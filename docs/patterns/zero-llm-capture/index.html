@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Durably record memory-worthy
+events without putting a model call on the synchronous write path.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Zero-LLM
+Capture — Agent Memory Atlas">
+    <meta property="og:description" content="Durably record
+memory-worthy events without putting a model call on the synchronous
+write path.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Zero-LLM
+Capture — Agent Memory Atlas">
+    <meta name="twitter:description" content="Durably record
+memory-worthy events without putting a model call on the synchronous
+write path.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Zero-LLM Capture — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Capture</p>
+          <h1>Zero-LLM Capture</h1>
+          <p class="document-deck">Durably record memory-worthy events
+without putting a model call on the synchronous write path.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Make capture cheap, deterministic, and available even when an
+extraction model is slow, unavailable, rate-limited, or unnecessary.</p>
+<h2 id="the-problem">The problem</h2>
+<p>If every hook, message, or tool result must pass through an LLM
+before it can be stored, memory inherits provider latency and failure. A
+transient outage can erase a session from memory, and high-volume agent
+traces can make capture prohibitively expensive.</p>
+<p>Skipping all processing has its own cost: raw events are noisy,
+private, and hard to retrieve. The pattern is therefore not “never use
+an LLM.” It is “do not require one to preserve the event.”</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Write a deterministic event envelope first:</p>
+<pre class="mermaid"><code>flowchart LR
+    A[&quot;Hook, message, tool result&quot;] --&gt; B[&quot;Validate + redact&quot;]
+    B --&gt; C[&quot;Durable scoped event&quot;]
+    C --&gt; D[&quot;Lexical / metadata index&quot;]
+    C --&gt; E[&quot;Optional async extraction&quot;]
+    E --&gt; F[&quot;Summary, fact, graph, embedding&quot;]
+    C --&gt; G[&quot;Raw fallback recall&quot;]
+    F --&gt; H[&quot;Derived recall&quot;]
+    D --&gt; H
+    G --&gt; H</code></pre>
+<p>The synchronous path may compute IDs, hashes, timestamps, scope, file
+paths, and a lexical index, but it makes no model call. Expensive
+compression, embedding, graph extraction, and consolidation run later
+and remain optional.</p>
+<p>The raw event is useful before enrichment and remains a fallback
+afterward. Derived records reference the event ID, and callers can
+observe whether enrichment is pending, failed, or complete.</p>
+<h2 id="why-it-works">Why it works</h2>
+<ul>
+<li>Capture latency and availability no longer depend on a model
+provider.</li>
+<li>Provider outages become delayed enrichment rather than lost
+memory.</li>
+<li>Low-value events can remain raw instead of incurring extraction
+cost.</li>
+<li>New extractors can reprocess the retained corpus.</li>
+<li>Deterministic lexical and metadata search provides a useful
+baseline.</li>
+</ul>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Raw capture can retain secrets, huge tool outputs, and irrelevant
+noise. Redaction, size limits, retention, and explicit scope still
+belong on the synchronous path. Lexical-only recall misses paraphrases,
+while deferred enrichment creates a freshness window. A zero-LLM capture
+claim is misleading if the system cannot retrieve or inspect the event
+until later processing finishes.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/agentmemory/">agentmemory</a> captures hooks
+and creates a synthetic structured observation without an LLM by
+default, then optionally compresses and consolidates later. <a
+href="../../systems/claude-mem/">Claude-Mem</a> durably queues hook
+events before observer generation, so provider and parser failures need
+not block the coding agent. <a
+href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> retains
+transcripts and failed capture inputs before map/reduce distillation. <a
+href="../../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a>
+stores L0 conversation JSONL and raw offloaded tool output beneath later
+extracted layers. <a href="../../systems/honcho/">Honcho</a> preserves
+ordinary message streams before deriving representations. <a
+href="../../systems/engram/">Engram</a> demonstrates the value of a
+compact SQLite/FTS baseline when extraction is not required.</p>
+<h2 id="implementation-checklist">Implementation checklist</h2>
+<ul>
+<li>Assign a stable event ID before acknowledging capture.</li>
+<li>Validate scope, actor, timestamp, and source deterministically.</li>
+<li>Redact private blocks and cap oversized payloads before
+persistence.</li>
+<li>Make raw events searchable through metadata, exact keys, or
+FTS.</li>
+<li>Record enrichment state and processor version separately.</li>
+<li>Link every derived record back to the event.</li>
+<li>Keep the enrichment queue idempotent and replayable.</li>
+<li>Define retention for raw evidence independently of derived
+memory.</li>
+</ul>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Capture succeeds with every model provider disabled.</li>
+<li>A crash immediately after acknowledgement does not lose the
+event.</li>
+<li>Duplicate hooks produce one stable event or an explicit duplicate
+relation.</li>
+<li>Private and oversized payload policy runs before the durable
+write.</li>
+<li>Raw recall works while enrichment is pending or failed.</li>
+<li>Replaying enrichment does not duplicate derived memory.</li>
+<li>Deleting an event handles queued and derived artifacts safely.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../recoverable-background-work/">Recoverable background
+work</a></li>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+<li><a href="../hybrid-retrieval-fusion/">Hybrid retrieval
+fusion</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

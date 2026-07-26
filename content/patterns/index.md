@@ -77,6 +77,18 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Track when a fact was true separately from when the system learned or expired it.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-amber" href="./decay-and-reinforcement/">
+    <span>Lifecycle</span>
+    <h2>Decay and reinforcement</h2>
+    <p>Change reachability over time without confusing age, use, popularity, and truth.</p>
+    <b>Read pattern →</b>
+  </a>
+  <a class="pattern-index-card tone-cyan" href="./zero-llm-capture/">
+    <span>Capture</span>
+    <h2>Zero-LLM capture</h2>
+    <p>Persist scoped events synchronously, then enrich them with models only when useful.</p>
+    <b>Read pattern →</b>
+  </a>
 </div>
 
 ## How to use the library
@@ -92,5 +104,7 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Retrieval repeats one document: assemble [source-diverse context](./source-diverse-context/).
 - Automatic extraction loses data on failure: build [recoverable background work](./recoverable-background-work/).
 - Changing facts overwrite useful history: add [bi-temporal fact validity](./bi-temporal-fact-validity/).
+- Old memory overwhelms recall or popular errors self-reinforce: separate [decay and reinforcement](./decay-and-reinforcement/) from truth.
+- Model latency or outages make capture unreliable: add a [zero-LLM capture](./zero-llm-capture/) path.
 
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Add the smallest set that closes a demonstrated failure mode.

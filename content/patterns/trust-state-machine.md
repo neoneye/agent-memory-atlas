@@ -51,6 +51,8 @@ For low-risk note retrieval, a full trust machine may be excessive. It matters m
 
 [Verel](../../systems/verel/) is the clearest reference: candidate, verified, and rejected states participate in recall, promotion, consolidation, and pruning. It also separates epistemic confidence from retrieval strength. [RainBox](../../systems/rainbox/) distinguishes human/override writes from model-originated candidates and couples trust with operator review. Other systems often expose CRUD without an equivalent promotion boundary.
 
+[Cognee](../../systems/cognee/) has rich provenance and ontology validity but no equivalent factual promotion state. [Claude-Mem](../../systems/claude-mem/) activates generated observations in project context, and [A-MEM](../../systems/a-mem/) can rewrite neighboring metadata, without candidate or rejected states. These are useful reminders that provenance, schema validity, and LLM confidence do not replace trust transitions.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.
@@ -65,3 +67,4 @@ For low-risk note retrieval, a full trust machine may be excessive. It matters m
 - [Rejected-value tombstone](../rejected-value-tombstone/)
 - [Evidence before belief](../evidence-before-belief/)
 - [Governed write gateway](../governed-write-gateway/)
+- [Decay and reinforcement](../decay-and-reinforcement/)

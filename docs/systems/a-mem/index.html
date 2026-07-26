@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A compact research implementation
+where LLM-generated notes link to and evolve neighboring memories
+through a Chroma-backed graph.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="A-MEM — Agent Memory Atlas">
+    <meta property="og:description" content="A compact research
+implementation where LLM-generated notes link to and evolve neighboring
+memories through a Chroma-backed graph.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="A-MEM — Agent Memory Atlas">
+    <meta name="twitter:description" content="A compact research
+implementation where LLM-generated notes link to and evolve neighboring
+memories through a Chroma-backed graph.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>A-MEM — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Evolving Zettelkasten memory</p>
+          <h1>A-MEM</h1>
+          <p class="document-deck">A compact research implementation
+where LLM-generated notes link to and evolve neighboring memories
+through a Chroma-backed graph.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/agiresearch/A-mem">
+              <span>Source</span>
+              <strong>agiresearch/A-mem</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d" title="ceffb860f0712bbae97b184d440df62bc910ca8d">
+              <span>Analyzed revision</span>
+              <code>ceffb860f0712bbae97b184d440df62bc910ca8d</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>A-MEM is a compact research implementation of agentic,
+Zettelkasten-inspired memory. Each note can carry keywords, context,
+tags, links, access metadata, and an evolution history. On insertion,
+vector-nearest notes are shown to an LLM, which can link the new note
+and rewrite neighboring tags or context.</p>
+<p>The valuable idea is that memory organization can evolve with new
+evidence rather than freezing metadata at ingestion time. The current
+implementation, however, is not safe to use as a production memory
+engine:</p>
+<ul>
+<li>The core system is process-local and resets a global in-memory
+Chroma collection on initialization.</li>
+<li>Search is vector-only despite “hybrid” docstrings.</li>
+<li>Neighbor positions are confused with memory identities during
+evolution, so the wrong note can be mutated.</li>
+<li>LLM-authored links are not validated as existing UUIDs.</li>
+<li>No user/project scope, provenance, trust state, or durable
+correction model exists.</li>
+</ul>
+<p>Treat A-MEM as a readable research sketch and source of design
+questions, not as a borrowing-ready library. The paper's experimental
+reproduction lives in a different repository linked from the README.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is a graph-like collection of enriched notes:</p>
+<pre class="text"><code>new note
+  -&gt; vector-nearest existing notes
+  -&gt; LLM evolution decision
+  -&gt; optional new links and tag changes
+  -&gt; optional neighbor context/tag rewrites
+  -&gt; note + metadata in Chroma and process memory</code></pre>
+<p>The Zettelkasten analogy comes from small notes and explicit links.
+Unlike a human-maintained Zettelkasten, link creation and neighborhood
+revision are delegated to an LLM. Retrieval starts with embedding
+similarity and can append linked neighbors.</p>
+<p>“Evolution” here means metadata and link mutation. It is not
+reinforcement learning, factual verification, decay, or model-weight
+adaptation.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<pre class="mermaid"><code>flowchart LR
+  Caller[&quot;Python caller&quot;] --&gt; AMS[&quot;AgenticMemorySystem&quot;]
+  AMS --&gt; Dict[&quot;In-process MemoryNote dictionary&quot;]
+  AMS --&gt; Chroma[&quot;Chroma collection + sentence-transformer&quot;]
+  Chroma --&gt; Neighbors[&quot;Nearest notes&quot;]
+  Neighbors --&gt; LLM[&quot;OpenAI or Ollama controller&quot;]
+  LLM --&gt; Mutate[&quot;Link/tag/context mutation&quot;]
+  Mutate --&gt; Dict
+  AMS --&gt; Search[&quot;Vector search + optional links&quot;]</code></pre>
+<p><code>AgenticMemorySystem</code> owns an in-memory dictionary and an
+ephemeral <code>ChromaRetriever</code>. A separate
+<code>PersistentChromaRetriever</code> exists, along with a
+temporary-copy variant for isolated experiments, but the main memory
+system does not use them.</p>
+<p>There is no server, worker, queue, transaction coordinator,
+authentication layer, or prompt-injection boundary.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>agentic_memory/memory_system.py::MemoryNote</code>: note
+schema.</li>
+<li><code>AgenticMemorySystem.__init__</code>: resets and opens the
+shared <code>memories</code> collection, configures the LLM, and defines
+the evolution prompt.</li>
+<li><code>add_note</code>: runs evolution, writes the process
+dictionary, then adds Chroma metadata.</li>
+<li><code>find_related_memories</code>: returns formatted nearest notes
+and positional indexes.</li>
+<li><code>process_memory</code>: asks the LLM to link or rewrite a
+neighborhood.</li>
+<li><code>search_agentic</code>: vector retrieval followed by limited
+linked-note expansion.</li>
+<li><code>update</code> and <code>delete</code>: mutate the dictionary
+and vector store.</li>
+<li><code>consolidate_memories</code>: recreates a retriever and re-adds
+all notes.</li>
+<li><code>agentic_memory/retrievers.py</code>: ephemeral, persistent,
+and copied Chroma wrappers.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryNote</code> contains:</p>
+<ul>
+<li>Free-text content and a UUID.</li>
+<li>Keywords, context, category, and tags.</li>
+<li>Links to other notes.</li>
+<li>Creation and last-access timestamps.</li>
+<li>Retrieval count.</li>
+<li>Evolution history.</li>
+</ul>
+<p>Most fields default to empty or generic values. Although
+<code>analyze_content</code> defines an LLM extraction prompt, no caller
+in the repository invokes it. A new note therefore keeps caller-supplied
+metadata or defaults unless the evolution path changes its tags or
+links.</p>
+<p>Chroma metadata serializes lists and dictionaries to JSON strings and
+attempts to recover their types with <code>ast.literal_eval</code> on
+read. The in-memory <code>MemoryNote</code> objects remain the practical
+source of truth for core operations.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>ChromaRetriever.search</code> embeds the query with a
+sentence-transformer and asks Chroma for nearest documents. Both
+<code>search</code> and <code>search_agentic</code> rely on this one
+semantic channel.</p>
+<p><code>search_agentic</code> hydrates metadata, then looks up linked
+memories in the process dictionary. Because the final list is truncated
+to <code>k</code>, appended neighbors often cannot expand the returned
+set when the initial vector search already filled it.</p>
+<p>The internal <code>_search</code> method claims to combine Chroma and
+an embedding retriever but calls the same retriever twice and then
+iterates the second Chroma result as if it were a list of result
+dictionaries. It is not a working hybrid implementation.</p>
+<p>There is no lexical retrieval, rank fusion, scope filter,
+recency/importance reranking, token budget, or evidence-aware result
+format.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add_note</code> creates a note and calls
+<code>process_memory</code> before persisting it. The first note
+bypasses analysis and evolution. Later notes retrieve five neighbors and
+ask the LLM for strict JSON containing:</p>
+<ul>
+<li>Whether to evolve.</li>
+<li><code>strengthen</code> and/or <code>update_neighbor</code>
+actions.</li>
+<li>Suggested connections.</li>
+<li>New tags for the new note.</li>
+<li>New context and tags for every neighbor.</li>
+</ul>
+<p>The implementation then mutates live objects.
+<code>find_related_memories</code> appends the enumeration position
+<code>i</code>, not the returned document UUID.
+<code>process_memory</code> uses those positions against
+insertion-ordered <code>self.memories.values()</code>. Vector rank
+position is therefore treated as collection position, which can rewrite
+a different memory than the LLM was shown.</p>
+<p>Update is delete-then-add in Chroma after mutating the live object.
+Delete removes the target but does not clean incoming links. Neither
+operation is atomic across the dictionary and Chroma.</p>
+<p>“Consolidation” does not summarize or merge notes; it opens the
+collection and re-adds every current document, which risks duplicate-ID
+failure depending on Chroma behavior.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Integration is a direct Python API: create
+<code>AgenticMemorySystem</code>, add notes, search, update, and delete.
+The included example demonstrates a local Ollama backend.</p>
+<p>There are no lifecycle hooks, MCP tools, REST endpoints, automatic
+context injection, multi-agent namespace, or framework adapters. The
+persistent and copied retrievers can support experimental sharing or
+forked starting memory, but callers must assemble that behavior
+themselves.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Strict JSON schema constrains the shape of the evolution
+response.</li>
+<li>Evolution errors fail closed to leaving the new note unchanged.</li>
+<li>Persistent Chroma access requires an explicit
+<code>extend=True</code> for an existing collection.</li>
+<li>The copied retriever offers an isolated disposable clone for
+experiments.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>Main-system initialization resets a globally named ephemeral
+collection.</li>
+<li>Neighbor identity confusion can corrupt unrelated notes.</li>
+<li>Suggested link IDs are accepted without referential validation.</li>
+<li>No locking protects concurrent writes.</li>
+<li>No provenance connects an evolved field to source evidence or model
+output.</li>
+<li>No privacy filtering, authentication, scope, retention, or audit
+trail.</li>
+<li>No candidate/verified/rejected state distinguishes generated
+organization from trusted knowledge.</li>
+<li>Mutation errors can leave Chroma and process memory
+inconsistent.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repository has focused tests for CRUD, metadata serialization,
+vector top-k, persistent collection access, copied/persistent behavior,
+relationships, and consolidation. The memory-system tests instantiate an
+OpenAI backend and do not inject the included
+<code>MockLLMController</code>; several “evolution” assertions only
+check that metadata fields are non-null. They do not assert correct
+neighbor identity or link validity.</p>
+<p>The test suite was not run for this atlas review because it downloads
+embedding models and may call an external LLM.</p>
+<p>The README says experiments across six foundation models outperform
+baselines, but directs reproducibility to
+<code>WujiangXu/AgenticMemory</code>. This package contains neither the
+paper benchmark harness nor committed result artifacts, so those claims
+cannot be verified from the inspected repository.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Model memory as small linkable notes rather than one growing
+summary.</li>
+<li>Reconsider local organization when new evidence arrives.</li>
+<li>Separate a shared persistent corpus from disposable per-agent
+copies.</li>
+<li>Constrain model decisions with a strict structured schema.</li>
+<li>Keep evolution optional and fail closed on parsing errors.</li>
+</ul>
+<p>The invariant to add before stealing the design is simple: every
+neighbor and link must use a stable memory ID end to end.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Using a ranking position as a persistent object identity.</li>
+<li>Letting an LLM mutate active neighboring memories without provenance
+or review.</li>
+<li>Naming vector-only retrieval “hybrid.”</li>
+<li>Treating reindexing as semantic consolidation.</li>
+<li>Resetting a shared collection inside a constructor.</li>
+<li>Keeping graph links without referential integrity or delete
+cleanup.</li>
+<li>Citing results whose runnable evaluation lives outside the analyzed
+package.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the concept, not the current core. A production implementation
+would need stable IDs, durable canonical storage, a rebuildable vector
+projection, validated edges, provenance for every mutation, scoped
+access, transactional updates, and reviewable candidate changes.</p>
+<p>The system is useful for research prototypes where observing emergent
+note organization matters more than persistence and correctness. It
+should not sit on a consequential agent path without substantial
+redesign.</p>
+<p>If implementing the pattern, generate proposed links and metadata
+revisions into a change set. Validate referenced IDs, record the source
+neighborhood and model, then atomically accept or reject the
+proposal.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Should evolution create proposals instead of mutating active
+notes?</li>
+<li>How should contradictory notes be linked without rewriting one into
+the other?</li>
+<li>What is the intended role of <code>analyze_content</code>, which has
+no call site?</li>
+<li>How should linked neighbors affect top-k rather than being truncated
+away?</li>
+<li>Can the paper evaluation be packaged with the library and pinned
+artifacts?</li>
+<li>What consolidation invariant was intended beyond reindexing?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>agentic_memory/memory_system.py</code>: notes, evolution,
+CRUD, retrieval.</li>
+<li><code>agentic_memory/retrievers.py</code>: Chroma adapters and
+collection copying.</li>
+<li><code>agentic_memory/llm_controller.py</code>: OpenAI and Ollama
+completion backends.</li>
+<li><code>examples/sovereign_memory.py</code>: local Ollama
+example.</li>
+<li><code>tests/test_memory_system.py</code>: memory lifecycle
+tests.</li>
+<li><code>tests/test_retriever.py</code>: Chroma and persistence
+tests.</li>
+<li><code>tests/test_utils.py</code>: unused mock LLM controller.</li>
+<li><code>README.md</code>: architecture and external paper-reproduction
+link.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

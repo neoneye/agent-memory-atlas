@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A lifecycle-hook plugin that
+captures coding activity, compresses it into observations, and reinjects
+semantic context across sessions.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Claude-Mem — Agent Memory Atlas">
+    <meta property="og:description" content="A lifecycle-hook plugin
+that captures coding activity, compresses it into observations, and
+reinjects semantic context across sessions.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude-Mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A lifecycle-hook plugin
+that captures coding activity, compresses it into observations, and
+reinjects semantic context across sessions.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Claude-Mem — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Hook-native coding-agent memory</p>
+          <h1>Claude-Mem</h1>
+          <p class="document-deck">A lifecycle-hook plugin that captures
+coding activity, compresses it into observations, and reinjects semantic
+context across sessions.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/thedotmack/claude-mem">
+              <span>Source</span>
+              <strong>thedotmack/claude-mem</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe" title="132b46343e60ecf4057c427736c57b08f7615dfe">
+              <span>Analyzed revision</span>
+              <code>132b46343e60ecf4057c427736c57b08f7615dfe</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Claude-Mem is a local-first memory sidecar for coding agents.
+Lifecycle hooks capture prompts and tool activity, a background observer
+compresses queued events into structured observations and session
+summaries, SQLite remains the canonical store, and Chroma supplies an
+optional semantic projection.</p>
+<p>Its best idea is operational: the hook path durably queues work and
+degrades without blocking the coding agent. Compression can fail, the
+vector projection can lag, and the observer can restart while the raw
+queue and canonical rows remain inspectable.</p>
+<p>The name understates its current scope. The repository includes
+integrations for Claude Code, Codex, Cursor, Windsurf, OpenCode,
+OpenClaw, and other agent surfaces, plus local HTTP/MCP access, optional
+cloud synchronization, and an emerging authenticated server mode.</p>
+<p>Claude-Mem is not a general belief or knowledge-graph system. It
+stores useful LLM-written accounts of work, reinjects a recent project
+timeline, and exposes search. Those observations have source/session
+metadata but no candidate/verified/rejected truth state.</p>
+<p>The inspected package version is <code>13.12.4</code>
+(2026-07-23).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The core pipeline is:</p>
+<pre class="text"><code>agent lifecycle hooks
+    -&gt; durable pending_messages queue
+    -&gt; observer model
+    -&gt; XML observations + session summary
+    -&gt; canonical SQLite rows
+    -&gt; optional Chroma and cloud projections
+    -&gt; project-scoped search or bounded timeline injection</code></pre>
+<p>An observation is not the raw tool event. It is a compressed
+interpretation with a type, title, narrative, facts, concepts, and file
+evidence. The queue is the recoverable work ledger; SQLite is the local
+source of truth; Chroma is a rebuildable semantic index.</p>
+<p>Two session identifiers distinguish the host conversation from the
+observer model's memory session. Project and platform source provide the
+main retrieval boundaries.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;Claude, Codex, Cursor, etc.&quot;] --&gt; Hooks[&quot;Lifecycle hooks / transcript adapters&quot;]
+  Hooks --&gt; Worker[&quot;Bun worker daemon&quot;]
+  Worker --&gt; Queue[&quot;SQLite pending_messages&quot;]
+  Queue --&gt; Observer[&quot;Claude / Gemini / OpenRouter observer&quot;]
+  Observer --&gt; Parser[&quot;XML parser + validation&quot;]
+  Parser --&gt; SQLite[&quot;SQLite observations, summaries, prompts&quot;]
+  SQLite --&gt; Context[&quot;Timeline context builder&quot;]
+  SQLite --&gt; FTS[&quot;FTS5 search&quot;]
+  SQLite --&gt; Chroma[&quot;Best-effort Chroma projection&quot;]
+  Chroma --&gt; Search[&quot;Semantic search&quot;]
+  Context --&gt; Agent
+  Search --&gt; MCP[&quot;HTTP / MCP / UI&quot;]</code></pre>
+<p>The worker owns local session lifecycle, capture, generation,
+storage, search, context, and synchronization. <code>SessionStore</code>
+contains a long migration chain; <code>DatabaseManager</code> composes
+SQLite, Chroma, and optional cloud sync.</p>
+<p>A newer server-owned schema introduces projects, agent events, memory
+items, sources, teams, API keys, and audit log.
+<code>docs/server-storage-boundary.md</code> explicitly says this is
+additive: legacy observations remain the worker search source of truth
+until a future backfill and reader switch.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Capture and generation:</p>
+<ul>
+<li><code>src/cli/hook-command.ts</code> and integration installers:
+host event entry points.</li>
+<li><code>src/services/worker/SessionMessageBuffer.ts</code>: event
+buffering.</li>
+<li><code>src/services/sqlite/SessionStore.ts</code>: durable queue and
+canonical tables.</li>
+<li><code>src/services/worker/ClaudeProvider.ts</code> and
+<code>OpenAICompatibleProvider.ts</code>: observer execution and retry
+behavior.</li>
+<li><code>src/services/worker/agents/ResponseProcessor.ts</code>: XML
+validation, canonical storage, acknowledgement, and projection
+fan-out.</li>
+</ul>
+<p>Retrieval and injection:</p>
+<ul>
+<li><code>src/services/worker/search/SearchOrchestrator.ts</code>:
+strategy selection.</li>
+<li><code>src/services/worker/search/strategies/SQLiteSearchStrategy.ts</code>:
+lexical and filter search.</li>
+<li><code>src/services/worker/search/strategies/ChromaSearchStrategy.ts</code>:
+semantic retrieval and SQLite hydration.</li>
+<li><code>src/services/context/ContextBuilder.ts</code>: read-only
+project timeline.</li>
+<li><code>src/services/context/ObservationCompiler.ts</code>: scoped
+observation and summary queries.</li>
+</ul>
+<p>Privacy, deletion, and transition:</p>
+<ul>
+<li><code>src/utils/tag-stripping.ts</code>: private and protocol-tag
+stripping.</li>
+<li><code>src/services/worker/validation/PrivacyCheckValidator.ts</code>:
+prompt-level suppression.</li>
+<li><code>src/services/worker/http/routes/DataRoutes.ts</code>:
+transaction-aware local and synchronized deletion.</li>
+<li><code>src/services/sync/ChromaSync.ts</code>: projection repair and
+backfill.</li>
+<li><code>src/storage/sqlite/schema.ts</code>: future server-owned
+schema.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The active local model centers on:</p>
+<ul>
+<li><code>sdk_sessions</code>: content session, memory session, project,
+platform, and lifecycle metadata.</li>
+<li><code>user_prompts</code>: privacy-stripped prompt text and prompt
+number.</li>
+<li><code>pending_messages</code>: queued observation or summary work
+with tool input/output and processing status.</li>
+<li><code>observations</code>: type, title, subtitle, facts, narrative,
+concepts, files read and modified, model fields, timestamps, and content
+hash.</li>
+<li><code>session_summaries</code>: request, investigation, learning,
+completion, next steps, notes, and timestamps.</li>
+<li><code>observation_feedback</code>: user feedback over derived
+observations.</li>
+</ul>
+<p>SQLite foreign keys link observations and summaries to memory
+sessions. Content hashes deduplicate near-simultaneous reprocessing. The
+code derives file write evidence from actual tool payloads and
+overwrites model-proposed modified file lists, a useful example of
+deterministic evidence outranking generated metadata.</p>
+<p>The future <code>memory_items</code> / <code>memory_sources</code>
+model is not yet a replacement for these tables and should not be
+treated as the current canonical path.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Filter-only queries use SQLite. When Chroma is configured, ordinary
+text queries use semantic search, then hydrate result IDs from SQLite.
+Platform-scoped empty semantic results can fall back to SQLite.</p>
+<p>This is not general hybrid fusion. <code>HybridSearchStrategy</code>
+is used for file-oriented lookup: SQLite produces metadata candidates
+and Chroma reranks their intersection. When Chroma is absent, the main
+orchestrator does not automatically run lexical search for a non-empty
+query; when a Chroma query throws, the orchestrator wraps the failure as
+<code>ChromaUnavailableError</code> rather than transparently falling
+back.</p>
+<p>SQLite supplies FTS5 indexes for observations, summaries, and
+prompts. Search supports project, platform, type, concept, file, and
+date filters.</p>
+<p>Automatic session-start context uses a different path.
+<code>ContextBuilder</code> reads recent project-scoped observations and
+summaries, filters configured types and concepts, and renders a
+chronological timeline with only a small number of full observations. It
+is bounded progressive disclosure, but it is primarily
+recency/configuration driven rather than query-specific semantic
+retrieval.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Hooks enqueue prompt and tool activity into
+<code>pending_messages</code>. The observer claims a batch and generates
+XML. <code>ResponseProcessor</code> then:</p>
+<ul>
+<li>Classifies quota and authentication failures and restores claimed
+messages to pending.</li>
+<li>Treats ordinary non-XML prose as a confirmed no-op to prevent retry
+loops.</li>
+<li>Defers storage when the memory-session identifier is not ready.</li>
+<li>Parses valid observations and summaries.</li>
+<li>Replaces model-reported modified files with deterministic tool
+evidence.</li>
+<li>Stores canonical rows in SQLite.</li>
+<li>Acknowledges the queue only after canonical storage.</li>
+<li>Starts Chroma and cloud synchronization outside the canonical
+transaction.</li>
+</ul>
+<p>Chroma failure is logged and tolerated, so capture survives without
+vector search. Content-hash deduplication prevents repeated rows from
+hook retries.</p>
+<p>The tradeoff is explicit: a valid parse with no observations can
+clear a batch, and a non-XML low-signal response is intentionally
+dropped rather than retried forever. Durable queues prevent accidental
+loss from crashes, not every semantic loss from the observer.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The project hooks setup, session start, prompt submission, tool use,
+stop or summary, and session end. It can capture without asking the
+primary agent to remember explicitly and reinject context automatically
+on a later session.</p>
+<p>Local MCP exposes search, timeline, observation lookup/addition,
+session-start context, semantic context, progressive smart-search
+operations, and corpus tools. The server recall MCP intentionally offers
+a smaller search, context, and recent surface.</p>
+<p>Multiple adapters normalize host-specific transcripts and platform
+sources into the same local model. Worktree/project adoption helps
+related coding sessions share context, but it also means project naming
+is part of the isolation policy and must be tested carefully.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>A durable SQLite queue separates hook latency from model
+compression.</li>
+<li>Provider authentication and quota failures preserve the claimed
+batch.</li>
+<li>SQLite is canonical; Chroma is a best-effort, repairable
+projection.</li>
+<li>Canonical storage happens before queue acknowledgement.</li>
+<li>Content hashes and tool-use IDs reduce duplicate capture.</li>
+<li><code>&lt;private&gt;...&lt;/private&gt;</code> and internal
+protocol blocks are stripped before generation and persistence.</li>
+<li>Context reads open SQLite read-only with a busy timeout.</li>
+<li>Synchronized deletion refuses to strand acknowledged replicas when
+cloud identity is unavailable.</li>
+<li>Project, worktree lineage, and platform source constrain most
+reads.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>Tag stripping is syntax-based and cannot guarantee secret
+detection.</li>
+<li>A missing prompt row fails open to avoid freezing a session after a
+startup race; this is availability-favoring behavior, not a privacy
+proof.</li>
+<li>Generated observations become active context without
+verification.</li>
+<li>Ordinary semantic search can fail when Chroma is unavailable even
+though FTS data exists.</li>
+<li>Local mode assumes a trusted user boundary; server authentication is
+a separate, evolving surface.</li>
+<li>The additive server schema creates two memory models during a
+transition.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The inspected tree contains 237 TypeScript test files. Coverage
+includes hook lifecycle, transcript adapters, queue recovery, context
+rendering, privacy, schema migration, foreign keys, Chroma
+synchronization, cloud sync, API endpoints, provider error
+classification, installer behavior, and server storage contracts.</p>
+<p>The source suite was not run for this atlas review because it
+requires Bun and several optional services. No committed end-to-end
+memory-quality benchmark was found. Token-economics telemetry measures
+compression and context volume; it does not establish recall correctness
+or factual accuracy.</p>
+<p>The test breadth supports an operational-maturity claim. It does not
+validate the observer's facts, the ideal context mix, or general
+retrieval quality.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Durable hook capture before LLM work.</li>
+<li>Canonical relational rows plus rebuildable semantic
+projections.</li>
+<li>Acknowledge queue work only after canonical persistence.</li>
+<li>Distinguish retryable provider failures from intentional no-op
+output.</li>
+<li>Derive file mutations from tool evidence, not model narration.</li>
+<li>Render compact timelines and expand only selected observations.</li>
+<li>Make privacy suppression visible and test race behavior
+explicitly.</li>
+<li>Refuse a local delete that cannot be replicated safely.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Calling semantic-or-lexical fallback “hybrid” when ranks are not
+fused.</li>
+<li>Automatically activating generated observations as trusted
+instructions.</li>
+<li>Letting project-name heuristics carry more isolation responsibility
+than explicit stable project IDs.</li>
+<li>Maintaining a large schema migration chain without continuously
+exercised recovery tests.</li>
+<li>Adding a second canonical-looking memory model before readers have
+migrated.</li>
+<li>Treating compression savings as evidence of memory quality.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow Claude-Mem when the product is a coding agent and reliable
+lifecycle capture matters more than a general-purpose knowledge model.
+Its queue, canonical/projection split, transcript adapters, privacy
+tags, context renderer, and recovery behavior would be expensive to
+reproduce well.</p>
+<p>Build a smaller path when explicit memory writes are acceptable or
+when the environment lacks stable hooks. The reusable minimum is durable
+event capture, asynchronous compression, source-linked observations,
+lexical fallback, bounded context, and exact deletion.</p>
+<p>Before using observations for consequential automation, add trust
+state and source display. Also change ordinary semantic search to
+degrade to FTS when Chroma is unavailable if availability is more
+important than ranking consistency.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>When will <code>memory_items</code> replace legacy observations, and
+how will the switch avoid dual-write divergence?</li>
+<li>Should a failed Chroma query fall back to FTS automatically?</li>
+<li>How are generated claims corrected or marked rejected so they do not
+return?</li>
+<li>Can context selection incorporate a current-task query without
+losing its predictable recent timeline?</li>
+<li>What stable identity replaces project-name and worktree heuristics
+in shared deployments?</li>
+<li>Which observer quality benchmark will detect lossy or fabricated
+summaries?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/services/sqlite/SessionStore.ts</code>: canonical schema,
+migrations, queue.</li>
+<li><code>src/services/worker/agents/ResponseProcessor.ts</code>:
+generated-output commit.</li>
+<li><code>src/services/worker/SessionMessageBuffer.ts</code>: durable
+capture buffer.</li>
+<li><code>src/services/worker/search/SearchOrchestrator.ts</code>:
+search selection.</li>
+<li><code>src/services/worker/search/strategies/HybridSearchStrategy.ts</code>:
+file lookup.</li>
+<li><code>src/services/context/ContextBuilder.ts</code>: context
+assembly.</li>
+<li><code>src/services/context/ObservationCompiler.ts</code>:
+project-scoped reads.</li>
+<li><code>src/utils/tag-stripping.ts</code>: privacy and protocol
+stripping.</li>
+<li><code>src/services/worker/validation/PrivacyCheckValidator.ts</code>:
+privacy decision.</li>
+<li><code>src/services/worker/http/routes/DataRoutes.ts</code>: deletion
+routes.</li>
+<li><code>src/services/sync/ChromaSync.ts</code>: vector projection and
+repair.</li>
+<li><code>docs/server-storage-boundary.md</code>: active/future schema
+boundary.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

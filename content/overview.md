@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of eighteen agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of twenty-one agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -17,10 +17,12 @@ Repos:
 - `mem0`
 - `langmem`
 - `graphiti`
+- `cognee`
+- `a-mem`
 
 These optimize for easy embedding into an existing agent application. The application calls memory tools or SDK functions; the library handles extraction, storage, and retrieval.
 
-Tradeoff: the memory layer is easy to adopt but usually has weak authority over the agent loop. It can store and retrieve, but it cannot guarantee the model calls the right tool at the right time, verifies facts, or uses the recall output safely.
+Tradeoff: the memory layer is easy to adopt but usually has weak authority over the agent loop. It can store and retrieve, but it cannot guarantee the model calls the right tool at the right time, verifies facts, or uses the recall output safely. Cognee is the broad exception in surface area: it is library-accessible but operates more like a knowledge pipeline platform. A-MEM sits at the opposite extreme: a compact research sketch whose linked-note evolution idea is stronger than its current implementation.
 
 ### Agent-runtime memory
 
@@ -32,6 +34,7 @@ Repos:
 - `memos`
 - `agentmemory`
 - `tencentdb-agent-memory`
+- `claude-mem`
 
 This treats memory as part of the agent runtime. Memory is not merely an external RAG sidecar; it is compiled into or injected into prompt/context, mutated through first-class tools/actions, searched through runtime services, and tied to agent state.
 
@@ -59,10 +62,41 @@ Repos:
 - `llm-wiki-memory`
 - `basic-memory`
 - `agentmemory`
+- `claude-mem`
 
 This optimizes for a local developer workflow: durable local memory, MCP/tools/hooks, project scopes, exact search, vector search, conflict or dedupe handling, and sync/repair hooks.
 
-Tradeoff: local-first design is operationally simple and inspectable, but it does not solve large-scale hosted ranking, multi-tenant APIs, or rich social/user modeling. `engram` is compact and FTS-oriented; `mempalace` is broader, benchmark-heavy, and vector/hybrid retrieval-oriented; `llm-wiki-memory` is filesystem/git-oriented, hook-heavy, federated across private and repository wikis, and unusually focused on capture recovery and operations; `agentmemory` is a much broader hook-native runtime with lexical, vector, graph, consolidation, governance, and team subsystems.
+Tradeoff: local-first design is operationally simple and inspectable, but it does not solve large-scale hosted ranking, multi-tenant APIs, or rich social/user modeling. `engram` is compact and FTS-oriented; `mempalace` is broader, benchmark-heavy, and vector/hybrid retrieval-oriented; `llm-wiki-memory` is filesystem/git-oriented, hook-heavy, federated across private and repository wikis, and unusually focused on capture recovery and operations; `agentmemory` is a much broader hook-native runtime with lexical, vector, graph, consolidation, governance, and team subsystems; `claude-mem` makes a durable event queue, background observer, canonical SQLite rows, and bounded cross-session timeline the center of the design.
+
+### Knowledge-graph memory platform
+
+Repo:
+
+- `cognee`
+
+Cognee preserves source data, runs configurable cognify pipelines, and stores
+typed graph, vector, summary, ontology, and session projections across
+pluggable backends. Its newer remember/recall API presents this platform through
+a smaller memory vocabulary.
+
+Tradeoff: the pipeline, provenance rollback, access control, and backend breadth
+are unusually strong, but LLM extraction remains probabilistic and consistency
+must be maintained across several stores.
+
+### Evolving linked-note research memory
+
+Repo:
+
+- `a-mem`
+
+A-MEM retrieves vector-nearest notes and asks an LLM to link the new note or
+rewrite neighboring tags and context. It is the clearest Zettelkasten-inspired
+research design in the atlas.
+
+Tradeoff: evolving organization is interesting, but the inspected
+implementation confuses retrieval positions with note identities, resets a
+global ephemeral Chroma collection, and lacks durable scope, provenance, and
+trust semantics.
 
 ### Layered symbolic context memory
 
@@ -190,14 +224,17 @@ Tradeoff: this is more complex than most systems need for an MVP, but it directl
 | `basic-memory` | Canonical Markdown note; indexed entity, observation, relation | Filesystem source + SQLite/PostgreSQL projection | FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph context | MCP/API writes accepted Markdown; file watcher reconciles human edits | Distinct create/replace/edit/move/delete with stable ID and reindex | Project, workspace, tenant, local/cloud route | MCP tools, typed clients, API, CLI | Watcher, startup reconciliation, indexing workflows | Human-visible source/checksums; no candidate/verified state | Inspectable portable memory with rebuildable indexes | Bidirectional sync complexity; agent can write unsupported claims |
 | `agentmemory` | Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records | iii StateModule backed by local SQLite plus persisted search projections | BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity | Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation | Delete/TTL; similarity-based version supersession; rebuildable indexes | Project, session, working directory; shared or isolated agent mode | Hooks, MCP, HTTP, CLI, iii functions | Optional compression, graph extraction, consolidation, decay, repair | Source observation IDs, versions, audit; no candidate/verified/rejected state | Cheap synchronous capture and compact-first hybrid search | Very broad surface; shared scope default; fuzzy supersession can hide conflicts |
 | `tencentdb-agent-memory` | L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map | JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB | FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context | Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload | Internal merge/delete/cleanup; no first-class correction/forget tool | Session fields and data directories; no general tenant boundary | OpenClaw hooks/tools/context engine; Hermes gateway | Deferred embeddings, scene/persona generation, retention reclamation | Source message IDs and raw evidence; no verification/rejection state | Layered progressive disclosure with raw drill-down | Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims |
+| `cognee` | Source data, chunk, typed `DataPoint`, graph edge, summary, session entry | SQLite/PostgreSQL plus pluggable graph/vector stores | Chunk, lexical, vector, graph, triplet, summary, temporal, hybrid, and routed modes | `add` + `cognify`; unified `remember`; session-hot writes with background improvement | Exact data/dataset/all forget; memory-only reprocessing; provenance rollback | User permissions and dataset; optional per-user/dataset backend isolation | Python, REST, CLI, MCP, typed memory entries | Composable pipelines, session bridge, memify, rollback/recovery | Source records, content hashes, pipeline/task/user provenance; no factual trust state | Ontology-aware multimodal graph pipeline with serious rollback | Large configuration surface; cross-store consistency; extracted graph can harden errors |
+| `claude-mem` | Hook event, pending message, observation, session summary, prompt | Canonical SQLite, optional Chroma projection and cloud sync | FTS/filter search or Chroma semantic search; file-only metadata/semantic intersection; recent timeline context | Lifecycle hooks queue work; observer generates structured XML; SQLite commit before acknowledgement | Exact row deletion with synchronized tombstones; project-wide server forget paths | Project/worktree, session, platform source; team/server scope emerging | Coding-agent hooks, HTTP, MCP, UI, multiple adapters | Durable queue, provider retries, vector/cloud projection, repair | Session/tool metadata and deterministic file evidence; generated claims have no trust state | Reliable non-blocking capture and bounded cross-session context | Ordinary search is not fused hybrid; generated observations activate automatically; dual schema transition |
+| `a-mem` | `MemoryNote` with content, tags, context, links, and evolution history | In-process dictionary plus ephemeral Chroma; separate persistent retriever utility | Vector similarity with optional linked-neighbor append | LLM decides links and neighbor metadata mutation before insert | Delete/re-add update; exact delete without incoming-link cleanup | None in core | Direct Python library | Periodic reindex called consolidation | No source provenance or trust state | Small, legible linked-note evolution concept | Neighbor position/identity bug can mutate wrong notes; destructive initialization; no durability |
 
 ## 3. End-to-End Memory Lifecycle Comparison
 
 ### Capture
 
-`mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `hindsight` retains documents/chunks before extracting facts. `graphiti` stores episodes before deriving entities and temporal relationships. `mastra-observational-memory` persists messages before compressing covered ranges. `memos` routes items into configured memory cubes. `basic-memory` accepts Markdown writes from MCP/API or human file edits and reconciles indexes. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores chunks in local JSON. `llm-wiki-memory` combines explicit MCP/CLI writes with lifecycle hooks. `honcho` captures messages as the primary event stream, then derives observations. `verel` routes captured percepts through a trust gate. `agentmemory` combines cheap hook capture with explicit `mem::remember`; compression is optional. `tencentdb-agent-memory` records raw conversation evidence, then extracts higher layers from successful turns.
+`mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `cognee` supports both explicit permanent writes and a session-hot capture path through `remember`. `claude-mem` writes hook events to a durable queue before invoking its observer. `a-mem` accepts direct Python note writes but runs LLM evolution before the new note is durable. `hindsight` retains documents/chunks before extracting facts. `graphiti` stores episodes before deriving entities and temporal relationships. `mastra-observational-memory` persists messages before compressing covered ranges. `memos` routes items into configured memory cubes. `basic-memory` accepts Markdown writes from MCP/API or human file edits and reconciles indexes. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores chunks in local JSON. `llm-wiki-memory` combines explicit MCP/CLI writes with lifecycle hooks. `honcho` captures messages as the primary event stream, then derives observations. `verel` routes captured percepts through a trust gate. `agentmemory` combines cheap hook capture with explicit `mem::remember`; compression is optional. `tencentdb-agent-memory` records raw conversation evidence, then extracts higher layers from successful turns.
 
-The important split is whether the captured item is itself memory or evidence for memory. Honcho, Verel, MemPalace, Graphiti, Hindsight, Basic Memory, Mastra, Swafra, RainBox, agentmemory, and TencentDB Agent Memory are evidence-aware in different ways: Graphiti keeps episodes behind edges, Hindsight links observations to source facts, Basic Memory keeps canonical notes behind projections, Mastra records exact message ranges behind summaries, agentmemory links memories to observations, and TencentDB preserves L0 messages and offloaded raw tool output. These designs still differ sharply in trust: provenance supports correction, but only Verel and RainBox model rejection/promotion explicitly.
+The important split is whether the captured item is itself memory or evidence for memory. Cognee, Claude-Mem, Honcho, Verel, MemPalace, Graphiti, Hindsight, Basic Memory, Mastra, Swafra, RainBox, agentmemory, and TencentDB Agent Memory are evidence-aware in different ways: Cognee retains source data below graph/vector projections; Claude-Mem queues hook material before generated observations; Graphiti keeps episodes behind edges; Hindsight links observations to source facts; Basic Memory keeps canonical notes behind projections; Mastra records exact message ranges behind summaries; agentmemory links memories to observations; and TencentDB preserves L0 messages and offloaded raw tool output. These designs still differ sharply in trust: provenance supports correction, but only Verel and RainBox model rejection/promotion explicitly.
 
 ### Extraction
 
@@ -226,11 +263,25 @@ compression/consolidation optional. `tencentdb-agent-memory` uses an LLM to
 extract L1 records, then another judgment step chooses store, update, merge, or
 skip; failures store all candidates rather than losing them.
 
+`cognee` runs typed task pipelines that chunk documents, extract graph
+structures, embed several views, and optionally ground nodes in an ontology.
+`claude-mem` asks an observer model for XML observations and summaries, but
+replaces its modified-file list with paths deterministically derived from tool
+calls. `a-mem` asks an LLM to organize a new note and rewrite nearby metadata;
+its `analyze_content()` method has no call site, so ordinary note metadata is
+not extracted as the public mental model suggests.
+
 ### Consolidation
 
 `honcho`, `hindsight`, `mastra-observational-memory`, and `verel` have the strongest visible consolidation stories. Honcho derives working representations from event streams. Hindsight creates/updates observations with source IDs and proof counts. Mastra reflects growing observation logs and can prepare the result asynchronously before activation. Verel clusters failures, induces candidate design rules and schemas, then requires promotion gates for verification. `agentmemory` separately consolidates important observations into versioned memories and optional semantic/procedural layers. `tencentdb-agent-memory` compiles L1 records into scene files and changed scenes into a persona.
 
 `mem0` V3 is intentionally more append-oriented; consolidation is mostly dedupe and entity linking in the OSS path. `mempalace` consolidates operationally through dedup, closets, halls, tunnels, graph layers, and repair paths rather than by rewriting memories into summaries. `swafra` has no real consolidation worker or correction policy: ingestion adds cross-source edges, and a `superseded_by` loop exists, but old same-source chunks are removed before that loop can see them. `llm-wiki-memory` has a substantial opt-in, brain-only pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup, optional LLM merge, deterministic staleness flags, optional LLM refresh, orphan archive, archived-body compression, cache pruning, and index rebuild. `rainbox` consolidates through claim supersession, rejection, expiry, profile selection, and eval/feedback loops rather than through background summarization. `letta` separates core and archival memory but does not make consolidation the central visible mechanism in the inspected files. `langmem` provides reflection hooks rather than a fixed consolidation policy. `engram` keeps a pragmatic local model: update topic keys, count duplicates, surface conflicts.
+
+Cognee's `memify`/`improve` pipelines enrich an existing graph, while its
+session path bridges hot entries into permanent memory asynchronously.
+Claude-Mem compresses batches into observations and session summaries but does
+not merge them into a verified long-term belief model. A-MEM's
+`consolidate_memories()` is only a reindex pass, not semantic consolidation.
 
 ### Retrieval
 
@@ -241,11 +292,11 @@ The repeated successful pattern is hybrid retrieval:
 - metadata filters for scope;
 - reranking or rank fusion when quality matters.
 
-`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
+`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `cognee` exposes lexical chunks, vectors, graph, triplet, summary, temporal, and hybrid modes, but the result contracts differ enough that each route needs separate evaluation. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `claude-mem` selects Chroma semantic search for ordinary text queries and reserves metadata/semantic intersection for file lookup. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
 ### Context Injection
 
-`letta` and `mastra-observational-memory` have the deepest runtime prompt integration. Mastra removes observed raw messages, injects active observations as system context, retains a recent tail, and adds a continuation reminder. `rainbox` injects an operator profile block and hybrid memory context and records what was injected. `verel` has the safest visible recall renderer: recalled memory is token-budgeted and fenced as untrusted data. `mempalace` has a four-layer stack. `basic-memory` builds graph context through MCP while leaving final prompt placement to the client. `agentmemory` assembles pinned items, profiles, lessons, summaries, and observations within a token budget; its smart search separately supports compact-first expansion. `tencentdb-agent-memory` separates dynamic L1 recall from stable scene/persona context and adds navigable short-term offload maps. `graphiti`, `hindsight`, and `memos` return structured recall/context to integrations. `swafra` exposes unbounded `get_context`; `llm-wiki-memory` injects session work context; `supermemory` emits profile text; `engram` has MCP context tools; `honcho` exposes working representations.
+`letta` and `mastra-observational-memory` have the deepest runtime prompt integration. Mastra removes observed raw messages, injects active observations as system context, retains a recent tail, and adds a continuation reminder. `claude-mem` automatically renders a project-scoped chronological timeline, showing only a bounded subset of observations in full. `rainbox` injects an operator profile block and hybrid memory context and records what was injected. `verel` has the safest visible recall renderer: recalled memory is token-budgeted and fenced as untrusted data. `mempalace` has a four-layer stack. `basic-memory` builds graph context through MCP while leaving final prompt placement to the client. `agentmemory` assembles pinned items, profiles, lessons, summaries, and observations within a token budget; its smart search separately supports compact-first expansion. `tencentdb-agent-memory` separates dynamic L1 recall from stable scene/persona context and adds navigable short-term offload maps. `cognee`, `graphiti`, `hindsight`, and `memos` return structured recall/context to integrations. `swafra` exposes unbounded `get_context`; `llm-wiki-memory` injects session work context; `supermemory` emits profile text; `engram` has MCP context tools; `honcho` exposes working representations. A-MEM leaves injection entirely to its caller.
 
 ### Correction
 
@@ -259,6 +310,12 @@ Graphiti closes a fact's validity interval and retains history, which is the str
 supersede a conflict without an explicit judgment. `tencentdb-agent-memory`
 offers internal merge/delete paths and editable generated files, but no
 first-class agent/user correction or forget operation.
+
+Cognee can forget and rebuild derived projections from retained source, but its
+ontology-valid, source-attributed graph facts still lack candidate/rejected
+epistemic state. Claude-Mem offers exact deletion and feedback but no durable
+rejection mechanism preventing an observation from being regenerated. A-MEM
+mutates neighboring note metadata directly and has no correction chain.
 
 ### Forgetting
 
@@ -283,12 +340,19 @@ Visible deletion varies from hard API deletion to lifecycle state:
 - `agentmemory`: explicit forget, TTL/retention, and search-index cleanup.
 - `tencentdb-agent-memory`: internal cleanup and record deletion, but no
   first-class user-facing forget tool.
+- `cognee`: exact item, dataset, all-user, or memory-only deletion across source
+  and projection stores.
+- `claude-mem`: exact canonical-row deletion coupled to cloud tombstone
+  enqueue; synchronized deletes fail closed when replication identity is
+  unavailable.
+- `a-mem`: exact local delete, but incoming links are not cleaned and the
+  dictionary/Chroma mutation is not atomic.
 
 Semantic forgetting is an antipattern unless there is explicit user review or exact ID targeting.
 
 ### Cross-Session and Cross-Agent Persistence
 
-`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `agentmemory` supports project/session keys and an opt-in isolated agent mode, but defaults to shared agent scope. TencentDB records session identity but does not turn it into a general tenant boundary; one persona per data directory is especially important operationally. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. `swafra` remains the outlier with one global local corpus.
+`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Cognee authorizes datasets per user and can isolate supported backend stores per user/dataset. Claude-Mem scopes local reads by project/worktree, session, and platform source, while its newer server model adds teams and API keys. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `agentmemory` supports project/session keys and an opt-in isolated agent mode, but defaults to shared agent scope. TencentDB records session identity but does not turn it into a general tenant boundary; one persona per data directory is especially important operationally. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. A-MEM and Swafra remain outliers with effectively global local corpora.
 
 ## 4. Implementation Hotspots by Repo
 
@@ -312,6 +376,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: `src/basic_memory/models/knowledge.py` and `markdown/schemas.py`.
 - `agentmemory`: `src/types.ts` and state scopes in `src/state/schema.ts`.
 - `tencentdb-agent-memory`: `src/core/record/l1-writer.ts`, `src/core/store/types.ts`, and `src/core/store/sqlite.ts`.
+- `cognee`: `cognee/infrastructure/engine/models/DataPoint.py`, graph edge/triplet models, and relational dataset/data/session models.
+- `claude-mem`: canonical tables and migrations in `src/services/sqlite/SessionStore.ts`; future server model in `src/storage/sqlite/schema.ts`.
+- `a-mem`: `MemoryNote` in `agentic_memory/memory_system.py`.
 
 ### Add/Write Path
 
@@ -333,6 +400,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: MCP `write_note` through typed client/API to accepted-note services and indexing workflows.
 - `agentmemory`: `src/functions/observe.ts` and `src/functions/remember.ts`.
 - `tencentdb-agent-memory`: `src/core/hooks/auto-capture.ts`, `src/core/record/l1-extractor.ts`, `l1-dedup.ts`, and `l1-writer.ts`.
+- `cognee`: `cognee/api/v1/remember/remember.py`, `add/add.py`, and `cognify/cognify.py`.
+- `claude-mem`: hook adapters, `SessionMessageBuffer.ts`, and `worker/agents/ResponseProcessor.ts`.
+- `a-mem`: `AgenticMemorySystem.add_note()` and `process_memory()` in `agentic_memory/memory_system.py`.
 
 ### Search/Retrieve Path
 
@@ -354,6 +424,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: `services/search_service.py` and backend repositories inheriting `search_repository_base.py`.
 - `agentmemory`: `src/functions/search.ts`, `src/state/hybrid-search.ts`, and `src/functions/smart-search.ts`.
 - `tencentdb-agent-memory`: `src/core/tools/memory-search.ts`, `conversation-search.ts`, and store search methods.
+- `cognee`: `cognee/api/v1/recall/recall.py`, `modules/search/methods/search.py`, and retrievers under `modules/retrieval/`.
+- `claude-mem`: `worker/search/SearchOrchestrator.ts`, Chroma/SQLite strategies, and `services/sqlite/SessionSearch.ts`.
+- `a-mem`: `search_agentic()` and Chroma wrappers in `agentic_memory/retrievers.py`.
 
 ### Context Assembly
 
@@ -375,6 +448,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: `mcp/tools/build_context.py` and graph/context response schemas.
 - `agentmemory`: token budgeting in `src/functions/context.ts`; compact expansion in `src/functions/smart-search.ts`.
 - `tencentdb-agent-memory`: `src/core/hooks/auto-recall.ts` and symbolic offload assembly in `src/offload/index.ts`.
+- `cognee`: structured output from `recall`; final prompt placement remains integration-owned.
+- `claude-mem`: `src/services/context/ContextBuilder.ts` and `ObservationCompiler.ts`.
+- `a-mem`: caller-owned; no bounded context assembler.
 
 ### Background Workers
 
@@ -396,6 +472,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: file watcher, startup reconciliation, and portable indexing workflows.
 - `agentmemory`: consolidation, graph extraction, decay, and index maintenance.
 - `tencentdb-agent-memory`: deferred embeddings, scene/persona generation, task draining, and `src/offload/reclaimer.ts`.
+- `cognee`: pipeline executor, `memify`, session improvement, cognify rollback, and stale-run recovery.
+- `claude-mem`: durable pending queue, observer providers, Chroma/cloud sync, and backfill/repair.
+- `a-mem`: no worker; “consolidation” is synchronous reindexing.
 
 ### MCP/API/SDK Surfaces
 
@@ -417,6 +496,9 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: MCP tools, typed API clients, FastAPI, CLI, and per-project local/cloud routing.
 - `agentmemory`: MCP, HTTP, CLI, lifecycle hooks, and the iii function registry.
 - `tencentdb-agent-memory`: OpenClaw hooks and two search tools plus the Hermes gateway; no MCP surface was found.
+- `cognee`: Python SDK, REST server, CLI, MCP server, and migration/export APIs.
+- `claude-mem`: coding-agent hooks, worker HTTP API, local/server MCP, and UI.
+- `a-mem`: direct Python API only.
 
 ### Evals/Tests
 
@@ -438,10 +520,13 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `basic-memory`: SQLite/PostgreSQL unit/integration coverage plus a provenance-rich standalone benchmark harness.
 - `agentmemory`: broad function/state/hook tests; documented retrieval-only LongMemEval-S and small synthetic coding-agent-life benchmarks.
 - `tencentdb-agent-memory`: six visible TypeScript/Python test files, none covering the central L1/L2/L3 lifecycle; README benchmark claims lack committed harness/results here.
+- `cognee`: broad unit/integration/backend/permission/recovery tests; committed preliminary BEAM report with a held-out 100K result and exploratory in-sample-routed 10M result.
+- `claude-mem`: 237 TypeScript test files spanning hooks, queues, privacy, migrations, Chroma/cloud sync, and server paths; no committed memory-quality benchmark found.
+- `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
 
 ## 5. Design Patterns That Recur
 
-These recurring moves are also documented as standalone implementation guides in the [memory design pattern library](../patterns/). The library covers correction, provenance, trust, retrieval, scope, write governance, federation, context assembly, recoverable background work, and audit history.
+These recurring moves are also documented as standalone implementation guides in the [memory design pattern library](../patterns/). The library covers correction, provenance, trust, retrieval, scope, write governance, federation, context assembly, recoverable background work, lifecycle decay, zero-LLM capture, and audit history.
 
 ### Explicit memory mutation surfaces
 
@@ -459,7 +544,7 @@ Hot memory is small and prompt-ready. Archival/document memory is large and retr
 
 Pattern guide: [Evidence before belief](../patterns/evidence-before-belief/).
 
-Repos: strongest in `honcho`, `verel`, `mempalace`, `rainbox`, `graphiti`, `hindsight`, `basic-memory`, and `tencentdb-agent-memory`; partly in `engram`, `swafra`, `llm-wiki-memory`, `mastra-observational-memory`, and `agentmemory`.
+Repos: strongest in `cognee`, `honcho`, `verel`, `mempalace`, `rainbox`, `graphiti`, `hindsight`, `basic-memory`, and `tencentdb-agent-memory`; partly in `claude-mem`, `engram`, `swafra`, `llm-wiki-memory`, `mastra-observational-memory`, and `agentmemory`.
 
 Raw messages, observations, files, drawers, or evidence rows are retained, and derived facts/representations/indexes are computed from them. This works because wrong memories can be audited and recomputed. It fails if the derived layer does not preserve source IDs, if raw stores become too noisy, if evidence excerpts are too thin, or if background derivation makes read consistency surprising.
 
@@ -471,11 +556,16 @@ Repos with visible fused lexical/semantic or multi-arm ranking: `mem0`, `honcho`
 
 Vector search alone is not enough. Identifiers, names, exact phrases, dates, file paths, and project keys often need lexical search. Hybrid retrieval works because it handles both fuzzy semantic recall and exact lookup. MemPalace adds a useful variant: extracted/indexed "closets" boost drawer ranking but never gate direct evidence retrieval. Swafra is a useful compact example of BM25 + vector + cheap heuristic fusion, but also a warning: ad hoc component normalization and unbounded bonuses make scores hard to interpret. Hybrid retrieval fails when rank fusion is opaque or not evaluated.
 
+Cognee has genuine multi-view hybrid retrievers but also many non-fused modes
+with different result contracts. Claude-Mem and A-MEM are naming
+counterexamples: ordinary Claude-Mem text search selects semantic rather than
+fusing it with FTS, and A-MEM's “hybrid” path is vector-only.
+
 ### Scope as a first-class key
 
 Pattern guide: [Scope as a first-class key](../patterns/scope-as-a-first-class-key/).
 
-Repos: most systems; weakest or absent in `swafra` and
+Repos: most systems; weakest or absent in `a-mem`, `swafra`, and
 `tencentdb-agent-memory`, while `agentmemory` requires opt-in isolated agent
 mode for its strictest boundary.
 
@@ -483,13 +573,13 @@ Good systems make memory boundaries explicit: user, agent, run, project, workspa
 
 ### MCP as a universal adapter
 
-Repos: `engram`, `mempalace`, `swafra`, `llm-wiki-memory`, `supermemory`, `verel`, `hindsight`, `graphiti`, `basic-memory`, `agentmemory`, and conceptually similar tool surfaces elsewhere.
+Repos: `engram`, `mempalace`, `swafra`, `llm-wiki-memory`, `supermemory`, `verel`, `hindsight`, `graphiti`, `cognee`, `claude-mem`, `basic-memory`, `agentmemory`, and conceptually similar tool surfaces elsewhere.
 
 MCP is useful because it lets different coding agents and desktop tools use the same memory backend. It fails if the MCP tool descriptions become the only guardrail against bad writes.
 
 ### Local SQLite for inspectable memory
 
-Repos: `engram`, `mempalace`, `verel`, `basic-memory`, `agentmemory`, and the local backend of `tencentdb-agent-memory`; SQLite also supports history/messages in `mem0`.
+Repos: `engram`, `mempalace`, `verel`, `claude-mem`, `basic-memory`, `agentmemory`, and the local backends of `cognee` and `tencentdb-agent-memory`; SQLite also supports history/messages in `mem0`.
 
 SQLite works well for local agent memory: durable, fast, easy to inspect, transaction-friendly, and good enough with FTS5. MemPalace also shows the complementary local pattern: SQLite metadata/KG/FTS plus a local vector store. It fails if a product needs multi-tenant scale, remote sharing, or vector-heavy retrieval without extensions/adapters.
 
@@ -507,11 +597,37 @@ Markdown leaves plus generated folder indexes make local memory directly readabl
 
 ### Recoverable background capture
 
-Repo: `llm-wiki-memory`; related checkpoint, deferred-work, and
-evidence-retention ideas appear in `honcho`, `mempalace`, `agentmemory`, and
-`tencentdb-agent-memory`.
+Repos: strongest in `claude-mem`, `llm-wiki-memory`, and `cognee`; related
+checkpoint, deferred-work, and evidence-retention ideas appear in `honcho`,
+`mempalace`, `agentmemory`, and `tencentdb-agent-memory`.
 
 Decouple transcript capture from the interactive hook, chunk long inputs, retain failed chunks, write fenced raw fallbacks, and support redistillation. This turns provider failure into delayed processing instead of silent data loss. It fails if the recovery stores themselves leak secrets or if no operator ever reviews/retries accumulated stashes.
+
+### Zero-LLM capture
+
+Pattern guide: [Zero-LLM capture](../patterns/zero-llm-capture/).
+
+Repos: strongest in `agentmemory`, `claude-mem`, `llm-wiki-memory`,
+`tencentdb-agent-memory`, and message-first `honcho`; `engram` demonstrates the
+small no-extraction baseline.
+
+Persist a scoped event before any model call, make it searchable through exact
+keys or lexical metadata, then enrich it asynchronously only when useful. This
+keeps provider latency and outages out of the capture path. It fails when raw
+capture has no privacy, size, retention, or retrieval policy.
+
+### Decay and reinforcement
+
+Pattern guide: [Decay and reinforcement](../patterns/decay-and-reinforcement/).
+
+Repos: strongest in `verel`; supporting behavior in `agentmemory` and `honcho`;
+`swafra` is a counterexample for unconditional age decay.
+
+Let retrieval strength fade or grow without changing epistemic confidence.
+This keeps stale operational memory from dominating while protecting durable
+truths and correction history. It fails when retrieval itself creates a
+self-reinforcing popularity loop or one half-life is applied to every memory
+kind.
 
 ### Profiles and working representations
 
@@ -543,13 +659,20 @@ Prepare derived context before the hard prompt threshold, persist the exact sour
 
 ### Treating LLM-extracted facts as truth
 
-Most systems extract with an LLM. Without trust state, provenance, and correction semantics, hallucinations become durable. `verel` addresses this directly; `honcho` preserves source events; `mem0`, `langmem`, and `llm-wiki-memory` need stronger promotion guardrails.
+Most systems extract with an LLM. Without trust state, provenance, and correction semantics, hallucinations become durable. `verel` addresses this directly; `honcho` preserves source events; `mem0`, `langmem`, `cognee`, `claude-mem`, `a-mem`, and `llm-wiki-memory` need stronger promotion guardrails.
 
 `mempalace` is the clearest counterexample in this workspace: it makes verbatim evidence the primary store and treats derived structures as indexes. That does not solve truth, but it avoids losing the original context during extraction.
 
 ### Vector-only memory
 
-Vector search misses exact constraints and can retrieve plausible but wrong memories. Every serious design should include lexical search or structured filters. `engram` demonstrates the value of boring FTS. `mempalace` demonstrates vector plus BM25 plus metadata plus fallback paths. `mem0` and `honcho` show hybrid approaches. `llm-wiki-memory` has strong metadata filters and deterministic topology lookup, but its lexical-hash mode is a fallback backend rather than a fused exact-search channel.
+Vector search misses exact constraints and can retrieve plausible but wrong memories. Every serious design should include lexical search or structured filters. `engram` demonstrates the value of boring FTS. `mempalace` demonstrates vector plus BM25 plus metadata plus fallback paths. `mem0` and `honcho` show hybrid approaches. `llm-wiki-memory` has strong metadata filters and deterministic topology lookup, but its lexical-hash mode is a fallback backend rather than a fused exact-search channel. Claude-Mem and A-MEM additionally show why having both lexical and vector code—or simply using Chroma—does not make an ordinary query path hybrid.
+
+### Ranking positions used as identities
+
+Retrieval order is ephemeral, not object identity. A-MEM shows the failure
+directly: it returns vector rank positions and later applies them to insertion
+order, so an LLM can rewrite a different neighbor than the one it saw. Carry
+stable memory IDs through prompts, responses, validation, mutation, and audit.
 
 ### Recall@k without enforcing k
 
@@ -595,7 +718,7 @@ Swafra loads and rewrites chunks, edges, and sources as three independent JSON f
 
 ## 7. What Seems to Work
 
-SQLite plus FTS works for local coding-agent memory. It gives inspectable state, transactional writes, simple backup/sync, and exact search. Engram and Verel are good references. MemPalace shows how to combine local SQLite-style operational machinery with a vector backend and fallback BM25/FTS paths.
+SQLite plus FTS works for local coding-agent memory. It gives inspectable state, transactional writes, simple backup/sync, and exact search. Engram, Verel, and Claude-Mem are good references. MemPalace shows how to combine local SQLite-style operational machinery with a vector backend and fallback BM25/FTS paths.
 
 Hybrid retrieval is the default serious choice. Pair semantic search with lexical matching and metadata filters. Add reranking only after basic retrieval metrics exist. MemPalace's "closets boost but never gate drawers" rule is a particularly reusable retrieval principle.
 
@@ -617,9 +740,26 @@ Record embedder identity. MemPalace's explicit model/dimension checks are a usef
 
 Make automatic capture recoverable. `llm-wiki-memory` preserves failed chunk inputs, raw fenced fallbacks, retry state, and provider provenance, which is a stronger failure posture than treating a failed summarization call as a lost session.
 
+Keep capture model-independent. Agentmemory's synthetic observation path and
+Claude-Mem's durable hook queue preserve the event before model compression.
+Zero-LLM capture is the reliable floor; enrichment can be added later.
+
+Treat semantic indexes as projections. Claude-Mem commits SQLite before
+best-effort Chroma sync, and Cognee can retain sources while deleting and
+rebuilding derived memory. The authoritative store and repair direction should
+be obvious.
+
+Make background derivation reversible by provenance. Cognee's pipeline-run
+rollback is the strongest cross-store example in the atlas, even though it
+cannot make every backend combination atomic.
+
 Make memory use inspectable. RainBox's debug rows, retrieval events, and review UI are the best reference here. Users need to know which memories entered a prompt and need a way to correct or reject them.
 
 Separate event time from ingestion time when facts change. Graphiti's bi-temporal edges preserve historical truth and backfilled events without destructive overwrite.
+
+Decay reachability, not truth. Verel keeps retrieval strength separate from
+confidence and protects important lifecycle states. Reinforcement should record
+usefulness or corroboration, never silently upgrade factual authority.
 
 Prepare compaction before the context cliff. Mastra Observational Memory's inactive buffers and exact coverage ranges make expensive observation/reflection recoverable and mostly non-blocking.
 
@@ -653,7 +793,7 @@ Status should start simple:
 
 Write path:
 
-1. Store raw evidence first.
+1. Store raw evidence first without requiring an LLM call.
 2. Chunk deterministically and record embedder identity.
 3. Index raw evidence with lexical and vector paths.
 4. Extract candidate facts with schema-constrained LLM output only after evidence is durable.
@@ -662,6 +802,7 @@ Write path:
 7. If same key plus different value, create a conflict or supersession.
 8. Do not auto-promote to verified unless the source is trusted or corroborated.
 9. Preserve failed extraction inputs and make background work safely retryable.
+10. Store enrichment state so raw memory remains searchable while derivation is pending.
 
 Retrieval path:
 
@@ -881,6 +1022,33 @@ Do not add background summarization before raw-evidence retrieval and correction
 - Study when: tool-heavy sessions exceed the context window and raw drill-down must remain possible.
 - Do not copy when: authoritative cross-store consistency, multi-tenant boundaries, or verified memory are required.
 
+### `cognee`
+
+- Best idea: source-preserving, ontology-aware graph/vector pipelines with provenance rollback behind a small remember/recall API.
+- Biggest risk: probabilistic extraction and a large adapter/configuration surface create cross-store consistency and policy burden.
+- Most reusable component: permanent `remember()` as add-plus-cognify, dataset authorization, and pipeline-run rollback.
+- Maturity impression: substantial platform with broad tests and transparent but preliminary BEAM artifacts.
+- Study when: agents need multimodal ingestion, typed knowledge graphs, ontologies, dataset permissions, and backend choice.
+- Do not copy when: a small local evidence store and lexical/vector retrieval satisfy the requirement.
+
+### `claude-mem`
+
+- Best idea: durable hook queue, canonical SQLite commit, then best-effort semantic/cloud projections and bounded timeline injection.
+- Biggest risk: generated observations become active without epistemic review, and ordinary text search does not fuse its FTS and Chroma capabilities.
+- Most reusable component: `pending_messages` lifecycle plus `ResponseProcessor` commit/acknowledgement ordering.
+- Maturity impression: operationally mature coding-agent sidecar with broad failure-path tests; memory quality is not benchmarked.
+- Study when: cross-session coding context must be captured automatically without blocking the agent.
+- Do not copy when: explicit writes are sufficient, hooks are unavailable, or high-stakes facts require verification before use.
+
+### `a-mem`
+
+- Best idea: small linked notes whose organization can be reconsidered when new memory arrives.
+- Biggest risk: rank positions are used as note identities, allowing evolution to mutate the wrong neighbor.
+- Most reusable component: the proposed Zettelkasten evolution protocol, after replacing direct mutation with validated change proposals.
+- Maturity impression: research prototype; tests are shallow around the most consequential behavior and benchmarks live elsewhere.
+- Study when: researching adaptive linked-note organization.
+- Do not copy as a production core without stable IDs, canonical durability, scope, provenance, transactions, and trust state.
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -988,6 +1156,9 @@ Privacy/deletion:
 - [`basic-memory`](../systems/basic-memory/)
 - [`agentmemory`](../systems/agentmemory/)
 - [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/)
+- [`cognee`](../systems/cognee/)
+- [`claude-mem`](../systems/claude-mem/)
+- [`a-mem`](../systems/a-mem/)
 
 ### Repos Inspected
 
@@ -1009,6 +1180,9 @@ Privacy/deletion:
 - [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) at [`232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b`](https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b)
 - [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) at [`d8b5267c367a5da07ad3619363520b7f1a506c6b`](https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b)
 - [TencentCloud/tencentdb-agent-memory](https://github.com/TencentCloud/tencentdb-agent-memory) at [`45e6e80ae2e63b65fad0d89f5e13171229c8f295`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295)
+- [topoteretes/cognee](https://github.com/topoteretes/cognee) at [`325acf356a81545b9892f19ab1ea7b61c51a776b`](https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b)
+- [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) at [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe)
+- [agiresearch/A-mem](https://github.com/agiresearch/A-mem) at [`ceffb860f0712bbae97b184d440df62bc910ca8d`](https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d)
 
 ### Commands Used
 
@@ -1040,3 +1214,6 @@ No internet sources were used for this report. The analysis is based on the chec
 - MemOS behavior varies materially by memory cube, backend, model, and search configuration; the report does not imply one universal MemOS pipeline.
 - agentmemory's source tests and benchmarks were inspected but not rerun; its documented LongMemEval-S numbers are retrieval-only.
 - TencentDB Agent Memory's published benchmark gains could not be traced to a committed harness or raw result artifacts in the inspected repository.
+- Cognee's dependency-heavy suites and BEAM evaluation were not rerun. The committed 100K report uses a held-out conversation; its 10M routed result is explicitly exploratory and selected on the reported questions.
+- Claude-Mem's Bun suite and optional service integrations were not run; no committed end-to-end recall-quality benchmark was found.
+- A-MEM's tests were not run because they may download embedding models and call an external LLM. The paper reproduction code and results are outside the inspected package.
