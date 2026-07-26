@@ -22,14 +22,14 @@ for path in "${required[@]}"; do
 done
 
 system_count="$(find "$site_dir/systems" -mindepth 2 -maxdepth 2 -name index.html | wc -l | tr -d ' ')"
-if [[ "$system_count" != "16" ]]; then
-  echo "Expected 16 rendered system reports, found $system_count" >&2
+if [[ "$system_count" != "18" ]]; then
+  echo "Expected 18 rendered system reports, found $system_count" >&2
   exit 1
 fi
 
 revision_count="$(grep -Rho 'Analyzed revision' "$site_dir/systems" | wc -l | tr -d ' ')"
-if [[ "$revision_count" != "16" ]]; then
-  echo "Expected revision metadata on all 16 reports, found $revision_count" >&2
+if [[ "$revision_count" != "18" ]]; then
+  echo "Expected revision metadata on all 18 reports, found $revision_count" >&2
   exit 1
 fi
 
@@ -60,4 +60,4 @@ if grep -Rqs 'href="/' "$site_dir" --include='*.html'; then
   exit 1
 fi
 
-echo "Validated 16 reports, 11 design patterns, revision metadata, and project-relative navigation."
+echo "Validated 18 reports, 11 design patterns, revision metadata, and project-relative navigation."

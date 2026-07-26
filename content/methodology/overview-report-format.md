@@ -11,7 +11,7 @@ Use this format for the cross-repository overview after the individual repo repo
 Suggested output path:
 
 ```text
-reports/overview.md
+content/overview.md
 ```
 
 ## Title

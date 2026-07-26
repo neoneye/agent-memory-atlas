@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-sixteen agent memory architectures, their retrieval mechanics, trust
+eighteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,14 +12,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixteen agent memory architectures, their retrieval mechanics, trust
+of eighteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixteen agent memory architectures, their retrieval mechanics, trust
+of eighteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -52,9 +52,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of sixteen
-agent memory architectures, their retrieval mechanics, trust models, and
-operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of
+eighteen agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -93,6 +93,8 @@ facts, or uses the recall output safely.</p>
 <li><code>rainbox</code></li>
 <li><code>mastra-observational-memory</code></li>
 <li><code>memos</code></li>
+<li><code>agentmemory</code></li>
+<li><code>tencentdb-agent-memory</code></li>
 </ul>
 <p>This treats memory as part of the agent runtime. Memory is not merely
 an external RAG sidecar; it is compiled into or injected into
@@ -125,6 +127,7 @@ managed-platform-only in the OSS code.</p>
 <li><code>mempalace</code></li>
 <li><code>llm-wiki-memory</code></li>
 <li><code>basic-memory</code></li>
+<li><code>agentmemory</code></li>
 </ul>
 <p>This optimizes for a local developer workflow: durable local memory,
 MCP/tools/hooks, project scopes, exact search, vector search, conflict
@@ -136,7 +139,22 @@ FTS-oriented; <code>mempalace</code> is broader, benchmark-heavy, and
 vector/hybrid retrieval-oriented; <code>llm-wiki-memory</code> is
 filesystem/git-oriented, hook-heavy, federated across private and
 repository wikis, and unusually focused on capture recovery and
-operations.</p>
+operations; <code>agentmemory</code> is a much broader hook-native
+runtime with lexical, vector, graph, consolidation, governance, and team
+subsystems.</p>
+<h3 id="layered-symbolic-context-memory">Layered symbolic context
+memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>tencentdb-agent-memory</code></li>
+</ul>
+<p>TencentDB Agent Memory combines long-term L0 conversation evidence,
+L1 records, L2 scene documents, and an L3 persona with short-term
+tool-output offload into files, summaries, and navigable Mermaid
+maps.</p>
+<p>Tradeoff: progressive disclosure preserves drill-down evidence and
+reduces prompt pressure, but generated layers and cross-store writes
+require a clear authority, review, and recovery contract.</p>
 <h3 id="temporal-knowledge-graph-memory">Temporal knowledge-graph
 memory</h3>
 <p>Repo:</p>
@@ -555,6 +573,50 @@ reindex</td>
 <td>Bidirectional sync complexity; agent can write unsupported
 claims</td>
 </tr>
+<tr>
+<td><code>agentmemory</code></td>
+<td>Raw/compressed observation, versioned memory, summary, lesson,
+graph/semantic/procedural records</td>
+<td>iii StateModule backed by local SQLite plus persisted search
+projections</td>
+<td>BM25 + optional vector + graph arms, weighted RRF, query expansion,
+rerank, source diversity</td>
+<td>Hooks call <code>mem::observe</code>; explicit
+<code>mem::remember</code>; optional compression and consolidation</td>
+<td>Delete/TTL; similarity-based version supersession; rebuildable
+indexes</td>
+<td>Project, session, working directory; shared or isolated agent
+mode</td>
+<td>Hooks, MCP, HTTP, CLI, iii functions</td>
+<td>Optional compression, graph extraction, consolidation, decay,
+repair</td>
+<td>Source observation IDs, versions, audit; no
+candidate/verified/rejected state</td>
+<td>Cheap synchronous capture and compact-first hybrid search</td>
+<td>Very broad surface; shared scope default; fuzzy supersession can
+hide conflicts</td>
+</tr>
+<tr>
+<td><code>tencentdb-agent-memory</code></td>
+<td>L0 conversation, L1 memory record, L2 scene, L3 persona, offload
+reference/map</td>
+<td>JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB</td>
+<td>FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona
+context</td>
+<td>Successful-turn capture, LLM extraction, store/update/merge/skip
+judge, symbolic tool-output offload</td>
+<td>Internal merge/delete/cleanup; no first-class correction/forget
+tool</td>
+<td>Session fields and data directories; no general tenant boundary</td>
+<td>OpenClaw hooks/tools/context engine; Hermes gateway</td>
+<td>Deferred embeddings, scene/persona generation, retention
+reclamation</td>
+<td>Source message IDs and raw evidence; no verification/rejection
+state</td>
+<td>Layered progressive disclosure with raw drill-down</td>
+<td>Non-atomic dual writes, fail-open dedup, thin core tests,
+unsupported benchmark claims</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
@@ -578,16 +640,21 @@ titled text via one MCP tool, then stores chunks in local JSON.
 <code>llm-wiki-memory</code> combines explicit MCP/CLI writes with
 lifecycle hooks. <code>honcho</code> captures messages as the primary
 event stream, then derives observations. <code>verel</code> routes
-captured percepts through a trust gate.</p>
+captured percepts through a trust gate. <code>agentmemory</code>
+combines cheap hook capture with explicit <code>mem::remember</code>;
+compression is optional. <code>tencentdb-agent-memory</code> records raw
+conversation evidence, then extracts higher layers from successful
+turns.</p>
 <p>The important split is whether the captured item is itself memory or
 evidence for memory. Honcho, Verel, MemPalace, Graphiti, Hindsight,
-Basic Memory, Mastra, Swafra, and RainBox are evidence-aware in
-different ways: Graphiti keeps episodes behind edges, Hindsight links
-observations to source facts, Basic Memory keeps canonical notes behind
-projections, and Mastra records exact message ranges behind summaries.
-These designs still differ sharply in trust: provenance supports
-correction, but only Verel and RainBox model rejection/promotion
-explicitly.</p>
+Basic Memory, Mastra, Swafra, RainBox, agentmemory, and TencentDB Agent
+Memory are evidence-aware in different ways: Graphiti keeps episodes
+behind edges, Hindsight links observations to source facts, Basic Memory
+keeps canonical notes behind projections, Mastra records exact message
+ranges behind summaries, agentmemory links memories to observations, and
+TencentDB preserves L0 messages and offloaded raw tool output. These
+designs still differ sharply in trust: provenance supports correction,
+but only Verel and RainBox model rejection/promotion explicitly.</p>
 <h3 id="extraction">Extraction</h3>
 <p><code>mem0</code> has the clearest open implementation of LLM
 extraction: retrieve nearby existing memories, ask the model for
@@ -633,6 +700,11 @@ tree-memory readers. <code>basic-memory</code> usually avoids LLM
 extraction: observations and relations are explicit Markdown syntax.
 <code>mastra-observational-memory</code> extracts chronological
 summaries rather than atomic facts.</p>
+<p><code>agentmemory</code> defaults to synthetic compression on the hot
+path and makes LLM compression/consolidation optional.
+<code>tencentdb-agent-memory</code> uses an LLM to extract L1 records,
+then another judgment step chooses store, update, merge, or skip;
+failures store all candidates rather than losing them.</p>
 <h3 id="consolidation">Consolidation</h3>
 <p><code>honcho</code>, <code>hindsight</code>,
 <code>mastra-observational-memory</code>, and <code>verel</code> have
@@ -641,7 +713,11 @@ representations from event streams. Hindsight creates/updates
 observations with source IDs and proof counts. Mastra reflects growing
 observation logs and can prepare the result asynchronously before
 activation. Verel clusters failures, induces candidate design rules and
-schemas, then requires promotion gates for verification.</p>
+schemas, then requires promotion gates for verification.
+<code>agentmemory</code> separately consolidates important observations
+into versioned memories and optional semantic/procedural layers.
+<code>tencentdb-agent-memory</code> compiles L1 records into scene files
+and changed scenes into a persona.</p>
 <p><code>mem0</code> V3 is intentionally more append-oriented;
 consolidation is mostly dedupe and entity linking in the OSS path.
 <code>mempalace</code> consolidates operationally through dedup,
@@ -687,6 +763,10 @@ metadata, closet boosts, neighbor expansion, and fallback paths.
 or lexical hashes, priority, and locality. <code>rainbox</code>
 hard-filters then blends vector, full-text, and entity signals.
 <code>verel</code> adds trust and confidence into ranking.
+<code>agentmemory</code> fuses BM25, vector, and graph arms with
+weighted RRF and per-session diversity.
+<code>tencentdb-agent-memory</code> fuses FTS and vector results with
+RRF or uses native Tencent VectorDB hybrid search.
 <code>mastra-observational-memory</code> is the deliberate exception:
 its primary path is sequential observations plus a recent raw tail, with
 semantic observation retrieval optional.</p>
@@ -700,13 +780,17 @@ what was injected. <code>verel</code> has the safest visible recall
 renderer: recalled memory is token-budgeted and fenced as untrusted
 data. <code>mempalace</code> has a four-layer stack.
 <code>basic-memory</code> builds graph context through MCP while leaving
-final prompt placement to the client. <code>graphiti</code>,
-<code>hindsight</code>, and <code>memos</code> return structured
-recall/context to integrations. <code>swafra</code> exposes unbounded
-<code>get_context</code>; <code>llm-wiki-memory</code> injects session
-work context; <code>supermemory</code> emits profile text;
-<code>engram</code> has MCP context tools; <code>honcho</code> exposes
-working representations.</p>
+final prompt placement to the client. <code>agentmemory</code> assembles
+pinned items, profiles, lessons, summaries, and observations within a
+token budget; its smart search separately supports compact-first
+expansion. <code>tencentdb-agent-memory</code> separates dynamic L1
+recall from stable scene/persona context and adds navigable short-term
+offload maps. <code>graphiti</code>, <code>hindsight</code>, and
+<code>memos</code> return structured recall/context to integrations.
+<code>swafra</code> exposes unbounded <code>get_context</code>;
+<code>llm-wiki-memory</code> injects session work context;
+<code>supermemory</code> emits profile text; <code>engram</code> has MCP
+context tools; <code>honcho</code> exposes working representations.</p>
 <h3 id="correction">Correction</h3>
 <p>This is where systems diverge sharply.</p>
 <p><code>verel</code> and <code>rainbox</code> have the strongest
@@ -727,6 +811,11 @@ human-readable file edit followed by transactional reindexing. Mastra
 replaces only the observation range covered by a reflection. MemOS
 correction varies by module and therefore lacks one consistent semantic
 contract.</p>
+<p><code>agentmemory</code> versions similar memories, but the Jaccard
+threshold can silently supersede a conflict without an explicit
+judgment. <code>tencentdb-agent-memory</code> offers internal
+merge/delete paths and editable generated files, but no first-class
+agent/user correction or forget operation.</p>
 <h3 id="forgetting">Forgetting</h3>
 <p>Visible deletion varies from hard API deletion to lifecycle
 state:</p>
@@ -768,6 +857,10 @@ records and covered-range replacement.</li>
 vector, cache, dump, and model artifacts.</li>
 <li><code>basic-memory</code>: canonical note deletion followed by
 entity, graph, full-text, semantic, and materialization cleanup.</li>
+<li><code>agentmemory</code>: explicit forget, TTL/retention, and
+search-index cleanup.</li>
+<li><code>tencentdb-agent-memory</code>: internal cleanup and record
+deletion, but no first-class user-facing forget tool.</li>
 </ul>
 <p>Semantic forgetting is an antipattern unless there is explicit user
 review or exact ID targeting.</p>
@@ -779,7 +872,11 @@ isolates memory banks and database schemas. Graphiti uses
 <code>group_id</code>. Mastra scopes observations to a thread or
 resource. MemOS registers cubes to users. Basic Memory uses
 project/workspace/tenant boundaries with per-project local/cloud
-routing. <code>supermemory</code>, <code>mem0</code>,
+routing. <code>agentmemory</code> supports project/session keys and an
+opt-in isolated agent mode, but defaults to shared agent scope.
+TencentDB records session identity but does not turn it into a general
+tenant boundary; one persona per data directory is especially important
+operationally. <code>supermemory</code>, <code>mem0</code>,
 <code>rainbox</code>, <code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>verel</code>, <code>letta</code>,
 and <code>langmem</code> each expose explicit boundaries.
@@ -835,6 +932,12 @@ activation/parametric item modules, and
 <li><code>basic-memory</code>:
 <code>src/basic_memory/models/knowledge.py</code> and
 <code>markdown/schemas.py</code>.</li>
+<li><code>agentmemory</code>: <code>src/types.ts</code> and state scopes
+in <code>src/state/schema.ts</code>.</li>
+<li><code>tencentdb-agent-memory</code>:
+<code>src/core/record/l1-writer.ts</code>,
+<code>src/core/store/types.ts</code>, and
+<code>src/core/store/sqlite.ts</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -893,6 +996,12 @@ and observer/reflector runners.</li>
 <code>TreeTextMemory.add()</code>.</li>
 <li><code>basic-memory</code>: MCP <code>write_note</code> through typed
 client/API to accepted-note services and indexing workflows.</li>
+<li><code>agentmemory</code>: <code>src/functions/observe.ts</code> and
+<code>src/functions/remember.ts</code>.</li>
+<li><code>tencentdb-agent-memory</code>:
+<code>src/core/hooks/auto-capture.ts</code>,
+<code>src/core/record/l1-extractor.ts</code>, <code>l1-dedup.ts</code>,
+and <code>l1-writer.ts</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -947,6 +1056,12 @@ optional observation indexing in
 <li><code>basic-memory</code>: <code>services/search_service.py</code>
 and backend repositories inheriting
 <code>search_repository_base.py</code>.</li>
+<li><code>agentmemory</code>: <code>src/functions/search.ts</code>,
+<code>src/state/hybrid-search.ts</code>, and
+<code>src/functions/smart-search.ts</code>.</li>
+<li><code>tencentdb-agent-memory</code>:
+<code>src/core/tools/memory-search.ts</code>,
+<code>conversation-search.ts</code>, and store search methods.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -989,6 +1104,12 @@ system-message injection.</li>
 <code>mem_chat/</code>.</li>
 <li><code>basic-memory</code>: <code>mcp/tools/build_context.py</code>
 and graph/context response schemas.</li>
+<li><code>agentmemory</code>: token budgeting in
+<code>src/functions/context.ts</code>; compact expansion in
+<code>src/functions/smart-search.ts</code>.</li>
+<li><code>tencentdb-agent-memory</code>:
+<code>src/core/hooks/auto-recall.ts</code> and symbolic offload assembly
+in <code>src/offload/index.ts</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -1031,6 +1152,11 @@ activation.</li>
 activation-memory refresh.</li>
 <li><code>basic-memory</code>: file watcher, startup reconciliation, and
 portable indexing workflows.</li>
+<li><code>agentmemory</code>: consolidation, graph extraction, decay,
+and index maintenance.</li>
+<li><code>tencentdb-agent-memory</code>: deferred embeddings,
+scene/persona generation, task draining, and
+<code>src/offload/reclaimer.ts</code>.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -1071,6 +1197,10 @@ CLI, and framework integrations.</li>
 <li><code>memos</code>: MOS runtime/chat, API, and CLI layers.</li>
 <li><code>basic-memory</code>: MCP tools, typed API clients, FastAPI,
 CLI, and per-project local/cloud routing.</li>
+<li><code>agentmemory</code>: MCP, HTTP, CLI, lifecycle hooks, and the
+iii function registry.</li>
+<li><code>tencentdb-agent-memory</code>: OpenClaw hooks and two search
+tools plus the Hermes gateway; no MCP surface was found.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <ul>
@@ -1115,6 +1245,12 @@ tests.</li>
 configured cube and backend.</li>
 <li><code>basic-memory</code>: SQLite/PostgreSQL unit/integration
 coverage plus a provenance-rich standalone benchmark harness.</li>
+<li><code>agentmemory</code>: broad function/state/hook tests;
+documented retrieval-only LongMemEval-S and small synthetic
+coding-agent-life benchmarks.</li>
+<li><code>tencentdb-agent-memory</code>: six visible TypeScript/Python
+test files, none covering the central L1/L2/L3 lifecycle; README
+benchmark claims lack committed harness/results here.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -1122,20 +1258,30 @@ implementation guides in the <a href="../patterns/">memory design
 pattern library</a>. The library covers correction, provenance, trust,
 retrieval, scope, write governance, federation, context assembly,
 recoverable background work, and audit history.</p>
-<h3 id="tool-mediated-memory-writes">Tool-mediated memory writes</h3>
-<p>Repos: all sixteen, in different forms.</p>
-<p>The agent or application explicitly calls a memory operation. This
-works because it gives the system a narrow interface for durable state
-changes. It fails when the model forgets to call the tool, calls it with
-low-quality facts, or treats tool descriptions as policy
-enforcement.</p>
+<h3 id="explicit-memory-mutation-surfaces">Explicit memory mutation
+surfaces</h3>
+<p>Repos: strongest in <code>mem0</code>, <code>langmem</code>,
+<code>engram</code>, <code>mempalace</code>,
+<code>llm-wiki-memory</code>, <code>rainbox</code>, <code>letta</code>,
+<code>supermemory</code>, <code>verel</code>, <code>hindsight</code>,
+<code>graphiti</code>, <code>basic-memory</code>, and
+<code>agentmemory</code>.</p>
+<p>The agent, application, or operator explicitly calls a memory
+operation. This works because it gives the system a narrow interface for
+durable state changes. It fails when the model forgets to call the tool,
+calls it with low-quality facts, or treats tool descriptions as policy
+enforcement. It is not the only capture model in the atlas: Mastra
+observes automatically at context thresholds, Basic Memory also
+reconciles direct filesystem edits, and event-driven systems such as
+Honcho derive memory from ordinary message ingestion.</p>
 <h3 id="separate-hot-memory-from-archival-memory">Separate hot memory
 from archival memory</h3>
 <p>Repos: <code>letta</code>, <code>rainbox</code>, <code>honcho</code>,
 <code>supermemory</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>hindsight</code>,
-<code>mastra-observational-memory</code>, <code>memos</code>, partly
-<code>mem0</code>.</p>
+<code>mastra-observational-memory</code>, <code>memos</code>,
+<code>tencentdb-agent-memory</code>, partly <code>mem0</code> and
+<code>agentmemory</code>.</p>
 <p>Hot memory is small and prompt-ready. Archival/document memory is
 large and retrieved on demand. This works because prompt space is scarce
 and long-term stores are noisy. It fails when there is no
@@ -1146,9 +1292,11 @@ memory second</h3>
 before belief</a>.</p>
 <p>Repos: strongest in <code>honcho</code>, <code>verel</code>,
 <code>mempalace</code>, <code>rainbox</code>, <code>graphiti</code>,
-<code>hindsight</code>, and <code>basic-memory</code>; partly in
-<code>engram</code>, <code>swafra</code>, <code>llm-wiki-memory</code>,
-and <code>mastra-observational-memory</code>.</p>
+<code>hindsight</code>, <code>basic-memory</code>, and
+<code>tencentdb-agent-memory</code>; partly in <code>engram</code>,
+<code>swafra</code>, <code>llm-wiki-memory</code>,
+<code>mastra-observational-memory</code>, and
+<code>agentmemory</code>.</p>
 <p>Raw messages, observations, files, drawers, or evidence rows are
 retained, and derived facts/representations/indexes are computed from
 them. This works because wrong memories can be audited and recomputed.
@@ -1158,11 +1306,16 @@ background derivation makes read consistency surprising.</p>
 <h3 id="hybrid-retrieval">Hybrid retrieval</h3>
 <p>Pattern guide: <a href="../patterns/hybrid-retrieval-fusion/">Hybrid
 retrieval fusion</a>.</p>
-<p>Repos: <code>mem0</code>, <code>honcho</code>, <code>engram</code>,
-<code>mempalace</code>, <code>swafra</code>, <code>rainbox</code>,
-<code>verel</code>, <code>hindsight</code>, <code>graphiti</code>,
-<code>basic-memory</code>, <code>memos</code>, <code>supermemory</code>
-API settings, <code>letta</code> across separate search modes.</p>
+<p>Repos with visible fused lexical/semantic or multi-arm ranking:
+<code>mem0</code>, <code>honcho</code>, <code>mempalace</code>,
+<code>swafra</code>, <code>rainbox</code>, <code>verel</code>,
+<code>hindsight</code>, <code>graphiti</code>,
+<code>basic-memory</code>, <code>agentmemory</code>,
+<code>tencentdb-agent-memory</code>, and configured <code>memos</code>
+pipelines. Supermemory exposes hybrid settings, but the hosted
+implementation is not visible. Engram's FTS/topic-key retrieval and
+Letta's separate archival/conversation searches are useful multi-mode
+retrieval surfaces, not evidence of fused hybrid ranking.</p>
 <p>Vector search alone is not enough. Identifiers, names, exact phrases,
 dates, file paths, and project keys often need lexical search. Hybrid
 retrieval works because it handles both fuzzy semantic recall and exact
@@ -1176,7 +1329,9 @@ is opaque or not evaluated.</p>
 <p>Pattern guide: <a
 href="../patterns/scope-as-a-first-class-key/">Scope as a first-class
 key</a>.</p>
-<p>Repos: all except <code>swafra</code>.</p>
+<p>Repos: most systems; weakest or absent in <code>swafra</code> and
+<code>tencentdb-agent-memory</code>, while <code>agentmemory</code>
+requires opt-in isolated agent mode for its strictest boundary.</p>
 <p>Good systems make memory boundaries explicit: user, agent, run,
 project, workspace, peer, session, space, palace, wing, room, source
 file, claim scope, sensitivity, scope lattice, namespace. This works
@@ -1189,16 +1344,18 @@ policy.</p>
 <p>Repos: <code>engram</code>, <code>mempalace</code>,
 <code>swafra</code>, <code>llm-wiki-memory</code>,
 <code>supermemory</code>, <code>verel</code>, <code>hindsight</code>,
-<code>graphiti</code>, <code>basic-memory</code>, and conceptually
-similar tool surfaces elsewhere.</p>
+<code>graphiti</code>, <code>basic-memory</code>,
+<code>agentmemory</code>, and conceptually similar tool surfaces
+elsewhere.</p>
 <p>MCP is useful because it lets different coding agents and desktop
 tools use the same memory backend. It fails if the MCP tool descriptions
 become the only guardrail against bad writes.</p>
 <h3 id="local-sqlite-for-inspectable-memory">Local SQLite for
 inspectable memory</h3>
 <p>Repos: <code>engram</code>, <code>mempalace</code>,
-<code>verel</code>, <code>basic-memory</code>; SQLite also supports
-history/messages in <code>mem0</code>.</p>
+<code>verel</code>, <code>basic-memory</code>, <code>agentmemory</code>,
+and the local backend of <code>tencentdb-agent-memory</code>; SQLite
+also supports history/messages in <code>mem0</code>.</p>
 <p>SQLite works well for local agent memory: durable, fast, easy to
 inspect, transaction-friendly, and good enough with FTS5. MemPalace also
 shows the complementary local pattern: SQLite metadata/KG/FTS plus a
@@ -1226,8 +1383,10 @@ fails at large scale, under concurrent collaborative writes, or when
 deletion must erase prior content rather than leave it in history.</p>
 <h3 id="recoverable-background-capture">Recoverable background
 capture</h3>
-<p>Repo: <code>llm-wiki-memory</code>; related evidence-retention ideas
-appear in <code>honcho</code> and <code>mempalace</code>.</p>
+<p>Repo: <code>llm-wiki-memory</code>; related checkpoint,
+deferred-work, and evidence-retention ideas appear in
+<code>honcho</code>, <code>mempalace</code>, <code>agentmemory</code>,
+and <code>tencentdb-agent-memory</code>.</p>
 <p>Decouple transcript capture from the interactive hook, chunk long
 inputs, retain failed chunks, write fenced raw fallbacks, and support
 redistillation. This turns provider failure into delayed processing
@@ -1238,7 +1397,8 @@ stashes.</p>
 representations</h3>
 <p>Repos: <code>honcho</code>, <code>supermemory</code>,
 <code>letta</code>, <code>hindsight</code>,
-<code>mastra-observational-memory</code>.</p>
+<code>mastra-observational-memory</code>, <code>agentmemory</code>, and
+<code>tencentdb-agent-memory</code>.</p>
 <p>A low-latency synthesized representation is often more useful than
 raw top-k memories. This works because agents need compact operating
 context. It fails when summaries drift, hide uncertainty, or cannot be
@@ -1782,6 +1942,37 @@ knowledge.</li>
 <li>Do not copy when: humans never edit memory and filesystem ownership
 adds no value.</li>
 </ul>
+<h3 id="agentmemory"><code>agentmemory</code></h3>
+<ul>
+<li>Best idea: zero-LLM hook capture plus compact-first hybrid search
+and explicit expansion.</li>
+<li>Biggest risk: a large optional surface and similarity-based
+supersession without an epistemic review state.</li>
+<li>Most reusable component: <code>mem::observe</code>,
+<code>HybridSearch</code>, and <code>mem::smart-search</code>.</li>
+<li>Maturity impression: ambitious, heavily tested coding-agent runtime
+with many operational paths.</li>
+<li>Study when: hooks, local capture, hybrid recall, and later
+consolidation need to coexist.</li>
+<li>Do not copy when: a small auditable store is enough or
+shared-by-default agent memory is unsafe.</li>
+</ul>
+<h3 id="tencentdb-agent-memory"><code>tencentdb-agent-memory</code></h3>
+<ul>
+<li>Best idea: progressive disclosure from raw evidence through records,
+scenes, persona, and navigable tool-output maps.</li>
+<li>Biggest risk: non-atomic JSONL/store updates and fail-open
+deduplication can create loss or contradictions.</li>
+<li>Most reusable component: L0/L1/L2/L3 context split and symbolic
+offload drill-down.</li>
+<li>Maturity impression: inventive OpenClaw/Hermes integration, but
+central lifecycle tests and reproducible benchmark evidence are
+thin.</li>
+<li>Study when: tool-heavy sessions exceed the context window and raw
+drill-down must remain possible.</li>
+<li>Do not copy when: authoritative cross-store consistency,
+multi-tenant boundaries, or verified memory are required.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -1905,6 +2096,9 @@ href="../systems/mastra-observational-memory/"><code>mastra-observational-memory
 <li><a href="../systems/memos/"><code>memos</code></a></li>
 <li><a
 href="../systems/basic-memory/"><code>basic-memory</code></a></li>
+<li><a href="../systems/agentmemory/"><code>agentmemory</code></a></li>
+<li><a
+href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -1935,7 +2129,7 @@ at <a
 href="https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146"><code>b7cc76a493573baac133969b324a874990556146</code></a></li>
 <li><a href="https://github.com/neoneye/RainBox">neoneye/RainBox</a> at
 <a
-href="https://github.com/neoneye/RainBox/commit/0792f8a07f6ff728931e928b2bdf7460492ac011"><code>0792f8a07f6ff728931e928b2bdf7460492ac011</code></a></li>
+href="https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c"><code>9f565bf26175bc5e09288f70ec666a4616a2323c</code></a></li>
 <li><a href="https://github.com/letta-ai/letta">letta-ai/letta</a> at <a
 href="https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f"><code>6d8cb7fd48938b629aad5770faa051a8d42e1e9f</code></a></li>
 <li><a
@@ -1962,6 +2156,14 @@ href="https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595
 href="https://github.com/basicmachines-co/basic-memory">basicmachines-co/basic-memory</a>
 at <a
 href="https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b"><code>232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b</code></a></li>
+<li><a
+href="https://github.com/rohitg00/agentmemory">rohitg00/agentmemory</a>
+at <a
+href="https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b"><code>d8b5267c367a5da07ad3619363520b7f1a506c6b</code></a></li>
+<li><a
+href="https://github.com/TencentCloud/tencentdb-agent-memory">TencentCloud/tencentdb-agent-memory</a>
+at <a
+href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295"><code>45e6e80ae2e63b65fad0d89f5e13171229c8f295</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -2011,6 +2213,11 @@ uses.</li>
 <li>MemOS behavior varies materially by memory cube, backend, model, and
 search configuration; the report does not imply one universal MemOS
 pipeline.</li>
+<li>agentmemory's source tests and benchmarks were inspected but not
+rerun; its documented LongMemEval-S numbers are retrieval-only.</li>
+<li>TencentDB Agent Memory's published benchmark gains could not be
+traced to a committed harness or raw result artifacts in the inspected
+repository.</li>
 </ul>
         </article>
       </div>

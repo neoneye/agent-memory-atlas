@@ -11,7 +11,7 @@ Use this format for each repository-specific report. The report should be techni
 Suggested output path:
 
 ```text
-reports/repos/<repo-name>.md
+content/systems/<repo-name>.md
 ```
 
 ## Title

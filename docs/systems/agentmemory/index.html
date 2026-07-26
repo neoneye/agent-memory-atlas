@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A broad local memory engine that
+captures coding-agent hooks, consolidates observations, and fuses
+lexical, vector, and graph retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="agentmemory — Agent Memory Atlas">
+    <meta property="og:description" content="A broad local memory engine
+that captures coding-agent hooks, consolidates observations, and fuses
+lexical, vector, and graph retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="agentmemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A broad local memory
+engine that captures coding-agent hooks, consolidates observations, and
+fuses lexical, vector, and graph retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>agentmemory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Hook-native coding-agent memory</p>
+          <h1>agentmemory</h1>
+          <p class="document-deck">A broad local memory engine that
+captures coding-agent hooks, consolidates observations, and fuses
+lexical, vector, and graph retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rohitg00/agentmemory">
+              <span>Source</span>
+              <strong>rohitg00/agentmemory</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b" title="d8b5267c367a5da07ad3619363520b7f1a506c6b">
+              <span>Analyzed revision</span>
+              <code>d8b5267c367a5da07ad3619363520b7f1a506c6b</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>agentmemory</code> is a local-first memory runtime for coding
+agents. It accepts agent hooks and explicit writes, stores observations
+and derived memory in the iii engine's state module, and exposes search,
+context, consolidation, governance, graph, team, and diagnostic
+functions.</p>
+<p>Its strongest path is narrower than its feature list suggests:</p>
+<ul>
+<li>Capture raw hook events without requiring an LLM call.</li>
+<li>Index them lexically and, when configured, semantically.</li>
+<li>Retrieve compact results first and expand selected items on
+demand.</li>
+<li>Consolidate observations into longer-lived memories in a separate
+pass.</li>
+</ul>
+<p>The implementation is unusually broad: BM25, vectors, graph
+expansion, memory versioning, semantic and procedural stores, lessons,
+profiles, retention, auditing, and multi-agent scopes all coexist. That
+breadth makes it useful as a reference architecture, but also raises
+configuration and policy risk. Several features are optional, shared
+agent scope is the default, and a similarity heuristic can silently
+supersede an existing memory.</p>
+<p>This is an operational memory system, not a verified knowledge
+system. Memories have provenance and version fields, but no first-class
+candidate, rejected, or verified state.</p>
+<p>The inspected package version is <code>0.9.28</code>
+(2026-07-25).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The central distinction is between captured evidence and synthesized
+memory:</p>
+<ul>
+<li><code>RawObservation</code>: an agent hook, tool event, prompt, or
+modality payload.</li>
+<li><code>CompressedObservation</code>: a structured account of facts,
+concepts, files, importance, and confidence.</li>
+<li><code>Memory</code>: a longer-lived fact, pattern, preference,
+architecture decision, bug, or workflow.</li>
+<li><code>Summary</code>, <code>SemanticMemory</code>,
+<code>ProceduralMemory</code>, <code>Lesson</code>, graph nodes, and
+profiles: additional projections over the same activity.</li>
+</ul>
+<p>Typical lifecycle:</p>
+<pre class="text"><code>agent hook -&gt; mem::observe -&gt; raw observation + indexes
+                         -&gt; optional compression
+explicit fact -&gt; mem::remember -&gt; versioned memory + indexes
+session evidence -&gt; consolidation -&gt; memory / semantic / procedural layers
+query -&gt; BM25 + vector + graph -&gt; RRF -&gt; compact results
+selected IDs -&gt; expand -&gt; context for the agent</code></pre>
+<p>Most hook capture is deliberately cheap. Unless automatic compression
+is enabled, <code>mem::observe</code> creates a synthetic structured
+observation rather than calling an LLM for every event.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The runtime uses the iii engine's Worker/Function/Trigger model.
+<code>StateKV</code> adapts its state functions into a scoped key-value
+interface; higher-level modules build retrieval and lifecycle behavior
+on top.</p>
+<pre class="mermaid"><code>flowchart LR
+  Hooks[&quot;Agent hooks&quot;] --&gt; Observe[&quot;mem::observe&quot;]
+  Tools[&quot;MCP / API / CLI&quot;] --&gt; Functions[&quot;Registered memory functions&quot;]
+  Observe --&gt; State[&quot;iii StateModule / SQLite&quot;]
+  Functions --&gt; State
+  State --&gt; BM25[&quot;BM25 indexes&quot;]
+  State --&gt; Vector[&quot;Optional vector indexes&quot;]
+  State --&gt; Graph[&quot;Optional memory graph&quot;]
+  BM25 --&gt; Hybrid[&quot;HybridSearch + RRF&quot;]
+  Vector --&gt; Hybrid
+  Graph --&gt; Hybrid
+  Hybrid --&gt; Context[&quot;Compact search / context&quot;]
+  Observe --&gt; Consolidate[&quot;Optional consolidation&quot;]
+  Consolidate --&gt; State</code></pre>
+<p>The state schema has separate scopes for sessions, observations,
+memories, summaries, embeddings, relations, profiles, graph data,
+semantic and procedural memory, teams, lessons, audit events, and
+maintenance state.</p>
+<p>The viewer and HTTP surfaces are local by default. MCP, hooks, and
+registered iii functions are the principal agent-facing paths.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Capture:</p>
+<ul>
+<li><code>src/functions/observe.ts</code>: validates, deduplicates,
+strips private data, persists the raw observation, updates the session,
+and indexes the result.</li>
+<li><code>src/hooks/session-start.ts</code>,
+<code>pre-tool-use.ts</code>, and <code>pre-compact.ts</code>: hook
+behavior and context injection policy.</li>
+<li><code>src/functions/compress.ts</code>: structured observation
+compression.</li>
+</ul>
+<p>Explicit memory:</p>
+<ul>
+<li><code>src/functions/remember.ts</code>: creates a versioned memory
+and supersedes a sufficiently similar latest memory.</li>
+<li><code>src/functions/forget.ts</code>: removes entities and their
+search projections.</li>
+<li><code>src/functions/governance.ts</code>: filtered deletion and
+administrative policy.</li>
+</ul>
+<p>Retrieval:</p>
+<ul>
+<li><code>src/functions/search.ts</code>: lexical search and scope
+filtering.</li>
+<li><code>src/state/hybrid-search.ts</code>: BM25, vector, and graph
+fusion with weighted RRF.</li>
+<li><code>src/functions/smart-search.ts</code>: compact-first search and
+ID expansion.</li>
+<li><code>src/functions/context.ts</code>: token-budgeted context
+assembly.</li>
+</ul>
+<p>Derivation and maintenance:</p>
+<ul>
+<li><code>src/functions/consolidate.ts</code>: LLM synthesis of memories
+from observations.</li>
+<li><code>src/functions/consolidation-pipeline.ts</code>: optional
+semantic/procedural extraction, reflection, and decay.</li>
+<li><code>src/functions/privacy.ts</code>: private-block and
+secret-pattern redaction.</li>
+<li><code>src/functions/audit.ts</code>: structural-change audit
+records.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>src/types.ts</code> defines the main records.</p>
+<p><code>RawObservation</code> retains:</p>
+<ul>
+<li>Session, hook, prompt, tool input/output, raw text, and modality
+fields.</li>
+<li>Optional agent identity.</li>
+<li>Creation time and capture metadata.</li>
+</ul>
+<p><code>CompressedObservation</code> adds:</p>
+<ul>
+<li>Type, title, facts, narrative, concepts, files.</li>
+<li>Importance and confidence.</li>
+<li>Links back to the source event.</li>
+</ul>
+<p><code>Memory</code> adds:</p>
+<ul>
+<li>A typed category: pattern, preference, architecture, bug, workflow,
+or fact.</li>
+<li>Content, concepts, files, session IDs, and source observation
+IDs.</li>
+<li>Strength, version, parent, supersedes, and
+<code>isLatest</code>.</li>
+<li>Optional TTL, project, and agent scope.</li>
+</ul>
+<p>Graph nodes and edges, summaries, project profiles, semantic facts,
+procedures, lessons, teams, and audit records form adjacent memory
+layers. The schema supports provenance, but the runtime does not assign
+a trust verdict to each claim.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The basic <code>mem::search</code> path is BM25. Results are filtered
+by project, working directory, and agent scope after retrieval. In
+isolated mode, missing agent identity fails closed.</p>
+<p><code>HybridSearch</code> adds:</p>
+<ul>
+<li>BM25, vector, and graph retrieval arms.</li>
+<li>Weighted reciprocal-rank fusion.</li>
+<li>Query expansion and optional reranking.</li>
+<li>A maximum of three results per session to improve source
+diversity.</li>
+<li>Best-effort graph expansion when graph data is available.</li>
+</ul>
+<p><code>mem::smart-search</code> returns compact matches first, then
+expands only requested IDs. It can fetch lessons in parallel and
+supports follow-up diagnostics. This is a strong progressive-disclosure
+interface for agents.</p>
+<p><code>mem::context</code> is a separate token-budgeted assembler. It
+reserves slots for pinned content and a project profile, then adds
+lessons, summaries, and important observations. It is mostly
+recency/importance driven rather than a query-specific hybrid
+search.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>mem::observe</code>:</p>
+<ul>
+<li>Validates the hook payload and deduplicates repeated events.</li>
+<li>Applies private-data stripping.</li>
+<li>Writes the observation while holding a session lock.</li>
+<li>Creates or updates the session.</li>
+<li>Uses zero-LLM synthetic compression by default.</li>
+<li>Optionally calls <code>mem::compress</code> when automatic
+compression is enabled.</li>
+<li>Updates lexical and vector indexes best-effort.</li>
+</ul>
+<p><code>mem::remember</code>:</p>
+<ul>
+<li>Validates the proposed memory and acquires a keyed lock.</li>
+<li>Compares it with current memories using content-token Jaccard
+similarity.</li>
+<li>At similarity above <code>0.7</code>, marks an old memory
+non-latest.</li>
+<li>Creates the new version with parent, supersedes, and
+source-observation links.</li>
+<li>Updates search indexes and triggers downstream work.</li>
+</ul>
+<p>This is convenient versioning, but the threshold is not evidence that
+two claims are semantically equivalent. A paraphrase, exception, or
+contradictory claim can be treated as a replacement without an explicit
+judgment step.</p>
+<p><code>mem::forget</code> deletes memories, observations, or sessions
+and updates persisted indexes. TTL and retention mechanisms provide
+additional expiry paths.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The repository supplies hooks for session start, prompt submission,
+tool events, compaction, stop, and session end. Context injection on
+session start and pre-tool use is disabled by default to avoid token
+cost; pre-compaction context is always requested with a bounded
+budget.</p>
+<p>Agent access is available through MCP, HTTP, CLI, and the iii
+function registry. The project documents 53 MCP tools and a much larger
+REST/function surface. That breadth covers capture, retrieval, graph,
+reflection, governance, teams, and diagnostics, but makes tool selection
+and policy review more demanding.</p>
+<p>Agent scope defaults to shared. Setting
+<code>AGENTMEMORY_AGENT_SCOPE=isolated</code> with an agent identity
+creates a stricter boundary.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Session and keyed locks protect key write paths.</li>
+<li>Private-tag and common-secret redaction occurs before
+persistence.</li>
+<li>Search indexes can be rebuilt and are dimension-checked.</li>
+<li>Deletion is propagated to persisted indexes.</li>
+<li>Structural deletion is designed to emit audit records.</li>
+<li>Non-loopback viewer access requires an API secret and allowed
+hosts.</li>
+<li>Isolated-agent retrieval fails closed when identity is absent.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>API authentication is optional when no secret is configured.</li>
+<li>Shared agent scope is the default.</li>
+<li>Redaction is regex-based and cannot guarantee secret removal.</li>
+<li>Similarity-based supersession lacks a candidate/rejected review
+state.</li>
+<li>Retrieved memory is wrapped for context, but remembered content is
+still untrusted text and should not be interpreted as privileged
+instructions.</li>
+<li>Operational correctness depends on the iii engine and a large set of
+optional subsystems remaining mutually consistent.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repository contains a large test tree covering functions, state,
+hooks, search, graph behavior, privacy, and maintenance. Project
+documentation reports more than 1,400 tests. The source test suite was
+not run for this atlas review.</p>
+<p>The published LongMemEval-S figures are retrieval-only: the
+documented setup uses 500 questions, a fresh index per question, and
+<code>all-MiniLM-L6-v2</code>. It does not evaluate end-to-end answer
+correctness. The repository documents R@5, R@10, and MRR results, but
+does not commit the per-question result artifact.</p>
+<p>The coding-agent-life benchmark is transparent about its small size:
+15 synthetic sessions and 15 queries. Its perfect R@5 result is useful
+as a smoke test, not broad evidence of production recall quality.
+<code>ROADMAP.md</code> still lists benchmark-harness CI as future
+work.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Zero-LLM capture in the synchronous hook path.</li>
+<li>Compact search results with explicit expansion by ID.</li>
+<li>Independent lexical, vector, and graph arms fused with RRF.</li>
+<li>Per-session result caps for source diversity.</li>
+<li>Source observation IDs on synthesized memories.</li>
+<li>Separate immediate capture from optional consolidation.</li>
+<li>Fail-closed identity behavior in isolated scope.</li>
+<li>Audited structural deletion and rebuildable projections.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Treating fuzzy content similarity as authority to supersede a
+memory.</li>
+<li>Shipping a very large tool surface without a correspondingly small
+default policy surface.</li>
+<li>Defaulting multi-agent installations to shared memory.</li>
+<li>Presenting retrieval metrics as if they measured end-to-end memory
+quality.</li>
+<li>Accumulating many derived stores without explicit consistency
+contracts.</li>
+<li>Encoding confidence without a first-class verification or rejection
+state.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow it when the integration target is a coding agent, local event
+capture is important, and a team is prepared to operate the iii runtime
+and choose among many optional capabilities.</p>
+<p>Build a smaller subset when the real requirement is only session
+capture plus search. The most reusable core is: raw observations,
+provenance, BM25/vector fusion, compact-first results, bounded context,
+and asynchronous consolidation.</p>
+<p>Add an explicit review state before using remembered claims for
+consequential automation. In multi-agent deployments, turn isolated
+scope on deliberately rather than relying on the shared default.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Should supersession require contradiction/equivalence judgment
+instead of a Jaccard threshold?</li>
+<li>Which state store is authoritative when a derived graph or vector
+index diverges?</li>
+<li>How are untrusted recalled instructions neutralized before agent
+execution?</li>
+<li>Which of the documented functions form the supported compatibility
+surface?</li>
+<li>Can benchmark runs and per-question outputs be published in CI?</li>
+<li>What migration guarantees exist across the broad state schema?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/types.ts</code>: primary memory and observation
+types.</li>
+<li><code>src/state/schema.ts</code>: state scopes and persistent
+layout.</li>
+<li><code>src/state/kv.ts</code>: iii state adapter.</li>
+<li><code>src/functions/observe.ts</code>: hook capture.</li>
+<li><code>src/functions/remember.ts</code>: explicit memory and
+supersession.</li>
+<li><code>src/functions/search.ts</code>: lexical search.</li>
+<li><code>src/state/hybrid-search.ts</code>: BM25/vector/graph
+fusion.</li>
+<li><code>src/functions/smart-search.ts</code>: compact search and
+expansion.</li>
+<li><code>src/functions/context.ts</code>: token-budgeted context.</li>
+<li><code>src/functions/consolidate.ts</code>: observation-to-memory
+synthesis.</li>
+<li><code>src/functions/consolidation-pipeline.ts</code>: optional
+derived-memory pipeline.</li>
+<li><code>src/functions/privacy.ts</code>: redaction.</li>
+<li><code>src/functions/governance.ts</code>: deletion and
+administration.</li>
+<li><code>src/functions/audit.ts</code>: audit behavior.</li>
+<li><code>src/hooks/</code>: coding-agent lifecycle hooks.</li>
+<li><code>benchmark/LONGMEMEVAL.md</code>: retrieval benchmark
+methodology.</li>
+<li><code>docs/benchmarks/2026-05-20-coding-agent-life-v1.md</code>:
+small synthetic eval.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
