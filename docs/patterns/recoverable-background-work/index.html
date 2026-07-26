@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Preserve inputs and checkpoints so
+extraction, consolidation, embedding, and indexing failures become
+retryable work instead of silent memory loss.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Recoverable Background
+Work — Agent Memory Atlas">
+    <meta property="og:description" content="Preserve inputs and
+checkpoints so extraction, consolidation, embedding, and indexing
+failures become retryable work instead of silent memory loss.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Recoverable Background
+Work — Agent Memory Atlas">
+    <meta name="twitter:description" content="Preserve inputs and
+checkpoints so extraction, consolidation, embedding, and indexing
+failures become retryable work instead of silent memory loss.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Recoverable Background Work — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Reliability</p>
+          <h1>Recoverable Background Work</h1>
+          <p class="document-deck">Preserve inputs and checkpoints so
+extraction, consolidation, embedding, and indexing failures become
+retryable work instead of silent memory loss.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Move expensive memory processing out of the interaction path without
+losing the information when a worker, model provider, parser, or write
+fails.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Automatic memory capture is often asynchronous. The interactive
+request succeeds, but a later extraction call times out or a worker
+crashes between writing chunks and updating indexes. If the raw input or
+job state is ephemeral, the session appears remembered while its durable
+memory is incomplete.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Persist work before acknowledging it:</p>
+<pre class="mermaid"><code>flowchart LR
+    A[&quot;Capture input&quot;] --&gt; B[&quot;Durable inbox / event&quot;]
+    B --&gt; C[&quot;Idempotent job&quot;]
+    C --&gt; D{&quot;Processing succeeds?&quot;}
+    D -- &quot;Yes&quot; --&gt; E[&quot;Atomic output + checkpoint&quot;]
+    D -- &quot;No&quot; --&gt; F[&quot;Failure record + retained input&quot;]
+    F --&gt; G[&quot;Bounded retry or operator review&quot;]
+    G --&gt; C</code></pre>
+<p>Jobs carry stable IDs, input hashes, processor versions, attempt
+counts, and checkpoints. Outputs use deterministic identities or
+transactional upserts so retrying cannot duplicate memories. Poison
+inputs move to a reviewable dead-letter state rather than retrying
+forever.</p>
+<p>For lossy extraction, retain a fenced raw fallback that can be
+redistilled after the provider or schema is repaired.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>The interaction path stays responsive while the system gains
+at-least-once processing without accepting duplicate durable state.
+Operators can distinguish delayed memory from lost memory and can replay
+work after model or embedding upgrades.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Queues and checkpoints add operational machinery and eventual
+consistency. Retained inputs may contain sensitive transcripts. Retry
+storms can amplify provider failures. Idempotency is difficult when one
+job writes several stores that lack a shared transaction.</p>
+<p>Expose freshness to callers; do not make asynchronous derivation look
+immediately consistent.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> is the
+clearest local example: detached transcript capture, chunking, retained
+failed inputs, fenced fallbacks, redistillation, and lifecycle tests
+turn provider failure into delayed work. <a
+href="../../systems/honcho/">Honcho</a> uses derivation queues to build
+observations and representations from messages. <a
+href="../../systems/mempalace/">MemPalace</a> includes repair and
+reindex paths around its derived structures. Simpler synchronous systems
+avoid queue complexity but also block ingestion or lose opportunities
+for heavier consolidation.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Crash before, during, and after each state mutation.</li>
+<li>Retry the same job and prove outputs are not duplicated.</li>
+<li>Preserve failed inputs and processor-version metadata.</li>
+<li>Enforce retry limits and dead-letter review.</li>
+<li>Delete a source while its jobs are queued.</li>
+<li>Report derivation freshness and partial failure accurately.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../append-only-memory-audit/">Append-only memory
+audit</a></li>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

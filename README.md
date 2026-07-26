@@ -11,6 +11,7 @@ Visit [neoneye.github.io/agent-memory-atlas](https://neoneye.github.io/agent-mem
 ## Repository structure
 
 - `content/systems/` — individual repository reports.
+- `content/patterns/` — reusable memory architecture pattern guides.
 - `content/overview.md` — cross-system comparative analysis.
 - `content/methodology/` — the review and synthesis formats.
 - `site/` — the designed homepage.
@@ -21,7 +22,7 @@ Visit [neoneye.github.io/agent-memory-atlas](https://neoneye.github.io/agent-mem
 
 ## Add a memory system
 
-Invoke the repository-local `$add-memory-system` skill with the path to a source checkout. It pins the analyzed commit, scaffolds the report, guides the code review, integrates the comparison and homepage, and validates the generated site.
+Invoke the repository-local `$add-memory-system` skill with the path to a source checkout. It pins the analyzed commit, scaffolds the report, guides the code review, updates applicable design patterns, integrates the comparison and homepage, and validates the generated site.
 
 ## Build locally
 

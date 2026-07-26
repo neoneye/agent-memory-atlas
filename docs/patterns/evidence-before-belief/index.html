@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Persist raw events and source text
+before deriving the compact memories that influence an agent.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Evidence Before
+Belief — Agent Memory Atlas">
+    <meta property="og:description" content="Persist raw events and
+source text before deriving the compact memories that influence an
+agent.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Evidence Before
+Belief — Agent Memory Atlas">
+    <meta name="twitter:description" content="Persist raw events and
+source text before deriving the compact memories that influence an
+agent.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Evidence Before Belief — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Provenance</p>
+          <h1>Evidence Before Belief</h1>
+          <p class="document-deck">Persist raw events and source text
+before deriving the compact memories that influence an agent.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Keep the material from which a memory was derived. Treat compact
+facts, profiles, summaries, and graph relations as interpretations that
+can be inspected and recomputed.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Extraction is lossy. A short claim can omit qualifiers, invert who
+said what, flatten uncertainty, or preserve a model hallucination. If
+the source event is discarded, correction becomes guesswork and a new
+extractor cannot repair old state.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Write evidence first, then derive memory:</p>
+<pre class="mermaid"><code>flowchart LR
+    A[&quot;Message, file, tool result&quot;] --&gt; B[&quot;Durable event&quot;]
+    B --&gt; C[&quot;Evidence chunks + source spans&quot;]
+    C --&gt; D[&quot;Candidate facts, profile, summary&quot;]
+    C --&gt; E[&quot;Lexical and vector indexes&quot;]
+    D --&gt; F[&quot;Trust and conflict policy&quot;]
+    E --&gt; G[&quot;Recall&quot;]
+    F --&gt; G
+    G --&gt; H[&quot;Source-linked context&quot;]</code></pre>
+<p>Evidence needs stable identity, scope, actor, timestamp, source
+location, and content hash. Derived records reference evidence IDs
+rather than copying an unattributed excerpt into a mutable field.</p>
+<p>Retrieval should retain a direct path to evidence. Derived structures
+may boost or organize evidence, but should not make the original
+unreachable.</p>
+<h2 id="why-it-works">Why it works</h2>
+<ul>
+<li>Wrong memories can be explained and corrected.</li>
+<li>Extractors and embedding models can be upgraded without losing the
+corpus.</li>
+<li>Multiple interpretations can coexist over one source event.</li>
+<li>Users can distinguish “the source said this” from “the system
+inferred this.”</li>
+<li>Deletion can enumerate raw and derived artifacts explicitly.</li>
+</ul>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Raw evidence increases storage, privacy exposure, and retrieval
+noise. Evidence retention needs access control, retention windows,
+source-aware deletion, and bounded context assembly. Keeping a source is
+not the same as proving it is true; provenance answers “where did this
+come from?”, not “should I believe it?”</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/mempalace/">MemPalace</a> makes verbatim
+drawers the retrieval floor and treats extracted structures as
+navigation aids. <a href="../../systems/honcho/">Honcho</a> keeps
+message streams and derives peer representations. <a
+href="../../systems/rainbox/">RainBox</a> separates claims from evidence
+rows. <a href="../../systems/verel/">Verel</a> carries provenance
+through its trust model. <a href="../../systems/swafra/">Swafra</a>
+preserves chunk text, but its source metadata is thin. These systems
+show different strengths of the same pattern.</p>
+<h2 id="implementation-checklist">Implementation checklist</h2>
+<ul>
+<li>Store the event before starting asynchronous extraction.</li>
+<li>Give chunks deterministic IDs and precise source spans.</li>
+<li>Link every derived memory to one or more evidence IDs.</li>
+<li>Record extractor, prompt/schema version, and embedder identity.</li>
+<li>Return source references with recalled claims.</li>
+<li>Cascade delete through chunks, embeddings, summaries, and graph
+edges.</li>
+<li>Define when evidence expires and whether derived memory may outlive
+it.</li>
+</ul>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Rebuild derived memory from retained evidence.</li>
+<li>Trace every injected claim back to a source.</li>
+<li>Delete a source and prove no derived artifact survives
+unintentionally.</li>
+<li>Retry a failed extraction without duplicating evidence.</li>
+<li>Verify access rules on both evidence and derived records.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../trust-state-machine/">Trust-state machine</a></li>
+<li><a href="../recoverable-background-work/">Recoverable background
+work</a></li>
+<li><a href="../append-only-memory-audit/">Append-only memory
+audit</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

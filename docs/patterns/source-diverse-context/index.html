@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Select context across sessions,
+documents, or sources so one dense neighborhood does not crowd out the
+rest of memory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Source-Diverse
+Context — Agent Memory Atlas">
+    <meta property="og:description" content="Select context across
+sessions, documents, or sources so one dense neighborhood does not crowd
+out the rest of memory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Source-Diverse
+Context — Agent Memory Atlas">
+    <meta name="twitter:description" content="Select context across
+sessions, documents, or sources so one dense neighborhood does not crowd
+out the rest of memory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Source-Diverse Context — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Context assembly</p>
+          <h1>Source-Diverse Context</h1>
+          <p class="document-deck">Select context across sessions,
+documents, or sources so one dense neighborhood does not crowd out the
+rest of memory.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Return a useful spread of evidence when top-ranked chunks are
+dominated by adjacent passages or repeated material from one source.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Chunk retrieval often returns several near-duplicates from the same
+document or session. Those chunks may all score well while consuming the
+entire context budget. The agent receives depth on one source but misses
+corroborating, contradicting, or more recent evidence elsewhere.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Rank candidates normally, then apply a source-aware selection
+policy:</p>
+<ol type="1">
+<li>Group by stable source identity.</li>
+<li>Select the best candidate from each source.</li>
+<li>Allocate the remaining budget to additional chunks where depth is
+justified.</li>
+<li>Preserve global ranking as much as possible.</li>
+<li>Enforce both result and token caps.</li>
+</ol>
+<p>Maximal marginal relevance, per-source quotas, or a simple two-pass
+selector can implement the pattern. The result should expose source
+labels so the agent can distinguish independent evidence from repeated
+chunks.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>Diversity increases coverage and reduces the illusion of
+corroboration created by adjacent chunks. It is especially useful for
+questions spanning sessions, documents, people, or time periods.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Some questions genuinely need several neighboring chunks from one
+source. A rigid one-per-source rule destroys local context. Weak source
+identity can over-diversify or collapse unrelated material. Diversity is
+not correctness; ten different sources can repeat the same wrong
+claim.</p>
+<p>Use a bounded escape hatch: reserve part of the context for source
+coverage and part for globally best evidence or neighbor expansion.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/swafra/">Swafra</a> explicitly chooses the
+best chunk per source title after hybrid search and graph traversal.
+That compact design makes the value of source coverage obvious, while
+also showing two hazards: source titles are weak identities, and a
+percentage-of-sources target can exceed the advertised <code>k</code>.
+<a href="../../systems/mempalace/">MemPalace</a> uses source structure,
+drawers, neighbors, and higher-level indexes to balance direct evidence
+with navigation. <a href="../../systems/honcho/">Honcho</a> blends
+recent and derived observations rather than relying on one similarity
+list.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Repeated adjacent chunks from one source.</li>
+<li>Queries that require multi-source corroboration.</li>
+<li>Queries that require several chunks from one source.</li>
+<li>Stable source identity across reingestion and renaming.</li>
+<li>Hard result and token limits after diversification.</li>
+<li>Diversity metrics reported beside relevance, not instead of it.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../hybrid-retrieval-fusion/">Hybrid retrieval
+fusion</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

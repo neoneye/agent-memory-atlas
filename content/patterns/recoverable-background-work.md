@@ -1,0 +1,63 @@
+---
+title: Recoverable Background Work
+eyebrow: Pattern · Reliability
+description: Preserve inputs and checkpoints so extraction, consolidation, embedding, and indexing failures become retryable work instead of silent memory loss.
+root: ../..
+page_kind: pattern
+---
+
+## Intent
+
+Move expensive memory processing out of the interaction path without losing the information when a worker, model provider, parser, or write fails.
+
+## The problem
+
+Automatic memory capture is often asynchronous. The interactive request succeeds, but a later extraction call times out or a worker crashes between writing chunks and updating indexes. If the raw input or job state is ephemeral, the session appears remembered while its durable memory is incomplete.
+
+## The pattern
+
+Persist work before acknowledging it:
+
+```mermaid
+flowchart LR
+    A["Capture input"] --> B["Durable inbox / event"]
+    B --> C["Idempotent job"]
+    C --> D{"Processing succeeds?"}
+    D -- "Yes" --> E["Atomic output + checkpoint"]
+    D -- "No" --> F["Failure record + retained input"]
+    F --> G["Bounded retry or operator review"]
+    G --> C
+```
+
+Jobs carry stable IDs, input hashes, processor versions, attempt counts, and checkpoints. Outputs use deterministic identities or transactional upserts so retrying cannot duplicate memories. Poison inputs move to a reviewable dead-letter state rather than retrying forever.
+
+For lossy extraction, retain a fenced raw fallback that can be redistilled after the provider or schema is repaired.
+
+## Why it works
+
+The interaction path stays responsive while the system gains at-least-once processing without accepting duplicate durable state. Operators can distinguish delayed memory from lost memory and can replay work after model or embedding upgrades.
+
+## Tradeoffs
+
+Queues and checkpoints add operational machinery and eventual consistency. Retained inputs may contain sensitive transcripts. Retry storms can amplify provider failures. Idempotency is difficult when one job writes several stores that lack a shared transaction.
+
+Expose freshness to callers; do not make asynchronous derivation look immediately consistent.
+
+## Seen in the atlas
+
+[llm-wiki-memory](../../systems/llm-wiki-memory/) is the clearest local example: detached transcript capture, chunking, retained failed inputs, fenced fallbacks, redistillation, and lifecycle tests turn provider failure into delayed work. [Honcho](../../systems/honcho/) uses derivation queues to build observations and representations from messages. [MemPalace](../../systems/mempalace/) includes repair and reindex paths around its derived structures. Simpler synchronous systems avoid queue complexity but also block ingestion or lose opportunities for heavier consolidation.
+
+## Tests to require
+
+- Crash before, during, and after each state mutation.
+- Retry the same job and prove outputs are not duplicated.
+- Preserve failed inputs and processor-version metadata.
+- Enforce retry limits and dead-letter review.
+- Delete a source while its jobs are queued.
+- Report derivation freshness and partial failure accurately.
+
+## Related patterns
+
+- [Evidence before belief](../evidence-before-belief/)
+- [Append-only memory audit](../append-only-memory-audit/)
+- [Governed write gateway](../governed-write-gateway/)

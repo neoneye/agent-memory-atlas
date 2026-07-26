@@ -7,6 +7,8 @@ site_dir="$project_dir/docs"
 required=(
   "$site_dir/index.html"
   "$site_dir/compare/index.html"
+  "$site_dir/patterns/index.html"
+  "$site_dir/patterns/rejected-value-tombstone/index.html"
   "$site_dir/assets/main.css"
   "$site_dir/assets/main.js"
 )
@@ -30,9 +32,25 @@ if [[ "$revision_count" != "11" ]]; then
   exit 1
 fi
 
+pattern_count="$(find "$site_dir/patterns" -mindepth 2 -maxdepth 2 -name index.html | wc -l | tr -d ' ')"
+if [[ "$pattern_count" != "10" ]]; then
+  echo "Expected 10 rendered design patterns, found $pattern_count" >&2
+  exit 1
+fi
+
+if ! grep -q 'href="./patterns/"' "$site_dir/index.html"; then
+  echo "Homepage does not link to the pattern library." >&2
+  exit 1
+fi
+
+if grep -Rqs 'href="<a' "$site_dir/systems" --include='*.html'; then
+  echo "Malformed nested source links found in rendered system reports." >&2
+  exit 1
+fi
+
 if grep -Rqs 'href="/' "$site_dir" --include='*.html'; then
   echo "Root-relative links found; these break under the GitHub Pages project path." >&2
   exit 1
 fi
 
-echo "Validated 11 reports, revision metadata, and project-relative navigation."
+echo "Validated 11 reports, 10 design patterns, revision metadata, and project-relative navigation."

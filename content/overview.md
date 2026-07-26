@@ -301,6 +301,8 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 
 ## 5. Design Patterns That Recur
 
+These recurring moves are also documented as standalone implementation guides in the [memory design pattern library](../patterns/). The library covers correction, provenance, trust, retrieval, scope, write governance, federation, context assembly, recoverable background work, and audit history.
+
 ### Tool-mediated memory writes
 
 Repos: all eleven, in different forms.
@@ -315,17 +317,23 @@ Hot memory is small and prompt-ready. Archival/document memory is large and retr
 
 ### Evidence first, derived memory second
 
+Pattern guide: [Evidence before belief](../patterns/evidence-before-belief/).
+
 Repos: strongest in `honcho`, `verel`, `mempalace`, and `rainbox`; partly in `engram`, `swafra`, and `llm-wiki-memory`.
 
 Raw messages, observations, files, drawers, or evidence rows are retained, and derived facts/representations/indexes are computed from them. This works because wrong memories can be audited and recomputed. It fails if the derived layer does not preserve source IDs, if raw stores become too noisy, if evidence excerpts are too thin, or if background derivation makes read consistency surprising.
 
 ### Hybrid retrieval
 
+Pattern guide: [Hybrid retrieval fusion](../patterns/hybrid-retrieval-fusion/).
+
 Repos: `mem0`, `honcho`, `engram`, `mempalace`, `swafra`, `rainbox`, `verel`, `supermemory` API settings, `letta` across separate search modes.
 
 Vector search alone is not enough. Identifiers, names, exact phrases, dates, file paths, and project keys often need lexical search. Hybrid retrieval works because it handles both fuzzy semantic recall and exact lookup. MemPalace adds a useful variant: extracted/indexed "closets" boost drawer ranking but never gate direct evidence retrieval. Swafra is a useful compact example of BM25 + vector + cheap heuristic fusion, but also a warning: ad hoc component normalization and unbounded bonuses make scores hard to interpret. Hybrid retrieval fails when rank fusion is opaque or not evaluated.
 
 ### Scope as a first-class key
+
+Pattern guide: [Scope as a first-class key](../patterns/scope-as-a-first-class-key/).
 
 Repos: all except `swafra`.
 
@@ -390,6 +398,8 @@ Vector search misses exact constraints and can retrieve plausible but wrong memo
 A retrieval benchmark is invalid at a stated cutoff if the system scores more than `k` returned items. Swafra's committed `k=10` artifact evaluated all returned sessions while returning 28–46 sessions per question (35.4 on average); it only truncated the displayed `retrieved_sessions` list. Benchmark harnesses should assert the result count, score exactly the first `k`, record token volume, and bind artifacts to a code/config/embedder manifest.
 
 ### Weak correction semantics
+
+Pattern guide: [Rejected-value tombstone](../patterns/rejected-value-tombstone/).
 
 Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. Verel's rejected tombstones are the clearest research-grade countermeasure; RainBox has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. `llm-wiki-memory` shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again.
 

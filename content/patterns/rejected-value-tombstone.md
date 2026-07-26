@@ -1,0 +1,73 @@
+---
+title: Rejected-Value Tombstone
+eyebrow: Pattern · Correction
+description: Preserve rejected values as negative memory so automatic extraction cannot silently reintroduce a known-wrong belief.
+root: ../..
+page_kind: pattern
+---
+
+## Intent
+
+Remember not only what the system currently believes, but also which values were deliberately rejected. Use that negative knowledge during future writes.
+
+## The problem
+
+Deleting or superseding a wrong memory removes it from normal recall, but it does not stop the same value from returning. A later conversation, stale document, model extraction, or synchronization pass can rediscover the old claim and create it as if it were new.
+
+This is memory laundering: history that the system already judged wrong re-enters through a different write path.
+
+## The pattern
+
+Store a durable tombstone keyed by the semantic identity of the rejected value:
+
+```text
+scope + subject + predicate + normalized value
+```
+
+The tombstone records why, when, and by whom the value was rejected, plus the claim or evidence that triggered the decision. Normal retrieval suppresses it. Every automated write checks it before activation.
+
+```mermaid
+flowchart LR
+    A["Candidate value"] --> B["Normalize key and value"]
+    B --> C{"Rejected tombstone exists?"}
+    C -- "No" --> D["Run dedupe and conflict policy"]
+    C -- "Yes" --> E["Block, quarantine, or require review"]
+    F["Human rejection or correction"] --> G["Write tombstone"]
+    G --> H["Reject or supersede active claim"]
+    H --> C
+```
+
+## Why it works
+
+A tombstone changes correction from a point-in-time mutation into a durable constraint. It prevents repeat failures across extraction runs and preserves enough history to explain why a write was refused.
+
+It is stronger than a soft-delete flag on the old claim because the check is value-oriented. The new proposal may have a different record ID or arrive from a different source.
+
+## Tradeoffs
+
+- Normalization mistakes can block a legitimately different value.
+- Truth can change; some tombstones need expiry or explicit reactivation.
+- Scope matters. A rejection in one project or user context may not apply globally.
+- The tombstone itself can contain sensitive data and must follow deletion policy.
+- Model writes should normally be blocked, while a trusted human correction may be allowed to override with an auditable action.
+
+Do not use tombstones as the sole conflict model. A new competing value may deserve a candidate state rather than immediate rejection.
+
+## Seen in the atlas
+
+[Verel](../../systems/verel/) uses rejected memory records as a correctness mechanism and protects rejected states from ordinary pruning. [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims are rejected or superseded; model writes check these rows to prevent re-assertion. The [llm-wiki-memory report](../../systems/llm-wiki-memory/) illustrates the gap: operational supersession can archive an old leaf but cannot prevent the same rejected content from being distilled again.
+
+## Tests to require
+
+- Reject a value, rerun extraction, and prove it stays inactive.
+- Correct A to B, then try to reintroduce A through a different source.
+- Verify scope isolation between users, projects, and agents.
+- Verify trusted override and tombstone reactivation are audited.
+- Exercise normalization variants without conflating materially different values.
+- Propagate privacy deletion to tombstones when policy requires true erasure.
+
+## Related patterns
+
+- [Trust-state machine](../trust-state-machine/)
+- [Governed write gateway](../governed-write-gateway/)
+- [Append-only memory audit](../append-only-memory-audit/)

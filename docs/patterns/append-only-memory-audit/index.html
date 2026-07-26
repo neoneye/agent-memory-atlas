@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Record memory mutations and
+retrieval use as immutable events while keeping telemetry separate from
+the truth state of memory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Append-Only Memory
+Audit — Agent Memory Atlas">
+    <meta property="og:description" content="Record memory mutations and
+retrieval use as immutable events while keeping telemetry separate from
+the truth state of memory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Append-Only Memory
+Audit — Agent Memory Atlas">
+    <meta name="twitter:description" content="Record memory mutations
+and retrieval use as immutable events while keeping telemetry separate
+from the truth state of memory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Append-Only Memory Audit — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Observability</p>
+          <h1>Append-Only Memory Audit</h1>
+          <p class="document-deck">Record memory mutations and retrieval
+use as immutable events while keeping telemetry separate from the truth
+state of memory.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Make it possible to reconstruct how memory changed, which memories
+entered context, and what feedback followed—without overwriting the
+evidence needed for investigation.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Current rows answer what the system believes now, not how it arrived
+there. A counter such as <code>times_used = 12</code> cannot explain
+which conversations used a memory, whether it was actually injected, or
+which model and query selected it. Mutable history also makes
+concurrency and audits ambiguous.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Keep canonical memory state for efficient reads and append immutable
+events for changes and use:</p>
+<pre class="text"><code>memory_mutation:
+  created | corroborated | corrected | superseded | rejected | expired
+
+retrieval_event:
+  considered | retrieved | injected | cited | downvoted</code></pre>
+<p>Each event records memory ID, scope, actor, timestamp, request or
+conversation ID, reason, and relevant version identifiers. Derive
+counters and dashboards from events. Retention and privacy policies
+still apply; append-only means application code does not casually
+rewrite history, not that data can never be erased.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>Events support debugging, eval generation, attribution, concurrency
+analysis, and product review. They reveal the difference between a
+memory matching a query and actually influencing a prompt.</p>
+<h2 id="the-critical-boundary">The critical boundary</h2>
+<p>Telemetry is not truth. A frequently retrieved memory is reachable,
+not necessarily correct. A downvote says the resulting interaction was
+unsatisfactory, not that the memory was false. Feed events into review
+and evaluation; do not silently promote, reject, or delete beliefs from
+weak behavioral signals.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Event volume grows quickly. Schema evolution and privacy deletion
+become harder. Causal attribution remains limited: injection does not
+prove that a model used a memory. Audit events also need transactional
+coupling to state changes or they can describe mutations that never
+committed.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/rainbox/">RainBox</a> combines claim/evidence
+state with <code>RetrievalEvent</code>, feedback, review UI, and eval
+flows, while explicitly treating telemetry as a review signal rather
+than truth. <a href="../../systems/mem0/">Mem0</a> keeps SQLite history
+around memory changes. <a
+href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> uses git
+history for inspectable mutation groups, demonstrating strong
+recoverability but also why audit history is not the same as privacy
+erasure.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Mutation and audit event commit or roll back together.</li>
+<li>Distinguish considered, returned, and injected memories.</li>
+<li>Rebuild derived counters from the event stream.</li>
+<li>Deduplicate retried event writes.</li>
+<li>Apply scope authorization to audit queries.</li>
+<li>Exercise retention and true-erasure procedures across events and
+backups.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../rejected-value-tombstone/">Rejected-value
+tombstone</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Model memory as candidate,
+verified, rejected, or stale instead of placing every extracted fact in
+one truth bucket.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Trust-State
+Machine — Agent Memory Atlas">
+    <meta property="og:description" content="Model memory as candidate,
+verified, rejected, or stale instead of placing every extracted fact in
+one truth bucket.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Trust-State
+Machine — Agent Memory Atlas">
+    <meta name="twitter:description" content="Model memory as candidate,
+verified, rejected, or stale instead of placing every extracted fact in
+one truth bucket.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Trust-State Machine — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Trust</p>
+          <h1>Trust-State Machine</h1>
+          <p class="document-deck">Model memory as candidate, verified,
+rejected, or stale instead of placing every extracted fact in one truth
+bucket.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Represent the epistemic status of a memory explicitly and make
+promotion, rejection, correction, retrieval, and pruning depend on that
+status.</p>
+<h2 id="the-problem">The problem</h2>
+<p>An LLM-generated fact, a user assertion, a document sentence, and a
+corroborated observation do not deserve the same authority. A single
+active/inactive flag hides that difference. Confidence scores alone are
+also ambiguous: they often mix truth, retrieval relevance, and model
+certainty.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Start with a small state machine:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Candidate
+    Candidate --&gt; Verified: trusted source or corroboration
+    Candidate --&gt; Rejected: review or contradiction
+    Verified --&gt; Stale: age or superseding evidence
+    Verified --&gt; Rejected: correction
+    Stale --&gt; Verified: revalidation
+    Rejected --&gt; Candidate: explicit reactivation</code></pre>
+<p>Keep separate dimensions for:</p>
+<ul>
+<li><strong>Trust state:</strong> whether the memory may be treated as
+established.</li>
+<li><strong>Epistemic confidence:</strong> how strongly the evidence
+supports it.</li>
+<li><strong>Retrieval strength:</strong> how useful or reachable it has
+been.</li>
+</ul>
+<p>Retrieval policy can then prefer verified memory, include candidates
+with visible uncertainty when necessary, and suppress rejected records
+from ordinary context.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>The state machine gives every transition a policy boundary. It
+creates places to require corroboration, human review, held-out evals,
+or privileged actors. It also makes correction and audit language
+precise: a memory was rejected, not merely assigned a lower similarity
+score.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>More states create more transitions, UI, and operational policy. A
+candidate queue can grow forever. Verification can become theater if the
+verifier repeats the same model or source. Stale is temporal
+uncertainty, not proof of falsity. Promotion rules must be explainable
+and scoped to the consequences of being wrong.</p>
+<p>For low-risk note retrieval, a full trust machine may be excessive.
+It matters most when memory changes decisions, identity, permissions, or
+long-lived behavior.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/verel/">Verel</a> is the clearest reference:
+candidate, verified, and rejected states participate in recall,
+promotion, consolidation, and pruning. It also separates epistemic
+confidence from retrieval strength. <a
+href="../../systems/rainbox/">RainBox</a> distinguishes human/override
+writes from model-originated candidates and couples trust with operator
+review. Other systems often expose CRUD without an equivalent promotion
+boundary.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Prove candidates cannot enter verified-only context.</li>
+<li>Exercise every allowed and forbidden state transition.</li>
+<li>Verify rejected records do not return through normal recall.</li>
+<li>Test that retrieval feedback changes usefulness signals, not truth
+automatically.</li>
+<li>Verify stale records can be revalidated without losing history.</li>
+<li>Test actor permissions for promotion, rejection, and override.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../rejected-value-tombstone/">Rejected-value
+tombstone</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

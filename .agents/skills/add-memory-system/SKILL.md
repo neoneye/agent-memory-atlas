@@ -110,6 +110,22 @@ Review and update every applicable area:
 
 Preserve nuance. A system can belong to multiple categories, and absence of a feature is not automatically a defect if it is outside the design's intended scope.
 
+## Review the pattern library
+
+Read `content/patterns/index.md` and every pattern page that overlaps the new system. Update the "Seen in the atlas" evidence when the repository provides a strong example, counterexample, or failure mode.
+
+Add a dedicated pattern page only when the implementation reveals a reusable architectural move that is not already covered. A good pattern page must explain:
+
+- Intent and the recurring problem.
+- Architectural shape and important invariants.
+- Why the pattern works.
+- Tradeoffs and failure modes.
+- Concrete systems in the atlas.
+- Tests required before relying on it.
+- Related patterns.
+
+When adding a pattern, register it in the pattern index, consider featuring it on the homepage, update the homepage pattern count, and keep `scripts/test_site.sh` aligned. Do not create a new pattern name for a minor product feature or a one-off implementation detail.
+
 ## Register the system on the homepage
 
 Add one card to `site/index.html` that matches the existing card structure:
@@ -147,6 +163,7 @@ Then verify:
 - The homepage links to the rendered report.
 - The report shows source and analyzed-revision links.
 - Generated `docs/` contains the updated overview and homepage.
+- Relevant pattern pages include the new implementation evidence.
 - No root-relative links were introduced.
 - Search/filter metadata makes the new card discoverable.
 

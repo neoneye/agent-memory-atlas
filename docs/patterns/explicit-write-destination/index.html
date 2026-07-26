@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Let reads fan out across allowed
+memory stores while requiring every mutation to name one concrete
+private or shared destination.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Explicit Write
+Destination — Agent Memory Atlas">
+    <meta property="og:description" content="Let reads fan out across
+allowed memory stores while requiring every mutation to name one
+concrete private or shared destination.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Explicit Write
+Destination — Agent Memory Atlas">
+    <meta name="twitter:description" content="Let reads fan out across
+allowed memory stores while requiring every mutation to name one
+concrete private or shared destination.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Explicit Write Destination — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Federation</p>
+          <h1>Explicit Write Destination</h1>
+          <p class="document-deck">Let reads fan out across allowed
+memory stores while requiring every mutation to name one concrete
+private or shared destination.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Support layered memory—personal, project, repository, team, or
+organization—without letting a broad read context silently determine
+where new information is written.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Federated retrieval may merge several stores into one result list. If
+a subsequent “remember this” operation inherits that blended context, a
+private observation can leak into a shared repository or a team lesson
+can land in one developer’s private memory.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Separate read scope from write target:</p>
+<pre class="text"><code>read_scopes = [private, project, organization]
+write_target = project</code></pre>
+<p>Reads may fan out according to access policy and merge with locality
+or precedence rules. Writes accept exactly one resolved destination and
+reject ambiguous requests. The destination becomes part of identity,
+provenance, access control, and the mutation audit.</p>
+<p>Agent tools should make the target visible in their arguments.
+Defaults are acceptable only when they are safe, obvious, and surfaced
+to the user; shared writes often deserve confirmation.</p>
+<h2 id="why-it-works">Why it works</h2>
+<p>The pattern prevents accidental publication and makes ownership
+inspectable. It also allows independent storage, sync, retention, and
+review policy for each layer.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<p>Explicit targets add friction. Agents may choose poorly, and users
+may not understand the scope names. A promotion flow is needed when a
+private insight becomes shared knowledge. Moving a memory between stores
+must preserve provenance without leaving stale copies or broken
+links.</p>
+<p>Do not infer a write target from the top search result. Relevance and
+ownership are different decisions.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> provides
+the clearest implementation: reads federate across a private brain and
+repository-owned wikis, while mutations require an explicit target. Its
+repository scopes also avoid silently auto-committing shared changes. <a
+href="../../systems/rainbox/">RainBox</a> and <a
+href="../../systems/verel/">Verel</a> reinforce the broader principle
+through explicit claim scopes and scoped policy.</p>
+<h2 id="implementation-checklist">Implementation checklist</h2>
+<ul>
+<li>Give every store a stable, human-readable destination ID.</li>
+<li>Resolve and authorize the target before mutation.</li>
+<li>Include target scope in dedupe, conflict, and tombstone checks.</li>
+<li>Record promotions and moves as relations or audit events.</li>
+<li>Require stronger confirmation for shared or organization-wide
+writes.</li>
+<li>Keep private automatic capture separate from shared
+publication.</li>
+</ul>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Omitted and ambiguous write targets fail safely.</li>
+<li>Private capture never appears in shared stores.</li>
+<li>Read federation does not affect write routing.</li>
+<li>Promotion preserves provenance and removes or links the
+predecessor.</li>
+<li>Concurrent moves cannot create two active owners.</li>
+<li>Shared targets enforce authorization independently of the agent
+tool.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../scope-as-a-first-class-key/">Scope as a first-class
+key</a></li>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+<li><a href="../append-only-memory-audit/">Append-only memory
+audit</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
