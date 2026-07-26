@@ -17,6 +17,11 @@ Visit [neoneye.github.io/agent-memory-atlas](https://neoneye.github.io/agent-mem
 - `templates/` — the shared document-page template.
 - `assets/` — styles, behavior, and social-preview media.
 - `docs/` — generated static site published by GitHub Pages.
+- `.agents/skills/add-memory-system/` — the repeatable workflow for researching and integrating another memory system.
+
+## Add a memory system
+
+Invoke the repository-local `$add-memory-system` skill with the path to a source checkout. It pins the analyzed commit, scaffolds the report, guides the code review, integrates the comparison and homepage, and validates the generated site.
 
 ## Build locally
 
