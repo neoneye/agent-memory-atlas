@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A FastAPI and Postgres memory
+service that turns message streams into derived peer representations.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Honcho — Agent Memory Atlas">
+    <meta property="og:description" content="A FastAPI and Postgres
+memory service that turns message streams into derived peer
+representations.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Honcho — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FastAPI and Postgres
+memory service that turns message streams into derived peer
+representations.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Honcho — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Peer and session representation</p>
+          <h1>Honcho</h1>
+          <p class="document-deck">A FastAPI and Postgres memory service
+that turns message streams into derived peer representations.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/plastic-labs/honcho">https://github.com/plastic-labs/honcho</a>">
+              <span>Source</span>
+              <strong>plastic-labs/honcho</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420">https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420</a>" title="eb386c3ceb77774b29108f9ab114e71d52b7d420">
+              <span>Analyzed revision</span>
+              <code>eb386c3ceb77774b29108f9ab114e71d52b7d420</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>honcho</code> is a FastAPI/Postgres memory service for stateful
+agents. Its core model is not "store arbitrary facts"; it stores
+messages/events, then derives peer-centric representations in the
+background. The system models workspaces, sessions, peers, messages,
+message embeddings, observer/observed collections,
+documents/observations, queue items, and active queue sessions.</p>
+<p>This is one of the more serious service architectures in the
+workspace. It has:</p>
+<ul>
+<li>Raw message event log.</li>
+<li>Async derivation queue.</li>
+<li>Derived explicit/deductive observations.</li>
+<li>Peer-to-peer representation model.</li>
+<li>pgvector or external vector-store paths.</li>
+<li>Session context/search APIs.</li>
+<li>Bench/eval harnesses for LoCoMo, LongMem, BEAM, Oolong, etc.</li>
+</ul>
+<p>The strongest idea is the separation between raw messages and
+inferred representations. The main risk is eventual consistency and
+trust: derived observations are LLM-generated and embedded, but the code
+reviewed does not show a hard verification gate before they become
+queryable memory.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Honcho's memory model:</p>
+<ul>
+<li><code>Message</code>: raw interaction/event in a session from a
+peer.</li>
+<li><code>MessageEmbedding</code>: chunked embedding rows for message
+semantic search.</li>
+<li><code>Collection</code>: a pairwise observer/observed memory
+space.</li>
+<li><code>Document</code>: derived observation about an observed peer
+from an observer's perspective.</li>
+<li><code>Representation</code>: in-memory object combining explicit and
+deductive observations.</li>
+</ul>
+<p>Lifecycle:</p>
+<pre class="text"><code>session.add_messages -&gt; messages table + optional pending embeddings
+-&gt; enqueue representation tasks
+-&gt; deriver batches messages
+-&gt; LLM extracts PromptRepresentation
+-&gt; RepresentationManager embeds observations
+-&gt; documents table / vector store
+-&gt; query via representation/session/search/chat/context endpoints</code></pre>
+<p>The peer-centric idea matters: a collection is not merely "Alice's
+memory"; it can be "observer X's representation of observed Y".</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>honcho/src/models.py</code>: SQLAlchemy schema.</li>
+<li><code>honcho/src/crud/message.py</code>: message
+creation/search/context helpers.</li>
+<li><code>honcho/src/crud/document.py</code>: document CRUD and vector
+search.</li>
+<li><code>honcho/src/crud/representation.py</code>: representation
+save/retrieve logic.</li>
+<li><code>honcho/src/deriver/deriver.py</code>: LLM-derived observation
+processing.</li>
+<li><code>honcho/src/deriver/enqueue.py</code>: queue record
+generation.</li>
+<li><code>honcho/src/deriver/queue_manager.py</code>: worker polling,
+batching, stale cleanup.</li>
+<li><code>honcho/src/dialectic/chat.py</code>,
+<code>honcho/src/dialectic/core.py</code>: query answering over peer
+memory.</li>
+<li><code>honcho/src/reconciler/*</code>: vector reconciliation.</li>
+</ul>
+<p>Architecture:</p>
+<pre class="mermaid"><code>flowchart LR
+  API[&quot;FastAPI routers&quot;] --&gt; CRUD[&quot;CRUD layer&quot;]
+  CRUD --&gt; PG[&quot;Postgres + pgvector&quot;]
+  CRUD --&gt; Queue[&quot;queue table&quot;]
+  Queue --&gt; Deriver[&quot;Deriver workers&quot;]
+  Deriver --&gt; LLM[&quot;LLM&quot;]
+  Deriver --&gt; RepMgr[&quot;RepresentationManager&quot;]
+  RepMgr --&gt; Docs[&quot;documents / collections&quot;]
+  Docs --&gt; Query[&quot;context/search/chat&quot;]
+  PG --&gt; Reconciler[&quot;external vector reconciler&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Message capture:</p>
+<ul>
+<li><code>create_messages()</code> in
+<code>honcho/src/crud/message.py</code>.</li>
+<li>Ensures session/peers exist.</li>
+<li>Uses
+<code>pg_advisory_xact_lock(hashtext(workspace), hashtext(session))</code>
+to serialize sequence assignment.</li>
+<li>Assigns <code>seq_in_session</code>.</li>
+<li>Creates pending <code>MessageEmbedding</code> rows if
+<code>settings.EMBED_MESSAGES</code>.</li>
+</ul>
+<p>Queueing:</p>
+<ul>
+<li><code>enqueue()</code> and <code>handle_session()</code> in
+<code>honcho/src/deriver/enqueue.py</code>.</li>
+<li>Resolves workspace/session/message configuration.</li>
+<li>Generates queue records for representation and summary tasks.</li>
+<li>Cancels pending dreams for active observed peers.</li>
+</ul>
+<p>Derivation:</p>
+<ul>
+<li><code>process_representation_tasks_batch()</code> in
+<code>honcho/src/deriver/deriver.py</code>.</li>
+<li>Sorts messages, formats timestamped turns, builds
+<code>minimal_deriver_prompt(...)</code>.</li>
+<li>Calls
+<code>honcho_llm_call(..., response_model=PromptRepresentation, json_mode=True)</code>.</li>
+<li>Converts response to <code>Representation</code>.</li>
+<li>Saves observations for all observer collections via
+<code>RepresentationManager.save_representation(...)</code>.</li>
+</ul>
+<p>Representation storage:</p>
+<ul>
+<li><code>RepresentationManager.save_representation()</code> in
+<code>honcho/src/crud/representation.py</code>.</li>
+<li>Normalizes observations.</li>
+<li>Batch embeds observation text.</li>
+<li>Writes documents through
+<code>crud.create_documents(...)</code>.</li>
+<li>Schedules dream processing when enabled.</li>
+</ul>
+<p>Representation retrieval:</p>
+<ul>
+<li><code>get_working_representation()</code> and
+<code>_get_working_representation_internal()</code> in
+<code>honcho/src/crud/representation.py</code>.</li>
+<li>Mixes semantic, most-derived, and recent observations within
+<code>max_observations</code>.</li>
+</ul>
+<p>Message search:</p>
+<ul>
+<li><code>search_messages()</code> and helpers in
+<code>honcho/src/crud/message.py</code>.</li>
+<li>Supports pgvector and external vector-store paths.</li>
+<li>Deduplicates chunk hits by message ID.</li>
+<li>Adds context windows around matched messages.</li>
+<li>Scopes peer searches to sessions where observer has membership.</li>
+</ul>
+<p>Document search:</p>
+<ul>
+<li><code>query_documents()</code> and helpers in
+<code>honcho/src/crud/document.py</code>.</li>
+<li>Uses pgvector cosine distance or external vector store, then fetches
+ordered DB rows.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li><code>honcho/tests/crud/test_representation_manager.py</code></li>
+<li><code>honcho/tests/deriver/test_deriver_processing.py</code></li>
+<li><code>honcho/tests/integration/test_representation.py</code></li>
+<li><code>honcho/tests/integration/test_message_embeddings.py</code></li>
+<li><code>honcho/tests/unified/test_cases/*</code></li>
+<li><code>honcho/tests/bench/*</code></li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Important tables from <code>honcho/src/models.py</code>:</p>
+<ul>
+<li><code>workspaces</code>: tenant/config root.</li>
+<li><code>peers</code>: people, agents, groups, projects, ideas.</li>
+<li><code>sessions</code>: event containers.</li>
+<li><code>session_peers</code>: peer membership/configuration per
+session.</li>
+<li><code>messages</code>: raw message log, full-text indexed.</li>
+<li><code>message_embeddings</code>: chunk embeddings, sync state, HNSW
+index.</li>
+<li><code>collections</code>: unique
+<code>(observer, observed, workspace_name)</code>.</li>
+<li><code>documents</code>: derived observations with
+<code>level</code>, <code>times_derived</code>, embedding, source IDs,
+soft delete, session link.</li>
+<li><code>queue</code>: background tasks.</li>
+<li><code>active_queue_sessions</code>: work-unit ownership.</li>
+</ul>
+<p>The <code>Document.level</code> field distinguishes explicit and
+deductive observations. <code>times_derived</code> tracks
+reinforcement/derivation count. <code>source_ids</code> can support
+derivation trees.</p>
+<p>Scoping is strong: most tables include <code>workspace_name</code>,
+and peer/session relationships are composite-key constrained.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Honcho has several retrieval paths:</p>
+<ul>
+<li>Message semantic search over <code>message_embeddings</code>.</li>
+<li>Message full-text index exists on
+<code>messages.content</code>.</li>
+<li>Document semantic search over <code>documents.embedding</code>.</li>
+<li>Recent observations.</li>
+<li>Most-derived observations.</li>
+<li>Session-limited context.</li>
+<li>Peer-visible sessions when observer is provided.</li>
+<li>Dialectic agent chat over peer representation.</li>
+</ul>
+<p><code>RepresentationManager._get_working_representation_internal()</code>
+splits the observation budget:</p>
+<ul>
+<li>Semantic observations if query supplied.</li>
+<li>Most-derived observations when requested.</li>
+<li>Recent observations for the remainder.</li>
+</ul>
+<p>This is a useful pattern: it avoids pure semantic recall and includes
+low-latency, stable representation context.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Honcho writes raw messages synchronously and derived memories
+asynchronously.</p>
+<p>Message write:</p>
+<ul>
+<li>Transactional session/sequence handling.</li>
+<li>Optional chunk preparation.</li>
+<li>Embedding work deferred through pending rows/reconciler.</li>
+</ul>
+<p>Derived write:</p>
+<ul>
+<li>Queue worker batches representation tasks.</li>
+<li>LLM call extracts explicit/deductive observations.</li>
+<li>Observations are batch embedded.</li>
+<li><code>create_documents(..., deduplicate=settings.DERIVER.DEDUPLICATE)</code>
+handles persistence.</li>
+</ul>
+<p>This is operationally sound for service latency: message ingestion
+does not wait on derivation. The tradeoff is stale reads immediately
+after writes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Surfaces:</p>
+<ul>
+<li>FastAPI routers under <code>honcho/src/routers/</code>.</li>
+<li>Python and TypeScript SDKs under <code>honcho/sdks/</code>.</li>
+<li>MCP server under <code>honcho/mcp/</code>.</li>
+<li>Agent integrations and examples.</li>
+</ul>
+<p>Agent-facing operations include:</p>
+<ul>
+<li>Add messages to sessions.</li>
+<li>Ask a peer chat question.</li>
+<li>Get session context.</li>
+<li>Search peer/session/global memory.</li>
+<li>Fetch representations.</li>
+<li>Inspect queue status.</li>
+</ul>
+<p>The system expects applications to store interaction history, then
+let Honcho reason in the background.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Raw messages preserved separately from derived observations.</li>
+<li>Queue ownership and stale cleanup exist.</li>
+<li>Advisory locks prevent session sequence races.</li>
+<li>Soft deletes on documents.</li>
+<li>Vector sync state tracks migration/reconciliation.</li>
+<li>Tests cover migrations, queueing, deriver, routes, SDKs, and
+benchmarks.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>LLM-derived observations become queryable documents without a
+visible hard verification gate.</li>
+<li>Background reasoning creates eventual consistency; API users must
+handle freshness.</li>
+<li>Multi-peer observation configuration is powerful but easy to
+misconfigure.</li>
+<li>Prompt injection in messages can influence derived
+observations.</li>
+<li>Trust is partly implicit in "explicit" vs "deductive" and
+<code>times_derived</code>, not a full epistemic state.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Honcho has the richest test/eval footprint among these repos:</p>
+<ul>
+<li>Migration tests under <code>tests/alembic</code>.</li>
+<li>CRUD and representation manager tests.</li>
+<li>Deriver queue/processing tests.</li>
+<li>Integration tests for enqueue, embeddings, representation.</li>
+<li>Unified JSON test cases for observation topology, LongMem-style
+scenarios, configuration inheritance.</li>
+<li>Benchmark harnesses under <code>tests/bench</code> for BEAM, LoCoMo,
+LongMem, Oolong, etc.</li>
+</ul>
+<p>I did not run these tests. The code structure suggests a serious test
+culture.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Raw event log plus derived representation documents.</li>
+<li>Observer/observed collections for multi-peer memory.</li>
+<li>Async derivation queue with explicit work-unit ownership.</li>
+<li>Blend semantic/recent/most-derived observations for working
+context.</li>
+<li>Advisory locks for session sequence assignment.</li>
+<li>Vector reconciliation path for external vector stores.</li>
+<li>Deduplicated message search snippets with context windows.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Derived observations are persuasive but not necessarily
+verified.</li>
+<li>Complex peer observation config can create surprising memory
+visibility.</li>
+<li>Eventual consistency must be surfaced clearly to users.</li>
+<li>A large service footprint may be too heavy for local coding-agent
+memory.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>Message log separated from derived memory.</li>
+<li>Peer/observer modeling if building multi-agent systems.</li>
+<li>Context blend: semantic + recent + reinforced.</li>
+<li>Queue/reconciler architecture.</li>
+</ul>
+<p>Avoid if your goal is a small local memory layer. Honcho is closer to
+memory infrastructure for products and teams.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How exactly does <code>create_documents(..., deduplicate=...)</code>
+decide duplicates?</li>
+<li>What is the production meaning of <code>times_derived</code>?</li>
+<li>How are bad derived observations corrected or contradicted?</li>
+<li>What freshness guarantees are documented to SDK users?</li>
+<li>How much does the dreamer layer alter long-term
+representations?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>honcho/src/models.py</code>.</li>
+<li>Message write/search: <code>honcho/src/crud/message.py</code>.</li>
+<li>Documents: <code>honcho/src/crud/document.py</code>.</li>
+<li>Representation: <code>honcho/src/crud/representation.py</code>.</li>
+<li>Deriver: <code>honcho/src/deriver/deriver.py</code>,
+<code>honcho/src/deriver/enqueue.py</code>,
+<code>honcho/src/deriver/queue_manager.py</code>.</li>
+<li>Dialectic chat: <code>honcho/src/dialectic/</code>.</li>
+<li>Reconciler: <code>honcho/src/reconciler/</code>.</li>
+<li>Tests/evals: <code>honcho/tests/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Deeply integrated agent memory
+spanning editable core blocks, archival passages, and conversation
+recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Letta — Agent Memory Atlas">
+    <meta property="og:description" content="Deeply integrated agent
+memory spanning editable core blocks, archival passages, and
+conversation recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Letta — Agent Memory Atlas">
+    <meta name="twitter:description" content="Deeply integrated agent
+memory spanning editable core blocks, archival passages, and
+conversation recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Letta — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Agent-runtime memory</p>
+          <h1>Letta</h1>
+          <p class="document-deck">Deeply integrated agent memory
+spanning editable core blocks, archival passages, and conversation
+recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/letta-ai/letta">https://github.com/letta-ai/letta</a>">
+              <span>Source</span>
+              <strong>letta-ai/letta</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f">https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f</a>" title="6d8cb7fd48938b629aad5770faa051a8d42e1e9f">
+              <span>Analyzed revision</span>
+              <code>6d8cb7fd48938b629aad5770faa051a8d42e1e9f</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>letta</code> is an agent runtime with memory as part of agent
+state. Its memory model is older and deeper than most repos here: core
+in-context memory blocks, archival semantic memory, recall over
+conversation history, file/source memory, and newer git-backed memory
+projection support.</p>
+<p>The essential distinction:</p>
+<ul>
+<li>Core memory is prompt-resident block state that the agent edits with
+tools.</li>
+<li>Archival memory is searchable passage storage.</li>
+<li>Recall memory is prior conversation history search.</li>
+<li>Source/file memory is document passages attached through
+sources/files.</li>
+</ul>
+<p>Letta's strongest idea is making memory editing explicit inside the
+tool loop, with block-level prompt recompilation after changes. Its
+biggest risk is that the agent is trusted to edit its own core memory;
+correctness depends on tool rules, exact-string edits, read-only flags,
+and runtime enforcement.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Letta memory layers:</p>
+<ul>
+<li><code>Memory</code>: in-context memory object containing
+<code>Block</code> objects.</li>
+<li><code>Block</code>: labeled prompt memory section such as
+<code>human</code>, <code>persona</code>, <code>system/persona</code>,
+or custom paths.</li>
+<li><code>ArchivalPassage</code>: long-term semantic memory attached to
+an archive/agent.</li>
+<li><code>SourcePassage</code>: chunks from uploaded files/sources.</li>
+<li>Conversation messages: searchable prior interaction history.</li>
+</ul>
+<p>Lifecycle:</p>
+<pre class="text"><code>agent receives prompt -&gt; system prompt includes compiled core memory
+-&gt; agent calls memory tools
+-&gt; core tool executor mutates AgentState.memory or inserts/searches passages
+-&gt; AgentManager persists changed memory and rebuilds system prompt
+-&gt; future LLM calls see updated core memory</code></pre>
+<p>Letta is memory-as-agent-state, not just memory-as-RAG.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>letta/letta/schemas/memory.py</code>: <code>Memory</code>,
+<code>BasicBlockMemory</code>, rendering/compilation.</li>
+<li><code>letta/letta/functions/function_sets/base.py</code>: tool
+schemas/docs for memory functions.</li>
+<li><code>letta/letta/services/tool_executor/core_tool_executor.py</code>:
+actual execution of core memory tools.</li>
+<li><code>letta/letta/services/block_manager.py</code>: block CRUD,
+tags, prompt rebuild triggers.</li>
+<li><code>letta/letta/services/passage_manager.py</code>:
+archival/source passage persistence.</li>
+<li><code>letta/letta/services/message_manager.py</code>: conversation
+search extraction/indexing.</li>
+<li><code>letta/letta/orm/block.py</code>: block schema and optimistic
+locking.</li>
+<li><code>letta/letta/orm/passage.py</code>: archival/source passage
+schema.</li>
+<li><code>letta/letta/services/memory_repo/*</code>: git-backed memory
+projection.</li>
+</ul>
+<p>Runtime shape:</p>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;Agent loop&quot;] --&gt; Tools[&quot;Core memory tools&quot;]
+  Tools --&gt; Executor[&quot;LettaCoreToolExecutor&quot;]
+  Executor --&gt; AgentState[&quot;AgentState.memory&quot;]
+  Executor --&gt; BlockMgr[&quot;BlockManager&quot;]
+  Executor --&gt; PassageMgr[&quot;PassageManager&quot;]
+  Executor --&gt; MsgMgr[&quot;MessageManager&quot;]
+  BlockMgr --&gt; DB[&quot;DB blocks&quot;]
+  PassageMgr --&gt; Passages[&quot;Archival/source passages + embeddings&quot;]
+  MsgMgr --&gt; Messages[&quot;Conversation messages&quot;]
+  BlockMgr --&gt; Prompt[&quot;Rebuilt system prompt&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Core prompt rendering:</p>
+<ul>
+<li><code>Memory.compile()</code> in
+<code>letta/letta/schemas/memory.py</code>.</li>
+<li>Renders XML-ish <code>&lt;memory_blocks&gt;</code> for normal
+agents.</li>
+<li>For git-enabled agents, <code>_render_memory_blocks_git()</code>
+renders <code>system/persona</code> as <code>&lt;self&gt;</code> and
+other <code>system/*</code> blocks under
+<code>&lt;memory&gt;</code>.</li>
+<li>For selected Anthropic agent types,
+<code>_render_memory_blocks_line_numbered()</code> adds line numbers as
+view-only context.</li>
+</ul>
+<p>Core memory mutation:</p>
+<ul>
+<li>Tool definitions are documented in
+<code>letta/letta/functions/function_sets/base.py</code>.</li>
+<li>Actual runtime implementation is
+<code>LettaCoreToolExecutor.execute()</code> in
+<code>letta/letta/services/tool_executor/core_tool_executor.py</code>.</li>
+<li><code>core_memory_append()</code>,
+<code>core_memory_replace()</code>, <code>memory_replace()</code>,
+<code>memory_insert()</code>, and <code>memory_apply_patch()</code>
+mutate <code>agent_state.memory</code>.</li>
+<li>After mutation, executor calls
+<code>agent_manager.update_memory_if_changed_async(...)</code>.</li>
+</ul>
+<p>Archival write/search:</p>
+<ul>
+<li><code>archival_memory_insert()</code> in
+<code>core_tool_executor.py</code> calls
+<code>passage_manager.insert_passage(...)</code> then rebuilds the
+system prompt.</li>
+<li><code>archival_memory_search()</code> delegates to
+<code>agent_manager.search_agent_archival_memory_async(...)</code>.</li>
+<li><code>PassageManager.create_agent_passage_async()</code> and
+<code>create_agent_passages_async()</code> persist
+<code>ArchivalPassage</code> rows with embeddings and tags.</li>
+</ul>
+<p>Conversation recall:</p>
+<ul>
+<li><code>conversation_search()</code> in
+<code>core_tool_executor.py</code>.</li>
+<li>Calls <code>message_manager.search_messages_async(...)</code>.</li>
+<li>Filters out tool messages and assistant calls to
+<code>conversation_search</code> to avoid recursive results.</li>
+<li>Formats structured results with timestamp, time delta, role,
+content, and RRF/vector/FTS metadata when available.</li>
+</ul>
+<p>Block persistence:</p>
+<ul>
+<li><code>BlockManager.update_block_async()</code> persists block
+changes, handles tag rows, and rebuilds system prompts for connected
+agents when prompt-affecting fields change.</li>
+<li><code>letta/letta/orm/block.py</code> defines
+<code>version_id_col</code> optimistic locking.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li><code>letta/tests/test_memory.py</code></li>
+<li><code>letta/tests/managers/test_block_manager.py</code></li>
+<li><code>letta/tests/managers/test_passage_manager.py</code></li>
+<li><code>letta/tests/managers/test_message_manager.py</code></li>
+<li><code>letta/tests/test_block_manager_noop_update.py</code></li>
+<li><code>letta/tests/performance_tests/test_insert_archival_memory.py</code></li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Core memory:</p>
+<ul>
+<li><code>Memory.blocks</code>: list of <code>Block</code> schemas.</li>
+<li><code>Block</code>: label, value, description, limit, read-only
+flag, metadata, tags.</li>
+<li><code>Block</code> ORM includes optimistic <code>version</code>,
+current history pointer, template/project/org fields.</li>
+</ul>
+<p>Archival/source memory:</p>
+<ul>
+<li><code>BasePassage</code>: <code>id</code>, <code>text</code>,
+embedding config, metadata, tags, embedding.</li>
+<li><code>ArchivalPassage</code>: attached to archive.</li>
+<li><code>SourcePassage</code>: attached to source/file and file
+name.</li>
+<li>Passage tags are stored both in JSON and a junction table for
+filtering.</li>
+</ul>
+<p>Conversation recall:</p>
+<ul>
+<li>Message records are indexed/searchable by
+<code>MessageManager</code>.</li>
+<li><code>_extract_message_text()</code> normalizes complex message
+content into JSON text and skips heartbeat/send-message/search tool
+noise.</li>
+</ul>
+<p>Scoping:</p>
+<ul>
+<li>Organization/user/agent boundaries are embedded throughout managers
+and ORM mixins.</li>
+<li>Agents connect to blocks through <code>blocks_agents</code>.</li>
+<li>Archives connect to agents through archive manager/pivot
+tables.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval layers:</p>
+<ul>
+<li>Core memory is always prompt-resident.</li>
+<li>Archival search uses semantic passage retrieval through the agent
+manager/passage infrastructure.</li>
+<li>Conversation search uses hybrid search metadata:
+<code>combined_score</code>, <code>vector_rank</code>,
+<code>fts_rank</code>, <code>search_mode</code>.</li>
+<li>Source/file passages support document memory.</li>
+</ul>
+<p>Letta's main retrieval idea is not "always search everything"; it
+gives the agent tools:</p>
+<ul>
+<li>Use <code>archival_memory_search</code> when it needs long-term
+facts.</li>
+<li>Use <code>conversation_search</code> when it needs prior
+conversation details.</li>
+<li>Rely on core memory for always-on stable state.</li>
+</ul>
+<p>Risk: the agent must know which layer to query. Core memory can
+become stale or bloated if the agent edits poorly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Core memory writes are precise edits:</p>
+<ul>
+<li>Append.</li>
+<li>Exact string replace.</li>
+<li>Insert at line.</li>
+<li>Apply unified-diff-like patch.</li>
+<li>Create/delete/rename memory blocks through the broader
+<code>memory</code> tool path.</li>
+</ul>
+<p>Guardrails:</p>
+<ul>
+<li>Read-only block check.</li>
+<li>Line-number-prefix rejection.</li>
+<li>Exact replace must match once.</li>
+<li>Patch hunk must match unique context.</li>
+<li>Prompt is rebuilt after memory changes.</li>
+</ul>
+<p>Archival writes:</p>
+<ul>
+<li><code>PassageManager</code> pads embeddings for Postgres vector
+dimensions.</li>
+<li>Removes null bytes before DB insert.</li>
+<li>Deduplicates tags.</li>
+<li>Batch creation available.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is deeply integrated with Letta's agent loop.</p>
+<p>Core tools:</p>
+<ul>
+<li><code>core_memory_append</code></li>
+<li><code>core_memory_replace</code></li>
+<li><code>memory_replace</code></li>
+<li><code>memory_insert</code></li>
+<li><code>memory_apply_patch</code></li>
+<li><code>memory</code></li>
+<li><code>archival_memory_insert</code></li>
+<li><code>archival_memory_search</code></li>
+<li><code>conversation_search</code></li>
+</ul>
+<p>Constants in <code>letta/letta/constants.py</code> define base memory
+tool sets for different agent families, including v1/v2/v3 and sleeptime
+variants.</p>
+<p>This is powerful because memory edits happen as part of the agent's
+reasoning/action loop. It is risky because the same model that may be
+confused is allowed to edit its own durable state.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Core memory block limits and read-only flags.</li>
+<li>Optimistic locking on block ORM.</li>
+<li>Tool executor catches errors and returns tool errors rather than
+crashing the loop.</li>
+<li>Prompt rebuild happens after persisted block changes.</li>
+<li>Conversation search suppresses recursive/tool-result pollution.</li>
+<li>Exact edit tools reduce accidental broad rewrites.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>Agent-controlled memory can silently encode wrong beliefs.</li>
+<li>No first-class verified/candidate/rejected trust layer.</li>
+<li>Core memory is prompt-resident and token-sensitive.</li>
+<li>Exact-string editing is brittle.</li>
+<li>Archival memory insertion trusts agent-provided content.</li>
+<li>Git-backed memory projection adds another synchronization
+surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Relevant tests exist for memory, block, passage, message, summarizer,
+and archival-memory performance. I did not run them.</p>
+<p>Missing tests I would want:</p>
+<ul>
+<li>Agent memory edit mistakes under line-numbered prompts.</li>
+<li>Prompt injection through archival search results.</li>
+<li>Read-only block enforcement across every memory tool path.</li>
+<li>Conflict handling when user facts change.</li>
+<li>Core memory token pressure and summarization interactions.</li>
+</ul>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Separate always-on core memory from searchable archival memory.</li>
+<li>Use labeled blocks with descriptions, limits, and read-only
+flags.</li>
+<li>Rebuild prompts automatically after memory mutation.</li>
+<li>Exact edit tools with uniqueness checks.</li>
+<li>Conversation search filters that avoid recursive tool-output
+pollution.</li>
+<li>Git-backed memory projection for developers comfortable with file
+semantics.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Letting the agent directly rewrite its own identity/user model
+without verification.</li>
+<li>Core memory as unstructured text blocks can become a junk
+drawer.</li>
+<li>Multiple memory tool generations create conceptual complexity.</li>
+<li>Exact string replacement is safe but brittle for long evolving
+blocks.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>Core vs archival vs recall separation.</li>
+<li>Block metadata and read-only controls.</li>
+<li>Prompt rebuild after state changes.</li>
+<li>Patch-style memory editing.</li>
+</ul>
+<p>Avoid copying:</p>
+<ul>
+<li>Unlimited model authority over durable beliefs.</li>
+<li>Unstructured core memory without provenance.</li>
+<li>Too many overlapping memory tool APIs unless backward compatibility
+requires it.</li>
+</ul>
+<p>Letta is worth studying if you are building a full agent runtime. It
+is heavier than needed for a standalone memory service.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How does Letta decide when to compact/summarize versus preserve raw
+conversation history?</li>
+<li>How are wrong core memories corrected in practice?</li>
+<li>How mature is git-backed memory relative to block-backed
+memory?</li>
+<li>What retrieval fusion does <code>search_messages_async</code> use
+internally across DB backends?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Core memory schema/rendering:
+<code>letta/letta/schemas/memory.py</code>.</li>
+<li>Tool docs/stubs:
+<code>letta/letta/functions/function_sets/base.py</code>.</li>
+<li>Tool runtime:
+<code>letta/letta/services/tool_executor/core_tool_executor.py</code>.</li>
+<li>Blocks: <code>letta/letta/services/block_manager.py</code>,
+<code>letta/letta/orm/block.py</code>.</li>
+<li>Passages: <code>letta/letta/services/passage_manager.py</code>,
+<code>letta/letta/orm/passage.py</code>.</li>
+<li>Conversation search:
+<code>letta/letta/services/message_manager.py</code>.</li>
+<li>Git memory: <code>letta/letta/services/memory_repo/</code>.</li>
+<li>Tests: <code>letta/tests/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

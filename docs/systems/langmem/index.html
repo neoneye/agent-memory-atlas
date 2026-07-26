@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="LangGraph-native memory tools,
+background reflection, structured extraction, and prompt optimization
+primitives.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LangMem — Agent Memory Atlas">
+    <meta property="og:description" content="LangGraph-native memory
+tools, background reflection, structured extraction, and prompt
+optimization primitives.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LangMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="LangGraph-native memory
+tools, background reflection, structured extraction, and prompt
+optimization primitives.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LangMem — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Library primitives</p>
+          <h1>LangMem</h1>
+          <p class="document-deck">LangGraph-native memory tools,
+background reflection, structured extraction, and prompt optimization
+primitives.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/langchain-ai/langmem">https://github.com/langchain-ai/langmem</a>">
+              <span>Source</span>
+              <strong>langchain-ai/langmem</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11">https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11</a>" title="c01e273b94aa4c06e41d0ed1ccce0db17de2bc11">
+              <span>Analyzed revision</span>
+              <code>c01e273b94aa4c06e41d0ed1ccce0db17de2bc11</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>langmem</code> is not a full memory service. It is a compact
+set of LangGraph/LangChain primitives for agent memory tools, background
+reflection, structured extraction, and prompt optimization. The
+repository intentionally delegates persistence, indexing, and retrieval
+quality to LangGraph's <code>BaseStore</code>.</p>
+<p>The essential implementation lives in:</p>
+<ul>
+<li><code>langmem/src/langmem/knowledge/tools.py</code></li>
+<li><code>langmem/src/langmem/knowledge/extraction.py</code></li>
+<li><code>langmem/src/langmem/reflection.py</code></li>
+<li><code>langmem/src/langmem/short_term/summarization.py</code></li>
+</ul>
+<p>The main value is ergonomic integration: it gives agents memory tools
+they can call in the hot path and managers/executors that can
+extract/consolidate in the background. It is best understood as a memory
+control plane for LangGraph apps, not as a storage or retrieval
+engine.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>LangMem treats memory as an item in a LangGraph
+<code>BaseStore</code>, namespaced by a tuple. The memory value is
+usually:</p>
+<pre class="python"><code>{&quot;content&quot;: &lt;string or JSON-serializable structured object&gt;}</code></pre>
+<p>The memory lifecycle has two main modes:</p>
+<pre class="text"><code>hot path:
+agent -&gt; manage_memory tool -&gt; BaseStore.put/delete
+agent -&gt; search_memory tool -&gt; BaseStore.search
+
+background:
+conversation -&gt; MemoryManager/trustcall extractor -&gt; extracted memories
+-&gt; create_memory_store_manager persists results to BaseStore
+-&gt; ReflectionExecutor schedules async/local/remote reflection</code></pre>
+<p>Memory is agent-controlled in the tool path and LLM-managed in the
+background manager path.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Runtime shape:</p>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;LangGraph agent&quot;] --&gt; Tools[&quot;LangMem tools&quot;]
+  Tools --&gt; Store[&quot;LangGraph BaseStore&quot;]
+  Conversation[&quot;Conversation&quot;] --&gt; Manager[&quot;MemoryManager&quot;]
+  Manager --&gt; Trustcall[&quot;trustcall extractor&quot;]
+  Manager --&gt; Store
+  App[&quot;App thread&quot;] --&gt; Reflection[&quot;ReflectionExecutor&quot;]
+  Reflection --&gt; Manager</code></pre>
+<p>Key dependency choices:</p>
+<ul>
+<li><code>BaseStore</code> provides persistence and search.</li>
+<li><code>trustcall.create_extractor</code> provides
+insert/update/delete structured extraction.</li>
+<li>LangGraph runtime provides store/config context.</li>
+<li>Remote reflection can use LangGraph Platform client APIs.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Hot-path write:</p>
+<ul>
+<li><code>create_manage_memory_tool()</code> in
+<code>langmem/src/langmem/knowledge/tools.py</code>.</li>
+<li>Builds sync and async <code>manage_memory</code> functions.</li>
+<li>Validates action: <code>create</code>, <code>update</code>,
+<code>delete</code>.</li>
+<li>Resolves namespace via <code>utils.NamespaceTemplate</code>.</li>
+<li>Uses <code>store.put/aput</code> for create/update and
+<code>store.delete/adelete</code> for delete.</li>
+</ul>
+<p>Hot-path search:</p>
+<ul>
+<li><code>create_search_memory_tool()</code> in
+<code>langmem/src/langmem/knowledge/tools.py</code>.</li>
+<li>Calls
+<code>store.search/asearch(namespace, query, filter, limit, offset)</code>.</li>
+<li>Returns JSON serialized items, optionally with raw artifact.</li>
+</ul>
+<p>Background extraction:</p>
+<ul>
+<li><code>MemoryManager</code> in
+<code>langmem/src/langmem/knowledge/extraction.py</code>.</li>
+<li><code>_MEMORY_INSTRUCTIONS</code> defines
+semantic/procedural/episodic extraction goals.</li>
+<li>Uses <code>trustcall.create_extractor(...)</code> with schemas and
+update/delete options.</li>
+<li>Supports multiple refinement steps through
+<code>max_steps</code>.</li>
+<li>Returns <code>ExtractedMemory(id, content)</code> tuples.</li>
+</ul>
+<p>Background persistence:</p>
+<ul>
+<li><code>create_memory_store_manager()</code> in
+<code>langmem/src/langmem/knowledge/extraction.py</code>.</li>
+<li>Wires <code>MemoryManager</code> to a store namespace and persists
+extracted results.</li>
+</ul>
+<p>Reflection queue:</p>
+<ul>
+<li><code>ReflectionExecutor()</code> in
+<code>langmem/src/langmem/reflection.py</code>.</li>
+<li><code>LocalReflectionExecutor</code> runs a background thread and
+cancels pending work for the same thread ID.</li>
+<li><code>RemoteReflectionExecutor</code> submits runs to LangGraph
+Platform.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li><code>langmem/tests/test_docstring_examples.py</code></li>
+<li><code>langmem/tests/short_term/test_summarization.py</code></li>
+<li><code>langmem/tests/short_term/test_summarization_async.py</code></li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>LangMem itself defines little persistent schema. The store item is
+provided by LangGraph:</p>
+<ul>
+<li>namespace: tuple path, often with runtime placeholders like
+<code>{langgraph_user_id}</code>.</li>
+<li>key: UUID string.</li>
+<li>value: <code>{"content": ...}</code>.</li>
+<li>created/updated timestamps and search score are provided by store
+implementation.</li>
+</ul>
+<p>Custom memory shape comes from the <code>schema</code> argument:</p>
+<ul>
+<li>Default hot-path tool schema is <code>str</code>.</li>
+<li>Background extraction default is
+<code>Memory(content: str)</code>.</li>
+<li>Users can pass Pydantic models for structured memory.</li>
+</ul>
+<p>Scoping is namespace-driven. This is flexible but pushes correctness
+to application convention.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is delegated to <code>BaseStore.search</code>.</p>
+<p>LangMem does not implement:</p>
+<ul>
+<li>vector search itself.</li>
+<li>BM25.</li>
+<li>reranking.</li>
+<li>temporal filtering.</li>
+<li>entity linking.</li>
+<li>token budgeting.</li>
+<li>conflict-aware recall.</li>
+</ul>
+<p>This is a feature and a limitation. The library composes with
+whatever LangGraph store is configured. In production, retrieval quality
+depends almost entirely on the store configuration and how the app
+injects results into prompts.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Hot-path writes are direct tool writes:</p>
+<ul>
+<li>Create: generate UUID and <code>put</code>.</li>
+<li>Update: require ID and overwrite content at key.</li>
+<li>Delete: require ID and delete key.</li>
+</ul>
+<p>Background writes are extractor-driven:</p>
+<ul>
+<li><code>MemoryManager</code> prepares a conversation packet and
+existing memories.</li>
+<li>The extractor may insert, update, or delete depending on flags.</li>
+<li>Existing memory IDs are preserved when updating.</li>
+<li>Deletes are disabled by default
+(<code>enable_deletes=False</code>).</li>
+</ul>
+<p>Important design choice: LangMem makes memory editing explicit and
+schema-aware but does not enforce provenance, trust, or conflict
+policy.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>This is where LangMem is strongest.</p>
+<p>Surfaces:</p>
+<ul>
+<li><code>create_manage_memory_tool(...)</code>: agent-callable memory
+mutation.</li>
+<li><code>create_search_memory_tool(...)</code>: agent-callable
+recall.</li>
+<li><code>create_memory_manager(...)</code>: background extraction
+manager.</li>
+<li><code>create_memory_store_manager(...)</code>: store-persisting
+background manager.</li>
+<li><code>ReflectionExecutor(...)</code>: local or remote background
+submission.</li>
+</ul>
+<p>The namespace template is the integration hinge. It lets the same
+tool definition scope memories by user, team, project, or arbitrary
+runtime config.</p>
+<p>Risk: the agent must decide when to use tools unless the app performs
+hot-path prompt injection or background reflection.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Very small behavioral surface.</li>
+<li>Store abstraction avoids lock-in.</li>
+<li>Create/update/delete validation is simple and clear.</li>
+<li>Background executor cancels older pending reflection for a
+thread.</li>
+<li>Structured extraction can use Pydantic schemas.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>No built-in provenance model.</li>
+<li>No memory confidence or verification state.</li>
+<li>No first-class contradiction handling beyond update/delete.</li>
+<li>Namespace mistakes can leak or fragment memory.</li>
+<li>Background worker thread is in-process and not durable unless using
+remote LangGraph execution.</li>
+<li>Prompt injection safety depends on user schemas/prompts and
+downstream store/prompt rendering.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repo has modest tests focused on docstring examples and
+short-term summarization. It does not appear to contain a deep memory
+retrieval/evaluation suite.</p>
+<p>Missing tests I would want:</p>
+<ul>
+<li>Namespace isolation.</li>
+<li>Tool behavior under malformed IDs/actions.</li>
+<li>Background extraction with contradictory memories.</li>
+<li>Store persistence behavior across different BaseStore
+implementations.</li>
+<li>Prompt injection in extracted memory content.</li>
+</ul>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Keep memory tools as thin wrappers over a generic store.</li>
+<li>Use namespace templates to avoid hard-coding user/project
+scope.</li>
+<li>Support both hot-path agent tools and background reflection.</li>
+<li>Let users provide structured memory schemas.</li>
+<li>Use background task cancellation keyed by thread ID to avoid stale
+reflection runs.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Delegating retrieval entirely to the store means memory quality is
+invisible at the LangMem layer.</li>
+<li>Direct update/delete tool semantics can let an agent overwrite
+memory without provenance.</li>
+<li>Background memory manager instructions are ambitious relative to the
+enforcement in code.</li>
+<li>No trust distinction between extracted, inferred, corrected, or
+verified memory.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The <code>BaseStore</code>-style interface idea.</li>
+<li>Namespace template design.</li>
+<li>Separate hot-path tools from background reflection.</li>
+<li>Schema-parametric memory extraction.</li>
+</ul>
+<p>Do not borrow as-is if you need:</p>
+<ul>
+<li>Strong correctness guarantees.</li>
+<li>Multi-signal retrieval.</li>
+<li>Durable queues.</li>
+<li>Tenant/security boundaries.</li>
+<li>Audit-grade provenance.</li>
+</ul>
+<p>LangMem is best when you are already building on LangGraph and want
+memory primitives, not a full memory platform.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How retrieval quality varies across LangGraph store
+implementations.</li>
+<li>Whether LangGraph Platform deployments add production-grade memory
+processing beyond this package.</li>
+<li>How users are expected to handle contradiction and deletion
+policies.</li>
+<li>Whether background reflection should become durable outside
+LangGraph Platform.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory tools:
+<code>langmem/src/langmem/knowledge/tools.py</code>.</li>
+<li>Extraction manager:
+<code>langmem/src/langmem/knowledge/extraction.py</code>.</li>
+<li>Reflection executor:
+<code>langmem/src/langmem/reflection.py</code>.</li>
+<li>Graph/RAG extras: <code>langmem/src/langmem/graph_rag.py</code>,
+<code>langmem/src/langmem/graphs/</code>.</li>
+<li>Short-term summarization:
+<code>langmem/src/langmem/short_term/summarization.py</code>.</li>
+<li>Tests: <code>langmem/tests/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1680 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A code-grounded comparison of
+eleven agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory Systems Comparative
+Report — Agent Memory Atlas">
+    <meta property="og:description" content="A code-grounded comparison
+of eleven agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory Systems Comparative
+Report — Agent Memory Atlas">
+    <meta name="twitter:description" content="A code-grounded comparison
+of eleven agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory Systems Comparative
+Report — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/main.css">
+  </head>
+  <body class="document-page" data-root="..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../#systems">Systems</a>
+        <a href="../compare/">Compare</a>
+        <a href="../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Cross-system synthesis</p>
+          <h1>Agent Memory Systems Comparative Report</h1>
+          <p class="document-deck">A code-grounded comparison of eleven
+agent memory architectures, their retrieval mechanics, trust models, and
+operational tradeoffs.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
+<p>This workspace contains several different answers to "agent memory".
+They should not be evaluated as one category.</p>
+<h3 id="library-first-memory-layer">Library-first memory layer</h3>
+<p>Repos:</p>
+<ul>
+<li><code>mem0</code></li>
+<li><code>langmem</code></li>
+</ul>
+<p>These optimize for easy embedding into an existing agent application.
+The application calls memory tools or SDK functions; the library handles
+extraction, storage, and retrieval.</p>
+<p>Tradeoff: the memory layer is easy to adopt but usually has weak
+authority over the agent loop. It can store and retrieve, but it cannot
+guarantee the model calls the right tool at the right time, verifies
+facts, or uses the recall output safely.</p>
+<h3 id="agent-runtime-memory">Agent-runtime memory</h3>
+<p>Repos:</p>
+<ul>
+<li><code>letta</code></li>
+<li><code>rainbox</code></li>
+</ul>
+<p>This treats memory as part of the agent runtime. Memory is not merely
+an external RAG sidecar; it is compiled into or injected into
+prompt/context, mutated through first-class tools/actions, searched
+through runtime services, and tied to agent state.</p>
+<p>Tradeoff: deeper integration gives better control over behavior, but
+the memory subsystem becomes coupled to the agent framework, tool
+execution, message manager, prompt/context assembly, review UI, and
+compatibility surface.</p>
+<h3 id="hostedproduct-memory-service">Hosted/product memory service</h3>
+<p>Repos:</p>
+<ul>
+<li><code>honcho</code></li>
+<li><code>supermemory</code></li>
+<li>partly <code>mem0</code></li>
+</ul>
+<p>These optimize for multi-user, multi-session, product-oriented
+memory. They expose APIs, SDKs, MCP tools, and background
+processing.</p>
+<p>Tradeoff: the API surface is often much easier to study than the
+actual decision machinery. In <code>supermemory</code>, the most
+important hosted backend logic is not visible in this checkout. In
+<code>mem0</code>, several advanced capabilities mentioned in docs are
+managed-platform-only in the OSS code.</p>
+<h3 id="coding-agent-local-memory">Coding-agent local memory</h3>
+<p>Repos:</p>
+<ul>
+<li><code>engram</code></li>
+<li><code>mempalace</code></li>
+<li><code>llm-wiki-memory</code></li>
+</ul>
+<p>This optimizes for a local developer workflow: durable local memory,
+MCP/tools/hooks, project scopes, exact search, vector search, conflict
+or dedupe handling, and sync/repair hooks.</p>
+<p>Tradeoff: local-first design is operationally simple and inspectable,
+but it does not solve large-scale hosted ranking, multi-tenant APIs, or
+rich social/user modeling. <code>engram</code> is compact and
+FTS-oriented; <code>mempalace</code> is broader, benchmark-heavy, and
+vector/hybrid retrieval-oriented; <code>llm-wiki-memory</code> is
+filesystem/git-oriented, hook-heavy, federated across private and
+repository wikis, and unusually focused on capture recovery and
+operations.</p>
+<h3 id="compact-local-graph-rag-memory">Compact local graph-RAG
+memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>swafra</code></li>
+</ul>
+<p>Swafra optimizes for a tiny, no-cloud MCP sidecar: ingest titled
+text, retain it as chunks, index with local embeddings and lexical
+signals, connect chunks in a graph, and return source-diverse
+context.</p>
+<p>Tradeoff: the implementation is easy to understand and run, but it
+has no database transactions, scopes, trust states, bounded context
+assembly, or ordinary tests. Its checked-in benchmark does not enforce
+the advertised retrieval cutoff.</p>
+<h3 id="verbatim-evidence-memory">Verbatim evidence memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>mempalace</code></li>
+</ul>
+<p>MemPalace optimizes for preserving original evidence. It stores raw
+conversation/file text as drawers and treats extracted/indexed layers as
+navigation aids rather than the authoritative memory.</p>
+<p>Tradeoff: this avoids lossy LLM extraction and preserves
+auditability, but it creates larger corpora and pushes more work into
+retrieval, context selection, privacy, and deletion.</p>
+<h3 id="peersession-representation-system">Peer/session representation
+system</h3>
+<p>Repo:</p>
+<ul>
+<li><code>honcho</code></li>
+</ul>
+<p>Honcho is not just "save facts and search them". It models
+workspaces, peers, sessions, messages, observations, and
+representations. It derives observations from conversation events and
+serves a working representation back to applications.</p>
+<p>Tradeoff: richer domain modeling gives more useful cross-session
+state, but it requires queueing, derivation, reconciliation, and
+consistency semantics.</p>
+<h3 id="operator-governed-assistant-memory">Operator-governed assistant
+memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>rainbox</code></li>
+</ul>
+<p>RainBox optimizes for memory that an operator can inspect, correct,
+audit, and evaluate. Its distinctive layer is not the vector ranker; it
+is the loop from memory claims/evidence to retrieval telemetry,
+feedback, eval cases, and review UI.</p>
+<p>Tradeoff: this works well inside a full assistant product, but it is
+much heavier than a library and less source-preserving than MemPalace's
+verbatim drawer model.</p>
+<h3 id="verification-first-memory">Verification-first memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>verel</code></li>
+</ul>
+<p>Verel treats memory as a trust problem. It separates confidence,
+retrieval strength, and verification state; carries rejected values
+forward; fences recalled memory as untrusted data; and uses promotion
+gates for induced rules.</p>
+<p>Tradeoff: this is more complex than most systems need for an MVP, but
+it directly addresses failures that simpler memory systems usually
+ignore.</p>
+<h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Memory unit</th>
+<th>Storage backend</th>
+<th>Retrieval strategy</th>
+<th>Write strategy</th>
+<th>Update/delete model</th>
+<th>Scoping model</th>
+<th>Agent integration</th>
+<th>Background processing</th>
+<th>Trust/provenance model</th>
+<th>Notable strengths</th>
+<th>Main risks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mem0</code></td>
+<td>Text fact in vector payload</td>
+<td>Vector store plus SQLite history/messages</td>
+<td>Semantic, optional keyword/BM25, entity boost, optional rerank</td>
+<td>LLM additive extraction, hash dedupe, entity linking</td>
+<td>Explicit update/delete APIs; V3 default append-oriented</td>
+<td><code>user_id</code>, <code>agent_id</code>, <code>run_id</code>,
+filters</td>
+<td>Python SDK, tool/API style</td>
+<td>Extraction and linking on write</td>
+<td>Attribution metadata, history; weak epistemic trust</td>
+<td>Practical SDK, pluggable stores, hybrid search</td>
+<td>LLM facts can become durable claims without verification</td>
+</tr>
+<tr>
+<td><code>langmem</code></td>
+<td>Store item, usually JSON memory</td>
+<td>LangGraph <code>BaseStore</code></td>
+<td><code>store.search/asearch</code> delegated to backend</td>
+<td>Tools call create/update/delete/search; extraction via
+Trustcall</td>
+<td>Tool-level CRUD</td>
+<td>Namespace templates</td>
+<td>LangChain/LangGraph tools</td>
+<td>Reflection executor local/remote</td>
+<td>Mostly application-defined</td>
+<td>Clean primitives, schema-driven extraction</td>
+<td>Too low-level to solve memory quality alone</td>
+</tr>
+<tr>
+<td><code>honcho</code></td>
+<td>Message, document/observation, representation</td>
+<td>Postgres/SQLAlchemy, pgvector or vector adapter</td>
+<td>Working representation blends semantic, recent, most-derived;
+message search with windows</td>
+<td>Message ingestion plus queued derivation</td>
+<td>Soft delete, representation reconciliation</td>
+<td>Workspace, peer, session, collection</td>
+<td>Hosted API/service model</td>
+<td>Deriver queues and workers</td>
+<td>Source IDs, derived observations, peer/session provenance</td>
+<td>Strong event-to-representation pipeline</td>
+<td>Operational complexity; LLM-derived observations still need trust
+policy</td>
+</tr>
+<tr>
+<td><code>engram</code></td>
+<td>Observation and prompt records</td>
+<td>Local SQLite WAL, FTS5</td>
+<td>FTS5, topic-key lookup, context assembly</td>
+<td>MCP <code>mem_save</code>, conflict candidate flow, dedupe/update
+rules</td>
+<td>Topic-key updates, duplicate counts, soft delete/sync mutation</td>
+<td>Project, scope, session, topic key</td>
+<td>MCP tools for coding agents</td>
+<td>Sync queue, local conflict workflows</td>
+<td>Source/session/project metadata, explicit judgment path</td>
+<td>Simple durable local design, inspectable code</td>
+<td>Lexical retrieval limits; conflict UX depends on agent behavior</td>
+</tr>
+<tr>
+<td><code>mempalace</code></td>
+<td>Verbatim drawer chunks, closets, KG triples</td>
+<td>Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG</td>
+<td>Direct drawer vector search, BM25 rerank, closet boost, metadata
+filters, FTS fallback</td>
+<td>Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert
+verbatim text</td>
+<td>Delete/update drawers, delete by source, dedup, repair; limited
+epistemic correction</td>
+<td>Palace, wing, room, source file, parent drawer, backend
+namespace</td>
+<td>MCP, CLI, hooks, skills, wake-up stack</td>
+<td>Mining, closet/hallway/tunnel computation, repair/sync/backup</td>
+<td>Strong source provenance; weak candidate/verified/rejected trust
+state</td>
+<td>Evidence-preserving raw baseline, hybrid retrieval, operational
+hardening</td>
+<td>Raw stores get large/noisy; contradiction resolution mostly outside
+core recall</td>
+</tr>
+<tr>
+<td><code>swafra</code></td>
+<td>Verbatim or synthetic chunk plus directed chunk edges</td>
+<td>Three local JSON files</td>
+<td>BM25 + vector + entity/date/preference heuristics + char n-gram;
+graph walk; best chunk per title</td>
+<td>MCP add; Leiden or exchange/paragraph chunks; synchronous full-file
+rewrite</td>
+<td>Exact source delete; implicit same-ID reindex; broken supersession
+path</td>
+<td>Source ID/title only; no user/project/tenant scope</td>
+<td>Python FastMCP; Node MCP over Python subprocess</td>
+<td>None</td>
+<td>Caller title and raw chunk; no actor, span-quality provenance, trust
+state, or injection fence</td>
+<td>Very compact local hybrid graph-RAG; optional dependencies; source
+diversity</td>
+<td>Non-atomic concurrent writes; unbounded context; dangling edges;
+benchmark cutoff invalid</td>
+</tr>
+<tr>
+<td><code>llm-wiki-memory</code></td>
+<td>Typed Markdown atom, plan/investigation, daily capture, or full
+document</td>
+<td>Filesystem wiki, per-category embedding caches, private git
+history</td>
+<td>Metadata prefilter, local embedding/chunk cosine, priority bands,
+federated locality boost; lexical vector fallback</td>
+<td>MCP/CLI writes, transcript and plan hooks, daily compile,
+full-document absorb</td>
+<td>Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in
+dedup/refresh consolidation</td>
+<td>Private brain plus explicit repository wiki levels;
+workspace/area/task/subject facets</td>
+<td>MCP, CLI, Claude Code lifecycle hooks, shared instructions</td>
+<td>Detached flush, daily compile, opt-in consolidation, cron healing,
+git/cache maintenance</td>
+<td>Body hash, capture audit, git history, user-gated lessons; no
+candidate/verified/rejected state</td>
+<td>Recoverable capture, explicit targets, deterministic
+layout/topology, excellent operational tests</td>
+<td>LLM atoms become active without verification; vector-only primary
+retrieval; linear scans; git is not erasure</td>
+</tr>
+<tr>
+<td><code>rainbox</code></td>
+<td>Claim, evidence, embedding, retrieval event</td>
+<td>Postgres/SQLAlchemy plus pgvector</td>
+<td>Hard-filtered hybrid (vector + Postgres full-text + entity boost)
+for both chat and assistant; profile digest</td>
+<td>User commands, assistant actions, review UI; single governed atomic
+path (<code>record_belief</code>); write-time conflict detection;
+active/candidate flows</td>
+<td>Reject/supersede/reactivate/expiry/sensitivity;
+<code>MemoryRejectedValue</code> tombstones block model re-assertion of
+rejected values; governed atomic correction
+(<code>correct_belief</code>); UI stale-write guards</td>
+<td>Global, agent, room, project; sensitivity</td>
+<td>Full assistant app: chat prompt (via
+<code>build_chat_memory_block</code>→hybrid), action loop, review
+UI</td>
+<td>Embedding sync/prune, telemetry, feedback/eval loop</td>
+<td>Five-actor trust model (3 human/override + 2 model/candidate);
+rejected-value tombstones; write-time lattice-aware conflict detection;
+governed atomic correction; fenced prompt injection; claim/evidence
+provenance and retrieval audit</td>
+<td>Operator governance, trust/correction machinery (tombstones +
+conflict detection + fenced recall + governed writes), telemetry, eval
+integration</td>
+<td>Compact claims may lose source nuance; no automatic candidate
+extraction;
+<code>epistemic_confidence</code>/<code>retrieval_strength</code>
+columns exist but Tier-1 ranking still uses <code>confidence</code>
+(schema groundwork only); attribution is context-injection, not
+causal</td>
+</tr>
+<tr>
+<td><code>letta</code></td>
+<td>Core memory block, archival passage, message</td>
+<td>ORM database; passages with embeddings; optional git memory</td>
+<td>Archival search, conversation search, compiled core prompt</td>
+<td>Agent tools mutate core/archival memory</td>
+<td>Append/replace/patch, passage insert, block update</td>
+<td>Agent, block labels, files/sources</td>
+<td>Deep runtime tool executor integration</td>
+<td>Prompt rebuilds, manager services</td>
+<td>Block tags/metadata, message timestamps; limited truth model</td>
+<td>Clear core/archive/recall separation</td>
+<td>Agent can rewrite important memory without strong verification</td>
+</tr>
+<tr>
+<td><code>supermemory</code></td>
+<td>Document, chunk, memory entry, space</td>
+<td>Hosted backend; visible schemas/client only</td>
+<td>Hosted search/profile API; SDK uses hybrid settings</td>
+<td>API/MCP add memory/document</td>
+<td>Version chains, relations, forget API</td>
+<td>Space, container tags, org/user/project</td>
+<td>SDK, AI SDK tools, MCP</td>
+<td>Hosted processing not visible</td>
+<td>Rich schema fields and relations; implementation not visible</td>
+<td>Product/API surface, document-memory graph</td>
+<td>Backend black box; semantic forget needs care</td>
+</tr>
+<tr>
+<td><code>verel</code></td>
+<td><code>MemoryRecord</code> fact/rule/schema/failure/skill</td>
+<td>SQLite local plus backend adapters</td>
+<td>Rank blends relevance, retrieval strength, confidence, trust;
+budgeted recall</td>
+<td>Candidate extraction, attested/corroborated promotion</td>
+<td>Correction chains, rejected tombstones, decay/prune</td>
+<td>Scope lattice</td>
+<td>Helpers, MCP, hosted/replicated adapters</td>
+<td>Consolidation, promotion gate, replication</td>
+<td>Explicit candidate/verified/rejected, provenance, confidence</td>
+<td>Best correctness model in set</td>
+<td>Complex; may be heavy for product MVP</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
+Lifecycle Comparison</h2>
+<h3 id="capture">Capture</h3>
+<p><code>mem0</code>, <code>letta</code>, <code>langmem</code>, and
+<code>supermemory</code> expose direct tool/SDK surfaces for adding
+memory. <code>rainbox</code> captures through explicit memory commands,
+assistant memory actions, and review UI mutations. <code>engram</code>
+captures via MCP tools and can also store prompt/session metadata.
+<code>mempalace</code> captures by mining files/conversations and by MCP
+drawer writes, preserving verbatim text. <code>swafra</code> captures
+titled text via one MCP tool, then stores Leiden, exchange, facts-index,
+or paragraph chunks in local JSON. <code>llm-wiki-memory</code> combines
+explicit MCP/CLI writes with Claude Code transcript and plan hooks;
+failed transcript extraction is recoverable through stashes and fenced
+raw fallbacks. <code>honcho</code> captures messages as the primary
+event stream, then derives observations. <code>verel</code> captures
+conversations and percepts but routes them through a trust gate before
+treating them as verified.</p>
+<p>The important split is whether the captured item is itself memory or
+evidence for memory. Honcho, Verel, MemPalace, Swafra, and RainBox are
+closer to evidence-aware designs, but with different answers: Honcho
+derives representations, Verel promotes trusted claims, MemPalace keeps
+raw drawers as the primary store, Swafra keeps raw chunks alongside
+heuristic navigation metadata, and RainBox stores compact claims with
+separate evidence rows. Swafra's provenance is much thinner than the
+others: normally just source ID, caller title, and chunk index.
+<code>llm-wiki-memory</code> temporarily preserves transcript/daily
+evidence and full documents, but its promoted atom is still the active
+memory and does not carry a normalized evidence relation. Mem0 and
+Supermemory's public surfaces are closer to "add memory" designs. Engram
+is in between: <code>mem_save</code> stores observations but may return
+conflict candidates requiring judgment.</p>
+<h3 id="extraction">Extraction</h3>
+<p><code>mem0</code> has the clearest open implementation of LLM
+extraction: retrieve nearby existing memories, ask the model for
+additive facts, parse JSON, dedupe, embed, insert, and link
+entities.</p>
+<p><code>langmem</code> delegates extraction to Trustcall and schemas.
+This is elegant if the application already knows what shape memory
+should have.</p>
+<p><code>honcho</code> formats timestamped session messages and derives
+representations/observations asynchronously.</p>
+<p><code>verel</code> extracts candidate memories but restricts
+promotion. It is deliberately suspicious of raw extracted claims.</p>
+<p><code>supermemory</code> exposes document/chunk/memory schemas, but
+the extraction engine behind hosted endpoints is not present in this
+checkout.</p>
+<p><code>mempalace</code> mostly avoids extraction for primary memory.
+It may build closets, entities, halls, and KG triples, but the
+authoritative memory remains verbatim drawer text.</p>
+<p><code>swafra</code> also avoids LLM extraction. Regexes annotate
+entities, date strings, and preference phrases; conversations get a
+synthetic facts chunk that acts as a retrieval index while exchange text
+remains stored. Its Leiden partition uses embedding similarity plus
+positional weight, despite docs also claiming entity-weighted
+partitioning.</p>
+<p><code>rainbox</code> does not center on automatic extraction in the
+inspected paths. Explicit user commands and assistant actions
+create/update claims; evidence rows record whether a claim was
+user-confirmed, model-inferred, imported, or observed.</p>
+<p><code>llm-wiki-memory</code> automatically distills coding
+transcripts into schema-constrained atoms with chunked map/reduce,
+stores them in dated daily leaves, then compiles them into durable
+knowledge or lessons. Compile retrieves same-type/facet candidates and
+asks an LLM for create/update/skip, except same-error-pattern lessons
+are force-updated deterministically. This path is recoverable and well
+tested, but promoted atoms become active without a verification
+gate.</p>
+<h3 id="consolidation">Consolidation</h3>
+<p><code>honcho</code> and <code>verel</code> have the strongest visible
+consolidation stories. Honcho derives working representations from event
+streams. Verel clusters failures, induces candidate design rules and
+schemas, then requires promotion gates for verification.</p>
+<p><code>mem0</code> V3 is intentionally more append-oriented;
+consolidation is mostly dedupe and entity linking in the OSS path.
+<code>mempalace</code> consolidates operationally through dedup,
+closets, halls, tunnels, graph layers, and repair paths rather than by
+rewriting memories into summaries. <code>swafra</code> has no real
+consolidation worker or correction policy: ingestion adds cross-source
+edges, and a <code>superseded_by</code> loop exists, but old same-source
+chunks are removed before that loop can see them.
+<code>llm-wiki-memory</code> has a substantial opt-in, brain-only
+pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup,
+optional LLM merge, deterministic staleness flags, optional LLM refresh,
+orphan archive, archived-body compression, cache pruning, and index
+rebuild. <code>rainbox</code> consolidates through claim supersession,
+rejection, expiry, profile selection, and eval/feedback loops rather
+than through background summarization. <code>letta</code> separates core
+and archival memory but does not make consolidation the central visible
+mechanism in the inspected files. <code>langmem</code> provides
+reflection hooks rather than a fixed consolidation policy.
+<code>engram</code> keeps a pragmatic local model: update topic keys,
+count duplicates, surface conflicts.</p>
+<h3 id="retrieval">Retrieval</h3>
+<p>The repeated successful pattern is hybrid retrieval:</p>
+<ul>
+<li>semantic/vector search where embeddings exist;</li>
+<li>lexical/BM25/FTS for exact terms and identifiers;</li>
+<li>metadata filters for scope;</li>
+<li>reranking or rank fusion when quality matters.</li>
+</ul>
+<p><code>mem0</code> combines semantic, keyword, entity boost, and
+optional rerank. <code>honcho</code> blends semantic, recent, and
+most-derived observations. <code>engram</code> uses FTS5 and topic keys,
+favoring local reliability over embedding complexity.
+<code>mempalace</code> uses direct drawer vector search, BM25 rerank,
+metadata filters, closet boosts, neighbor expansion, and SQLite/FTS
+fallback. <code>swafra</code> rebuilds BM25 and full-scans
+vectors/character n-grams, adds entity/date/preference bonuses and
+recency decay, graph-walks from top hits, then keeps the best chunk per
+source title. Its fusion is compact but uncalibrated, its heuristic
+channel is unbounded, and <code>k</code> becomes a lower bound when a
+percentage-of-sources target is larger. <code>llm-wiki-memory</code>
+prefilters Markdown frontmatter, scores local embeddings or a
+lexical-hash fallback, handles long notes by best chunk, reranks near
+ties by priority, and boosts comparably relevant repository-local
+results across federated scopes. It lacks an independently fused
+BM25/FTS path. <code>rainbox</code> hard-filters by
+lifecycle/sensitivity/scope, then blends pgvector similarity, Postgres
+full-text rank, and subject/object entity boosts; both chat
+(<code>build_chat_memory_block</code>) and the assistant's
+<code>memory_query</code> action use this hybrid path.
+<code>verel</code> adds trust and confidence into ranking.
+<code>letta</code> distinguishes archival search from conversation
+search and core prompt memory. <code>langmem</code> and
+<code>supermemory</code> mostly delegate retrieval to backend services
+through a clean API.</p>
+<h3 id="context-injection">Context Injection</h3>
+<p><code>letta</code> has the deepest runtime prompt integration: core
+memory blocks compile into the agent prompt, and updates trigger prompt
+rebuilds. <code>rainbox</code> injects an operator profile block,
+curated seed facts, and hybrid memory context into chat/assistant
+prompts, and records what was injected. <code>verel</code> has the
+safest visible recall renderer: recalled memory is token-budgeted and
+fenced as untrusted data. <code>mempalace</code> has a four-layer stack:
+identity, essential story, on-demand recall, and deep search.
+<code>swafra</code> exposes <code>get_context</code>, a search-plus-walk
+composition, but does not format, fence, or token-budget the returned
+chunks; client instructions ask the model to call it at session start.
+<code>llm-wiki-memory</code> exposes excerpted or frontmatter-only MCP
+recall and automatically injects work context, plan progress, recent
+activity, and health at Claude Code session start; raw fallbacks and
+plans are fenced, but ordinary atomic bodies are not universally
+wrapped. <code>supermemory</code> has a product-style profile/context
+endpoint that emits static/dynamic profile text and search results.
+<code>engram</code> has MCP context tools. <code>honcho</code> exposes
+working representations. <code>mem0</code> returns search results and
+leaves context assembly mostly to the application.</p>
+<h3 id="correction">Correction</h3>
+<p>This is where systems diverge sharply.</p>
+<p><code>verel</code> and <code>rainbox</code> now have the strongest
+visible correction semantics in this set. <code>verel</code> has
+explicit trust states, rejected tombstones, and verified/rejected
+effects on recall. <code>rainbox</code> has governed atomic correction
+(<code>correct_belief</code>): old claim superseded and tombstoned in
+one transaction, replacement keys derived from new text via
+<code>record_belief</code>, conflict-refused if the replacement would
+create a second active rival. Rejected values are tombstoned via
+<code>MemoryRejectedValue</code>, preventing silent re-entry via model
+writes; the <code>/memory</code> UI surfaces conflict candidates (4
+resolution options) and tombstone hits. <code>engram</code> has conflict
+candidates and judgment tools. <code>mempalace</code> has storage
+correction tools: delete/update drawer, delete by source, dedup, repair,
+KG invalidation, and conservative fact-check primitives; it does not yet
+have Verel-style epistemic states for every memory. <code>swafra</code>
+has no update or conflict API; a repeated add only replaces data when
+title plus the first 100 content characters produce the same source ID,
+and the same-source supersession code is unreachable in the current call
+order. <code>llm-wiki-memory</code> supports exact upsert, relocation,
+archive/re-enable, superseding replacement, and consolidation, but it
+has no contradiction record or rejected-value tombstone and can keep
+incompatible active leaves. <code>letta</code> supports exact replace
+and patch-style core memory edits. <code>mem0</code> has explicit
+update/delete APIs, but the default additive path avoids rewriting
+existing memories. <code>honcho</code> has representation reconciliation
+concepts. <code>supermemory</code> schemas include versions and
+relations, but the producer logic is not visible. <code>langmem</code>
+exposes update/delete tools and leaves correctness to the
+application.</p>
+<h3 id="forgetting">Forgetting</h3>
+<p>Visible deletion varies from hard API deletion to lifecycle
+state:</p>
+<ul>
+<li><code>mem0</code>: delete APIs and expiration metadata.</li>
+<li><code>langmem</code>: delete tool operation.</li>
+<li><code>honcho</code>: soft-delete style document handling.</li>
+<li><code>engram</code>: deleted timestamps/sync mutation
+semantics.</li>
+<li><code>mempalace</code>: delete drawer, delete by source, dedup,
+repair, backend delete; deletion must account for drawers, closets, KG,
+backups, sync, and remote backends.</li>
+<li><code>swafra</code>: exact source deletion from chunks/sources and
+source-owned edges; global cross-session edges survive and become
+dangling records.</li>
+<li><code>llm-wiki-memory</code>: exact archive/re-enable and hard
+working-tree delete; embedding/index cleanup follows, but private git
+history can retain deleted or truncated content.</li>
+<li><code>rainbox</code>: reject claim (tombstones the value in
+<code>MemoryRejectedValue</code>), supersede claim (also tombstones),
+expire claim, prune embeddings; rejected/superseded evidence remains
+inspectable; tombstoned values block future model re-assertion
+(anti-laundering).</li>
+<li><code>letta</code>: block/file/passage update paths, archival
+insert/search visible; deletion depends on manager APIs outside the key
+path.</li>
+<li><code>supermemory</code>: forget API in MCP/client; semantic
+fallback delete is powerful but risky.</li>
+<li><code>verel</code>: rejected tombstones, TTL/volatile/stale pruning,
+and protection for verified/rejected/pinned records.</li>
+</ul>
+<p>Semantic forgetting is an antipattern unless there is explicit user
+review or exact ID targeting.</p>
+<h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
+Cross-Agent Persistence</h3>
+<p><code>honcho</code> has the richest multi-actor model: workspace,
+peer, session, collections, and derived representations.
+<code>supermemory</code> has org/user/space/container-tag schemas.
+<code>mem0</code> has simple <code>user_id</code>,
+<code>agent_id</code>, and <code>run_id</code> scopes.
+<code>rainbox</code> uses global/agent/room/project scopes plus
+sensitivity labels. <code>engram</code> uses project/session/scope/topic
+key, which is appropriate for coding agents. <code>mempalace</code> uses
+palace/wing/room/source/parent-drawer scopes and backend namespaces.
+<code>llm-wiki-memory</code> layers a private brain with nested
+repository-owned wikis, stamps deterministic project identity, and
+requires every write to name a target. <code>verel</code> uses a scope
+lattice. <code>letta</code> binds memory to agents and blocks.
+<code>langmem</code> uses namespace templates and inherits whatever
+sharing semantics the store implements. <code>swafra</code> is the
+outlier: it has one global local corpus with source IDs/titles but no
+user, agent, project, session, or tenant boundary.</p>
+<h2 id="4-implementation-hotspots-by-repo">4. Implementation Hotspots by
+Repo</h2>
+<h3 id="memory-schema">Memory Schema</h3>
+<ul>
+<li><code>mem0</code>: <code>mem0/mem0/configs/base.py</code>, payload
+construction in <code>mem0/mem0/memory/main.py</code>.</li>
+<li><code>langmem</code>: store item shape is application-defined; see
+<code>langmem/src/langmem/knowledge/tools.py</code> and schema
+extraction in
+<code>langmem/src/langmem/knowledge/extraction.py</code>.</li>
+<li><code>honcho</code>: <code>honcho/src/models.py</code>.</li>
+<li><code>engram</code>: SQLite schema in
+<code>engram/internal/store/store.go</code>.</li>
+<li><code>mempalace</code>: drawer metadata in
+<code>mempalace/mempalace/miner.py</code> and
+<code>mcp_server.py</code>; backend contract in
+<code>mempalace/mempalace/backends/base.py</code>; KG schema in
+<code>mempalace/mempalace/knowledge_graph.py</code>.</li>
+<li><code>swafra</code>: implicit source/chunk/edge dictionaries and
+JSON files in <code>swafra/swafra/engine.py</code>.</li>
+<li><code>llm-wiki-memory</code>: leaf and metadata types in
+<code>llm-wiki-memory/scripts/lib/types-metadata.mjs</code>; rendering
+in <code>wiki-render.mjs</code>; layout contracts in
+<code>examples/layouts/*/layout.yaml</code>.</li>
+<li><code>rainbox</code>: <code>MemoryClaim</code>,
+<code>MemoryEvidence</code>, <code>MemoryEmbedding</code>,
+<code>RetrievalEvent</code> in
+<code>rainbox/source/db/models.py</code>.</li>
+<li><code>letta</code>: <code>letta/letta/schemas/memory.py</code>,
+<code>letta/letta/orm/block.py</code>,
+<code>letta/letta/orm/passage.py</code>.</li>
+<li><code>supermemory</code>:
+<code>supermemory/packages/validation/schemas.ts</code>,
+<code>supermemory/packages/validation/api.ts</code>.</li>
+<li><code>verel</code>:
+<code>verel/src/verel/memory/view.py</code>.</li>
+</ul>
+<h3 id="addwrite-path">Add/Write Path</h3>
+<ul>
+<li><code>mem0</code>: <code>Memory.add()</code> and
+<code>_add_to_vector_store()</code> in
+<code>mem0/mem0/memory/main.py</code>.</li>
+<li><code>langmem</code>: <code>create_manage_memory_tool()</code> in
+<code>langmem/src/langmem/knowledge/tools.py</code>; extraction in
+<code>MemoryManager</code>.</li>
+<li><code>honcho</code>: <code>honcho/src/crud/message.py</code>,
+<code>honcho/src/deriver/deriver.py</code>,
+<code>honcho/src/crud/representation.py</code>.</li>
+<li><code>engram</code>: <code>AddObservation()</code> in
+<code>engram/internal/store/store.go</code>; MCP
+<code>handleSave()</code> in
+<code>engram/internal/mcp/mcp.go</code>.</li>
+<li><code>mempalace</code>: <code>process_file()</code> and
+<code>mine()</code> in <code>mempalace/mempalace/miner.py</code>;
+<code>tool_add_drawer()</code> in
+<code>mempalace/mempalace/mcp_server.py</code>; collection access in
+<code>mempalace/mempalace/palace.py</code>.</li>
+<li><code>swafra</code>: <code>add_knowledge()</code>,
+<code>leiden_chunk()</code>, and <code>chunk_conversation()</code> in
+<code>swafra/swafra/engine.py</code>.</li>
+<li><code>llm-wiki-memory</code>: MCP dispatch in
+<code>llm-wiki-memory/mcp-server/mcp-write-dispatch.mjs</code>;
+<code>writeMemory()</code> / <code>saveDocument()</code> in
+<code>scripts/lib/wiki-mutate.mjs</code>; transcript capture in
+<code>scripts/hooks/flush-worker.mjs</code>; promotion in
+<code>scripts/compile-promote.mjs</code>.</li>
+<li><code>rainbox</code>: explicit commands in
+<code>rainbox/source/memory/ops.py</code>; assistant actions in
+<code>rainbox/source/agents/assistant.py</code>; review UI actions in
+<code>rainbox/source/webapp/memory_api.py</code>; DB helpers in
+<code>rainbox/source/db/memory.py</code>.</li>
+<li><code>letta</code>:
+<code>letta/letta/services/tool_executor/core_tool_executor.py</code>;
+<code>letta/letta/services/block_manager.py</code>;
+<code>letta/letta/services/passage_manager.py</code>.</li>
+<li><code>supermemory</code>:
+<code>supermemory/packages/ai-sdk/src/tools.ts</code>,
+<code>supermemory/apps/mcp/src/server.ts</code>,
+<code>supermemory/apps/mcp/src/client.ts</code>.</li>
+<li><code>verel</code>: <code>verel/src/verel/memory/local.py</code>,
+<code>verel/src/verel/memory/remember.py</code>.</li>
+</ul>
+<h3 id="searchretrieve-path">Search/Retrieve Path</h3>
+<ul>
+<li><code>mem0</code>: <code>Memory.search()</code> and
+<code>_search_vector_store()</code>; scoring in
+<code>mem0/mem0/utils/scoring.py</code>.</li>
+<li><code>langmem</code>: <code>create_search_memory_tool()</code>
+delegates to <code>BaseStore.search/asearch</code>.</li>
+<li><code>honcho</code>: <code>honcho/src/crud/representation.py</code>,
+<code>honcho/src/crud/document.py</code>,
+<code>honcho/src/dialectic/</code>.</li>
+<li><code>engram</code>: <code>Search()</code> and context helpers in
+<code>engram/internal/store/store.go</code>; MCP search/context
+handlers.</li>
+<li><code>mempalace</code>: <code>search_memories()</code>,
+<code>_hybrid_rank()</code>, <code>_bm25_only_via_sqlite()</code> in
+<code>mempalace/mempalace/searcher.py</code>.</li>
+<li><code>swafra</code>: <code>BM25Index</code>,
+<code>search_knowledge()</code>, and <code>graph_walk()</code> in
+<code>swafra/swafra/engine.py</code>.</li>
+<li><code>llm-wiki-memory</code>: <code>searchOneTree()</code> in
+<code>llm-wiki-memory/scripts/lib/wiki-search.mjs</code>; federated
+merge in <code>wiki-search-fanout.mjs</code>;
+<code>searchMemory()</code> and <code>recallLessons()</code> in
+<code>recall-search.mjs</code> / <code>recall.mjs</code>.</li>
+<li><code>rainbox</code>: <code>retrieve_memories_hybrid()</code>,
+<code>hard_filtered_claims()</code>,
+<code>build_chat_memory_block()</code> in
+<code>rainbox/source/memory/retrieval.py</code>; profile retrieval in
+<code>rainbox/source/user_profile/retrieval.py</code>.</li>
+<li><code>letta</code>: <code>archival_memory_search()</code>,
+<code>conversation_search()</code>,
+<code>message_manager.search_messages_async</code>.</li>
+<li><code>supermemory</code>: <code>client.search.execute</code>,
+<code>client.search.memories</code>, <code>/v4/profile</code> context
+helper.</li>
+<li><code>verel</code>: <code>recall()</code> in <code>local.py</code>,
+<code>recall_budgeted()</code> in <code>recall.py</code>, rank logic in
+<code>view.py</code>.</li>
+</ul>
+<h3 id="context-assembly">Context Assembly</h3>
+<ul>
+<li><code>mem0</code>: mostly application-owned after search.</li>
+<li><code>langmem</code>: application-owned; tools return store/search
+results.</li>
+<li><code>honcho</code>: working representation in
+<code>honcho/src/crud/representation.py</code>.</li>
+<li><code>engram</code>: MCP context/session summary in
+<code>engram/internal/mcp/mcp.go</code>.</li>
+<li><code>mempalace</code>: four-layer stack in
+<code>mempalace/mempalace/layers.py</code>; MCP search/status/list tools
+in <code>mempalace/mempalace/mcp_server.py</code>.</li>
+<li><code>swafra</code>: <code>get_context()</code> source-diverse
+search/walk composition in <code>swafra/swafra/engine.py</code>.</li>
+<li><code>llm-wiki-memory</code>: bounded MCP responses in
+<code>llm-wiki-memory/mcp-server/tools-search.mjs</code> and
+<code>scripts/lib/search-clamp.mjs</code>; automatic session context in
+<code>scripts/hooks/session-start.mjs</code> and
+<code>scripts/lib/work-context.mjs</code>.</li>
+<li><code>rainbox</code>:
+<code>rainbox/source/agents/chat_context.py</code>,
+<code>rainbox/source/memory/retrieval.py</code>,
+<code>rainbox/source/user_profile/retrieval.py</code>.</li>
+<li><code>letta</code>: <code>Memory.compile()</code> in
+<code>letta/letta/schemas/memory.py</code>.</li>
+<li><code>supermemory</code>:
+<code>supermemory/packages/tools/src/shared/context.ts</code>.</li>
+<li><code>verel</code>:
+<code>verel/src/verel/memory/recall.py</code>.</li>
+</ul>
+<h3 id="background-workers">Background Workers</h3>
+<ul>
+<li><code>mem0</code>: no central open worker in the inspected OSS core;
+extraction happens in write path.</li>
+<li><code>langmem</code>:
+<code>langmem/src/langmem/reflection.py</code>.</li>
+<li><code>honcho</code>: <code>honcho/src/deriver/</code>,
+<code>honcho/src/reconciler/</code>, queue models.</li>
+<li><code>engram</code>: sync queue in
+<code>engram/internal/sync/</code> and store mutation queue fields.</li>
+<li><code>mempalace</code>: mining/convo/format miners, hallway/tunnel
+computation, daemon jobs, repair/sync/backups.</li>
+<li><code>swafra</code>: none; chunking, embedding, graph construction,
+and JSON rewrites happen synchronously in
+<code>add_knowledge()</code>.</li>
+<li><code>llm-wiki-memory</code>: detached capture in
+<code>llm-wiki-memory/scripts/hooks/flush-worker.mjs</code>; compile in
+<code>scripts/compile*.mjs</code>; consolidation in
+<code>scripts/consolidate*.mjs</code>; self-healing scheduler in
+<code>scripts/cron*.mjs</code>.</li>
+<li><code>rainbox</code>: embedding sync/prune in
+<code>rainbox/source/memory/embeddings.py</code>; feedback/eval loop in
+<code>rainbox/source/db/feedback.py</code> and
+<code>rainbox/source/evals/</code>.</li>
+<li><code>letta</code>: manager services and prompt rebuilds; not
+primarily worker-centric in inspected paths.</li>
+<li><code>supermemory</code>: hosted processing not visible; graph UI
+and MCP/client visible.</li>
+<li><code>verel</code>: consolidation, promotion, replication
+modules.</li>
+</ul>
+<h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
+<ul>
+<li><code>mem0</code>: Python SDK and service/API paths.</li>
+<li><code>langmem</code>: LangChain/LangGraph tools.</li>
+<li><code>honcho</code>: service endpoints and SDK-facing models.</li>
+<li><code>engram</code>: <code>engram/internal/mcp/mcp.go</code>.</li>
+<li><code>mempalace</code>:
+<code>mempalace/mempalace/mcp_server.py</code>, CLI modules, hooks under
+<code>mempalace/hooks/</code>, skills/commands.</li>
+<li><code>swafra</code>: Python FastMCP in
+<code>swafra/swafra/server.py</code>; Node MCP in
+<code>swafra/src/index.ts</code>; subprocess bridge in
+<code>swafra/src/engine.ts</code>.</li>
+<li><code>llm-wiki-memory</code>:
+<code>llm-wiki-memory/mcp-server/index.mjs</code> and
+<code>tools-*.mjs</code>; <code>scripts/cli.mjs</code>; Claude Code
+hooks under <code>scripts/hooks/</code>; canonical agent policy in
+<code>templates/agents-memory-instructions.md</code>.</li>
+<li><code>rainbox</code>: web API/UI in
+<code>rainbox/source/webapp/memory_api.py</code> and
+<code>memory_views.py</code>; assistant capabilities in
+<code>rainbox/source/agents/assistant.py</code>.</li>
+<li><code>letta</code>: tool definitions in
+<code>letta/letta/functions/function_sets/base.py</code>, runtime in
+core tool executor.</li>
+<li><code>supermemory</code>:
+<code>supermemory/apps/mcp/src/server.ts</code>,
+<code>supermemory/packages/ai-sdk/src/tools.ts</code>.</li>
+<li><code>verel</code>: <code>verel/src/verel/mcp_server.py</code>,
+hosted/replicated adapters.</li>
+</ul>
+<h3 id="evalstests">Evals/Tests</h3>
+<ul>
+<li><code>mem0</code>: tests are present but the report focused on core
+implementation.</li>
+<li><code>langmem</code>: tests/examples around tools and extraction
+should be consulted before reuse.</li>
+<li><code>honcho</code>: rich tests under
+<code>honcho/tests</code>.</li>
+<li><code>engram</code>: Go package tests and MCP flows should be
+inspected for command behavior.</li>
+<li><code>mempalace</code>: broad tests under
+<code>mempalace/tests</code>; benchmarks under
+<code>mempalace/benchmarks</code>.</li>
+<li><code>swafra</code>: no unit/integration tests; LongMemEval harness
+and artifacts under <code>swafra/bench</code> and
+<code>swafra/packages/mcp/bench</code>, with a result-count validity
+problem.</li>
+<li><code>llm-wiki-memory</code>: broad unit tests under
+<code>llm-wiki-memory/test</code>; lifecycle and federation coverage
+under <code>test/e2e</code>; latency evidence in
+<code>PERFORMANCE.md</code>; no retrieval-relevance benchmark.</li>
+<li><code>rainbox</code>: memory/retrieval/assistant/UI tests under
+<code>rainbox/source/memory</code>, <code>rainbox/source/db</code>,
+<code>rainbox/source/agents</code>, and
+<code>rainbox/source/webapp</code>.</li>
+<li><code>letta</code>: <code>letta/tests/test_memory.py</code>, manager
+tests, passage/message/block tests.</li>
+<li><code>supermemory</code>: visible integration/e2e wrappers and
+memory graph tests; backend tests not present.</li>
+<li><code>verel</code>: strong memory-focused tests under
+<code>verel/tests/test_memory*.py</code>, plus consolidation, promotion,
+lattice, replicated, hosted, MCP tests.</li>
+</ul>
+<h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
+<h3 id="tool-mediated-memory-writes">Tool-mediated memory writes</h3>
+<p>Repos: all eleven, in different forms.</p>
+<p>The agent or application explicitly calls a memory operation. This
+works because it gives the system a narrow interface for durable state
+changes. It fails when the model forgets to call the tool, calls it with
+low-quality facts, or treats tool descriptions as policy
+enforcement.</p>
+<h3 id="separate-hot-memory-from-archival-memory">Separate hot memory
+from archival memory</h3>
+<p>Repos: <code>letta</code>, <code>rainbox</code>, <code>honcho</code>,
+<code>supermemory</code>, <code>mempalace</code>,
+<code>llm-wiki-memory</code>, partly <code>mem0</code>.</p>
+<p>Hot memory is small and prompt-ready. Archival/document memory is
+large and retrieved on demand. This works because prompt space is scarce
+and long-term stores are noisy. It fails when there is no
+promotion/demotion policy between the layers.</p>
+<h3 id="evidence-first-derived-memory-second">Evidence first, derived
+memory second</h3>
+<p>Repos: strongest in <code>honcho</code>, <code>verel</code>,
+<code>mempalace</code>, and <code>rainbox</code>; partly in
+<code>engram</code>, <code>swafra</code>, and
+<code>llm-wiki-memory</code>.</p>
+<p>Raw messages, observations, files, drawers, or evidence rows are
+retained, and derived facts/representations/indexes are computed from
+them. This works because wrong memories can be audited and recomputed.
+It fails if the derived layer does not preserve source IDs, if raw
+stores become too noisy, if evidence excerpts are too thin, or if
+background derivation makes read consistency surprising.</p>
+<h3 id="hybrid-retrieval">Hybrid retrieval</h3>
+<p>Repos: <code>mem0</code>, <code>honcho</code>, <code>engram</code>,
+<code>mempalace</code>, <code>swafra</code>, <code>rainbox</code>,
+<code>verel</code>, <code>supermemory</code> API settings,
+<code>letta</code> across separate search modes.</p>
+<p>Vector search alone is not enough. Identifiers, names, exact phrases,
+dates, file paths, and project keys often need lexical search. Hybrid
+retrieval works because it handles both fuzzy semantic recall and exact
+lookup. MemPalace adds a useful variant: extracted/indexed "closets"
+boost drawer ranking but never gate direct evidence retrieval. Swafra is
+a useful compact example of BM25 + vector + cheap heuristic fusion, but
+also a warning: ad hoc component normalization and unbounded bonuses
+make scores hard to interpret. Hybrid retrieval fails when rank fusion
+is opaque or not evaluated.</p>
+<h3 id="scope-as-a-first-class-key">Scope as a first-class key</h3>
+<p>Repos: all except <code>swafra</code>.</p>
+<p>Good systems make memory boundaries explicit: user, agent, run,
+project, workspace, peer, session, space, palace, wing, room, source
+file, claim scope, sensitivity, scope lattice, namespace. This works
+because many memory bugs are scope bugs. Swafra's one global corpus
+shows why a source title is not a scope: two clients or projects can
+silently retrieve each other's memory. Scope fails when absent or when
+it is only metadata with no migration, inheritance, access, or conflict
+policy.</p>
+<h3 id="mcp-as-a-universal-adapter">MCP as a universal adapter</h3>
+<p>Repos: <code>engram</code>, <code>mempalace</code>,
+<code>swafra</code>, <code>llm-wiki-memory</code>,
+<code>supermemory</code>, <code>verel</code>, and conceptually similar
+tool surfaces elsewhere.</p>
+<p>MCP is useful because it lets different coding agents and desktop
+tools use the same memory backend. It fails if the MCP tool descriptions
+become the only guardrail against bad writes.</p>
+<h3 id="local-sqlite-for-inspectable-memory">Local SQLite for
+inspectable memory</h3>
+<p>Repos: <code>engram</code>, <code>mempalace</code>,
+<code>verel</code>; SQLite also supports history/messages in
+<code>mem0</code>.</p>
+<p>SQLite works well for local agent memory: durable, fast, easy to
+inspect, transaction-friendly, and good enough with FTS5. MemPalace also
+shows the complementary local pattern: SQLite metadata/KG/FTS plus a
+local vector store. It fails if a product needs multi-tenant scale,
+remote sharing, or vector-heavy retrieval without
+extensions/adapters.</p>
+<h3 id="flat-json-as-a-prototype-store">Flat JSON as a prototype
+store</h3>
+<p>Repo: <code>swafra</code>.</p>
+<p>Three JSON files make the complete state inspectable and keep
+installation trivial. This is reasonable for a single-process prototype
+and terrible as implicit production durability: full-file rewrites, no
+transactions or locks, no indexed access, and cross-file consistency
+hazards. Treat flat JSON as a demo format or export, not a concurrent
+memory database.</p>
+<h3 id="filesystem-wiki-plus-git-history">Filesystem wiki plus git
+history</h3>
+<p>Repo: <code>llm-wiki-memory</code>.</p>
+<p>Markdown leaves plus generated folder indexes make local memory
+directly readable, diffable, and recoverable. Git commits can group one
+logical mutation into an auditable change, while repository-owned mounts
+provide a simple team-sharing path. This works for small coding-agent
+corpora where inspectability matters more than query throughput. It
+fails at large scale, under concurrent collaborative writes, or when
+deletion must erase prior content rather than leave it in history.</p>
+<h3 id="recoverable-background-capture">Recoverable background
+capture</h3>
+<p>Repo: <code>llm-wiki-memory</code>; related evidence-retention ideas
+appear in <code>honcho</code> and <code>mempalace</code>.</p>
+<p>Decouple transcript capture from the interactive hook, chunk long
+inputs, retain failed chunks, write fenced raw fallbacks, and support
+redistillation. This turns provider failure into delayed processing
+instead of silent data loss. It fails if the recovery stores themselves
+leak secrets or if no operator ever reviews/retries accumulated
+stashes.</p>
+<h3 id="profiles-and-working-representations">Profiles and working
+representations</h3>
+<p>Repos: <code>honcho</code>, <code>supermemory</code>,
+<code>letta</code>.</p>
+<p>A low-latency synthesized representation is often more useful than
+raw top-k memories. This works because agents need compact operating
+context. It fails when summaries drift, hide uncertainty, or cannot be
+traced back to evidence.</p>
+<h3 id="memory-governance-loop">Memory governance loop</h3>
+<p>Repos: strongest in <code>rainbox</code>; partly in
+<code>verel</code>.</p>
+<p>Memory quality improves when memory use is observable and connected
+to review, feedback, and evals. RainBox's <code>RetrievalEvent</code>,
+<code>FeedbackEvent</code>, <code>/memory</code> review page, and eval
+loop show a practical product pattern. This fails if telemetry is
+mistaken for truth: a downvote is a review signal, not proof that a
+memory is false.</p>
+<h2 id="6-antipatterns-and-failure-modes">6. Antipatterns and Failure
+Modes</h2>
+<h3 id="treating-llm-extracted-facts-as-truth">Treating LLM-extracted
+facts as truth</h3>
+<p>Most systems extract with an LLM. Without trust state, provenance,
+and correction semantics, hallucinations become durable.
+<code>verel</code> addresses this directly; <code>honcho</code>
+preserves source events; <code>mem0</code>, <code>langmem</code>, and
+<code>llm-wiki-memory</code> need stronger promotion guardrails.</p>
+<p><code>mempalace</code> is the clearest counterexample in this
+workspace: it makes verbatim evidence the primary store and treats
+derived structures as indexes. That does not solve truth, but it avoids
+losing the original context during extraction.</p>
+<h3 id="vector-only-memory">Vector-only memory</h3>
+<p>Vector search misses exact constraints and can retrieve plausible but
+wrong memories. Every serious design should include lexical search or
+structured filters. <code>engram</code> demonstrates the value of boring
+FTS. <code>mempalace</code> demonstrates vector plus BM25 plus metadata
+plus fallback paths. <code>mem0</code> and <code>honcho</code> show
+hybrid approaches. <code>llm-wiki-memory</code> has strong metadata
+filters and deterministic topology lookup, but its lexical-hash mode is
+a fallback backend rather than a fused exact-search channel.</p>
+<h3 id="recallk-without-enforcing-k">Recall@k without enforcing k</h3>
+<p>A retrieval benchmark is invalid at a stated cutoff if the system
+scores more than <code>k</code> returned items. Swafra's committed
+<code>k=10</code> artifact evaluated all returned sessions while
+returning 28–46 sessions per question (35.4 on average); it only
+truncated the displayed <code>retrieved_sessions</code> list. Benchmark
+harnesses should assert the result count, score exactly the first
+<code>k</code>, record token volume, and bind artifacts to a
+code/config/embedder manifest.</p>
+<h3 id="weak-correction-semantics">Weak correction semantics</h3>
+<p>Update/delete APIs are not enough. A system needs to model
+contradiction, supersession, source, timestamp, and rejected values.
+Otherwise a wrong fact can be reintroduced by later extraction. Verel's
+rejected tombstones are the clearest research-grade countermeasure;
+RainBox has adopted equivalent machinery in a product context:
+<code>MemoryRejectedValue</code> tombstones block future model
+re-assertion of rejected or superseded values,
+<code>correct_belief</code> is an atomic governed correction path, and
+write-time conflict detection is lattice-aware across the scope
+hierarchy. <code>llm-wiki-memory</code> shows the limit of operational
+supersession without epistemic state: it can archive a selected
+predecessor, but cannot prevent the rejected value from being distilled
+again.</p>
+<h3 id="semantic-deletion">Semantic deletion</h3>
+<p>Deleting by "similar memory" is dangerous. It is useful as a
+discovery aid, but the actual forget operation should target exact IDs
+or require review. Supermemory's MCP client fallback semantic deletion
+is a risk pattern to treat carefully.</p>
+<h3 id="treating-git-deletion-as-privacy-deletion">Treating git deletion
+as privacy deletion</h3>
+<p><code>llm-wiki-memory</code> removes exact leaves and embedding
+entries, but private wiki commits retain prior bodies. Git history is
+excellent for recovery and audit, but it is not an erasure guarantee.
+Any git-backed memory needs an explicit procedure for history rewriting,
+clones, backups, stashes, and derived caches.</p>
+<h3 id="core-memory-as-a-junk-drawer">Core memory as a junk drawer</h3>
+<p>Editable prompt memory is powerful and dangerous. Letta's core memory
+tools are useful, but any system with long-lived core blocks needs
+provenance, review, and compaction policy. Otherwise it accumulates
+stale identity and preference claims.</p>
+<h3 id="tool-descriptions-as-policy">Tool descriptions as policy</h3>
+<p>Several systems rely on tool docs telling the agent when to save
+memory. This is necessary but insufficient. The backend still needs
+dedupe, conflict detection, trust gates, and review.</p>
+<h3 id="telemetry-mistaken-for-truth">Telemetry mistaken for truth</h3>
+<p>RainBox explicitly avoids this: retrieval events and downvotes are
+signals for inspection/evals, not automatic confidence changes or
+deletion. This matters because "memory was used in a bad answer" does
+not prove the memory was false.</p>
+<h3 id="platform-only-claims-hidden-behind-oss-apis">Platform-only
+claims hidden behind OSS APIs</h3>
+<p>Mem0 and Supermemory both have product surfaces where advanced
+behavior may live outside the inspected source. For build decisions,
+separate what is visible in code from what is promised by hosted
+APIs.</p>
+<h3 id="throwing-away-raw-evidence-too-early">Throwing away raw evidence
+too early</h3>
+<p>Extraction-first systems can look elegant while deleting the only
+material needed to debug a wrong memory. MemPalace is the strongest
+evidence that raw text plus retrieval deserves to be the baseline before
+adding lossy summarization or fact extraction.</p>
+<h3 id="treating-local-json-rewrites-as-durable-storage">Treating local
+JSON rewrites as durable storage</h3>
+<p>Swafra loads and rewrites chunks, edges, and sources as three
+independent JSON files. Without locks, atomic replace, transactions,
+repair, or cascading deletion, concurrent agents can lose writes and
+partial failure can split graph state. Human-readable export is
+valuable; it is not a substitute for transactional primary storage.</p>
+<h2 id="7-what-seems-to-work">7. What Seems to Work</h2>
+<p>SQLite plus FTS works for local coding-agent memory. It gives
+inspectable state, transactional writes, simple backup/sync, and exact
+search. Engram and Verel are good references. MemPalace shows how to
+combine local SQLite-style operational machinery with a vector backend
+and fallback BM25/FTS paths.</p>
+<p>Hybrid retrieval is the default serious choice. Pair semantic search
+with lexical matching and metadata filters. Add reranking only after
+basic retrieval metrics exist. MemPalace's "closets boost but never gate
+drawers" rule is a particularly reusable retrieval principle.</p>
+<p>Source diversity is useful when the context should cover sessions or
+documents rather than repeat adjacent chunks from one source. Swafra
+makes this explicit with best-chunk-per-source selection. The production
+version needs a hard result/token cap, stable source identity, and an
+escape hatch for questions requiring multiple chunks from one
+source.</p>
+<p>Scope must be part of the primary design, not a later filter.
+User/agent/project/session/workspace boundaries determine whether recall
+is useful or harmful.</p>
+<p>Make write destinations explicit in layered memory.
+<code>llm-wiki-memory</code> lets reads fan out across private and
+repository scopes while requiring every mutation to name a concrete
+target. This prevents a shared scope from silently becoming a shared
+write.</p>
+<p>Keep raw evidence. Messages, source IDs, documents, drawers, and
+provenance make correction possible. Honcho, Verel, and MemPalace
+benefit from this; systems that only store extracted facts lose
+auditability.</p>
+<p>Separate truth from usefulness. Retrieval strength should not mean
+the memory is true. Verel's split between
+<code>epistemic_confidence</code> and <code>retrieval_strength</code> is
+one of the strongest ideas in the workspace.</p>
+<p>Render recalled memory defensively. Verel's untrusted-memory fence is
+a practical prompt-injection mitigation. Context should be quoted as
+data, not instructions.</p>
+<p>Use small, explicit mutation APIs. Letta's append/replace/patch
+operations are easier to reason about than free-form "update my memory"
+text.</p>
+<p>Record embedder identity. MemPalace's explicit model/dimension checks
+are a useful operational guardrail: a vector index searched with the
+wrong embedding model can silently degrade.</p>
+<p>Make automatic capture recoverable. <code>llm-wiki-memory</code>
+preserves failed chunk inputs, raw fenced fallbacks, retry state, and
+provider provenance, which is a stronger failure posture than treating a
+failed summarization call as a lost session.</p>
+<p>Make memory use inspectable. RainBox's debug rows, retrieval events,
+and review UI are the best reference here. Users need to know which
+memories entered a prompt and need a way to correct or reject them.</p>
+<h2 id="8-what-i-would-build">8. What I Would Build</h2>
+<h3 id="ship-first">Ship First</h3>
+<p>Build a local-first core even if a hosted version is planned
+later.</p>
+<p>Data model:</p>
+<ul>
+<li><code>event</code>: raw messages, tool calls, documents, user
+assertions, timestamps, actor IDs.</li>
+<li><code>evidence_chunk</code>: verbatim text chunk with source
+path/session, line/span, authored/filed time, deterministic ID,
+embedding ID, and scope.</li>
+<li><code>memory</code>: extracted or manually saved claim with
+<code>kind</code>, <code>subject</code>, <code>predicate</code>,
+<code>text</code>, <code>scope</code>, <code>status</code>,
+<code>confidence</code>, <code>retrieval_strength</code>,
+<code>source_event_ids</code>, <code>created_at</code>,
+<code>updated_at</code>.</li>
+<li><code>memory_evidence</code>: append-only provenance rows, not a
+mutable field on <code>memory</code>.</li>
+<li><code>memory_relation</code>: <code>supersedes</code>,
+<code>contradicts</code>, <code>supports</code>,
+<code>derived_from</code>, <code>same_as</code>.</li>
+<li><code>rejected_value</code>: tombstone for values that should not be
+silently reintroduced.</li>
+<li><code>embedding</code>: optional vector table or external vector
+ID.</li>
+<li><code>retrieval_event</code>: append-only events for retrieved,
+used/injected, rejected, downvoted, considered.</li>
+</ul>
+<p>Status should start simple:</p>
+<ul>
+<li><code>candidate</code></li>
+<li><code>verified</code></li>
+<li><code>rejected</code></li>
+<li><code>stale</code></li>
+</ul>
+<p>Write path:</p>
+<ol type="1">
+<li>Store raw evidence first.</li>
+<li>Chunk deterministically and record embedder identity.</li>
+<li>Index raw evidence with lexical and vector paths.</li>
+<li>Extract candidate facts with schema-constrained LLM output only
+after evidence is durable.</li>
+<li>Search for same subject/predicate and near duplicates.</li>
+<li>If same key plus same value, corroborate.</li>
+<li>If same key plus different value, create a conflict or
+supersession.</li>
+<li>Do not auto-promote to verified unless the source is trusted or
+corroborated.</li>
+<li>Preserve failed extraction inputs and make background work safely
+retryable.</li>
+</ol>
+<p>Retrieval path:</p>
+<ol type="1">
+<li>Apply hard scope filters.</li>
+<li>Run lexical search and vector search.</li>
+<li>Retrieve raw evidence directly as the floor.</li>
+<li>Let derived indexes/summaries/entities boost rank, not gate
+evidence.</li>
+<li>Blend with recency, confidence, retrieval strength, and trust
+status.</li>
+<li>Suppress rejected records from normal recall but use rejected
+tombstones during write conflict checks.</li>
+<li>Return compact, source-linked results.</li>
+</ol>
+<p>Context assembly:</p>
+<ul>
+<li>Token-budgeted.</li>
+<li>Verified first, then high-confidence candidates if needed.</li>
+<li>Group by subject or task.</li>
+<li>Fence as recalled data, not instructions.</li>
+<li>Include source or confidence markers when possible.</li>
+<li>Record which memories entered context.</li>
+</ul>
+<p>Agent integration:</p>
+<ul>
+<li>MCP tools for <code>remember</code>, <code>recall</code>,
+<code>judge</code>, <code>forget</code>, and <code>context</code>.</li>
+<li>SDK methods with the same semantics.</li>
+<li>Tool calls should be small and boring; policy belongs in the
+backend.</li>
+<li>Review UI or API for
+activate/reject/correct/sensitivity/expiry.</li>
+<li>Confirm-tier write intents for high-impact assistant-proposed memory
+changes.</li>
+<li>Let reads span allowed scopes, but require an explicit destination
+for every write.</li>
+</ul>
+<p>Testing:</p>
+<ul>
+<li>Extraction golden tests.</li>
+<li>Conflict/supersession tests.</li>
+<li>Retrieval recall/precision fixtures.</li>
+<li>Hard assertions that a benchmark labeled <code>@k</code> scores
+exactly the first <code>k</code> results and records token volume.</li>
+<li>Prompt-injection tests for recalled content.</li>
+<li>Deletion/privacy tests.</li>
+<li>Scope leakage tests.</li>
+<li>Telemetry and feedback-to-eval tests.</li>
+<li>Regression corpus of wrong memories that must not reappear.</li>
+</ul>
+<h3 id="add-later">Add Later</h3>
+<ul>
+<li>Background consolidation from failures into candidate rules.</li>
+<li>Promotion gates using held-out task suites.</li>
+<li>Entity graph linking with indexed, intentional edge direction and
+cascading deletion.</li>
+<li>Closet-style source indexes and neighbor expansion.</li>
+<li>Hosted multi-tenant API.</li>
+<li>Cross-device sync.</li>
+<li>UI for memory review and conflict resolution.</li>
+<li>Retrieval telemetry dashboards and feedback/eval promotion.</li>
+<li>Temporal reasoning and decay.</li>
+</ul>
+<p>Do not add background summarization before raw-evidence retrieval and
+correction semantics exist. Summaries are compressed belief; if the
+system cannot explain and repair a belief, summarization hides the
+problem.</p>
+<h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
+<h3 id="mem0"><code>mem0</code></h3>
+<ul>
+<li>Best idea: pragmatic additive extraction plus hybrid
+retrieval/entity boost.</li>
+<li>Biggest risk: extracted facts are not strongly modeled as uncertain
+claims.</li>
+<li>Most reusable component: <code>Memory.add()</code> /
+<code>_add_to_vector_store()</code> pipeline.</li>
+<li>Maturity impression: practical SDK core, with some advanced features
+outside OSS.</li>
+<li>Study when: building a drop-in memory library.</li>
+<li>Do not copy when: you need rigorous trust/correction semantics.</li>
+</ul>
+<h3 id="langmem"><code>langmem</code></h3>
+<ul>
+<li>Best idea: memory as LangGraph store tools with schema-driven
+extraction.</li>
+<li>Biggest risk: it is a primitive layer, not a full memory
+policy.</li>
+<li>Most reusable component: <code>create_manage_memory_tool()</code>
+and namespace templates.</li>
+<li>Maturity impression: clean and framework-native.</li>
+<li>Study when: already building on LangGraph.</li>
+<li>Do not copy when: you need a standalone memory service with built-in
+quality controls.</li>
+</ul>
+<h3 id="honcho"><code>honcho</code></h3>
+<ul>
+<li>Best idea: event stream to derived working representation.</li>
+<li>Biggest risk: operational complexity and background
+consistency.</li>
+<li>Most reusable component: message ingestion plus
+deriver/representation flow.</li>
+<li>Maturity impression: serious service architecture with meaningful
+tests.</li>
+<li>Study when: modeling users/peers/sessions over time.</li>
+<li>Do not copy when: all you need is a local memory file.</li>
+</ul>
+<h3 id="engram"><code>engram</code></h3>
+<ul>
+<li>Best idea: local SQLite/FTS MCP memory with conflict-oriented
+writes.</li>
+<li>Biggest risk: lexical retrieval and agent-mediated judgment may hit
+limits.</li>
+<li>Most reusable component: <code>AddObservation()</code> and MCP
+<code>handleSave()</code>.</li>
+<li>Maturity impression: compact, inspectable, purpose-built for coding
+agents.</li>
+<li>Study when: building local developer-agent memory.</li>
+<li>Do not copy when: you need hosted multi-tenant vector
+retrieval.</li>
+</ul>
+<h3 id="mempalace"><code>mempalace</code></h3>
+<ul>
+<li>Best idea: verbatim drawers as the authoritative memory, with hybrid
+retrieval and extracted indexes as boosts.</li>
+<li>Biggest risk: raw stores get large/noisy and do not resolve
+contradictions by themselves.</li>
+<li>Most reusable component: <code>search_memories()</code> plus
+<code>_hybrid_rank()</code>, and the mining/write path around
+deterministic IDs.</li>
+<li>Maturity impression: operationally mature local system with broad
+tests, integrations, repair tooling, and benchmark artifacts.</li>
+<li>Study when: building local-first coding-agent memory or testing
+whether extraction is actually needed.</li>
+<li>Do not copy when: you need compact verified user facts as the
+primary memory surface.</li>
+</ul>
+<h3 id="swafra"><code>swafra</code></h3>
+<ul>
+<li>Best idea: compact source-diverse hybrid retrieval with explicit
+graph exploration and no required cloud model.</li>
+<li>Biggest risk: non-atomic global JSON state plus a benchmark that
+scores far more than the advertised <code>k</code>.</li>
+<li>Most reusable component: the conceptual
+<code>search_knowledge()</code> -&gt; <code>graph_walk()</code> -&gt;
+best-per-source composition, not the persistence implementation.</li>
+<li>Maturity impression: promising alpha prototype with significant
+code/docs/artifact drift and no ordinary tests.</li>
+<li>Study when: learning how little code a local MCP graph-RAG memory
+can require.</li>
+<li>Do not copy when: you need concurrency, trustworthy evals, scope
+isolation, correction, bounded prompts, or durable storage.</li>
+</ul>
+<h3 id="llm-wiki-memory"><code>llm-wiki-memory</code></h3>
+<ul>
+<li>Best idea: recoverable hook capture plus explicit federated write
+targets over inspectable Markdown/git memory.</li>
+<li>Biggest risk: LLM-distilled atoms become active guidance without
+candidate/verified/rejected state or contradiction protection.</li>
+<li>Most reusable component: <code>wiki-mutate.mjs</code> /
+<code>wiki-search*.mjs</code> with the flush, compile, scope, and commit
+orchestration around them.</li>
+<li>Maturity impression: operationally mature local coding-agent system
+with unusually broad failure-path and federation tests; retrieval
+quality is not benchmarked.</li>
+<li>Study when: building cross-agent local project memory, lifecycle
+capture, deterministic wiki placement, or self-healing maintenance.</li>
+<li>Do not copy when: you need high-stakes truth governance,
+large-corpus query performance, multi-tenant access control, or
+privacy-grade deletion.</li>
+</ul>
+<h3 id="rainbox"><code>rainbox</code></h3>
+<ul>
+<li>Best idea: claim/evidence memory tied to governed writes (single
+<code>record_belief</code> path, five-actor trust model, tombstones,
+conflict detection), review UI, retrieval telemetry, feedback, and eval
+gates.</li>
+<li>Biggest risk: active compact claims can steer behavior while losing
+nuance from original source context; no automatic candidate extraction
+means claims enter only through explicit writes.</li>
+<li>Most reusable component:
+<code>MemoryClaim</code>/<code>MemoryEvidence</code>/<code>MemoryRejectedValue</code>/<code>RetrievalEvent</code>
+model, <code>record_belief</code>/<code>correct_belief</code> governed
+write paths, <code>retrieve_memories_hybrid()</code>.</li>
+<li>Maturity impression: strong app-integrated memory subsystem with
+trust/correction machinery comparable to Verel's correctness properties,
+broad tests, and operator workflows.</li>
+<li>Study when: building an assistant product where memory must be
+inspectable, governable, and protected against model-write
+laundering.</li>
+<li>Do not copy when: you need a small embeddable library, raw
+transcript recall as the primary memory layer, or
+<code>epistemic_confidence</code>/<code>retrieval_strength</code>
+driving ranking (these columns are schema groundwork only; Tier-1
+ranking still uses <code>confidence</code>).</li>
+</ul>
+<h3 id="letta"><code>letta</code></h3>
+<ul>
+<li>Best idea: core vs archival vs conversation memory inside the
+runtime.</li>
+<li>Biggest risk: agent-editable core memory without a strong truth
+model.</li>
+<li>Most reusable component: memory block compile/mutation and
+patch-style edits.</li>
+<li>Maturity impression: deep runtime integration with compatibility
+complexity.</li>
+<li>Study when: building an agent platform, not just a memory
+backend.</li>
+<li>Do not copy when: you want a small independent memory service.</li>
+</ul>
+<h3 id="supermemory"><code>supermemory</code></h3>
+<ul>
+<li>Best idea: product-grade API shape around documents, chunks, memory
+entries, spaces, profiles, SDKs, and MCP.</li>
+<li>Biggest risk: the hosted backend core is not visible here.</li>
+<li>Most reusable component: schemas and adapter surfaces.</li>
+<li>Maturity impression: polished integration surface; implementation
+evidence incomplete.</li>
+<li>Study when: designing public APIs and memory UX.</li>
+<li>Do not copy when: you need open implementation details for
+extraction/ranking.</li>
+</ul>
+<h3 id="verel"><code>verel</code></h3>
+<ul>
+<li>Best idea: explicit trust, confidence, retrieval strength, rejected
+tombstones, and defensive recall.</li>
+<li>Biggest risk: complexity.</li>
+<li>Most reusable component: <code>MemoryRecord</code>,
+<code>LocalMemory.write()</code>, and
+<code>recall_budgeted()</code>.</li>
+<li>Maturity impression: research-grade correctness focus with strong
+targeted tests.</li>
+<li>Study when: wrong memory is costly.</li>
+<li>Do not copy wholesale when: you need a fast MVP.</li>
+</ul>
+<h2 id="10-practical-checklist-for-your-own-system">10. Practical
+Checklist for Your Own System</h2>
+<p>Schema and scoping:</p>
+<ul>
+<li>Define the memory unit before choosing vector storage.</li>
+<li>Store raw evidence separately from derived memory.</li>
+<li>Give raw evidence stable IDs and source/span metadata.</li>
+<li>Make scope mandatory: user, agent, project/session, and sharing
+boundary.</li>
+<li>Include provenance/source IDs on every derived memory.</li>
+<li>Store provenance/evidence as append-only rows when a claim can have
+multiple origins.</li>
+<li>Represent status/trust explicitly.</li>
+</ul>
+<p>Write path:</p>
+<ul>
+<li>Store evidence first.</li>
+<li>Record embedder identity and index version.</li>
+<li>Extract structured candidates.</li>
+<li>Dedupe by exact hash and semantic similarity.</li>
+<li>Detect same subject/predicate conflicts.</li>
+<li>Preserve correction chains.</li>
+<li>Keep rejected tombstones.</li>
+<li>Use stale-write guards for review UI mutations.</li>
+</ul>
+<p>Retrieval:</p>
+<ul>
+<li>Use lexical plus vector retrieval.</li>
+<li>Filter by scope before ranking.</li>
+<li>Let summaries/entities/indexes boost raw evidence, not hide it.</li>
+<li>Rank with relevance, recency, confidence, trust, and retrieval
+strength.</li>
+<li>Enforce both result-count and token budgets; never let
+<code>k</code> silently become a lower bound.</li>
+<li>Evaluate retrieval on realistic tasks.</li>
+</ul>
+<p>Context assembly:</p>
+<ul>
+<li>Budget tokens.</li>
+<li>Prefer verified memories.</li>
+<li>Mark uncertainty.</li>
+<li>Fence recalled memory as data.</li>
+<li>Include enough source metadata for debugging.</li>
+</ul>
+<p>Trust/provenance:</p>
+<ul>
+<li>Do not let model extraction imply truth.</li>
+<li>Separate "often retrieved" from "known true".</li>
+<li>Require attestation or corroboration for important claims.</li>
+<li>Track who said what and when.</li>
+<li>Treat feedback/downvotes as review signals, not automatic truth
+updates.</li>
+</ul>
+<p>Agent UX:</p>
+<ul>
+<li>Provide small MCP/SDK tools.</li>
+<li>Make <code>remember</code>, <code>recall</code>, <code>judge</code>,
+and <code>forget</code> distinct.</li>
+<li>Return conflicts for review instead of silently overwriting.</li>
+<li>Avoid broad semantic deletion without ID confirmation.</li>
+<li>Expose "which memories did you use?" as a first-class audit
+command.</li>
+<li>Require an explicit write target when private and shared scopes
+coexist.</li>
+</ul>
+<p>Testing/evals:</p>
+<ul>
+<li>Golden extraction cases.</li>
+<li>Contradiction and supersession cases.</li>
+<li>Scope leakage cases.</li>
+<li>Prompt-injection recall cases.</li>
+<li>Delete/forget compliance cases.</li>
+<li>Long-running compaction/summarization regression cases.</li>
+</ul>
+<p>Operations:</p>
+<ul>
+<li>Keep local state inspectable during early development.</li>
+<li>Use atomic transactional storage for primary state; reserve flat
+JSON for export or single-process prototypes.</li>
+<li>Add background workers only after synchronous semantics are
+clear.</li>
+<li>Log memory mutations as audit events.</li>
+<li>Version schemas.</li>
+<li>Provide repair/reindex paths for vector-store corruption or
+embedding-model swaps.</li>
+<li>Keep retrieval events append-only; derive counters from events.</li>
+<li>Preserve failed background-extraction inputs and provide a bounded
+retry/redistill path.</li>
+<li>Separate private auto-commit behavior from shared repository
+writes.</li>
+</ul>
+<p>Privacy/deletion:</p>
+<ul>
+<li>Design deletion before shipping.</li>
+<li>Know whether delete means hide, tombstone, hard delete, or forget
+from embeddings.</li>
+<li>Propagate deletion to raw chunks, derived memories,
+summaries/indexes, graph facts, backups, sync, and remote backends.</li>
+<li>Test that cross-source graph edges cannot survive as dangling
+references after source deletion.</li>
+</ul>
+<h2 id="11-appendix">11. Appendix</h2>
+<h3 id="individual-reports">Individual Reports</h3>
+<ul>
+<li><a href="../systems/mem0/"><code>mem0</code></a></li>
+<li><a href="../systems/langmem/"><code>langmem</code></a></li>
+<li><a href="../systems/honcho/"><code>honcho</code></a></li>
+<li><a href="../systems/engram/"><code>engram</code></a></li>
+<li><a href="../systems/mempalace/"><code>mempalace</code></a></li>
+<li><a href="../systems/swafra/"><code>swafra</code></a></li>
+<li><a
+href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a></li>
+<li><a href="../systems/rainbox/"><code>rainbox</code></a></li>
+<li><a href="../systems/letta/"><code>letta</code></a></li>
+<li><a href="../systems/supermemory/"><code>supermemory</code></a></li>
+<li><a href="../systems/verel/"><code>verel</code></a></li>
+</ul>
+<h3 id="repos-inspected">Repos Inspected</h3>
+<ul>
+<li><a href="https://github.com/mem0ai/mem0">mem0ai/mem0</a> at <a
+href="https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150"><code>31cec11a790868f88c9acafb8b70eb25071f2150</code></a></li>
+<li><a
+href="https://github.com/langchain-ai/langmem">langchain-ai/langmem</a>
+at <a
+href="https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11"><code>c01e273b94aa4c06e41d0ed1ccce0db17de2bc11</code></a></li>
+<li><a
+href="https://github.com/plastic-labs/honcho">plastic-labs/honcho</a> at
+<a
+href="https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420"><code>eb386c3ceb77774b29108f9ab114e71d52b7d420</code></a></li>
+<li><a
+href="https://github.com/Gentleman-Programming/engram">Gentleman-Programming/engram</a>
+at <a
+href="https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb"><code>44faeee1fb4fabdee4ba9619df55af485f3d06eb</code></a></li>
+<li><a
+href="https://github.com/MemPalace/mempalace">MemPalace/mempalace</a> at
+<a
+href="https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988"><code>afd0428823b47f9a9d1d68c450d54bb0045a4988</code></a></li>
+<li><a href="https://github.com/kunal12203/swafra">kunal12203/swafra</a>
+at <a
+href="https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7"><code>24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7</code></a></li>
+<li><a
+href="https://github.com/ctxr-dev/llm-wiki-memory">ctxr-dev/llm-wiki-memory</a>
+at <a
+href="https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146"><code>b7cc76a493573baac133969b324a874990556146</code></a></li>
+<li><a href="https://github.com/neoneye/RainBox">neoneye/RainBox</a> at
+<a
+href="https://github.com/neoneye/RainBox/commit/0792f8a07f6ff728931e928b2bdf7460492ac011"><code>0792f8a07f6ff728931e928b2bdf7460492ac011</code></a></li>
+<li><a href="https://github.com/letta-ai/letta">letta-ai/letta</a> at <a
+href="https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f"><code>6d8cb7fd48938b629aad5770faa051a8d42e1e9f</code></a></li>
+<li><a
+href="https://github.com/supermemoryai/supermemory">supermemoryai/supermemory</a>
+at <a
+href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6"><code>603d0512fd40e4575e2a075938c1851a898ceeb6</code></a></li>
+<li><a href="https://github.com/amitpatole/verel">amitpatole/verel</a>
+at <a
+href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e"><code>df80efe8207a99585a2ebce36fc6e32ba5077e2e</code></a></li>
+</ul>
+<h3 id="commands-used">Commands Used</h3>
+<p>Representative local inspection commands:</p>
+<ul>
+<li><code>find . -maxdepth ... -type d</code></li>
+<li><code>rg --files</code></li>
+<li><code>rg -n "memory|recall|remember|search|embedding|vector|MCP|Block|Passage|Representation|drawer|palace|wing|room|claim|evidence|retrieval_event"</code></li>
+<li><code>sed -n ...</code></li>
+<li><code>wc -l</code></li>
+<li><code>cmp</code></li>
+<li><code>jq</code></li>
+<li><code>git show -s --format=fuller HEAD</code></li>
+</ul>
+<p>No internet sources were used for this report. The analysis is based
+on the checked-out code in this workspace.</p>
+<h3 id="known-limitations">Known Limitations</h3>
+<ul>
+<li>Supermemory's hosted backend implementation was not visible in this
+checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph
+UI.</li>
+<li>Some mem0 advanced capabilities appear to be managed-platform-only
+in the inspected OSS code.</li>
+<li>This is an implementation-oriented static review, not a runtime
+benchmark.</li>
+<li>Retrieval quality and extraction quality were not independently
+re-measured; committed benchmark artifacts were inspected for MemPalace
+but not rerun.</li>
+<li>Swafra was reviewed at commit <code>24dba18</code>; its full
+LongMemEval run was not rerun. Static inspection, committed artifact
+analysis, and a small hash-embedder smoke check exposed the
+<code>k</code> mismatch and same-title source behavior.</li>
+<li><code>llm-wiki-memory</code> was reviewed at commit
+<code>b7cc76a493573baac133969b324a874990556146</code>; its broad test
+tree and committed latency report were inspected, but the suites and
+benchmarks were not rerun.</li>
+<li>RainBox was reviewed as an application-integrated memory subsystem;
+unrelated assistant/product features were not exhaustively
+analyzed.</li>
+<li>The reports prioritize memory-management code paths over unrelated
+framework/application code.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../compare/">Comparative report</a>
+        <a href="../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A polished product and integration
+surface around documents, chunks, spaces, profiles, SDKs, and MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Supermemory — Agent Memory Atlas">
+    <meta property="og:description" content="A polished product and
+integration surface around documents, chunks, spaces, profiles, SDKs,
+and MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Supermemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A polished product and
+integration surface around documents, chunks, spaces, profiles, SDKs,
+and MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Supermemory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Hosted memory product</p>
+          <h1>Supermemory</h1>
+          <p class="document-deck">A polished product and integration
+surface around documents, chunks, spaces, profiles, SDKs, and MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/supermemoryai/supermemory">https://github.com/supermemoryai/supermemory</a>">
+              <span>Source</span>
+              <strong>supermemoryai/supermemory</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6">https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6</a>" title="603d0512fd40e4575e2a075938c1851a898ceeb6">
+              <span>Analyzed revision</span>
+              <code>603d0512fd40e4575e2a075938c1851a898ceeb6</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>supermemory</code> is a memory/context product monorepo. In
+this checkout, the core hosted ingestion, extraction, indexing, and
+retrieval engine does not appear to be fully present. What is present
+and inspectable:</p>
+<ul>
+<li>Public validation schemas for documents, chunks, spaces, memory
+entries, relations, requests, and projects.</li>
+<li>SDK/tool wrappers for AI SDK, OpenAI, Vercel, Mastra, VoltAgent,
+Claude-memory style integrations.</li>
+<li>MCP server that wraps the hosted API.</li>
+<li>Memory graph visualization package.</li>
+<li>Web app and docs.</li>
+</ul>
+<p>So this report is necessarily about the open implementation surface,
+not the private backend. The repo is still useful because the schemas
+reveal a lot about Supermemory's internal model: documents, chunks,
+memory entries, versioning, parent/root chains, update/extend/derive
+relations, forgetting, static/inferred flags, spaces/container tags, and
+profile/search APIs.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The visible memory model has two coupled layers:</p>
+<ul>
+<li>Documents/chunks: uploaded or connected content,
+extracted/chunked/embedded/indexed.</li>
+<li>Memory entries: inferred or static facts connected to spaces and
+source documents.</li>
+</ul>
+<p>Important entities from
+<code>supermemory/packages/validation/schemas.ts</code>:</p>
+<ul>
+<li><code>Document</code>: content, summary, type, processing status,
+stats, summary embeddings.</li>
+<li><code>Chunk</code>: document chunk with content, embedded content,
+embedding, matryoshka embedding.</li>
+<li><code>Space</code>: scoped container with <code>containerTag</code>,
+visibility, owner, content text index.</li>
+<li><code>MemoryEntry</code>: memory text, version, latest flag,
+parent/root chain, relations, source count, inference/forgotten/static
+flags, embeddings.</li>
+<li><code>MemoryDocumentSource</code>: links memory entries to source
+documents with relevance score.</li>
+</ul>
+<p>Lifecycle inferred from schemas and clients:</p>
+<pre class="text"><code>API add/document/connectors -&gt; document queued/extracting/chunking/embedding/indexing/done
+-&gt; memory entries inferred or statically saved
+-&gt; search/profile APIs return memories, documents, chunks, summaries, related context
+-&gt; clients inject profile/search results into agent prompts
+-&gt; forget API marks/removes matching memory</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Visible code areas:</p>
+<ul>
+<li><code>supermemory/packages/validation/schemas.ts</code>:
+internal/domain schema types.</li>
+<li><code>supermemory/packages/validation/api.ts</code>: public API
+request/response schemas.</li>
+<li><code>supermemory/packages/ai-sdk/src/tools.ts</code>: AI SDK
+<code>searchMemories</code> and <code>addMemory</code> tools.</li>
+<li><code>supermemory/apps/mcp/src/server.ts</code>: Cloudflare MCP
+agent exposing memory, recall, context, profile/resources, graph
+UI.</li>
+<li><code>supermemory/apps/mcp/src/client.ts</code>: SDK wrapper for
+create/forget/search/profile/documents.</li>
+<li><code>supermemory/packages/tools/src/shared/context.ts</code>:
+profile/search prompt injection.</li>
+<li><code>supermemory/packages/tools/src/shared/memory-client.ts</code>:
+client construction and API-key validation.</li>
+<li><code>supermemory/packages/memory-graph/src/*</code>: graph
+visualization of documents/memory relations.</li>
+</ul>
+<p>Runtime shape from visible code:</p>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;Agent / AI SDK / MCP&quot;] --&gt; Tools[&quot;Supermemory wrappers&quot;]
+  Tools --&gt; API[&quot;Hosted Supermemory API&quot;]
+  API --&gt; Private[&quot;Private ingestion/search engine&quot;]
+  Tools --&gt; Prompt[&quot;Prompt/profile injection&quot;]
+  API --&gt; Graph[&quot;Documents + memories graph&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Add memory through AI SDK:</p>
+<ul>
+<li><code>supermemoryTools()</code> in
+<code>packages/ai-sdk/src/tools.ts</code>.</li>
+<li><code>addMemory.execute()</code> calls
+<code>client.add({ content: memory, containerTags })</code>.</li>
+<li>Scoping is via <code>projectId -&gt; sm_project_&lt;id&gt;</code> or
+explicit <code>containerTags</code>.</li>
+</ul>
+<p>Search through AI SDK:</p>
+<ul>
+<li><code>searchMemories.execute()</code> calls
+<code>client.search.execute({ q, containerTags, limit, chunkThreshold: 0.6, includeFullDocs })</code>.</li>
+</ul>
+<p>MCP memory tool:</p>
+<ul>
+<li><code>SupermemoryMCP.init()</code> in
+<code>apps/mcp/src/server.ts</code>.</li>
+<li>Registers <code>memory</code> tool with
+<code>action: save | forget</code>.</li>
+<li><code>handleMemory()</code> calls
+<code>SupermemoryClient.createMemory()</code> or
+<code>forgetMemory()</code>.</li>
+</ul>
+<p>MCP recall tool:</p>
+<ul>
+<li><code>recall</code> tool registered in
+<code>apps/mcp/src/server.ts</code>.</li>
+<li>Calls API through <code>SupermemoryClient</code> and formats
+memories through <code>formatMemories</code>.</li>
+</ul>
+<p>MCP context/profile:</p>
+<ul>
+<li><code>context</code> prompt in
+<code>apps/mcp/src/server.ts</code>.</li>
+<li>Fetches profile and formats stable preferences plus recent
+activity.</li>
+<li><code>packages/tools/src/shared/context.ts</code> does similar
+prompt injection for framework integrations through
+<code>/v4/profile</code>.</li>
+</ul>
+<p>Forget flow:</p>
+<ul>
+<li><code>apps/mcp/src/client.ts</code>.</li>
+<li><code>forgetMemory()</code> tries exact
+<code>client.memories.forget({ content })</code>.</li>
+<li>On 404, falls back to semantic search with threshold
+<code>0.85</code>, then forgets by ID if an actual memory result
+matched.</li>
+</ul>
+<p>Graph:</p>
+<ul>
+<li><code>apps/mcp/src/server.ts</code> registers
+<code>memory-graph</code> and <code>fetch-graph-data</code>.</li>
+<li><code>packages/memory-graph</code> renders documents and memory
+entries.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Visible schema details:</p>
+<p><code>Document</code>:</p>
+<ul>
+<li><code>id</code>, <code>customId</code>, <code>contentHash</code>,
+<code>orgId</code>, <code>userId</code>, <code>connectionId</code>.</li>
+<li>Content fields: <code>title</code>, <code>content</code>,
+<code>summary</code>, <code>url</code>, <code>source</code>,
+<code>type</code>, <code>status</code>.</li>
+<li>Processing metadata: extraction/chunking/embedding/indexing
+states.</li>
+<li><code>summaryEmbedding</code>,
+<code>summaryEmbeddingNew</code>.</li>
+</ul>
+<p><code>Chunk</code>:</p>
+<ul>
+<li><code>documentId</code>, content, embedded content, position,
+metadata.</li>
+<li>Standard and matryoshka embeddings.</li>
+</ul>
+<p><code>MemoryEntry</code>:</p>
+<ul>
+<li><code>memory</code>, <code>spaceId</code>, <code>orgId</code>,
+<code>userId</code>.</li>
+<li><code>version</code>, <code>isLatest</code>,
+<code>parentMemoryId</code>, <code>rootMemoryId</code>.</li>
+<li><code>memoryRelations</code>: <code>updates</code>,
+<code>extends</code>, <code>derives</code>.</li>
+<li><code>sourceCount</code>, <code>isInference</code>,
+<code>isForgotten</code>, <code>isStatic</code>.</li>
+<li><code>forgetAfter</code>, <code>forgetReason</code>.</li>
+<li>memory embeddings and metadata.</li>
+</ul>
+<p><code>Space</code>:</p>
+<ul>
+<li><code>containerTag</code>, visibility, owner, text index,
+experimental flag.</li>
+</ul>
+<p>This schema is more sophisticated than the visible client wrappers.
+It suggests a graph/version model, but the mutation algorithms are not
+present in this checkout.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Visible retrieval controls:</p>
+<ul>
+<li><code>searchMode</code>: <code>memories</code>, <code>hybrid</code>,
+<code>documents</code>.</li>
+<li><code>rerank</code>.</li>
+<li><code>rewriteQuery</code>.</li>
+<li>include flags: documents, related memories, summaries, chunks,
+forgotten memories.</li>
+<li>thresholds for chunks, documents, memories.</li>
+<li>container tag / project scoping.</li>
+<li>profile endpoint that returns static and dynamic facts plus optional
+search results.</li>
+</ul>
+<p>What is not visible:</p>
+<ul>
+<li>Embedding model choice.</li>
+<li>Ranking formula.</li>
+<li>Reranker implementation.</li>
+<li>Query rewriting implementation.</li>
+<li>Memory graph construction/update logic.</li>
+<li>Contradiction/update detection logic.</li>
+</ul>
+<p>The client API indicates a strong product retrieval surface, but not
+enough backend code is present to evaluate ranking quality.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Visible write paths are API wrappers:</p>
+<ul>
+<li><code>client.add(...)</code> for memory/document ingestion.</li>
+<li>MCP <code>memory</code> tool sends short content with
+<code>sm_source: "mcp"</code> metadata.</li>
+<li>AI SDK <code>addMemory</code> sends a single
+sentence/paragraph.</li>
+</ul>
+<p>Visible schema implies backend write processing:</p>
+<ul>
+<li>Documents progress through <code>queued</code>,
+<code>extracting</code>, <code>chunking</code>, <code>embedding</code>,
+<code>indexing</code>, <code>done</code>, <code>failed</code>.</li>
+<li>Memory entries can be inferred, static, latest/non-latest,
+forgotten, versioned, and related.</li>
+</ul>
+<p>But the code that extracts memory entries, decides
+<code>updates</code>/<code>extends</code>/<code>derives</code>, manages
+versions, and marks latest entries is not available in the inspected
+source.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Supermemory's visible repo is strongest at integrations:</p>
+<ul>
+<li>AI SDK tools: <code>searchMemories</code>,
+<code>addMemory</code>.</li>
+<li>MCP tools: <code>memory</code>, <code>recall</code>,
+<code>context</code>, <code>listProjects</code>, <code>whoAmI</code>,
+memory graph.</li>
+<li>Prompt injection helpers for frameworks.</li>
+<li>OpenAI/Vercel/Mastra/VoltAgent wrappers under
+<code>packages/tools</code>.</li>
+<li>Browser extension and web app.</li>
+</ul>
+<p>The MCP prompt explicitly tells agents to save memory-worthy facts.
+This is similar to Engram's affordance pattern, but backed by a hosted
+API rather than local storage.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths visible in code:</p>
+<ul>
+<li>Project/container tag scoping.</li>
+<li>Profile separated into static and dynamic facts.</li>
+<li>Forget flow attempts exact delete before semantic fallback.</li>
+<li>Semantic forget threshold is high (<code>0.85</code>) to reduce
+accidental deletion.</li>
+<li>Prompt injection helpers deduplicate memory lists before
+injection.</li>
+<li>MCP root container tag can constrain tool inputs.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>Core extraction/ranking/trust behavior is not auditable in this
+checkout.</li>
+<li>MCP tool description says "DO NOT USE ANY OTHER MEMORY TOOL", which
+may be effective but is heavy-handed.</li>
+<li>Save tool lets agent send arbitrary text to hosted memory.</li>
+<li>Forget-by-semantic fallback can still delete wrong memory if
+high-similarity content is ambiguous.</li>
+<li>Container tag/project naming becomes a major isolation
+boundary.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Visible tests:</p>
+<ul>
+<li><code>packages/ai-sdk/src/tools.test.ts</code>.</li>
+<li><code>packages/tools/src/*.test.ts</code> and framework tests.</li>
+<li><code>apps/mcp/e2e/*.test.ts</code>.</li>
+<li><code>packages/memory-graph/src/__tests__/*</code>.</li>
+</ul>
+<p>These mostly test wrappers, UI graph behavior, and integration
+surfaces. They do not prove backend memory extraction or retrieval
+quality.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Explicit schema for memory versions and relations:
+<code>updates</code>, <code>extends</code>, <code>derives</code>.</li>
+<li>Separate <code>Document</code>, <code>Chunk</code>, and
+<code>MemoryEntry</code> domains.</li>
+<li>Static vs inferred memory flag.</li>
+<li>Forget metadata: <code>isForgotten</code>, <code>forgetAfter</code>,
+<code>forgetReason</code>.</li>
+<li>Profile split into static stable facts and dynamic recent
+activity.</li>
+<li>Integration packages that inject memory into multiple agent
+frameworks.</li>
+<li>Memory graph UI as an inspection/debugging surface.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Public repo does not expose the most essential backend logic.</li>
+<li>Hosted API dependency means local reproducibility is limited.</li>
+<li>Agent-facing "remember everything generalizable" can over-save.</li>
+<li>Semantic forget can be dangerous without confirmation UX.</li>
+<li>Schema richness can hide uncertain implementation semantics.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow conceptually:</p>
+<ul>
+<li>Document/chunk/memory-entry separation.</li>
+<li>Version chains and relation vocabulary.</li>
+<li>Static/dynamic profile split.</li>
+<li>Agent-framework adapters and prompt injection.</li>
+</ul>
+<p>Do not borrow blindly:</p>
+<ul>
+<li>Hosted-only black-box core.</li>
+<li>Broad save instructions without provenance/trust.</li>
+<li>Semantic deletion without review.</li>
+</ul>
+<p>Study Supermemory for product/API surface design and memory graph UX
+more than for open backend implementation.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How are memory entries extracted from documents/conversations?</li>
+<li>How are contradictions handled?</li>
+<li>What makes a memory static vs dynamic?</li>
+<li>How are versions and <code>updates</code> relations produced?</li>
+<li>What retrieval/reranking stack powers <code>/search</code> and
+<code>/v4/profile</code>?</li>
+<li>How is deletion/forgetting represented internally across documents
+and memory entries?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Domain schemas:
+<code>supermemory/packages/validation/schemas.ts</code>.</li>
+<li>Public API schemas:
+<code>supermemory/packages/validation/api.ts</code>.</li>
+<li>AI SDK tools:
+<code>supermemory/packages/ai-sdk/src/tools.ts</code>.</li>
+<li>MCP server: <code>supermemory/apps/mcp/src/server.ts</code>.</li>
+<li>MCP/API client:
+<code>supermemory/apps/mcp/src/client.ts</code>.</li>
+<li>Prompt injection:
+<code>supermemory/packages/tools/src/shared/context.ts</code>.</li>
+<li>Client helper:
+<code>supermemory/packages/tools/src/shared/memory-client.ts</code>.</li>
+<li>Graph UI: <code>supermemory/packages/memory-graph/src/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

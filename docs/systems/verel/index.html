@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A correctness-focused memory
+framework with explicit trust states, rejected tombstones, confidence,
+and defensive recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Verel — Agent Memory Atlas">
+    <meta property="og:description" content="A correctness-focused
+memory framework with explicit trust states, rejected tombstones,
+confidence, and defensive recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Verel — Agent Memory Atlas">
+    <meta name="twitter:description" content="A correctness-focused
+memory framework with explicit trust states, rejected tombstones,
+confidence, and defensive recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Verel — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Verification-first memory</p>
+          <h1>Verel</h1>
+          <p class="document-deck">A correctness-focused memory
+framework with explicit trust states, rejected tombstones, confidence,
+and defensive recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/amitpatole/verel">https://github.com/amitpatole/verel</a>">
+              <span>Source</span>
+              <strong>amitpatole/verel</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e">https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e</a>" title="df80efe8207a99585a2ebce36fc6e32ba5077e2e">
+              <span>Analyzed revision</span>
+              <code>df80efe8207a99585a2ebce36fc6e32ba5077e2e</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>verel</code> is not primarily a memory product; it is a
+verification-first agent framework. Its memory package is nevertheless
+one of the most technically interesting in the workspace because it
+treats memory as an epistemic/trust problem, not just retrieval.</p>
+<p>Core idea: extracted facts and learned rules should not automatically
+become trusted memory. Verel separates:</p>
+<ul>
+<li><code>epistemic_confidence</code>: belief that the memory is
+true.</li>
+<li><code>retrieval_strength</code>: reachability/usefulness for
+recall.</li>
+<li><code>trust</code>: candidate, verified, rejected.</li>
+</ul>
+<p>It also has correction chains, rejected-value tombstones,
+volatile/TTL/pinned lifecycle flags, token-budgeted recall, held-out
+promotion gates, scope lattices, hosted/replicated memory, and pluggable
+backends.</p>
+<p>The code is unusually explicit about adversarial cases. Many comments
+refer to audit rounds and attack fixes. It is more of a
+research/verification design than a minimal production memory
+service.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Primary memory unit:</p>
+<pre class="python"><code>MemoryRecord(
+    kind=FACT | DESIGN_RULE | SCHEMA | FAILURE | SKILL,
+    subject=...,
+    predicate=...,
+    text=...,
+    scope=...,
+    subj_pred_key=...,
+    provenance=[...],
+    trust=CANDIDATE | VERIFIED | REJECTED,
+    epistemic_confidence=...,
+    retrieval_strength=...,
+    support_count=...,
+    detail_json=...
+)</code></pre>
+<p>Lifecycle:</p>
+<pre class="text"><code>transcript/percept/failure -&gt; extraction/proposal -&gt; CANDIDATE memory
+-&gt; corroboration or attestation -&gt; VERIFIED
+-&gt; contradiction -&gt; lower confidence or REJECTED
+-&gt; recall reinforces retrieval_strength only
+-&gt; decay/prune affects reachability, not truth
+-&gt; consolidation induces candidate design rules/schemas
+-&gt; held-out attested promotion gate verifies rules</code></pre>
+<p>The key design principle is that retrieval and truth are
+orthogonal.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>verel/src/verel/memory/view.py</code>: protocol, record model,
+trust/ranking/decay.</li>
+<li><code>verel/src/verel/memory/local.py</code>: SQLite
+<code>LocalMemory</code>.</li>
+<li><code>verel/src/verel/memory/remember.py</code>: conversation
+extraction trust gate.</li>
+<li><code>verel/src/verel/memory/recall.py</code>: token-budgeted,
+untrusted-data-fenced recall.</li>
+<li><code>verel/src/verel/memory/consolidate.py</code>: failures -&gt;
+design rules -&gt; schemas.</li>
+<li><code>verel/src/verel/memory/promotion.py</code>: held-out eval
+promotion gate.</li>
+<li><code>verel/src/verel/memory/lattice.py</code>: scope hierarchy
+recall and graduation.</li>
+<li><code>verel/src/verel/memory/hosted.py</code>: hosted memory
+server/client.</li>
+<li><code>verel/src/verel/memory/replicated.py</code>: leader/follower
+replicated memory.</li>
+<li><code>verel/src/verel/memory/mem0_backend.py</code>,
+<code>pg_backend.py</code>, <code>redis_backend.py</code>,
+<code>lance_backend.py</code>: backend adapters.</li>
+<li><code>verel/src/verel/mcp_server.py</code>: MCP integration.</li>
+</ul>
+<p>Architecture:</p>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;Agent loop / MCP&quot;] --&gt; MemoryAPI[&quot;Memory helpers&quot;]
+  MemoryAPI --&gt; View[&quot;MemoryView protocol&quot;]
+  View --&gt; Local[&quot;LocalMemory SQLite&quot;]
+  View --&gt; Remote[&quot;Remote/mem0/PG/Redis/Lance&quot;]
+  MemoryAPI --&gt; Recall[&quot;Budgeted recall&quot;]
+  MemoryAPI --&gt; Remember[&quot;Trust-gated remember&quot;]
+  MemoryAPI --&gt; Consolidate[&quot;Consolidation&quot;]
+  Consolidate --&gt; Promotion[&quot;Held-out promotion gate&quot;]
+  Promotion --&gt; Verdict[&quot;Verdict bus attestation&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Record/trust model:</p>
+<ul>
+<li><code>MemoryRecord</code>, <code>Trust</code>,
+<code>MemoryKind</code>, <code>rank()</code>, <code>apply_decay()</code>
+in <code>view.py</code>.</li>
+<li><code>make_key()</code> and <code>make_id()</code> define
+content-addressed identity from
+<code>(subject, predicate, scope)</code>.</li>
+<li><code>canonical_text()</code> is shared by recall rendering and
+rejection comparison.</li>
+</ul>
+<p>Local persistence:</p>
+<ul>
+<li><code>LocalMemory</code> in <code>local.py</code>.</li>
+<li>SQLite table <code>memory</code> stores all fields plus optional
+vector JSON.</li>
+<li>WAL + <code>synchronous=FULL</code> when durable file-backed mode is
+enabled.</li>
+</ul>
+<p>Write path:</p>
+<ul>
+<li><code>LocalMemory.write()</code>.</li>
+<li>Same <code>(subject, predicate, scope)</code> and same text
+corroborates: support and confidence rise.</li>
+<li>Same key with different value supersedes: correction chain is
+stored.</li>
+<li>Rejected values are carried forward in a bounded ledger to prevent
+laundering.</li>
+<li><code>apply_replica()</code> bypasses inference behavior for
+replication idempotence.</li>
+</ul>
+<p>Recall:</p>
+<ul>
+<li><code>LocalMemory.recall()</code> ranks by semantic cosine if
+embedder configured, otherwise lexical overlap.</li>
+<li>Excludes rejected records.</li>
+<li>Recall reinforces only <code>retrieval_strength</code>, never
+confidence.</li>
+<li><code>recall_budgeted()</code> in <code>recall.py</code> greedily
+packs ranked memories under a token budget and fences them as untrusted
+data.</li>
+</ul>
+<p>Remember/extraction gate:</p>
+<ul>
+<li><code>remember_conversation()</code> in
+<code>remember.py</code>.</li>
+<li>Calls <code>extract_facts(...)</code>.</li>
+<li>Refuses reserved keys and non-FACT clobbering.</li>
+<li>Promotes only with attestation or distinct authenticated
+principals.</li>
+<li>Repeated self-asserted source labels do not count without an
+authenticator.</li>
+</ul>
+<p>Consolidation:</p>
+<ul>
+<li><code>consolidate_failures()</code> clusters <code>FAILURE</code>
+records and asks an LLM to induce <code>DESIGN_RULE</code>
+candidates.</li>
+<li><code>induce_schemas()</code> and <code>induce_hierarchy()</code>
+create higher-order <code>SCHEMA</code> candidates.</li>
+<li>These are never auto-verified.</li>
+</ul>
+<p>Promotion:</p>
+<ul>
+<li><code>PromotionGate.consider()</code> in
+<code>promotion.py</code>.</li>
+<li>Evaluates rule over held-out corpus.</li>
+<li>Checks leakage canary.</li>
+<li>Creates signed run receipt.</li>
+<li>Gates through verdict bus.</li>
+<li>Promotes only on attested pass and F1 threshold.</li>
+</ul>
+<p>Scope lattice:</p>
+<ul>
+<li><code>lattice_recall()</code> searches scope plus ancestors with
+specificity bonus.</li>
+<li><code>graduate()</code> promotes verified sibling beliefs to a
+parent scope as candidates.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li><code>verel/tests/test_memory.py</code></li>
+<li><code>verel/tests/test_memory_remember.py</code></li>
+<li><code>verel/tests/test_memory_recall_budget.py</code></li>
+<li><code>verel/tests/test_memory_lifecycle.py</code></li>
+<li><code>verel/tests/test_consolidation.py</code></li>
+<li><code>verel/tests/test_promotion.py</code></li>
+<li><code>verel/tests/test_lattice.py</code></li>
+<li><code>verel/tests/test_replicated.py</code></li>
+<li><code>verel/tests/test_hosted_memory.py</code></li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The data model is explicit and compact:</p>
+<ul>
+<li><code>kind</code>: fact, design rule, schema, failure, skill.</li>
+<li><code>subject</code>, <code>predicate</code>, <code>text</code>:
+structured claim.</li>
+<li><code>scope</code>: repo/component/global/etc.</li>
+<li><code>subj_pred_key</code>: interference key.</li>
+<li><code>source</code>, <code>provenance</code>: evidence.</li>
+<li><code>trust</code>: candidate/verified/rejected.</li>
+<li><code>epistemic_confidence</code>: truth confidence.</li>
+<li><code>retrieval_strength</code>: recall strength.</li>
+<li><code>support_count</code>: corroboration count.</li>
+<li><code>detail_json</code>: lifecycle flags, corrections, rejected
+values, schema metadata, etc.</li>
+</ul>
+<p>SQLite is one table. The abstraction is in <code>MemoryView</code>,
+not schema complexity.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval ranking:</p>
+<pre class="text"><code>rank = W_REL * relevance
+     + W_REC * retrieval_strength
+     + W_CONF * epistemic_confidence
+     + W_TRUST * trust_tier</code></pre>
+<p>Verified memories get a retrieval-strength floor so a trusted fact
+does not decay below a fresh candidate at equal relevance. Rejected
+memories are excluded from normal recall.</p>
+<p><code>recall_budgeted()</code> adds:</p>
+<ul>
+<li>Token budget.</li>
+<li>Highest-ranked memory always included if any relevant memory
+exists.</li>
+<li>Dropped count.</li>
+<li>Untrusted-data fence.</li>
+<li>Canonical text neutralization to prevent recalled content from
+forging prompt structure.</li>
+</ul>
+<p>This is one of the cleanest retrieval safety designs in the
+workspace.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>LocalMemory.write()</code> is the critical method:</p>
+<ul>
+<li>Stable key from subject/predicate/scope.</li>
+<li>Same value -&gt; corroboration.</li>
+<li>Rejected same value -&gt; remains rejected.</li>
+<li>Different value -&gt; supersede, preserve correction chain.</li>
+<li>Rejected value ledger is durable across supersessions.</li>
+<li>Embeddings are optional.</li>
+</ul>
+<p>This solves a common memory bug: silently overwriting old values
+loses history; blindly appending creates contradictions. Verel keeps the
+current value plus bounded correction history.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Surfaces:</p>
+<ul>
+<li>Python API through <code>verel.memory</code>.</li>
+<li>MCP through <code>verel/src/verel/mcp_server.py</code>.</li>
+<li>CLI/framework integration through the broader Verel runtime.</li>
+<li>Backends selected through registry/env.</li>
+</ul>
+<p>The memory system is designed to sit behind agent-run CI and verdict
+loops: only verified work compounds. That is a different use case from
+personal preference memory, though it can represent facts too.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Explicit candidate/verified/rejected trust state.</li>
+<li>Confidence separate from retrieval strength.</li>
+<li>Rejected-value anti-laundering.</li>
+<li>Canonicalization shared by renderer and trust gate.</li>
+<li>Prompt-injection neutralization in recall.</li>
+<li>Held-out promotion gate with attestation.</li>
+<li>Scope lattice for shared memory without direct trust
+inheritance.</li>
+<li>SQLite crash-safety options.</li>
+<li>Replication/hosted tests exist.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>Considerably more complex than most teams need initially.</li>
+<li>Some LLM consolidation paths are ambitious and may be brittle.</li>
+<li>Lexical recall is the zero-dependency default unless embedder
+configured.</li>
+<li>Correctness of attestation/authenticator depends on external
+integration.</li>
+<li>The many security-oriented mechanisms require discipline to preserve
+when extending.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Verel has strong memory-specific tests:</p>
+<ul>
+<li>Memory contract.</li>
+<li>Remember/extraction gate.</li>
+<li>Lifecycle/decay.</li>
+<li>Budgeted recall.</li>
+<li>Consolidation.</li>
+<li>Promotion.</li>
+<li>Lattice.</li>
+<li>Hosted and replicated backends.</li>
+<li>MCP memory.</li>
+</ul>
+<p>I did not run them. The test file coverage is unusually aligned with
+the design claims.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Separate truth confidence from retrieval strength.</li>
+<li>Candidate/verified/rejected trust state.</li>
+<li>Correction chains instead of silent overwrites.</li>
+<li>Rejected-value tombstones to prevent laundering.</li>
+<li>Recall fenced as untrusted data.</li>
+<li>Token-budgeted recall that reports dropped memories.</li>
+<li>Scope lattice with graduate-up as candidate, not verified.</li>
+<li>Held-out promotion gates for learned rules.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>The design may be overbuilt for simple personalization.</li>
+<li>Too much security logic in comments can become stale if tests do not
+enforce every invariant.</li>
+<li>LLM-induced design rules require careful held-out evals to avoid
+false generalization.</li>
+<li>Single-table local model is elegant but may need indexing work for
+large memory corpora.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow aggressively for correctness-sensitive agent memory:</p>
+<ul>
+<li>Trust model.</li>
+<li>Recall neutralization.</li>
+<li>Correction/rejected-value handling.</li>
+<li>Promotion gate concept.</li>
+<li>Scope lattice semantics.</li>
+</ul>
+<p>Do not start here if you need a quick MVP. The minimal viable subset
+would be:</p>
+<ul>
+<li><code>MemoryRecord</code> with trust/confidence/retrieval
+fields.</li>
+<li><code>write()</code> interference behavior.</li>
+<li><code>recall_budgeted()</code> fence.</li>
+<li>simple local SQLite backend.</li>
+</ul>
+<p>Add consolidation/promotion/replication later.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How well does the trust machinery perform with real noisy agent
+transcripts?</li>
+<li>What is the operational UX for resolving candidates/rejections?</li>
+<li>Which backend is used in serious deployments?</li>
+<li>How often do induced schemas help versus overgeneralize?</li>
+<li>How mature is the replicated store under network partitions?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Protocol/model/ranking:
+<code>verel/src/verel/memory/view.py</code>.</li>
+<li>Local store: <code>verel/src/verel/memory/local.py</code>.</li>
+<li>Conversation memory gate:
+<code>verel/src/verel/memory/remember.py</code>.</li>
+<li>Recall: <code>verel/src/verel/memory/recall.py</code>.</li>
+<li>Consolidation:
+<code>verel/src/verel/memory/consolidate.py</code>.</li>
+<li>Promotion: <code>verel/src/verel/memory/promotion.py</code>.</li>
+<li>Scope lattice: <code>verel/src/verel/memory/lattice.py</code>.</li>
+<li>Backends: <code>verel/src/verel/memory/*_backend.py</code>,
+<code>hosted.py</code>, <code>replicated.py</code>.</li>
+<li>Tests: <code>verel/tests/test_memory*.py</code>,
+<code>verel/tests/test_consolidation.py</code>,
+<code>verel/tests/test_promotion.py</code>,
+<code>verel/tests/test_lattice.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

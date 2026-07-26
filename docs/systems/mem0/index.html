@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A pragmatic personal and agent
+memory layer with pluggable models, vector stores, extraction, and
+hybrid retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mem0 — Agent Memory Atlas">
+    <meta property="og:description" content="A pragmatic personal and
+agent memory layer with pluggable models, vector stores, extraction, and
+hybrid retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mem0 — Agent Memory Atlas">
+    <meta name="twitter:description" content="A pragmatic personal and
+agent memory layer with pluggable models, vector stores, extraction, and
+hybrid retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mem0 — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Library-first memory</p>
+          <h1>Mem0</h1>
+          <p class="document-deck">A pragmatic personal and agent memory
+layer with pluggable models, vector stores, extraction, and hybrid
+retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/mem0ai/mem0">https://github.com/mem0ai/mem0</a>">
+              <span>Source</span>
+              <strong>mem0ai/mem0</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150">https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150</a>" title="31cec11a790868f88c9acafb8b70eb25071f2150">
+              <span>Analyzed revision</span>
+              <code>31cec11a790868f88c9acafb8b70eb25071f2150</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>mem0</code> is a library-first and service-backed
+personal/agent memory layer. In this checkout, the open-source core is
+concentrated in the Python SDK under <code>mem0/mem0/memory/</code>,
+with configurable embedders, LLMs, vector stores, rerankers, SQLite
+history, and entity linking.</p>
+<p>The most important recent design choice is the V3 add-only extraction
+path in <code>mem0/mem0/memory/main.py</code>: instead of asking an LLM
+to ADD/UPDATE/DELETE existing memories, the system extracts new
+contextual facts in a single LLM call, deduplicates by hash, stores each
+as a new vector payload, and links extracted entities to memories. The
+README still references temporal reasoning and managed-platform
+features, but in the OSS code several temporal/decay operations
+explicitly raise platform-only errors.</p>
+<p>Technically interesting pieces:</p>
+<ul>
+<li>One main class, <code>Memory</code>, owns embedding, vector store,
+LLM, reranker, entity store, and SQLite history.</li>
+<li>Search fuses semantic vector search, keyword/BM25-style scoring
+where the vector backend supports it, and entity boosts.</li>
+<li>Memory write path now captures both user and assistant messages as
+extractable evidence.</li>
+<li>Entity records are stored in a separate vector collection and
+maintain <code>linked_memory_ids</code>.</li>
+<li>SQLite stores operation history and recent messages, not the primary
+memory corpus.</li>
+</ul>
+<p>Main risk: facts are LLM-extracted and stored as candidate-looking
+text but are not represented as uncertain, sourced claims. The system
+has history metadata, but not a strong trust model.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The primary memory unit is a text fact stored as a vector-store
+payload:</p>
+<ul>
+<li><code>payload["data"]</code>: memory text.</li>
+<li><code>user_id</code>, <code>agent_id</code>, <code>run_id</code>:
+session/entity scope.</li>
+<li><code>actor_id</code>, <code>role</code>,
+<code>attributed_to</code>: attribution metadata when available.</li>
+<li><code>hash</code>: MD5 hash for duplicate suppression.</li>
+<li><code>text_lemmatized</code>: keyword-search support.</li>
+<li><code>created_at</code>, <code>updated_at</code>, optional
+<code>expiration_date</code>.</li>
+</ul>
+<p>The lifecycle is:</p>
+<pre class="text"><code>messages -&gt; parse/vision handling -&gt; retrieve nearby existing memories -&gt; LLM additive extraction
+-&gt; embed extracted memories -&gt; hash dedupe -&gt; vector insert -&gt; SQLite history -&gt; entity extraction/linking
+-&gt; search via semantic/BM25/entity fusion -&gt; optional rerank -&gt; result formatting</code></pre>
+<p>The V3 path is append-oriented. Updates and deletes still exist as
+explicit APIs, but the default <code>add(..., infer=True)</code>
+pipeline no longer asks the extractor to rewrite existing facts.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>mem0/mem0/memory/main.py</code>: main sync memory
+implementation.</li>
+<li><code>mem0/mem0/memory/storage.py</code>: SQLite history and
+recent-message store.</li>
+<li><code>mem0/mem0/configs/prompts.py</code>: extraction, update, and
+procedural-memory prompts.</li>
+<li><code>mem0/mem0/utils/scoring.py</code>: BM25/entity weighting and
+rank fusion.</li>
+<li><code>mem0/mem0/utils/entity_extraction.py</code>: entity extraction
+helpers.</li>
+<li><code>mem0/mem0/vector_stores/*</code>: backend adapters.</li>
+<li><code>mem0/mem0/reranker/*</code>: optional rerankers.</li>
+<li><code>mem0/mem0/configs/base.py</code>: config and
+<code>MemoryItem</code> types.</li>
+</ul>
+<p>Runtime shape:</p>
+<pre class="mermaid"><code>flowchart LR
+  App[&quot;App / Agent SDK&quot;] --&gt; Memory[&quot;Memory&quot;]
+  Memory --&gt; LLM[&quot;LLM extractor&quot;]
+  Memory --&gt; Embedder[&quot;Embedder&quot;]
+  Memory --&gt; VS[&quot;Vector store&quot;]
+  Memory --&gt; EntVS[&quot;Entity vector collection&quot;]
+  Memory --&gt; SQLite[&quot;SQLite history + recent messages&quot;]
+  Memory --&gt; Reranker[&quot;Optional reranker&quot;]</code></pre>
+<p>The vector store is the authoritative memory store. SQLite tracks
+<code>history</code> and <code>messages</code>; it does not store full
+active memory rows except operation history.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Capture/write:</p>
+<ul>
+<li><code>Memory.add()</code> in
+<code>mem0/mem0/memory/main.py</code></li>
+<li><code>_build_filters_and_metadata()</code> validates and builds
+scope metadata.</li>
+<li><code>_add_to_vector_store()</code> handles raw inserts when
+<code>infer=False</code> and the V3 additive LLM pipeline when
+<code>infer=True</code>.</li>
+<li><code>_create_memory()</code> and <code>_update_memory()</code>
+implement direct storage mutations.</li>
+</ul>
+<p>Extraction/consolidation:</p>
+<ul>
+<li><code>ADDITIVE_EXTRACTION_PROMPT</code> and
+<code>generate_additive_extraction_prompt()</code> in
+<code>mem0/mem0/configs/prompts.py</code>.</li>
+<li><code>_add_to_vector_store()</code> retrieves nearby existing
+memories, maps UUIDs to small integer IDs for anti-hallucination, calls
+<code>self.llm.generate_response(...)</code>, parses JSON, embeds new
+texts, deduplicates, then inserts.</li>
+</ul>
+<p>Retrieval/search:</p>
+<ul>
+<li><code>Memory.search()</code> validates query/filters and calls
+<code>_search_vector_store()</code>.</li>
+<li><code>_search_vector_store()</code> performs query preprocessing,
+semantic search, keyword search where supported, entity lookup/boosting,
+score fusion, and formatting.</li>
+<li>Optional reranking is invoked in <code>Memory.search()</code>
+through <code>self.reranker.rerank(...)</code>.</li>
+</ul>
+<p>Context/history:</p>
+<ul>
+<li><code>SQLiteManager.save_messages()</code> stores recent messages
+per deterministic <code>session_scope</code>.</li>
+<li><code>_add_to_vector_store()</code> calls
+<code>get_last_messages(..., limit=10)</code> to resolve references in
+later extraction.</li>
+</ul>
+<p>Delete/update:</p>
+<ul>
+<li><code>Memory.update()</code>, <code>Memory.delete()</code>,
+<code>Memory.delete_all()</code>.</li>
+<li><code>_remove_memory_from_entity_store()</code> removes memory IDs
+from entity links.</li>
+<li><code>SQLiteManager.add_history()</code> records ADD/UPDATE/DELETE
+history.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li><code>mem0/tests</code> exists, but the full test map was not deeply
+audited in this pass.</li>
+<li>The implementation has many defensive fallbacks, but the strongest
+evidence for behavior came from code, not test execution.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Primary memory rows are vector-store records with payload fields.
+Scoping is flexible: operations require at least one of
+<code>user_id</code>, <code>agent_id</code>, or <code>run_id</code>, and
+those become both storage metadata and query filters.</p>
+<p>SQLite tables in <code>mem0/mem0/memory/storage.py</code>:</p>
+<ul>
+<li><code>history</code>: <code>memory_id</code>, old/new memory text,
+event, timestamps, deletion flag, actor, role.</li>
+<li><code>messages</code>: <code>session_scope</code>, role, content,
+name, created timestamp.</li>
+</ul>
+<p>Entity collection:</p>
+<ul>
+<li>Separate vector collection named from the main collection plus
+<code>_entities</code> or provider-specific separator.</li>
+<li>Payload: <code>data</code>, <code>entity_type</code>,
+<code>linked_memory_ids</code>, plus session scope fields.</li>
+</ul>
+<p>Weakness: the memory record does not explicitly distinguish
+observation, extracted assertion, verified claim, stale claim,
+contradiction, or rejected claim. <code>expiration_date</code> exists,
+but trust and uncertainty do not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The intended retrieval stack is multi-signal:</p>
+<ul>
+<li>Semantic vector similarity on memory text.</li>
+<li>Backend keyword search/BM25 where available.</li>
+<li>Entity matching and boosting using a separate entity
+collection.</li>
+<li>Optional reranker.</li>
+<li>Metadata filters and advanced filter operators.</li>
+<li>Expiration filtering unless <code>show_expired=True</code>.</li>
+</ul>
+<p>The code warns when the selected vector backend does not implement
+<code>keyword_search</code>, falling back to semantic-only retrieval.
+That is a good operational warning because hybrid search claims
+otherwise silently degrade.</p>
+<p>Search risks:</p>
+<ul>
+<li>Scoring behavior depends heavily on vector-store adapter
+support.</li>
+<li>Entity linking failures are non-fatal and logged; search may
+silently lose entity boost.</li>
+<li>Expiration is date-based hiding, not a broader temporal reasoning
+model in OSS.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add(..., infer=True)</code> is the critical path:</p>
+<ol type="1">
+<li>Normalize messages.</li>
+<li>Parse vision messages if configured.</li>
+<li>Retrieve nearby existing memories for dedupe/linking context.</li>
+<li>Build additive extraction prompt with last messages and existing
+memories.</li>
+<li>Parse <code>{"memory": [...]}</code> response.</li>
+<li>Batch embed extracted texts.</li>
+<li>Deduplicate by MD5 hash against existing and current batch.</li>
+<li>Insert vector records.</li>
+<li>Batch write history.</li>
+<li>Batch extract/link entities.</li>
+<li>Save recent messages.</li>
+</ol>
+<p><code>infer=False</code> stores each non-system message as raw
+memory, preserving role and actor.</p>
+<p>The write path is pragmatic and scalable: one LLM call, batch
+embeddings, batch vector insert, batch entity extraction. The tradeoff
+is that contradictions are not semantically resolved on write; they
+become additional memories unless explicit update/delete APIs are
+used.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Surfaces present in this repo:</p>
+<ul>
+<li>Python SDK: <code>mem0/mem0/memory/main.py</code>.</li>
+<li>Client/platform layer: <code>mem0/mem0/client/</code>.</li>
+<li>CLI under <code>mem0/cli</code>.</li>
+<li>OpenMemory app/server under <code>mem0/openmemory</code>.</li>
+<li>TypeScript SDK under <code>mem0/mem0-ts</code>.</li>
+<li>Agent skill/plugin docs under <code>mem0/skills</code> and
+<code>mem0/integrations</code>.</li>
+</ul>
+<p>The agent can call add/search through SDK/CLI/plugin surfaces. The
+default library design is application-controlled: the app decides when
+to call <code>add</code> and <code>search</code>, unless wrapped as an
+agent tool by integrations.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Validates entity IDs and forbids top-level entity params in newer
+APIs.</li>
+<li>Hash dedup prevents exact duplicate explosion.</li>
+<li>SQLite writes are locked.</li>
+<li>Entity cleanup is best-effort and isolated from primary
+delete/update.</li>
+<li>Sensitive config redaction exists for telemetry-related config
+cloning.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>No first-class provenance/trust state for extracted facts.</li>
+<li>LLM extraction includes assistant-generated facts by design; useful
+for plans/recommendations, risky for hallucinated assistant claims.</li>
+<li>Prompt injection in shared content may cause false extraction unless
+filtered by upstream prompts.</li>
+<li>Temporal parameters like <code>timestamp</code> and
+<code>reference_date</code> are platform-only in OSS, even though
+docs/README emphasize temporal reasoning.</li>
+<li>Delete semantics depend on vector backend behavior and optional
+entity cleanup.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The README claims benchmark wins and references external evaluation
+frameworks. In this local analysis, I did not run tests or reproduce
+benchmark claims.</p>
+<p>Evidence in code:</p>
+<ul>
+<li>The implementation has explicit notices for scale, temporal, and
+decay feature use.</li>
+<li>Many fallbacks are present around embedding, entity linking, vector
+insert, and parsing.</li>
+</ul>
+<p>Missing tests I would want before relying on it:</p>
+<ul>
+<li>Extraction against adversarial assistant/user content.</li>
+<li>Contradiction behavior under add-only V3.</li>
+<li>Hybrid scoring consistency across vector stores.</li>
+<li>Entity boost correctness.</li>
+<li>Expiration and delete consistency.</li>
+<li>Regression tests proving assistant-generated facts do not pollute
+user memories.</li>
+</ul>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Single-call additive extraction with nearby existing memories as
+dedupe/linking context.</li>
+<li>Separate entity collection with <code>linked_memory_ids</code>.</li>
+<li>Hash-based exact dedupe before vector insert.</li>
+<li>Strict entity scoping with at least one of <code>user_id</code>,
+<code>agent_id</code>, <code>run_id</code>.</li>
+<li>Recent-message side channel for reference resolution without
+stuffing full chat history into memory.</li>
+<li>Graceful degradation when keyword search or entity linking is
+unavailable.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Extracted facts are stored too confidently.</li>
+<li>Add-only is operationally simple but punts contradiction resolution
+to retrieval or explicit APIs.</li>
+<li>Platform-only temporal/decay features create a doc/code gap for OSS
+users.</li>
+<li>One main class owns too many responsibilities.</li>
+<li>Entity linking is best-effort but retrieval quality may depend on
+it.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The V3 additive write pipeline shape.</li>
+<li>Multi-signal retrieval.</li>
+<li>Entity side index.</li>
+<li>Scope validation.</li>
+<li>Batch-first write mechanics.</li>
+</ul>
+<p>Avoid copying:</p>
+<ul>
+<li>Treating extracted memories as plain facts with no trust state.</li>
+<li>Letting assistant output become first-class memory without explicit
+provenance/trust controls.</li>
+<li>Hiding platform-only behavior behind SDK-level parameters.</li>
+</ul>
+<p>This design is appropriate for product personalization and
+high-throughput memory APIs. It is less appropriate when memory
+correctness, adversarial inputs, or auditability matter more than recall
+volume.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How much of the README's temporal reasoning exists only in the
+hosted platform?</li>
+<li>How are memory contradictions handled operationally after the V3
+add-only shift?</li>
+<li>What are the exact production scoring weights and benchmarks?</li>
+<li>How often does entity extraction materially improve retrieval?</li>
+<li>What deletion guarantees exist across all vector-store
+backends?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage/schema: <code>mem0/mem0/memory/storage.py</code>,
+<code>mem0/mem0/configs/base.py</code>.</li>
+<li>Write path: <code>mem0/mem0/memory/main.py</code>.</li>
+<li>Retrieval path: <code>mem0/mem0/memory/main.py</code>,
+<code>mem0/mem0/utils/scoring.py</code>.</li>
+<li>Prompts: <code>mem0/mem0/configs/prompts.py</code>.</li>
+<li>Entity extraction:
+<code>mem0/mem0/utils/entity_extraction.py</code>.</li>
+<li>Vector stores: <code>mem0/mem0/vector_stores/</code>.</li>
+<li>Rerankers: <code>mem0/mem0/reranker/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

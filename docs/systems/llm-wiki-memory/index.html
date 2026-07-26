@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Recoverable coding-agent memory
+built from typed Markdown leaves, local embeddings, lifecycle hooks, and
+git history.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="llm-wiki-memory — Agent Memory Atlas">
+    <meta property="og:description" content="Recoverable coding-agent
+memory built from typed Markdown leaves, local embeddings, lifecycle
+hooks, and git history.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="llm-wiki-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="Recoverable coding-agent
+memory built from typed Markdown leaves, local embeddings, lifecycle
+hooks, and git history.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>llm-wiki-memory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Filesystem and git memory</p>
+          <h1>llm-wiki-memory</h1>
+          <p class="document-deck">Recoverable coding-agent memory built
+from typed Markdown leaves, local embeddings, lifecycle hooks, and git
+history.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/ctxr-dev/llm-wiki-memory">https://github.com/ctxr-dev/llm-wiki-memory</a>">
+              <span>Source</span>
+              <strong>ctxr-dev/llm-wiki-memory</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146">https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146</a>" title="b7cc76a493573baac133969b324a874990556146">
+              <span>Analyzed revision</span>
+              <code>b7cc76a493573baac133969b324a874990556146</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>llm-wiki-memory</code> is a local-first memory runtime for
+coding agents. It stores Markdown leaves in a filesystem wiki, maintains
+navigable <code>index.md</code> files through
+<code>@ctxr/skill-llm-wiki</code>, searches with on-device embeddings,
+and exposes the result through MCP, CLI commands, and Claude Code
+lifecycle hooks. Its primary memory unit is either a typed atomic note,
+a captured plan/investigation, or a verbatim full document. Private
+memory can be layered with repository-owned shared wikis.</p>
+<p>The core philosophy is unusually explicit: memory owns content,
+placement, retrieval, and lifecycle; <code>@ctxr/skill-llm-wiki</code>
+owns tree structure and indexes. The strongest implementation work is
+around operational durability: recoverable transcript capture,
+deterministic placement, explicit write targets, per-operation wiki
+commits, scope federation, bounded context responses, opt-in
+consolidation, and a very broad test suite.</p>
+<p>The weakest part is epistemic rather than operational. Extracted
+atoms are stored as active memories without candidate/verified/rejected
+states, source authority, contradiction records, or rejected-value
+tombstones. Git provides history, but not a truth model. Retrieval is
+semantic plus structured filtering, not genuinely hybrid lexical/vector
+search, and there is no checked-in retrieval-quality benchmark. The
+implementation is a strong reference for local coding-agent memory
+plumbing, but not for high-stakes belief governance.</p>
+<p>Analysis target: checkout
+<code>b7cc76a493573baac133969b324a874990556146</code> (2026-07-18),
+package version <code>0.5.0</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The system treats a memory as a Markdown leaf with schema-compatible
+top-level frontmatter and a nested <code>memory</code> metadata block.
+Three shapes coexist:</p>
+<ul>
+<li><strong>Atomic memory:</strong> a typed <code>decision</code>,
+<code>bug-root-cause</code>, <code>feedback-rule</code>,
+<code>project-lore</code>, <code>reference</code>,
+<code>pattern-gotcha</code>, or <code>self-improvement-lesson</code>
+distilled from a session or written explicitly.</li>
+<li><strong>Workflow artifact:</strong> a plan, investigation,
+issue-linked note, or dated daily capture.</li>
+<li><strong>Full document:</strong> verbatim Markdown absorbed into a
+category with <code>memory.full: true</code>, searched across its full
+chunk set.</li>
+</ul>
+<p>The lifecycle is:</p>
+<ol type="1">
+<li>Explicit MCP/CLI writes, plan hooks, or transcript hooks capture
+content.</li>
+<li>Transcript capture distills structured atoms into a dated
+<code>daily/yyyy/mm/dd/</code> leaf. Failed distillation preserves raw
+fenced content and a retry stash.</li>
+<li><code>compile.mjs</code> promotes daily atoms into
+<code>knowledge/</code> or <code>self_improvement/</code>, searches for
+candidates, and chooses create/update/skip.</li>
+<li>Retrieval prefilters active leaves by metadata, embeds the query,
+scores cached leaf/chunk embeddings, and merges results across the
+private and repository scope chain.</li>
+<li>Session-start context and explicit MCP calls expose selected
+memories to the agent.</li>
+<li>Mutations can update, move, archive, re-enable, or hard-delete a
+leaf. Optional consolidation deduplicates, refreshes, archives,
+compresses, and reindexes.</li>
+</ol>
+<p>Control is hybrid. Agents explicitly call memory tools; Claude Code
+hooks automatically capture sessions and approved plans; background
+compile/consolidate jobs manage the corpus. Interactive
+<code>self_improvement</code> writes are server-gated on explicit
+consent. Policy requires asking before shared-repository writes, while
+the server deterministically enforces only the explicit repository
+target. The store generally treats active memory as usable guidance, not
+as candidate evidence. A <code>priority</code> field models apply
+strength, but not truth.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<pre class="mermaid"><code>flowchart TD
+    Host[&quot;Agent host: Claude Code, Codex, Cursor, MCP client&quot;]
+    Hooks[&quot;Lifecycle hooks&quot;]
+    MCP[&quot;Local stdio MCP server&quot;]
+    CLI[&quot;CLI and hourly scheduler&quot;]
+    Flush[&quot;Chunked transcript distillation&quot;]
+    Compile[&quot;Daily atom promotion&quot;]
+    Consolidate[&quot;Opt-in consolidation&quot;]
+    Store[&quot;Wiki-store mutation and lifecycle&quot;]
+    Search[&quot;Metadata filter, local embeddings, chunk scoring&quot;]
+    Context[&quot;Federated scope resolver&quot;]
+    Wiki[&quot;Markdown leaves in private or repository wiki&quot;]
+    Index[&quot;skill-llm-wiki index and validation CLI&quot;]
+    Cache[&quot;Per-category embedding cache&quot;]
+    Git[&quot;Private wiki git history&quot;]
+
+    Host --&gt; MCP
+    Host --&gt; Hooks
+    Host --&gt; CLI
+    Hooks --&gt; Flush --&gt; Store
+    Hooks --&gt; Compile
+    CLI --&gt; Compile --&gt; Store
+    CLI --&gt; Consolidate --&gt; Store
+    MCP --&gt; Store
+    MCP --&gt; Search
+    Context --&gt; Search
+    Context --&gt; Store
+    Search --&gt; Wiki
+    Search --&gt; Cache
+    Store --&gt; Wiki
+    Store --&gt; Cache
+    Store --&gt; Index --&gt; Wiki
+    Store --&gt; Git</code></pre>
+<p>Runtime components:</p>
+<ul>
+<li><code>mcp-server/index.mjs</code> starts a local stdio MCP server
+and publishes shared memory discipline through MCP
+<code>instructions</code>.</li>
+<li><code>scripts/lib/wiki-*.mjs</code> form the storage, placement,
+search, federation, lifecycle, embedding-cache, and git-commit
+layer.</li>
+<li><code>scripts/hooks/</code> contains capture, session-start,
+compaction, plan, write-gate, and embedding-sync hooks.</li>
+<li><code>scripts/compile*.mjs</code> promote captured daily atoms.</li>
+<li><code>scripts/consolidate*.mjs</code> run deterministic and optional
+LLM refinement passes.</li>
+<li><code>scripts/cron*.mjs</code> schedule compile plus consolidation
+and track per-entity failure episodes.</li>
+<li><code>@ctxr/skill-llm-wiki</code> is invoked as a CLI subprocess
+through <code>scripts/lib/wiki-cli.mjs</code>; it owns generated
+indexes, validation, healing, and structural rebuilds.</li>
+</ul>
+<p>Persistence is filesystem-first. Leaves and generated indexes live
+under <code>&lt;mount&gt;/.llm-wiki-memory/wiki/</code>; settings, logs,
+locks, stashes, health state, and audit files live under the data
+directory. Embeddings are cached per wiki/category. The private wiki may
+be its own git repository and auto-committed. Repository-owned shared
+mounts are intentionally never auto-staged or auto-committed.</p>
+<p>Deployment assumes Node.js 20+, a local filesystem, the npm
+dependency, an optional local transformer model, and optional access to
+an LLM provider or authenticated CLI for extraction/merge work. There is
+no service database, Docker requirement, hosted control plane, or
+multi-tenant authentication layer.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="explicit-capture-and-write">Explicit Capture and Write</h3>
+<ul>
+<li><code>mcp-server/tools-write.mjs</code> registers
+<code>save_lesson</code>, <code>save_to_dataset</code>, and
+<code>write_memory</code>; <code>mcp-server/tools-absorb.mjs</code>
+registers <code>absorb_document</code>.</li>
+<li><code>mcp-server/mcp-scopes.mjs</code> creates the active federated
+wiki context from required <code>scopes</code>.</li>
+<li><code>scripts/lib/context/write.mjs</code> parses a strict nested
+write request; <code>scripts/lib/context/target.mjs</code> requires an
+explicit target.</li>
+<li><code>mcp-server/mcp-write-dispatch.mjs::dispatchWrite()</code>
+validates topology paths, applies P0 scarcity, remaps invalid path
+facets, stamps repository identity, enters the selected write target,
+and batches one logical commit.</li>
+<li><code>scripts/lib/wiki-mutate.mjs::writeMemory()</code> creates a
+new leaf and can archive/delete a superseded ID.
+<code>saveDocument()</code> performs recursive upsert-by-name and
+relocation when facets change.</li>
+<li><code>scripts/lib/wiki-render.mjs::renderLeaf()</code> creates
+schema-compatible frontmatter, content hash, covers, brief, tags, update
+date, and nested metadata.</li>
+<li>State changes at the leaf file, generated ancestor indexes,
+embedding cache invalidation, and optional git commit.</li>
+</ul>
+<h3 id="automatic-session-capture">Automatic Session Capture</h3>
+<ul>
+<li>Claude Code <code>pre-compact</code>, <code>post-compact</code>, and
+<code>session-end</code> wrappers call
+<code>scripts/hooks/flush.mjs</code>.</li>
+<li><code>flush-source.mjs::buildSourceMaterial()</code> reads, redacts,
+and caps the transcript.</li>
+<li><code>flush-worker.mjs::runWorker()</code> obtains a per-session
+lock and runs asynchronously from the hook deadline.</li>
+<li><code>flush-distill.mjs::distillByChunks()</code> maps chunks
+through <code>flush-chunk-distill.mjs</code>, then reduces atoms through
+<code>flush-reduce.mjs</code>.</li>
+<li><code>flush-validate.mjs::validateAtoms()</code> enforces the atom
+schema. <code>flush-render.mjs</code> emits a daily document,
+partial-failure blocks, or a fenced raw fallback.</li>
+<li><code>flush-stash.mjs</code> preserves failed source material;
+<code>cli-redistill.mjs</code> and <code>flush-redistill*.mjs</code>
+retry it.</li>
+<li><code>flush-write.mjs::writeFlushDoc()</code> writes to the
+configured daily slot and falls back to <code>daily</code> when
+misconfigured.</li>
+</ul>
+<h3 id="daily-promotion-and-deduplication">Daily Promotion and
+Deduplication</h3>
+<ul>
+<li><code>scripts/compile.mjs::main()</code> locks against concurrent
+compile/consolidate, enumerates active <code>daily-*</code> leaves, and
+calls <code>compile-promote.mjs::processDaily()</code>.</li>
+<li><code>compile-atoms.mjs::parseAtomsFromMarkdown()</code> and
+<code>scoreAtomQuality()</code> parse captured atoms and apply the
+optional strict quality floor.</li>
+<li><code>compile-routing.mjs</code> selects the target dataset and
+filter fields.</li>
+<li><code>compile-dedup.mjs::dedupCandidates()</code> retrieves
+same-type, same-facet candidates. <code>forcedLessonUpdate()</code>
+deterministically replaces the top same-<code>error_pattern</code>
+lesson.</li>
+<li><code>compile-actions.mjs::decideAction()</code> asks an LLM for
+create/update/skip when no forced rule applies.
+<code>executeAction()</code> validates that an update's
+<code>supersedes</code> ID came from the candidate set, writes the
+replacement, and archives the old leaf.</li>
+<li>A fully processed daily leaf is archived. Failed promotion is
+retried up to <code>compile.metadataRetryLimit</code>, after which the
+source daily is archived to prevent duplicate-create loops.</li>
+</ul>
+<h3 id="retrieval-and-search">Retrieval and Search</h3>
+<ul>
+<li><code>mcp-server/tools-search.mjs</code> registers
+<code>search_memory</code> and <code>recall_lessons</code>, then clamps
+bodies and total output through
+<code>scripts/lib/search-clamp.mjs</code>.</li>
+<li><code>scripts/lib/recall-search.mjs::searchMemory()</code> searches
+selected or all scoped categories and auto-injects the workspace
+<code>project_module</code> when filters are supplied.</li>
+<li><code>scripts/lib/wiki-search.mjs::searchOneTree()</code> walks
+leaves, skips archived/unreadable documents, applies exact metadata
+membership/equality filters, embeds one query, batch-embeds cache
+misses, scores chunks, enforces a cosine floor, and reranks near ties by
+P0/P1/P2.</li>
+<li><code>scripts/lib/wiki-search-fanout.mjs::searchMemoryFiltered()</code>
+runs that scorer per active wiki level. Comparable local results get a
+depth boost; clearly less relevant local results do not.</li>
+<li><code>scripts/lib/recall.mjs::recallLessons()</code> broadens
+through a deterministic ladder: drop <code>error_pattern</code>,
+<code>language</code>, <code>task_type</code>, <code>area</code>, then
+<code>project_module</code>. It can append one
+<code>bug-root-cause</code> and one <code>feedback-rule</code> knowledge
+hit.</li>
+</ul>
+<h3 id="context-assembly-and-injection">Context Assembly and
+Injection</h3>
+<ul>
+<li><code>templates/agents-memory-instructions.md</code> is the
+canonical discipline loaded by <code>scripts/lib/discipline.mjs</code>
+into MCP initialization and the Claude Code session-start context.</li>
+<li><code>scripts/hooks/session-start.mjs</code> triggers daily compile
+when due, emits default scope guidance, searches current work context,
+surfaces recent daily activity, and reports unresolved cron/monitoring
+health.</li>
+<li><code>scripts/lib/work-context.mjs</code> builds active branch/issue
+and plan context.</li>
+<li>Search responses support frontmatter-only glance records, excerpted
+bodies, full bodies, a total character budget, and priority-aware
+truncation.</li>
+<li>Context assembly is mostly tool and hook mediated. There is no
+universal backend-owned prompt compiler comparable to Letta core
+memory.</li>
+</ul>
+<h3 id="update-delete-forget-and-conflict">Update, Delete, Forget, and
+Conflict</h3>
+<ul>
+<li><code>scripts/lib/wiki-relocate.mjs</code> updates metadata and
+moves leaves while refusing destination collisions.</li>
+<li><code>scripts/lib/wiki-lifecycle.mjs::disableDocument()</code>
+archives by setting <code>memory.status</code>;
+<code>enableDocument()</code> reverses it; <code>deleteDocument()</code>
+removes the file and cache entry; <code>truncateArchivedBody()</code>
+compacts old archived bodies while preserving the original source
+hash.</li>
+<li><code>writeMemory({ supersedes })</code> writes a replacement and
+archives or deletes the selected prior document.</li>
+<li><code>saveDocument()</code> refuses to clobber a different same-name
+leaf at the destination.</li>
+<li>There is no contradiction table, correction chain beyond
+<code>supersedes_id</code>, rejected-value tombstone, or multi-source
+corroboration model.</li>
+</ul>
+<h3 id="background-work-and-operations">Background Work and
+Operations</h3>
+<ul>
+<li><code>scripts/consolidate.mjs::consolidateMemory()</code> is opt-in
+and brain-only. It requires every category to declare
+<code>consolidate: refine|none</code>, shares the compile lock, and runs
+under an internal maintenance capability.</li>
+<li><code>consolidate-run.mjs::runConsolidate()</code> runs per-leaf
+clustering, exact-hash/lesson-key/cosine dedup, optional LLM merge,
+staleness flagging, optional LLM refresh, orphan archive, archived-body
+compression, embedding pruning, and index rebuilding.</li>
+<li><code>scripts/cron-job.mjs::runCronJob()</code> runs compile and
+consolidation, retains slim and full logs, updates per-entity healing
+state, and emits versioned issue reports after repeated failures.</li>
+<li><code>scripts/lib/wiki-commit.mjs::withWikiCommit()</code> groups
+writes into one audit commit.
+<code>wiki-commit-git.mjs::gitUsable()</code> proves that the wiki is
+its own repository and excludes repository-owned shared categories.</li>
+</ul>
+<h3 id="tests-and-evals">Tests and Evals</h3>
+<ul>
+<li>The checkout contains 195 <code>*.test.mjs</code> files and roughly
+1,700 declared <code>node:test</code> cases across unit and end-to-end
+directories.</li>
+<li>Capture/recovery: <code>capture-edge-cases.test.mjs</code>,
+<code>flush-*.test.mjs</code>, <code>cli-redistill.test.mjs</code>,
+<code>integration-redistill-2026-06-02.test.mjs</code>.</li>
+<li>Retrieval: <code>recall.test.mjs</code>,
+<code>read-fanout.test.mjs</code>, <code>embed-chunk.test.mjs</code>,
+<code>priority.test.mjs</code>,
+<code>search-snippet.test.mjs</code>.</li>
+<li>Write/safety: <code>wiki-store*.test.mjs</code>,
+<code>hardening-*.test.mjs</code>,
+<code>save-gate-audit.test.mjs</code>, <code>fence.test.mjs</code>.</li>
+<li>Federation/git: extensive
+<code>test/e2e/federation-*.e2e.test.mjs</code>, plus
+<code>wiki-context</code>, <code>scope-scanner</code>,
+<code>wiki-commit</code>, and ownership tests.</li>
+<li>Consolidation/cron: <code>consolidate-*.test.mjs</code>,
+<code>cron-job.test.mjs</code>, and
+<code>cron-healing.test.mjs</code>.</li>
+<li>There is no visible labeled query corpus or nDCG/MRR/recall-at-k
+benchmark for retrieval quality. <code>PERFORMANCE.md</code> measures
+latency and scaling, not relevance quality.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>scripts/lib/types-metadata.mjs</code> defines the persisted
+shape. Each leaf has:</p>
+<ul>
+<li>Top-level wiki fields: <code>id</code>, <code>type</code>,
+<code>depth_role</code>, <code>focus</code>, <code>parents</code>,
+<code>covers</code>, <code>source</code>, <code>updated</code>, optional
+<code>brief</code>, and optional tags.</li>
+<li><code>source.origin</code> and <code>source.hash</code>, where the
+hash is over the leaf body.</li>
+<li>A nested <code>memory</code> block with required
+<code>atom_type</code>, <code>status</code>, and
+<code>priority</code>.</li>
+<li>Optional workspace/facet fields: <code>project_module</code>,
+<code>area</code>, <code>language</code>, <code>task_type</code>,
+<code>error_pattern</code>, tags, hierarchical <code>subject</code>,
+<code>full</code>, <code>stale</code>, <code>supersedes_id</code>,
+<code>consolidated_at</code>, <code>last_refreshed_at</code>, and
+<code>consolidate_truncated_at</code>.</li>
+<li>Plans may also have top-level <code>status</code> and
+<code>progress</code> derived from checkboxes.</li>
+</ul>
+<p>Scoping is federated rather than tenant-based.
+<code>scope-scanner.mjs</code> walks each requested directory toward the
+user's home and discovers nested <code>.llm-wiki-memory</code> mounts.
+The private brain is depth 0. Repository levels use
+<code>project_id</code>, canonical git origin, or
+<code>file://&lt;mount&gt;</code> identity. Reads fan out; writes
+require an exact selected target.</p>
+<p>Provenance is uneven. Manual and promoted documents preserve body
+hashes, timestamps, git commits, evidence excerpts, capture audits, and
+source session fields. However, atomic leaves do not carry a normalized
+list of source event IDs, actor authority, verified/candidate status, or
+multiple evidence records. A compiled atom can therefore be traceable to
+a daily capture but still has no explicit epistemic state.</p>
+<p>Versioning is file plus git history. Updates often create a new leaf
+and archive the superseded one; same-name saves can overwrite in place.
+There is no TTL field. Staleness is derived from the top-level update
+date. Archive is reversible until archived bodies are truncated, at
+which point full recovery relies on git history.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The retrieval engine is local vector-style search over a filesystem
+walk:</p>
+<ol type="1">
+<li>Select categories and walk all active leaves.</li>
+<li>Apply structured frontmatter filters before embedding.</li>
+<li>Embed the query with <code>Xenova/bge-large-en-v1.5</code> by
+default, falling back to a lexical hash vector when configured or when
+the transformer fails.</li>
+<li>Load per-category content-hash caches and batch-compute missing
+vectors.</li>
+<li>For recall, split long atomic notes into bounded chunks; full
+documents can use up to 256 chunks with no length penalty.</li>
+<li>Rank by best chunk cosine minus a length penalty for ordinary long
+notes.</li>
+<li>Apply score threshold, then stable priority reranking only within a
+configured score band.</li>
+<li>Across scopes, add locality boost only to hits close enough to the
+global top cosine.</li>
+</ol>
+<p>The design is strong on filters, scope, long-document handling, cache
+invalidation, and response budgets. It is weak on exact lookup from
+arbitrary free text: the lexical fallback is an alternative embedding
+backend, not a separately fused BM25/FTS channel. Identifiers and rare
+tokens depend on embedding behavior unless a topology provides
+deterministic lookup or metadata filters isolate them.</p>
+<p>There is no query rewriting, cross-encoder reranker, recency term in
+the general score, graph traversal, or learned rank fusion.
+<code>recallLessons()</code> adds a useful deterministic
+scope-broadening ladder, but the thresholds and locality/priority bands
+are configuration heuristics without committed relevance benchmarks.</p>
+<p>Likely failure modes include cold-cache latency, linear corpus
+scanning, semantic misses on exact identifiers, over-broad ladder
+results after facet drops, local-scope boost overpowering a marginally
+better private result inside the band, stale active leaves, and
+full-document best-chunk hits that conceal contradictory passages
+elsewhere in the same document.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes arrive through four paths:</p>
+<ul>
+<li>Explicit agent tools for atomic or document memory.</li>
+<li><code>absorb_document</code> and batch absorb for verbatim full
+documents.</li>
+<li>Claude Code hooks for plans and session transcripts.</li>
+<li>Compile/consolidate maintenance.</li>
+</ul>
+<p>Leaf writing itself is deterministic and synchronous: normalize a
+filename, infer/remap facets, choose a directory, atomically write
+frontmatter plus body, regenerate ancestor indexes, invalidate the
+embedding cache, record the mutation, and optionally commit. Writes do
+not eagerly compute transformer embeddings.</p>
+<p>LLMs participate before or around the write, not inside the
+primitive:</p>
+<ul>
+<li>Flush uses a strict JSON atom extractor with chunked map/reduce and
+explicit type/quality rules.</li>
+<li>Compile uses filtered candidate retrieval plus create/update/skip
+JSON decisions.</li>
+<li>Absorb uses an LLM only for placement classification, with a
+deterministic sentinel fallback.</li>
+<li>Consolidation optionally merges duplicate bodies and refreshes stale
+leaves.</li>
+</ul>
+<p>Deduplication exists at several layers: explicit agent discipline
+says search before save; same-name saves upsert; compile searches
+same-type/facet candidates; same error-pattern lessons force-update;
+consolidation compares hashes, lesson keys, and cosine. The forced
+lesson update is also a concrete risk:
+<code>compile-dedup.mjs::forcedLessonUpdate()</code> replaces old body
+content with only the new atom, explicitly accepting the loss of
+distinct old evidence to avoid an LLM call.</p>
+<p>Conflict handling is storage-oriented. Destination collisions are
+refused and hallucinated supersedes IDs are rejected, but contradictory
+facts may coexist as active leaves. There is no semantic conflict key
+beyond lesson <code>error_pattern</code>, no rejected-value memory, and
+no user-review queue for contradictions.</p>
+<p>Noise and malicious input controls include schema-constrained
+outputs, atom caps, metadata validation, newline stripping in rendered
+fields, P0 scarcity, self-improvement consent, fenced raw/plan bodies,
+marker defanging, transcript redaction, and response clamping. These
+reduce injection and corpus pollution, but LLM-distilled project facts
+are still activated automatically.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The main integration is a local stdio MCP server with configuration,
+search, recall, write, absorb, document lifecycle, audit, layout,
+topology, provider, and consolidation tools. Inputs use strict Zod
+schemas. Every tool requires <code>scopes</code>; every write/mutation
+requires an explicit target. The server hot-reloads selected
+implementation and settings modules.</p>
+<p>Agency is carefully split:</p>
+<ul>
+<li>Agents are instructed to recall before non-trivial work and search
+before saving.</li>
+<li>Interactive <code>self_improvement</code> writes require per-lesson
+user consent and a server-side <code>userRequested</code>
+assertion.</li>
+<li>Project knowledge writes are not consent-gated, but shared
+repository writes require a user-selected target.</li>
+<li>Claude Code gets extra lifecycle automation. Codex, Cursor, and
+generic MCP clients receive the discipline but not all hooks, so
+plan/session capture is less automatic.</li>
+<li>Session-start context can inject recent activity, relevant plans,
+and current work context without an explicit model tool call.</li>
+</ul>
+<p>The integration is portable because storage/search are behind MCP and
+CLI surfaces. The deepest automatic behavior is Claude-specific, and the
+safety model assumes clients respect MCP instructions for recalled data.
+A backend cannot guarantee that a model will call recall, correctly
+interpret priority, or ignore instructions inside ordinary unfenced
+atomic leaves.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Operational reliability is the standout feature:</p>
+<ul>
+<li>Atomic file writes, filesystem retry helpers, stale-lock recovery,
+per-session dedup locks, and a shared compile/consolidate lock.</li>
+<li>Failed distillation stashes plus raw fallbacks and redistill
+commands.</li>
+<li>Unreadable leaves are skipped per level instead of blanking all
+recall.</li>
+<li>Model/backend-stamped embedding caches are invalidated on
+content/model changes and warmed after shared-wiki git events.</li>
+<li>Git commit safety proves the private wiki is its own repository
+before staging and excludes shared mounts.</li>
+<li>Cron tracks per-entity failures, provider outages, recovery,
+retention, escalation signatures, and versioned issue reports.</li>
+</ul>
+<p>Trust controls are narrower:</p>
+<ul>
+<li><code>priority</code> expresses how strongly to apply a memory, not
+whether it is true.</li>
+<li>P0 requires explicit consent or internal maintenance authority.</li>
+<li>Self-improvement writes have L1 instructions, Claude-only L2 hooks,
+L3 server enforcement, and a bounded redacted audit ledger.</li>
+<li>Raw transcript fallbacks and captured plans are fenced as untrusted
+data, and forged fence markers are defanged.</li>
+<li>Other atomic memories are not universally fenced on retrieval, and
+the main safeguard is an instruction telling the model to treat fenced
+content as data.</li>
+</ul>
+<p>There is no authentication boundary because this is local software.
+Shared wiki safety is based on filesystem/git ownership and explicit
+target selection, not user identities or ACLs. Concurrent writes use
+atomic replacement and locks for major pipelines, but separate direct
+writers can still race; git path-directory staging can fold a concurrent
+change in the same directory into a private audit commit.</p>
+<p>Delete semantics need careful interpretation.
+<code>deleteDocument()</code> removes the live file and vector entry,
+but a private auto-committed wiki retains prior content in git history
+and possibly filesystem backups/stashes. This is recoverability, not
+privacy-grade erasure. There is no built-in history rewrite, encrypted
+storage, retention policy for leaves, or secure-delete workflow.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repository has unusually broad implementation coverage. The
+inspected tree contains 195 test files across unit and end-to-end
+suites, with extensive cases for capture failures, exact placement, path
+compiler sandboxing, topology round trips, hot reload, scope federation,
+explicit targets, shared-repository safety, git commits, settings
+migration, consolidation passes, cron healing, and full lifecycle
+behavior.</p>
+<p>The tests use <code>node:test</code>, lexical embeddings for
+isolation, a sanctioned mock LLM provider, frozen settings/clock seams,
+and temp workspaces. End-to-end tests run against the actual
+<code>@ctxr/skill-llm-wiki</code> CLI. This is strong evidence for
+control-flow correctness and failure recovery.</p>
+<p>What is not proven:</p>
+<ul>
+<li>Retrieval relevance on a labeled corpus.</li>
+<li>Extraction precision/recall across realistic coding
+transcripts.</li>
+<li>Long-term contradiction rate and stale-memory impact.</li>
+<li>Prompt-injection resistance at the model-behavior level rather than
+marker/rendering level.</li>
+<li>Multi-process stress under large shared/private corpora.</li>
+<li>Privacy deletion from git history, stashes, backups, and
+clones.</li>
+</ul>
+<p><code>PERFORMANCE.md</code> reports measured latency and scaling,
+including roughly linear warm search and expensive per-ancestor index
+subprocesses. Those numbers were not independently rerun for this
+report. The README's test badge and prose report different test totals,
+and both lag the current static declarations, so test-count
+documentation is stale even though the suite itself is broad.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>One seam between meaning and structure:</strong> keep leaf
+semantics/search in the memory layer and generated navigation in a
+domain-agnostic wiki engine.</li>
+<li><strong>Recoverable capture:</strong> chunk, map/reduce, preserve
+failed chunks, write a raw fenced fallback, and provide a redistill
+path.</li>
+<li><strong>Explicit federated writes:</strong> let reads fan out, but
+require a concrete target for every mutation.</li>
+<li><strong>Banded locality boost:</strong> prefer repository-local
+memory only when its semantic score is comparable to the global
+result.</li>
+<li><strong>Content/model-stamped lazy embedding cache:</strong> avoid
+write-path model latency and invalidate safely on body/model
+changes.</li>
+<li><strong>Layout-driven placement:</strong> make category ownership,
+refinement eligibility, full-document status, facet paths, and custom
+topologies explicit contracts.</li>
+<li><strong>Round-trip topology validation:</strong> require
+<code>facets -&gt; path -&gt; facets</code> equality before a
+write.</li>
+<li><strong>Per-operation git commits:</strong> batch all leaf/index
+changes from one logical operation and prove the wiki is its own
+repository before committing.</li>
+<li><strong>Maintenance capability via async context:</strong> internal
+consolidation can bypass interactive gates without accepting a forgeable
+argument or environment flag.</li>
+<li><strong>Per-entity cron healing:</strong> distinguish transient run
+failure from repeatedly failing leaves/providers and escalate only
+persistent episodes.</li>
+<li><strong>Glance-first retrieval:</strong> return frontmatter
+summaries without bodies when an agent only needs to choose what to
+read.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Active by extraction:</strong> compile promotes LLM output
+directly into active memory, with no candidate/verified state or human
+review for project facts.</li>
+<li><strong>Priority can be mistaken for truth:</strong> P0/P1/P2
+controls application strength, but users and models may interpret it as
+confidence.</li>
+<li><strong>No semantic contradiction model:</strong> unrelated
+filenames allow incompatible active leaves; supersession only works when
+a caller already identifies the old record.</li>
+<li><strong>Forced lesson replacement drops evidence:</strong> the
+no-LLM same-error-pattern path knowingly discards unique old
+content.</li>
+<li><strong>Vector-only primary retrieval:</strong> the lexical backend
+is a fallback rather than an independently fused exact-search
+channel.</li>
+<li><strong>Linear filesystem scans:</strong> every search walks and
+parses candidate leaves, which is attractive for inspectability but
+limits corpus scale.</li>
+<li><strong>Synchronous index subprocess fan-out:</strong> one write can
+spawn a process per ancestor; bulk deep writes scale poorly without
+batching.</li>
+<li><strong>Partial injection fencing:</strong> raw fallbacks and plans
+are fenced, but ordinary stored atomic/document content is returned as
+body text and relies on global agent discipline.</li>
+<li><strong>Git is not erasure:</strong> hard delete removes the
+working-tree leaf but not committed history.</li>
+<li><strong>Cross-client behavior differs:</strong> the MCP policy is
+portable, but automatic session/plan capture and L2 write approval are
+Claude Code features.</li>
+<li><strong>Stale quality evidence:</strong> the README carries
+inconsistent test totals, and there is no relevance benchmark to justify
+default model/threshold claims.</li>
+<li><strong>LLM refresh cannot inspect current code by itself:</strong>
+the stale-leaf prompt sees related memory, not necessarily repository
+truth, so it may consolidate old assumptions into a fresher-looking
+note.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Reuse conceptually:</p>
+<ul>
+<li>Filesystem Markdown plus git for small, local, inspectable
+coding-agent memory.</li>
+<li>Federated private/project scopes with read fan-out and explicit
+write destinations.</li>
+<li>Recoverable capture, schema-constrained atomization, layout
+contracts, topology round trips, bounded recall responses, and
+operational self-healing.</li>
+<li>The MCP surface and separation between primitive writes and
+higher-level extraction/maintenance.</li>
+</ul>
+<p>Avoid copying without changes:</p>
+<ul>
+<li>Activating LLM-extracted atoms without trust state and normalized
+provenance.</li>
+<li>Treating priority as the only governance dimension.</li>
+<li>Vector-only retrieval for code identifiers and exact operational
+facts.</li>
+<li>Depending on git history as both audit trail and deletion
+story.</li>
+</ul>
+<p>This shape is appropriate for a single developer or team that wants
+local, cross-agent project memory, can inspect Markdown/git, and values
+no hosted dependency. It is the wrong shape for multi-tenant SaaS,
+regulated deletion, very large corpora, collaborative real-time writes,
+or domains where incorrect memory requires attestation and contradiction
+workflows.</p>
+<p>The storage/search modules can be reimplemented cleanly, but the full
+experience is coupled to the layout protocol, companion wiki CLI,
+distributed templates/rules, and Claude Code hooks. Borrow the contracts
+and failure-recovery patterns before borrowing the entire installation
+surface.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How does retrieval quality compare with BM25/FTS and hybrid rank
+fusion on real coding-memory queries?</li>
+<li>How large can a wiki become before filesystem parsing and lazy cache
+maintenance are visibly disruptive?</li>
+<li>How often does compile create contradictory active atoms, and how
+are users expected to discover them?</li>
+<li>Does the default BGE model materially outperform the smaller
+documented alternatives on this corpus?</li>
+<li>How are secrets handled when transcript redaction misses a token and
+git auto-commits it?</li>
+<li>What is the intended privacy-erasure procedure for git history,
+stashes, logs, clones, and backups?</li>
+<li>How reliable are MCP initialize-time instructions across all claimed
+clients in practice?</li>
+<li>Does stale semantic refresh improve factual currency when its
+context is other memory rather than live repository evidence?</li>
+<li>Are shared repository wikis expected to resolve concurrent teammate
+edits manually through ordinary git conflicts?</li>
+<li>Which README test total is intended to be authoritative, and should
+CI generate it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<h3 id="storage-and-schema">Storage and Schema</h3>
+<ul>
+<li><code>scripts/lib/types-metadata.mjs</code></li>
+<li><code>scripts/lib/types-records.mjs</code></li>
+<li><code>scripts/lib/wiki-core.mjs</code></li>
+<li><code>scripts/lib/wiki-render.mjs</code></li>
+<li><code>scripts/lib/wiki-mutate.mjs</code></li>
+<li><code>scripts/lib/wiki-layout-state.mjs</code></li>
+<li><code>examples/layouts/default/layout.yaml</code></li>
+<li><code>examples/layouts/repo/layout.yaml</code></li>
+<li><code>examples/layouts/tracker-issues/layout.yaml</code></li>
+</ul>
+<h3 id="write-and-capture-paths">Write and Capture Paths</h3>
+<ul>
+<li><code>mcp-server/tools-write.mjs</code></li>
+<li><code>mcp-server/mcp-write-dispatch.mjs</code></li>
+<li><code>mcp-server/mcp-write-gate.mjs</code></li>
+<li><code>scripts/hooks/flush.mjs</code></li>
+<li><code>scripts/hooks/flush-worker.mjs</code></li>
+<li><code>scripts/hooks/flush-distill.mjs</code></li>
+<li><code>scripts/hooks/flush-stash.mjs</code></li>
+<li><code>scripts/hooks/exit-plan-mode.mjs</code></li>
+<li><code>scripts/lib/absorb.mjs</code></li>
+</ul>
+<h3 id="extraction-and-consolidation">Extraction and Consolidation</h3>
+<ul>
+<li><code>prompts/flush.md</code></li>
+<li><code>prompts/compile.md</code></li>
+<li><code>scripts/compile.mjs</code></li>
+<li><code>scripts/compile-promote.mjs</code></li>
+<li><code>scripts/compile-dedup.mjs</code></li>
+<li><code>scripts/compile-actions.mjs</code></li>
+<li><code>scripts/consolidate.mjs</code></li>
+<li><code>scripts/consolidate-run.mjs</code></li>
+<li><code>scripts/consolidate-dedup-passes.mjs</code></li>
+<li><code>scripts/consolidate-llm-merge.mjs</code></li>
+<li><code>scripts/consolidate-llm-refresh.mjs</code></li>
+</ul>
+<h3 id="retrieval-and-context">Retrieval and Context</h3>
+<ul>
+<li><code>scripts/lib/embed.mjs</code></li>
+<li><code>scripts/lib/embed-chunk.mjs</code></li>
+<li><code>scripts/lib/wiki-search.mjs</code></li>
+<li><code>scripts/lib/wiki-search-fanout.mjs</code></li>
+<li><code>scripts/lib/recall.mjs</code></li>
+<li><code>scripts/lib/recall-search.mjs</code></li>
+<li><code>scripts/lib/search-clamp.mjs</code></li>
+<li><code>scripts/hooks/session-start.mjs</code></li>
+<li><code>scripts/lib/work-context.mjs</code></li>
+</ul>
+<h3 id="scope-lifecycle-and-operations">Scope, Lifecycle, and
+Operations</h3>
+<ul>
+<li><code>scripts/lib/scope-scanner.mjs</code></li>
+<li><code>scripts/lib/wiki-context.mjs</code></li>
+<li><code>scripts/lib/wiki-lifecycle.mjs</code></li>
+<li><code>scripts/lib/wiki-relocate.mjs</code></li>
+<li><code>scripts/lib/wiki-commit.mjs</code></li>
+<li><code>scripts/lib/wiki-commit-git.mjs</code></li>
+<li><code>scripts/cron-job.mjs</code></li>
+<li><code>scripts/cron-entity-state.mjs</code></li>
+<li><code>scripts/cron-issues-index.mjs</code></li>
+</ul>
+<h3 id="mcp-and-agent-policy">MCP and Agent Policy</h3>
+<ul>
+<li><code>mcp-server/index.mjs</code></li>
+<li><code>mcp-server/tools-search.mjs</code></li>
+<li><code>mcp-server/tools-documents.mjs</code></li>
+<li><code>mcp-server/tools-maintenance.mjs</code></li>
+<li><code>templates/agents-memory-instructions.md</code></li>
+<li><code>templates/rules/memory-write-gate.md</code></li>
+<li><code>templates/rules/priority.md</code></li>
+</ul>
+<h3 id="tests-and-performance-evidence">Tests and Performance
+Evidence</h3>
+<ul>
+<li><code>test/recall.test.mjs</code></li>
+<li><code>test/read-fanout.test.mjs</code></li>
+<li><code>test/embed-chunk.test.mjs</code></li>
+<li><code>test/flush-worker.test.mjs</code></li>
+<li><code>test/consolidate-orchestrator.test.mjs</code></li>
+<li><code>test/cron-healing.test.mjs</code></li>
+<li><code>test/hardening-gate-server.test.mjs</code></li>
+<li><code>test/wiki-commit.test.mjs</code></li>
+<li><code>test/e2e/lifecycle.e2e.test.mjs</code></li>
+<li><code>test/e2e/federation-*.e2e.test.mjs</code></li>
+<li><code>PERFORMANCE.md</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

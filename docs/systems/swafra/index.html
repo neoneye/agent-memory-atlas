@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A tiny local MCP sidecar combining
+hybrid retrieval, graph traversal, and source-diverse context over JSON
+state.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Swafra — Agent Memory Atlas">
+    <meta property="og:description" content="A tiny local MCP sidecar
+combining hybrid retrieval, graph traversal, and source-diverse context
+over JSON state.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Swafra — Agent Memory Atlas">
+    <meta name="twitter:description" content="A tiny local MCP sidecar
+combining hybrid retrieval, graph traversal, and source-diverse context
+over JSON state.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Swafra — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Compact local graph-RAG</p>
+          <h1>Swafra</h1>
+          <p class="document-deck">A tiny local MCP sidecar combining
+hybrid retrieval, graph traversal, and source-diverse context over JSON
+state.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/kunal12203/swafra">https://github.com/kunal12203/swafra</a>">
+              <span>Source</span>
+              <strong>kunal12203/swafra</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7">https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7</a>" title="24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7">
+              <span>Analyzed revision</span>
+              <code>24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>swafra</code> is a compact, local-first graph-RAG memory server
+for MCP clients. It stores source text as embedded chunks, annotates
+chunks with regex-extracted entities, dates, and preferences, connects
+chunks with several edge types, and retrieves with a four-signal hybrid
+ranker plus graph expansion.</p>
+<p>Its design is appealing as a small personal memory sidecar:</p>
+<ul>
+<li>no hosted service or API key is required;</li>
+<li>the Python package is a complete MCP server;</li>
+<li>the Node package offers a second MCP wrapper over the same Python
+engine;</li>
+<li>source text remains in the stored chunks instead of being replaced
+by LLM-generated facts;</li>
+<li>BM25, embeddings, entity/date hints, character n-grams, source
+diversity, and graph traversal are combined in fewer than 1,000 lines of
+engine code.</li>
+</ul>
+<p>The strongest technical idea is the source-diverse retrieval shape:
+rank chunks, expand through graph edges, then return the best chunk from
+each source. The conversation fallback also creates useful exchange
+chunks and a deterministic facts/navigation chunk without calling an
+LLM.</p>
+<p>The implementation is alpha-quality, not yet a safe durable memory
+layer. Persistence is three unlocked, non-atomic JSON rewrites. There
+are no user/project scopes, authentication boundaries, token budgets,
+update API, provenance spans, trust states, or unit tests. Several
+advertised behaviors do not match the code. Most importantly, the
+committed LongMemEval artifact labeled <code>k=10</code> returned 28–46
+sessions per question, so the headline recall score is not evidence of
+recall at 10.</p>
+<p>Verdict: study Swafra for a concise hybrid-retrieval prototype and
+MCP affordances. Do not borrow its storage, benchmark methodology,
+deletion semantics, or trust model for a serious system without
+substantial redesign.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Swafra considers a memory source to be a titled text blob. Ingestion
+turns that blob into one or more chunk records. Those chunks, not
+extracted beliefs, are the authoritative content.</p>
+<p>Chunk kinds:</p>
+<ul>
+<li><code>leiden</code>: sentence communities created by Leiden
+clustering when optional dependencies are available and the input has at
+least eight sentences;</li>
+<li><code>exchange</code>: groups of two user/assistant exchanges when
+the fallback detects role-prefixed conversation text;</li>
+<li><code>facts</code>: a synthetic index chunk containing
+regex-extracted entities, dates, and preference statements from a
+conversation;</li>
+<li><code>paragraph</code>: groups of paragraphs capped approximately at
+256 whitespace-separated words.</li>
+</ul>
+<p>Each chunk holds its text and embedding directly. The "knowledge
+graph" is a separate list of directed edges between chunk IDs:</p>
+<ul>
+<li><code>next</code> / <code>prev</code>;</li>
+<li><code>similar</code>;</li>
+<li><code>entity</code>;</li>
+<li><code>cross_session</code>.</li>
+</ul>
+<p>Lifecycle:</p>
+<pre class="text"><code>MCP add_knowledge
+-&gt; choose Leiden or fallback chunking
+-&gt; annotate and embed chunks
+-&gt; add within-source and cross-source edges
+-&gt; rewrite chunks.json, edges.json, sources.json
+-&gt; later hybrid search
+-&gt; optional directed graph walk
+-&gt; best chunk per source
+-&gt; MCP result</code></pre>
+<p>Memory is agent-controlled. <code>CLAUDE.md</code>,
+<code>SKILL.md</code>, and MCP descriptions instruct the model to save
+proactively and call <code>get_context</code> at session start. The
+backend does not observe conversations or inject memory
+automatically.</p>
+<p>Stored text is treated as recallable evidence, but there is no
+explicit epistemic distinction between user statements, assistant
+statements, imported documents, extracted navigation text, current
+values, rejected values, or verified facts.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Swafra has two public runtime shapes over one duplicated engine
+implementation.</p>
+<p>Python distribution:</p>
+<ul>
+<li><code>swafra/server.py</code>: <code>FastMCP</code> stdio
+server.</li>
+<li><code>swafra/engine.py</code>: chunking, embedding, graph
+construction, JSON persistence, search, graph walk, and context
+selection.</li>
+</ul>
+<p>Node distribution:</p>
+<ul>
+<li><code>src/index.ts</code>: MCP stdio server using the TypeScript
+SDK.</li>
+<li><code>src/engine.ts</code>: starts
+<code>engine/scimap_engine.py</code> and sends JSON-line RPC
+requests.</li>
+<li><code>engine/scimap_engine.py</code>: byte-for-byte duplicate of
+<code>swafra/engine.py</code> in the inspected checkout.</li>
+</ul>
+<p>Persistence:</p>
+<ul>
+<li><code>${SCIMAP_DATA_DIR}/chunks.json</code>;</li>
+<li><code>${SCIMAP_DATA_DIR}/edges.json</code>;</li>
+<li><code>${SCIMAP_DATA_DIR}/sources.json</code>;</li>
+<li>default directory <code>~/.scimap</code>.</li>
+</ul>
+<p>External dependencies:</p>
+<ul>
+<li>required Python MCP package for the Python distribution;</li>
+<li>optional <code>fastembed</code> for
+<code>BAAI/bge-small-en-v1.5</code>;</li>
+<li>optional NumPy, igraph, and leidenalg for Leiden chunking;</li>
+<li>Node MCP SDK and Zod for the Node wrapper.</li>
+</ul>
+<p>If FastEmbed cannot load, <code>_local_vector()</code> creates
+deterministic signed hash vectors over words and character trigrams. If
+Leiden dependencies are unavailable, ingestion uses
+conversation/paragraph chunking.</p>
+<pre class="mermaid"><code>flowchart LR
+  Client[&quot;MCP client&quot;] --&gt; PyMCP[&quot;Python FastMCP server&quot;]
+  Client --&gt; NodeMCP[&quot;Node MCP server&quot;]
+  NodeMCP --&gt; RPC[&quot;JSON-line subprocess bridge&quot;]
+  RPC --&gt; Engine[&quot;Python engine&quot;]
+  PyMCP --&gt; Engine
+  Engine --&gt; Chunker[&quot;Leiden or conversation/paragraph chunker&quot;]
+  Chunker --&gt; Embed[&quot;FastEmbed or hash vectors&quot;]
+  Embed --&gt; JSON[&quot;chunks.json + edges.json + sources.json&quot;]
+  JSON --&gt; Hybrid[&quot;BM25 + vector + entity/date/preference + char n-gram&quot;]
+  Hybrid --&gt; Walk[&quot;directed graph walk&quot;]
+  Walk --&gt; Diverse[&quot;best chunk per source&quot;]
+  Diverse --&gt; Client</code></pre>
+<p>There is no daemon, database, queue, background worker, hosted API,
+replication path, or multi-tenant service boundary.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="capture-and-write">Capture and Write</h3>
+<p>Python MCP starts at <code>add_knowledge()</code> in
+<code>swafra/server.py</code>, which directly calls
+<code>engine.add_knowledge()</code>.</p>
+<p>The Node path starts in the <code>add_knowledge</code> case in
+<code>src/index.ts</code>, calls <code>Engine.call()</code> in
+<code>src/engine.ts</code>, and dispatches through the
+<code>METHODS</code> map in <code>engine/scimap_engine.py</code>.</p>
+<p><code>add_knowledge()</code> in <code>swafra/engine.py</code>:</p>
+<ol type="1">
+<li>loads all three JSON files;</li>
+<li>derives <code>source_id</code> from
+<code>SHA-256(title + ":" + first 100 text characters)[:16]</code>;</li>
+<li>removes records already carrying that exact source ID;</li>
+<li>tries <code>leiden_chunk()</code>, then
+<code>chunk_conversation()</code>;</li>
+<li>embeds all resulting chunk contents;</li>
+<li>derives chunk IDs from source ID and chunk index;</li>
+<li>appends chunk records;</li>
+<li>builds within-source and cross-source edges;</li>
+<li>rewrites all three files.</li>
+</ol>
+<p>State changes only in the final <code>_save_json()</code> calls.
+There is no transaction covering the three files.</p>
+<h3 id="chunking-and-annotation">Chunking and Annotation</h3>
+<p><code>leiden_chunk()</code>:</p>
+<ul>
+<li>splits sentences with <code>_SENT_RE</code>;</li>
+<li>embeds every sentence;</li>
+<li>materializes an all-pairs cosine-similarity matrix;</li>
+<li>adds positional weight for sentences at distance three or less;</li>
+<li>keeps graph edges with adjusted similarity at least
+<code>0.3</code>;</li>
+<li>runs <code>RBConfigurationVertexPartition</code> with a derived
+resolution and fixed seed;</li>
+<li>joins each community's sentences in original within-community
+order.</li>
+</ul>
+<p>The docs describe a semantic + entity + position graph, but the
+implemented Leiden graph uses embedding similarity plus positional
+weight. Extracted entities annotate the output after partitioning; they
+do not influence Leiden edges.</p>
+<p><code>chunk_conversation()</code>:</p>
+<ul>
+<li>recognizes only lines beginning with <code>User:</code>,
+<code>Assistant:</code>, <code>Human:</code>, or <code>AI:</code>;</li>
+<li>groups turns into exchanges ending at assistant turns;</li>
+<li>groups two exchanges per chunk;</li>
+<li>creates an additional synthetic facts chunk if any entities, dates,
+or preferences were found;</li>
+<li>otherwise groups non-conversation paragraphs around a 256-word
+threshold.</li>
+</ul>
+<p><code>_extract_entities()</code>, <code>_extract_dates()</code>, and
+<code>_extract_preferences()</code> are regex heuristics, not an LLM or
+NLP entity linker.</p>
+<h3 id="graph-construction">Graph Construction</h3>
+<p><code>add_knowledge()</code> creates:</p>
+<ul>
+<li>bidirectional <code>next</code>/<code>prev</code> edges between
+adjacent chunk-list entries;</li>
+<li>up to five outgoing <code>similar</code> edges per chunk above
+cosine <code>0.7</code>;</li>
+<li>one-way pairwise <code>entity</code> edges for entities appearing in
+two to ten chunks;</li>
+<li>up to three outgoing <code>cross_session</code> edges from each new
+chunk to the best chunk in other sources above cosine
+<code>0.45</code>.</li>
+</ul>
+<p>No explicit community edge is created despite MCP/docs claims about
+"community edges". <code>community_id</code> is metadata only.</p>
+<p>For Leiden output, adjacent entries are adjacent Leiden communities,
+not necessarily adjacent spans in the original text. Calling those edges
+<code>next</code>/<code>prev</code> can therefore imply a sequence that
+the source did not have.</p>
+<h3 id="retrieval-and-ranking">Retrieval and Ranking</h3>
+<p><code>search_knowledge()</code>:</p>
+<ol type="1">
+<li>loads all chunks and drops records whose <code>superseded_by</code>
+is set;</li>
+<li>rebuilds an in-memory <code>BM25Index</code>;</li>
+<li>scores only the top <code>3k</code> BM25 candidates lexically;</li>
+<li>embeds the query and scans every chunk embedding;</li>
+<li>calculates regex entity/date/preference and exact-keyword
+bonuses;</li>
+<li>calculates character-trigram overlap against every chunk;</li>
+<li>fuses
+<code>0.40 * BM25 + 0.15 * vector + 0.25 * entity/heuristic + 0.20 * n-gram</code>;</li>
+<li>multiplies by exponential age decay with an approximately 139-day
+half-life;</li>
+<li>deduplicates on the first 100 lowercased content characters;</li>
+<li>returns top-scoring chunks.</li>
+</ol>
+<p>The entity/heuristic score is not bounded before fusion, so repeated
+matching entities, dates, preferences, and keywords can dominate the
+other normalized channels.</p>
+<h3 id="context-assembly">Context Assembly</h3>
+<p><code>get_context()</code>:</p>
+<ol type="1">
+<li>calls <code>search_knowledge(query, k=len(chunks_store))</code>,
+deliberately scoring and returning as many chunks as possible;</li>
+<li>graph-walks from the first three hits;</li>
+<li>appends unseen walked nodes at half their path score;</li>
+<li>keeps the best hit for each <code>source_title</code>;</li>
+<li>returns at least
+<code>max(k, floor(total_sources * min_source_pct))</code>
+source-diverse results.</li>
+</ol>
+<p>The public Python MCP server fixes <code>min_source_pct=0.15</code>.
+This means <code>k</code> is a lower bound, not a result cap, once 15%
+of the corpus exceeds <code>k</code>. There is no token budget or
+maximum context size.</p>
+<h3 id="delete-and-update">Delete and Update</h3>
+<p><code>delete_source()</code> removes:</p>
+<ul>
+<li>chunks with the target <code>source_id</code>;</li>
+<li>edges whose own <code>source_id</code> equals the target;</li>
+<li>the source list entry.</li>
+</ul>
+<p>Cross-session edges are stored with <code>source_id: None</code>, so
+edges pointing from or to deleted chunks survive. They become dangling
+graph records and accumulate.</p>
+<p>There is no update tool. Calling <code>add_knowledge</code> is only
+an idempotent replacement when the title and first 100 text characters
+derive the same source ID. Changing early content creates a second
+source even when the title is unchanged.</p>
+<p>The <code>superseded_by</code> loop cannot currently mark an old
+version from the same source: matching-source chunks are removed from
+<code>chunks_store</code> before <code>old_chunks</code> is
+computed.</p>
+<h3 id="storage-definitions">Storage Definitions</h3>
+<p>The schema is implicit dictionary construction in
+<code>add_knowledge()</code>:</p>
+<ul>
+<li>source: <code>id</code>, <code>title</code>,
+<code>chunks</code>;</li>
+<li>chunk: <code>id</code>, <code>source_id</code>,
+<code>source_title</code>, <code>content</code>, <code>embedding</code>,
+<code>token_count</code>, <code>chunk_index</code>,
+<code>community_id</code>, <code>entities</code>, <code>dates</code>,
+<code>preferences</code>, <code>type</code>, <code>span</code>,
+<code>created_at</code>, <code>superseded_by</code>;</li>
+<li>edge: <code>source_id</code>, <code>from</code>, <code>to</code>,
+<code>type</code>, <code>weight</code>.</li>
+</ul>
+<p>There are no migrations or schema-version fields.</p>
+<h3 id="tests-and-evals">Tests and Evals</h3>
+<p>No unit or integration test files are present.</p>
+<p>LongMemEval harnesses exist at:</p>
+<ul>
+<li><code>bench/run_eval.py</code>;</li>
+<li><code>packages/mcp/bench/run_eval.py</code>;</li>
+<li><code>packages/mcp/bench/longmemeval_colab.ipynb</code>;</li>
+<li>committed outputs in both benchmark directories.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The model is source -&gt; chunk plus a global edge list.</p>
+<p>Useful fields:</p>
+<ul>
+<li>source identity and title;</li>
+<li>verbatim chunk content;</li>
+<li>embedding stored beside content;</li>
+<li>created time;</li>
+<li>chunk kind;</li>
+<li>extracted entities, date strings, and preference strings;</li>
+<li>a weak <code>span</code>;</li>
+<li>graph relation type and weight.</li>
+</ul>
+<p>Important limitations:</p>
+<ul>
+<li><code>span</code> is a word-count placeholder such as
+<code>[0, wc]</code>, not a source character, line, turn, or sentence
+span.</li>
+<li>Sources do not retain original full text separately from
+chunks.</li>
+<li>There is no author/actor, message ID, role field, file path, URL,
+content hash, ingestion method, source timestamp, or embedding model
+identity.</li>
+<li><code>source_id</code> uses only the first 100 text characters plus
+title, so it is neither a full content hash nor a stable title key.</li>
+<li>The title is not unique. <code>get_context()</code> groups by title,
+so distinct sources sharing a title collapse at retrieval time.</li>
+<li>There is no user, agent, session, project, workspace, tenant, or
+visibility scope.</li>
+<li>There is no version chain, correction relation, contradiction
+record, rejection tombstone, TTL, pin, sensitivity label, uncertainty,
+or verification state.</li>
+<li>The raw embedding vector is duplicated into JSON for every
+chunk.</li>
+</ul>
+<p>The data model is adequate for a single trusted user running one
+process over a small corpus. It is not adequate for shared or
+safety-sensitive memory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Swafra's retrieval is its most interesting subsystem.</p>
+<p>Strengths:</p>
+<ul>
+<li>lexical and vector signals cover different query shapes;</li>
+<li>character n-grams give the hash-vector fallback a second fuzzy
+lexical channel;</li>
+<li>entity/date/preference heuristics target common personal-memory
+questions;</li>
+<li>recency is explicit rather than hidden in an opaque reranker;</li>
+<li>graph expansion can recover neighboring or cross-source
+context;</li>
+<li>source diversity avoids returning ten near-duplicate chunks from one
+document;</li>
+<li>raw content is returned with source title and chunk ID.</li>
+</ul>
+<p>Weaknesses:</p>
+<ul>
+<li>all indexes are rebuilt or scanned on every query;</li>
+<li>score calibration is ad hoc and entity bonuses are unbounded;</li>
+<li>dates are string matches, not normalized temporal facts or
+reasoning;</li>
+<li>the age decay penalizes old durable truths even when they remain
+current;</li>
+<li>graph traversal follows only outgoing edges, while entity and
+cross-session edges are often one-way;</li>
+<li>graph-walk scores are not comparable to fused search scores, yet
+<code>get_context()</code> compares them after multiplying walk scores
+by <code>0.5</code>;</li>
+<li>grouping by <code>source_title</code> can merge unrelated
+sources;</li>
+<li>result count and token volume are unbounded relative to the
+requested <code>k</code>;</li>
+<li>no scope filter is applied before scoring;</li>
+<li>no result exposes component scores, dates, preferences, path
+provenance, or why it ranked.</li>
+</ul>
+<p>The best-chunk-per-source rule is useful when sources are sessions,
+as in LongMemEval. It can under-recall a large document where multiple
+distant chunks are needed to answer one question.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and hot-path. The server does not use an LLM
+for extraction or consolidation.</p>
+<p>Good properties:</p>
+<ul>
+<li>deterministic IDs make identical ingestion calls repeatable;</li>
+<li>raw chunk text is retained;</li>
+<li>FastEmbed and Leiden are optional;</li>
+<li>the fallback stays local and deterministic;</li>
+<li>source deletion is exposed by exact ID;</li>
+<li>synthetic facts chunks act as navigational indexes while the source
+exchange chunks remain available.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li><code>_save_json()</code> overwrites files directly rather than
+writing a temporary file and atomically replacing it;</li>
+<li>no file lock or process lock protects read-modify-write;</li>
+<li>concurrent MCP processes can lose writes or expose partially written
+JSON;</li>
+<li>failure after one of the three saves can leave chunks, edges, and
+sources inconsistent;</li>
+<li>there is no validation of empty/huge text, title uniqueness, corpus
+size, or embedding dimension;</li>
+<li>changing embedding model can mix incompatible vector dimensions
+silently;</li>
+<li>the <code>SCIMAP_EMBED_BACKEND</code> variable documented and set by
+benchmarks is never read by the engine;</li>
+<li>no dedupe operates across differently titled identical sources;</li>
+<li>no correction/conflict flow exists;</li>
+<li>the facts chunk can overemphasize noisy regex matches;</li>
+<li>no input is classified as untrusted before later prompt injection by
+a client.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The six-tool MCP surface is compact and understandable:</p>
+<ul>
+<li><code>add_knowledge</code>;</li>
+<li><code>search_knowledge</code>;</li>
+<li><code>get_context</code>;</li>
+<li><code>graph_walk</code>;</li>
+<li><code>list_sources</code>;</li>
+<li><code>delete_source</code>.</li>
+</ul>
+<p><code>get_context</code> is the recommended high-level read;
+<code>search_knowledge</code> and <code>graph_walk</code> enable
+progressive disclosure. Exact source deletion is preferable to semantic
+"forget" behavior.</p>
+<p>The integration depends heavily on prompt/tool policy.
+<code>CLAUDE.md</code> and Python tool descriptions tell the agent
+to:</p>
+<ul>
+<li>store user identity, preferences, project decisions, corrections,
+and likely future context;</li>
+<li>retrieve at every session start;</li>
+<li>avoid duplicates by listing sources;</li>
+<li>confirm writes to the user.</li>
+</ul>
+<p>Those are good affordances but are not backend guarantees. An agent
+can omit writes, store assistant speculation, duplicate a source under a
+new title, retrieve too much context, or recall prompt-injected source
+text.</p>
+<p>The Python and Node public surfaces have drift:</p>
+<ul>
+<li>Python package version is <code>0.1.5</code>; npm package version is
+<code>0.1.2</code>; Node server advertises <code>0.1.0</code>.</li>
+<li>Python uses FastMCP and passes <code>min_source_pct=0.15</code>
+explicitly.</li>
+<li>Node uses a subprocess bridge and relies on the engine default.</li>
+<li>Node tool text says <code>search_knowledge</code> is cosine search,
+while the engine performs hybrid search.</li>
+<li>names and docs still alternate between <code>swafra</code> and the
+earlier <code>scimap</code>.</li>
+</ul>
+<p>The Python MCP package is the cleaner integration path. The Node
+wrapper adds process management, a second protocol, duplicated engine
+packaging, and a 60-second timeout without adding memory semantics.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Positive:</p>
+<ul>
+<li>local-only default;</li>
+<li>no model/API key required;</li>
+<li>exact-ID source deletion;</li>
+<li>source title and chunk ID accompany recalled text;</li>
+<li>deterministic fallback embeddings;</li>
+<li>MCP errors are returned rather than silently swallowed;</li>
+<li>Node wrapper sends engine logs to stderr, keeping JSON-line stdout
+clean.</li>
+</ul>
+<p>Serious gaps:</p>
+<ul>
+<li>no atomicity, locking, backup, repair, sync, or corruption
+handling;</li>
+<li>JSON parse failure can make the server unusable;</li>
+<li>cross-session edges survive source deletion;</li>
+<li>no embedding-model/version record;</li>
+<li>no access control or multi-user scoping;</li>
+<li>no provenance beyond a caller-supplied title;</li>
+<li>no trust/verification state or uncertainty representation;</li>
+<li>no prompt-injection fencing for recalled content;</li>
+<li>no differentiation between user text and assistant text in stored
+exchange content;</li>
+<li>no privacy metadata, expiry, hard-delete audit, or derived-data
+deletion verification;</li>
+<li>no bounded context assembly;</li>
+<li>no protection from malicious documents creating dense entity edges
+or dominating heuristic scores.</li>
+</ul>
+<p>Swafra is best understood as a trusted, single-user local retrieval
+utility. It should not be treated as a truth-bearing memory
+database.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are no ordinary tests in the repository. The only executable
+quality evidence is LongMemEval retrieval code and committed result
+JSON.</p>
+<p>The benchmark deserves special caution.</p>
+<p>What the harness does well:</p>
+<ul>
+<li>uses labeled <code>answer_session_ids</code>;</li>
+<li>ingests every session as a separate titled source;</li>
+<li>skips abstention questions;</li>
+<li>reports <code>recall_any</code>, <code>recall_all</code>, and
+fractional session recall;</li>
+<li>retains per-question details.</li>
+</ul>
+<p>Why the published result is not valid <code>recall_all@10</code>
+evidence:</p>
+<ul>
+<li><code>get_context()</code> treats <code>k</code> as a lower bound
+and can return a percentage of all sources.</li>
+<li>The checked-in <code>bench/results.json</code> is labeled
+<code>k: 10</code>, but every one of the 470 evaluated questions
+returned more than 10 sessions: minimum 28, maximum 46, mean 35.4.</li>
+<li>The artifact truncates <code>retrieved_sessions</code> to ten for
+display while scoring recall against the full untruncated result
+list.</li>
+<li>Thus the metric is effectively recall over roughly two-thirds of the
+haystack, not recall at ten.</li>
+</ul>
+<p>The evidence is also internally inconsistent:</p>
+<ul>
+<li><code>README.md</code> and the headline in <code>BENCHMARK.md</code>
+claim <code>94.7%</code>.</li>
+<li><code>bench/results.json</code> records <code>99.6%</code>
+recall-all over 470 non-abstention questions.</li>
+<li>category values disagree between README, benchmark prose, and result
+JSON.</li>
+<li>the current <code>bench/run_eval.py</code> uses the engine default
+source percentage, while the legacy copy explicitly passes
+<code>0.25</code>;</li>
+<li>current source code would cap a typical 53-source,
+<code>k=10</code>, <code>min_source_pct=0.15</code> run at ten results,
+which does not match the committed artifact's 28–46 results;</li>
+<li>the benchmark sets <code>SCIMAP_EMBED_BACKEND=local</code>, but the
+engine ignores that variable and tries FastEmbed whenever import/model
+loading succeeds.</li>
+</ul>
+<p>The README correctly says retrieval recall is not end-to-end QA
+accuracy. However, the reported run does not establish the stated
+retrieval cutoff.</p>
+<p>Before trusting retrieval quality, add:</p>
+<ul>
+<li>unit tests for chunking, edge direction, fusion, source diversity,
+update, and delete;</li>
+<li>concurrent write and interrupted-write tests;</li>
+<li>embedding model mismatch tests;</li>
+<li>scope and prompt-injection tests once those features exist;</li>
+<li>a benchmark assertion that <code>len(results) &lt;= k</code>;</li>
+<li>scoring against exactly the first <code>k</code> returned source
+IDs;</li>
+<li>precision, MRR/nDCG, token count, latency, and end-to-end QA
+measures;</li>
+<li>a committed manifest tying results to engine commit, dependencies,
+embedder, and configuration.</li>
+</ul>
+<p>The smoke review for this report used the hash embedder on a
+temporary directory. It confirmed that current
+<code>get_context(k=3)</code> returns three results for 20 sources at
+the default 15% rule, and that adding two different texts under the same
+title creates two source records.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Combine BM25, vector, and cheap domain heuristics before adding an
+LLM reranker.</li>
+<li>Return source-diverse results when sessions/documents, rather than
+chunks, are the evaluation and context unit.</li>
+<li>Keep raw exchange chunks and treat a deterministic facts chunk as an
+index, not the sole memory.</li>
+<li>Offer <code>search</code> and <code>graph_walk</code> separately,
+plus one convenient <code>get_context</code> composition.</li>
+<li>Use exact source IDs for destructive deletion.</li>
+<li>Make heavy embedding and graph dependencies optional for a local
+tool.</li>
+<li>Keep engine logs on stderr when a subprocess uses stdout as a
+protocol.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Calling a metric <code>@k</code> while evaluating more than
+<code>k</code> results.</li>
+<li>Rewriting several JSON files without locks or atomic replace.</li>
+<li>Storing vectors without embedder identity or index version.</li>
+<li>Using caller titles as both weak provenance and retrieval diversity
+keys.</li>
+<li>Deriving source identity from title plus only the first 100 content
+characters.</li>
+<li>Applying unconditional recency decay to durable facts.</li>
+<li>Building directed semantic/entity edges without making traversal
+direction intentional.</li>
+<li>Leaving cross-source edges behind during deletion.</li>
+<li>Keeping unreachable supersession code and presenting it as an update
+mechanism.</li>
+<li>Advertising graph signals not used by the implementation, such as
+entity-weighted Leiden partitioning and community edges.</li>
+<li>Relying on tool descriptions to enforce proactive capture, dedupe,
+source trust, and retrieval hygiene.</li>
+<li>Duplicating the full engine across package layouts and letting
+Python/Node/docs versions drift.</li>
+<li>Full corpus scans, in-memory BM25 rebuilds, all-pairs Leiden
+similarity, and linear edge scans with no corpus limit.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Reuse conceptually:</p>
+<ul>
+<li>the compact MCP vocabulary;</li>
+<li>hybrid lexical/vector/fuzzy retrieval;</li>
+<li>source-diverse context selection;</li>
+<li>raw conversation chunks plus derived navigation chunks;</li>
+<li>explicit graph exploration after a precise search hit.</li>
+</ul>
+<p>Reimplement rather than copy:</p>
+<ul>
+<li>persistence on SQLite with transactions, FTS5, schema migrations,
+foreign keys, WAL, and exact cascading deletion;</li>
+<li>embeddings in a versioned vector index or typed blob table;</li>
+<li>graph adjacency with indexed, intentionally bidirectional
+relations;</li>
+<li>stable source IDs plus full content hashes and source/version
+records;</li>
+<li>bounded, token-aware context selection;</li>
+<li>component-score telemetry and realistic retrieval evals.</li>
+</ul>
+<p>Add before production:</p>
+<ul>
+<li>user/agent/project scopes;</li>
+<li>source roles and provenance spans;</li>
+<li>candidate/verified/rejected or at least evidence/current/stale
+states;</li>
+<li>contradiction and correction chains;</li>
+<li>defensive context rendering;</li>
+<li>locks, backups, repair/reindex, and deletion verification;</li>
+<li>comprehensive tests.</li>
+</ul>
+<p>This design is appropriate for a small, trusted, single-user MCP
+prototype where install simplicity matters more than durability and
+corpus scale. It is the wrong shape for shared memory, high-stakes
+personalization, large document collections, concurrent agents, or any
+system that presents memory as verified truth.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What exact engine revision and configuration produced each published
+score?</li>
+<li>Why do committed <code>k=10</code> results contain 28–46 returned
+sessions?</li>
+<li>Was FastEmbed or the hash fallback actually used in the published
+full run?</li>
+<li>Is <code>SCIMAP_EMBED_BACKEND</code> intended to select a backend,
+and if so, why is it not read?</li>
+<li>Should source identity be title-based, content-based, or a
+caller-supplied stable ID?</li>
+<li>Are cross-session and entity edges intended to be traversable in
+both directions?</li>
+<li>Should recency decay apply to imported documents and durable
+preferences?</li>
+<li>How should two sources with the same title be represented in
+<code>get_context</code>?</li>
+<li>What is the intended upgrade path when the embedding model
+changes?</li>
+<li>Are Node and Python packages both supported surfaces, or is one
+transitional?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>Storage/schema/write/retrieval/graph:</p>
+<ul>
+<li><code>swafra/swafra/engine.py</code></li>
+<li><code>swafra/engine/scimap_engine.py</code> (duplicate engine
+copy)</li>
+</ul>
+<p>Python MCP:</p>
+<ul>
+<li><code>swafra/swafra/server.py</code></li>
+<li><code>swafra/swafra/__init__.py</code></li>
+<li><code>swafra/pyproject.toml</code></li>
+</ul>
+<p>Node MCP and subprocess bridge:</p>
+<ul>
+<li><code>swafra/src/index.ts</code></li>
+<li><code>swafra/src/engine.ts</code></li>
+<li><code>swafra/package.json</code></li>
+</ul>
+<p>Agent policy and setup:</p>
+<ul>
+<li><code>swafra/CLAUDE.md</code></li>
+<li><code>swafra/SKILL.md</code></li>
+<li><code>swafra/README.md</code></li>
+<li><code>swafra/SETUP.md</code></li>
+</ul>
+<p>Evals:</p>
+<ul>
+<li><code>swafra/bench/run_eval.py</code></li>
+<li><code>swafra/bench/results.json</code></li>
+<li><code>swafra/packages/mcp/bench/run_eval.py</code></li>
+<li><code>swafra/packages/mcp/bench/results.json</code></li>
+<li><code>swafra/packages/mcp/bench/longmemeval_colab.ipynb</code></li>
+<li><code>swafra/BENCHMARK.md</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

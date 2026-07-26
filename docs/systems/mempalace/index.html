@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local-first system that keeps
+original text as authoritative drawers and layers hybrid retrieval over
+the evidence.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemPalace — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first system that
+keeps original text as authoritative drawers and layers hybrid retrieval
+over the evidence.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemPalace — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first system that
+keeps original text as authoritative drawers and layers hybrid retrieval
+over the evidence.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemPalace — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Verbatim evidence memory</p>
+          <h1>MemPalace</h1>
+          <p class="document-deck">A local-first system that keeps
+original text as authoritative drawers and layers hybrid retrieval over
+the evidence.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/MemPalace/mempalace">https://github.com/MemPalace/mempalace</a>">
+              <span>Source</span>
+              <strong>MemPalace/mempalace</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988">https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988</a>" title="afd0428823b47f9a9d1d68c450d54bb0045a4988">
+              <span>Analyzed revision</span>
+              <code>afd0428823b47f9a9d1d68c450d54bb0045a4988</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>mempalace</code> is a local-first, verbatim-memory system for
+coding agents and personal AI workflows. Its core bet is almost the
+opposite of <code>mem0</code>: do not summarize, paraphrase, or
+LLM-extract the primary memory. Store original text chunks as "drawers",
+index them with embeddings and metadata, then retrieve the original
+evidence.</p>
+<p>The implementation is broad and operationally mature for a local
+memory tool:</p>
+<ul>
+<li>ChromaDB default storage, with backend abstraction for
+<code>sqlite_exact</code>, Qdrant, and pgvector.</li>
+<li>Hybrid retrieval combining vector search, BM25 reranking, metadata
+filters, closet boosts, and fallback SQLite/FTS paths.</li>
+<li>A "palace" information model: wings, rooms, halls, closets, drawers,
+tunnels.</li>
+<li>MCP server, CLI, hooks for Claude/Cursor/Antigravity, and a wake-up
+memory stack.</li>
+<li>Knowledge graph, fact-checking primitives, entity registry, dedup,
+repair, sync, backups, benchmarks, and conformance tests.</li>
+<li>Explicit operational safety rails: embedder identity checks, stdio
+protection, mine locks, idempotent writes, collision scans, HNSW repair
+warnings, backend mismatch checks.</li>
+</ul>
+<p>The most important design distinction: MemPalace treats verbatim
+stored text as the authoritative memory layer. Structured layers such as
+closets and the knowledge graph are indexes or navigation aids, not
+replacements for the source memory.</p>
+<p>Main risk: the system stores large amounts of raw text. That
+preserves evidence and avoids extraction loss, but it shifts the hard
+problems to retrieval quality, privacy/deletion, corpus hygiene, and
+context assembly.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Primary units:</p>
+<ul>
+<li><code>Palace</code>: local memory root.</li>
+<li><code>Wing</code>: project/person/top-level scope.</li>
+<li><code>Room</code>: topic within a wing.</li>
+<li><code>Drawer</code>: verbatim text chunk. This is the primary
+searchable evidence.</li>
+<li><code>Closet</code>: compact index/pointer layer that points back to
+drawer IDs.</li>
+<li><code>Hall</code>: conceptual category inside a wing.</li>
+<li><code>Tunnel</code>: graph connection between related
+rooms/wings.</li>
+<li><code>KG triple</code>: temporal entity relation stored in local
+SQLite.</li>
+</ul>
+<p>Lifecycle:</p>
+<pre class="text"><code>files / conversations / manual MCP writes
+-&gt; normalize and chunk verbatim text
+-&gt; assign wing + room + metadata
+-&gt; deterministic drawer IDs
+-&gt; batch upsert into backend
+-&gt; emit closet pointer lines
+-&gt; optional graph / hallway / tunnel computation
+-&gt; search drawers directly
+-&gt; boost/rerank with BM25 + closets + metadata + recency
+-&gt; return verbatim drawer context</code></pre>
+<p>The system's answer to "what should be remembered?" is conservative:
+remember the original content first, then let retrieval decide what
+matters later.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>mempalace/mempalace/palace.py</code>: shared collection
+access, backend resolution, embedder identity, closet helpers, mine
+locks.</li>
+<li><code>mempalace/mempalace/miner.py</code>: project/file mining,
+chunking, room detection, drawer writes, closet generation.</li>
+<li><code>mempalace/mempalace/convo_miner.py</code>: conversation
+mining.</li>
+<li><code>mempalace/mempalace/searcher.py</code>: CLI/programmatic
+search, hybrid ranking, FTS/BM25 fallback.</li>
+<li><code>mempalace/mempalace/mcp_server.py</code>: MCP tools for
+search, add/delete/update drawers, mine, graph/KG, diary, sync,
+status.</li>
+<li><code>mempalace/mempalace/backends/base.py</code>: typed backend
+contract.</li>
+<li><code>mempalace/mempalace/backends/chroma.py</code>: default Chroma
+backend.</li>
+<li><code>mempalace/mempalace/backends/sqlite_exact.py</code>: local
+exact-vector backend.</li>
+<li><code>mempalace/mempalace/backends/qdrant.py</code>,
+<code>pgvector.py</code>: external backend adapters.</li>
+<li><code>mempalace/mempalace/layers.py</code>: 4-layer
+wake-up/recall/search stack.</li>
+<li><code>mempalace/mempalace/knowledge_graph.py</code>: temporal SQLite
+entity-relation graph.</li>
+<li><code>mempalace/mempalace/fact_checker.py</code>: conservative
+contradiction/name-confusion checks.</li>
+<li><code>mempalace/mempalace/dedup.py</code>: near-duplicate drawer
+cleanup.</li>
+<li><code>mempalace/mempalace/repair.py</code>: index/schema/extraction
+repair utilities.</li>
+</ul>
+<p>Architecture:</p>
+<pre class="mermaid"><code>flowchart LR
+  Sources[&quot;Files / JSONL / conversations / MCP writes&quot;] --&gt; Miner[&quot;Miner / MCP add_drawer&quot;]
+  Miner --&gt; Drawers[&quot;mempalace_drawers&quot;]
+  Miner --&gt; Closets[&quot;closets pointer index&quot;]
+  Drawers --&gt; Backend[&quot;Backend: Chroma / SQLite / Qdrant / pgvector&quot;]
+  Closets --&gt; Backend
+  Backend --&gt; Search[&quot;search_memories&quot;]
+  Search --&gt; Rank[&quot;Vector + BM25 + closet boost + metadata filters&quot;]
+  Search --&gt; MCP[&quot;MCP / CLI / hooks&quot;]
+  Drawers --&gt; KG[&quot;Knowledge graph / fact checker&quot;]
+  Drawers --&gt; Stack[&quot;L0-L3 memory stack&quot;]</code></pre>
+<p>The backend abstraction is unusually explicit.
+<code>BaseCollection</code> and <code>BaseBackend</code> define typed
+result shapes, error classes, health status, maintenance hooks, embedder
+identity, and isolation contracts.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="collection-and-backend-resolution">Collection and Backend
+Resolution</h3>
+<p><code>get_collection()</code> in <code>palace.py</code> resolves the
+configured backend, opens the collection, wraps backends that require
+explicit embeddings, and enforces embedder identity. This is a critical
+operational guardrail: a palace indexed with one embedding model should
+not be silently searched with another.</p>
+<p>The backend contract in <code>backends/base.py</code> defines:</p>
+<ul>
+<li><code>PalaceRef</code> with <code>id</code>,
+<code>local_path</code>, and optional <code>namespace</code>.</li>
+<li>backend isolation rules;</li>
+<li>typed <code>QueryResult</code> / <code>GetResult</code>;</li>
+<li><code>EmbedderIdentity</code>;</li>
+<li>mismatch and capability errors;</li>
+<li>maintenance result semantics.</li>
+</ul>
+<h3 id="mining-and-drawer-writes">Mining and Drawer Writes</h3>
+<p><code>mine()</code> in <code>miner.py</code> acquires a palace-level
+lock, then <code>_mine_impl()</code> scans files, opens drawer and
+closet collections, and calls <code>process_file()</code>.</p>
+<p><code>process_file()</code>:</p>
+<ul>
+<li>skips already-mined files by metadata/mtime;</li>
+<li>reads text without following symlinks;</li>
+<li>detects the room;</li>
+<li>chunks text with line metadata;</li>
+<li>enforces a max chunks per file safety rail;</li>
+<li>locks the source file;</li>
+<li>deletes stale drawers for modified files;</li>
+<li>builds deterministic drawer IDs with
+<code>make_drawer_id_from_chunk()</code>;</li>
+<li>batch-upserts documents and metadata;</li>
+<li>collision-checks IDs;</li>
+<li>builds closet pointer lines and upserts them.</li>
+</ul>
+<p>This is not a casual ingest path. It is engineered around concurrent
+agents, large files, HNSW/chroma update hazards, generated-file caps,
+and reproducible IDs.</p>
+<h3 id="mcp-manual-writes">MCP Manual Writes</h3>
+<p><code>tool_add_drawer()</code> in <code>mcp_server.py</code> is the
+hot path for agent-supplied memory. It sanitizes
+wing/room/content/source metadata, computes a deterministic
+content-derived logical drawer ID, logs a WAL event, checks idempotency,
+and writes either a single row or chunked physical rows with
+<code>parent_drawer_id</code>.</p>
+<p>Important details:</p>
+<ul>
+<li>oversized content is chunked before embedding;</li>
+<li>batch upsert is all-or-nothing from the caller's perspective;</li>
+<li>the last chunk is probed after write to verify readability;</li>
+<li>chunked logical drawers return both <code>drawer_id</code> and
+<code>chunk_ids</code>;</li>
+<li>delete paths handle logical chunk groups.</li>
+</ul>
+<h3 id="search">Search</h3>
+<p><code>search_memories()</code> in <code>searcher.py</code> is the
+core retrieval implementation.</p>
+<p>It:</p>
+<ul>
+<li>validates candidate strategy;</li>
+<li>can route to vector-disabled SQLite/BM25 fallback;</li>
+<li>opens the drawer collection;</li>
+<li>applies wing/room/source metadata filters;</li>
+<li>queries drawers directly as the retrieval floor;</li>
+<li>queries closets separately as a rank signal;</li>
+<li>applies rank-based closet boosts, never as a hard gate;</li>
+<li>computes effective distance;</li>
+<li>enriches closet-boosted hits with neighboring drawer chunks;</li>
+<li>returns source path, created/authored timestamps, similarity,
+raw/effective distance, and match mode.</li>
+</ul>
+<p>The comment in <code>searcher.py</code> is a good design rule:
+closets are a ranking signal, never a gate. This avoids the failure mode
+where a weak extracted index hides verbatim evidence that direct drawer
+search would have found.</p>
+<h3 id="hybrid-ranking">Hybrid Ranking</h3>
+<p><code>_hybrid_rank()</code> combines backend vector similarity with
+BM25 over candidates:</p>
+<ul>
+<li>vector similarity is derived from backend-declared metric;</li>
+<li>BM25 is Okapi-style over the candidate set;</li>
+<li>BM25 is normalized before fusion;</li>
+<li>authored time breaks exact score ties;</li>
+<li>vector-unknown candidates can still rank by BM25.</li>
+</ul>
+<p>This is a pragmatic hybrid retrieval implementation. It is more
+careful than the common "vector search and hope" baseline.</p>
+<h3 id="context-assembly">Context Assembly</h3>
+<p><code>layers.py</code> implements a 4-layer stack:</p>
+<ul>
+<li>L0 identity: <code>~/.mempalace/identity.txt</code>.</li>
+<li>L1 essential story: top drawers grouped by room, capped around 3,200
+chars.</li>
+<li>L2 on-demand recall: wing/room-filtered drawers.</li>
+<li>L3 deep search: semantic search.</li>
+</ul>
+<p>This stack is simpler than Letta's runtime memory but useful: bounded
+startup context plus explicit deeper retrieval.</p>
+<h3 id="knowledge-graph-and-fact-checking">Knowledge Graph and Fact
+Checking</h3>
+<p><code>knowledge_graph.py</code> stores entities and temporal triples
+in SQLite with WAL. Triples include:</p>
+<ul>
+<li><code>subject</code>, <code>predicate</code>,
+<code>object</code>;</li>
+<li><code>valid_from</code>, <code>valid_to</code>;</li>
+<li><code>confidence</code>;</li>
+<li>source closet/file/drawer provenance;</li>
+<li>adapter name.</li>
+</ul>
+<p><code>fact_checker.py</code> is conservative. It flags:</p>
+<ul>
+<li>similar-name confusion against known entities;</li>
+<li>relationship mismatch against current KG facts;</li>
+<li>stale facts when matching triples have expired.</li>
+</ul>
+<p>The docs explicitly say contradiction detection is not fully
+integrated end-to-end in the MCP workflow. Treat the KG/fact checker as
+promising primitives, not a finished trust layer comparable to
+Verel.</p>
+<h2 id="5-data-model-and-storage-semantics">5. Data Model and Storage
+Semantics</h2>
+<p>Drawer metadata includes fields such as:</p>
+<ul>
+<li><code>wing</code></li>
+<li><code>room</code></li>
+<li><code>source_file</code></li>
+<li><code>chunk_index</code></li>
+<li><code>parent_drawer_id</code> for logical chunk groups</li>
+<li><code>filed_at</code></li>
+<li><code>authored_at</code></li>
+<li>source mtime/content date</li>
+<li>line start/end</li>
+<li><code>normalize_version</code></li>
+<li>extracted entities/hall metadata</li>
+<li>ID recipe</li>
+</ul>
+<p>Important storage properties:</p>
+<ul>
+<li>The primary memory is the document text itself.</li>
+<li>Deterministic IDs make re-mining and duplicate checks
+tractable.</li>
+<li>Modified files are purged and reinserted to avoid unsafe vector
+update paths.</li>
+<li>Collections record embedder identity to prevent model-swap
+corruption.</li>
+<li>External backends are opt-in; local Chroma is default.</li>
+<li>Namespace isolation is explicitly part of the backend contract for
+remote backends.</li>
+</ul>
+<h2 id="6-retrieval-and-ranking">6. Retrieval and Ranking</h2>
+<p>MemPalace's retrieval has several layers:</p>
+<ol type="1">
+<li>Direct drawer vector search.</li>
+<li>Candidate BM25 reranking.</li>
+<li>Optional lexical candidate union where backend supports it.</li>
+<li>Closet lookup for source-level boost.</li>
+<li>Metadata filters for wing, room, source file.</li>
+<li>Neighbor chunk expansion.</li>
+<li>SQLite/FTS fallback when vector/HNSW is unavailable or unsafe.</li>
+</ol>
+<p>This is one of the better retrieval implementations in the workspace
+because it assumes vector retrieval will fail in boring ways:</p>
+<ul>
+<li>exact terms matter;</li>
+<li>source-level match can point to a better neighboring chunk;</li>
+<li>HNSW indexes can diverge or become unsafe;</li>
+<li>backend distance metrics must be declared;</li>
+<li>adding lexical candidates should not silently bypass distance
+filters.</li>
+</ul>
+<h2 id="7-update-correction-and-deletion">7. Update, Correction, and
+Deletion</h2>
+<p>Update/deletion is mostly storage-level, not epistemic:</p>
+<ul>
+<li><code>tool_delete_drawer()</code> deletes a logical drawer or chunk
+group by ID.</li>
+<li><code>tool_delete_by_source()</code> removes mined content from a
+source file.</li>
+<li><code>tool_update_drawer()</code> can update content and
+metadata.</li>
+<li><code>dedup.py</code> removes near-duplicate drawers by source
+group.</li>
+<li><code>repair.py</code> handles index/schema recovery.</li>
+</ul>
+<p>Contradiction handling is not a central write-time memory policy. The
+knowledge graph has temporal invalidation, and the fact checker can
+detect some relationship/stale conflicts, but normal drawer memory
+remains verbatim evidence. This is appropriate for its design: it avoids
+rewriting memory into false certainty, but it also means the system
+needs retrieval and context consumers that can reason over conflicting
+raw evidence.</p>
+<h2 id="8-trust-provenance-and-safety">8. Trust, Provenance, and
+Safety</h2>
+<p>Strengths:</p>
+<ul>
+<li>Verbatim evidence is retained.</li>
+<li>Drawers link to source file, chunk, authored/filed time, line spans,
+parent IDs.</li>
+<li>KG triples carry source fields.</li>
+<li>MCP server has read-only mode.</li>
+<li>Content and metadata are sanitized.</li>
+<li>The MCP server protects JSON-RPC stdio from dependency stdout
+pollution.</li>
+<li>Local-first default keeps data on machine unless a remote backend is
+chosen.</li>
+</ul>
+<p>Weaknesses:</p>
+<ul>
+<li>There is no first-class trust state like candidate/verified/rejected
+for drawers.</li>
+<li>Raw recalled text is not inherently fenced as untrusted data in the
+same way as Verel's recall renderer.</li>
+<li>Fact-checking is conservative and partial.</li>
+<li>Large verbatim stores increase privacy/deletion burden.</li>
+</ul>
+<p>Compared with extraction-first systems, MemPalace preserves
+provenance better because the source content is the memory. Compared
+with Verel, it has less epistemic machinery.</p>
+<h2 id="9-extensibility-and-operations">9. Extensibility and
+Operations</h2>
+<p>MemPalace is strong operationally:</p>
+<ul>
+<li>Backend registry and conformance tests.</li>
+<li>CLI, MCP stdio/HTTP, Docker, hooks, commands, skills, and
+integrations.</li>
+<li>Repair/migrate/sync/export/backups.</li>
+<li>Benchmarks and benchmark-result artifacts.</li>
+<li>Embedder identity and dimension checks.</li>
+<li>Palace locks and per-file mine locks.</li>
+<li>HNSW capacity and metric checks.</li>
+<li>WAL logging for MCP writes.</li>
+</ul>
+<p>This is a system built by people who have hit local-agent failure
+modes in practice.</p>
+<h2 id="10-tests-and-evidence">10. Tests and Evidence</h2>
+<p>The repo has broad test coverage:</p>
+<ul>
+<li>search and hybrid candidate union;</li>
+<li>backends and backend conformance;</li>
+<li>Chroma/Qdrant/pgvector/sqlite exact;</li>
+<li>MCP server and HTTP transport;</li>
+<li>mining, conversation mining, format mining;</li>
+<li>hooks for Claude/Cursor/Antigravity;</li>
+<li>locks, repair, sync, backups;</li>
+<li>knowledge graph, fact checker, entity registry;</li>
+<li>line numbers, authored-at backfill, dedup, collision scan;</li>
+<li>benchmarks.</li>
+</ul>
+<p>The benchmark docs make strong claims, but also include caveats about
+metric comparability and overfitting. The most important internal result
+for design purposes is not the headline score; it is the empirical
+argument that verbatim storage plus good retrieval is a strong baseline
+before adding LLM extraction.</p>
+<h2 id="11-fit-for-agent-memory">11. Fit for Agent Memory</h2>
+<p>Best fit:</p>
+<ul>
+<li>local coding-agent memory;</li>
+<li>Claude/Cursor/Gemini-style session retention;</li>
+<li>project knowledge recall;</li>
+<li>offline/private memory;</li>
+<li>evidence-preserving retrieval;</li>
+<li>benchmarked retrieval experiments.</li>
+</ul>
+<p>Less ideal:</p>
+<ul>
+<li>systems requiring compact canonical user profiles;</li>
+<li>cases where the application needs verified facts rather than raw
+evidence;</li>
+<li>hosted multi-user SaaS memory without additional privacy/tenant
+controls;</li>
+<li>small agents that need a minimal memory primitive.</li>
+</ul>
+<p>MemPalace is closest to <code>engram</code> in local-first spirit,
+but much broader and more retrieval/benchmark heavy. It is closest to
+<code>verel</code> in caring about correctness, but chooses preservation
+of evidence over explicit trust-state promotion.</p>
+<h2 id="12-patterns-and-antipatterns">12. Patterns and Antipatterns</h2>
+<p>Patterns worth borrowing:</p>
+<ul>
+<li>Store raw evidence before extracting anything.</li>
+<li>Make metadata scopes human-legible.</li>
+<li>Use lexical and vector retrieval together.</li>
+<li>Treat extracted/indexed summaries as boosts, not gates.</li>
+<li>Record embedder identity with the index.</li>
+<li>Use deterministic IDs for reproducible mining.</li>
+<li>Add repair and fallback paths for local vector stores.</li>
+<li>Validate writes by reading after write.</li>
+<li>Include benchmark fixtures and failure-analysis notes.</li>
+</ul>
+<p>Antipatterns avoided:</p>
+<ul>
+<li>Throwing away source context after fact extraction.</li>
+<li>Vector-only retrieval.</li>
+<li>Silent embedding-model swaps.</li>
+<li>Agent-facing MCP tools that corrupt stdio.</li>
+<li>Concurrent mining without locks.</li>
+</ul>
+<p>Remaining risks:</p>
+<ul>
+<li>Raw memory can become huge and noisy.</li>
+<li>Retrieval can surface contradictory evidence without resolving
+it.</li>
+<li>Context assembly may still inject raw text as if it were safe
+instruction unless callers fence it.</li>
+<li>Deletion must chase drawers, closets, KG triples, backups, and
+remote backends.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow aggressively:</p>
+<ul>
+<li>verbatim drawer baseline;</li>
+<li>hybrid retrieval;</li>
+<li>closet-as-boost-not-gate principle;</li>
+<li>embedder identity checks;</li>
+<li>deterministic drawer IDs;</li>
+<li>MCP stdio hardening;</li>
+<li>local repair/fallback tooling;</li>
+<li>benchmark discipline.</li>
+</ul>
+<p>Do not copy blindly:</p>
+<ul>
+<li>the full palace metaphor if your users do not need it;</li>
+<li>Chroma-specific recovery paths if using another store;</li>
+<li>raw-everything retention without privacy controls;</li>
+<li>claims about retrieval benchmarks as if they prove end-to-end answer
+quality.</li>
+</ul>
+<p>For your own memory system, MemPalace is the strongest reminder that
+extraction is not always the right first step. A serious system should
+first prove that raw evidence plus hybrid retrieval is insufficient
+before adding lossy LLM memory synthesis.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How well does the raw-drawer approach behave at very large
+personal-memory scale?</li>
+<li>What is the best UX for resolving contradictory drawers?</li>
+<li>How integrated will KG/fact-checking become with MCP write/search
+flows?</li>
+<li>How expensive is hybrid candidate union on each backend at
+scale?</li>
+<li>How reliably do hooks capture all important agent context across
+tools?</li>
+<li>What is the deletion story across drawers, closets, KG, backups, and
+sync?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Core collection/backend access:
+<code>mempalace/mempalace/palace.py</code>.</li>
+<li>Backend contract:
+<code>mempalace/mempalace/backends/base.py</code>.</li>
+<li>Default backend:
+<code>mempalace/mempalace/backends/chroma.py</code>.</li>
+<li>Other backends:
+<code>mempalace/mempalace/backends/sqlite_exact.py</code>,
+<code>qdrant.py</code>, <code>pgvector.py</code>.</li>
+<li>Mining: <code>mempalace/mempalace/miner.py</code>,
+<code>mempalace/mempalace/convo_miner.py</code>,
+<code>mempalace/mempalace/format_miner.py</code>.</li>
+<li>Search: <code>mempalace/mempalace/searcher.py</code>.</li>
+<li>MCP server: <code>mempalace/mempalace/mcp_server.py</code>.</li>
+<li>Context stack: <code>mempalace/mempalace/layers.py</code>.</li>
+<li>Graph: <code>mempalace/mempalace/palace_graph.py</code>,
+<code>mempalace/mempalace/hallways.py</code>,
+<code>mempalace/mempalace/knowledge_graph.py</code>.</li>
+<li>Fact checking:
+<code>mempalace/mempalace/fact_checker.py</code>.</li>
+<li>Dedup/repair/sync: <code>mempalace/mempalace/dedup.py</code>,
+<code>repair.py</code>, <code>sync.py</code>.</li>
+<li>Benchmarks: <code>mempalace/benchmarks/</code>.</li>
+<li>Tests: <code>mempalace/tests/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

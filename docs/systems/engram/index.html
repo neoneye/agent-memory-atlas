@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A compact local-first coding-agent
+memory built around SQLite, FTS5, structured observations, and
+conflict-oriented writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engram — Agent Memory Atlas">
+    <meta property="og:description" content="A compact local-first
+coding-agent memory built around SQLite, FTS5, structured observations,
+and conflict-oriented writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engram — Agent Memory Atlas">
+    <meta name="twitter:description" content="A compact local-first
+coding-agent memory built around SQLite, FTS5, structured observations,
+and conflict-oriented writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engram — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Coding-agent local memory</p>
+          <h1>Engram</h1>
+          <p class="document-deck">A compact local-first coding-agent
+memory built around SQLite, FTS5, structured observations, and
+conflict-oriented writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="<a
+href="https://github.com/Gentleman-Programming/engram">https://github.com/Gentleman-Programming/engram</a>">
+              <span>Source</span>
+              <strong>Gentleman-Programming/engram</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="<a
+href="https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb">https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb</a>" title="44faeee1fb4fabdee4ba9619df55af485f3d06eb">
+              <span>Analyzed revision</span>
+              <code>44faeee1fb4fabdee4ba9619df55af485f3d06eb</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>engram</code> is a local-first memory system for coding agents.
+It is implemented as a single Go binary with SQLite + FTS5, exposed
+through CLI, HTTP, MCP stdio, TUI, and sync/cloud replication paths.</p>
+<p>Compared to hosted memory services, Engram is intentionally
+practical: it stores structured coding-session observations, user
+prompts, sessions, relations, and sync mutations. It does not rely on
+embeddings by default. Retrieval is FTS5/BM25, recent context, pinned
+memories, topic-key exact lookup, and timeline drill-down.</p>
+<p>The strongest ideas:</p>
+<ul>
+<li>Local SQLite as source of truth.</li>
+<li>MCP tool design tailored to real coding-agent workflows.</li>
+<li>Explicit session summaries and prompt capture.</li>
+<li>Topic-key upserts for evolving decisions.</li>
+<li>Conflict surfacing via candidate relations and
+<code>mem_judge</code>.</li>
+<li>Sync journal and cloud replication without making cloud
+authoritative.</li>
+</ul>
+<p>Main risk: extraction is mostly agent discipline, not automatic
+semantic understanding. It works when the agent reliably calls
+<code>mem_save</code> with good structured content.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Engram memory units:</p>
+<ul>
+<li><code>Session</code>: project/directory/time-bound work
+session.</li>
+<li><code>Observation</code>: structured memory about a decision,
+bugfix, pattern, config, discovery, etc.</li>
+<li><code>Prompt</code>: saved user prompt.</li>
+<li><code>Relation</code>: agent/user judgment between
+observations.</li>
+<li>Sync mutation: durable local change journal.</li>
+</ul>
+<p>Lifecycle:</p>
+<pre class="text"><code>agent decides something -&gt; mem_save -&gt; AddObservation
+-&gt; topic_key upsert OR dedupe OR insert
+-&gt; FTS5 index trigger
+-&gt; sync mutation
+-&gt; conflict candidate detection
+-&gt; optional mem_judge relation
+-&gt; later mem_search / mem_context / mem_timeline</code></pre>
+<p>The memory is intentionally not a general transcript database. It is
+curated observations from coding sessions.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files:</p>
+<ul>
+<li><code>engram/internal/store/store.go</code>: persistent engine,
+schema, sessions, observations, prompts, search, sync journal.</li>
+<li><code>engram/internal/store/relations.go</code>: relation
+vocabulary, conflict candidates, semantic judgment hooks.</li>
+<li><code>engram/internal/mcp/mcp.go</code>: MCP tools and agent-facing
+behavior.</li>
+<li><code>engram/internal/mcp/write_queue.go</code>: serialized MCP
+writes.</li>
+<li><code>engram/internal/server/server.go</code>: HTTP API.</li>
+<li><code>engram/internal/sync/sync.go</code>: local sync chunks.</li>
+<li><code>engram/internal/cloud/*</code>: cloud
+replication/server/dashboard.</li>
+<li><code>engram/internal/project/*</code>: project
+detection/similarity.</li>
+</ul>
+<p>Architecture:</p>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;MCP agent&quot;] --&gt; MCP[&quot;internal/mcp&quot;]
+  CLI[&quot;CLI/TUI&quot;] --&gt; Store[&quot;internal/store&quot;]
+  HTTP[&quot;HTTP server&quot;] --&gt; Store
+  MCP --&gt; Store
+  Store --&gt; SQLite[&quot;SQLite WAL + FTS5&quot;]
+  Store --&gt; Sync[&quot;sync_mutations journal&quot;]
+  Sync --&gt; Cloud[&quot;optional cloud/git sync&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Schema/migrations:</p>
+<ul>
+<li><code>Store.migrate()</code> in
+<code>engram/internal/store/store.go</code>.</li>
+<li>Creates <code>sessions</code>, <code>observations</code>,
+<code>observations_fts</code>, <code>user_prompts</code>,
+<code>prompts_fts</code>, <code>sync_state</code>,
+<code>sync_mutations</code>, cloud/sync support tables, and
+triggers.</li>
+</ul>
+<p>Session lifecycle:</p>
+<ul>
+<li><code>CreateSession()</code> and <code>EndSession()</code> in
+<code>store.go</code>.</li>
+<li>Enqueue session sync mutations.</li>
+<li>MCP handlers: <code>handleSessionStart</code>,
+<code>handleSessionEnd</code>, <code>handleSessionSummary</code>.</li>
+</ul>
+<p>Write path:</p>
+<ul>
+<li>MCP <code>mem_save</code> is defined and handled in
+<code>engram/internal/mcp/mcp.go</code>.</li>
+<li><code>handleSave()</code> resolves project, normalizes project name,
+creates implicit session, calls
+<code>Store.AddObservation(...)</code>.</li>
+<li><code>AddObservation()</code> strips
+<code>&lt;private&gt;...&lt;/private&gt;</code>, truncates overlong
+content, normalizes scope/topic key, computes normalized hash.</li>
+<li>If <code>topic_key</code> exists, updates latest matching
+observation and increments <code>revision_count</code>.</li>
+<li>Otherwise exact duplicate within dedupe window increments
+<code>duplicate_count</code>.</li>
+<li>Otherwise inserts a new observation, sets <code>review_after</code>
+for selected types, and enqueues sync mutation.</li>
+</ul>
+<p>Search path:</p>
+<ul>
+<li>MCP <code>handleSearch()</code> calls
+<code>Store.Search(...)</code>.</li>
+<li><code>Search()</code> validates <code>match_mode</code>, normalizes
+project, performs direct <code>topic_key</code> lookup when query
+contains <code>/</code>, then FTS5 <code>MATCH</code>, sorted by
+rank.</li>
+<li>Filters: type, project, scope, match mode, limit.</li>
+</ul>
+<p>Context path:</p>
+<ul>
+<li><code>FormatContext()</code> in <code>store.go</code>.</li>
+<li>Combines recent sessions, pinned observations, recent unpinned
+observations, and recent prompts.</li>
+<li>MCP <code>mem_context</code> exposes this to agents.</li>
+</ul>
+<p>Conflict/relation path:</p>
+<ul>
+<li><code>FindCandidates()</code> in
+<code>engram/internal/store/relations.go</code>.</li>
+<li><code>handleSave()</code> calls it after saving and returns
+<code>judgment_required</code> with candidates.</li>
+<li><code>mem_judge</code> and <code>mem_compare</code> persist relation
+verdicts.</li>
+<li>Relation verbs include <code>related</code>,
+<code>compatible</code>, <code>scoped</code>,
+<code>conflicts_with</code>, <code>supersedes</code>,
+<code>not_conflict</code>.</li>
+</ul>
+<p>Tests:</p>
+<ul>
+<li>Store tests: <code>engram/internal/store/*_test.go</code>.</li>
+<li>MCP tests: <code>engram/internal/mcp/*_test.go</code>.</li>
+<li>Sync/cloud tests across <code>internal/sync</code> and
+<code>internal/cloud</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Key structs in <code>store.go</code>:</p>
+<ul>
+<li><code>Session</code>: <code>id</code>, <code>project</code>,
+<code>directory</code>, timestamps, summary.</li>
+<li><code>Observation</code>: <code>id</code>, <code>sync_id</code>,
+<code>session_id</code>, <code>type</code>, <code>title</code>,
+<code>content</code>, <code>tool_name</code>, <code>project</code>,
+<code>scope</code>, <code>topic_key</code>, <code>revision_count</code>,
+<code>duplicate_count</code>, <code>last_seen_at</code>,
+<code>review_after</code>, <code>pinned</code>, timestamps,
+<code>deleted_at</code>.</li>
+<li><code>Prompt</code>: saved user prompt linked to
+session/project.</li>
+<li><code>SyncMutation</code>: seq, target, entity, op, payload, source,
+project, ack.</li>
+</ul>
+<p>SQLite schema:</p>
+<ul>
+<li><code>observations</code> is the main table.</li>
+<li><code>observations_fts</code> indexes
+title/content/tool/type/project/topic key.</li>
+<li><code>user_prompts</code> and <code>prompts_fts</code> capture
+prompts.</li>
+<li><code>memory_relations</code> is managed in relation
+migrations.</li>
+<li><code>sync_mutations</code> is the local change journal.</li>
+</ul>
+<p>Scoping:</p>
+<ul>
+<li>Project names are normalized.</li>
+<li>Observation scope defaults to <code>project</code>;
+<code>personal</code> is also supported.</li>
+<li>Pinned state is local and not synced.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval modes:</p>
+<ul>
+<li>FTS5 lexical search over observations.</li>
+<li>Topic-key direct lookup.</li>
+<li>Recent context assembly.</li>
+<li>Pinned-priority context.</li>
+<li>Timeline around an observation.</li>
+<li>Full observation fetch after search.</li>
+<li>Prompt search.</li>
+</ul>
+<p>Strengths:</p>
+<ul>
+<li>Deterministic, local, fast.</li>
+<li>No vector DB needed.</li>
+<li>FTS query sanitization and match-mode validation.</li>
+<li>Progressive disclosure: search -&gt; get/timeline.</li>
+</ul>
+<p>Weakness:</p>
+<ul>
+<li>No semantic recall by default.</li>
+<li>Quality depends on titles/content/topic keys being
+well-written.</li>
+<li>Cross-project recall exists, but project naming drift is a real
+operational concern; Engram explicitly warns on similar project
+names.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>AddObservation()</code> is carefully engineered:</p>
+<ul>
+<li>Normalizes project.</li>
+<li>Strips private tags.</li>
+<li>Truncates to configured max length.</li>
+<li>Normalizes scope and topic key.</li>
+<li>Computes normalized content hash.</li>
+<li>Topic-key match updates in place and increments revisions.</li>
+<li>Short-window duplicates increment duplicate count.</li>
+<li>New rows get sync IDs and optional lifecycle
+<code>review_after</code>.</li>
+<li>Every mutation is journaled for sync.</li>
+</ul>
+<p>MCP <code>handleSave()</code> adds agent-facing behavior:</p>
+<ul>
+<li>Project resolution and recovery tokens for ambiguous project
+choices.</li>
+<li>Implicit session creation.</li>
+<li>Suggested topic keys.</li>
+<li>Similar project warning.</li>
+<li>Prompt auto-capture.</li>
+<li>Conflict candidates returned in response envelope.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP is the main integration surface.</p>
+<p>Core tools:</p>
+<ul>
+<li><code>mem_save</code></li>
+<li><code>mem_search</code></li>
+<li><code>mem_context</code></li>
+<li><code>mem_session_summary</code></li>
+<li><code>mem_get_observation</code></li>
+<li><code>mem_save_prompt</code></li>
+<li><code>mem_current_project</code></li>
+</ul>
+<p>Deferred/admin tools include
+update/delete/stats/timeline/review/pin/unpin/judge/compare/capture/merge.</p>
+<p>The server instructions explicitly tell agents to save decisions,
+bugfixes, discoveries, conventions, and end-of-session summaries. This
+is a strong affordance pattern: the tool names and descriptions shape
+agent behavior.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Local SQLite with WAL and single connection.</li>
+<li>Sync mutations make local writes durable and replayable.</li>
+<li>Soft delete by default; hard delete available.</li>
+<li>Project normalization and ambiguity recovery.</li>
+<li>Private-tag stripping.</li>
+<li>Conflict candidates avoid silent overwrites.</li>
+<li>Lifecycle review for selected memory types.</li>
+<li>Extensive tests.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>Agent must remember to save.</li>
+<li>No automatic extraction from all conversation turns by default.</li>
+<li>Lexical retrieval misses paraphrases.</li>
+<li><code>mem_judge</code> relies on agent/user judgment; not a
+cryptographic verification system.</li>
+<li>Prompt capture can store sensitive user requests unless policy/agent
+behavior avoids it.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Engram has broad unit and integration tests:</p>
+<ul>
+<li>Store migration/search/sync tests.</li>
+<li>MCP tests for save/search/judge/compare/conflict loops.</li>
+<li>Cloud sync and mutation tests.</li>
+<li>Diagnostic/repair tests.</li>
+<li>TUI/project/setup tests.</li>
+</ul>
+<p>I did not run them during this report generation.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Local SQLite + FTS5 as a serious baseline.</li>
+<li>Agent-facing <code>mem_save</code> schema with
+What/Why/Where/Learned.</li>
+<li>Topic-key upsert for evolving decisions.</li>
+<li>Post-save conflict candidate surfacing.</li>
+<li>End-of-session summary as mandatory memory hygiene.</li>
+<li>Pinned memories before recent memories in context.</li>
+<li>Project detection plus similar-project warnings.</li>
+<li>Sync journal separate from cloud authority.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Memory quality depends on agent compliance.</li>
+<li>No embedding/semantic default may frustrate natural-language
+recall.</li>
+<li>Large MCP tool surface can overwhelm weaker agents despite deferred
+loading.</li>
+<li>Local-first sync semantics are more complex than a purely local tool
+if cloud is enabled.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow heavily if building coding-agent memory:</p>
+<ul>
+<li>The observation schema.</li>
+<li>The MCP affordances.</li>
+<li>Topic-key upserts.</li>
+<li>Conflict surfacing.</li>
+<li>Local SQLite/FTS5 baseline.</li>
+<li>Session summary format.</li>
+</ul>
+<p>Avoid copying if your target is consumer chat personalization or
+multi-tenant hosted memory; Engram is optimized for developer
+workflows.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How well do agents comply with proactive save instructions in
+practice?</li>
+<li>What is the best semantic-search extension while keeping local-first
+simplicity?</li>
+<li>How often do conflict candidates produce useful judgments versus
+noise?</li>
+<li>How should sensitive prompt capture be governed?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store/schema/search:
+<code>engram/internal/store/store.go</code>.</li>
+<li>Relations/conflicts:
+<code>engram/internal/store/relations.go</code>.</li>
+<li>MCP tools: <code>engram/internal/mcp/mcp.go</code>.</li>
+<li>Write queue: <code>engram/internal/mcp/write_queue.go</code>.</li>
+<li>HTTP server: <code>engram/internal/server/server.go</code>.</li>
+<li>Sync: <code>engram/internal/sync/</code>,
+<code>engram/internal/cloud/</code>.</li>
+<li>Tests: <code>engram/internal/**/*_test.go</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
