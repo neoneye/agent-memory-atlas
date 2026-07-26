@@ -84,6 +84,86 @@
     }
   }
 
+  const tableWraps = [...document.querySelectorAll(".prose .table-wrap")];
+
+  if (tableWraps.length) {
+    const siteHeader = document.querySelector(".site-header");
+    const stickyTables = tableWraps
+      .map((wrap) => {
+        const table = wrap.querySelector(":scope > table");
+        const sourceHead = table?.tHead;
+        if (!table || !sourceHead) return null;
+
+        const holder = document.createElement("div");
+        holder.className = "sticky-table-head";
+        holder.setAttribute("aria-hidden", "true");
+
+        const clone = document.createElement("table");
+        const columns = document.createElement("colgroup");
+        clone.append(columns, sourceHead.cloneNode(true));
+        holder.appendChild(clone);
+        document.body.appendChild(holder);
+
+        return { wrap, table, sourceHead, holder, clone, columns };
+      })
+      .filter(Boolean);
+
+    let updateFrame = 0;
+
+    const syncStickyTables = () => {
+      updateFrame = 0;
+      const stickyTop = siteHeader?.getBoundingClientRect().bottom || 0;
+
+      stickyTables.forEach(({ wrap, table, sourceHead, holder, clone, columns }) => {
+        const wrapRect = wrap.getBoundingClientRect();
+        const headerHeight = sourceHead.getBoundingClientRect().height;
+        const active = wrapRect.top < stickyTop && wrapRect.bottom > stickyTop + headerHeight;
+
+        holder.classList.toggle("is-visible", active);
+        if (!active) return;
+
+        const sourceCells = [...sourceHead.rows[0].cells];
+        while (columns.children.length < sourceCells.length) {
+          columns.appendChild(document.createElement("col"));
+        }
+        while (columns.children.length > sourceCells.length) {
+          columns.lastElementChild.remove();
+        }
+        sourceCells.forEach((cell, index) => {
+          columns.children[index].style.width = `${cell.getBoundingClientRect().width}px`;
+        });
+
+        holder.style.top = `${stickyTop}px`;
+        holder.style.left = `${wrapRect.left}px`;
+        holder.style.width = `${wrapRect.width}px`;
+        clone.style.width = `${table.scrollWidth}px`;
+        clone.style.transform = `translateX(${-wrap.scrollLeft}px)`;
+      });
+    };
+
+    const requestStickyTableSync = () => {
+      if (updateFrame) return;
+      updateFrame = window.requestAnimationFrame(syncStickyTables);
+    };
+
+    window.addEventListener("scroll", requestStickyTableSync, { passive: true });
+    window.addEventListener("resize", requestStickyTableSync);
+    tableWraps.forEach((wrap) => {
+      wrap.addEventListener("scroll", requestStickyTableSync, { passive: true });
+    });
+
+    if ("ResizeObserver" in window) {
+      const resizeObserver = new ResizeObserver(requestStickyTableSync);
+      stickyTables.forEach(({ wrap, table }) => {
+        resizeObserver.observe(wrap);
+        resizeObserver.observe(table);
+      });
+    }
+
+    document.fonts?.ready.then(requestStickyTableSync);
+    syncStickyTables();
+  }
+
   const progress = document.querySelector(".reading-progress span");
   if (progress) {
     const updateProgress = () => {

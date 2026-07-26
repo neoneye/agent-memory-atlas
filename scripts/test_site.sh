@@ -43,6 +43,12 @@ if ! grep -q 'href="./patterns/"' "$site_dir/index.html"; then
   exit 1
 fi
 
+if ! grep -q 'sticky-table-head' "$site_dir/assets/main.js" ||
+   ! grep -q 'sticky-table-head' "$site_dir/assets/main.css"; then
+  echo "Sticky table-header behavior is missing from the generated assets." >&2
+  exit 1
+fi
+
 if grep -Rqs 'href="<a' "$site_dir/systems" --include='*.html'; then
   echo "Malformed nested source links found in rendered system reports." >&2
   exit 1
