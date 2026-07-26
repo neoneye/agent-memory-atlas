@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A structured memory service
+separating facts, experiences, observations, entities, and reflections
+with hybrid temporal recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hindsight — Agent Memory Atlas">
+    <meta property="og:description" content="A structured memory service
+separating facts, experiences, observations, entities, and reflections
+with hybrid temporal recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hindsight — Agent Memory Atlas">
+    <meta name="twitter:description" content="A structured memory
+service separating facts, experiences, observations, entities, and
+reflections with hybrid temporal recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hindsight — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Retain, recall, and reflect</p>
+          <h1>Hindsight</h1>
+          <p class="document-deck">A structured memory service
+separating facts, experiences, observations, entities, and reflections
+with hybrid temporal recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vectorize-io/hindsight">
+              <span>Source</span>
+              <strong>vectorize-io/hindsight</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c" title="ed120a256d51d731085ec8aca724573a7f2f1e1c">
+              <span>Analyzed revision</span>
+              <code>ed120a256d51d731085ec8aca724573a7f2f1e1c</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hindsight is a memory service built around three verbs: retain source
+material, recall relevant facts, and reflect over a bank's accumulated
+knowledge. Its strongest architectural move is not any single index; it
+is the separation between raw documents/chunks, extracted
+<code>world</code> and <code>experience</code> facts, automatically
+consolidated <code>observation</code> facts, and user-curated
+reflections.</p>
+<p>The open implementation is unusually complete. It includes a
+FastAPI/MCP surface, PostgreSQL/pgvector and Oracle backends, four-arm
+retrieval, cross-encoder reranking, per-bank configuration, async
+operations, audit logging, webhooks, and consolidation recovery. This
+makes it one of the most operationally serious systems in the atlas.</p>
+<p>Its main weakness is epistemic rather than mechanical: facts and
+observations are still produced or rewritten by LLMs. Source IDs and
+proof counts make them auditable, but support is not the same as
+verification, and a synthesized observation can become influential
+without an explicit candidate/verified/rejected state.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Each memory bank is an isolated “brain”. Retention turns content into
+evidence-bearing facts and a graph of temporal, semantic, entity, and
+causal links. Consolidation turns repeated or related facts into
+observations. Recall searches these layers. Reflection answers a
+question using recalled evidence, disposition settings, and curated
+reflection material.</p>
+<pre class="text"><code>content -&gt; document + chunks -&gt; extracted world/experience facts
+       -&gt; entities + links + embeddings
+       -&gt; background consolidation -&gt; observations with source_memory_ids
+query   -&gt; semantic + BM25 + graph + temporal -&gt; fusion -&gt; rerank -&gt; bounded recall
+prompt  -&gt; recall + reflections + disposition -&gt; reflect response</code></pre>
+<p>The distinction between observation and reflection matters.
+<code>consolidation/consolidator.py</code> describes observations as
+bottom-up, automatically maintained claims. Reflections are user-curated
+documents. This avoids collapsing every derived artifact into one
+ambiguous “memory” type.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The main layers are:</p>
+<ul>
+<li><code>hindsight-api-slim/hindsight_api/api/http.py</code> and
+<code>api/mcp.py</code>: REST and MCP boundaries.</li>
+<li><code>engine/memory_engine.py</code>: orchestration, bank context,
+async operations, health, audit, and public retain/recall/reflect
+methods.</li>
+<li><code>engine/retain/</code>: screening, chunking, fact extraction,
+entity resolution, embedding, storage, and link construction.</li>
+<li><code>engine/search/</code>: parallel retrieval, graph expansion,
+temporal extraction, fusion, reranking, tracing, and token
+budgeting.</li>
+<li><code>engine/consolidation/</code>: background observation
+creation/update and deduplication.</li>
+<li><code>engine/db/</code>, <code>engine/sql/</code>, and
+<code>alembic/</code>: PostgreSQL/Oracle abstraction and schema
+evolution.</li>
+<li><code>worker/</code>: queued operations, retries, cancellation, and
+maintenance.</li>
+</ul>
+<p>The code is modular, but <code>memory_engine.py</code> is very large
+and remains the composition center. That gives the service one
+authoritative orchestration path while increasing change risk and
+navigation cost.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li>Retain entrypoints: <code>MemoryEngine.retain_async()</code> and
+<code>retain_batch_async()</code> in
+<code>engine/memory_engine.py</code>.</li>
+<li>Retain pipeline: <code>retain_batch()</code> in
+<code>engine/retain/orchestrator.py</code>.</li>
+<li>Fact extraction: <code>engine/retain/fact_extraction.py</code>;
+conversion and persistence are split into <code>fact_storage.py</code>,
+<code>embedding_processing.py</code>, and
+<code>entity_processing.py</code>.</li>
+<li>Recall entrypoint: <code>MemoryEngine.recall_async()</code> in
+<code>engine/memory_engine.py</code>.</li>
+<li>Four-way candidate generation:
+<code>engine/search/retrieval.py</code>.</li>
+<li>Rank fusion: <code>reciprocal_rank_fusion()</code> and the
+dedup-oriented <code>interleave_fusion()</code> in
+<code>engine/search/fusion.py</code>.</li>
+<li>Graph expansion:
+<code>engine/search/link_expansion_retrieval.py</code>.</li>
+<li>Final scoring: <code>engine/search/reranking.py</code>.</li>
+<li>Reflection: <code>MemoryEngine.reflect_async()</code> and
+<code>engine/search/think_utils.py</code>.</li>
+<li>Consolidation:
+<code>engine/consolidation/consolidator.py</code>.</li>
+<li>Core schema history:
+<code>alembic/versions/5a366d414dce_initial_schema.py</code> and later
+observation/reflection migrations.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Key persisted concepts include:</p>
+<ul>
+<li><code>banks</code>: the isolation and configuration boundary.</li>
+<li><code>documents</code> and <code>chunks</code>: retained source
+material and chunk-level provenance.</li>
+<li><code>memory_units</code>: extracted or derived facts with text,
+embeddings, event/occurrence dates, metadata, tags, and fact type.</li>
+<li><code>entities</code>, <code>unit_entities</code>,
+<code>entity_cooccurrences</code>, and <code>memory_links</code>: graph
+navigation.</li>
+<li>observations in <code>memory_units</code>: carry
+<code>proof_count</code>, <code>source_memory_ids</code>, history,
+consolidation timestamps, and failure state.</li>
+<li><code>reflections</code>: curated material used by reflection.</li>
+<li><code>directives</code>: hard rules separated from ordinary
+memory.</li>
+<li><code>async_operations</code>, audit, webhook, and LLM request
+tables: operational state.</li>
+</ul>
+<p>Current migrations show evolving terminology: older “mental models”
+were migrated toward observations and reflections. That evolution is a
+documentation hazard, but the current split is conceptually
+stronger.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>engine/search/retrieval.py</code> runs four strategies:</p>
+<ol type="1">
+<li>Semantic similarity over embeddings.</li>
+<li>BM25/full-text retrieval.</li>
+<li>Graph retrieval through a pluggable <code>GraphRetriever</code>,
+normally link expansion.</li>
+<li>Temporal retrieval using extracted date constraints and time-aware
+spreading.</li>
+</ol>
+<p>The semantic and lexical arms are combined efficiently per fact type,
+with score floors, tag groups, created-at ranges, partial ANN indexes,
+and backend-specific SQL. <code>reciprocal_rank_fusion()</code> combines
+rank positions without requiring raw score calibration. Per-arm caps
+prevent graph fan-out from monopolizing the candidate pool. A
+cross-encoder can then rerank the bounded set.</p>
+<p>The presence of <code>interleave_fusion()</code> is a subtle
+strength. Consolidation dedup needs to guarantee that semantic rank one
+survives even when it lacks graph or lexical support; ordinary RRF can
+suppress exactly that result. Hindsight therefore treats retrieval
+policy as task-specific rather than universally interchangeable.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Retention is a staged pipeline rather than a single vector-store
+insert:</p>
+<ul>
+<li>screen/redact/block content through the memory-defense
+extension;</li>
+<li>split large inputs and preserve a document body;</li>
+<li>extract structured facts with type, temporal data, entities, and
+causal relations;</li>
+<li>embed facts and chunks;</li>
+<li>persist documents, chunks, memory units, and graph links;</li>
+<li>enqueue consolidation and other maintenance work.</li>
+</ul>
+<p>Append and replacement modes, content hashes, chunk deduplication,
+batch/sub-batch handling, cancellation, and operation metadata are
+implemented explicitly. Consolidation then compares new facts with
+existing observations, issuing creates or updates and carrying source
+IDs forward. A focused semantic dedup pass can merge near twins after an
+LLM adjudication.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hindsight exposes REST, generated Python/TypeScript/Rust clients,
+MCP, CLI tooling, and integrations for agent frameworks. The surface
+keeps the core verbs legible:</p>
+<ul>
+<li><code>retain</code>: send content and context to a bank;</li>
+<li><code>recall</code>: retrieve bounded memory facts;</li>
+<li><code>reflect</code>: ask a higher-level question grounded in memory
+and curated models.</li>
+</ul>
+<p>This is a good service boundary because applications do not need to
+reproduce the extraction and ranking pipeline. It is less opinionated
+about exactly where recall enters an agent prompt, so safe context
+framing remains partly integration-owned.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strong operational safeguards include:</p>
+<ul>
+<li>bank context carried through async tasks for isolation and
+attribution;</li>
+<li>PostgreSQL and Oracle migration-shape checks;</li>
+<li>retryable queued consolidation with capped exponential backoff and
+per-bank dedup;</li>
+<li>cancellation and progress stages;</li>
+<li>audit logs, LLM traces, webhooks, health checks, and vector-index
+health;</li>
+<li>memory-defense policies that can redact or block sensitive content
+before persistence;</li>
+<li>token and database budgets;</li>
+<li>source fact IDs, proof counts, and history on observations.</li>
+</ul>
+<p>The largest correctness gap is that provenance is not an epistemic
+state machine. An observation supported by several extracted facts may
+still be wrong in the same direction. Semantic dedup also asks an LLM to
+decide whether claims should merge; the prompt is careful about negation
+and quantities, but incorrect merges remain possible.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The test surface is broad: retain/recall/reflect integration,
+temporal ranges, graph fan-out caps, causal relationships, observation
+consolidation and recovery, source-fact budgeting, memory defense, audit
+logs, migrations, cancellation, provider behavior, and multi-tenant
+maintenance. Deterministic mechanics use ordinary assertions;
+LLM-behavior tests use real models plus an independent judge.</p>
+<p>The repository also ships LongMemEval and LoCoMo scripts plus
+performance and consolidation benchmarks. That is better evidence than a
+demo-only test suite, although published quality still depends on
+model/provider configuration and benchmark settings.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Preserve documents and chunks before extracting compact facts.</li>
+<li>Separate raw facts, consolidated observations, curated reflections,
+and hard directives.</li>
+<li>Run semantic, lexical, graph, and temporal recall as independent
+arms, then fuse ranks.</li>
+<li>Cap each retrieval arm before global reranking.</li>
+<li>Use a different fusion policy for deduplication than for ordinary
+question answering.</li>
+<li>Carry source memory IDs and proof counts through consolidation.</li>
+<li>Make queued consolidation retryable and deduplicated per scope.</li>
+<li>Put sensitive-data screening before durable persistence.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>The orchestration core is extremely large.</li>
+<li>LLM-extracted facts become durable without a universal verification
+gate.</li>
+<li>Observation support counts can be mistaken for truth
+confidence.</li>
+<li>LLM-driven consolidation can erase meaningful distinctions despite
+dedup safeguards.</li>
+<li>Four retrieval arms, reranking, consolidation, and multiple backends
+create tuning and operational cost.</li>
+<li>Historical terminology around mental models/observations/reflections
+can confuse integrators.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow Hindsight when you need a service-grade memory pipeline rather
+than a thin vector wrapper. Its clearest reusable ideas are
+evidence/derived-state separation, task-specific rank fusion, temporal
+recall, and recoverable consolidation.</p>
+<p>Do not copy the full architecture for a small local agent. Start with
+two retrieval arms and explicit source records. Add graph, temporal
+analysis, consolidation, and cross-encoder reranking only when
+evaluations show they solve real misses. If correctness matters, add a
+trust state beyond Hindsight's proof and provenance fields.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How often do consolidated observations improve recall versus
+introducing synthesis errors?</li>
+<li>What operator workflow corrects a wrong observation and prevents it
+from being recreated?</li>
+<li>How are four-arm score floors and reranker budgets calibrated per
+domain?</li>
+<li>Which deletion path guarantees removal from documents, chunks,
+facts, links, observations, audit artifacts, and external backups?</li>
+<li>How closely do PostgreSQL and Oracle retrieval results match under
+production load?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>hindsight-api-slim/hindsight_api/engine/memory_engine.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/retain/orchestrator.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/retain/fact_extraction.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/search/retrieval.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/search/fusion.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/search/link_expansion_retrieval.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/search/reranking.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/search/think_utils.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/engine/consolidation/consolidator.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/api/http.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/api/mcp.py</code></li>
+<li><code>hindsight-api-slim/hindsight_api/alembic/versions/</code></li>
+<li><code>hindsight-api-slim/hindsight_api/worker/</code></li>
+<li><code>hindsight-api-slim/tests/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

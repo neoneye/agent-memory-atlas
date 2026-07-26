@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local-first MCP memory where
+Markdown is canonical and database indexes provide graph and hybrid
+retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Basic
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first MCP memory
+where Markdown is canonical and database indexes provide graph and
+hybrid retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Basic
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first MCP memory
+where Markdown is canonical and database indexes provide graph and
+hybrid retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Basic Memory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Human-editable Markdown graph</p>
+          <h1>Basic Memory</h1>
+          <p class="document-deck">A local-first MCP memory where
+Markdown is canonical and database indexes provide graph and hybrid
+retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/basicmachines-co/basic-memory">
+              <span>Source</span>
+              <strong>basicmachines-co/basic-memory</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b" title="232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b">
+              <span>Analyzed revision</span>
+              <code>232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Basic Memory is a local-first knowledge system where Markdown files
+are the canonical memory and SQLite or PostgreSQL is a rebuildable
+projection for graph and search. Agents interact through MCP tools,
+while people can read, edit, move, version, and synchronize the same
+notes with ordinary filesystem tools.</p>
+<p>Its best architectural decision is the source-of-truth boundary. A
+note is not an opaque row hidden behind an embedding API: accepted
+Markdown owns the knowledge. Entities, observations, relations,
+full-text rows, semantic chunks, and materializations are derived state
+that must be kept coherent or rebuilt.</p>
+<p>The tradeoff is coordination complexity. Human edits, agent writes,
+file watchers, APIs, cloud routing, graph projections, and two database
+backends all touch the same lifecycle. The code has grown serious
+transaction, checksum, reconciliation, and composition-root machinery to
+keep that promise.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A project is the isolation boundary. A note is the human-facing
+canonical document. An entity is the indexed database representation of
+that note. Observations and relations are structured Markdown constructs
+owned by their source note.</p>
+<pre class="text"><code>human editor / MCP tool
+  -&gt; accepted Markdown note
+       |- YAML frontmatter
+       |- prose
+       |- [category] observations
+       `- typed [[relations]]
+  -&gt; parse + transaction
+  -&gt; entity + observation + relation graph
+  -&gt; FTS rows + optional semantic chunks
+  -&gt; search / build_context / navigation</code></pre>
+<p>The direction also works in reverse: a file watcher parses external
+edits and reconciles projections. Database state is not allowed to
+silently outrank the file.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Basic Memory has API, MCP, and CLI entrypoints, each with a
+composition root. Only those roots read global configuration; downstream
+services receive explicit dependencies.</p>
+<p>Main layers:</p>
+<ul>
+<li><code>src/basic_memory/markdown/</code>: parsing and
+serialization.</li>
+<li><code>models/</code> and <code>schemas/</code>: persistence and
+boundary models.</li>
+<li><code>services/</code>: note preparation, accepted-content writes,
+entities, search, projects, and initialization.</li>
+<li><code>repository/</code>: SQLite/PostgreSQL data access and hybrid
+retrieval.</li>
+<li><code>indexing/</code>: portable mutation, materialization,
+reconciliation, and project-index workflows.</li>
+<li><code>index/</code>: local file watcher and concrete indexing
+adapters.</li>
+<li><code>api/</code>: FastAPI routers.</li>
+<li><code>mcp/clients/</code> and <code>mcp/tools/</code>: typed HTTP
+clients and thin agent-facing tools.</li>
+<li><code>runtime/</code>: local/test/cloud mode contracts.</li>
+</ul>
+<p>The intended dependency path is explicit: MCP tool → typed client →
+API router → service → repository. Local MCP calls use an in-process
+ASGI client; cloud projects can route to remote HTTP per project.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li>Domain rules: <code>docs/DOMAIN_MODEL.md</code>.</li>
+<li>Composition: <code>docs/ARCHITECTURE.md</code> and
+<code>api|mcp|cli/container.py</code>.</li>
+<li>Persistence entities: <code>models/knowledge.py</code>.</li>
+<li>Markdown boundary: <code>markdown/entity_parser.py</code>,
+<code>markdown/markdown_processor.py</code>, and
+<code>markdown/schemas.py</code>.</li>
+<li>Agent write: <code>mcp/tools/write_note.py</code> →
+<code>mcp/clients/knowledge.py</code> → API/service.</li>
+<li>Accepted note orchestration:
+<code>services/note_preparation.py</code>,
+<code>services/note_content_writes.py</code>, and indexing
+workflows.</li>
+<li>Search orchestration: <code>services/search_service.py</code>.</li>
+<li>Backend retrieval:
+<code>repository/sqlite_search_repository.py</code>,
+<code>postgres_search_repository.py</code>, and
+<code>search_repository_base.py</code>.</li>
+<li>Context assembly: <code>mcp/tools/build_context.py</code> and
+<code>schemas/memory.py</code>.</li>
+<li>External-edit sync: <code>index/watch_service.py</code>,
+<code>index/watch_coordinator.py</code>, and
+<code>indexing/</code>.</li>
+<li>Startup reconciliation:
+<code>services/initialization.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The canonical note contains:</p>
+<ul>
+<li>frontmatter: title, type, permalink, tags, and arbitrary
+metadata;</li>
+<li>ordinary Markdown prose;</li>
+<li>observations written as
+<code>- [category] content #tags (context)</code>;</li>
+<li>relations written as
+<code>- relation_type [[Target]] (context)</code> or inline wiki
+links.</li>
+</ul>
+<p>The database projects this into:</p>
+<ul>
+<li><code>Project</code>: ownership/isolation boundary.</li>
+<li><code>Entity</code>: stable external identity, mutable
+path/permalink, checksums, timestamps, metadata, and content state.</li>
+<li><code>Observation</code>: categorized fact owned by an entity.</li>
+<li><code>Relation</code>: directed semantic link owned by its source
+entity, with resolution state.</li>
+<li>search rows for whole entities, observations, and relations.</li>
+<li>optional semantic chunk and embedding rows.</li>
+</ul>
+<p>Move operations preserve stable identity while changing location.
+Relations belong to the source note, an important rule for deletion and
+reconciliation.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Basic Memory supports:</p>
+<ul>
+<li>SQLite FTS5 or PostgreSQL <code>tsvector</code> full-text
+search;</li>
+<li>title, permalink, metadata, tag, category, date, and type
+filters;</li>
+<li>optional semantic chunk embeddings;</li>
+<li>hybrid score-based fusion of lexical and vector results;</li>
+<li>relaxed lexical fallback for question-shaped queries that fail
+strict all-term matching.</li>
+</ul>
+<p>Semantic content is split at Markdown-aware boundaries. Candidate
+counts over-fetch, score thresholds gate weak matches, and FTS scores
+are normalized before hybrid fusion. Search indexes notes, observations,
+and relations separately, so an agent can land on a precise fact or
+graph link instead of only a whole document.</p>
+<p><code>build_context</code> expands from a memory URL/entity through
+related observations and relations with depth and result controls.
+Direct file/navigation tools complement search; the system does not
+force every task through embeddings.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>MCP <code>write_note</code> validates the project and path,
+constructs an <code>Entity</code> request, and calls a typed client. The
+API/service layer prepares canonical content, checks conflicts and
+checksums, persists the accepted note snapshot, parses graph structures,
+and updates search projections.</p>
+<p><code>MarkdownProcessor.write_file()</code> performs a complete
+read-modify-write with an optional dirty-file checksum and an atomic
+filesystem replace. External edits enter through the watcher and
+project-index workflows.</p>
+<p>Create, replace, edit, move, and delete have distinct orchestration.
+A move preserves external identity; a delete must remove canonical
+content through the owning storage service and then reconcile entity,
+graph, materialization, and search state. This discipline is the cost of
+a real source-of-truth model.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP is first class. Tools include
+write/edit/move/delete/read/view/search notes, build context, recent
+activity, directory browsing, schema operations, project management,
+diagnostics, and workspaces.</p>
+<p>Per-project routing is unusually thoughtful.
+<code>get_project_client()</code> resolves the requested project,
+chooses local ASGI or cloud HTTP, applies authentication at client
+creation, validates the project, and yields both client and active
+project. <code>project_id</code> can disambiguate same-named projects
+across workspaces.</p>
+<p>Tool responses are deliberately human- and model-readable, often
+including repair suggestions. This improves usability but makes the MCP
+surface verbose.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strong mechanisms include:</p>
+<ul>
+<li>Markdown as inspectable, versionable source;</li>
+<li>project/workspace/tenant boundaries and path traversal checks;</li>
+<li>atomic file writes and checksum-based dirty detection;</li>
+<li>transactional persistence of accepted note, graph, and search
+state;</li>
+<li>startup reconciliation and watcher lifecycle ownership;</li>
+<li>stable external IDs across moves;</li>
+<li>derived-index cleanup on delete;</li>
+<li>SQLite and PostgreSQL parity tests;</li>
+<li>optional semantic features fail explicitly when dependencies are
+absent.</li>
+</ul>
+<p>Basic Memory preserves author-visible provenance better than
+extracted-fact stores, but it has no universal
+candidate/verified/rejected state. An agent can write an observation
+directly into canonical Markdown. Human editability makes correction
+easy, yet preventing a rejected claim from returning requires
+application policy or version-history review.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The project targets full unit/integration coverage across SQLite and
+PostgreSQL, with isolated temporary projects. Tests cover parsing,
+file/database synchronization, MCP/API flows, search, semantic vectors,
+move/delete invariants, cloud/local routing, watchers, schemas, and
+recovery.</p>
+<p>A separate benchmark harness runs reproducible retrieval comparisons
+with LoCoMo data, common query/top-k settings, explicit skipped-provider
+records, checksums, and manifests containing repository SHAs and runtime
+metadata. That provenance policy is exemplary, though benchmark outcomes
+should still be interpreted as retrieval—not total memory quality.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Make human-readable content canonical and indexes disposable.</li>
+<li>Model every database/search structure as a projection with a
+reconciliation path.</li>
+<li>Keep project scope on identity and routing, not just search
+filters.</li>
+<li>Use stable IDs across file moves.</li>
+<li>Own relations at their source note.</li>
+<li>Put typed clients between MCP tools and API routes.</li>
+<li>Treat create, replace, edit, move, and delete as distinct lifecycle
+operations.</li>
+<li>Record exact benchmark provenance and explicit provider skips.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>Source-of-truth synchronization creates substantial code and race
+surfaces.</li>
+<li>Markdown conventions can be malformed by arbitrary editors.</li>
+<li>Direct agent writes can promote unsupported claims to canonical
+notes.</li>
+<li>Git/backups may conflict with true erasure expectations.</li>
+<li>Search and context behavior differs when semantic search is
+disabled.</li>
+<li>Verbose agent tools can consume context.</li>
+<li>Supporting local/cloud and SQLite/PostgreSQL multiplies integration
+paths.</li>
+<li>File watchers need careful lifecycle ownership and platform
+testing.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow Basic Memory's canonical-file/projection boundary when humans
+must own and edit memory directly. It is particularly good for research
+notes, project knowledge, and agent collaboration where portability
+matters more than invisible automatic fact extraction.</p>
+<p>Do not choose it merely because Markdown feels simple. Bidirectional
+sync is not simple. If humans never edit memory, a transactional
+database with an export view may be easier. If agents can write
+canonical notes, add review or trust states for high-impact claims.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What prevents an agent from turning prompt injection into canonical
+Markdown?</li>
+<li>How are conflicting simultaneous human and agent edits surfaced to
+users?</li>
+<li>Can deletion prove removal from filesystem history, cloud storage,
+vectors, and backups?</li>
+<li>How should rejected or disputed observations be represented in
+Markdown?</li>
+<li>What is the largest project size before watcher/index rebuild cost
+becomes intrusive?</li>
+<li>How close is SQLite/PostgreSQL hybrid ranking parity on the same
+corpus?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>docs/DOMAIN_MODEL.md</code></li>
+<li><code>docs/ARCHITECTURE.md</code></li>
+<li><code>src/basic_memory/models/knowledge.py</code></li>
+<li><code>src/basic_memory/markdown/schemas.py</code></li>
+<li><code>src/basic_memory/markdown/entity_parser.py</code></li>
+<li><code>src/basic_memory/markdown/markdown_processor.py</code></li>
+<li><code>src/basic_memory/services/note_preparation.py</code></li>
+<li><code>src/basic_memory/services/note_content_writes.py</code></li>
+<li><code>src/basic_memory/services/search_service.py</code></li>
+<li><code>src/basic_memory/repository/search_repository_base.py</code></li>
+<li><code>src/basic_memory/repository/sqlite_search_repository.py</code></li>
+<li><code>src/basic_memory/repository/postgres_search_repository.py</code></li>
+<li><code>src/basic_memory/mcp/project_context.py</code></li>
+<li><code>src/basic_memory/mcp/tools/write_note.py</code></li>
+<li><code>src/basic_memory/mcp/tools/search.py</code></li>
+<li><code>src/basic_memory/mcp/tools/build_context.py</code></li>
+<li><code>src/basic_memory/index/</code></li>
+<li><code>src/basic_memory/indexing/</code></li>
+<li><code>tests/</code></li>
+<li><code>test-int/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

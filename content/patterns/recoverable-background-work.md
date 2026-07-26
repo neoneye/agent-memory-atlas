@@ -45,7 +45,7 @@ Expose freshness to callers; do not make asynchronous derivation look immediatel
 
 ## Seen in the atlas
 
-[llm-wiki-memory](../../systems/llm-wiki-memory/) is the clearest local example: detached transcript capture, chunking, retained failed inputs, fenced fallbacks, redistillation, and lifecycle tests turn provider failure into delayed work. [Honcho](../../systems/honcho/) uses derivation queues to build observations and representations from messages. [MemPalace](../../systems/mempalace/) includes repair and reindex paths around its derived structures. Simpler synchronous systems avoid queue complexity but also block ingestion or lose opportunities for heavier consolidation.
+[llm-wiki-memory](../../systems/llm-wiki-memory/) is the clearest local capture example: retained failed inputs and redistillation turn provider failure into delayed work. [Hindsight](../../systems/hindsight/) gives consolidation indefinite capped retries, deterministic-error filtering, and per-bank deduplication. [Mastra Observational Memory](../../systems/mastra-observational-memory/) persists early observation/reflection buffers with durable range markers before activation. [Basic Memory](../../systems/basic-memory/) can rebuild file-derived graph/search projections through startup reconciliation. [Honcho](../../systems/honcho/) uses derivation queues; [MemPalace](../../systems/mempalace/) includes repair and reindex paths.
 
 ## Tests to require
 

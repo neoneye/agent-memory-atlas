@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An incrementally updated
+bi-temporal knowledge graph preserving episodes, entity histories, and
+hybrid graph retrieval.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Graphiti — Agent Memory Atlas">
+    <meta property="og:description" content="An incrementally updated
+bi-temporal knowledge graph preserving episodes, entity histories, and
+hybrid graph retrieval.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Graphiti — Agent Memory Atlas">
+    <meta name="twitter:description" content="An incrementally updated
+bi-temporal knowledge graph preserving episodes, entity histories, and
+hybrid graph retrieval.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Graphiti — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Bi-temporal context graph</p>
+          <h1>Graphiti</h1>
+          <p class="document-deck">An incrementally updated bi-temporal
+knowledge graph preserving episodes, entity histories, and hybrid graph
+retrieval.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/getzep/graphiti">
+              <span>Source</span>
+              <strong>getzep/graphiti</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf" title="9140123a7282d44efc077a0af09179919f3defdf">
+              <span>Analyzed revision</span>
+              <code>9140123a7282d44efc077a0af09179919f3defdf</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Graphiti is a library for building an incrementally updated temporal
+knowledge graph from episodes such as messages, events, or documents.
+Its defining feature is bi-temporal memory: it distinguishes when an
+episode or fact was true (<code>valid_at</code>/<code>invalid_at</code>)
+from when the graph learned or expired it
+(<code>created_at</code>/<code>expired_at</code>).</p>
+<p>This is a genuinely different answer to agent memory. Graphiti does
+not primarily produce a bag of user facts. It preserves episodes,
+resolves entities, extracts typed relationships, invalidates
+contradicted edges, and searches across facts, entities, episodes, and
+communities. The graph remains queryable as history rather than
+overwriting the past with the latest summary.</p>
+<p>Its strengths—temporal correctness, rich retrieval, custom ontology
+support—also create its risks. Ingestion is LLM-heavy, graph-database
+operations are operationally substantial, and entity/edge deduplication
+mistakes can restructure memory globally. It is best treated as a
+context-graph engine, not a drop-in truth store.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An episode is immutable evidence. Entities are normalized concepts
+mentioned by episodes. Entity edges are extracted claims, with temporal
+validity and links back to their source episodes. Communities and sagas
+provide higher-level organization and summaries.</p>
+<pre class="text"><code>episode(content, reference_time, group_id)
+  -&gt; extract + resolve entity nodes
+  -&gt; extract + dedupe entity edges
+  -&gt; assign valid_at / invalid_at
+  -&gt; invalidate contradictory older edges
+  -&gt; connect episode to entities and episode chain
+  -&gt; search edges + nodes + episodes + communities</code></pre>
+<p>Two clocks answer two different questions:</p>
+<ul>
+<li>“When was this believed/recorded?” uses <code>created_at</code> and
+<code>expired_at</code>.</li>
+<li>“When was this true in the represented world?” uses
+<code>valid_at</code> and <code>invalid_at</code>.</li>
+</ul>
+<p>That distinction makes backfilled and corrected history representable
+without pretending ingestion time equals event time.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core areas:</p>
+<ul>
+<li><code>graphiti_core/graphiti.py</code>: public orchestrator for
+episodes, bulk ingestion, search, removal, sagas, and indices.</li>
+<li><code>graphiti_core/nodes.py</code>: episodic, entity, community,
+and saga node types.</li>
+<li><code>graphiti_core/edges.py</code>: episodic, entity, and community
+edge types plus persistence.</li>
+<li><code>graphiti_core/utils/maintenance/</code>: extraction,
+resolution, dedupe, invalidation, and graph mutation.</li>
+<li><code>graphiti_core/search/</code>: configurable multi-scope search
+and reranking recipes.</li>
+<li><code>graphiti_core/driver/</code>: Neo4j, FalkorDB, Kuzu, and
+Amazon Neptune adapters.</li>
+<li><code>graphiti_core/llm_client/</code>, <code>embedder/</code>, and
+<code>cross_encoder/</code>: model abstractions.</li>
+<li><code>mcp_server/</code> and <code>server/</code>: agent-facing
+service layers.</li>
+</ul>
+<p>The design separates graph-domain objects from driver queries and LLM
+clients. Search receives a <code>GraphitiClients</code> bundle, while
+ingestion orchestration uses the same explicit clients. This supports
+backend substitution, though not every backend has identical query or
+index capabilities.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li>Single ingestion: <code>Graphiti.add_episode()</code> in
+<code>graphiti_core/graphiti.py</code>.</li>
+<li>Bulk ingestion: <code>Graphiti.add_episode_bulk()</code>.</li>
+<li>Episode model: <code>EpisodicNode</code> in
+<code>graphiti_core/nodes.py</code>.</li>
+<li>Entity/fact models: <code>EntityNode</code> and
+<code>EntityEdge</code> in <code>nodes.py</code> and
+<code>edges.py</code>.</li>
+<li>Entity extraction/resolution:
+<code>utils/maintenance/node_operations.py</code>.</li>
+<li>Relationship extraction: <code>extract_edges()</code> in
+<code>utils/maintenance/edge_operations.py</code>.</li>
+<li>Contradiction and temporal invalidation: edge
+resolution/invalidation functions in
+<code>edge_operations.py</code>.</li>
+<li>Search entrypoints: <code>Graphiti.search()</code>,
+<code>Graphiti.search_()</code>, and <code>search()</code> in
+<code>search/search.py</code>.</li>
+<li>Search presets: <code>search/search_config_recipes.py</code>.</li>
+<li>Episode removal: <code>Graphiti.remove_episode()</code>.</li>
+<li>Database constraints: driver
+<code>build_indices_and_constraints()</code> implementations.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>EpisodicNode</code> stores content, episode type, source
+description, <code>valid_at</code>, <code>created_at</code>, and
+<code>group_id</code>. Episodes can represent messages, text, or
+JSON.</p>
+<p><code>EntityNode</code> stores a normalized name, summary,
+labels/types, attributes, embedding, and scope. Optional
+application-defined Pydantic models constrain entity attributes.</p>
+<p><code>EntityEdge</code> is the principal fact record:</p>
+<ul>
+<li>source and target entity UUIDs;</li>
+<li>relationship name and natural-language fact;</li>
+<li>source episode UUIDs;</li>
+<li>embedding and custom attributes;</li>
+<li><code>valid_at</code>, <code>invalid_at</code>,
+<code>created_at</code>, and <code>expired_at</code>;</li>
+<li><code>group_id</code> scope.</li>
+</ul>
+<p><code>EpisodicEdge</code> links an episode to mentioned entities.
+Community nodes/edges group the entity graph. Saga nodes group episodes
+and maintain summaries with both wall-clock and episode-time
+watermarks.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Graphiti searches four scopes concurrently: entity edges, entity
+nodes, episodes, and communities. Each scope can enable a combination
+of:</p>
+<ul>
+<li>BM25/full-text search;</li>
+<li>cosine similarity;</li>
+<li>graph BFS from explicit or discovered origins.</li>
+</ul>
+<p>Results are fused and reranked with configurable recipes: RRF,
+maximal marginal relevance, cross-encoder scoring, node distance, or
+episode-mention signals. <code>EDGE_HYBRID_SEARCH_RRF</code> is the
+default high-level recipe used by the convenient
+<code>Graphiti.search()</code> path.</p>
+<p>Filters support group IDs, dates, entity labels, and edge types.
+Search can also center on a node or begin BFS from supplied origins.
+This is more expressive than ordinary fact-vector recall, but query
+behavior depends heavily on choosing the right recipe and graph
+scope.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add_episode()</code> saves an episode, obtains recent context,
+extracts entity nodes and facts, resolves nodes against the existing
+graph, embeds new material, and persists nodes/edges. Extracted
+relationships carry the episode UUIDs that support them.</p>
+<p>Temporal edge handling is the standout step. Relationship extraction
+can produce <code>valid_at</code> and <code>invalid_at</code>;
+maintenance code compares a resolved edge with existing candidates and
+expires or bounds overlapping claims. An older fact can remain in the
+graph with a closed validity interval instead of being deleted.</p>
+<p>Bulk ingestion reduces calls through combined extraction but
+documents a tradeoff: it omits some edge invalidation/date extraction
+behavior found in single-episode insertion. Consumers cannot assume the
+faster path is semantically identical.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Python library is the primary surface. MCP and server packages
+expose graph operations to agents and applications.
+<code>group_id</code> is the main namespace and must be supplied
+consistently.</p>
+<p>Search returns structured graph objects rather than a prebuilt prompt
+block. That is flexible for applications that want facts, entity
+summaries, or source episodes separately, but safe formatting, token
+budgeting, and injection fencing remain application
+responsibilities.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strong safeguards:</p>
+<ul>
+<li>source episode UUIDs on extracted facts;</li>
+<li>retention of invalidated history;</li>
+<li>explicit event-time and ingestion-time fields;</li>
+<li>group-scoped reads and writes;</li>
+<li>constraints and indexes per graph backend;</li>
+<li>bounded concurrency helpers and retry-capable model clients;</li>
+<li>validation of LLM-returned entity names against resolved nodes;</li>
+<li>dropping self-edges;</li>
+<li>extensive driver, search, extraction, dedupe, and temporal
+tests.</li>
+</ul>
+<p>Trust remains evidence-oriented rather than verification-oriented. A
+fact can be well sourced and still false. LLM entity resolution can
+merge distinct real-world entities; a bad merge then contaminates many
+neighboring facts. Group IDs are a filter boundary, but authorization
+must be enforced by the service around the library.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repository has unit and integration coverage for graph
+operations, entity/edge extraction, deduplication, temporal
+invalidation, search recipes, filters, drivers, bulk ingestion, episode
+deletion, and sagas. Many meaningful tests require a live graph database
+and model substitutes.</p>
+<p>There are benchmark and evaluation utilities, but measured quality
+depends on the LLM, embedder, graph backend, ontology, and dataset. The
+source gives strong evidence for mechanics; it does not make temporal
+extraction or entity resolution objectively correct.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Store episodes as evidence before graph-derived facts.</li>
+<li>Distinguish transaction time from real-world validity time.</li>
+<li>Invalidate an old fact by closing its interval rather than erasing
+history.</li>
+<li>Keep source episode IDs on every derived relationship.</li>
+<li>Search facts, entities, episodes, and communities as separate
+scopes.</li>
+<li>Make retrieval recipes explicit and task-selectable.</li>
+<li>Validate LLM-extracted relationships against resolved entity
+identities.</li>
+<li>Maintain both wall-clock and event-time watermarks for backfilled
+summaries.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>LLM errors can mutate graph topology, not just one text record.</li>
+<li>A mistaken entity merge has wide blast radius.</li>
+<li>Graph database and model dependencies make local operation heavier
+than file/SQLite memory.</li>
+<li>Single and bulk ingestion do not provide identical temporal
+semantics.</li>
+<li>Search configuration has many degrees of freedom and can be hard to
+evaluate.</li>
+<li>No built-in candidate/verified/rejected trust state.</li>
+<li>Prompt assembly and authorization are outside the core library.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow Graphiti when time and relationships are central to the
+domain: changing employment, ownership, preferences, plans, incidents,
+or other facts that have valid intervals. The bi-temporal edge model and
+evidence links are more valuable than copying the whole ingestion
+pipeline.</p>
+<p>For simpler personal memory, a graph may be needless complexity.
+Preserve source events and add validity fields to ordinary records
+first. Adopt entity resolution and graph traversal only when
+cross-entity questions measurably require them.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How often does automatic edge invalidation close the wrong
+historical fact?</li>
+<li>What recovery path splits entities after an incorrect
+deduplication?</li>
+<li>How should applications authorize <code>group_id</code> rather than
+merely filter by it?</li>
+<li>Which search recipe performs best for conversational recall versus
+graph investigation?</li>
+<li>How should bulk ingestion advertise its reduced temporal semantics
+to callers?</li>
+<li>Can source episodes be deleted for privacy without leaving
+unsupported derived edges?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>graphiti_core/graphiti.py</code></li>
+<li><code>graphiti_core/nodes.py</code></li>
+<li><code>graphiti_core/edges.py</code></li>
+<li><code>graphiti_core/utils/maintenance/node_operations.py</code></li>
+<li><code>graphiti_core/utils/maintenance/edge_operations.py</code></li>
+<li><code>graphiti_core/utils/maintenance/combined_extraction.py</code></li>
+<li><code>graphiti_core/utils/maintenance/graph_data_operations.py</code></li>
+<li><code>graphiti_core/search/search.py</code></li>
+<li><code>graphiti_core/search/search_config.py</code></li>
+<li><code>graphiti_core/search/search_config_recipes.py</code></li>
+<li><code>graphiti_core/search/search_filters.py</code></li>
+<li><code>graphiti_core/driver/</code></li>
+<li><code>mcp_server/</code></li>
+<li><code>tests/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

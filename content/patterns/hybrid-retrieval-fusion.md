@@ -49,7 +49,7 @@ Do not call retrieval “hybrid” merely because two backends exist. The import
 
 ## Seen in the atlas
 
-[Mem0](../../systems/mem0/) combines semantic, keyword, entity, and optional reranking signals. [MemPalace](../../systems/mempalace/) combines vector retrieval, BM25 reranking, metadata, closet boosts, and fallback paths while keeping direct evidence reachable. [RainBox](../../systems/rainbox/) hard-filters first, then blends vector, full-text, and entity signals. [Swafra](../../systems/swafra/) is a compact example and a warning: uncalibrated heuristic channels and result-count behavior can undermine an otherwise appealing fusion design. [Engram](../../systems/engram/) shows that reliable FTS and exact keys can be the right local baseline.
+[Hindsight](../../systems/hindsight/) runs semantic, BM25, graph, and temporal arms, caps each arm, uses reciprocal-rank fusion for recall, and switches to interleaving when dedup needs semantic rank one to survive. [Graphiti](../../systems/graphiti/) searches edges, nodes, episodes, and communities through BM25, cosine, and BFS with configurable fusion/reranking. [Basic Memory](../../systems/basic-memory/) fuses FTS5 or `tsvector` with optional semantic chunks. [MemOS](../../systems/memos/) composes vector, graph, BM25, reranker, and optional reasoning channels per cube. [Mem0](../../systems/mem0/), [MemPalace](../../systems/mempalace/), and [RainBox](../../systems/rainbox/) provide other strong variants. [Swafra](../../systems/swafra/) is a compact warning about unbounded heuristics and result-count drift. [Engram](../../systems/engram/) shows that reliable FTS and exact keys can be the right local baseline.
 
 ## Tests to require
 

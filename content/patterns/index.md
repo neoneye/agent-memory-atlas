@@ -71,6 +71,12 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Record mutations and retrieval use as events without confusing telemetry with truth.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-violet" href="./bi-temporal-fact-validity/">
+    <span>Time</span>
+    <h2>Bi-temporal fact validity</h2>
+    <p>Track when a fact was true separately from when the system learned or expired it.</p>
+    <b>Read pattern →</b>
+  </a>
 </div>
 
 ## How to use the library
@@ -85,5 +91,6 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Private and shared memory are mixed: require an [explicit write destination](./explicit-write-destination/).
 - Retrieval repeats one document: assemble [source-diverse context](./source-diverse-context/).
 - Automatic extraction loses data on failure: build [recoverable background work](./recoverable-background-work/).
+- Changing facts overwrite useful history: add [bi-temporal fact validity](./bi-temporal-fact-validity/).
 
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Add the smallest set that closes a demonstrated failure mode.

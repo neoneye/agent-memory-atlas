@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-eleven agent memory architectures, their retrieval mechanics, trust
+sixteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,14 +12,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of eleven agent memory architectures, their retrieval mechanics, trust
+of sixteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of eleven agent memory architectures, their retrieval mechanics, trust
+of sixteen agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -52,7 +52,7 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of eleven
+          <p class="document-deck">A code-grounded comparison of sixteen
 agent memory architectures, their retrieval mechanics, trust models, and
 operational tradeoffs.</p>
                   </div>
@@ -77,6 +77,7 @@ They should not be evaluated as one category.</p>
 <ul>
 <li><code>mem0</code></li>
 <li><code>langmem</code></li>
+<li><code>graphiti</code></li>
 </ul>
 <p>These optimize for easy embedding into an existing agent application.
 The application calls memory tools or SDK functions; the library handles
@@ -90,6 +91,8 @@ facts, or uses the recall output safely.</p>
 <ul>
 <li><code>letta</code></li>
 <li><code>rainbox</code></li>
+<li><code>mastra-observational-memory</code></li>
+<li><code>memos</code></li>
 </ul>
 <p>This treats memory as part of the agent runtime. Memory is not merely
 an external RAG sidecar; it is compiled into or injected into
@@ -104,6 +107,7 @@ compatibility surface.</p>
 <ul>
 <li><code>honcho</code></li>
 <li><code>supermemory</code></li>
+<li><code>hindsight</code></li>
 <li>partly <code>mem0</code></li>
 </ul>
 <p>These optimize for multi-user, multi-session, product-oriented
@@ -120,6 +124,7 @@ managed-platform-only in the OSS code.</p>
 <li><code>engram</code></li>
 <li><code>mempalace</code></li>
 <li><code>llm-wiki-memory</code></li>
+<li><code>basic-memory</code></li>
 </ul>
 <p>This optimizes for a local developer workflow: durable local memory,
 MCP/tools/hooks, project scopes, exact search, vector search, conflict
@@ -132,6 +137,55 @@ vector/hybrid retrieval-oriented; <code>llm-wiki-memory</code> is
 filesystem/git-oriented, hook-heavy, federated across private and
 repository wikis, and unusually focused on capture recovery and
 operations.</p>
+<h3 id="temporal-knowledge-graph-memory">Temporal knowledge-graph
+memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>graphiti</code></li>
+</ul>
+<p>Graphiti preserves episodes as evidence, resolves entities and
+relationships, and tracks both transaction time and real-world validity
+time. Facts can be invalidated by closing a temporal interval without
+erasing history.</p>
+<p>Tradeoff: temporal graphs answer changing-world questions that flat
+fact stores cannot, but LLM entity resolution and edge invalidation can
+make structural mistakes with a wide blast radius.</p>
+<h3 id="observation-reflection-context-memory">Observation-reflection
+context memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>mastra-observational-memory</code></li>
+</ul>
+<p>Mastra Observational Memory compresses older messages into dated
+observations, then reflects growing observations into a smaller context.
+Buffered results can be computed before a hard threshold and activated
+without blocking.</p>
+<p>Tradeoff: this is excellent context-window management, not a general
+evidence or truth system. Its correctness depends on a complex
+threshold, marker, storage, and concurrency state machine.</p>
+<h3 id="memory-operating-substrate">Memory operating substrate</h3>
+<p>Repo:</p>
+<ul>
+<li><code>memos</code></li>
+</ul>
+<p>MemOS packages textual, preference, skill, activation/KV-cache, and
+parametric/LoRA memory into mountable memory cubes managed by a
+user-aware runtime and schedulers.</p>
+<p>Tradeoff: the abstraction is unusually broad, but configured modules
+have different search, durability, deletion, compatibility, and maturity
+guarantees.</p>
+<h3 id="human-editable-canonical-memory">Human-editable canonical
+memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>basic-memory</code></li>
+</ul>
+<p>Basic Memory makes Markdown notes authoritative while
+SQLite/PostgreSQL entities, observations, relations, FTS rows, and
+semantic chunks remain rebuildable projections.</p>
+<p>Tradeoff: direct human ownership and portability are strong, but
+bidirectional file/database synchronization is a substantial consistency
+problem rather than “just Markdown”.</p>
 <h3 id="compact-local-graph-rag-memory">Compact local graph-RAG
 memory</h3>
 <p>Repo:</p>
@@ -415,6 +469,92 @@ budgeted recall</td>
 <td>Best correctness model in set</td>
 <td>Complex; may be heavy for product MVP</td>
 </tr>
+<tr>
+<td><code>hindsight</code></td>
+<td>Source chunk, world/experience fact, observation, reflection</td>
+<td>PostgreSQL/pgvector or Oracle</td>
+<td>Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder
+rerank</td>
+<td>Screen, chunk, extract, embed, link, consolidate</td>
+<td>Replace/append source; observation create/update/history; exact
+bank/document operations</td>
+<td>Memory bank, tags, schemas/tenants</td>
+<td>REST, MCP, generated SDKs, framework integrations</td>
+<td>Queued consolidation and maintenance with retries</td>
+<td>Source IDs, proof counts, audit/LLM traces; no explicit truth
+state</td>
+<td>Complete service pipeline; task-specific fusion; temporal
+recall</td>
+<td>LLM facts/observations can harden errors; operational
+complexity</td>
+</tr>
+<tr>
+<td><code>graphiti</code></td>
+<td>Episode, entity, temporal relationship edge, community/saga</td>
+<td>Neo4j, FalkorDB, Kuzu, Neptune</td>
+<td>BM25 + cosine + BFS across edges/nodes/episodes/communities;
+RRF/MMR/cross-encoder</td>
+<td>Episode ingestion, entity/edge extraction, resolution, temporal
+invalidation</td>
+<td>Close <code>valid_at</code> intervals, expire edges, remove
+episodes</td>
+<td><code>group_id</code>, entity/edge types</td>
+<td>Python library, MCP, server</td>
+<td>Ingestion maintenance; saga summaries</td>
+<td>Source episode UUIDs and bi-temporal history; no verified state</td>
+<td>Preserves changing facts without erasing history</td>
+<td>Entity merge/invalidation mistakes reshape the graph</td>
+</tr>
+<tr>
+<td><code>mastra-observational-memory</code></td>
+<td>Raw message, dated observation group, reflected observation
+context</td>
+<td>Mastra <code>MemoryStorage</code> adapters</td>
+<td>Sequential active observations + recent raw tail; optional
+observation-vector retrieval</td>
+<td>Processor observes at token thresholds; reflector compacts
+observations</td>
+<td>Range replacement, buffered activation, clear/clone records</td>
+<td>Thread or resource</td>
+<td>Deep Mastra input/output processor integration</td>
+<td>Early async observation/reflection buffers with activation</td>
+<td>Exact covered ranges and markers; summary has no truth state</td>
+<td>Non-blocking context compaction for long sessions</td>
+<td>Distributed locking and progressive summary drift</td>
+</tr>
+<tr>
+<td><code>memos</code></td>
+<td>Textual item, graph tier, preference/skill, KV cache, LoRA</td>
+<td>Configurable vector/graph stores, dumps, cache/model artifacts</td>
+<td>Direct vector or graph + BM25 + rerank + reasoner; optional
+auxiliary memories</td>
+<td>Reader extraction into a memory cube; scheduler transformations</td>
+<td>Module-specific update/delete/soft-delete/dump semantics</td>
+<td>User plus registered memory cube</td>
+<td>MOS chat/runtime, APIs, CLI</td>
+<td>Scheduler and activation-memory refresh</td>
+<td>Source metadata varies by module; no uniform trust state</td>
+<td>Treats memory as heterogeneous mountable resources</td>
+<td>Umbrella API hides uneven guarantees and maturity</td>
+</tr>
+<tr>
+<td><code>basic-memory</code></td>
+<td>Canonical Markdown note; indexed entity, observation, relation</td>
+<td>Filesystem source + SQLite/PostgreSQL projection</td>
+<td>FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph
+context</td>
+<td>MCP/API writes accepted Markdown; file watcher reconciles human
+edits</td>
+<td>Distinct create/replace/edit/move/delete with stable ID and
+reindex</td>
+<td>Project, workspace, tenant, local/cloud route</td>
+<td>MCP tools, typed clients, API, CLI</td>
+<td>Watcher, startup reconciliation, indexing workflows</td>
+<td>Human-visible source/checksums; no candidate/verified state</td>
+<td>Inspectable portable memory with rebuildable indexes</td>
+<td>Bidirectional sync complexity; agent can write unsupported
+claims</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
@@ -422,33 +562,32 @@ Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
 <p><code>mem0</code>, <code>letta</code>, <code>langmem</code>, and
 <code>supermemory</code> expose direct tool/SDK surfaces for adding
-memory. <code>rainbox</code> captures through explicit memory commands,
+memory. <code>hindsight</code> retains documents/chunks before
+extracting facts. <code>graphiti</code> stores episodes before deriving
+entities and temporal relationships.
+<code>mastra-observational-memory</code> persists messages before
+compressing covered ranges. <code>memos</code> routes items into
+configured memory cubes. <code>basic-memory</code> accepts Markdown
+writes from MCP/API or human file edits and reconciles indexes.
+<code>rainbox</code> captures through explicit memory commands,
 assistant memory actions, and review UI mutations. <code>engram</code>
 captures via MCP tools and can also store prompt/session metadata.
 <code>mempalace</code> captures by mining files/conversations and by MCP
 drawer writes, preserving verbatim text. <code>swafra</code> captures
-titled text via one MCP tool, then stores Leiden, exchange, facts-index,
-or paragraph chunks in local JSON. <code>llm-wiki-memory</code> combines
-explicit MCP/CLI writes with Claude Code transcript and plan hooks;
-failed transcript extraction is recoverable through stashes and fenced
-raw fallbacks. <code>honcho</code> captures messages as the primary
-event stream, then derives observations. <code>verel</code> captures
-conversations and percepts but routes them through a trust gate before
-treating them as verified.</p>
+titled text via one MCP tool, then stores chunks in local JSON.
+<code>llm-wiki-memory</code> combines explicit MCP/CLI writes with
+lifecycle hooks. <code>honcho</code> captures messages as the primary
+event stream, then derives observations. <code>verel</code> routes
+captured percepts through a trust gate.</p>
 <p>The important split is whether the captured item is itself memory or
-evidence for memory. Honcho, Verel, MemPalace, Swafra, and RainBox are
-closer to evidence-aware designs, but with different answers: Honcho
-derives representations, Verel promotes trusted claims, MemPalace keeps
-raw drawers as the primary store, Swafra keeps raw chunks alongside
-heuristic navigation metadata, and RainBox stores compact claims with
-separate evidence rows. Swafra's provenance is much thinner than the
-others: normally just source ID, caller title, and chunk index.
-<code>llm-wiki-memory</code> temporarily preserves transcript/daily
-evidence and full documents, but its promoted atom is still the active
-memory and does not carry a normalized evidence relation. Mem0 and
-Supermemory's public surfaces are closer to "add memory" designs. Engram
-is in between: <code>mem_save</code> stores observations but may return
-conflict candidates requiring judgment.</p>
+evidence for memory. Honcho, Verel, MemPalace, Graphiti, Hindsight,
+Basic Memory, Mastra, Swafra, and RainBox are evidence-aware in
+different ways: Graphiti keeps episodes behind edges, Hindsight links
+observations to source facts, Basic Memory keeps canonical notes behind
+projections, and Mastra records exact message ranges behind summaries.
+These designs still differ sharply in trust: provenance supports
+correction, but only Verel and RainBox model rejection/promotion
+explicitly.</p>
 <h3 id="extraction">Extraction</h3>
 <p><code>mem0</code> has the clearest open implementation of LLM
 extraction: retrieve nearby existing memories, ask the model for
@@ -485,10 +624,23 @@ asks an LLM for create/update/skip, except same-error-pattern lessons
 are force-updated deterministically. This path is recoverable and well
 tested, but promoted atoms become active without a verification
 gate.</p>
+<p><code>hindsight</code> extracts world/experience facts, entities,
+temporal spans, and causal links from durable source material.
+<code>graphiti</code> extracts entities and typed relationships from an
+episode, then resolves them against existing graph identity.
+<code>memos</code> ranges from simple key/value/tag extraction to
+tree-memory readers. <code>basic-memory</code> usually avoids LLM
+extraction: observations and relations are explicit Markdown syntax.
+<code>mastra-observational-memory</code> extracts chronological
+summaries rather than atomic facts.</p>
 <h3 id="consolidation">Consolidation</h3>
-<p><code>honcho</code> and <code>verel</code> have the strongest visible
-consolidation stories. Honcho derives working representations from event
-streams. Verel clusters failures, induces candidate design rules and
+<p><code>honcho</code>, <code>hindsight</code>,
+<code>mastra-observational-memory</code>, and <code>verel</code> have
+the strongest visible consolidation stories. Honcho derives working
+representations from event streams. Hindsight creates/updates
+observations with source IDs and proof counts. Mastra reflects growing
+observation logs and can prepare the result asynchronously before
+activation. Verel clusters failures, induces candidate design rules and
 schemas, then requires promotion gates for verification.</p>
 <p><code>mem0</code> V3 is intentionally more append-oriented;
 consolidation is mostly dedupe and entity linking in the OSS path.
@@ -519,83 +671,62 @@ count duplicates, surface conflicts.</p>
 <li>reranking or rank fusion when quality matters.</li>
 </ul>
 <p><code>mem0</code> combines semantic, keyword, entity boost, and
-optional rerank. <code>honcho</code> blends semantic, recent, and
-most-derived observations. <code>engram</code> uses FTS5 and topic keys,
-favoring local reliability over embedding complexity.
-<code>mempalace</code> uses direct drawer vector search, BM25 rerank,
-metadata filters, closet boosts, neighbor expansion, and SQLite/FTS
-fallback. <code>swafra</code> rebuilds BM25 and full-scans
-vectors/character n-grams, adds entity/date/preference bonuses and
-recency decay, graph-walks from top hits, then keeps the best chunk per
-source title. Its fusion is compact but uncalibrated, its heuristic
-channel is unbounded, and <code>k</code> becomes a lower bound when a
-percentage-of-sources target is larger. <code>llm-wiki-memory</code>
-prefilters Markdown frontmatter, scores local embeddings or a
-lexical-hash fallback, handles long notes by best chunk, reranks near
-ties by priority, and boosts comparably relevant repository-local
-results across federated scopes. It lacks an independently fused
-BM25/FTS path. <code>rainbox</code> hard-filters by
-lifecycle/sensitivity/scope, then blends pgvector similarity, Postgres
-full-text rank, and subject/object entity boosts; both chat
-(<code>build_chat_memory_block</code>) and the assistant's
-<code>memory_query</code> action use this hybrid path.
+optional rerank. <code>hindsight</code> runs semantic, BM25, graph, and
+temporal arms, then uses task-specific fusion and cross-encoder
+reranking. <code>graphiti</code> searches edges, nodes, episodes, and
+communities with BM25, cosine, and BFS plus configurable
+RRF/MMR/cross-encoder recipes. <code>basic-memory</code> fuses
+FTS5/tsvector with optional semantic chunks. <code>memos</code> can run
+vector or graph/BM25/reranker/reasoner pipelines depending on the
+mounted cube. <code>honcho</code> blends semantic, recent, and
+most-derived observations. <code>engram</code> uses FTS5 and topic keys.
+<code>mempalace</code> combines direct drawer vector search, BM25,
+metadata, closet boosts, neighbor expansion, and fallback paths.
+<code>swafra</code> uses compact but uncalibrated hybrid/graph fusion.
+<code>llm-wiki-memory</code> combines frontmatter prefilters, embeddings
+or lexical hashes, priority, and locality. <code>rainbox</code>
+hard-filters then blends vector, full-text, and entity signals.
 <code>verel</code> adds trust and confidence into ranking.
-<code>letta</code> distinguishes archival search from conversation
-search and core prompt memory. <code>langmem</code> and
-<code>supermemory</code> mostly delegate retrieval to backend services
-through a clean API.</p>
+<code>mastra-observational-memory</code> is the deliberate exception:
+its primary path is sequential observations plus a recent raw tail, with
+semantic observation retrieval optional.</p>
 <h3 id="context-injection">Context Injection</h3>
-<p><code>letta</code> has the deepest runtime prompt integration: core
-memory blocks compile into the agent prompt, and updates trigger prompt
-rebuilds. <code>rainbox</code> injects an operator profile block,
-curated seed facts, and hybrid memory context into chat/assistant
-prompts, and records what was injected. <code>verel</code> has the
-safest visible recall renderer: recalled memory is token-budgeted and
-fenced as untrusted data. <code>mempalace</code> has a four-layer stack:
-identity, essential story, on-demand recall, and deep search.
-<code>swafra</code> exposes <code>get_context</code>, a search-plus-walk
-composition, but does not format, fence, or token-budget the returned
-chunks; client instructions ask the model to call it at session start.
-<code>llm-wiki-memory</code> exposes excerpted or frontmatter-only MCP
-recall and automatically injects work context, plan progress, recent
-activity, and health at Claude Code session start; raw fallbacks and
-plans are fenced, but ordinary atomic bodies are not universally
-wrapped. <code>supermemory</code> has a product-style profile/context
-endpoint that emits static/dynamic profile text and search results.
-<code>engram</code> has MCP context tools. <code>honcho</code> exposes
-working representations. <code>mem0</code> returns search results and
-leaves context assembly mostly to the application.</p>
+<p><code>letta</code> and <code>mastra-observational-memory</code> have
+the deepest runtime prompt integration. Mastra removes observed raw
+messages, injects active observations as system context, retains a
+recent tail, and adds a continuation reminder. <code>rainbox</code>
+injects an operator profile block and hybrid memory context and records
+what was injected. <code>verel</code> has the safest visible recall
+renderer: recalled memory is token-budgeted and fenced as untrusted
+data. <code>mempalace</code> has a four-layer stack.
+<code>basic-memory</code> builds graph context through MCP while leaving
+final prompt placement to the client. <code>graphiti</code>,
+<code>hindsight</code>, and <code>memos</code> return structured
+recall/context to integrations. <code>swafra</code> exposes unbounded
+<code>get_context</code>; <code>llm-wiki-memory</code> injects session
+work context; <code>supermemory</code> emits profile text;
+<code>engram</code> has MCP context tools; <code>honcho</code> exposes
+working representations.</p>
 <h3 id="correction">Correction</h3>
 <p>This is where systems diverge sharply.</p>
-<p><code>verel</code> and <code>rainbox</code> now have the strongest
-visible correction semantics in this set. <code>verel</code> has
-explicit trust states, rejected tombstones, and verified/rejected
-effects on recall. <code>rainbox</code> has governed atomic correction
-(<code>correct_belief</code>): old claim superseded and tombstoned in
-one transaction, replacement keys derived from new text via
-<code>record_belief</code>, conflict-refused if the replacement would
-create a second active rival. Rejected values are tombstoned via
-<code>MemoryRejectedValue</code>, preventing silent re-entry via model
-writes; the <code>/memory</code> UI surfaces conflict candidates (4
-resolution options) and tombstone hits. <code>engram</code> has conflict
-candidates and judgment tools. <code>mempalace</code> has storage
-correction tools: delete/update drawer, delete by source, dedup, repair,
-KG invalidation, and conservative fact-check primitives; it does not yet
-have Verel-style epistemic states for every memory. <code>swafra</code>
-has no update or conflict API; a repeated add only replaces data when
-title plus the first 100 content characters produce the same source ID,
-and the same-source supersession code is unreachable in the current call
-order. <code>llm-wiki-memory</code> supports exact upsert, relocation,
-archive/re-enable, superseding replacement, and consolidation, but it
-has no contradiction record or rejected-value tombstone and can keep
-incompatible active leaves. <code>letta</code> supports exact replace
-and patch-style core memory edits. <code>mem0</code> has explicit
-update/delete APIs, but the default additive path avoids rewriting
-existing memories. <code>honcho</code> has representation reconciliation
-concepts. <code>supermemory</code> schemas include versions and
-relations, but the producer logic is not visible. <code>langmem</code>
-exposes update/delete tools and leaves correctness to the
-application.</p>
+<p><code>verel</code> and <code>rainbox</code> have the strongest
+visible epistemic correction semantics in this set. <code>verel</code>
+has explicit trust states and rejected tombstones. <code>rainbox</code>
+has governed atomic correction, conflict detection, and tombstones that
+prevent model-write laundering. <code>engram</code> has conflict
+candidates and judgment tools. <code>mempalace</code>,
+<code>llm-wiki-memory</code>, <code>letta</code>, <code>mem0</code>,
+<code>honcho</code>, <code>supermemory</code>, and <code>langmem</code>
+expose increasingly operational forms of update/supersession without the
+same trust model.</p>
+<p>Graphiti closes a fact's validity interval and retains history, which
+is the strongest temporal correction model here, but it does not mark
+claims verified/rejected. Hindsight rewrites or merges observations
+while retaining source/history fields. Basic Memory makes correction a
+human-readable file edit followed by transactional reindexing. Mastra
+replaces only the observation range covered by a reflection. MemOS
+correction varies by module and therefore lacks one consistent semantic
+contract.</p>
 <h3 id="forgetting">Forgetting</h3>
 <p>Visible deletion varies from hard API deletion to lifecycle
 state:</p>
@@ -626,28 +757,34 @@ path.</li>
 fallback delete is powerful but risky.</li>
 <li><code>verel</code>: rejected tombstones, TTL/volatile/stale pruning,
 and protection for verified/rejected/pinned records.</li>
+<li><code>hindsight</code>: bank/document/memory operations plus
+cascading schema relations; derived observations must remain consistent
+with source changes.</li>
+<li><code>graphiti</code>: episode removal and edge invalidation
+preserve temporal history and source support.</li>
+<li><code>mastra-observational-memory</code>: clear/clone observational
+records and covered-range replacement.</li>
+<li><code>memos</code>: module-specific hard/soft deletion across graph,
+vector, cache, dump, and model artifacts.</li>
+<li><code>basic-memory</code>: canonical note deletion followed by
+entity, graph, full-text, semantic, and materialization cleanup.</li>
 </ul>
 <p>Semantic forgetting is an antipattern unless there is explicit user
 review or exact ID targeting.</p>
 <h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
 Cross-Agent Persistence</h3>
 <p><code>honcho</code> has the richest multi-actor model: workspace,
-peer, session, collections, and derived representations.
-<code>supermemory</code> has org/user/space/container-tag schemas.
-<code>mem0</code> has simple <code>user_id</code>,
-<code>agent_id</code>, and <code>run_id</code> scopes.
-<code>rainbox</code> uses global/agent/room/project scopes plus
-sensitivity labels. <code>engram</code> uses project/session/scope/topic
-key, which is appropriate for coding agents. <code>mempalace</code> uses
-palace/wing/room/source/parent-drawer scopes and backend namespaces.
-<code>llm-wiki-memory</code> layers a private brain with nested
-repository-owned wikis, stamps deterministic project identity, and
-requires every write to name a target. <code>verel</code> uses a scope
-lattice. <code>letta</code> binds memory to agents and blocks.
-<code>langmem</code> uses namespace templates and inherits whatever
-sharing semantics the store implements. <code>swafra</code> is the
-outlier: it has one global local corpus with source IDs/titles but no
-user, agent, project, session, or tenant boundary.</p>
+peer, session, collections, and derived representations. Hindsight
+isolates memory banks and database schemas. Graphiti uses
+<code>group_id</code>. Mastra scopes observations to a thread or
+resource. MemOS registers cubes to users. Basic Memory uses
+project/workspace/tenant boundaries with per-project local/cloud
+routing. <code>supermemory</code>, <code>mem0</code>,
+<code>rainbox</code>, <code>engram</code>, <code>mempalace</code>,
+<code>llm-wiki-memory</code>, <code>verel</code>, <code>letta</code>,
+and <code>langmem</code> each expose explicit boundaries.
+<code>swafra</code> remains the outlier with one global local
+corpus.</p>
 <h2 id="4-implementation-hotspots-by-repo">4. Implementation Hotspots by
 Repo</h2>
 <h3 id="memory-schema">Memory Schema</h3>
@@ -684,6 +821,20 @@ in <code>wiki-render.mjs</code>; layout contracts in
 <code>supermemory/packages/validation/api.ts</code>.</li>
 <li><code>verel</code>:
 <code>verel/src/verel/memory/view.py</code>.</li>
+<li><code>hindsight</code>:
+<code>hindsight-api-slim/hindsight_api/engine/memory_engine.py</code>
+and Alembic <code>memory_units</code>/document/link migrations.</li>
+<li><code>graphiti</code>: <code>graphiti_core/nodes.py</code> and
+<code>graphiti_core/edges.py</code>.</li>
+<li><code>mastra-observational-memory</code>: core
+<code>ObservationalMemoryRecord</code> plus
+<code>packages/memory/src/processors/observational-memory/types.ts</code>.</li>
+<li><code>memos</code>: <code>src/memos/memories/textual/item.py</code>,
+activation/parametric item modules, and
+<code>mem_cube/general.py</code>.</li>
+<li><code>basic-memory</code>:
+<code>src/basic_memory/models/knowledge.py</code> and
+<code>markdown/schemas.py</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -729,6 +880,19 @@ in <code>wiki-render.mjs</code>; layout contracts in
 <code>supermemory/apps/mcp/src/client.ts</code>.</li>
 <li><code>verel</code>: <code>verel/src/verel/memory/local.py</code>,
 <code>verel/src/verel/memory/remember.py</code>.</li>
+<li><code>hindsight</code>: <code>MemoryEngine.retain_async()</code> and
+<code>engine/retain/orchestrator.py</code>.</li>
+<li><code>graphiti</code>: <code>Graphiti.add_episode()</code> and
+<code>utils/maintenance/node_operations.py</code> /
+<code>edge_operations.py</code>.</li>
+<li><code>mastra-observational-memory</code>:
+<code>ObservationalMemoryProcessor</code> plus observation strategies
+and observer/reflector runners.</li>
+<li><code>memos</code>: <code>MOSCore</code>,
+<code>GeneralMemCube</code>, <code>GeneralTextMemory.add()</code>, and
+<code>TreeTextMemory.add()</code>.</li>
+<li><code>basic-memory</code>: MCP <code>write_note</code> through typed
+client/API to accepted-note services and indexing workflows.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -768,6 +932,21 @@ helper.</li>
 <li><code>verel</code>: <code>recall()</code> in <code>local.py</code>,
 <code>recall_budgeted()</code> in <code>recall.py</code>, rank logic in
 <code>view.py</code>.</li>
+<li><code>hindsight</code>: <code>engine/search/retrieval.py</code>,
+<code>fusion.py</code>, <code>link_expansion_retrieval.py</code>, and
+<code>reranking.py</code>.</li>
+<li><code>graphiti</code>: <code>graphiti_core/search/search.py</code>
+and <code>search_config_recipes.py</code>.</li>
+<li><code>mastra-observational-memory</code>:
+<code>Memory.getContext()</code>, observation-context builders, and
+optional observation indexing in
+<code>packages/memory/src/index.ts</code>.</li>
+<li><code>memos</code>: <code>TreeTextMemory.search()</code>,
+<code>memories/textual/searcher/</code>, and
+<code>get_relevant_subgraph()</code>.</li>
+<li><code>basic-memory</code>: <code>services/search_service.py</code>
+and backend repositories inheriting
+<code>search_repository_base.py</code>.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -798,6 +977,18 @@ search/walk composition in <code>swafra/swafra/engine.py</code>.</li>
 <code>supermemory/packages/tools/src/shared/context.ts</code>.</li>
 <li><code>verel</code>:
 <code>verel/src/verel/memory/recall.py</code>.</li>
+<li><code>hindsight</code>: <code>MemoryEngine.recall_async()</code> and
+<code>reflect_async()</code> with
+<code>engine/search/think_utils.py</code>.</li>
+<li><code>graphiti</code>: application-owned assembly from structured
+<code>SearchResults</code>.</li>
+<li><code>mastra-observational-memory</code>:
+<code>Memory.getContext()</code> and <code>processor.ts</code>
+system-message injection.</li>
+<li><code>memos</code>: <code>MOS.chat()</code> and context helpers in
+<code>mem_chat/</code>.</li>
+<li><code>basic-memory</code>: <code>mcp/tools/build_context.py</code>
+and graph/context response schemas.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -829,6 +1020,17 @@ primarily worker-centric in inspected paths.</li>
 and MCP/client visible.</li>
 <li><code>verel</code>: consolidation, promotion, replication
 modules.</li>
+<li><code>hindsight</code>: queued consolidation and maintenance workers
+with per-bank retries.</li>
+<li><code>graphiti</code>: ingestion maintenance and optional saga
+summarization; no separate mandatory queue.</li>
+<li><code>mastra-observational-memory</code>: early async
+observation/reflection buffers plus idle/provider-change
+activation.</li>
+<li><code>memos</code>: <code>mem_scheduler/</code> and periodic
+activation-memory refresh.</li>
+<li><code>basic-memory</code>: file watcher, startup reconciliation, and
+portable indexing workflows.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -860,6 +1062,15 @@ core tool executor.</li>
 <code>supermemory/packages/ai-sdk/src/tools.ts</code>.</li>
 <li><code>verel</code>: <code>verel/src/verel/mcp_server.py</code>,
 hosted/replicated adapters.</li>
+<li><code>hindsight</code>: FastAPI REST, MCP, generated SDK clients,
+CLI, and framework integrations.</li>
+<li><code>graphiti</code>: Python library, <code>mcp_server/</code>, and
+<code>server/</code>.</li>
+<li><code>mastra-observational-memory</code>: Mastra
+<code>Memory</code>, agent processors, and direct context APIs.</li>
+<li><code>memos</code>: MOS runtime/chat, API, and CLI layers.</li>
+<li><code>basic-memory</code>: MCP tools, typed API clients, FastAPI,
+CLI, and per-project local/cloud routing.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <ul>
@@ -893,6 +1104,17 @@ memory graph tests; backend tests not present.</li>
 <li><code>verel</code>: strong memory-focused tests under
 <code>verel/tests/test_memory*.py</code>, plus consolidation, promotion,
 lattice, replicated, hosted, MCP tests.</li>
+<li><code>hindsight</code>: broad retain/recall/reflect, temporal,
+consolidation, migration, defense, audit, and benchmark coverage.</li>
+<li><code>graphiti</code>: graph-backend, extraction, dedupe, temporal
+invalidation, search recipe, saga, and removal tests.</li>
+<li><code>mastra-observational-memory</code>: dense threshold,
+buffering, marker, retry, resource-scope, and storage integration
+tests.</li>
+<li><code>memos</code>: unit/integration/benchmark coverage varies by
+configured cube and backend.</li>
+<li><code>basic-memory</code>: SQLite/PostgreSQL unit/integration
+coverage plus a provenance-rich standalone benchmark harness.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -901,7 +1123,7 @@ pattern library</a>. The library covers correction, provenance, trust,
 retrieval, scope, write governance, federation, context assembly,
 recoverable background work, and audit history.</p>
 <h3 id="tool-mediated-memory-writes">Tool-mediated memory writes</h3>
-<p>Repos: all eleven, in different forms.</p>
+<p>Repos: all sixteen, in different forms.</p>
 <p>The agent or application explicitly calls a memory operation. This
 works because it gives the system a narrow interface for durable state
 changes. It fails when the model forgets to call the tool, calls it with
@@ -911,7 +1133,9 @@ enforcement.</p>
 from archival memory</h3>
 <p>Repos: <code>letta</code>, <code>rainbox</code>, <code>honcho</code>,
 <code>supermemory</code>, <code>mempalace</code>,
-<code>llm-wiki-memory</code>, partly <code>mem0</code>.</p>
+<code>llm-wiki-memory</code>, <code>hindsight</code>,
+<code>mastra-observational-memory</code>, <code>memos</code>, partly
+<code>mem0</code>.</p>
 <p>Hot memory is small and prompt-ready. Archival/document memory is
 large and retrieved on demand. This works because prompt space is scarce
 and long-term stores are noisy. It fails when there is no
@@ -921,9 +1145,10 @@ memory second</h3>
 <p>Pattern guide: <a href="../patterns/evidence-before-belief/">Evidence
 before belief</a>.</p>
 <p>Repos: strongest in <code>honcho</code>, <code>verel</code>,
-<code>mempalace</code>, and <code>rainbox</code>; partly in
-<code>engram</code>, <code>swafra</code>, and
-<code>llm-wiki-memory</code>.</p>
+<code>mempalace</code>, <code>rainbox</code>, <code>graphiti</code>,
+<code>hindsight</code>, and <code>basic-memory</code>; partly in
+<code>engram</code>, <code>swafra</code>, <code>llm-wiki-memory</code>,
+and <code>mastra-observational-memory</code>.</p>
 <p>Raw messages, observations, files, drawers, or evidence rows are
 retained, and derived facts/representations/indexes are computed from
 them. This works because wrong memories can be audited and recomputed.
@@ -935,8 +1160,9 @@ background derivation makes read consistency surprising.</p>
 retrieval fusion</a>.</p>
 <p>Repos: <code>mem0</code>, <code>honcho</code>, <code>engram</code>,
 <code>mempalace</code>, <code>swafra</code>, <code>rainbox</code>,
-<code>verel</code>, <code>supermemory</code> API settings,
-<code>letta</code> across separate search modes.</p>
+<code>verel</code>, <code>hindsight</code>, <code>graphiti</code>,
+<code>basic-memory</code>, <code>memos</code>, <code>supermemory</code>
+API settings, <code>letta</code> across separate search modes.</p>
 <p>Vector search alone is not enough. Identifiers, names, exact phrases,
 dates, file paths, and project keys often need lexical search. Hybrid
 retrieval works because it handles both fuzzy semantic recall and exact
@@ -962,16 +1188,17 @@ policy.</p>
 <h3 id="mcp-as-a-universal-adapter">MCP as a universal adapter</h3>
 <p>Repos: <code>engram</code>, <code>mempalace</code>,
 <code>swafra</code>, <code>llm-wiki-memory</code>,
-<code>supermemory</code>, <code>verel</code>, and conceptually similar
-tool surfaces elsewhere.</p>
+<code>supermemory</code>, <code>verel</code>, <code>hindsight</code>,
+<code>graphiti</code>, <code>basic-memory</code>, and conceptually
+similar tool surfaces elsewhere.</p>
 <p>MCP is useful because it lets different coding agents and desktop
 tools use the same memory backend. It fails if the MCP tool descriptions
 become the only guardrail against bad writes.</p>
 <h3 id="local-sqlite-for-inspectable-memory">Local SQLite for
 inspectable memory</h3>
 <p>Repos: <code>engram</code>, <code>mempalace</code>,
-<code>verel</code>; SQLite also supports history/messages in
-<code>mem0</code>.</p>
+<code>verel</code>, <code>basic-memory</code>; SQLite also supports
+history/messages in <code>mem0</code>.</p>
 <p>SQLite works well for local agent memory: durable, fast, easy to
 inspect, transaction-friendly, and good enough with FTS5. MemPalace also
 shows the complementary local pattern: SQLite metadata/KG/FTS plus a
@@ -1010,7 +1237,8 @@ stashes.</p>
 <h3 id="profiles-and-working-representations">Profiles and working
 representations</h3>
 <p>Repos: <code>honcho</code>, <code>supermemory</code>,
-<code>letta</code>.</p>
+<code>letta</code>, <code>hindsight</code>,
+<code>mastra-observational-memory</code>.</p>
 <p>A low-latency synthesized representation is often more useful than
 raw top-k memories. This works because agents need compact operating
 context. It fails when summaries drift, hide uncertainty, or cannot be
@@ -1024,6 +1252,25 @@ to review, feedback, and evals. RainBox's <code>RetrievalEvent</code>,
 loop show a practical product pattern. This fails if telemetry is
 mistaken for truth: a downvote is a review signal, not proof that a
 memory is false.</p>
+<h3 id="bi-temporal-fact-validity">Bi-temporal fact validity</h3>
+<p>Pattern guide: <a
+href="../patterns/bi-temporal-fact-validity/">Bi-temporal fact
+validity</a>.</p>
+<p>Repos: strongest in <code>graphiti</code>; supporting
+temporal/event-time ideas in <code>hindsight</code>.</p>
+<p>Record both when a fact was valid in the represented world and when
+the system learned or expired it. This preserves historical truth during
+correction and backfill. It fails when LLM-extracted dates or
+invalidation decisions are treated as certain.</p>
+<h3 id="buffered-observation-reflection">Buffered
+observation-reflection</h3>
+<p>Repos: strongest in <code>mastra-observational-memory</code>; related
+consolidation in <code>hindsight</code> and <code>honcho</code>.</p>
+<p>Prepare derived context before the hard prompt threshold, persist the
+exact source range it covers, and activate it atomically when needed.
+This removes LLM compression from the critical path. It fails without
+durable markers, range-aware replacement, recovery, and distributed
+coordination.</p>
 <h2 id="6-antipatterns-and-failure-modes">6. Antipatterns and Failure
 Modes</h2>
 <h3 id="treating-llm-extracted-facts-as-truth">Treating LLM-extracted
@@ -1165,6 +1412,18 @@ failed summarization call as a lost session.</p>
 <p>Make memory use inspectable. RainBox's debug rows, retrieval events,
 and review UI are the best reference here. Users need to know which
 memories entered a prompt and need a way to correct or reject them.</p>
+<p>Separate event time from ingestion time when facts change. Graphiti's
+bi-temporal edges preserve historical truth and backfilled events
+without destructive overwrite.</p>
+<p>Prepare compaction before the context cliff. Mastra Observational
+Memory's inactive buffers and exact coverage ranges make expensive
+observation/reflection recoverable and mostly non-blocking.</p>
+<p>Keep human-owned source canonical when that is the product promise.
+Basic Memory's Markdown/projection boundary makes memory portable and
+repairable, provided every derived index has a reconciliation path.</p>
+<p>Name the physical memory form. MemOS usefully expands memory beyond
+text, but KV cache, graph text, and LoRA memory need different
+compatibility, deletion, and evaluation guarantees.</p>
 <h2 id="8-what-i-would-build">8. What I Would Build</h2>
 <h3 id="ship-first">Ship First</h3>
 <p>Build a local-first core even if a hosted version is planned
@@ -1450,6 +1709,79 @@ targeted tests.</li>
 <li>Study when: wrong memory is costly.</li>
 <li>Do not copy wholesale when: you need a fast MVP.</li>
 </ul>
+<h3 id="hindsight"><code>hindsight</code></h3>
+<ul>
+<li>Best idea: four independent recall arms plus task-specific fusion
+over evidence-backed facts and observations.</li>
+<li>Biggest risk: LLM-extracted and consolidated claims can become
+durable without an explicit truth state.</li>
+<li>Most reusable component: retain pipeline and
+<code>engine/search/</code> fusion/reranking stack.</li>
+<li>Maturity impression: service-grade implementation with unusually
+strong operational coverage.</li>
+<li>Study when: building a hosted retain/recall/reflect service.</li>
+<li>Do not copy when: a small local store can meet the evaluated
+retrieval need.</li>
+</ul>
+<h3 id="graphiti"><code>graphiti</code></h3>
+<ul>
+<li>Best idea: bi-temporal relationship edges that close validity
+intervals without erasing history.</li>
+<li>Biggest risk: entity-resolution or invalidation mistakes reshape a
+large portion of the graph.</li>
+<li>Most reusable component: episode/evidence model plus temporal edge
+maintenance.</li>
+<li>Maturity impression: substantial graph library with multiple drivers
+and deep search configuration.</li>
+<li>Study when: facts, relationships, and their validity change over
+time.</li>
+<li>Do not copy when: memory is mostly independent notes or stable
+preferences.</li>
+</ul>
+<h3
+id="mastra-observational-memory"><code>mastra-observational-memory</code></h3>
+<ul>
+<li>Best idea: compute observation/reflection buffers early, persist
+exact coverage, and activate without blocking.</li>
+<li>Biggest risk: progressive summary drift and in-process-only
+locking.</li>
+<li>Most reusable component: marker/range-aware buffered
+activation.</li>
+<li>Maturity impression: deeply integrated and heavily tested framework
+feature.</li>
+<li>Study when: long agent conversations exceed model context.</li>
+<li>Do not copy when: exact evidence retrieval is the primary
+requirement.</li>
+</ul>
+<h3 id="memos"><code>memos</code></h3>
+<ul>
+<li>Best idea: mount textual, preference, skill, KV-cache, and
+parametric memory as one cube.</li>
+<li>Biggest risk: one abstraction hides uneven backend guarantees and
+maturity.</li>
+<li>Most reusable component: memory-cube packaging and
+textual-to-activation scheduling.</li>
+<li>Maturity impression: ambitious research/engineering substrate with
+many configurations.</li>
+<li>Study when: exploring model-native memory or deployable
+heterogeneous memory bundles.</li>
+<li>Do not copy when: a single audited text store is sufficient.</li>
+</ul>
+<h3 id="basic-memory"><code>basic-memory</code></h3>
+<ul>
+<li>Best idea: canonical human-editable Markdown with graph/search state
+treated as rebuildable projection.</li>
+<li>Biggest risk: bidirectional file/database synchronization and direct
+agent writes to canonical knowledge.</li>
+<li>Most reusable component: accepted-note transaction/reconciliation
+boundary and typed MCP client flow.</li>
+<li>Maturity impression: operationally serious local/cloud knowledge
+system with broad parity tests.</li>
+<li>Study when: people and agents must share portable project
+knowledge.</li>
+<li>Do not copy when: humans never edit memory and filesystem ownership
+adds no value.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -1566,6 +1898,13 @@ href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a></li>
 <li><a href="../systems/letta/"><code>letta</code></a></li>
 <li><a href="../systems/supermemory/"><code>supermemory</code></a></li>
 <li><a href="../systems/verel/"><code>verel</code></a></li>
+<li><a href="../systems/hindsight/"><code>hindsight</code></a></li>
+<li><a href="../systems/graphiti/"><code>graphiti</code></a></li>
+<li><a
+href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a></li>
+<li><a href="../systems/memos/"><code>memos</code></a></li>
+<li><a
+href="../systems/basic-memory/"><code>basic-memory</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -1606,6 +1945,23 @@ href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a07
 <li><a href="https://github.com/amitpatole/verel">amitpatole/verel</a>
 at <a
 href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e"><code>df80efe8207a99585a2ebce36fc6e32ba5077e2e</code></a></li>
+<li><a
+href="https://github.com/vectorize-io/hindsight">vectorize-io/hindsight</a>
+at <a
+href="https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c"><code>ed120a256d51d731085ec8aca724573a7f2f1e1c</code></a></li>
+<li><a href="https://github.com/getzep/graphiti">getzep/graphiti</a> at
+<a
+href="https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf"><code>9140123a7282d44efc077a0af09179919f3defdf</code></a></li>
+<li><a href="https://github.com/mastra-ai/mastra">mastra-ai/mastra</a>
+at <a
+href="https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333"><code>40547102f655596178346ad2f883fbde735c3333</code></a></li>
+<li><a href="https://github.com/MemTensor/MemOS">MemTensor/MemOS</a> at
+<a
+href="https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00"><code>3fd109e7cbaba291af2253f107e0a595dbf62b00</code></a></li>
+<li><a
+href="https://github.com/basicmachines-co/basic-memory">basicmachines-co/basic-memory</a>
+at <a
+href="https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b"><code>232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -1646,6 +2002,15 @@ unrelated assistant/product features were not exhaustively
 analyzed.</li>
 <li>The reports prioritize memory-management code paths over unrelated
 framework/application code.</li>
+<li>Hindsight, Graphiti, Mastra, MemOS, and Basic Memory were reviewed
+statically at the pinned revisions above; their dependency-heavy
+integration suites and published benchmarks were not rerun.</li>
+<li>Mastra analysis is intentionally limited to
+<code>packages/memory</code> and the core contracts it directly
+uses.</li>
+<li>MemOS behavior varies materially by memory cube, backend, model, and
+search configuration; the report does not imply one universal MemOS
+pipeline.</li>
 </ul>
         </article>
       </div>

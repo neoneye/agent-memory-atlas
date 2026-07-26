@@ -43,7 +43,7 @@ Scope is not a substitute for authorization. A row tagged `user_id` is unsafe if
 
 ## Seen in the atlas
 
-[Honcho](../../systems/honcho/) models workspace, peer, session, and representation boundaries. [RainBox](../../systems/rainbox/) uses global, agent, room, and project scopes with sensitivity rules. [Engram](../../systems/engram/) uses project, session, scope, and topic keys. [llm-wiki-memory](../../systems/llm-wiki-memory/) federates reads across private and repository-owned trees. [Verel](../../systems/verel/) uses a scope lattice. [Swafra](../../systems/swafra/) shows the risk of the opposite design: a source title in one global corpus is not a user or project boundary.
+[Hindsight](../../systems/hindsight/) makes the memory bank an isolation and configuration boundary. [Graphiti](../../systems/graphiti/) carries `group_id` through nodes, edges, episodes, and search. [Mastra Observational Memory](../../systems/mastra-observational-memory/) chooses thread or resource scope. [MemOS](../../systems/memos/) registers memory cubes to users. [Basic Memory](../../systems/basic-memory/) uses projects and workspaces for identity, routing, and search. [Honcho](../../systems/honcho/) models workspace, peer, session, and representation boundaries. [RainBox](../../systems/rainbox/) uses a scope lattice with sensitivity rules. [Engram](../../systems/engram/), [llm-wiki-memory](../../systems/llm-wiki-memory/), and [Verel](../../systems/verel/) reinforce the pattern. [Swafra](../../systems/swafra/) shows the opposite risk: a source title in one global corpus is not a boundary.
 
 ## Tests to require
 

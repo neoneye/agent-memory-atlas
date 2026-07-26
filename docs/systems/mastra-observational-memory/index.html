@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A framework-native memory that
+compresses messages into dated observations and reflects them into
+durable context.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mastra Observational
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A framework-native memory
+that compresses messages into dated observations and reflects them into
+durable context.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mastra Observational
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A framework-native memory
+that compresses messages into dated observations and reflects them into
+durable context.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mastra Observational Memory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Observer–reflector context</p>
+          <h1>Mastra Observational Memory</h1>
+          <p class="document-deck">A framework-native memory that
+compresses messages into dated observations and reflects them into
+durable context.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mastra-ai/mastra">
+              <span>Source</span>
+              <strong>mastra-ai/mastra</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333" title="40547102f655596178346ad2f883fbde735c3333">
+              <span>Analyzed revision</span>
+              <code>40547102f655596178346ad2f883fbde735c3333</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+          </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mastra Observational Memory is a context-compaction system integrated
+directly into an agent's input and output processor lifecycle. Instead
+of searching a large long-term fact store on every turn, it continuously
+converts old messages into dated observations, then periodically
+reflects those observations into a smaller stable context. The active
+agent sees compressed observations, a continuation hint, and recent
+unobserved messages.</p>
+<p>The promising idea is buffered activation. Observation and reflection
+can run before the hard context threshold, store their results as
+inactive buffers, and activate them instantly when needed. This moves
+expensive LLM compression off the critical path without simply
+fire-and-forgetting work.</p>
+<p>The tradeoff is complexity. This is not just a summarizer: it is a
+threshold state machine with message markers, storage capabilities,
+resource/thread scopes, in-process locks, buffering cursors, retries,
+idle/provider-change activation, and processor-step semantics. It is
+strong at keeping long conversations alive, but it is not a general
+factual memory or verification system.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three roles share the conversation:</p>
+<ul>
+<li>Actor: the main agent doing user work.</li>
+<li>Observer: converts older raw messages into chronologically anchored
+observations.</li>
+<li>Reflector: condenses a growing observation log while preserving
+useful detail.</li>
+</ul>
+<pre class="text"><code>raw messages + recent observations
+  -&gt; Observer at message-token threshold
+  -&gt; active dated observations + retained recent raw tail
+  -&gt; Reflector at observation-token threshold
+  -&gt; condensed observations
+  -&gt; inject as system context + continuation reminder</code></pre>
+<p>With asynchronous buffering enabled, an observer or reflector runs
+early. Its output records the exact message or observation range it
+covers. Activation replaces only that covered range, preserving anything
+appended afterward.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The feature lives under
+<code>packages/memory/src/processors/observational-memory/</code>:</p>
+<ul>
+<li><code>observational-memory.ts</code>: engine, configuration,
+locking, records, context construction, and primitive operations.</li>
+<li><code>processor.ts</code>: Mastra agent lifecycle adapter.</li>
+<li><code>observation-turn/</code>: turn/step abstraction for processor
+orchestration.</li>
+<li><code>observer-runner.ts</code> / <code>reflector-runner.ts</code>:
+model execution.</li>
+<li><code>observation-strategies/</code>: synchronous, async-buffered,
+and resource-scoped policies.</li>
+<li><code>buffering-coordinator.ts</code>: shared in-process buffering
+state.</li>
+<li><code>markers.ts</code> and <code>message-utils.ts</code>: durable
+operation boundaries in message streams.</li>
+<li><code>thresholds.ts</code>: token thresholds, dynamic ranges,
+activation ratio, and blocking fallback.</li>
+<li><code>extracted-values.ts</code> and
+<code>working-memory-extractor.ts</code>: extensible structured
+outputs.</li>
+</ul>
+<p><code>packages/memory/src/index.ts</code> wires the engine to
+storage, ordinary history, semantic retrieval, and working memory.
+Storage adapters must advertise
+<code>supportsObservationalMemory</code>; the feature fails clearly when
+core or storage capabilities are missing.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li>Lazy engine creation: <code>Memory._initOMEngine()</code> in
+<code>packages/memory/src/index.ts</code>.</li>
+<li>Context read: <code>Memory.getContext()</code>.</li>
+<li>Engine: <code>ObservationalMemory</code> in
+<code>observational-memory.ts</code>.</li>
+<li>Agent processor: <code>ObservationalMemoryProcessor</code> in
+<code>processor.ts</code>.</li>
+<li>Observer and reflector calls: <code>observer-runner.ts</code>,
+<code>reflector-runner.ts</code>.</li>
+<li>Threshold calculation: <code>thresholds.ts</code>.</li>
+<li>Async state: <code>BufferingCoordinator</code> in
+<code>buffering-coordinator.ts</code>.</li>
+<li>Observation activation: strategy files under
+<code>observation-strategies/</code>.</li>
+<li>Persistent operation markers: <code>markers.ts</code>.</li>
+<li>Context-range parsing: <code>message-utils.ts</code>.</li>
+<li>Retrieval indexing: <code>Memory.indexObservation()</code> and
+<code>onIndexObservations</code> wiring in <code>index.ts</code>.</li>
+<li>Working-memory side effect: <code>WorkingMemoryExtractor</code> in
+<code>working-memory-extractor.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The storage boundary uses <code>ObservationalMemoryRecord</code>,
+supplied by Mastra core storage. The record tracks active observations,
+observation/reflection buffering state, message cursors and IDs, token
+counts, buffered chunks, pending reflection, cycle IDs, model context,
+and scope identity.</p>
+<p>Raw messages remain separately persisted. Markers embedded as data
+parts record observation/reflection start, completion, failure,
+activation, token range, and configuration snapshots. This gives the
+state machine a durable narrative rather than relying only on process
+memory.</p>
+<p>Observations are text organized into dated groups. Optional retrieval
+mode additionally indexes observation groups with
+group/range/thread/resource metadata. Optional extractors can update
+thread metadata, suggest titles, or update structured/Markdown working
+memory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Observational Memory's primary “retrieval” is sequential context
+replacement:</p>
+<ul>
+<li>active observations become a system message;</li>
+<li>already observed raw messages are omitted;</li>
+<li>messages after <code>lastObservedAt</code> remain verbatim;</li>
+<li>a continuation reminder tells the actor that observations are
+compressed history;</li>
+<li>resource scope can include unobserved blocks from other
+threads.</li>
+</ul>
+<p>Optional retrieval mode indexes observation groups for semantic
+search, with <code>observed_at</code> metadata and configurable search
+behavior. This is secondary to compaction: the base system optimizes
+context continuity, not arbitrary long-term question answering.</p>
+<p>This separation is good. It avoids forcing vector recall onto every
+turn, but applications needing precise old facts should enable retrieval
+or keep an independent evidence store.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>At each processor step, new messages are persisted and token counts
+updated. When unobserved messages cross <code>messageTokens</code>, the
+observer extracts observations. Activation retains a configurable
+raw-message floor rather than deleting the entire recent history.</p>
+<p>When observations cross <code>observationTokens</code>, the reflector
+condenses them. Background observation starts at
+<code>bufferTokens</code> intervals; background reflection starts at a
+fraction of the reflection threshold. <code>blockAfter</code> can force
+a synchronous call only when buffered work failed to keep up.</p>
+<p>Idle time and model/provider changes can force activation, which
+prevents a buffer from remaining invisible indefinitely or crossing
+model-context boundaries unexpectedly. Extractor callbacks can
+atomically project observer output into working memory or metadata.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>This is the deepest framework integration among the new batch. The
+same processor participates in both input and output:</p>
+<ul>
+<li>input loads observations and unobserved history into
+<code>MessageList</code>;</li>
+<li>output seals/persists messages and advances observation/reflection
+work;</li>
+<li>shared turn state coordinates multi-step agent loops;</li>
+<li>progress data parts can be streamed;</li>
+<li>system messages are tagged <code>observational-memory</code> so they
+can be replaced cleanly.</li>
+</ul>
+<p>The feature can also be used directly through
+<code>Memory.getContext()</code> or standalone observation calls. That
+makes it usable outside the full processor workflow while preserving one
+engine.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strong reliability mechanisms:</p>
+<ul>
+<li>message-range markers make partial operations inspectable;</li>
+<li>failed/in-progress cycles are distinguishable;</li>
+<li>stale buffering flags are detected against an operation
+registry;</li>
+<li>per-scope in-process locks prevent concurrent lost updates;</li>
+<li>background buffers persist before activation;</li>
+<li>activation replaces only the range the buffer summarized;</li>
+<li>retry, abort-signal, TTL, idle, provider-change, and long-session
+behavior are tested;</li>
+<li>missing core/storage capabilities fail fast.</li>
+</ul>
+<p>The code explicitly notes that locks only protect one Node.js
+process. Distributed deployments need external locking or must accept
+eventual consistency. More fundamentally, observations and reflections
+are LLM summaries: they have source ranges but no
+candidate/verified/rejected state. Compression can omit details, import
+prompt injection, or harden a mistaken interpretation.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The package has unusually dense unit coverage for thresholds, long
+sessions, mid-loop observation, async buffering, activation TTL,
+temporal markers, failure persistence, retries, extraction, token
+counting, circular processor workflows, resource scope, attachments, and
+model/provider changes. Storage-backed integration tests exercise real
+adapters.</p>
+<p>The tests strongly support lifecycle correctness. They do not, by
+themselves, establish that observer or reflector prose preserves all
+facts. Summary quality remains model-, prompt-, language-, and
+conversation-dependent.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li>Treat compaction as a first-class agent lifecycle, not an ad hoc
+summary call.</li>
+<li>Run compression early, persist it inactive, then activate without
+blocking.</li>
+<li>Attach every summary to the exact source range it replaces.</li>
+<li>Preserve a recent raw tail after observation.</li>
+<li>Replace only the covered range so late-arriving context
+survives.</li>
+<li>Separate observer and reflector thresholds.</li>
+<li>Force activation after idle time or provider change.</li>
+<li>Fail fast when storage cannot provide the required memory
+semantics.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li>In-process locks do not protect horizontally scaled workers.</li>
+<li>Static buffering maps add lifecycle and memory-leak risk despite
+cleanup paths.</li>
+<li>Summary prose lacks explicit truth or contradiction states.</li>
+<li>Compaction can progressively amplify earlier omissions.</li>
+<li>Resource scope can mix multiple threads into one derived context if
+isolation policy is unclear.</li>
+<li>Many threshold and buffering options increase configuration
+burden.</li>
+<li>It solves context length better than durable evidence
+retrieval.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow Mastra's observation/reflection loop when the problem is
+long-running conversations that exceed model context. The most reusable
+piece is buffered activation with explicit coverage ranges—not the
+particular model prompts.</p>
+<p>Do not substitute observational summaries for an auditable long-term
+store when exact evidence, deletion, or contradiction matters. A strong
+design can pair Mastra-style active context compaction with a separate
+source-preserving retrieval system.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What distributed lock or compare-and-swap contract should storage
+adapters provide?</li>
+<li>How is summary faithfulness measured across repeated reflection
+generations?</li>
+<li>Can an operator inspect an observation and jump directly to every
+covered message?</li>
+<li>How are deleted source messages removed from active and buffered
+observations?</li>
+<li>When should resource scope merge threads, and when should it keep
+them isolated?</li>
+<li>How should untrusted tool output be fenced before it reaches
+observer prompts?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>packages/memory/src/index.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/observational-memory.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/processor.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/types.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/thresholds.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/buffering-coordinator.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/markers.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/message-utils.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/observer-runner.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/reflector-runner.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/observation-strategies/</code></li>
+<li><code>packages/memory/src/processors/observational-memory/working-memory-extractor.ts</code></li>
+<li><code>packages/memory/src/processors/observational-memory/__tests__/</code></li>
+<li><code>packages/memory/integration-tests/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

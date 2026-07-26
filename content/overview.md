@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of eleven agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of sixteen agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -16,6 +16,7 @@ Repos:
 
 - `mem0`
 - `langmem`
+- `graphiti`
 
 These optimize for easy embedding into an existing agent application. The application calls memory tools or SDK functions; the library handles extraction, storage, and retrieval.
 
@@ -27,6 +28,8 @@ Repos:
 
 - `letta`
 - `rainbox`
+- `mastra-observational-memory`
+- `memos`
 
 This treats memory as part of the agent runtime. Memory is not merely an external RAG sidecar; it is compiled into or injected into prompt/context, mutated through first-class tools/actions, searched through runtime services, and tied to agent state.
 
@@ -38,6 +41,7 @@ Repos:
 
 - `honcho`
 - `supermemory`
+- `hindsight`
 - partly `mem0`
 
 These optimize for multi-user, multi-session, product-oriented memory. They expose APIs, SDKs, MCP tools, and background processing.
@@ -51,10 +55,51 @@ Repos:
 - `engram`
 - `mempalace`
 - `llm-wiki-memory`
+- `basic-memory`
 
 This optimizes for a local developer workflow: durable local memory, MCP/tools/hooks, project scopes, exact search, vector search, conflict or dedupe handling, and sync/repair hooks.
 
 Tradeoff: local-first design is operationally simple and inspectable, but it does not solve large-scale hosted ranking, multi-tenant APIs, or rich social/user modeling. `engram` is compact and FTS-oriented; `mempalace` is broader, benchmark-heavy, and vector/hybrid retrieval-oriented; `llm-wiki-memory` is filesystem/git-oriented, hook-heavy, federated across private and repository wikis, and unusually focused on capture recovery and operations.
+
+### Temporal knowledge-graph memory
+
+Repo:
+
+- `graphiti`
+
+Graphiti preserves episodes as evidence, resolves entities and relationships, and tracks both transaction time and real-world validity time. Facts can be invalidated by closing a temporal interval without erasing history.
+
+Tradeoff: temporal graphs answer changing-world questions that flat fact stores cannot, but LLM entity resolution and edge invalidation can make structural mistakes with a wide blast radius.
+
+### Observation-reflection context memory
+
+Repo:
+
+- `mastra-observational-memory`
+
+Mastra Observational Memory compresses older messages into dated observations, then reflects growing observations into a smaller context. Buffered results can be computed before a hard threshold and activated without blocking.
+
+Tradeoff: this is excellent context-window management, not a general evidence or truth system. Its correctness depends on a complex threshold, marker, storage, and concurrency state machine.
+
+### Memory operating substrate
+
+Repo:
+
+- `memos`
+
+MemOS packages textual, preference, skill, activation/KV-cache, and parametric/LoRA memory into mountable memory cubes managed by a user-aware runtime and schedulers.
+
+Tradeoff: the abstraction is unusually broad, but configured modules have different search, durability, deletion, compatibility, and maturity guarantees.
+
+### Human-editable canonical memory
+
+Repo:
+
+- `basic-memory`
+
+Basic Memory makes Markdown notes authoritative while SQLite/PostgreSQL entities, observations, relations, FTS rows, and semantic chunks remain rebuildable projections.
+
+Tradeoff: direct human ownership and portability are strong, but bidirectional file/database synchronization is a substantial consistency problem rather than “just Markdown”.
 
 ### Compact local graph-RAG memory
 
@@ -121,14 +166,19 @@ Tradeoff: this is more complex than most systems need for an MVP, but it directl
 | `letta` | Core memory block, archival passage, message | ORM database; passages with embeddings; optional git memory | Archival search, conversation search, compiled core prompt | Agent tools mutate core/archival memory | Append/replace/patch, passage insert, block update | Agent, block labels, files/sources | Deep runtime tool executor integration | Prompt rebuilds, manager services | Block tags/metadata, message timestamps; limited truth model | Clear core/archive/recall separation | Agent can rewrite important memory without strong verification |
 | `supermemory` | Document, chunk, memory entry, space | Hosted backend; visible schemas/client only | Hosted search/profile API; SDK uses hybrid settings | API/MCP add memory/document | Version chains, relations, forget API | Space, container tags, org/user/project | SDK, AI SDK tools, MCP | Hosted processing not visible | Rich schema fields and relations; implementation not visible | Product/API surface, document-memory graph | Backend black box; semantic forget needs care |
 | `verel` | `MemoryRecord` fact/rule/schema/failure/skill | SQLite local plus backend adapters | Rank blends relevance, retrieval strength, confidence, trust; budgeted recall | Candidate extraction, attested/corroborated promotion | Correction chains, rejected tombstones, decay/prune | Scope lattice | Helpers, MCP, hosted/replicated adapters | Consolidation, promotion gate, replication | Explicit candidate/verified/rejected, provenance, confidence | Best correctness model in set | Complex; may be heavy for product MVP |
+| `hindsight` | Source chunk, world/experience fact, observation, reflection | PostgreSQL/pgvector or Oracle | Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder rerank | Screen, chunk, extract, embed, link, consolidate | Replace/append source; observation create/update/history; exact bank/document operations | Memory bank, tags, schemas/tenants | REST, MCP, generated SDKs, framework integrations | Queued consolidation and maintenance with retries | Source IDs, proof counts, audit/LLM traces; no explicit truth state | Complete service pipeline; task-specific fusion; temporal recall | LLM facts/observations can harden errors; operational complexity |
+| `graphiti` | Episode, entity, temporal relationship edge, community/saga | Neo4j, FalkorDB, Kuzu, Neptune | BM25 + cosine + BFS across edges/nodes/episodes/communities; RRF/MMR/cross-encoder | Episode ingestion, entity/edge extraction, resolution, temporal invalidation | Close `valid_at` intervals, expire edges, remove episodes | `group_id`, entity/edge types | Python library, MCP, server | Ingestion maintenance; saga summaries | Source episode UUIDs and bi-temporal history; no verified state | Preserves changing facts without erasing history | Entity merge/invalidation mistakes reshape the graph |
+| `mastra-observational-memory` | Raw message, dated observation group, reflected observation context | Mastra `MemoryStorage` adapters | Sequential active observations + recent raw tail; optional observation-vector retrieval | Processor observes at token thresholds; reflector compacts observations | Range replacement, buffered activation, clear/clone records | Thread or resource | Deep Mastra input/output processor integration | Early async observation/reflection buffers with activation | Exact covered ranges and markers; summary has no truth state | Non-blocking context compaction for long sessions | Distributed locking and progressive summary drift |
+| `memos` | Textual item, graph tier, preference/skill, KV cache, LoRA | Configurable vector/graph stores, dumps, cache/model artifacts | Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories | Reader extraction into a memory cube; scheduler transformations | Module-specific update/delete/soft-delete/dump semantics | User plus registered memory cube | MOS chat/runtime, APIs, CLI | Scheduler and activation-memory refresh | Source metadata varies by module; no uniform trust state | Treats memory as heterogeneous mountable resources | Umbrella API hides uneven guarantees and maturity |
+| `basic-memory` | Canonical Markdown note; indexed entity, observation, relation | Filesystem source + SQLite/PostgreSQL projection | FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph context | MCP/API writes accepted Markdown; file watcher reconciles human edits | Distinct create/replace/edit/move/delete with stable ID and reindex | Project, workspace, tenant, local/cloud route | MCP tools, typed clients, API, CLI | Watcher, startup reconciliation, indexing workflows | Human-visible source/checksums; no candidate/verified state | Inspectable portable memory with rebuildable indexes | Bidirectional sync complexity; agent can write unsupported claims |
 
 ## 3. End-to-End Memory Lifecycle Comparison
 
 ### Capture
 
-`mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores Leiden, exchange, facts-index, or paragraph chunks in local JSON. `llm-wiki-memory` combines explicit MCP/CLI writes with Claude Code transcript and plan hooks; failed transcript extraction is recoverable through stashes and fenced raw fallbacks. `honcho` captures messages as the primary event stream, then derives observations. `verel` captures conversations and percepts but routes them through a trust gate before treating them as verified.
+`mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `hindsight` retains documents/chunks before extracting facts. `graphiti` stores episodes before deriving entities and temporal relationships. `mastra-observational-memory` persists messages before compressing covered ranges. `memos` routes items into configured memory cubes. `basic-memory` accepts Markdown writes from MCP/API or human file edits and reconciles indexes. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores chunks in local JSON. `llm-wiki-memory` combines explicit MCP/CLI writes with lifecycle hooks. `honcho` captures messages as the primary event stream, then derives observations. `verel` routes captured percepts through a trust gate.
 
-The important split is whether the captured item is itself memory or evidence for memory. Honcho, Verel, MemPalace, Swafra, and RainBox are closer to evidence-aware designs, but with different answers: Honcho derives representations, Verel promotes trusted claims, MemPalace keeps raw drawers as the primary store, Swafra keeps raw chunks alongside heuristic navigation metadata, and RainBox stores compact claims with separate evidence rows. Swafra's provenance is much thinner than the others: normally just source ID, caller title, and chunk index. `llm-wiki-memory` temporarily preserves transcript/daily evidence and full documents, but its promoted atom is still the active memory and does not carry a normalized evidence relation. Mem0 and Supermemory's public surfaces are closer to "add memory" designs. Engram is in between: `mem_save` stores observations but may return conflict candidates requiring judgment.
+The important split is whether the captured item is itself memory or evidence for memory. Honcho, Verel, MemPalace, Graphiti, Hindsight, Basic Memory, Mastra, Swafra, and RainBox are evidence-aware in different ways: Graphiti keeps episodes behind edges, Hindsight links observations to source facts, Basic Memory keeps canonical notes behind projections, and Mastra records exact message ranges behind summaries. These designs still differ sharply in trust: provenance supports correction, but only Verel and RainBox model rejection/promotion explicitly.
 
 ### Extraction
 
@@ -150,9 +200,11 @@ The important split is whether the captured item is itself memory or evidence fo
 
 `llm-wiki-memory` automatically distills coding transcripts into schema-constrained atoms with chunked map/reduce, stores them in dated daily leaves, then compiles them into durable knowledge or lessons. Compile retrieves same-type/facet candidates and asks an LLM for create/update/skip, except same-error-pattern lessons are force-updated deterministically. This path is recoverable and well tested, but promoted atoms become active without a verification gate.
 
+`hindsight` extracts world/experience facts, entities, temporal spans, and causal links from durable source material. `graphiti` extracts entities and typed relationships from an episode, then resolves them against existing graph identity. `memos` ranges from simple key/value/tag extraction to tree-memory readers. `basic-memory` usually avoids LLM extraction: observations and relations are explicit Markdown syntax. `mastra-observational-memory` extracts chronological summaries rather than atomic facts.
+
 ### Consolidation
 
-`honcho` and `verel` have the strongest visible consolidation stories. Honcho derives working representations from event streams. Verel clusters failures, induces candidate design rules and schemas, then requires promotion gates for verification.
+`honcho`, `hindsight`, `mastra-observational-memory`, and `verel` have the strongest visible consolidation stories. Honcho derives working representations from event streams. Hindsight creates/updates observations with source IDs and proof counts. Mastra reflects growing observation logs and can prepare the result asynchronously before activation. Verel clusters failures, induces candidate design rules and schemas, then requires promotion gates for verification.
 
 `mem0` V3 is intentionally more append-oriented; consolidation is mostly dedupe and entity linking in the OSS path. `mempalace` consolidates operationally through dedup, closets, halls, tunnels, graph layers, and repair paths rather than by rewriting memories into summaries. `swafra` has no real consolidation worker or correction policy: ingestion adds cross-source edges, and a `superseded_by` loop exists, but old same-source chunks are removed before that loop can see them. `llm-wiki-memory` has a substantial opt-in, brain-only pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup, optional LLM merge, deterministic staleness flags, optional LLM refresh, orphan archive, archived-body compression, cache pruning, and index rebuild. `rainbox` consolidates through claim supersession, rejection, expiry, profile selection, and eval/feedback loops rather than through background summarization. `letta` separates core and archival memory but does not make consolidation the central visible mechanism in the inspected files. `langmem` provides reflection hooks rather than a fixed consolidation policy. `engram` keeps a pragmatic local model: update topic keys, count duplicates, surface conflicts.
 
@@ -165,17 +217,19 @@ The repeated successful pattern is hybrid retrieval:
 - metadata filters for scope;
 - reranking or rank fusion when quality matters.
 
-`mem0` combines semantic, keyword, entity boost, and optional rerank. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys, favoring local reliability over embedding complexity. `mempalace` uses direct drawer vector search, BM25 rerank, metadata filters, closet boosts, neighbor expansion, and SQLite/FTS fallback. `swafra` rebuilds BM25 and full-scans vectors/character n-grams, adds entity/date/preference bonuses and recency decay, graph-walks from top hits, then keeps the best chunk per source title. Its fusion is compact but uncalibrated, its heuristic channel is unbounded, and `k` becomes a lower bound when a percentage-of-sources target is larger. `llm-wiki-memory` prefilters Markdown frontmatter, scores local embeddings or a lexical-hash fallback, handles long notes by best chunk, reranks near ties by priority, and boosts comparably relevant repository-local results across federated scopes. It lacks an independently fused BM25/FTS path. `rainbox` hard-filters by lifecycle/sensitivity/scope, then blends pgvector similarity, Postgres full-text rank, and subject/object entity boosts; both chat (`build_chat_memory_block`) and the assistant's `memory_query` action use this hybrid path. `verel` adds trust and confidence into ranking. `letta` distinguishes archival search from conversation search and core prompt memory. `langmem` and `supermemory` mostly delegate retrieval to backend services through a clean API.
+`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
 ### Context Injection
 
-`letta` has the deepest runtime prompt integration: core memory blocks compile into the agent prompt, and updates trigger prompt rebuilds. `rainbox` injects an operator profile block, curated seed facts, and hybrid memory context into chat/assistant prompts, and records what was injected. `verel` has the safest visible recall renderer: recalled memory is token-budgeted and fenced as untrusted data. `mempalace` has a four-layer stack: identity, essential story, on-demand recall, and deep search. `swafra` exposes `get_context`, a search-plus-walk composition, but does not format, fence, or token-budget the returned chunks; client instructions ask the model to call it at session start. `llm-wiki-memory` exposes excerpted or frontmatter-only MCP recall and automatically injects work context, plan progress, recent activity, and health at Claude Code session start; raw fallbacks and plans are fenced, but ordinary atomic bodies are not universally wrapped. `supermemory` has a product-style profile/context endpoint that emits static/dynamic profile text and search results. `engram` has MCP context tools. `honcho` exposes working representations. `mem0` returns search results and leaves context assembly mostly to the application.
+`letta` and `mastra-observational-memory` have the deepest runtime prompt integration. Mastra removes observed raw messages, injects active observations as system context, retains a recent tail, and adds a continuation reminder. `rainbox` injects an operator profile block and hybrid memory context and records what was injected. `verel` has the safest visible recall renderer: recalled memory is token-budgeted and fenced as untrusted data. `mempalace` has a four-layer stack. `basic-memory` builds graph context through MCP while leaving final prompt placement to the client. `graphiti`, `hindsight`, and `memos` return structured recall/context to integrations. `swafra` exposes unbounded `get_context`; `llm-wiki-memory` injects session work context; `supermemory` emits profile text; `engram` has MCP context tools; `honcho` exposes working representations.
 
 ### Correction
 
 This is where systems diverge sharply.
 
-`verel` and `rainbox` now have the strongest visible correction semantics in this set. `verel` has explicit trust states, rejected tombstones, and verified/rejected effects on recall. `rainbox` has governed atomic correction (`correct_belief`): old claim superseded and tombstoned in one transaction, replacement keys derived from new text via `record_belief`, conflict-refused if the replacement would create a second active rival. Rejected values are tombstoned via `MemoryRejectedValue`, preventing silent re-entry via model writes; the `/memory` UI surfaces conflict candidates (4 resolution options) and tombstone hits. `engram` has conflict candidates and judgment tools. `mempalace` has storage correction tools: delete/update drawer, delete by source, dedup, repair, KG invalidation, and conservative fact-check primitives; it does not yet have Verel-style epistemic states for every memory. `swafra` has no update or conflict API; a repeated add only replaces data when title plus the first 100 content characters produce the same source ID, and the same-source supersession code is unreachable in the current call order. `llm-wiki-memory` supports exact upsert, relocation, archive/re-enable, superseding replacement, and consolidation, but it has no contradiction record or rejected-value tombstone and can keep incompatible active leaves. `letta` supports exact replace and patch-style core memory edits. `mem0` has explicit update/delete APIs, but the default additive path avoids rewriting existing memories. `honcho` has representation reconciliation concepts. `supermemory` schemas include versions and relations, but the producer logic is not visible. `langmem` exposes update/delete tools and leaves correctness to the application.
+`verel` and `rainbox` have the strongest visible epistemic correction semantics in this set. `verel` has explicit trust states and rejected tombstones. `rainbox` has governed atomic correction, conflict detection, and tombstones that prevent model-write laundering. `engram` has conflict candidates and judgment tools. `mempalace`, `llm-wiki-memory`, `letta`, `mem0`, `honcho`, `supermemory`, and `langmem` expose increasingly operational forms of update/supersession without the same trust model.
+
+Graphiti closes a fact's validity interval and retains history, which is the strongest temporal correction model here, but it does not mark claims verified/rejected. Hindsight rewrites or merges observations while retaining source/history fields. Basic Memory makes correction a human-readable file edit followed by transactional reindexing. Mastra replaces only the observation range covered by a reflection. MemOS correction varies by module and therefore lacks one consistent semantic contract.
 
 ### Forgetting
 
@@ -192,12 +246,17 @@ Visible deletion varies from hard API deletion to lifecycle state:
 - `letta`: block/file/passage update paths, archival insert/search visible; deletion depends on manager APIs outside the key path.
 - `supermemory`: forget API in MCP/client; semantic fallback delete is powerful but risky.
 - `verel`: rejected tombstones, TTL/volatile/stale pruning, and protection for verified/rejected/pinned records.
+- `hindsight`: bank/document/memory operations plus cascading schema relations; derived observations must remain consistent with source changes.
+- `graphiti`: episode removal and edge invalidation preserve temporal history and source support.
+- `mastra-observational-memory`: clear/clone observational records and covered-range replacement.
+- `memos`: module-specific hard/soft deletion across graph, vector, cache, dump, and model artifacts.
+- `basic-memory`: canonical note deletion followed by entity, graph, full-text, semantic, and materialization cleanup.
 
 Semantic forgetting is an antipattern unless there is explicit user review or exact ID targeting.
 
 ### Cross-Session and Cross-Agent Persistence
 
-`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. `supermemory` has org/user/space/container-tag schemas. `mem0` has simple `user_id`, `agent_id`, and `run_id` scopes. `rainbox` uses global/agent/room/project scopes plus sensitivity labels. `engram` uses project/session/scope/topic key, which is appropriate for coding agents. `mempalace` uses palace/wing/room/source/parent-drawer scopes and backend namespaces. `llm-wiki-memory` layers a private brain with nested repository-owned wikis, stamps deterministic project identity, and requires every write to name a target. `verel` uses a scope lattice. `letta` binds memory to agents and blocks. `langmem` uses namespace templates and inherits whatever sharing semantics the store implements. `swafra` is the outlier: it has one global local corpus with source IDs/titles but no user, agent, project, session, or tenant boundary.
+`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. `swafra` remains the outlier with one global local corpus.
 
 ## 4. Implementation Hotspots by Repo
 
@@ -214,6 +273,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: `letta/letta/schemas/memory.py`, `letta/letta/orm/block.py`, `letta/letta/orm/passage.py`.
 - `supermemory`: `supermemory/packages/validation/schemas.ts`, `supermemory/packages/validation/api.ts`.
 - `verel`: `verel/src/verel/memory/view.py`.
+- `hindsight`: `hindsight-api-slim/hindsight_api/engine/memory_engine.py` and Alembic `memory_units`/document/link migrations.
+- `graphiti`: `graphiti_core/nodes.py` and `graphiti_core/edges.py`.
+- `mastra-observational-memory`: core `ObservationalMemoryRecord` plus `packages/memory/src/processors/observational-memory/types.ts`.
+- `memos`: `src/memos/memories/textual/item.py`, activation/parametric item modules, and `mem_cube/general.py`.
+- `basic-memory`: `src/basic_memory/models/knowledge.py` and `markdown/schemas.py`.
 
 ### Add/Write Path
 
@@ -228,6 +292,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: `letta/letta/services/tool_executor/core_tool_executor.py`; `letta/letta/services/block_manager.py`; `letta/letta/services/passage_manager.py`.
 - `supermemory`: `supermemory/packages/ai-sdk/src/tools.ts`, `supermemory/apps/mcp/src/server.ts`, `supermemory/apps/mcp/src/client.ts`.
 - `verel`: `verel/src/verel/memory/local.py`, `verel/src/verel/memory/remember.py`.
+- `hindsight`: `MemoryEngine.retain_async()` and `engine/retain/orchestrator.py`.
+- `graphiti`: `Graphiti.add_episode()` and `utils/maintenance/node_operations.py` / `edge_operations.py`.
+- `mastra-observational-memory`: `ObservationalMemoryProcessor` plus observation strategies and observer/reflector runners.
+- `memos`: `MOSCore`, `GeneralMemCube`, `GeneralTextMemory.add()`, and `TreeTextMemory.add()`.
+- `basic-memory`: MCP `write_note` through typed client/API to accepted-note services and indexing workflows.
 
 ### Search/Retrieve Path
 
@@ -242,6 +311,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: `archival_memory_search()`, `conversation_search()`, `message_manager.search_messages_async`.
 - `supermemory`: `client.search.execute`, `client.search.memories`, `/v4/profile` context helper.
 - `verel`: `recall()` in `local.py`, `recall_budgeted()` in `recall.py`, rank logic in `view.py`.
+- `hindsight`: `engine/search/retrieval.py`, `fusion.py`, `link_expansion_retrieval.py`, and `reranking.py`.
+- `graphiti`: `graphiti_core/search/search.py` and `search_config_recipes.py`.
+- `mastra-observational-memory`: `Memory.getContext()`, observation-context builders, and optional observation indexing in `packages/memory/src/index.ts`.
+- `memos`: `TreeTextMemory.search()`, `memories/textual/searcher/`, and `get_relevant_subgraph()`.
+- `basic-memory`: `services/search_service.py` and backend repositories inheriting `search_repository_base.py`.
 
 ### Context Assembly
 
@@ -256,6 +330,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: `Memory.compile()` in `letta/letta/schemas/memory.py`.
 - `supermemory`: `supermemory/packages/tools/src/shared/context.ts`.
 - `verel`: `verel/src/verel/memory/recall.py`.
+- `hindsight`: `MemoryEngine.recall_async()` and `reflect_async()` with `engine/search/think_utils.py`.
+- `graphiti`: application-owned assembly from structured `SearchResults`.
+- `mastra-observational-memory`: `Memory.getContext()` and `processor.ts` system-message injection.
+- `memos`: `MOS.chat()` and context helpers in `mem_chat/`.
+- `basic-memory`: `mcp/tools/build_context.py` and graph/context response schemas.
 
 ### Background Workers
 
@@ -270,6 +349,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: manager services and prompt rebuilds; not primarily worker-centric in inspected paths.
 - `supermemory`: hosted processing not visible; graph UI and MCP/client visible.
 - `verel`: consolidation, promotion, replication modules.
+- `hindsight`: queued consolidation and maintenance workers with per-bank retries.
+- `graphiti`: ingestion maintenance and optional saga summarization; no separate mandatory queue.
+- `mastra-observational-memory`: early async observation/reflection buffers plus idle/provider-change activation.
+- `memos`: `mem_scheduler/` and periodic activation-memory refresh.
+- `basic-memory`: file watcher, startup reconciliation, and portable indexing workflows.
 
 ### MCP/API/SDK Surfaces
 
@@ -284,6 +368,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: tool definitions in `letta/letta/functions/function_sets/base.py`, runtime in core tool executor.
 - `supermemory`: `supermemory/apps/mcp/src/server.ts`, `supermemory/packages/ai-sdk/src/tools.ts`.
 - `verel`: `verel/src/verel/mcp_server.py`, hosted/replicated adapters.
+- `hindsight`: FastAPI REST, MCP, generated SDK clients, CLI, and framework integrations.
+- `graphiti`: Python library, `mcp_server/`, and `server/`.
+- `mastra-observational-memory`: Mastra `Memory`, agent processors, and direct context APIs.
+- `memos`: MOS runtime/chat, API, and CLI layers.
+- `basic-memory`: MCP tools, typed API clients, FastAPI, CLI, and per-project local/cloud routing.
 
 ### Evals/Tests
 
@@ -298,6 +387,11 @@ Semantic forgetting is an antipattern unless there is explicit user review or ex
 - `letta`: `letta/tests/test_memory.py`, manager tests, passage/message/block tests.
 - `supermemory`: visible integration/e2e wrappers and memory graph tests; backend tests not present.
 - `verel`: strong memory-focused tests under `verel/tests/test_memory*.py`, plus consolidation, promotion, lattice, replicated, hosted, MCP tests.
+- `hindsight`: broad retain/recall/reflect, temporal, consolidation, migration, defense, audit, and benchmark coverage.
+- `graphiti`: graph-backend, extraction, dedupe, temporal invalidation, search recipe, saga, and removal tests.
+- `mastra-observational-memory`: dense threshold, buffering, marker, retry, resource-scope, and storage integration tests.
+- `memos`: unit/integration/benchmark coverage varies by configured cube and backend.
+- `basic-memory`: SQLite/PostgreSQL unit/integration coverage plus a provenance-rich standalone benchmark harness.
 
 ## 5. Design Patterns That Recur
 
@@ -305,13 +399,13 @@ These recurring moves are also documented as standalone implementation guides in
 
 ### Tool-mediated memory writes
 
-Repos: all eleven, in different forms.
+Repos: all sixteen, in different forms.
 
 The agent or application explicitly calls a memory operation. This works because it gives the system a narrow interface for durable state changes. It fails when the model forgets to call the tool, calls it with low-quality facts, or treats tool descriptions as policy enforcement.
 
 ### Separate hot memory from archival memory
 
-Repos: `letta`, `rainbox`, `honcho`, `supermemory`, `mempalace`, `llm-wiki-memory`, partly `mem0`.
+Repos: `letta`, `rainbox`, `honcho`, `supermemory`, `mempalace`, `llm-wiki-memory`, `hindsight`, `mastra-observational-memory`, `memos`, partly `mem0`.
 
 Hot memory is small and prompt-ready. Archival/document memory is large and retrieved on demand. This works because prompt space is scarce and long-term stores are noisy. It fails when there is no promotion/demotion policy between the layers.
 
@@ -319,7 +413,7 @@ Hot memory is small and prompt-ready. Archival/document memory is large and retr
 
 Pattern guide: [Evidence before belief](../patterns/evidence-before-belief/).
 
-Repos: strongest in `honcho`, `verel`, `mempalace`, and `rainbox`; partly in `engram`, `swafra`, and `llm-wiki-memory`.
+Repos: strongest in `honcho`, `verel`, `mempalace`, `rainbox`, `graphiti`, `hindsight`, and `basic-memory`; partly in `engram`, `swafra`, `llm-wiki-memory`, and `mastra-observational-memory`.
 
 Raw messages, observations, files, drawers, or evidence rows are retained, and derived facts/representations/indexes are computed from them. This works because wrong memories can be audited and recomputed. It fails if the derived layer does not preserve source IDs, if raw stores become too noisy, if evidence excerpts are too thin, or if background derivation makes read consistency surprising.
 
@@ -327,7 +421,7 @@ Raw messages, observations, files, drawers, or evidence rows are retained, and d
 
 Pattern guide: [Hybrid retrieval fusion](../patterns/hybrid-retrieval-fusion/).
 
-Repos: `mem0`, `honcho`, `engram`, `mempalace`, `swafra`, `rainbox`, `verel`, `supermemory` API settings, `letta` across separate search modes.
+Repos: `mem0`, `honcho`, `engram`, `mempalace`, `swafra`, `rainbox`, `verel`, `hindsight`, `graphiti`, `basic-memory`, `memos`, `supermemory` API settings, `letta` across separate search modes.
 
 Vector search alone is not enough. Identifiers, names, exact phrases, dates, file paths, and project keys often need lexical search. Hybrid retrieval works because it handles both fuzzy semantic recall and exact lookup. MemPalace adds a useful variant: extracted/indexed "closets" boost drawer ranking but never gate direct evidence retrieval. Swafra is a useful compact example of BM25 + vector + cheap heuristic fusion, but also a warning: ad hoc component normalization and unbounded bonuses make scores hard to interpret. Hybrid retrieval fails when rank fusion is opaque or not evaluated.
 
@@ -341,13 +435,13 @@ Good systems make memory boundaries explicit: user, agent, run, project, workspa
 
 ### MCP as a universal adapter
 
-Repos: `engram`, `mempalace`, `swafra`, `llm-wiki-memory`, `supermemory`, `verel`, and conceptually similar tool surfaces elsewhere.
+Repos: `engram`, `mempalace`, `swafra`, `llm-wiki-memory`, `supermemory`, `verel`, `hindsight`, `graphiti`, `basic-memory`, and conceptually similar tool surfaces elsewhere.
 
 MCP is useful because it lets different coding agents and desktop tools use the same memory backend. It fails if the MCP tool descriptions become the only guardrail against bad writes.
 
 ### Local SQLite for inspectable memory
 
-Repos: `engram`, `mempalace`, `verel`; SQLite also supports history/messages in `mem0`.
+Repos: `engram`, `mempalace`, `verel`, `basic-memory`; SQLite also supports history/messages in `mem0`.
 
 SQLite works well for local agent memory: durable, fast, easy to inspect, transaction-friendly, and good enough with FTS5. MemPalace also shows the complementary local pattern: SQLite metadata/KG/FTS plus a local vector store. It fails if a product needs multi-tenant scale, remote sharing, or vector-heavy retrieval without extensions/adapters.
 
@@ -371,7 +465,7 @@ Decouple transcript capture from the interactive hook, chunk long inputs, retain
 
 ### Profiles and working representations
 
-Repos: `honcho`, `supermemory`, `letta`.
+Repos: `honcho`, `supermemory`, `letta`, `hindsight`, `mastra-observational-memory`.
 
 A low-latency synthesized representation is often more useful than raw top-k memories. This works because agents need compact operating context. It fails when summaries drift, hide uncertainty, or cannot be traced back to evidence.
 
@@ -380,6 +474,20 @@ A low-latency synthesized representation is often more useful than raw top-k mem
 Repos: strongest in `rainbox`; partly in `verel`.
 
 Memory quality improves when memory use is observable and connected to review, feedback, and evals. RainBox's `RetrievalEvent`, `FeedbackEvent`, `/memory` review page, and eval loop show a practical product pattern. This fails if telemetry is mistaken for truth: a downvote is a review signal, not proof that a memory is false.
+
+### Bi-temporal fact validity
+
+Pattern guide: [Bi-temporal fact validity](../patterns/bi-temporal-fact-validity/).
+
+Repos: strongest in `graphiti`; supporting temporal/event-time ideas in `hindsight`.
+
+Record both when a fact was valid in the represented world and when the system learned or expired it. This preserves historical truth during correction and backfill. It fails when LLM-extracted dates or invalidation decisions are treated as certain.
+
+### Buffered observation-reflection
+
+Repos: strongest in `mastra-observational-memory`; related consolidation in `hindsight` and `honcho`.
+
+Prepare derived context before the hard prompt threshold, persist the exact source range it covers, and activate it atomically when needed. This removes LLM compression from the critical path. It fails without durable markers, range-aware replacement, recovery, and distributed coordination.
 
 ## 6. Antipatterns and Failure Modes
 
@@ -460,6 +568,14 @@ Record embedder identity. MemPalace's explicit model/dimension checks are a usef
 Make automatic capture recoverable. `llm-wiki-memory` preserves failed chunk inputs, raw fenced fallbacks, retry state, and provider provenance, which is a stronger failure posture than treating a failed summarization call as a lost session.
 
 Make memory use inspectable. RainBox's debug rows, retrieval events, and review UI are the best reference here. Users need to know which memories entered a prompt and need a way to correct or reject them.
+
+Separate event time from ingestion time when facts change. Graphiti's bi-temporal edges preserve historical truth and backfilled events without destructive overwrite.
+
+Prepare compaction before the context cliff. Mastra Observational Memory's inactive buffers and exact coverage ranges make expensive observation/reflection recoverable and mostly non-blocking.
+
+Keep human-owned source canonical when that is the product promise. Basic Memory's Markdown/projection boundary makes memory portable and repairable, provided every derived index has a reconciliation path.
+
+Name the physical memory form. MemOS usefully expands memory beyond text, but KV cache, graph text, and LoRA memory need different compatibility, deletion, and evaluation guarantees.
 
 ## 8. What I Would Build
 
@@ -652,6 +768,51 @@ Do not add background summarization before raw-evidence retrieval and correction
 - Study when: wrong memory is costly.
 - Do not copy wholesale when: you need a fast MVP.
 
+### `hindsight`
+
+- Best idea: four independent recall arms plus task-specific fusion over evidence-backed facts and observations.
+- Biggest risk: LLM-extracted and consolidated claims can become durable without an explicit truth state.
+- Most reusable component: retain pipeline and `engine/search/` fusion/reranking stack.
+- Maturity impression: service-grade implementation with unusually strong operational coverage.
+- Study when: building a hosted retain/recall/reflect service.
+- Do not copy when: a small local store can meet the evaluated retrieval need.
+
+### `graphiti`
+
+- Best idea: bi-temporal relationship edges that close validity intervals without erasing history.
+- Biggest risk: entity-resolution or invalidation mistakes reshape a large portion of the graph.
+- Most reusable component: episode/evidence model plus temporal edge maintenance.
+- Maturity impression: substantial graph library with multiple drivers and deep search configuration.
+- Study when: facts, relationships, and their validity change over time.
+- Do not copy when: memory is mostly independent notes or stable preferences.
+
+### `mastra-observational-memory`
+
+- Best idea: compute observation/reflection buffers early, persist exact coverage, and activate without blocking.
+- Biggest risk: progressive summary drift and in-process-only locking.
+- Most reusable component: marker/range-aware buffered activation.
+- Maturity impression: deeply integrated and heavily tested framework feature.
+- Study when: long agent conversations exceed model context.
+- Do not copy when: exact evidence retrieval is the primary requirement.
+
+### `memos`
+
+- Best idea: mount textual, preference, skill, KV-cache, and parametric memory as one cube.
+- Biggest risk: one abstraction hides uneven backend guarantees and maturity.
+- Most reusable component: memory-cube packaging and textual-to-activation scheduling.
+- Maturity impression: ambitious research/engineering substrate with many configurations.
+- Study when: exploring model-native memory or deployable heterogeneous memory bundles.
+- Do not copy when: a single audited text store is sufficient.
+
+### `basic-memory`
+
+- Best idea: canonical human-editable Markdown with graph/search state treated as rebuildable projection.
+- Biggest risk: bidirectional file/database synchronization and direct agent writes to canonical knowledge.
+- Most reusable component: accepted-note transaction/reconciliation boundary and typed MCP client flow.
+- Maturity impression: operationally serious local/cloud knowledge system with broad parity tests.
+- Study when: people and agents must share portable project knowledge.
+- Do not copy when: humans never edit memory and filesystem ownership adds no value.
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -752,6 +913,11 @@ Privacy/deletion:
 - [`letta`](../systems/letta/)
 - [`supermemory`](../systems/supermemory/)
 - [`verel`](../systems/verel/)
+- [`hindsight`](../systems/hindsight/)
+- [`graphiti`](../systems/graphiti/)
+- [`mastra-observational-memory`](../systems/mastra-observational-memory/)
+- [`memos`](../systems/memos/)
+- [`basic-memory`](../systems/basic-memory/)
 
 ### Repos Inspected
 
@@ -766,6 +932,11 @@ Privacy/deletion:
 - [letta-ai/letta](https://github.com/letta-ai/letta) at [`6d8cb7fd48938b629aad5770faa051a8d42e1e9f`](https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f)
 - [supermemoryai/supermemory](https://github.com/supermemoryai/supermemory) at [`603d0512fd40e4575e2a075938c1851a898ceeb6`](https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6)
 - [amitpatole/verel](https://github.com/amitpatole/verel) at [`df80efe8207a99585a2ebce36fc6e32ba5077e2e`](https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e)
+- [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) at [`ed120a256d51d731085ec8aca724573a7f2f1e1c`](https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c)
+- [getzep/graphiti](https://github.com/getzep/graphiti) at [`9140123a7282d44efc077a0af09179919f3defdf`](https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf)
+- [mastra-ai/mastra](https://github.com/mastra-ai/mastra) at [`40547102f655596178346ad2f883fbde735c3333`](https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333)
+- [MemTensor/MemOS](https://github.com/MemTensor/MemOS) at [`3fd109e7cbaba291af2253f107e0a595dbf62b00`](https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00)
+- [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) at [`232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b`](https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b)
 
 ### Commands Used
 
@@ -792,3 +963,6 @@ No internet sources were used for this report. The analysis is based on the chec
 - `llm-wiki-memory` was reviewed at commit `b7cc76a493573baac133969b324a874990556146`; its broad test tree and committed latency report were inspected, but the suites and benchmarks were not rerun.
 - RainBox was reviewed as an application-integrated memory subsystem; unrelated assistant/product features were not exhaustively analyzed.
 - The reports prioritize memory-management code paths over unrelated framework/application code.
+- Hindsight, Graphiti, Mastra, MemOS, and Basic Memory were reviewed statically at the pinned revisions above; their dependency-heavy integration suites and published benchmarks were not rerun.
+- Mastra analysis is intentionally limited to `packages/memory` and the core contracts it directly uses.
+- MemOS behavior varies materially by memory cube, backend, model, and search configuration; the report does not imply one universal MemOS pipeline.

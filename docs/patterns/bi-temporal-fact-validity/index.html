@@ -3,26 +3,26 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Make memory ownership and
-visibility part of identity, storage, conflict detection, and
-retrieval—not an optional metadata filter.">
+    <meta name="description" content="Track when a fact was true
+separately from when the memory system learned, changed, or expired
+it.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
-    <meta property="og:title" content="Scope as a First-Class
-Key — Agent Memory Atlas">
-    <meta property="og:description" content="Make memory ownership and
-visibility part of identity, storage, conflict detection, and
-retrieval—not an optional metadata filter.">
+    <meta property="og:title" content="Bi-Temporal Fact
+Validity — Agent Memory Atlas">
+    <meta property="og:description" content="Track when a fact was true
+separately from when the memory system learned, changed, or expired
+it.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Scope as a First-Class
-Key — Agent Memory Atlas">
-    <meta name="twitter:description" content="Make memory ownership and
-visibility part of identity, storage, conflict detection, and
-retrieval—not an optional metadata filter.">
+    <meta name="twitter:title" content="Bi-Temporal Fact
+Validity — Agent Memory Atlas">
+    <meta name="twitter:description" content="Track when a fact was true
+separately from when the memory system learned, changed, or expired
+it.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
-    <title>Scope as a First-Class Key — Agent Memory Atlas</title>
+    <title>Bi-Temporal Fact Validity — Agent Memory Atlas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -49,11 +49,10 @@ retrieval—not an optional metadata filter.">
       <section class="document-hero">
         <div class="document-hero-inner">
           <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
-          <p class="eyebrow">Pattern · Boundaries</p>
-          <h1>Scope as a First-Class Key</h1>
-          <p class="document-deck">Make memory ownership and visibility
-part of identity, storage, conflict detection, and retrieval—not an
-optional metadata filter.</p>
+          <p class="eyebrow">Pattern · Time</p>
+          <h1>Bi-Temporal Fact Validity</h1>
+          <p class="document-deck">Track when a fact was true separately
+from when the memory system learned, changed, or expired it.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -69,75 +68,83 @@ optional metadata filter.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="intent">Intent</h2>
-<p>Prevent one user, agent, project, room, or session from reading or
-mutating memory that belongs to another context.</p>
+<p>Represent changing facts and backfilled history without overwriting
+the past or confusing event time with ingestion time.</p>
 <h2 id="the-problem">The problem</h2>
-<p>A highly relevant memory from the wrong scope is still a severe
-failure. Adding a <code>project</code> field after the storage and
-retrieval model is built rarely fixes the problem: uniqueness,
-conflicts, indexes, access checks, inheritance, and deletion may still
-be global.</p>
-<h2 id="the-pattern">The pattern</h2>
-<p>Define scope as part of the memory key and every operation:</p>
-<pre class="text"><code>tenant / user / agent / project / session / memory-key</code></pre>
-<p>The exact lattice varies. Some systems need a strict hierarchy;
-others need namespaces or an allow-list of readable scopes. In every
-case:</p>
+<p>A memory system usually has at least two clocks:</p>
 <ul>
-<li>Writes name an owning scope.</li>
-<li>Reads state which scopes are visible.</li>
-<li>Dedupe and conflict checks run within intentional scope
-boundaries.</li>
-<li>Storage indexes begin with scope.</li>
-<li>Cache and embedding identifiers cannot collide across scopes.</li>
-<li>Authorization is checked independently of relevance.</li>
+<li>the time an event happened or a fact was true;</li>
+<li>the time the system received, stored, corrected, or deleted that
+information.</li>
 </ul>
+<p>Collapsing them into one timestamp breaks questions such as “Where
+did Alice work last year?” A backfilled event appears new, and a
+corrected fact may erase the state that was valid earlier.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Give facts an application-time interval and a system-time
+lifecycle:</p>
+<pre class="text"><code>fact
+  valid_at    ───────────── invalid_at
+  created_at  ───────────── expired_at</code></pre>
+<p>When a new fact supersedes an old one:</p>
+<ol type="1">
+<li>Keep the source event for both facts.</li>
+<li>Set the new fact's real-world <code>valid_at</code>.</li>
+<li>Close the old fact's <code>invalid_at</code> at the appropriate
+event boundary.</li>
+<li>Record when the system made that change through
+<code>created_at</code>/<code>expired_at</code>.</li>
+<li>Query against the clock appropriate to the question.</li>
+</ol>
+<p>Do not silently hard-delete the older edge merely because it is no
+longer current.</p>
 <h2 id="why-it-works">Why it works</h2>
-<p>The system can reason about visibility before ranking. Scope-aware
-identity prevents unrelated memories from overwriting or corroborating
-each other. It also makes migration, export, retention, and deletion
-tractable.</p>
+<p>The graph can answer current-state and historical questions from the
+same records. Backfilled information stays ordered by event time even
+though it was ingested later. Corrections become inspectable state
+transitions rather than destructive rewrites.</p>
 <h2 id="tradeoffs">Tradeoffs</h2>
-<p>Users often expect some memories to inherit: a project may read
-global preferences, while a private session may not write back globally.
-Hierarchies introduce precedence and conflict questions. Duplicating
-memories across scopes creates drift; sharing references creates access
-and lifecycle coupling.</p>
-<p>Scope is not a substitute for authorization. A row tagged
-<code>user_id</code> is unsafe if callers can choose arbitrary IDs.</p>
+<ul>
+<li>Date extraction may be uncertain or absent.</li>
+<li>Overlapping intervals need explicit policy.</li>
+<li>Entity resolution mistakes can invalidate the wrong fact.</li>
+<li>Queries and indexes become more complex.</li>
+<li>“Unknown end date” must remain different from “still true”.</li>
+<li>System-time retention may conflict with privacy deletion
+requirements.</li>
+</ul>
+<p>Temporal precision is not truth. Store the evidence and confidence
+behind inferred dates.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/hindsight/">Hindsight</a> makes the memory
-bank an isolation and configuration boundary. <a
-href="../../systems/graphiti/">Graphiti</a> carries
-<code>group_id</code> through nodes, edges, episodes, and search. <a
-href="../../systems/mastra-observational-memory/">Mastra Observational
-Memory</a> chooses thread or resource scope. <a
-href="../../systems/memos/">MemOS</a> registers memory cubes to users.
-<a href="../../systems/basic-memory/">Basic Memory</a> uses projects and
-workspaces for identity, routing, and search. <a
-href="../../systems/honcho/">Honcho</a> models workspace, peer, session,
-and representation boundaries. <a
-href="../../systems/rainbox/">RainBox</a> uses a scope lattice with
-sensitivity rules. <a href="../../systems/engram/">Engram</a>, <a
-href="../../systems/llm-wiki-memory/">llm-wiki-memory</a>, and <a
-href="../../systems/verel/">Verel</a> reinforce the pattern. <a
-href="../../systems/swafra/">Swafra</a> shows the opposite risk: a
-source title in one global corpus is not a boundary.</p>
+<p><a href="../../systems/graphiti/">Graphiti</a> is the clearest
+implementation. Episodes carry a reference time; entity edges carry
+<code>valid_at</code>, <code>invalid_at</code>, <code>created_at</code>,
+and <code>expired_at</code>; contradiction handling closes older
+intervals while source episode UUIDs preserve evidence. Saga summaries
+keep separate wall-clock and episode-time watermarks so backfilled
+episodes remain processable.</p>
+<p><a href="../../systems/hindsight/">Hindsight</a> provides a
+complementary fact-store implementation with event dates, occurrence
+ranges, mentioned-at time, and a dedicated temporal retrieval arm. It
+demonstrates that the pattern is useful outside a graph, although
+Graphiti has the stronger interval-correction model.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
-<li>Cross-user, cross-agent, and cross-project leakage.</li>
-<li>Dedupe and conflict behavior for identical keys in different
-scopes.</li>
-<li>Inheritance and precedence across parent/child scopes.</li>
-<li>Unauthorized caller-supplied scope IDs.</li>
-<li>Cache, embedding, and background-job isolation.</li>
-<li>Export and deletion of exactly one scope.</li>
+<li>Backfilled old events ingested today.</li>
+<li>A current fact replacing a formerly true fact.</li>
+<li>Overlapping, missing, and timezone-naive intervals.</li>
+<li>Contradictions whose source events arrive out of order.</li>
+<li>Historical queries versus current-state queries.</li>
+<li>Entity deduplication followed by temporal correction.</li>
+<li>Exact deletion of source evidence and all unsupported derived
+facts.</li>
 </ul>
 <h2 id="related-patterns">Related patterns</h2>
 <ul>
-<li><a href="../explicit-write-destination/">Explicit write
-destination</a></li>
-<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+<li><a href="../evidence-before-belief/">Evidence before belief</a></li>
+<li><a href="../append-only-memory-audit/">Append-only memory
+audit</a></li>
+<li><a href="../trust-state-machine/">Trust-state machine</a></li>
 <li><a href="../hybrid-retrieval-fusion/">Hybrid retrieval
 fusion</a></li>
 </ul>
