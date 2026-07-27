@@ -99,6 +99,17 @@ event boundary.</li>
 </ol>
 <p>Do not silently hard-delete the older edge merely because it is no
 longer current.</p>
+<pre class="mermaid"><code>flowchart LR
+    Ev[&quot;source event&quot;] --&gt; F1[&quot;fact: lives in Berlin&quot;]
+    Ev2[&quot;later source event&quot;] --&gt; F2[&quot;fact: lives in Lisbon&quot;]
+    F2 --&gt; C[&quot;close F1.invalid_at at the event boundary&quot;]
+    C --&gt; F1
+    Q1[&quot;as of last March&quot;] --&gt; F1
+    Q2[&quot;as of now&quot;] --&gt; F2
+    F1 -. &quot;retained, not deleted&quot; .- H[&quot;history&quot;]</code></pre>
+<p>Two clocks, two questions. <em>What was true then</em> reads
+application time; <em>what did we believe then</em> reads system
+time.</p>
 <h2 id="why-it-works">Why it works</h2>
 <p>The graph can answer current-state and historical questions from the
 same records. Backfilled information stays ordered by event time even
@@ -171,6 +182,9 @@ something but not when it was true.</p>
 <li>Exact deletion of source evidence and all unsupported derived
 facts.</li>
 </ul>
+<p>Run these as a matrix rather than a checklist — see <a
+href="../../benchmarks/#contradiction-test">the contradiction test</a>
+for the case shapes and the four outcomes worth scoring separately.</p>
 <h2 id="related-patterns">Related patterns</h2>
 <ul>
 <li><a href="../evidence-before-belief/">Evidence before belief</a></li>

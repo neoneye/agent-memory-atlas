@@ -569,6 +569,8 @@ its `contradict` action surfaces contradictions as an ordinary query, but only
 reports them, with no supersession or review workflow attached, and its docstring
 claim that "no other memory system does this" is not accurate within this atlas.
 
+A specification for measuring any of this — the shapes a contradiction can take, and the four things worth scoring separately — is in [the contradiction test](../benchmarks/#contradiction-test).
+
 `memora` contributes the one procedural idea this section has been missing. Its
 supersession pass runs in three phases — candidate pairs by embedding
 similarity, LLM classification, then edge creation — and the mutating phase is

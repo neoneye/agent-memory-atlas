@@ -93,6 +93,31 @@ boundaries.</li>
 <li>Cache and embedding identifiers cannot collide across scopes.</li>
 <li>Authorization is checked independently of relevance.</li>
 </ul>
+<p>Put scope first in the physical layout, not just in the
+predicate:</p>
+<pre class="sql"><code>CREATE TABLE memory (
+  tenant_id  TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  id         TEXT NOT NULL,
+  body       TEXT NOT NULL,
+  PRIMARY KEY (tenant_id, project_id, id)
+);
+
+-- Scope leads every index, so a query that forgets it cannot use one.
+CREATE INDEX memory_recent ON memory (tenant_id, project_id, created_at DESC);</code></pre>
+<p>The embedding cache key needs the same treatment —
+<code>hash(scope, model, body)</code>, never <code>hash(body)</code> —
+or two tenants share a vector and a deletion in one leaks into the
+other.</p>
+<pre class="mermaid"><code>flowchart LR
+    Req[&quot;request&quot;] --&gt; Res[&quot;resolve current scope&quot;]
+    Res --&gt; Auth{&quot;scope authorized?&quot;}
+    Auth -- &quot;no&quot; --&gt; Deny[&quot;deny — before ranking, not after&quot;]
+    Auth -- &quot;yes&quot; --&gt; Filter[&quot;filter by scope key&quot;]
+    Filter --&gt; Rank[&quot;rank within scope&quot;]
+    Rank --&gt; Out[&quot;results&quot;]
+    Res --&gt; BG[&quot;background jobs inherit the same scope&quot;]
+    BG -. &quot;consolidation that spans scopes has crossed the boundary&quot; .-&gt; Warn[&quot;leak&quot;]</code></pre>
 <h2 id="why-it-works">Why it works</h2>
 <p>The system can reason about visibility before ranking. Scope-aware
 identity prevents unrelated memories from overwriting or corroborating

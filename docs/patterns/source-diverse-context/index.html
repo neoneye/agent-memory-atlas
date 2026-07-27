@@ -92,6 +92,29 @@ justified.</li>
 selector can implement the pattern. The result should expose source
 labels so the agent can distinguish independent evidence from repeated
 chunks.</p>
+<pre class="text"><code>select_diverse(candidates, k, per_source_cap):
+    ranked = sort_by_score_desc(candidates)
+    picked, taken = [], {}
+    for c in ranked:                       # pass 1 — one per source, best first
+        if taken.get(c.source, 0) == 0:
+            picked.append(c); taken[c.source] = 1
+        if len(picked) == k: return picked
+    for c in ranked:                       # pass 2 — spend the rest on depth
+        if c in picked: continue
+        if taken[c.source] &lt; per_source_cap:
+            picked.append(c); taken[c.source] += 1
+        if len(picked) == k: return picked
+    return picked</code></pre>
+<p>Two passes, global ranking preserved inside each.
+<code>per_source_cap</code> is the only tuning constant, and every
+returned item keeps its source label so the agent can tell independent
+evidence from one document repeated.</p>
+<pre class="mermaid"><code>flowchart LR
+    C[&quot;ranked candidates&quot;] --&gt; P1[&quot;pass 1: best chunk per source&quot;]
+    P1 --&gt; P2[&quot;pass 2: fill remaining budget, capped per source&quot;]
+    P2 --&gt; Cap[&quot;enforce result and token caps&quot;]
+    Cap --&gt; Out[&quot;context, each item labelled with its source&quot;]
+    C -. &quot;without this, 5 adjacent chunks of one file&quot; .-&gt; Crowd[&quot;crowding&quot;]</code></pre>
 <h2 id="why-it-works">Why it works</h2>
 <p>Diversity increases coverage and reduces the illusion of
 corroboration created by adjacent chunks. It is especially useful for

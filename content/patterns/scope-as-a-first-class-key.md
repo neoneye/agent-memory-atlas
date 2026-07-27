@@ -31,6 +31,37 @@ The exact lattice varies. Some systems need a strict hierarchy; others need name
 - Cache and embedding identifiers cannot collide across scopes.
 - Authorization is checked independently of relevance.
 
+Put scope first in the physical layout, not just in the predicate:
+
+```sql
+CREATE TABLE memory (
+  tenant_id  TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  id         TEXT NOT NULL,
+  body       TEXT NOT NULL,
+  PRIMARY KEY (tenant_id, project_id, id)
+);
+
+-- Scope leads every index, so a query that forgets it cannot use one.
+CREATE INDEX memory_recent ON memory (tenant_id, project_id, created_at DESC);
+```
+
+The embedding cache key needs the same treatment — `hash(scope, model, body)`,
+never `hash(body)` — or two tenants share a vector and a deletion in one leaks
+into the other.
+
+```mermaid
+flowchart LR
+    Req["request"] --> Res["resolve current scope"]
+    Res --> Auth{"scope authorized?"}
+    Auth -- "no" --> Deny["deny — before ranking, not after"]
+    Auth -- "yes" --> Filter["filter by scope key"]
+    Filter --> Rank["rank within scope"]
+    Rank --> Out["results"]
+    Res --> BG["background jobs inherit the same scope"]
+    BG -. "consolidation that spans scopes has crossed the boundary" .-> Warn["leak"]
+```
+
 ## Why it works
 
 The system can reason about visibility before ranking. Scope-aware identity prevents unrelated memories from overwriting or corroborating each other. It also makes migration, export, retention, and deletion tractable.

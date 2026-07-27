@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="What the memory benchmarks
 actually test, why a bad score on one may mean nothing, what stress
-testing is for, and which metrics — cost, latency, storage, forgetting —
-nobody is measuring.">
+testing is for, which metrics nobody measures, and two tests worth
+running instead — for deletion that holds and for contradictions that
+stay corrected.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
@@ -14,16 +15,18 @@ nobody is measuring.">
 Memory — Agent Memory Atlas">
     <meta property="og:description" content="What the memory benchmarks
 actually test, why a bad score on one may mean nothing, what stress
-testing is for, and which metrics — cost, latency, storage, forgetting —
-nobody is measuring.">
+testing is for, which metrics nobody measures, and two tests worth
+running instead — for deletion that holds and for contradictions that
+stay corrected.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Benchmarking Agent
 Memory — Agent Memory Atlas">
     <meta name="twitter:description" content="What the memory benchmarks
 actually test, why a bad score on one may mean nothing, what stress
-testing is for, and which metrics — cost, latency, storage, forgetting —
-nobody is measuring.">
+testing is for, which metrics nobody measures, and two tests worth
+running instead — for deletion that holds and for contradictions that
+stay corrected.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Benchmarking Agent Memory — Agent Memory Atlas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,8 +60,9 @@ nobody is measuring.">
           <h1>Benchmarking Agent Memory</h1>
           <p class="document-deck">What the memory benchmarks actually
 test, why a bad score on one may mean nothing, what stress testing is
-for, and which metrics — cost, latency, storage, forgetting — nobody is
-measuring.</p>
+for, which metrics nobody measures, and two tests worth running instead
+— for deletion that holds and for contradictions that stay
+corrected.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -99,7 +103,11 @@ atlas, and nothing in the published benchmarks it uses, tests whether a
 deleted memory stays deleted after the next background pass.</li>
 </ol>
 <p>Everything below is evidence for those six claims, plus what a better
-measurement set would look like.</p>
+measurement set would look like — including a <a
+href="#contradiction-test">contradiction test</a> specified in enough
+detail to run, since supersession is the one part of correction that
+existing benchmarks touch at all, and they touch only its easiest
+half.</p>
 <h2 id="2-what-benchmarks-exist">2. What Benchmarks Exist</h2>
 <h3 id="found-in-the-repositories-reviewed-here">Found in the
 repositories reviewed here</h3>
@@ -608,7 +616,164 @@ time" is not a meaningful thing to say about a deletion request.</p>
 legal right to erasure, "we deleted the row and a nightly job re-derived
 it from retained history" is a compliance failure with a
 benchmark-shaped hole where the evidence should be.</p>
-<h2 id="7-a-scorecard-worth-publishing">7. A Scorecard Worth
+<p><a id="contradiction-test"></a></p>
+<h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
+<p>Forgetting has no benchmark. <strong>Supersession has half of
+one</strong> — LongMemEval's knowledge-update category — and that half
+measures the easy part. What follows is a specification for the rest of
+it, small enough to run in an afternoon against any system in this
+atlas.</p>
+<h3 id="why-the-obvious-version-is-too-easy">Why the obvious version is
+too easy</h3>
+<p>The natural test is: the user likes blue on day one, prefers red on
+day three, ask on day five. Any system that returns the most recent
+matching memory passes, including one with no correction machinery
+whatsoever. Recency alone gets you through.</p>
+<p>Four things make it discriminating instead.</p>
+<p><strong>Vary the shape of the contradiction.</strong> Systems fail
+differently depending on how the old value is displaced:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Day 1</th>
+<th>Day 3</th>
+<th>What it probes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Replacement</strong></td>
+<td>"I live in Berlin"</td>
+<td>"I moved to Lisbon"</td>
+<td>Baseline. Recency alone passes this.</td>
+</tr>
+<tr>
+<td><strong>Polarity flip</strong></td>
+<td>"I love coriander"</td>
+<td>"I can't stand coriander now"</td>
+<td>Both statements are about the same subject and embed almost
+identically, so retrieval returns both and the <em>model</em> picks.
+That is not correction; it is delegation.</td>
+</tr>
+<tr>
+<td><strong>Retraction</strong></td>
+<td>"My sister is a doctor"</td>
+<td>"I misspoke — I don't have a sister"</td>
+<td>Nothing replaces the value. There is no newer fact for recency to
+prefer, so a system with no negative memory has nothing to work
+with.</td>
+</tr>
+<tr>
+<td><strong>Partial supersession</strong></td>
+<td>"I'm an engineer at Acme"</td>
+<td>"I got promoted to manager"</td>
+<td>Systems that supersede whole records lose the employer along with
+the role.</td>
+</tr>
+<tr>
+<td><strong>Bounded validity</strong></td>
+<td>"I was vegetarian for ten years"</td>
+<td>"I stopped in 2024"</td>
+<td>Both are true, of different periods. Only a system tracking validity
+separately from record time can answer "was I vegetarian in 2022?"</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Score four things, not one.</strong> The single question
+"what does it answer" hides the interesting failures:</p>
+<ul>
+<li><strong>A — Answer.</strong> Does the agent say Lisbon? This is what
+knowledge-update scoring already measures, and the weakest of the
+four.</li>
+<li><strong>B — Retrieval hygiene.</strong> Does <em>Berlin</em> still
+appear in the assembled prompt? A system that retrieves both and gets
+the right answer anyway has not corrected anything; it has handed the
+contradiction to the model and got lucky. Measure this against the
+prompt prefix, the way <a
+href="../systems/open-cowork/">open-cowork</a>'s harness does, not
+against the retriever's return value.</li>
+<li><strong>C — Durability.</strong> Run every background job —
+consolidation, re-extraction, nightly distillation, profile rebuild —
+and ask again. This is where systems that re-derive from retained
+history quietly restore the old value.</li>
+<li><strong>D — History.</strong> Ask "where did I use to live?" A
+system that hard-deletes Berlin passes A, B and C and fails here.
+<strong>Correction is not amnesia</strong>, and a test that only rewards
+the current answer will push designs toward destructive overwrite.</li>
+</ul>
+<p>C and D pull in opposite directions, which is the point: passing both
+is what <a href="../patterns/bi-temporal-fact-validity/">bi-temporal
+fact validity</a> and the <a
+href="../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> exist to make possible, and a design that satisfies one by
+sacrificing the other has not solved it.</p>
+<p><strong>Add the adversarial re-entry.</strong> After the correction
+lands, feed the day-one material again through a <em>different</em>
+write path — a document upload, a synchronization pass, an imported
+transcript. This is the same step that breaks most systems in the
+deletion sequence in §6, and it belongs here too.</p>
+<p><strong>Vary the gap.</strong> Contradictions minutes apart and
+contradictions months apart are different problems: the first tests
+within-session handling, the second tests whether the older memory has
+decayed, been consolidated into a summary, or been folded into a profile
+— and a summary that still says Berlin is a correction that only reached
+the surface layer.</p>
+<h3 id="the-procedure">The procedure</h3>
+<pre class="text"><code>for each case in {replacement, polarity, retraction, partial, bounded}:
+    day 1  write the original statement
+           assert it is retrievable                        → setup
+    day 3  write the contradicting statement
+    A      ask the question                                 → is the answer current?
+    B      inspect the assembled prompt                     → is the stale value absent?
+    D      ask the historical form of the question          → is the old value still knowable?
+           run every background job
+    C      repeat A and B                                   → did the correction survive?
+           re-feed the day-1 material by another write path
+    C&#39;     repeat A and B                                   → did re-entry undo it?
+           inspect derived artifacts: summaries, profiles,
+           graph edges, embeddings, exports
+    E      grep them for the stale value                    → did the correction reach them?</code></pre>
+<p>Ten to twenty cases is enough. A and D need a judge or a human; B, C
+and E are deterministic string checks against material the system
+produced.</p>
+<h3 id="what-this-would-show-and-what-it-would-not">What this would
+show, and what it would not</h3>
+<p>Reporting it as a percentage would waste it. The useful output is a
+small matrix — cases down the side, A/B/C/D/E across — because
+<em>which</em> column fails tells you what is missing. Failing B but
+passing A means no correction, just a model doing cleanup on every turn,
+and that cost recurs forever. Failing C means correction is a statement
+about the present that the next scheduled job may overturn. Failing D
+means the system forgets rather than corrects.</p>
+<p><strong>This atlas cannot report results for it.</strong> Every
+review here is static — code read, not run — so what follows is a
+prediction from the code, not a measurement, and it should be read as a
+hypothesis worth testing rather than a finding:</p>
+<ul>
+<li>Nearly everything should pass <strong>A</strong> on the replacement
+case. Recency is enough, and this is why the obvious version of the test
+separates nothing.</li>
+<li><strong>B</strong> should fail widely. Most systems here rank and
+return top <em>k</em> with no mechanism that suppresses a superseded
+value, so both statements land in the prompt.</li>
+<li><strong>C</strong> should fail for every system that re-derives on a
+schedule — and that is now the common case, not the exception.</li>
+<li><strong>D</strong> should fail for systems whose correction is an
+overwrite or a delete, and pass for those retaining history: <a
+href="../systems/graphiti/">Graphiti</a> closes a validity interval
+rather than erasing, <a href="../systems/mempalace/">MemPalace</a> keeps
+verbatim drawers authoritative.</li>
+<li>The <strong>retraction</strong> row should fail almost everywhere,
+because it needs negative memory and <a
+href="../compare/#capability-index">two systems of forty-six have
+it</a>.</li>
+</ul>
+<p>If those predictions are right, the test separates the field on the
+second column rather than the first — which is exactly the property the
+existing benchmarks lack. If they are wrong, that is worth knowing too,
+and the way to find out is to run it.</p>
+<h2 id="8-a-scorecard-worth-publishing">8. A Scorecard Worth
 Publishing</h2>
 <p>If a memory system published one table, this is the shape that would
 be useful. Every row is either already collectable from the systems
@@ -642,8 +807,10 @@ prompt</td>
 </tr>
 <tr>
 <td>Correction</td>
-<td>Stale-value survival time after a correction lands</td>
-<td>Turns "we support updates" into a number</td>
+<td>The <a href="#contradiction-test">contradiction test</a> matrix:
+cases against A/B/C/D/E</td>
+<td>Turns "we support updates" into something that separates
+systems</td>
 </tr>
 <tr>
 <td>Deletion</td>
@@ -694,7 +861,7 @@ list. The published number was not measuring what it said.</p>
 reproducible harness with no committed results reads as measured and is
 not. This atlas has now found that pattern in several repositories,
 including some of the most carefully engineered ones.</p>
-<h2 id="8-limits-of-this-page">8. Limits of This Page</h2>
+<h2 id="9-limits-of-this-page">9. Limits of This Page</h2>
 <ul>
 <li>Benchmark harnesses in these repositories were <strong>inspected,
 not run</strong>. No numbers here were reproduced, and the atlas's
@@ -710,6 +877,9 @@ href="../compare/">comparative report</a>. It is a statement about 46
 repositories, not about the whole field.</li>
 <li>The criticism of LoCoMo's difficulty in §3 is a summary of a known
 objection, not an independent finding.</li>
+<li>The predicted outcomes in §7 are inferences from reading code, not
+results. Nothing in this atlas has been run against the contradiction
+test, and the predictions are published so they can be falsified.</li>
 </ul>
         </article>
       </div>

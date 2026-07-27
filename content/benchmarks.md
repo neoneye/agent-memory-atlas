@@ -1,7 +1,7 @@
 ---
 title: Benchmarking Agent Memory
 eyebrow: Measurement
-description: What the memory benchmarks actually test, why a bad score on one may mean nothing, what stress testing is for, and which metrics — cost, latency, storage, forgetting — nobody is measuring.
+description: What the memory benchmarks actually test, why a bad score on one may mean nothing, what stress testing is for, which metrics nobody measures, and two tests worth running instead — for deletion that holds and for contradictions that stay corrected.
 root: ..
 page_kind: comparison
 ---
@@ -31,7 +31,10 @@ Six things are worth knowing before reading further.
    deleted after the next background pass.
 
 Everything below is evidence for those six claims, plus what a better
-measurement set would look like.
+measurement set would look like — including a [contradiction test](#contradiction-test)
+specified in enough detail to run, since supersession is the one part of
+correction that existing benchmarks touch at all, and they touch only its
+easiest half.
 
 ## 2. What Benchmarks Exist
 
@@ -401,7 +404,128 @@ to erasure, "we deleted the row and a nightly job re-derived it from retained
 history" is a compliance failure with a benchmark-shaped hole where the
 evidence should be.
 
-## 7. A Scorecard Worth Publishing
+<a id="contradiction-test"></a>
+
+## 7. The Contradiction Test
+
+Forgetting has no benchmark. **Supersession has half of one** — LongMemEval's
+knowledge-update category — and that half measures the easy part. What follows
+is a specification for the rest of it, small enough to run in an afternoon
+against any system in this atlas.
+
+### Why the obvious version is too easy
+
+The natural test is: the user likes blue on day one, prefers red on day three,
+ask on day five. Any system that returns the most recent matching memory passes,
+including one with no correction machinery whatsoever. Recency alone gets you
+through.
+
+Four things make it discriminating instead.
+
+**Vary the shape of the contradiction.** Systems fail differently depending on
+how the old value is displaced:
+
+| Case | Day 1 | Day 3 | What it probes |
+| --- | --- | --- | --- |
+| **Replacement** | "I live in Berlin" | "I moved to Lisbon" | Baseline. Recency alone passes this. |
+| **Polarity flip** | "I love coriander" | "I can't stand coriander now" | Both statements are about the same subject and embed almost identically, so retrieval returns both and the *model* picks. That is not correction; it is delegation. |
+| **Retraction** | "My sister is a doctor" | "I misspoke — I don't have a sister" | Nothing replaces the value. There is no newer fact for recency to prefer, so a system with no negative memory has nothing to work with. |
+| **Partial supersession** | "I'm an engineer at Acme" | "I got promoted to manager" | Systems that supersede whole records lose the employer along with the role. |
+| **Bounded validity** | "I was vegetarian for ten years" | "I stopped in 2024" | Both are true, of different periods. Only a system tracking validity separately from record time can answer "was I vegetarian in 2022?" |
+
+**Score four things, not one.** The single question "what does it answer" hides
+the interesting failures:
+
+- **A — Answer.** Does the agent say Lisbon? This is what knowledge-update
+  scoring already measures, and the weakest of the four.
+- **B — Retrieval hygiene.** Does *Berlin* still appear in the assembled prompt?
+  A system that retrieves both and gets the right answer anyway has not
+  corrected anything; it has handed the contradiction to the model and got
+  lucky. Measure this against the prompt prefix, the way
+  [open-cowork](../systems/open-cowork/)'s harness does, not against the
+  retriever's return value.
+- **C — Durability.** Run every background job — consolidation,
+  re-extraction, nightly distillation, profile rebuild — and ask again. This is
+  where systems that re-derive from retained history quietly restore the old
+  value.
+- **D — History.** Ask "where did I use to live?" A system that hard-deletes
+  Berlin passes A, B and C and fails here. **Correction is not amnesia**, and a
+  test that only rewards the current answer will push designs toward destructive
+  overwrite.
+
+C and D pull in opposite directions, which is the point: passing both is what
+[bi-temporal fact validity](../patterns/bi-temporal-fact-validity/) and the
+[rejected-value tombstone](../patterns/rejected-value-tombstone/) exist to make
+possible, and a design that satisfies one by sacrificing the other has not
+solved it.
+
+**Add the adversarial re-entry.** After the correction lands, feed the day-one
+material again through a *different* write path — a document upload, a
+synchronization pass, an imported transcript. This is the same step that breaks
+most systems in the deletion sequence in §6, and it belongs here too.
+
+**Vary the gap.** Contradictions minutes apart and contradictions months apart
+are different problems: the first tests within-session handling, the second
+tests whether the older memory has decayed, been consolidated into a summary, or
+been folded into a profile — and a summary that still says Berlin is a
+correction that only reached the surface layer.
+
+### The procedure
+
+```text
+for each case in {replacement, polarity, retraction, partial, bounded}:
+    day 1  write the original statement
+           assert it is retrievable                        → setup
+    day 3  write the contradicting statement
+    A      ask the question                                 → is the answer current?
+    B      inspect the assembled prompt                     → is the stale value absent?
+    D      ask the historical form of the question          → is the old value still knowable?
+           run every background job
+    C      repeat A and B                                   → did the correction survive?
+           re-feed the day-1 material by another write path
+    C'     repeat A and B                                   → did re-entry undo it?
+           inspect derived artifacts: summaries, profiles,
+           graph edges, embeddings, exports
+    E      grep them for the stale value                    → did the correction reach them?
+```
+
+Ten to twenty cases is enough. A and D need a judge or a human; B, C and E are
+deterministic string checks against material the system produced.
+
+### What this would show, and what it would not
+
+Reporting it as a percentage would waste it. The useful output is a small
+matrix — cases down the side, A/B/C/D/E across — because *which* column fails
+tells you what is missing. Failing B but passing A means no correction, just a
+model doing cleanup on every turn, and that cost recurs forever. Failing C means
+correction is a statement about the present that the next scheduled job may
+overturn. Failing D means the system forgets rather than corrects.
+
+**This atlas cannot report results for it.** Every review here is static — code
+read, not run — so what follows is a prediction from the code, not a
+measurement, and it should be read as a hypothesis worth testing rather than a
+finding:
+
+- Nearly everything should pass **A** on the replacement case. Recency is
+  enough, and this is why the obvious version of the test separates nothing.
+- **B** should fail widely. Most systems here rank and return top *k* with no
+  mechanism that suppresses a superseded value, so both statements land in the
+  prompt.
+- **C** should fail for every system that re-derives on a schedule — and that
+  is now the common case, not the exception.
+- **D** should fail for systems whose correction is an overwrite or a delete,
+  and pass for those retaining history: [Graphiti](../systems/graphiti/) closes
+  a validity interval rather than erasing,
+  [MemPalace](../systems/mempalace/) keeps verbatim drawers authoritative.
+- The **retraction** row should fail almost everywhere, because it needs
+  negative memory and [two systems of forty-six have it](../compare/#capability-index).
+
+If those predictions are right, the test separates the field on the second
+column rather than the first — which is exactly the property the existing
+benchmarks lack. If they are wrong, that is worth knowing too, and the way to
+find out is to run it.
+
+## 8. A Scorecard Worth Publishing
 
 If a memory system published one table, this is the shape that would be useful.
 Every row is either already collectable from the systems reviewed here or
@@ -412,7 +536,7 @@ requires a small harness; none needs a new dataset.
 | Recall | Accuracy on a public long-conversation benchmark, with judge and config stated | Comparability, with all the caveats above |
 | Precision | Forbidden-hit rate: how often material that should not surface does | The half nobody reports |
 | Fidelity | Fraction of retrieved memories that survive into the actual prompt | Truncation silently eats what retrieval found |
-| Correction | Stale-value survival time after a correction lands | Turns "we support updates" into a number |
+| Correction | The [contradiction test](#contradiction-test) matrix: cases against A/B/C/D/E | Turns "we support updates" into something that separates systems |
 | Deletion | Pass/fail on the ten-step sequence above | The compliance-relevant one |
 | Cost (write) | Tokens per unit of material ingested | Scales with volume |
 | Cost (read) | Injected memory tokens per turn, and accuracy per thousand of them | The recurring cost, and the honest efficiency ratio |
@@ -434,7 +558,7 @@ committed results reads as measured and is not. This atlas has now found that
 pattern in several repositories, including some of the most carefully
 engineered ones.
 
-## 8. Limits of This Page
+## 9. Limits of This Page
 
 - Benchmark harnesses in these repositories were **inspected, not run**. No
   numbers here were reproduced, and the atlas's per-system reports say the same.
@@ -449,3 +573,6 @@ engineered ones.
   not about the whole field.
 - The criticism of LoCoMo's difficulty in §3 is a summary of a known objection,
   not an independent finding.
+- The predicted outcomes in §7 are inferences from reading code, not results.
+  Nothing in this atlas has been run against the contradiction test, and the
+  predictions are published so they can be falsified.

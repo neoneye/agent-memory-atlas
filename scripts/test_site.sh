@@ -56,6 +56,15 @@ if [[ "$matrix_rows" != "$expected_systems" ]]; then
   exit 1
 fi
 
+# Heading ids are generated from heading text, so a numbered section changes its
+# anchor whenever sections are renumbered. Catch fragment links that no longer land.
+broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"
+if [[ -n "$broken_anchors" ]]; then
+  echo "Fragment links pointing at ids that do not exist:" >&2
+  echo "$broken_anchors" >&2
+  exit 1
+fi
+
 missing_dates="$(grep -RLs '^analyzed_at:' "$project_dir/content/systems" --include='*.md' || true)"
 if [[ -n "$missing_dates" ]]; then
   echo "System reports missing analyzed_at frontmatter:" >&2

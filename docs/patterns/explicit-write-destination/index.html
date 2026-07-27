@@ -89,6 +89,16 @@ provenance, access control, and the mutation audit.</p>
 <p>Agent tools should make the target visible in their arguments.
 Defaults are acceptable only when they are safe, obvious, and surfaced
 to the user; shared writes often deserve confirmation.</p>
+<pre class="mermaid"><code>flowchart LR
+    Q[&quot;read&quot;] --&gt; RS[&quot;read_scopes: private + project + org&quot;]
+    RS --&gt; Merge[&quot;merge by locality / precedence&quot;]
+    Merge --&gt; Out[&quot;results, each labelled with its scope&quot;]
+    W[&quot;write&quot;] --&gt; T{&quot;write_target resolved?&quot;}
+    T -- &quot;no&quot; --&gt; Rej[&quot;reject: ambiguous destination&quot;]
+    T -- &quot;yes, private&quot; --&gt; P[&quot;private store&quot;]
+    T -- &quot;yes, shared&quot; --&gt; Conf[&quot;confirm, then shared store&quot;]</code></pre>
+<p>Reads fan out; writes converge on exactly one named destination, and
+an unresolved destination is an error rather than a default.</p>
 <h2 id="why-it-works">Why it works</h2>
 <p>The pattern prevents accidental publication and makes ownership
 inspectable. It also allows independent storage, sync, retention, and

@@ -126,6 +126,8 @@ nothing blocks. Rich relation modelling is not a substitute for negative memory.
 - Exercise normalization variants without conflating materially different values.
 - Propagate privacy deletion to tombstones when policy requires true erasure.
 
+Run these as a matrix rather than a checklist — see [the contradiction test](../../benchmarks/#contradiction-test) for the case shapes and the four outcomes worth scoring separately.
+
 ## Related patterns
 
 - [Trust-state machine](../trust-state-machine/)

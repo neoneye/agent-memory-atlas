@@ -39,6 +39,20 @@ When a new fact supersedes an old one:
 
 Do not silently hard-delete the older edge merely because it is no longer current.
 
+```mermaid
+flowchart LR
+    Ev["source event"] --> F1["fact: lives in Berlin"]
+    Ev2["later source event"] --> F2["fact: lives in Lisbon"]
+    F2 --> C["close F1.invalid_at at the event boundary"]
+    C --> F1
+    Q1["as of last March"] --> F1
+    Q2["as of now"] --> F2
+    F1 -. "retained, not deleted" .- H["history"]
+```
+
+Two clocks, two questions. *What was true then* reads application time;
+*what did we believe then* reads system time.
+
 ## Why it works
 
 The graph can answer current-state and historical questions from the same records. Backfilled information stays ordered by event time even though it was ingested later. Corrections become inspectable state transitions rather than destructive rewrites.
@@ -112,6 +126,8 @@ stop believing something but not when it was true.
 - Historical queries versus current-state queries.
 - Entity deduplication followed by temporal correction.
 - Exact deletion of source evidence and all unsupported derived facts.
+
+Run these as a matrix rather than a checklist — see [the contradiction test](../../benchmarks/#contradiction-test) for the case shapes and the four outcomes worth scoring separately.
 
 ## Related patterns
 

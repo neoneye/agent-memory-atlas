@@ -27,6 +27,20 @@ Reads may fan out according to access policy and merge with locality or preceden
 
 Agent tools should make the target visible in their arguments. Defaults are acceptable only when they are safe, obvious, and surfaced to the user; shared writes often deserve confirmation.
 
+```mermaid
+flowchart LR
+    Q["read"] --> RS["read_scopes: private + project + org"]
+    RS --> Merge["merge by locality / precedence"]
+    Merge --> Out["results, each labelled with its scope"]
+    W["write"] --> T{"write_target resolved?"}
+    T -- "no" --> Rej["reject: ambiguous destination"]
+    T -- "yes, private" --> P["private store"]
+    T -- "yes, shared" --> Conf["confirm, then shared store"]
+```
+
+Reads fan out; writes converge on exactly one named destination, and an
+unresolved destination is an error rather than a default.
+
 ## Why it works
 
 The pattern prevents accidental publication and makes ownership inspectable. It also allows independent storage, sync, retention, and review policy for each layer.

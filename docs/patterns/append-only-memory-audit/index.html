@@ -92,6 +92,17 @@ conversation ID, reason, and relevant version identifiers. Derive
 counters and dashboards from events. Retention and privacy policies
 still apply; append-only means application code does not casually
 rewrite history, not that data can never be erased.</p>
+<pre class="mermaid"><code>flowchart LR
+    W[&quot;write / correct / reject&quot;] --&gt; S[&quot;canonical memory state&quot;]
+    W --&gt; M[&quot;memory_mutation events&quot;]
+    R[&quot;retrieval&quot;] --&gt; S
+    R --&gt; RE[&quot;retrieval_event log&quot;]
+    S --&gt; A[&quot;answer&quot;]
+    M --&gt; D[&quot;counters · dashboards · investigations&quot;]
+    RE --&gt; D
+    D -. &quot;never read back as truth&quot; .-x S</code></pre>
+<p>The dashed edge is the whole discipline: events flow outward into
+observability and never back into belief.</p>
 <h2 id="why-it-works">Why it works</h2>
 <p>Events support debugging, eval generation, attribution, concurrency
 analysis, and product review. They reveal the difference between a

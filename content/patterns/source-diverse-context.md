@@ -26,6 +26,35 @@ Rank candidates normally, then apply a source-aware selection policy:
 
 Maximal marginal relevance, per-source quotas, or a simple two-pass selector can implement the pattern. The result should expose source labels so the agent can distinguish independent evidence from repeated chunks.
 
+```text
+select_diverse(candidates, k, per_source_cap):
+    ranked = sort_by_score_desc(candidates)
+    picked, taken = [], {}
+    for c in ranked:                       # pass 1 — one per source, best first
+        if taken.get(c.source, 0) == 0:
+            picked.append(c); taken[c.source] = 1
+        if len(picked) == k: return picked
+    for c in ranked:                       # pass 2 — spend the rest on depth
+        if c in picked: continue
+        if taken[c.source] < per_source_cap:
+            picked.append(c); taken[c.source] += 1
+        if len(picked) == k: return picked
+    return picked
+```
+
+Two passes, global ranking preserved inside each. `per_source_cap` is the only
+tuning constant, and every returned item keeps its source label so the agent can
+tell independent evidence from one document repeated.
+
+```mermaid
+flowchart LR
+    C["ranked candidates"] --> P1["pass 1: best chunk per source"]
+    P1 --> P2["pass 2: fill remaining budget, capped per source"]
+    P2 --> Cap["enforce result and token caps"]
+    Cap --> Out["context, each item labelled with its source"]
+    C -. "without this, 5 adjacent chunks of one file" .-> Crowd["crowding"]
+```
+
 ## Why it works
 
 Diversity increases coverage and reduces the illusion of corroboration created by adjacent chunks. It is especially useful for questions spanning sessions, documents, people, or time periods.
