@@ -89,6 +89,12 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Persist scoped events synchronously, then enrich them with models only when useful.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-sage" href="./pluggable-memory-provider/">
+    <span>Federation</span>
+    <h2>Pluggable memory provider</h2>
+    <p>Mount swappable memory backends behind one interface without losing deletion and scope.</p>
+    <b>Read pattern →</b>
+  </a>
 </div>
 
 ## How to use the library
@@ -106,5 +112,6 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Changing facts overwrite useful history: add [bi-temporal fact validity](./bi-temporal-fact-validity/).
 - Old memory overwhelms recall or popular errors self-reinforce: separate [decay and reinforcement](./decay-and-reinforcement/) from truth.
 - Model latency or outages make capture unreliable: add a [zero-LLM capture](./zero-llm-capture/) path.
+- Memory is a swappable backend and "forget me" has nowhere to go: fix the [pluggable memory provider](./pluggable-memory-provider/) contract.
 
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Add the smallest set that closes a demonstrated failure mode.

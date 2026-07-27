@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Hard-bounded Markdown memory
+frozen into the system prompt at session start, with FTS5 session
+history, skills as procedural memory, and a pluggable provider
+interface.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hermes
+Agent — Agent Memory Atlas">
+    <meta property="og:description" content="Hard-bounded Markdown
+memory frozen into the system prompt at session start, with FTS5 session
+history, skills as procedural memory, and a pluggable provider
+interface.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hermes
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="Hard-bounded Markdown
+memory frozen into the system prompt at session start, with FTS5 session
+history, skills as procedural memory, and a pluggable provider
+interface.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hermes Agent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Prompt-cache-bounded memory</p>
+          <h1>Hermes Agent</h1>
+          <p class="document-deck">Hard-bounded Markdown memory frozen
+into the system prompt at session start, with FTS5 session history,
+skills as procedural memory, and a pluggable provider interface.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NousResearch/hermes-agent">
+              <span>Source</span>
+              <strong>NousResearch/hermes-agent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476" title="0fa5e41c86f022bba147797849f0b44865721476">
+              <span>Analyzed revision</span>
+              <code>0fa5e41c86f022bba147797849f0b44865721476</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This report covers Hermes Agent's <strong>own built-in
+memory</strong>, not the third-party providers it can mount. The <a
+href="../holographic/">Holographic</a> report covers the first-party HRR
+plugin shipped in the same repository at the same commit; this one
+covers the memory the agent has when no provider is configured at
+all.</p>
+<p>Hermes takes a position almost nothing else in this atlas takes:
+<strong>memory is hard-bounded and frozen, because the prompt cache
+matters more than completeness.</strong></p>
+<p>Two Markdown files under <code>$HERMES_HOME/memories/</code> hold
+curated memory — <code>MEMORY.md</code> (the agent's own notes, 2,200
+chars) and <code>USER.md</code> (the user profile, 1,375 chars). Both
+are injected into the system prompt as a <strong>frozen snapshot at
+session start</strong>. Mid-session writes land on disk immediately and
+durably, but deliberately do <em>not</em> change the system prompt, so
+the prefix cache survives the whole session. The snapshot refreshes on
+the next start.</p>
+<p>The limits are hard, and this is the design's sharpest edge: when an
+<code>add</code> would exceed the char budget, the write is
+<strong>refused</strong> and the tool returns the current entries with
+an instruction to consolidate and retry <em>within the same turn</em>.
+Memory compaction is not a background worker; it is a synchronous
+obligation handed to the model at the moment of overflow.</p>
+<p>Around that core sit three more layers:</p>
+<ul>
+<li><strong>Session history</strong> in SQLite
+(<code>~/.hermes/state.db</code>) with FTS5 full-text search — the
+unbounded, searchable counterpart to the bounded prompt memory.</li>
+<li><strong>Skills</strong> as procedural memory: Markdown files the
+agent writes, updates, and deletes itself via
+<code>skill_manage</code>.</li>
+<li><strong>A <code>MemoryProvider</code> ABC</strong> that mounts
+exactly one external provider at a time, with first-party adapters for
+Honcho, Mem0, Hindsight, Supermemory, OpenViking, ByteRover, RetainDB,
+and Holographic.</li>
+</ul>
+<p>The engineering quality of the file layer is high, and much of it is
+visibly scar tissue from real bugs: external-drift detection with
+automatic backup, refusal on ambiguous reads, cross-platform file
+locking, atomic replacement, and threat scanning at the write
+boundary.</p>
+<p>The main weaknesses are the flip side of the same simplicity. Entries
+are opaque prose with no provenance, status, scope, or supersession;
+<code>replace</code>/<code>remove</code> address entries by
+<strong>substring match</strong> rather than identity; and there is no
+verification step between "the model decided to remember this" and "this
+is in every future system prompt."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no schema. The memory unit is a text entry in a delimited
+flat file:</p>
+<pre class="text"><code>MEMORY.md   # agent&#39;s personal notes    — 2,200 char whole-file budget
+USER.md     # what it knows about you   — 1,375 char whole-file budget
+
+entry
+§
+another entry, possibly
+spanning multiple lines
+§
+a third entry</code></pre>
+<p>The delimiter is <code>\n§\n</code>. Limits are counted in
+<strong>characters, not tokens</strong>, explicitly "because char counts
+are model-independent."</p>
+<p>Four memory kinds coexist with very different guarantees:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Store</th>
+<th>Bounded?</th>
+<th>In prompt?</th>
+<th>Searchable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Curated memory</td>
+<td><code>MEMORY.md</code> / <code>USER.md</code></td>
+<td>Hard char cap</td>
+<td>Always, frozen at session start</td>
+<td>n/a — always present</td>
+</tr>
+<tr>
+<td>Session history</td>
+<td>SQLite <code>state.db</code></td>
+<td>Unbounded</td>
+<td>No</td>
+<td>FTS5</td>
+</tr>
+<tr>
+<td>Skills</td>
+<td>Markdown files</td>
+<td>Unbounded</td>
+<td>Names/descriptions only</td>
+<td>by name</td>
+</tr>
+<tr>
+<td>Provider memory</td>
+<td>External</td>
+<td>Provider-defined</td>
+<td>Via <code>prefetch</code></td>
+<td>Provider-defined</td>
+</tr>
+</tbody>
+</table></div>
+<p>Write lifecycle:</p>
+<pre class="text"><code>memory(action=add|replace|remove, target=memory|user, ...)
+-&gt; write gate (allow | block | stage for human approval)
+-&gt; threat scan (strict pattern set)
+-&gt; file lock -&gt; re-read from disk -&gt; drift check -&gt; budget check
+-&gt; refuse-and-demand-consolidation, or append/replace/remove
+-&gt; atomic_replace to disk        [system prompt unchanged this session]
+-&gt; next session start: frozen snapshot re-rendered into system prompt</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>tools/memory_tool.py</code> (1,258 lines):
+<code>MemoryStore</code>, the <code>memory</code> tool, budgets, drift
+detection, locking, and the write gate.</li>
+<li><code>agent/memory_manager.py</code> (1,241 lines): provider
+registration and lifecycle orchestration.</li>
+<li><code>agent/memory_provider.py</code> (315 lines): the pluggable
+provider ABC.</li>
+<li><code>hermes_state.py</code> (10,850 lines): SQLite session
+persistence, FTS5 schema, CJK tokenizer extension, corruption probes and
+repair.</li>
+<li><code>tools/write_approval.py</code>: the shared allow/block/stage
+gate used by memory writes.</li>
+<li><code>tools/threat_patterns.py</code>: injection/exfiltration
+patterns, shared with the context-file scanner.</li>
+<li><code>tools/skill_manager_tool.py</code>,
+<code>tools/skill_provenance.py</code>, <code>agent/skill_*.py</code>:
+skills as procedural memory.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Model[&quot;Model&quot;] --&gt; Tool[&quot;memory tool (add/replace/remove)&quot;]
+  Tool --&gt; Gate[&quot;write_approval gate&quot;]
+  Gate --&gt;|stage| Human[&quot;Human approval queue&quot;]
+  Gate --&gt;|allow| Scan[&quot;threat_patterns strict scan&quot;]
+  Scan --&gt; Lock[&quot;file lock + re-read + drift check&quot;]
+  Lock --&gt; Budget{&quot;within char limit?&quot;}
+  Budget --&gt;|no| Consolidate[&quot;refuse: consolidate in-turn&quot;]
+  Budget --&gt;|yes| Disk[&quot;atomic_replace MEMORY.md / USER.md&quot;]
+  Disk -.-&gt;|next session start| Snapshot[&quot;frozen system-prompt block&quot;]
+  Sessions[&quot;state.db + FTS5&quot;] --&gt; Search[&quot;session search&quot;]
+  Provider[&quot;one external MemoryProvider&quot;] --&gt; Prefetch[&quot;prefetch() block&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-frozen-snapshot">The frozen snapshot</h3>
+<p>Documented at the top of <code>tools/memory_tool.py</code>: memory
+files are rendered into the system prompt once, at session start.
+Mid-session mutations are durable on disk but invisible to the running
+session's prompt.</p>
+<p>The motivation is economic rather than epistemic — a stable prompt
+prefix keeps the provider's cache warm for the entire session — but it
+has a real safety consequence the code calls out: because the snapshot
+is frozen, <strong>a poisoned entry persists for the whole session and
+across sessions until explicitly removed.</strong> That is why memory
+content is scanned with the broadest ("strict") threat-pattern set at
+write time, where most systems in this atlas defend at read time
+instead.</p>
+<p>This is an unusual and defensible trade: Hermes filters what may
+enter durable memory; <a href="../verel/">Verel</a> and <a
+href="../rainbox/">RainBox</a> instead fence whatever is recalled as
+untrusted data at the prompt boundary. Write-time filtering is cheaper
+per turn and cache-friendly; read-time fencing is more robust, because
+it does not depend on a pattern list being complete.</p>
+<h3 id="hard-budgets-and-in-turn-consolidation">Hard budgets and in-turn
+consolidation</h3>
+<p><code>MemoryStore.__init__(memory_char_limit=2200, user_char_limit=1375)</code>.
+In <code>add</code>, the prospective serialized total is computed before
+writing; on overflow the tool returns <code>success: False</code>
+together with <code>current_entries</code> and <code>usage</code>, and
+instructs the model to merge or remove entries and retry in the same
+turn.</p>
+<p><code>_MAX_CONSOLIDATION_FAILURES_PER_TURN = 3</code> bounds the
+resulting loop, so a model that cannot get under budget degrades instead
+of spinning.</p>
+<p>This is the inverse of the atlas's usual pattern. Most systems here
+let memory grow and add background consolidation later; Hermes refuses
+the write and makes compaction the model's immediate problem. The
+benefit is that prompt cost is known statically and cannot drift. The
+cost is that <strong>the model chooses what to forget under time
+pressure, with no review and no record of what it dropped.</strong></p>
+<h3 id="external-drift-detection">External drift detection</h3>
+<p><code>_detect_external_drift</code> treats the files as tool-shaped
+and looks for two signals that something else wrote them: a round-trip
+mismatch (re-parsing and re-serializing does not reproduce the bytes),
+or any single parsed entry exceeding the whole-file limit — which
+implies a shell append, patch tool, manual edit, or sibling session
+dumped free-form content into what the tool would treat as one
+entry.</p>
+<p>On detection it writes a timestamped <code>.bak</code> snapshot and
+<strong>refuses the mutation</strong>, returning the backup path. If the
+backup itself fails, the returned string says so explicitly and the file
+is left unchanged.</p>
+<p>Compare <a href="../basic-memory/">basic-memory</a>, which accepts
+human edits as canonical and invests heavily in bidirectional
+reconciliation. Hermes takes the opposite and much cheaper route: detect
+foreign writes, preserve them, and decline to proceed. For a two-file,
+few-kilobyte store that is the right call; it would not scale to a
+knowledge base people are expected to edit directly.</p>
+<p>The <code>add</code> path deliberately skips the drift guard —
+appending cannot clobber — but a comment records the exception that had
+to be handled anyway: because <code>add</code> rewrites the whole file
+from parsed entries, a file that exists but reads as empty (transient
+lock, permission blip, I/O error) would be rewritten down to just the
+new entry, wiping everything. The code refuses on read failure
+instead.</p>
+<h3 id="the-write-gate">The write gate</h3>
+<p><code>_apply_write_gate</code> routes every mutating memory action
+through <code>tools/write_approval.py</code>, which returns allow,
+block, or stage. Staged writes are persisted with an inline summary and
+a <code>pending_id</code> for later human approval — the same
+confirm-tier write-intent shape <a href="../rainbox/">RainBox</a> uses
+for high-impact assistant memory mutations, arrived at
+independently.</p>
+<p>One caveat is explicit in the code: if the gate module fails to
+import, the function returns <code>None</code> and the write proceeds.
+It <strong>fails open</strong> by design, with a comment saying so.</p>
+<h3 id="session-history">Session history</h3>
+<p><code>hermes_state.py</code> maintains session messages in SQLite
+with an FTS5 virtual table, and is unusually defensive about it: it
+detects legacy inline FTS schemas, probes for FTS5 availability and
+partial corruption with representative <code>MATCH</code> queries, caps
+user-controlled query input at 2,048 chars, can load a CJK tokenizer
+extension, and can drop and rebuild triggers.</p>
+<p>Retrieval here is lexical only. There is no vector index over session
+history and no fusion with the curated memory files — session search is
+a separate tool surface the model must choose to call.</p>
+<h3 id="skills-as-procedural-memory">Skills as procedural memory</h3>
+<p>Skills are Markdown files the agent creates and edits through
+<code>skill_manage</code>, with provenance and usage tracking in
+<code>tools/skill_provenance.py</code> and
+<code>tools/skill_usage.py</code>. Only names and descriptions occupy
+prompt space; bodies load on demand. This is a clean separation of "what
+I know how to do" from "what I know", and it is the layer that makes
+Hermes self-improving in the sense its documentation claims.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The curated layer has no data model beyond ordered strings in a file.
+Consequences:</p>
+<ul>
+<li><strong>No provenance.</strong> An entry does not record when, why,
+from what turn, or on whose authority it was written.</li>
+<li><strong>No status.</strong> Nothing separates candidate from
+confirmed; whatever the model writes is immediately authoritative for
+every future session.</li>
+<li><strong>No scope.</strong> Profiles partition everything — each
+profile has its own <code>HERMES_HOME</code> with its own config,
+memory, sessions, and skills — but <em>within</em> a profile there is no
+project, room, or agent boundary.</li>
+<li><strong>No identity.</strong> <code>replace</code> and
+<code>remove</code> locate an entry by unique substring, not by ID. The
+module docstring presents this as a feature ("short unique substring
+matching (not full text or IDs)"), and for a hand-sized list it is
+ergonomic. It is nonetheless identity-by-content: as entries are
+consolidated and reworded, a substring that was unique can become
+ambiguous or vanish, and the model must re-derive a handle it cannot
+store.</li>
+</ul>
+<p>Durability is handled well: cross-platform locking via
+<code>fcntl</code> or <code>msvcrt</code>, re-read under lock so
+concurrent sessions observe each other, <code>atomic_replace</code> for
+the final write, and explicit refusal rather than best-effort behaviour
+on ambiguous reads.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is essentially no retrieval for curated memory — it is
+<em>always</em> present, in full, in the system prompt. That is the
+point of bounding it. Recall latency is zero and recall is guaranteed;
+the trade is that the budget must be small enough for that to be
+affordable.</p>
+<p>The other layers are retrieved on demand and are not fused:</p>
+<ul>
+<li>Session history: FTS5 lexical search, explicit tool call.</li>
+<li>Skills: selected by name/description from the always-present
+index.</li>
+<li>Provider memory: whatever the mounted provider returns from
+<code>prefetch(query)</code>, appended as its own block.</li>
+</ul>
+<p>Nothing ranks across these layers. There is no unified query that
+considers curated memory, session history, and provider results
+together, and no de-duplication between them — a fact can appear in
+<code>USER.md</code>, in a provider's store, and in session history, and
+be injected two or three times.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Curated memory is written only by explicit <code>memory</code> tool
+calls (or their staged, human-approved equivalents). There is no
+automatic extraction into <code>MEMORY.md</code>/<code>USER.md</code> —
+a deliberate choice consistent with the hard budget, since automatic
+capture would exhaust 2,200 characters almost immediately.</p>
+<p>Automatic capture instead happens in the layers that can absorb it:
+session messages accumulate in SQLite, and a mounted provider's
+<code>sync_turn</code>/<code>on_session_end</code> hooks may extract
+whatever it likes into its own store.</p>
+<p><code>apply_batch</code> allows several operations against one target
+atomically, which is what makes the in-turn consolidate-then-retry flow
+practical.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The <code>MemoryProvider</code> ABC is the most explicit
+pluggable-memory contract in the atlas — roughly seventeen lifecycle
+members covering initialization, prompt blocks, prefetch, per-turn sync,
+tool schemas and dispatch, session end and switch, pre-compression
+extraction, delegation observation, config, backup paths, and shutdown.
+<code>MemoryManager</code> enforces a one-external-provider limit to
+prevent tool-schema bloat and conflicting backends.</p>
+<p>Hermes also exposes sessions to MCP clients via
+<code>hermes mcp serve</code>.</p>
+<p>The contract's notable gap — analyzed further in the <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> pattern — is that <strong>it has no deletion or forgetting
+hook and no scope parameter.</strong> <code>on_memory_write</code>
+forwards <code>add</code>, <code>replace</code>, and <code>remove</code>
+for providers that want to mirror built-in writes, but providers are
+free to implement only <code>add</code> (Holographic does exactly that),
+so a removal in <code>MEMORY.md</code> need not reach the provider's
+copy. There is no interface-level answer to "the user asked to be
+forgotten."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Bounded prompt cost by construction, with a stable cached
+prefix.</li>
+<li>Threat scanning at the write boundary, chosen deliberately because
+frozen snapshots make poisoning persistent.</li>
+<li>Human approval available for memory writes via a shared staging
+gate.</li>
+<li>Foreign-write detection with automatic backup and refusal.</li>
+<li>Refusal rather than guessing on failed or ambiguous reads.</li>
+<li>Atomic writes, cross-platform locking, cross-session re-read.</li>
+<li>Extensive FTS5 corruption detection and repair in the session
+store.</li>
+<li>Profile isolation for multi-persona use.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No verification tier.</strong> Anything the model writes is
+authoritative in every subsequent session. There is no candidate state,
+no corroboration, and no rejected-value tombstone, so a wrong entry that
+gets removed can be re-derived and re-added the next session with
+nothing to stop it.</li>
+<li><strong>Forgetting is unrecorded and model-driven.</strong> Budget
+pressure makes the model discard entries; nothing logs what was dropped
+or why.</li>
+<li><strong>Substring identity</strong> is fragile under exactly the
+consolidation the design forces.</li>
+<li><strong>The write gate fails open</strong> if its module cannot be
+imported.</li>
+<li><strong>Write-time pattern scanning is a denylist</strong>, and
+unlike read-time fencing its coverage depends on the pattern set being
+complete.</li>
+<li><strong>No cross-layer deduplication or precedence</strong> between
+curated memory, provider memory, and session history.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Memory-relevant suites include
+<code>tests/tools/test_memory_tool.py</code>,
+<code>tests/tools/test_memory_tool_import_fallback.py</code>,
+<code>tests/tools/test_write_approval.py</code>,
+<code>tests/agent/test_memory_provider.py</code> (1,662 lines),
+<code>tests/agent/test_skip_memory_store_65429.py</code>,
+<code>tests/agent/test_learning_mutations.py</code>,
+<code>tests/hermes_cli/test_backup.py</code>, and the holographic plugin
+suites.</p>
+<p>The suites were not run for this review. Coverage is clearly
+failure-path-oriented and several guards cite the issues that produced
+them (#26045 for drift, #50502 for FTS trigger corruption, #57682/#57690
+for extraction contamination), which is good evidence that the defensive
+code reflects real incidents rather than speculation.</p>
+<p>No committed memory-quality benchmark was found. There is no
+evaluation of whether the 2,200/1,375-character budgets are well chosen,
+and no measurement of what in-turn consolidation discards over
+long-running use — which is the single most important open empirical
+question about this design.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Frozen prompt snapshot.</strong> Decoupling durable writes
+from prompt mutation to preserve the cache is a genuinely useful move
+for any always-on memory block, and no other system in this atlas does
+it explicitly.</li>
+<li><strong>Hard budget with in-turn consolidation.</strong> Refusing
+the write and handing back current entries makes the compaction decision
+explicit and immediate instead of deferring it to a background job that
+may never run.</li>
+<li><strong>Character budgets, not token budgets</strong>, for
+model-independent limits.</li>
+<li><strong>Foreign-write detection with backup-then-refuse</strong> as
+a cheap alternative to bidirectional sync.</li>
+<li><strong>Refuse on ambiguous read</strong> rather than proceeding
+from a possibly-empty snapshot.</li>
+<li><strong>A staged write-approval gate</strong> shared across tools,
+giving humans a checkpoint on durable memory mutations.</li>
+<li><strong>Skills as separate procedural memory</strong>, indexed by
+name and loaded on demand.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Model writes are immediately authoritative</strong> — no
+candidate tier, no corroboration, no tombstones.</li>
+<li><strong>Substring-as-identity</strong> for mutation targets.</li>
+<li><strong>Unlogged forgetting</strong> driven by budget pressure.</li>
+<li><strong>Denylist-based injection defence</strong> at write time,
+with no read-time fence as a second layer.</li>
+<li><strong>Fail-open write gate.</strong></li>
+<li><strong>Layer duplication</strong> with no precedence rule between
+curated, provider, and session memory.</li>
+<li><strong>Provider interface with no deletion contract</strong>,
+making "forget me" unenforceable across a mounted backend.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The frozen-snapshot pattern, especially if prompt caching is a
+material cost.</li>
+<li>The hard-budget-plus-consolidate-in-turn loop, with the per-turn
+failure cap.</li>
+<li><code>_detect_external_drift</code>'s two signals and its
+backup-then-refuse response.</li>
+<li>The staged write-approval gate for durable memory mutations.</li>
+<li>The bounded-curated / unbounded-searchable split, which is a clean
+and honest division of labour.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Substring addressing beyond a few dozen entries.</li>
+<li>Write-time denylist scanning as the <em>only</em> injection
+defence.</li>
+<li>The provider ABC as-is if you need deletion, scope, or multi-tenancy
+— it has none.</li>
+<li>Unrecorded, model-driven eviction if you ever need to explain why
+something was forgotten.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What is actually lost over months of in-turn consolidation? Nothing
+measures or logs evictions.</li>
+<li>Should removals write a tombstone so a re-derived entry can be
+recognized and refused?</li>
+<li>Should the provider ABC gain <code>forget(scope|id)</code> and a
+scope parameter? Without them, host-level deletion cannot be honoured by
+a mounted provider.</li>
+<li>Should curated memory, provider results, and session hits be fused
+and de-duplicated rather than concatenated as independent blocks?</li>
+<li>Are 2,200 and 1,375 characters empirically right, or simply the
+first values that fit comfortably?</li>
+<li>Could entries carry a stable hidden ID while preserving the
+ergonomic substring interface?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Curated memory store, budgets, drift, locking:
+<code>tools/memory_tool.py</code>.</li>
+<li>Write gating and staging: <code>tools/write_approval.py</code>.</li>
+<li>Injection/exfiltration patterns:
+<code>tools/threat_patterns.py</code>.</li>
+<li>Provider contract: <code>agent/memory_provider.py</code>;
+orchestration: <code>agent/memory_manager.py</code>.</li>
+<li>Session persistence and FTS5: <code>hermes_state.py</code>.</li>
+<li>Skills as procedural memory:
+<code>tools/skill_manager_tool.py</code>,
+<code>tools/skill_provenance.py</code>,
+<code>tools/skill_usage.py</code>, <code>agent/skill_*.py</code>.</li>
+<li>Provider adapters:
+<code>plugins/memory/{holographic,honcho,mem0,hindsight,supermemory,openviking,byterover,retaindb}/</code>.</li>
+<li>Tests: <code>tests/tools/test_memory_tool*.py</code>,
+<code>tests/tools/test_write_approval.py</code>,
+<code>tests/agent/test_memory_provider.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

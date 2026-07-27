@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A coding-agent memory layer whose
+distinctive move is a deterministic structural-loss guard that detects
+and repairs what an LLM rewrite would silently delete.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ByteRover — Agent Memory Atlas">
+    <meta property="og:description" content="A coding-agent memory layer
+whose distinctive move is a deterministic structural-loss guard that
+detects and repairs what an LLM rewrite would silently delete.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ByteRover — Agent Memory Atlas">
+    <meta name="twitter:description" content="A coding-agent memory
+layer whose distinctive move is a deterministic structural-loss guard
+that detects and repairs what an LLM rewrite would silently delete.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ByteRover — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Curated coding-agent memory</p>
+          <h1>ByteRover</h1>
+          <p class="document-deck">A coding-agent memory layer whose
+distinctive move is a deterministic structural-loss guard that detects
+and repairs what an LLM rewrite would silently delete.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/campfirein/cipher">
+              <span>Source</span>
+              <strong>campfirein/cipher</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c" title="1052ac1a5dd0fde4da8693d4712064f7876c269c">
+              <span>Analyzed revision</span>
+              <code>1052ac1a5dd0fde4da8693d4712064f7876c269c</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ByteRover is a memory layer for autonomous coding agents, distributed
+as <code>byterover-cli</code> (<code>brv</code>) and mounted by <a
+href="../hermes-agent/">Hermes Agent</a> as one of its official memory
+providers. The repository was previously known as Cipher; the package
+now identifies as <code>byterover-cli</code>.</p>
+<p><strong>Licensing note, because it affects whether you can borrow
+from it: this repository is under the Elastic License 2.0, not an
+OSI-approved open-source licence.</strong> ELv2 forbids providing the
+software to third parties as a hosted or managed service and forbids
+circumventing licence-key functionality. Widely circulated descriptions
+of ByteRover's engine as "open source" are inaccurate at this commit.
+Read the code for ideas by all means; check with counsel before
+vendoring it.</p>
+<p>The local memory primitive is deliberately thin — a
+<code>Memory</code> is content plus id, timestamps, tags, and metadata
+carrying a <code>source</code> of <code>agent | system | user</code> and
+a <code>pinned</code> flag. There is no trust state, no scope hierarchy,
+and no supersession chain. On its own that would make this a minor
+entry.</p>
+<p>What earns it a report is the <strong>knowledge curation
+layer</strong>, and specifically one idea the atlas has been
+missing:</p>
+<pre class="text"><code>detectStructuralLoss(existing, proposed) -&gt; StructuralLoss
+resolveStructuralLoss(existing, proposed, loss) -&gt; repaired content</code></pre>
+<p>Before an LLM "curate" pass is allowed to overwrite a knowledge file,
+ByteRover diffs the parsed existing content against the proposed
+replacement and counts precisely what would be <strong>lost</strong> —
+snippets, relations, narrative fields, raw-concept scalars, and array
+items. Additions are ignored, so enrichment passes cleanly; deletions
+are flagged as high structural impact and then automatically repaired by
+merging the lost material back in.</p>
+<p>This is a cheap, deterministic answer to a failure the atlas
+repeatedly warns about and no other system here defends against
+directly: background summarization quietly discarding the evidence it
+was meant to compress.</p>
+<p>A second, smaller idea is worth noting: the deduplicator treats the
+<code>DECISIONS</code> category as an immutable append-only log that is
+never merged or skipped, while every other category is subject to LLM
+<code>CREATE</code> / <code>MERGE</code> / <code>SKIP</code> judgement.
+Making immutability a property of the memory <em>kind</em> is a
+lighter-weight alternative to a full trust-state machine.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two layers with quite different sophistication.</p>
+<p><strong>Memory</strong>
+(<code>src/agent/core/domain/memory/types.ts</code>) — flat and
+simple:</p>
+<pre class="typescript"><code>interface Memory {
+  id: string
+  content: string
+  createdAt: number
+  updatedAt: number
+  tags?: string[]
+  metadata?: {
+    source?: &#39;agent&#39; | &#39;system&#39; | &#39;user&#39;
+    pinned?: boolean
+    [key: string]: unknown
+  }
+}
+
+interface MemoryConfig {
+  storageDir?: string      // default: .byterover/cipher/memories
+  maxMemories?: number
+  defaultTags?: string[]
+}</code></pre>
+<p><strong>Knowledge</strong>
+(<code>src/agent/core/domain/knowledge/</code>,
+<code>src/server/core/domain/knowledge/</code>) — structured Markdown
+documents parsed into <code>ContextData</code>:</p>
+<pre class="typescript"><code>ContextData {
+  snippets: string[]
+  relations: string[]
+  narrative: { dependencies, examples, highlights, rules, structure }
+  rawConcept: { author, flow, task, timestamp, changes[], files[], patterns }
+}</code></pre>
+<p>Curation lifecycle — the part worth studying:</p>
+<pre class="text"><code>agent proposes curated content for an existing knowledge file
+-&gt; parse existing file -&gt; ContextData(existing)
+-&gt; detectStructuralLoss(existing, proposed)
+     counts lostSnippets, lostRelations, lostNarrativeFields,
+            lostRawConceptFields, lostArrayItems
+-&gt; deriveImpactFromLoss(loss) -&gt; &#39;high&#39; | &#39;low&#39;
+-&gt; if loss.hasLoss: resolveStructuralLoss()
+     arrays  -&gt; union merge with dedup
+     scalars -&gt; proposed wins, existing preserved when proposed is empty
+-&gt; write repaired content</code></pre>
+<p>Memory write lifecycle:</p>
+<pre class="text"><code>agent extracts DraftMemory[] (content, category, tags)
+-&gt; MemoryDeduplicator.deduplicate(drafts, existing)   [LLM, concurrency 4]
+     -&gt; CREATE | MERGE(targetId, mergedContent) | SKIP
+     -&gt; DECISIONS category: always CREATE (immutable log)
+-&gt; persist to .byterover/cipher/memories</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The repository is a TypeScript CLI and server, roughly 1,168
+<code>.ts</code> files under <code>src/</code>, organized as
+<code>agent/</code>, <code>server/</code>, <code>oclif/</code>,
+<code>tui/</code>, <code>webui/</code>, and <code>shared/</code>.</p>
+<p>Memory-relevant modules are small and easy to trace:</p>
+<ul>
+<li><code>src/agent/core/domain/memory/types.ts</code> (111 lines) — the
+<code>Memory</code> model.</li>
+<li><code>src/agent/infra/memory/memory-manager.ts</code> (640 lines) —
+persistence and lifecycle.</li>
+<li><code>src/agent/infra/memory/memory-deduplicator.ts</code> (132
+lines) — LLM dedup with CREATE/MERGE/SKIP.</li>
+<li><code>src/agent/core/domain/knowledge/conflict-detector.ts</code>
+(107 lines) — <code>detectStructuralLoss</code>,
+<code>deriveImpactFromLoss</code>.</li>
+<li><code>src/agent/core/domain/knowledge/conflict-resolver.ts</code>
+(133 lines) — <code>resolveStructuralLoss</code> and the merge
+helpers.</li>
+<li><code>src/server/core/domain/knowledge/markdown-writer.ts</code> —
+the <code>ContextData</code> / <code>Narrative</code> /
+<code>RawConcept</code> shapes.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Agent[&quot;Coding agent&quot;] --&gt; Drafts[&quot;DraftMemory[]&quot;]
+  Drafts --&gt; Dedup[&quot;MemoryDeduplicator (LLM)&quot;]
+  Dedup --&gt;|CREATE / MERGE / SKIP| Store[&quot;.byterover/cipher/memories&quot;]
+  Agent --&gt; Curate[&quot;curate: proposed ContextData&quot;]
+  Existing[&quot;Existing knowledge file&quot;] --&gt; Detect[&quot;detectStructuralLoss&quot;]
+  Curate --&gt; Detect
+  Detect --&gt; Impact[&quot;deriveImpactFromLoss&quot;]
+  Detect --&gt; Resolve[&quot;resolveStructuralLoss (union merge)&quot;]
+  Resolve --&gt; Write[&quot;markdown-writer&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="structural-loss-detection-conflict-detectorts">Structural-loss
+detection (<code>conflict-detector.ts</code>)</h3>
+<p><code>countLostItems</code> compares normalized string arrays and
+returns how many existing entries are absent from the proposal.
+<code>countLostNarrativeFields</code> checks the five narrative fields
+(<code>dependencies</code>, <code>examples</code>,
+<code>highlights</code>, <code>rules</code>, <code>structure</code>) for
+ones that exist now and would not afterwards.
+<code>countLostRawConceptFields</code> does the same for scalars
+(<code>author</code>, <code>flow</code>, <code>task</code>,
+<code>timestamp</code>) and for the <code>changes</code> and
+<code>files</code> arrays.</p>
+<p>The design comment states the key asymmetry plainly: it "only flags
+when existing content would be LOST, not when new content is added. This
+prevents false positives when the LLM is enriching content."</p>
+<p>That asymmetry is what makes the guard usable in practice. A
+symmetric diff would fire on every legitimate rewrite; this one fires
+only on deletion, which is the direction that loses information.</p>
+<p><code>deriveImpactFromLoss</code> collapses the counts to
+<code>high</code> when anything at all would be lost and
+<code>low</code> otherwise — a blunt but honest signal, given that
+losing one relation and losing forty are both "the rewrite is
+destructive."</p>
+<h3 id="structural-loss-resolution-conflict-resolverts">Structural-loss
+resolution (<code>conflict-resolver.ts</code>)</h3>
+<p><code>resolveStructuralLoss</code> is a no-op when nothing would be
+lost. Otherwise it rebuilds the proposal:</p>
+<ul>
+<li><strong>Arrays</strong> (<code>snippets</code>,
+<code>relations</code>, <code>changes</code>, <code>files</code>) —
+union merge with deduplication, so nothing disappears.</li>
+<li><strong>Scalars</strong> (narrative fields, raw-concept scalars,
+<code>patterns</code>) — proposed wins, with the existing value
+preserved when the proposal leaves the field empty.</li>
+</ul>
+<p>The strategy is deliberately conservative in one direction only: the
+LLM may <em>rephrase</em> a scalar, but it cannot <em>empty</em> one,
+and it cannot drop a list item. This is repair rather than rejection —
+the curate operation still succeeds, it just cannot destroy.</p>
+<p>Compare how the atlas's other systems handle the same risk. <a
+href="../mastra-observational-memory/">Mastra</a> persists the exact
+source range a summary covers so the summary can be replaced rather than
+trusted. <a href="../mempalace/">MemPalace</a> refuses the problem
+entirely by keeping verbatim drawers authoritative. ByteRover's answer
+is the cheapest of the three and the only one that operates as a guard
+on the rewrite itself.</p>
+<h3 id="deduplication-memory-deduplicatorts">Deduplication
+(<code>memory-deduplicator.ts</code>)</h3>
+<p>Each draft is compared against existing memories by an LLM that must
+answer with one of <code>CREATE</code>, <code>MERGE</code> (with
+<code>targetId</code> and <code>mergedContent</code>), or
+<code>SKIP</code>, at concurrency 4. When there are no existing memories
+the LLM is skipped entirely and everything is a <code>CREATE</code>.</p>
+<p>The <code>DECISIONS</code> category bypasses the LLM and always
+returns <code>CREATE</code>. The code calls this an "immutable log", and
+it is a meaningful epistemic statement: decisions are events that
+happened, so merging or skipping them would corrupt a historical record,
+whereas facts and observations can reasonably be consolidated.</p>
+<p>This is a lighter-weight cousin of <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+— rather than separating evidence rows from claims, it marks one
+category as evidence-shaped and exempts it from consolidation.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Storage is the local filesystem under
+<code>.byterover/cipher/memories</code>, with an optional
+<code>maxMemories</code> cap and optional cloud sync.</p>
+<p>The model's limits are straightforward:</p>
+<ul>
+<li><strong><code>source</code> is descriptive, not
+authoritative.</strong> <code>agent | system | user</code> records who
+wrote a memory but gates nothing — an agent-sourced memory is as active
+as a user-sourced one. Contrast <a href="../rainbox/">RainBox</a>'s
+five-actor model, where the actor determines whether a write lands
+active or candidate.</li>
+<li><strong><code>pinned</code> is the only lifecycle flag.</strong> No
+status, no expiry, no supersession chain, no rejected values.</li>
+<li><strong>Scope is a storage directory.</strong> There is no user,
+project, or session key on the record itself; workspace separation comes
+from where the files live.</li>
+<li><strong><code>maxMemories</code> is an unqualified cap</strong> with
+no documented eviction policy in the inspected modules — which memory is
+dropped when the cap is hit is not visible here.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>ListMemoriesOptions</code> supports <code>limit</code>,
+<code>offset</code>, and filtering by <code>tags</code> (OR logic),
+<code>source</code>, and <code>pinned</code>. This is metadata filtering
+and pagination, not ranked retrieval: no vector search, lexical index,
+or scoring appears in the memory modules inspected.</p>
+<p>ByteRover's marketing describes a hierarchical knowledge tree with
+tiered retrieval and fast pre-LLM lookup. The knowledge layer's
+<code>ContextData</code> structure and the <code>markdown-writer</code>
+are consistent with that, but the ranking machinery is not present in
+the memory domain modules reviewed here, and no claimed retrieval
+benchmark was found in the repository.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two paths, with quite different care applied:</p>
+<ol type="1">
+<li><strong>Memory drafts</strong> → LLM dedup → persist. Every
+non-<code>DECISIONS</code> draft is subject to an LLM's judgement about
+whether it is new, and a <code>MERGE</code> rewrites an existing
+memory's content with LLM-produced text. That merge has no
+structural-loss guard of its own — the protection described above
+applies to knowledge-file curation, not to memory merging.</li>
+<li><strong>Knowledge curation</strong> → structural-loss detection →
+automatic repair → write.</li>
+</ol>
+<p>The asymmetry is worth flagging: the more carefully guarded path is
+the document layer, while the memory layer — where an LLM rewrites
+stored content during <code>MERGE</code> — is the less protected
+one.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>ByteRover is delivered as the <code>brv</code> CLI with an MCP
+surface, and is documented as compatible with a long list of coding
+agents. It is one of the nine official <a href="../hermes-agent/">Hermes
+Agent</a> memory providers, with the adapter living in that repository
+at <code>plugins/memory/byterover/</code>.</p>
+<p>Because it is mounted through a host's provider interface, it
+inherits the boundary problem described in the <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> pattern: the host has no interface-level way to propagate a
+deletion into ByteRover's store.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Deterministic, non-LLM detection of destructive rewrites, with
+automatic repair.</li>
+<li>Loss detection is asymmetric by design, avoiding false positives on
+enrichment.</li>
+<li>An immutable category for decisions.</li>
+<li>Human-readable local Markdown storage with an explicit storage
+directory.</li>
+<li>Bounded dedup concurrency and a short-circuit when no comparison is
+needed.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state.</strong> <code>source</code> is metadata
+only; agent-written memories are immediately authoritative.</li>
+<li><strong>No tombstones or supersession</strong>, so a removed memory
+can be re-extracted.</li>
+<li><strong>LLM <code>MERGE</code> rewrites memory content
+unguarded</strong>, which is precisely the operation the knowledge layer
+protects against elsewhere.</li>
+<li><strong>No ranked retrieval</strong> in the inspected memory
+modules.</li>
+<li><strong><code>deriveImpactFromLoss</code> is binary</strong>, so
+severity is not proportional to what was lost.</li>
+<li><strong><code>maxMemories</code> eviction policy is not
+visible</strong> in the inspected code.</li>
+<li><strong>ELv2 licensing</strong> materially constrains reuse and
+redistribution.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No test files specific to the memory or knowledge domain modules were
+located in this checkout, and no committed retrieval or memory-quality
+benchmark was found. The suites were not run.</p>
+<p>For a system whose most valuable idea is a correctness guard —
+structural-loss detection — the absence of visible tests around
+<code>detectStructuralLoss</code> and <code>resolveStructuralLoss</code>
+is the most significant evidence gap in this report. The functions are
+pure and deterministic, so they are unusually easy to test; that they
+appear untested here means the guard's behaviour on edge cases (empty
+proposals, reordered arrays, case-variant duplicates) is unverified.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Structural-loss guard on LLM rewrites.</strong> Parse before
+and after, count only what would be deleted, treat deletion as high
+impact, and merge the loss back automatically. This is the single most
+transferable idea in the repository and belongs in any system that lets
+a model rewrite stored knowledge.</li>
+<li><strong>Asymmetric diffing</strong> — flag removals, ignore
+additions — as the way to make such a guard usable.</li>
+<li><strong>Union-merge repair</strong> rather than outright rejection,
+so curation still succeeds.</li>
+<li><strong>An immutable memory category</strong> for decisions and
+other event-shaped records.</li>
+<li><strong>Short-circuiting the LLM</strong> when there is nothing to
+compare against.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Actor recorded but not enforced.</strong></li>
+<li><strong>LLM merge without a loss guard</strong>, in the same
+codebase that implements one for documents.</li>
+<li><strong>Binary impact severity.</strong></li>
+<li><strong>No durable correction semantics</strong> — no tombstones, no
+supersession.</li>
+<li><strong>Unspecified eviction</strong> behind a raw
+<code>maxMemories</code> cap.</li>
+<li><strong>"Open source" positioning</strong> that does not match the
+ELv2 licence in the repository.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow (as ideas — check the licence before borrowing code):</p>
+<ul>
+<li><code>detectStructuralLoss</code> /
+<code>resolveStructuralLoss</code> conceptually, applied to
+<em>every</em> LLM rewrite path including memory merges.</li>
+<li>The immutable-category rule for decision logs.</li>
+<li>The CREATE/MERGE/SKIP dedup vocabulary, which is clearer than a
+similarity threshold.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The <code>Memory</code> model as a durable belief store; it lacks
+status, scope, provenance, and correction.</li>
+<li>LLM-driven merge without the structural guard.</li>
+<li>Any of the code itself into a hosted service, which ELv2
+prohibits.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Why is the structural-loss guard applied to knowledge curation but
+not to <code>MemoryDeduplicator</code>'s <code>MERGE</code> path?</li>
+<li>What is evicted when <code>maxMemories</code> is reached?</li>
+<li>Is <code>detectStructuralLoss</code> tested anywhere? Its edge-case
+behaviour is unverified in this checkout.</li>
+<li>Should impact be proportional to the volume of loss rather than
+binary?</li>
+<li>How does the hierarchical retrieval described in ByteRover's
+documentation relate to the metadata-filter-only listing in these
+modules — is ranking implemented server-side or in the closed cloud
+component?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory model:
+<code>src/agent/core/domain/memory/types.ts</code>.</li>
+<li>Memory persistence:
+<code>src/agent/infra/memory/memory-manager.ts</code>,
+<code>index.ts</code>.</li>
+<li>LLM deduplication:
+<code>src/agent/infra/memory/memory-deduplicator.ts</code>.</li>
+<li>Structural-loss detection:
+<code>src/agent/core/domain/knowledge/conflict-detector.ts</code>.</li>
+<li>Structural-loss resolution:
+<code>src/agent/core/domain/knowledge/conflict-resolver.ts</code>,
+<code>utils.ts</code>.</li>
+<li>Document shapes:
+<code>src/server/core/domain/knowledge/markdown-writer.ts</code>.</li>
+<li>Licence: <code>LICENSE</code> (Elastic License 2.0).</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

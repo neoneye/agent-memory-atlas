@@ -4,22 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-twenty-one agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+twenty-seven agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of twenty-one agent memory architectures, their retrieval mechanics,
+of twenty-seven agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of twenty-one agent memory architectures, their retrieval mechanics,
+of twenty-seven agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -53,8 +53,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-twenty-one agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+twenty-seven agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -102,6 +102,8 @@ than its current implementation.</p>
 <li><code>agentmemory</code></li>
 <li><code>tencentdb-agent-memory</code></li>
 <li><code>claude-mem</code></li>
+<li><code>hermes-agent</code></li>
+<li><code>openclaw</code></li>
 </ul>
 <p>This treats memory as part of the agent runtime. Memory is not merely
 an external RAG sidecar; it is compiled into or injected into
@@ -117,6 +119,8 @@ compatibility surface.</p>
 <li><code>honcho</code></li>
 <li><code>supermemory</code></li>
 <li><code>hindsight</code></li>
+<li><code>redis-agent-memory-server</code></li>
+<li><code>openviking</code></li>
 <li>partly <code>mem0</code></li>
 </ul>
 <p>These optimize for multi-user, multi-session, product-oriented
@@ -136,6 +140,7 @@ managed-platform-only in the OSS code.</p>
 <li><code>basic-memory</code></li>
 <li><code>agentmemory</code></li>
 <li><code>claude-mem</code></li>
+<li><code>byterover</code></li>
 </ul>
 <p>This optimizes for a local developer workflow: durable local memory,
 MCP/tools/hooks, project scopes, exact search, vector search, conflict
@@ -292,6 +297,36 @@ feedback, eval cases, and review UI.</p>
 <p>Tradeoff: this works well inside a full assistant product, but it is
 much heavier than a library and less source-preserving than MemPalace's
 verbatim drawer model.</p>
+<h3 id="vector-symbolic-memory">Vector-symbolic memory</h3>
+<p>Repo:</p>
+<ul>
+<li><code>holographic</code></li>
+</ul>
+<p>Holographic encodes facts as Holographic Reduced Representation phase
+vectors derived deterministically from SHA-256, so entities can be bound
+into and unbound out of a fact algebraically rather than matched by
+embedding similarity.</p>
+<p>Tradeoff: representations are reproducible with no embedding model to
+version, and compositional multi-entity queries become expressible, but
+the encoding is bag-of-words, capacity degrades as facts bundle into a
+category bank, and the plugin folds truth and usefulness into one
+feedback-trained score.</p>
+<h3 id="host-runtime-with-pluggable-memory">Host runtime with pluggable
+memory</h3>
+<p>Repos:</p>
+<ul>
+<li><code>hermes-agent</code></li>
+<li><code>openclaw</code></li>
+</ul>
+<p>These are agent runtimes that ship a memory interface rather than a
+single memory model. Hermes bounds its own curated Markdown memory hard
+and freezes it into the system prompt, while mounting one external
+provider at a time; OpenClaw ships memory entirely as extensions over a
+plugin contract.</p>
+<p>Tradeoff: users can choose a backend matching their privacy and scale
+needs, but trust state, scope, and above all deletion have to cross the
+host/provider boundary — and in both contracts inspected here, no
+deletion hook exists.</p>
 <h3 id="verification-first-memory">Verification-first memory</h3>
 <p>Repo:</p>
 <ul>
@@ -699,6 +734,134 @@ claims have no trust state</td>
 automatically; dual schema transition</td>
 </tr>
 <tr>
+<td><code>holographic</code></td>
+<td>Flat fact row plus HRR phase vector and linked entities</td>
+<td>Local SQLite (WAL) with FTS5 and per-category bundled banks</td>
+<td>FTS5 + Jaccard + HRR cosine, multiplied by trust; algebraic
+<code>probe</code>/<code>related</code>/<code>reason</code></td>
+<td><code>fact_store</code> tool, mirrored host writes, optional
+end-of-session regex extraction</td>
+<td>Exact update/remove; feedback shifts trust; no supersession</td>
+<td>Category only; no user/project/session scope</td>
+<td>Hermes <code>MemoryProvider</code> plugin; <code>fact_store</code>
+and <code>fact_feedback</code> tools</td>
+<td>None; bank rebuild is synchronous on every write</td>
+<td>None — no source, actor, or session on a fact</td>
+<td>Deterministic hash-derived vectors; <code>contradict</code> as a
+query action</td>
+<td>Three downvotes silently drop a fact below the retrieval floor; one
+score for truth and reachability</td>
+</tr>
+<tr>
+<td><code>hermes-agent</code></td>
+<td>Delimited text entry in <code>MEMORY.md</code> /
+<code>USER.md</code>; session message; skill</td>
+<td>Markdown files plus SQLite <code>state.db</code> with FTS5</td>
+<td>Curated memory always in prompt; session history via FTS5; no
+cross-layer fusion</td>
+<td>Explicit <code>memory</code> tool through a staged write-approval
+gate</td>
+<td>Substring-addressed replace/remove; hard char cap forces in-turn
+consolidation</td>
+<td>Profile-level only; no project or room boundary within a
+profile</td>
+<td>Own tools plus one mounted <code>MemoryProvider</code>; MCP
+serve</td>
+<td>None for curated memory; providers may run their own</td>
+<td>Threat-scanned at write; no provenance on entries</td>
+<td>Frozen prompt snapshot preserves cache; foreign-write detection with
+backup</td>
+<td>Model writes are instantly authoritative; unlogged budget-driven
+eviction</td>
+</tr>
+<tr>
+<td><code>openviking</code></td>
+<td>Typed memory file with L0 abstract, L1 overview, L2 content, links
+and backlinks</td>
+<td>Pluggable vector/graph stores plus native Rust/C++ index</td>
+<td>Directory-recursive dense + sparse, level filter, per-type quota,
+rerank, hotness blend</td>
+<td>LLM extraction into typed files; write target resolved before
+persistence</td>
+<td>Merge ops with
+<code>upsert</code>/<code>add_only</code>/<code>update_only</code>; no
+rejection state</td>
+<td>Tenant and permission via <code>RequestContext</code>; user space
+plus <code>peers/&lt;id&gt;</code></td>
+<td>Server, SDKs, CLI, web studio; Hermes and OpenClaw provider</td>
+<td>Extraction, streaming update, reindex, hotness maintenance</td>
+<td>URIs, types, timestamps; no evidential spans or trust state</td>
+<td>Three-granularity progressive disclosure; hotness kept apart from
+confidence</td>
+<td>Headline benchmark numbers lack committed raw artifacts;
+AGPL-3.0</td>
+</tr>
+<tr>
+<td><code>redis-agent-memory-server</code></td>
+<td>Working-memory message; long-term <code>MemoryRecord</code> typed
+episodic/semantic/message</td>
+<td>Redis with TTL for working memory; pluggable vector DB for
+long-term</td>
+<td>Vector search plus metadata filters, reranked by recency with dual
+half-lives</td>
+<td>Debounced trailing extraction via swappable strategies, then layered
+dedupe</td>
+<td>Exact delete; composite forgetting policy; no tombstones</td>
+<td>Namespace, <code>user_id</code>, <code>session_id</code>, with
+auth</td>
+<td>REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin</td>
+<td>Debounced extraction, compaction, dedupe, forgetting sweeps</td>
+<td>Session linkage and per-message extraction flags; no trust
+state</td>
+<td>Best-specified retention policy in the atlas; cohesion-gated
+semantic merge</td>
+<td>Deletion is not durable against re-extraction; access-driven
+reinforcement</td>
+</tr>
+<tr>
+<td><code>byterover</code></td>
+<td>Flat memory with source/pinned metadata; structured knowledge
+<code>ContextData</code></td>
+<td>Local Markdown under <code>.byterover/</code>, optional cloud
+sync</td>
+<td>Metadata filter and pagination only in inspected modules</td>
+<td>LLM dedup returning CREATE/MERGE/SKIP; <code>DECISIONS</code> always
+creates</td>
+<td>Structural-loss guard repairs destructive curation; no
+tombstones</td>
+<td>Storage directory only</td>
+<td><code>brv</code> CLI, MCP, Hermes provider</td>
+<td>LLM dedup at bounded concurrency</td>
+<td><code>source</code> of agent/system/user recorded but not
+enforced</td>
+<td>Deterministic structural-loss detection and repair on LLM
+rewrites</td>
+<td>Elastic License 2.0, not open source; merge path itself is
+unguarded</td>
+</tr>
+<tr>
+<td><code>openclaw</code></td>
+<td>Categorized entry (preference/fact/decision/entity/other) with
+embedding</td>
+<td>LanceDB via <code>memory-lancedb</code> extension; swappable
+embedding adapters</td>
+<td>Vector search with mandatory agent-scoped predicate; no lexical
+arm</td>
+<td>Optional auto-capture after envelope sanitization; 500-char
+truncation</td>
+<td>Exact scoped delete; no tombstones, and auto-capture can restore
+content</td>
+<td><code>agentId</code>, composed inseparably into every predicate</td>
+<td>Plugin contract via <code>memory-core</code>; tools, CLI, doctor
+checks</td>
+<td>Auto-capture cursor with fingerprint drift detection</td>
+<td><code>createdAt</code> and category only</td>
+<td>Envelope sanitization before capture; scope that cannot be
+dropped</td>
+<td>Vector-only reference backend; sanitization is a denylist tied to
+envelope formats</td>
+</tr>
+<tr>
 <td><code>a-mem</code></td>
 <td><code>MemoryNote</code> with content, tags, context, links, and
 evolution history</td>
@@ -747,7 +910,25 @@ captured percepts through a trust gate. <code>agentmemory</code>
 combines cheap hook capture with explicit <code>mem::remember</code>;
 compression is optional. <code>tencentdb-agent-memory</code> records raw
 conversation evidence, then extracts higher layers from successful
-turns.</p>
+turns. <code>redis-agent-memory-server</code> writes messages into
+TTL-scoped working memory first and defers extraction behind a debounce.
+<code>hermes-agent</code> captures curated memory only through explicit
+tool calls, because a hard character budget makes automatic capture
+self-defeating. <code>openclaw</code> and <code>holographic</code> both
+capture without a model — OpenClaw after sanitizing its own message
+envelope, Holographic by regex over user turns when auto-extraction is
+enabled.</p>
+<p>Two systems in the Hermes/OpenClaw ecosystem independently guard
+against the same subtle failure: <strong>the harness's own scaffolding
+becoming memory.</strong> OpenClaw devotes 567 lines to stripping media
+notes, context markers, reply headers, and sender prefixes before
+capture, with a <code>looksLikeEnvelopeSludge</code> gate rejecting what
+remains. Holographic had to exclude its host's compaction handoff
+summaries, which were being injected as <code>role="user"</code>
+messages, matched its decision-extraction patterns, and were stored as
+durable facts on every context rollover. Any system with automatic
+capture should test explicitly that its own generated text cannot
+re-enter as evidence.</p>
 <p>The important split is whether the captured item is itself memory or
 evidence for memory. Cognee, Claude-Mem, Honcho, Verel, MemPalace,
 Graphiti, Hindsight, Basic Memory, Mastra, Swafra, RainBox, agentmemory,
@@ -810,6 +991,19 @@ path and makes LLM compression/consolidation optional.
 <code>tencentdb-agent-memory</code> uses an LLM to extract L1 records,
 then another judgment step chooses store, update, merge, or skip;
 failures store all candidates rather than losing them.</p>
+<p><code>redis-agent-memory-server</code> is the clearest example of
+extraction policy as a plugin point: <code>BaseMemoryStrategy</code> has
+discrete-fact, summary, user-preference, and fully custom
+implementations, so what counts as a memory is configuration. Because
+the custom strategy accepts an operator-supplied prompt, it also ships a
+<code>PromptValidator</code> that screens those prompts for injection —
+an unusual threat model in which the deployment's own configuration is
+the attack surface. <code>openviking</code> extracts into typed memory
+files whose <code>stage</code> field separates long-term user memory
+from execution-derived agent memory. <code>holographic</code> and
+<code>openclaw</code> deliberately do not extract at all: both store
+lightly-processed user text, which keeps capture model-independent but
+fills the store with prose rather than normalized claims.</p>
 <p><code>cognee</code> runs typed task pipelines that chunk documents,
 extract graph structures, embed several views, and optionally ground
 nodes in an ontology. <code>claude-mem</code> asks an observer model for
@@ -851,6 +1045,17 @@ mechanism in the inspected files. <code>langmem</code> provides
 reflection hooks rather than a fixed consolidation policy.
 <code>engram</code> keeps a pragmatic local model: update topic keys,
 count duplicates, surface conflicts.</p>
+<p><code>redis-agent-memory-server</code> has the most careful
+consolidation guard in the atlas: hash, ID, and semantic dedupe are
+separate passes, and the semantic path runs
+<code>_semantic_merge_group_is_cohesive</code> before an LLM is allowed
+to collapse a cluster — an explicit test that "similar" really is "same"
+before merging. <code>byterover</code> approaches the same risk from the
+document side, diffing existing against proposed content and counting
+only what a rewrite would delete. <code>hermes-agent</code> is the
+outlier: consolidation is neither background nor automatic, but a
+synchronous obligation handed to the model when a write would exceed the
+character budget.</p>
 <p>Cognee's <code>memify</code>/<code>improve</code> pipelines enrich an
 existing graph, while its session path bridges hot entries into
 permanent memory asynchronously. Claude-Mem compresses batches into
@@ -892,10 +1097,19 @@ weighted RRF and per-session diversity.
 RRF or uses native Tencent VectorDB hybrid search.
 <code>claude-mem</code> selects Chroma semantic search for ordinary text
 queries and reserves metadata/semantic intersection for file lookup.
-<code>a-mem</code> is vector-only despite hybrid wording.
-<code>mastra-observational-memory</code> is the deliberate exception:
-its primary path is sequential observations plus a recent raw tail, with
-semantic observation retrieval optional.</p>
+<code>openviking</code> runs directory-recursive dense plus sparse
+retrieval with level filters, per-type quotas, optional reranking, and a
+hotness blend. <code>redis-agent-memory-server</code> pairs vector
+search with a recency reranker using separate half-lives for last access
+and creation. <code>holographic</code> fuses FTS5, Jaccard, and HRR
+cosine, then multiplies by trust — and silently reweights to
+lexical-only when NumPy is absent while still reporting itself as
+available. <code>openclaw</code>'s reference backend is vector-only,
+which sits awkwardly with a category set dominated by preferences,
+entities, and decisions. <code>a-mem</code> is vector-only despite
+hybrid wording. <code>mastra-observational-memory</code> is the
+deliberate exception: its primary path is sequential observations plus a
+recent raw tail, with semantic observation retrieval optional.</p>
 <h3 id="context-injection">Context Injection</h3>
 <p><code>letta</code> and <code>mastra-observational-memory</code> have
 the deepest runtime prompt integration. Mastra removes observed raw
@@ -921,6 +1135,19 @@ work context; <code>supermemory</code> emits profile text;
 <code>engram</code> has MCP context tools; <code>honcho</code> exposes
 working representations. A-MEM leaves injection entirely to its
 caller.</p>
+<p><code>hermes-agent</code> takes the most distinctive position in this
+set: curated memory is rendered into the system prompt <strong>once, at
+session start, as a frozen snapshot</strong>, and mid-session writes
+deliberately do not update it, so the provider's prefix cache survives
+the whole session. That choice is economic rather than epistemic, but it
+drives a real safety decision — because a poisoned entry would persist
+for the entire session and beyond, Hermes scans memory content against
+its broadest threat-pattern set at <em>write</em> time. This is the
+mirror image of Verel's and RainBox's read-time fencing, and the trade
+is instructive: write-time filtering is cheaper and cache-friendly but
+is a denylist, while read-time fencing costs tokens every turn and does
+not depend on pattern coverage. <code>holographic</code> does neither,
+injecting its top five stored facts into the prompt unfenced.</p>
 <h3 id="correction">Correction</h3>
 <p>This is where systems diverge sharply.</p>
 <p><code>verel</code> and <code>rainbox</code> have the strongest
@@ -946,6 +1173,22 @@ threshold can silently supersede a conflict without an explicit
 judgment. <code>tencentdb-agent-memory</code> offers internal
 merge/delete paths and editable generated files, but no first-class
 agent/user correction or forget operation.</p>
+<p>The six systems added from the Hermes/OpenClaw ecosystem are
+uniformly weak here, and usefully so: none of <code>holographic</code>,
+<code>hermes-agent</code>, <code>openviking</code>,
+<code>redis-agent-memory-server</code>, <code>byterover</code>, or
+<code>openclaw</code> has a rejected-value tombstone, so in every one of
+them a corrected or deleted memory can be re-derived from retained
+material with nothing to stop it. <code>byterover</code> is the partial
+exception in an unexpected place — its <code>detectStructuralLoss</code>
+/ <code>resolveStructuralLoss</code> pair is the only mechanism in the
+atlas that guards a <em>rewrite</em> rather than a claim, counting
+exactly what an LLM curation pass would delete and merging the loss back
+in. <code>holographic</code> inverts the usual failure: its
+<code>contradict</code> action surfaces contradictions as an ordinary
+query, but only reports them, with no supersession or review workflow
+attached, and its docstring claim that "no other memory system does
+this" is not accurate within this atlas.</p>
 <p>Cognee can forget and rebuild derived projections from retained
 source, but its ontology-valid, source-attributed graph facts still lack
 candidate/rejected epistemic state. Claude-Mem offers exact deletion and
@@ -1004,9 +1247,39 @@ cloud tombstone enqueue; synchronized deletes fail closed when
 replication identity is unavailable.</li>
 <li><code>a-mem</code>: exact local delete, but incoming links are not
 cleaned and the dictionary/Chroma mutation is not atomic.</li>
+<li><code>holographic</code>: exact <code>remove</code>, but the
+practical forgetting mechanism is feedback — three unhelpful ratings
+drop a fact below the default <code>min_trust</code> floor of 0.3,
+making it permanently unreachable with no tombstone and no record that
+suppression occurred.</li>
+<li><code>hermes-agent</code>: substring-addressed <code>remove</code>
+plus budget-driven eviction the model performs under pressure; nothing
+logs what was dropped.</li>
+<li><code>openviking</code>: hotness decays reachability on a single
+seven-day half-life for every memory kind.</li>
+<li><code>redis-agent-memory-server</code>: the most developed policy in
+the atlas — <code>select_ids_for_forgetting</code> combines TTL and
+inactivity so a recently-used memory survives its nominal age unless it
+passes a hard-age multiple, honours pinning and per-type allowlists, and
+prunes to a budget by a recency composite with separate half-lives for
+last access and creation.</li>
+<li><code>byterover</code>: <code>maxMemories</code> cap with no
+eviction policy visible in the inspected modules.</li>
+<li><code>openclaw</code>: exact agent-scoped delete, undermined by
+auto-capture, which can restore the same content from a later matching
+message.</li>
 </ul>
 <p>Semantic forgetting is an antipattern unless there is explicit user
 review or exact ID targeting.</p>
+<p>Deletion is also where pluggable memory breaks down. Both host
+runtimes in the atlas — <code>hermes-agent</code> and
+<code>openclaw</code> — define a memory-provider contract with
+<strong>no deletion hook and no scope parameter</strong>, so a user's
+"forget that" has no defined path into whatever backend is mounted.
+<code>holographic</code> shows the resulting hazard concretely: it
+mirrors the host's built-in memory additions into its own store but
+implements only the <code>add</code> action, so removing an entry from
+<code>MEMORY.md</code> leaves the mirrored copy behind indefinitely.</p>
 <h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
 Cross-Agent Persistence</h3>
 <p><code>honcho</code> has the richest multi-actor model: workspace,
@@ -1025,8 +1298,21 @@ tenant boundary; one persona per data directory is especially important
 operationally. <code>supermemory</code>, <code>mem0</code>,
 <code>rainbox</code>, <code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>verel</code>, <code>letta</code>,
-and <code>langmem</code> each expose explicit boundaries. A-MEM and
-Swafra remain outliers with effectively global local corpora.</p>
+and <code>langmem</code> each expose explicit boundaries.
+<code>openviking</code> carries tenant and permission filtering into
+every retrieval call and physically separates memory about the user from
+memory about a peer under <code>peers/&lt;peer_id&gt;</code>.
+<code>redis-agent-memory-server</code> scopes by namespace, user, and
+session behind auth. <code>openclaw</code> has a single
+<code>agentId</code> axis but defends it unusually well, composing scope
+and user filter into one predicate "so scope cannot be lost" and scoping
+deletes the same way. <code>hermes-agent</code> isolates by profile but
+has no project or room boundary within one. <code>byterover</code>
+scopes only by storage directory, and <code>holographic</code> has no
+scope at all — it describes itself as a single-user store, with
+<code>category</code> serving as partitioning rather than access
+control. A-MEM, Swafra, and Holographic remain the outliers with
+effectively global local corpora.</p>
 <h2 id="4-implementation-hotspots-by-repo">4. Implementation Hotspots by
 Repo</h2>
 <h3 id="memory-schema">Memory Schema</h3>
@@ -1091,6 +1377,25 @@ edge/triplet models, and relational dataset/data/session models.</li>
 <code>src/storage/sqlite/schema.ts</code>.</li>
 <li><code>a-mem</code>: <code>MemoryNote</code> in
 <code>agentic_memory/memory_system.py</code>.</li>
+<li><code>holographic</code>: <code>_SCHEMA</code> in
+<code>plugins/memory/holographic/store.py</code>; HRR encoding in
+<code>holographic.py</code>.</li>
+<li><code>hermes-agent</code>: <code>MemoryStore</code> in
+<code>tools/memory_tool.py</code>; provider contract in
+<code>agent/memory_provider.py</code>.</li>
+<li><code>openviking</code>: <code>MemoryData</code> /
+<code>MemoryTypeSchema</code> in
+<code>openviking/session/memory/dataclass.py</code>; level field in
+<code>openviking/storage/collection_schemas.py</code>.</li>
+<li><code>redis-agent-memory-server</code>:
+<code>V0/agent_memory_server/models.py</code>.</li>
+<li><code>byterover</code>:
+<code>src/agent/core/domain/memory/types.ts</code>;
+<code>ContextData</code> in
+<code>src/server/core/domain/knowledge/markdown-writer.ts</code>.</li>
+<li><code>openclaw</code>: <code>MemoryEntry</code> in
+<code>extensions/memory-lancedb/lancedb-store.ts</code>; categories in
+<code>config.ts</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -1164,6 +1469,29 @@ and <code>l1-writer.ts</code>.</li>
 <li><code>a-mem</code>: <code>AgenticMemorySystem.add_note()</code> and
 <code>process_memory()</code> in
 <code>agentic_memory/memory_system.py</code>.</li>
+<li><code>holographic</code>: <code>add_fact()</code> and
+<code>_rebuild_bank()</code> in
+<code>plugins/memory/holographic/store.py</code>;
+<code>_auto_extract_facts()</code> in <code>__init__.py</code>.</li>
+<li><code>hermes-agent</code>:
+<code>MemoryStore.add/replace/remove</code> and
+<code>_apply_write_gate()</code> in
+<code>tools/memory_tool.py</code>.</li>
+<li><code>openviking</code>:
+<code>openviking/session/memory/extract_loop.py</code>,
+<code>memory_updater.py</code>, and
+<code>memory_isolation_handler.py</code>.</li>
+<li><code>redis-agent-memory-server</code>:
+<code>promote_working_memory_to_long_term()</code> and the dedupe chain
+in <code>V0/agent_memory_server/long_term_memory.py</code>.</li>
+<li><code>byterover</code>:
+<code>MemoryDeduplicator.deduplicate()</code> in
+<code>src/agent/infra/memory/memory-deduplicator.ts</code>;
+<code>resolveStructuralLoss()</code> in
+<code>knowledge/conflict-resolver.ts</code>.</li>
+<li><code>openclaw</code>: <code>sanitizeForMemoryCapture()</code> in
+<code>extensions/memory-lancedb/memory-capture-sanitization.ts</code>;
+<code>store()</code> in <code>lancedb-store.ts</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -1232,6 +1560,26 @@ and backend repositories inheriting
 strategies, and <code>services/sqlite/SessionSearch.ts</code>.</li>
 <li><code>a-mem</code>: <code>search_agentic()</code> and Chroma
 wrappers in <code>agentic_memory/retrievers.py</code>.</li>
+<li><code>holographic</code>:
+<code>FactRetriever.search/probe/related/reason/contradict</code> in
+<code>plugins/memory/holographic/retrieval.py</code>.</li>
+<li><code>hermes-agent</code>: FTS5 session search in
+<code>hermes_state.py</code>; curated memory needs no retrieval.</li>
+<li><code>openviking</code>:
+<code>openviking/retrieve/hierarchical_retriever.py</code>,
+<code>type_quota_recall.py</code>,
+<code>memory_lifecycle.py</code>.</li>
+<li><code>redis-agent-memory-server</code>:
+<code>search_long_term_memories()</code> and
+<code>rerank_with_recency</code> in
+<code>V0/agent_memory_server/long_term_memory.py</code>.</li>
+<li><code>byterover</code>: <code>ListMemoriesOptions</code> filtering
+in <code>src/agent/infra/memory/memory-manager.ts</code>.</li>
+<li><code>openclaw</code>: <code>scopedPredicate()</code> and
+<code>query()</code> in
+<code>extensions/memory-lancedb/lancedb-store.ts</code>;
+<code>normalizeRecallQuery()</code> in
+<code>memory-policy.ts</code>.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -1286,6 +1634,20 @@ final prompt placement remains integration-owned.</li>
 <code>src/services/context/ContextBuilder.ts</code> and
 <code>ObservationCompiler.ts</code>.</li>
 <li><code>a-mem</code>: caller-owned; no bounded context assembler.</li>
+<li><code>holographic</code>: <code>prefetch()</code> in
+<code>plugins/memory/holographic/__init__.py</code> — top-5,
+unfenced.</li>
+<li><code>hermes-agent</code>: <code>format_for_system_prompt()</code> /
+<code>_render_block()</code> in <code>tools/memory_tool.py</code>,
+rendered once per session.</li>
+<li><code>openviking</code>: <code>QueryResult</code> from the
+hierarchical retriever; final placement is integration-owned.</li>
+<li><code>redis-agent-memory-server</code>:
+<code>V0/agent_memory_server/summary_views.py</code> and API response
+shaping.</li>
+<li><code>byterover</code>: caller-owned after listing.</li>
+<li><code>openclaw</code>: auto-recall assembly in
+<code>extensions/memory-lancedb/index.ts</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -1339,6 +1701,18 @@ improvement, cognify rollback, and stale-run recovery.</li>
 Chroma/cloud sync, and backfill/repair.</li>
 <li><code>a-mem</code>: no worker; “consolidation” is synchronous
 reindexing.</li>
+<li><code>holographic</code>: none; <code>_rebuild_bank()</code> runs
+synchronously on every write.</li>
+<li><code>hermes-agent</code>: none for curated memory; a mounted
+provider may run its own.</li>
+<li><code>openviking</code>: extraction loop, streaming updater, reindex
+executor, hotness maintenance.</li>
+<li><code>redis-agent-memory-server</code>: debounced trailing
+extraction, compaction, dedupe, and forgetting sweeps via
+<code>docket_tasks.py</code>.</li>
+<li><code>byterover</code>: bounded-concurrency LLM deduplication.</li>
+<li><code>openclaw</code>: auto-capture cursor advancement; no separate
+worker.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -1388,6 +1762,20 @@ migration/export APIs.</li>
 <li><code>claude-mem</code>: coding-agent hooks, worker HTTP API,
 local/server MCP, and UI.</li>
 <li><code>a-mem</code>: direct Python API only.</li>
+<li><code>holographic</code>: <code>fact_store</code> and
+<code>fact_feedback</code> tools through the Hermes
+<code>MemoryProvider</code> ABC.</li>
+<li><code>hermes-agent</code>: the <code>memory</code> tool,
+<code>agent/memory_provider.py</code> for third-party backends, and
+<code>hermes mcp serve</code>.</li>
+<li><code>openviking</code>: Python SDK, REST server, CLI, web studio,
+npm package, and Hermes/OpenClaw provider adapters.</li>
+<li><code>redis-agent-memory-server</code>: REST (<code>api.py</code>),
+MCP (<code>mcp.py</code>), CLI, and generated SDK clients.</li>
+<li><code>byterover</code>: <code>brv</code> CLI and MCP; Hermes
+provider adapter.</li>
+<li><code>openclaw</code>: <code>extensions/memory-core/</code> plugin
+contract, memory tools, CLI, and doctor contracts.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <ul>
@@ -1447,14 +1835,34 @@ queues, privacy, migrations, Chroma/cloud sync, and server paths; no
 committed memory-quality benchmark found.</li>
 <li><code>a-mem</code>: small CRUD/retriever test suite; paper
 reproduction and benchmark artifacts live in a separate repository.</li>
+<li><code>holographic</code>: 599 lines across four plugin test files
+plus 1,662 lines exercising the provider ABC; no retrieval-quality
+benchmark, and the measured contribution of the HRR arm is unknown.</li>
+<li><code>hermes-agent</code>: memory-tool, write-approval, provider,
+and backup suites, with several guards citing the issues that produced
+them; no committed memory-quality benchmark.</li>
+<li><code>openviking</code>: 688 test files, plus committed LoCoMo,
+LongMemEval, tau2, SkillsBench, and vector-DB harnesses with runners for
+six systems and token accounting — but the published headline numbers
+live off-repo and no raw result artifacts are committed.</li>
+<li><code>redis-agent-memory-server</code>: roughly 27,000 lines of
+tests, with dedicated forgetting, extraction, strategy, and
+contextual-grounding suites; benchmark scaffolding but no published
+numbers.</li>
+<li><code>byterover</code>: no tests located for the memory or knowledge
+domain modules, including none for the structural-loss guard that is its
+best idea.</li>
+<li><code>openclaw</code>: test lines far exceed implementation — 4,497
+for the LanceDB extension and 2,530 for the memory-core doctor contract;
+no committed retrieval benchmark.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
 implementation guides in the <a href="../patterns/">memory design
 pattern library</a>. The library covers correction, provenance, trust,
 retrieval, scope, write governance, federation, context assembly,
-recoverable background work, lifecycle decay, zero-LLM capture, and
-audit history.</p>
+recoverable background work, lifecycle decay, zero-LLM capture, audit
+history, and pluggable memory providers.</p>
 <h3 id="explicit-memory-mutation-surfaces">Explicit memory mutation
 surfaces</h3>
 <p>Repos: strongest in <code>mem0</code>, <code>langmem</code>,
@@ -1652,6 +2060,49 @@ temporal/event-time ideas in <code>hindsight</code>.</p>
 the system learned or expired it. This preserves historical truth during
 correction and backfill. It fails when LLM-extracted dates or
 invalidation decisions are treated as certain.</p>
+<h3 id="pluggable-memory-provider">Pluggable memory provider</h3>
+<p>Pattern guide: <a
+href="../patterns/pluggable-memory-provider/">Pluggable memory
+provider</a>.</p>
+<p>Repos: <code>hermes-agent</code> and <code>openclaw</code> define the
+contracts; <code>holographic</code>, <code>openviking</code>,
+<code>byterover</code>, <code>redis-agent-memory-server</code>,
+<code>tencentdb-agent-memory</code>, <code>honcho</code>,
+<code>mem0</code>, <code>hindsight</code>, and <code>supermemory</code>
+are mounted through them.</p>
+<p>A host runtime exposes one memory interface and lets users mount a
+backend by configuration. This works because no single memory model
+suits a laptop and a multi-tenant product at once, and because providers
+reach many hosts by implementing one contract. It fails at the boundary:
+neither contract inspected here carries a scope parameter or a deletion
+hook, so host-level erasure cannot reach a mounted store, trust state
+cannot cross, and mirroring host writes into a provider creates
+duplicates with independent lifecycles.</p>
+<h3 id="bounded-prompt-memory-with-in-turn-consolidation">Bounded prompt
+memory with in-turn consolidation</h3>
+<p>Repo: <code>hermes-agent</code>; contrast with the
+unbounded-plus-background-summarization approach in most of the
+atlas.</p>
+<p>Cap curated memory in characters, inject it as a frozen snapshot at
+session start, and refuse any write that would exceed the cap —
+returning the current entries and requiring the model to consolidate and
+retry in the same turn. This works because prompt cost becomes a static,
+known quantity and the prefix cache survives the session. It fails
+because the model chooses what to discard under time pressure, with no
+review and no record of what was dropped.</p>
+<h3 id="structural-loss-guard-on-generated-rewrites">Structural-loss
+guard on generated rewrites</h3>
+<p>Repo: <code>byterover</code>; related range-tracking in
+<code>mastra-observational-memory</code> and verbatim retention in
+<code>mempalace</code>.</p>
+<p>Before an LLM rewrite replaces stored content, parse both versions
+and count only what would be <strong>deleted</strong> — ignoring
+additions so enrichment does not trigger false positives. Treat any loss
+as high impact and merge the lost material back automatically. This is
+the cheapest countermeasure in the atlas to summarization silently
+discarding evidence. It fails if the parse is lossy, or if the same
+guard is not applied to every rewrite path — ByteRover itself protects
+document curation but not its own LLM memory merge.</p>
 <h3 id="buffered-observation-reflection">Buffered
 observation-reflection</h3>
 <p>Repos: strongest in <code>mastra-observational-memory</code>; related
@@ -1745,12 +2196,74 @@ dedupe, conflict detection, trust gates, and review.</p>
 signals for inspection/evals, not automatic confidence changes or
 deletion. This matters because "memory was used in a bad answer" does
 not prove the memory was false.</p>
+<p><code>holographic</code> is the atlas's clearest counterexample, and
+it is worth studying precisely because the mechanism looks reasonable in
+isolation. A <code>fact_feedback</code> tool lets the model or user rate
+a fact helpful or unhelpful, adjusting a single <code>trust_score</code>
+by +0.05 or −0.10. That same score is multiplied directly into relevance
+during ranking <em>and</em> gates retrieval through a
+<code>min_trust</code> floor defaulting to 0.3. From the default trust
+of 0.5, three unhelpful ratings put a fact at 0.2 — below every default
+retrieval path, permanently, with no tombstone, no review queue, and no
+record that a suppression occurred. Feedback has quietly become
+deletion, and "unhelpful" has quietly become "false".</p>
+<h3 id="the-harnesss-own-output-captured-as-evidence">The harness's own
+output captured as evidence</h3>
+<p>A system that generates text and also captures text will eventually
+capture its own output. <code>openclaw</code> strips media notes,
+context markers, reply headers, sender prefixes, and timestamps from
+every message before capture, then rejects whatever still
+<code>looksLikeEnvelopeSludge</code>. <code>holographic</code> had to
+exclude its host's compaction handoff summaries, which arrive as
+<code>role="user"</code> messages and reliably matched its own
+decision-extraction regexes, so the compactor's output was being stored
+as durable facts on every context rollover.</p>
+<p>Both fixes arrived after the bug. Any system with automatic capture
+should have a test asserting that its own generated scaffolding —
+summaries, envelopes, tool wrappers, injected memory blocks — cannot
+re-enter as evidence.</p>
+<h3 id="one-score-for-truth-and-reachability">One score for truth and
+reachability</h3>
+<p>Separating epistemic confidence from retrieval strength is one of the
+atlas's recurring recommendations, and the new systems split cleanly on
+it. <code>openviking</code>'s <code>hotness_score</code> is explicitly a
+reachability signal blended into ranking and never touches correctness;
+<code>redis-agent-memory-server</code> keeps recency weights entirely
+inside ranking and retention. <code>holographic</code> collapses both
+into <code>trust_score</code>, so there is no way to ask for the most
+relevant memory independent of how it has been rated, and no way to
+record that a rarely-retrieved fact is nonetheless certainly true.</p>
 <h3 id="platform-only-claims-hidden-behind-oss-apis">Platform-only
 claims hidden behind OSS APIs</h3>
 <p>Mem0 and Supermemory both have product surfaces where advanced
 behavior may live outside the inspected source. For build decisions,
 separate what is visible in code from what is promised by hosted
 APIs.</p>
+<p><code>byterover</code> adds a licensing variant of the same problem:
+it is widely described as an open-source memory engine, but the
+repository inspected here carries the Elastic License 2.0, which
+prohibits offering the software as a hosted service. Check the
+<code>LICENSE</code> file rather than the positioning before planning to
+reuse anything.</p>
+<h3
+id="published-benchmark-numbers-without-committed-artifacts">Published
+benchmark numbers without committed artifacts</h3>
+<p>The atlas has now found three variants of this. Swafra committed a
+<code>k=10</code> artifact that scored every returned session. TencentDB
+published gains with no harness in the repository at all.
+<code>openviking</code> is the most advanced case and the most nearly
+right: it commits a genuinely reproducible harness — ingest, QA, LLM
+judge, statistics, runners for six competing systems, and token
+accounting alongside accuracy, which is exactly what this atlas asks for
+— yet the headline figures in its README (LoCoMo accuracy of 82.08%
+versus 24.20% native for OpenClaw, and comparable deltas for Hermes and
+Claude Code) point to an off-repo blog post, and no raw result files are
+committed.</p>
+<p>A reproducible harness and a reproducible result are different
+claims. These are also vendor-run comparisons of "competitor's native
+memory" against "competitor plus our product", judged by an LLM, so the
+native baselines deserve independent scrutiny before the deltas are
+quoted.</p>
 <h3 id="throwing-away-raw-evidence-too-early">Throwing away raw evidence
 too early</h3>
 <p>Extraction-first systems can look elegant while deleting the only
@@ -1820,6 +2333,25 @@ repair direction should be obvious.</p>
 <p>Make background derivation reversible by provenance. Cognee's
 pipeline-run rollback is the strongest cross-store example in the atlas,
 even though it cannot make every backend combination atomic.</p>
+<p>Make scope structurally inseparable from the query. OpenClaw composes
+agent scope and user filter into a single predicate so an unscoped read
+is not expressible, and scopes deletes the same way. This is stronger
+than applying a scope filter somewhere in the read path, and it is the
+kind of guarantee that survives refactoring.</p>
+<p>Specify retention as a policy, not a TTL. Redis Agent Memory Server's
+<code>select_ids_for_forgetting</code> combines age and inactivity so
+recent use buys a memory time but not immunity, honours pinning and
+per-type allowlists, and prunes to a budget using separate half-lives
+for last access and creation. Most systems here either never forget or
+forget on one crude axis.</p>
+<p>Guard generated rewrites against deletion. ByteRover's
+structural-loss detection parses before and after, counts only what
+would be removed, and merges it back. It is a few hundred lines,
+requires no model, and directly addresses the reason this atlas warns
+against premature summarization.</p>
+<p>Sanitize your own scaffolding out of captured text, and test that it
+stays out. Two systems in the Hermes/OpenClaw ecosystem shipped fixes
+for their own generated text being stored as user memory.</p>
 <p>Make memory use inspectable. RainBox's debug rows, retrieval events,
 and review UI are the best reference here. Users need to know which
 memories entered a prompt and need a way to correct or reject them.</p>
@@ -2266,6 +2798,111 @@ automatically without blocking the agent.</li>
 <li>Do not copy when: explicit writes are sufficient, hooks are
 unavailable, or high-stakes facts require verification before use.</li>
 </ul>
+<h3 id="holographic"><code>holographic</code></h3>
+<ul>
+<li>Best idea: deterministic SHA-256-derived phase vectors and algebraic
+multi-entity queries, with no embedding model to version.</li>
+<li>Biggest risk: three unhelpful ratings silently drop a fact below the
+retrieval floor forever.</li>
+<li>Most reusable component:
+<code>encode_atom</code>/<code>bind</code>/<code>unbind</code>, the FTS5
+query sanitizer, and the refcounted shared-connection registry.</li>
+<li>Maturity impression: compact and fully readable, with real
+production scar tissue around concurrency, but no benchmark and an
+unmeasured HRR contribution.</li>
+<li>Study when: you want compositional structure without an embedding
+service, or a worked example of why truth and usefulness must be
+separate fields.</li>
+<li>Do not copy when: you need scope, provenance, correction, or any
+feedback mechanism that is not also a deletion mechanism.</li>
+</ul>
+<h3 id="hermes-agent"><code>hermes-agent</code></h3>
+<ul>
+<li>Best idea: bounded curated memory frozen into the prompt at session
+start, with overflow refused and consolidation demanded in-turn.</li>
+<li>Biggest risk: whatever the model writes is authoritative in every
+later session, and budget-driven eviction is unlogged.</li>
+<li>Most reusable component: the frozen-snapshot pattern,
+<code>_detect_external_drift</code>, and the staged write-approval
+gate.</li>
+<li>Maturity impression: heavily defended file layer whose guards cite
+the incidents that produced them; the provider contract is less complete
+than the store.</li>
+<li>Study when: prompt-cache cost is material, or you need memory that
+cannot grow without someone deciding what to drop.</li>
+<li>Do not copy when: you need verification, tombstones, substring-free
+identity, or a provider contract that can honour deletion.</li>
+</ul>
+<h3 id="openviking"><code>openviking</code></h3>
+<ul>
+<li>Best idea: three retrievable granularities on one record, plus
+hotness kept strictly separate from confidence.</li>
+<li>Biggest risk: extraction becomes durable context with no
+verification tier, and published numbers are not backed by committed
+artifacts.</li>
+<li>Most reusable component: <code>hotness_score</code>,
+<code>type_quota_recall</code>, and the <code>user_space</code> /
+<code>peers/&lt;id&gt;</code> isolation convention.</li>
+<li>Maturity impression: a large, seriously engineered platform with
+real multi-tenancy and the most complete benchmark harness in the
+atlas.</li>
+<li>Study when: you need multimodal ingestion, tenant isolation, skills
+and resources unified with memory, or backend choice.</li>
+<li>Do not copy when: you need a small embeddable layer, verified
+memory, or a licence compatible with closed distribution — this is
+AGPL-3.0.</li>
+</ul>
+<h3
+id="redis-agent-memory-server"><code>redis-agent-memory-server</code></h3>
+<ul>
+<li>Best idea: TTL-native working memory promoting into deduplicated
+long-term memory, with retention expressed as a real policy.</li>
+<li>Biggest risk: forgetting is deletion without tombstones, so anything
+forgotten can be re-extracted.</li>
+<li>Most reusable component: <code>select_ids_for_forgetting</code>, the
+three-layer dedupe chain, and
+<code>_semantic_merge_group_is_cohesive</code>.</li>
+<li>Maturity impression: vendor-neutral reference implementation with
+unusually well-targeted tests on the risky logic.</li>
+<li>Study when: you want the working/long-term split done carefully, or
+a retention policy you can defend to a user.</li>
+<li>Do not copy when: cognitive memory types would be mistaken for a
+trust model, or deletion must be durable.</li>
+</ul>
+<h3 id="byterover"><code>byterover</code></h3>
+<ul>
+<li>Best idea: counting exactly what an LLM rewrite would delete, then
+merging the loss back automatically.</li>
+<li>Biggest risk: the Elastic License 2.0 forbids hosted redistribution,
+and the memory core itself has no trust, scope, or correction
+model.</li>
+<li>Most reusable component: <code>detectStructuralLoss</code> /
+<code>resolveStructuralLoss</code>, and the immutable
+<code>DECISIONS</code> category.</li>
+<li>Maturity impression: a thin memory primitive attached to a more
+thoughtful knowledge-curation layer, with no visible tests on its best
+idea.</li>
+<li>Study when: an LLM is allowed to rewrite stored knowledge and you
+need a cheap deterministic guard.</li>
+<li>Do not copy when: you need durable beliefs, ranked retrieval, or an
+OSI-compatible licence.</li>
+</ul>
+<h3 id="openclaw"><code>openclaw</code></h3>
+<ul>
+<li>Best idea: scope composed inseparably into every predicate, and 567
+lines spent keeping the runtime's own envelope out of memory.</li>
+<li>Biggest risk: a vector-only reference backend for content full of
+names and identifiers, with auto-capture that can undo deletions.</li>
+<li>Most reusable component:
+<code>memory-capture-sanitization.ts</code>,
+<code>scopedPredicate</code>, and the doctor-contract idea.</li>
+<li>Maturity impression: test lines far exceed implementation lines; the
+plugin contract is mature, the memory model deliberately minimal.</li>
+<li>Study when: building a host runtime with swappable memory, or
+capturing from a channel that wraps messages in scaffolding.</li>
+<li>Do not copy when: you need hybrid retrieval, per-user scope inside
+an agent, or deletion that survives auto-capture.</li>
+</ul>
 <h3 id="a-mem"><code>a-mem</code></h3>
 <ul>
 <li>Best idea: small linked notes whose organization can be reconsidered
@@ -2410,6 +3047,14 @@ href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a
 <li><a href="../systems/cognee/"><code>cognee</code></a></li>
 <li><a href="../systems/claude-mem/"><code>claude-mem</code></a></li>
 <li><a href="../systems/a-mem/"><code>a-mem</code></a></li>
+<li><a href="../systems/holographic/"><code>holographic</code></a></li>
+<li><a
+href="../systems/hermes-agent/"><code>hermes-agent</code></a></li>
+<li><a href="../systems/openviking/"><code>openviking</code></a></li>
+<li><a
+href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a></li>
+<li><a href="../systems/byterover/"><code>byterover</code></a></li>
+<li><a href="../systems/openclaw/"><code>openclaw</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -2486,6 +3131,26 @@ href="https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736
 <li><a href="https://github.com/agiresearch/A-mem">agiresearch/A-mem</a>
 at <a
 href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d"><code>ceffb860f0712bbae97b184d440df62bc910ca8d</code></a></li>
+<li><a
+href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a>
+at <a
+href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476"><code>0fa5e41c86f022bba147797849f0b44865721476</code></a>
+— analyzed twice, as the <code>holographic</code> plugin and as Hermes's
+own built-in memory</li>
+<li><a
+href="https://github.com/volcengine/OpenViking">volcengine/OpenViking</a>
+at <a
+href="https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef"><code>c67222c3d46de4874eed65af8918fc55513812ef</code></a></li>
+<li><a
+href="https://github.com/redis/agent-memory-server">redis/agent-memory-server</a>
+at <a
+href="https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337"><code>886437963dc02289e828872f0ae21fdaa734c337</code></a></li>
+<li><a href="https://github.com/campfirein/cipher">campfirein/cipher</a>
+at <a
+href="https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c"><code>1052ac1a5dd0fde4da8693d4712064f7876c269c</code></a></li>
+<li><a href="https://github.com/openclaw/openclaw">openclaw/openclaw</a>
+at <a
+href="https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11"><code>570eab59e7c7ce052f4550af7507e7dd77c73e11</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -2549,6 +3214,34 @@ run; no committed end-to-end recall-quality benchmark was found.</li>
 <li>A-MEM's tests were not run because they may download embedding
 models and call an external LLM. The paper reproduction code and results
 are outside the inspected package.</li>
+<li><code>holographic</code> and <code>hermes-agent</code> are two
+reports over one repository at one commit: the first covers the in-tree
+HRR memory plugin, the second covers Hermes's own built-in memory and
+provider contract. Neither report's suites were run.</li>
+<li>Two open Hermes issues (#4781, #31263) report that the holographic
+plugin registers without its tools or context injection firing. Only the
+issue titles were read; they are not treated here as established defects
+in the inspected code.</li>
+<li>OpenViking's published LoCoMo and tau2-bench figures could not be
+reproduced or traced to committed raw artifacts at the inspected commit;
+the harness is committed, the results are not. Those figures are also
+vendor-run comparisons judged by an LLM, and the native-memory baselines
+for OpenClaw, Hermes, and Claude Code were not independently
+verified.</li>
+<li>The <code>openclaw</code> figures quoted from OpenViking's benchmark
+are third-party claims about OpenClaw's native memory, not measurements
+taken from the OpenClaw repository.</li>
+<li>ByteRover was reviewed at a commit where the repository is licensed
+under the Elastic License 2.0 and packaged as
+<code>byterover-cli</code>; descriptions of it as open source are
+inaccurate as of this commit. No tests were found for its memory or
+knowledge modules.</li>
+<li>Redis Agent Memory Server's <code>V0/</code> tree is the open
+reference implementation adjacent to a managed Redis offering;
+conclusions here apply only to the inspected code, and the managed
+product may differ.</li>
+<li>Retrieval quality was not measured for any of the six systems added
+in this round.</li>
 </ul>
         </article>
       </div>

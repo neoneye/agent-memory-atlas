@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A messaging-first agent runtime
+whose memory ships as swappable extensions, with heavy investment in
+stripping the host's own message envelope out of captured text.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenClaw — Agent Memory Atlas">
+    <meta property="og:description" content="A messaging-first agent
+runtime whose memory ships as swappable extensions, with heavy
+investment in stripping the host's own message envelope out of captured
+text.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenClaw — Agent Memory Atlas">
+    <meta name="twitter:description" content="A messaging-first agent
+runtime whose memory ships as swappable extensions, with heavy
+investment in stripping the host's own message envelope out of captured
+text.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenClaw — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Host-runtime plugin memory</p>
+          <h1>OpenClaw</h1>
+          <p class="document-deck">A messaging-first agent runtime whose
+memory ships as swappable extensions, with heavy investment in stripping
+the host's own message envelope out of captured text.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openclaw/openclaw">
+              <span>Source</span>
+              <strong>openclaw/openclaw</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11" title="570eab59e7c7ce052f4550af7507e7dd77c73e11">
+              <span>Analyzed revision</span>
+              <code>570eab59e7c7ce052f4550af7507e7dd77c73e11</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenClaw is an MIT-licensed autonomous agent runtime that uses
+messaging platforms as its primary interface. Memory is not built into
+the core: it ships as <strong>extensions</strong> —
+<code>memory-core</code> provides the plugin contract, tools, and CLI,
+and <code>memory-lancedb</code> provides the reference implementation
+over LanceDB, with pluggable embedding adapters for OpenAI, Voyage,
+Mistral, and LM Studio.</p>
+<p>Together with <a href="../hermes-agent/">Hermes Agent</a>, this makes
+OpenClaw the second host runtime in the atlas whose memory story is
+"pick a provider" rather than "here is the memory model" — the subject
+of the <a href="../../patterns/pluggable-memory-provider/">pluggable
+memory provider</a> pattern.</p>
+<p>The memory model itself is modest and honest: a flat entry with a
+five-value category (<code>preference</code>, <code>fact</code>,
+<code>decision</code>, <code>entity</code>, <code>other</code>), vector
+search over LanceDB, optional auto-capture and auto-recall, and
+character caps of 500 on capture and 1,000 on recall.</p>
+<p>What makes it worth reading is not the retrieval — it is <strong>567
+lines devoted to stopping the runtime's own message envelope from
+becoming memory.</strong></p>
+<p>Because OpenClaw is messaging-first, every inbound message arrives
+wrapped in scaffolding: media-attachment notes,
+<code>⟦openclaw:ctx⟧</code> context markers,
+<code>[Chat messages since your last reply - for context]</code>
+headers, <code>[Replying to: …]</code> lines, <code>#123 sender:</code>
+prefixes, and bracketed timestamp prefixes. Captured naively, that
+wrapper text becomes durable "memory" that is mostly punctuation and
+protocol. <code>memory-capture-sanitization.ts</code> strips all of it,
+and <code>looksLikeEnvelopeSludge()</code> rejects text that is mostly
+envelope after stripping.</p>
+<p>This is the same failure class the <a
+href="../holographic/">Holographic</a> plugin hit from a different
+direction, where the context compactor's own handoff summaries matched
+its extraction patterns and were stored as facts on every rollover. Two
+independent systems in this ecosystem shipped guards against <strong>the
+harness's own scaffolding laundering itself into memory</strong> — a
+failure mode general enough that any system with automatic capture
+should test for it explicitly.</p>
+<p>The second thing worth copying is small and easy to miss: the LanceDB
+store composes agent scope and user filters into a single predicate,
+with the comment "Scope and operator filter stay one predicate so scope
+cannot be lost." That is <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> defended at the query-construction layer, not merely
+documented.</p>
+<p>Test coverage is the strongest signal of maturity here:
+<code>extensions/memory-lancedb/index.test.ts</code> alone is 4,497
+lines against a 669-line implementation.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="typescript"><code>MemoryEntry = {
+  id: string
+  agentId: string          // scope, enforced in every predicate
+  content: string
+  category: &#39;preference&#39; | &#39;fact&#39; | &#39;decision&#39; | &#39;entity&#39; | &#39;other&#39;
+  createdAt: ...
+  // + embedding vector, stored in LanceDB
+}
+
+MemoryConfig = {
+  dbPath?: string          // default ~/.openclaw/memory/lancedb
+  autoCapture?: boolean
+  autoRecall?: boolean
+  captureMaxChars?: number // default 500
+  recallMaxChars?: number  // default 1000
+  customTriggers?: string[]
+  storageOptions?: Record&lt;string, string&gt;
+}</code></pre>
+<p>Capture lifecycle:</p>
+<pre class="text"><code>inbound platform message (wrapped in OpenClaw envelope)
+-&gt; extractUserTextContent() / extractLatestUserText()
+-&gt; sanitizeForMemoryCapture(): drop media notes, ctx markers, history/current
+   markers, bracketed prefixes, reply lines, sender prefixes, timestamps
+-&gt; looksLikeEnvelopeSludge()? -&gt; reject
+-&gt; truncate to captureMaxChars (500)
+-&gt; embed -&gt; store(agentId, entry)
+-&gt; AutoCaptureCursor { nextIndex, lastMessageFingerprint } advances</code></pre>
+<p>Recall lifecycle:</p>
+<pre class="text"><code>latest user text -&gt; normalizeRecallQuery() (collapse whitespace, cap at 1000 chars)
+-&gt; embed -&gt; LanceDB vector search
+-&gt; scopedPredicate(agentId, filter)  [single predicate — scope cannot be dropped]
+-&gt; results injected into context</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Memory-relevant code lives entirely in extensions:</p>
+<ul>
+<li><code>extensions/memory-core/</code> — the plugin contract and host
+wiring: <code>index.ts</code> (248 lines), <code>api.ts</code>,
+<code>runtime-api.ts</code>, <code>manager-runtime.ts</code>,
+<code>cli.ts</code>, <code>doctor-contract-api.ts</code> (288), plus
+<code>src/memory/embedding-local-service.ts</code> and
+<code>src/memory/runtime-host.ts</code>.</li>
+<li><code>extensions/memory-lancedb/</code> — the reference store:
+<code>index.ts</code> (669), <code>memory-capture-sanitization.ts</code>
+(567), <code>embeddings.ts</code> (455), <code>config.ts</code> (296),
+<code>memory-policy.ts</code> (268), <code>lancedb-store.ts</code>
+(252), <code>lancedb-schema.ts</code>, <code>memory-cli.ts</code>
+(228).</li>
+<li><code>extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts</code>
+— embedding providers.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Msg[&quot;Platform message (envelope-wrapped)&quot;] --&gt; Extract[&quot;extractLatestUserText&quot;]
+  Extract --&gt; Sanitize[&quot;sanitizeForMemoryCapture&quot;]
+  Sanitize --&gt; Sludge{&quot;looksLikeEnvelopeSludge?&quot;}
+  Sludge --&gt;|yes| Drop[&quot;discard&quot;]
+  Sludge --&gt;|no| Cap[&quot;truncate to captureMaxChars&quot;]
+  Cap --&gt; Embed[&quot;embedding adapter&quot;]
+  Embed --&gt; Store[&quot;LanceDB (agentId-scoped)&quot;]
+  Query[&quot;normalizeRecallQuery&quot;] --&gt; Search[&quot;vector search + scopedPredicate&quot;]
+  Store --&gt; Search
+  Search --&gt; Ctx[&quot;auto-recall into context&quot;]
+  Core[&quot;memory-core plugin contract&quot;] --&gt; Store
+  Core --&gt; Doctor[&quot;doctor-contract-api health checks&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="envelope-sanitization-memory-capture-sanitizationts">Envelope
+sanitization (<code>memory-capture-sanitization.ts</code>)</h3>
+<p>The module is a catalogue of everything OpenClaw itself adds to a
+message before the model sees it:</p>
+<ul>
+<li><code>MEDIA_NOTE_HEADER</code> —
+<code>[media attached 1/3: …]</code> lines, removed by
+<code>dropMediaNoteLines</code>.</li>
+<li><code>MARKER_HEADER_LINE_RE</code> and
+<code>CONTEXT_HEADER_RE</code> — the <code>⟦openclaw:ctx⟧</code>
+sentinel.</li>
+<li><code>HISTORY_CONTEXT_MARKERS</code> /
+<code>CURRENT_MESSAGE_MARKERS</code> —
+<code>[Chat messages since your last reply - for context]</code> and
+<code>[Current message - respond to this]</code>.</li>
+<li><code>LEADING_CURRENT_MESSAGE_REPLY_LINE_RE</code> —
+<code>[Replying to: …]</code>.</li>
+<li><code>LEADING_CURRENT_MESSAGE_ID_SENDER_RE</code> —
+<code>#42 alice:</code> style prefixes.</li>
+<li><code>LEADING_TIMESTAMP_PREFIX_RE</code> —
+<code>[Mon 2026-07-27 09:15 …]</code>.</li>
+<li><code>BRACKETED_PREFIX_RE</code> — a general bracketed-prefix
+sweep.</li>
+</ul>
+<p><code>sanitizeForMemoryCapture(text)</code> applies the pipeline;
+<code>looksLikeEnvelopeSludge(text)</code> is the acceptance gate that
+rejects what is left when it is still mostly wrapper.</p>
+<p>The bounded quantifiers throughout (<code>{1,500}</code>,
+<code>{0,1000}</code>, <code>{1,120}</code>) are worth noting on their
+own: these regexes run on adversary-influenced input, and unbounded
+alternatives would be a ReDoS surface.</p>
+<h3 id="scope-that-cannot-be-dropped-lancedb-storets">Scope that cannot
+be dropped (<code>lancedb-store.ts</code>)</h3>
+<pre class="typescript"><code>function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
+  const scope = memoryAgentPredicate(agentId);
+  return filter ? `(${scope}) AND (${formatQueryFilter(filter)})` : scope;
+}</code></pre>
+<p>Every <code>query</code>, <code>list</code>, and <code>delete</code>
+path builds its WHERE clause through this helper, and the inline comment
+states the intent: scope and user filter are composed into one predicate
+so a caller cannot accidentally issue an unscoped query.
+<code>store</code> writes <code>agentId</code> onto the row.
+<code>delete(agentId, id)</code> scopes the deletion predicate too, so
+one agent cannot delete another's memory by ID.</p>
+<p>Most systems in the atlas treat scope as a filter applied somewhere
+in the read path. Making it structurally inseparable from the predicate
+is a stronger guarantee, and it is the sort of thing that only gets
+built after someone ships a scope-leak bug.</p>
+<h3 id="auto-capture-cursor-memory-policyts">Auto-capture cursor
+(<code>memory-policy.ts</code>)</h3>
+<pre class="typescript"><code>type AutoCaptureCursor = {
+  nextIndex: number;
+  lastMessageFingerprint?: string;
+};</code></pre>
+<p>Position plus fingerprint means capture can resume where it left off
+and detect that the history it is resuming into has changed underneath
+it — a small but real defence against double-capturing or skipping
+messages when a conversation is edited or replayed.</p>
+<h3 id="health-contracts-doctor-contract-apits">Health contracts
+(<code>doctor-contract-api.ts</code>)</h3>
+<p>Both extensions expose a "doctor" contract, with 2,530 lines of tests
+in <code>memory-core</code> alone. This is operational tooling for
+diagnosing a misconfigured memory backend — embedding model mismatches,
+unreachable stores, schema drift — surfaced through the CLI. The atlas
+notes elsewhere that a vector index searched with the wrong embedding
+model degrades silently; a doctor contract is the right shape of
+answer.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>LanceDB provides vector storage with a declared schema
+(<code>lancedb-schema.ts</code>), initialized using a sentinel row
+(<code>SCHEMA_SENTINEL_ID</code>) so the table's shape exists before
+real data arrives.</p>
+<p>The model is deliberately minimal, and the gaps are the familiar
+ones:</p>
+<ul>
+<li><strong>Category, not trust.</strong>
+<code>preference | fact | decision | entity | other</code> describes
+kind, not confidence. There is no candidate/verified/rejected
+state.</li>
+<li><strong>No provenance.</strong> An entry does not record the source
+message, platform, or timestamp of origin beyond
+<code>createdAt</code>.</li>
+<li><strong>No supersession or tombstones.</strong> <code>delete</code>
+is exact removal; nothing prevents the same content being re-captured on
+the next matching message.</li>
+<li><strong><code>agentId</code> is the only scope.</strong> There is no
+per-user, per-room, or per-project boundary within an agent —
+significant for a messaging-first runtime where one agent may serve a
+group chat.</li>
+<li><strong>500-character capture cap</strong> truncates rather than
+summarizing, so a long user statement is stored as its first 500
+characters.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over LanceDB with metadata filtering through
+<code>MemoryQueryFilter</code> (column, operator, value) and mandatory
+agent scoping. <code>normalizeRecallQuery</code> collapses whitespace
+and caps the query at 1,000 characters.</p>
+<p>There is no lexical or hybrid arm in the reference backend. For a
+memory holding preferences, entities, and decisions — content full of
+names, identifiers, and exact strings — the atlas's standing objection
+to vector-only retrieval applies directly: exact-match lookups are the
+case pure embeddings handle worst. The extension architecture means an
+alternative backend could supply hybrid retrieval, but the shipped one
+does not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Auto-capture and auto-recall are independently configurable and both
+optional, so an operator can run recall-only against a manually curated
+store. <code>customTriggers</code> allows configured phrases to force
+capture.</p>
+<p>The write path's investment is concentrated entirely in <em>what not
+to store</em> — sanitization, sludge rejection, and truncation — rather
+than in extraction quality. There is no LLM extraction step in the
+reference backend: captured text is the user's sanitized words, not a
+derived claim. That makes this a <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> design,
+with the usual trade: cheap, fast, and robust to provider outages, but
+the store fills with conversational prose rather than normalized
+facts.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory reaches the agent as plugin-provided tools
+(<code>memory-core/src/tools.ts</code>), a CLI
+(<code>memory-cli.ts</code>), and the auto-capture/auto-recall hooks.
+<code>memory-core</code> defines the contract via
+<code>definePluginEntry</code>, <code>MemoryPluginRuntime</code>, and
+<code>MemoryCoreRuntimeHost</code>, so third-party memory backends — the
+Redis, Mem0, and Supermemory plugins that exist in the wider ecosystem —
+implement the same surface as <code>memory-lancedb</code>.</p>
+<p>As with Hermes, the host contract is where the interesting governance
+question lives: a plugin owns its own storage, and the host has no
+general mechanism to propagate a user's deletion request into whatever
+backend is mounted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Exceptional test coverage — 4,497 lines for the LanceDB extension,
+2,530 for the memory-core doctor contract, plus config,
+embedding-lifecycle, and sanitization suites.</li>
+<li>Envelope sanitization with an explicit rejection gate.</li>
+<li>Bounded regex quantifiers on adversary-influenced input.</li>
+<li>Structurally inseparable scope predicates, including on delete.</li>
+<li>Resumable capture with fingerprint drift detection.</li>
+<li>Doctor contracts for diagnosing backend and embedding
+misconfiguration.</li>
+<li>Swappable embedding providers, including a fully local option via LM
+Studio.</li>
+<li>MIT licence.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust model or verification tier.</strong></li>
+<li><strong>No tombstones</strong>, so deleted memories can be
+re-captured verbatim.</li>
+<li><strong><code>agentId</code> is the only boundary</strong>, which is
+coarse for group-chat deployments.</li>
+<li><strong>Vector-only retrieval</strong> in the reference
+backend.</li>
+<li><strong>Truncation at 500 characters</strong> rather than
+summarization or splitting.</li>
+<li><strong>Sanitization is a denylist</strong> tied to current envelope
+formats; a change to the message wrapper elsewhere in the codebase can
+silently reintroduce sludge unless the patterns are updated in
+lockstep.</li>
+<li><strong>No fencing of recalled content</strong> was found in the
+inspected extension paths; recalled memories are user-authored text
+injected back into context.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test lines substantially exceed implementation lines in the memory
+extensions:</p>
+<ul>
+<li><code>extensions/memory-lancedb/index.test.ts</code> — 4,497
+lines.</li>
+<li><code>extensions/memory-core/doctor-contract-api.test.ts</code> —
+2,530 lines.</li>
+<li><code>extensions/memory-core/index.test.ts</code> — 278;
+<code>extensions/memory-lancedb/doctor-contract-api.test.ts</code> —
+252; <code>config.test.ts</code> — 216;
+<code>embeddings.lifecycle.test.ts</code> — 179.</li>
+</ul>
+<p>The suites were not run for this review. The distribution is telling:
+the heaviest coverage sits on the store surface and the health
+contracts, which is where a pluggable-backend system accumulates silent
+misconfiguration failures.</p>
+<p>No committed retrieval-quality benchmark was found in the repository.
+Third-party comparative results exist — notably <a
+href="../openviking/">OpenViking</a>'s LoCoMo harness, which reports
+OpenClaw's native memory at 24.20% versus 82.08% with OpenViking mounted
+— but those are vendor-run comparisons whose raw artifacts are not
+committed, and the native-memory baseline configuration is not
+independently verifiable. They should not be read as a measured property
+of this code.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Sanitize the harness envelope before capture.</strong> If
+your runtime wraps messages in markers, timestamps, reply headers, or
+attachment notes, that scaffolding will become memory unless something
+removes it. Pair the stripping pipeline with an acceptance gate that
+rejects text which is still mostly wrapper.</li>
+<li><strong>Compose scope into the predicate</strong>, so an unscoped
+query is not expressible, and scope deletes as well as reads.</li>
+<li><strong>Capture cursor with a content fingerprint</strong>, making
+auto-capture resumable and drift-aware.</li>
+<li><strong>A doctor contract</strong> for memory backends, diagnosing
+embedding and schema mismatches before they degrade recall
+silently.</li>
+<li><strong>Bounded regex quantifiers</strong> on any pattern that
+touches untrusted text.</li>
+<li><strong>Independent auto-capture and auto-recall
+switches.</strong></li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Vector-only retrieval</strong> for content dominated by
+names and identifiers.</li>
+<li><strong>Category standing in for trust state.</strong></li>
+<li><strong>Deletion without tombstones</strong>, with automatic
+re-capture actively working against it.</li>
+<li><strong>Denylist sanitization coupled to envelope formats</strong>
+defined elsewhere in the codebase.</li>
+<li><strong>Hard truncation</strong> of captured content at 500
+characters.</li>
+<li><strong>Single-axis scope</strong> in a multi-participant messaging
+context.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li><code>memory-capture-sanitization.ts</code> as a template, adapted
+to your own envelope.</li>
+<li><code>scopedPredicate</code> and the discipline it encodes.</li>
+<li>The <code>AutoCaptureCursor</code> shape.</li>
+<li>The doctor-contract idea for any pluggable storage backend.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The reference retrieval path if exact-match recall matters; add a
+lexical arm.</li>
+<li><code>agentId</code>-only scoping for group deployments.</li>
+<li>Auto-capture without a durable correction story, since re-capture
+will undo deletions.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What keeps the sanitization patterns synchronized with the envelope
+formats they mirror? A test asserting round-trip removal against the
+actual renderer would close the gap.</li>
+<li>Should <code>agentId</code> be joined by room and participant scope,
+given the messaging-first design?</li>
+<li>Is recalled memory fenced anywhere before it enters the prompt?</li>
+<li>Should capture summarize rather than truncate at 500
+characters?</li>
+<li>What is the intended deletion contract between the host and a
+mounted memory plugin?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Plugin contract and host wiring:
+<code>extensions/memory-core/index.ts</code>, <code>api.ts</code>,
+<code>runtime-api.ts</code>, <code>manager-runtime.ts</code>.</li>
+<li>Health contracts:
+<code>extensions/memory-core/doctor-contract-api.ts</code>,
+<code>extensions/memory-lancedb/doctor-contract-api.ts</code>.</li>
+<li>Reference backend: <code>extensions/memory-lancedb/index.ts</code>,
+<code>lancedb-store.ts</code>, <code>lancedb-schema.ts</code>.</li>
+<li>Envelope sanitization:
+<code>extensions/memory-lancedb/memory-capture-sanitization.ts</code>.</li>
+<li>Capture/recall policy:
+<code>extensions/memory-lancedb/memory-policy.ts</code>.</li>
+<li>Configuration and categories:
+<code>extensions/memory-lancedb/config.ts</code>.</li>
+<li>Embedding adapters:
+<code>extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts</code>.</li>
+<li>Tests: <code>extensions/memory-lancedb/index.test.ts</code>,
+<code>extensions/memory-core/doctor-contract-api.test.ts</code>,
+<code>config.test.ts</code>,
+<code>embeddings.lifecycle.test.ts</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

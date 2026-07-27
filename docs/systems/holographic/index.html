@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local SQLite fact store that
+encodes facts as holographic phase vectors, enabling algebraic entity
+queries, but collapses truth and usefulness into one feedback-trained
+score.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Holographic — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite fact store
+that encodes facts as holographic phase vectors, enabling algebraic
+entity queries, but collapses truth and usefulness into one
+feedback-trained score.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Holographic — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite fact store
+that encodes facts as holographic phase vectors, enabling algebraic
+entity queries, but collapses truth and usefulness into one
+feedback-trained score.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Holographic — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Vector-symbolic memory</p>
+          <h1>Holographic</h1>
+          <p class="document-deck">A local SQLite fact store that
+encodes facts as holographic phase vectors, enabling algebraic entity
+queries, but collapses truth and usefulness into one feedback-trained
+score.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NousResearch/hermes-agent">
+              <span>Source</span>
+              <strong>NousResearch/hermes-agent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476" title="0fa5e41c86f022bba147797849f0b44865721476">
+              <span>Analyzed revision</span>
+              <code>0fa5e41c86f022bba147797849f0b44865721476</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Holographic is the first-party memory provider shipped inside Hermes
+Agent at <code>plugins/memory/holographic/</code>. It is the only system
+in this atlas built on a <strong>vector-symbolic architecture</strong>:
+facts are encoded as Holographic Reduced Representation (HRR) phase
+vectors, and retrieval uses algebraic
+<code>bind</code>/<code>unbind</code>/<code>bundle</code> operations
+rather than a learned embedding model.</p>
+<p>The whole plugin is roughly 2,000 lines across four files. That
+compactness is a feature: unlike most systems here, the entire memory
+model can be read in an afternoon.</p>
+<p>Two things make it worth studying:</p>
+<ul>
+<li><strong>Deterministic representation without an embedding
+model.</strong> Atoms are generated from SHA-256 of the token string
+(<code>encode_atom</code>), so vectors are byte-identical across
+processes, machines, and Python versions. There is no embedder to
+record, version, or drift — the atlas's usual "record embedder identity"
+guardrail is satisfied by construction.</li>
+<li><strong><code>contradict</code> as a first-class retrieval
+action.</strong> It surfaces fact pairs with high entity overlap and low
+content similarity. No other system in the atlas exposes contradiction
+discovery as an ordinary query.</li>
+</ul>
+<p>Two things make it a cautionary example, and they are more
+instructive than the strengths:</p>
+<ul>
+<li><strong>Trust is one float doing two jobs.</strong>
+<code>trust_score</code> is simultaneously epistemic confidence and
+retrieval strength; the ranker multiplies it straight into relevance
+(<code>score = relevance * trust_score</code>). This is precisely the
+split that <a href="../verel/">Verel</a> and <a
+href="../rainbox/">RainBox</a> treat as foundational.</li>
+<li><strong>User feedback silently deletes memory.</strong>
+<code>fact_feedback</code> moves trust by +0.05 (helpful) or −0.10
+(unhelpful), and both search paths default to
+<code>min_trust=0.3</code>. A fact created at the default 0.5 trust
+falls below the retrieval floor after <strong>three</strong> unhelpful
+ratings and becomes permanently invisible — with no tombstone, no review
+queue, and no record that it was ever suppressed. The atlas's "telemetry
+mistaken for truth" antipattern is not merely present here; it is the
+trust model.</li>
+</ul>
+<p>The plugin also demonstrates a failure mode specific to plugin-shaped
+memory: it mirrors the host's built-in memory writes into its own store
+(<code>on_memory_write</code>), creating two copies of the same content
+with independent lifecycles and no reconciliation or deletion
+propagation.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The memory unit is a flat fact row. There is no claim/evidence split,
+no scope, and no status:</p>
+<pre class="python"><code>facts(
+    fact_id         INTEGER PRIMARY KEY,
+    content         TEXT NOT NULL UNIQUE,   # dedupe is exact-text only
+    category        TEXT DEFAULT &#39;general&#39;, # user_pref|project|tool|general
+    tags            TEXT DEFAULT &#39;&#39;,
+    trust_score     REAL DEFAULT 0.5,       # confidence AND retrieval strength
+    retrieval_count INTEGER DEFAULT 0,
+    helpful_count   INTEGER DEFAULT 0,
+    created_at      TIMESTAMP,
+    updated_at      TIMESTAMP,
+    hrr_vector      BLOB                    # float64 phases, 8 KB at dim=1024
+)</code></pre>
+<p>Entities are resolved into a side table and linked many-to-many,
+which is what makes the algebraic query actions possible:</p>
+<pre class="python"><code>entities(entity_id, name, entity_type, aliases, created_at)
+fact_entities(fact_id, entity_id)
+memory_banks(bank_name, vector, dim, fact_count, updated_at)  # one bundled vector per category</code></pre>
+<p>The HRR layer is the distinctive part. Each fact is encoded
+compositionally:</p>
+<pre class="text"><code>encode_fact(content, entities) =
+    bundle(
+      bind(encode_text(content), ROLE_CONTENT),
+      bind(encode_atom(entity_1), ROLE_ENTITY),
+      bind(encode_atom(entity_2), ROLE_ENTITY),
+      ...
+    )</code></pre>
+<p>Because <code>unbind</code> inverts <code>bind</code>, an entity can
+be algebraically probed out of a fact — or out of a whole category bank
+— without keyword matching:</p>
+<pre class="text"><code>unbind(fact_vector, bind(entity, ROLE_ENTITY)) ≈ content_vector</code></pre>
+<p>Write lifecycle:</p>
+<pre class="text"><code>fact_store(action=&quot;add&quot;)  or  on_memory_write mirror  or  on_session_end regex extraction
+-&gt; add_fact(): INSERT (UNIQUE content) -&gt; regex entity extraction -&gt; entity resolve/link
+-&gt; _compute_hrr_vector() -&gt; _rebuild_bank(category)   # full category re-bundle, every write</code></pre>
+<p>Retrieval lifecycle:</p>
+<pre class="text"><code>fact_store(action=search|probe|related|reason|contradict)  or  prefetch(query)
+-&gt; FTS5 candidates (limit*3, sanitized OR-query, trust &gt;= min_trust)
+-&gt; rerank: 0.4*fts + 0.3*jaccard + 0.3*hrr_similarity
+-&gt; score = relevance * trust_score  [* optional temporal decay]
+-&gt; top-k, injected unfenced into the prompt as &quot;- [0.5] &lt;content&gt;&quot;</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Core files, all under <code>plugins/memory/holographic/</code>:</p>
+<ul>
+<li><code>holographic.py</code> (203 lines): the HRR algebra —
+<code>encode_atom</code>, <code>bind</code>, <code>unbind</code>,
+<code>bundle</code>, <code>similarity</code>, <code>encode_text</code>,
+<code>encode_fact</code>, <code>snr_estimate</code>. Pure NumPy, no
+persistence.</li>
+<li><code>store.py</code> (644 lines): SQLite schema,
+<code>MemoryStore</code> CRUD, entity extraction/resolution, trust
+feedback, HRR vector computation, bank rebuilds, and a process-wide
+shared-connection registry.</li>
+<li><code>retrieval.py</code> (654 lines): <code>FactRetriever</code>
+with <code>search</code>, <code>probe</code>, <code>related</code>,
+<code>reason</code>, and <code>contradict</code>, plus FTS5 query
+sanitization and Jaccard reranking.</li>
+<li><code>__init__.py</code> (465 lines): the
+<code>HolographicMemoryProvider</code> implementation of Hermes's
+<code>MemoryProvider</code> ABC, tool schemas, and end-of-session regex
+extraction.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Tools[&quot;fact_store / fact_feedback tools&quot;] --&gt; Provider[&quot;HolographicMemoryProvider&quot;]
+  Hooks[&quot;on_memory_write / on_session_end&quot;] --&gt; Provider
+  Provider --&gt; Store[&quot;MemoryStore (SQLite)&quot;]
+  Store --&gt; Facts[&quot;facts + FTS5&quot;]
+  Store --&gt; Ents[&quot;entities / fact_entities&quot;]
+  Store --&gt; HRR[&quot;holographic.py encode_fact&quot;]
+  HRR --&gt; Vec[&quot;facts.hrr_vector&quot;]
+  HRR --&gt; Bank[&quot;memory_banks (per category)&quot;]
+  Provider --&gt; Retr[&quot;FactRetriever&quot;]
+  Facts --&gt; Retr
+  Vec --&gt; Retr
+  Bank --&gt; Retr
+  Retr --&gt; Prompt[&quot;prefetch() -&gt; system prompt&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="hrr-encoding-holographicpy">HRR encoding
+(<code>holographic.py</code>)</h3>
+<p><code>encode_atom</code> derives a phase vector deterministically
+from SHA-256 counter blocks: it hashes <code>f"{word}:{i}"</code>,
+unpacks each 32-byte digest as sixteen <code>uint16</code> values, and
+scales them to <code>[0, 2π)</code>. This is the single best idea in the
+plugin. Representations are reproducible everywhere with no model
+download, no API call, and no dimension negotiation.</p>
+<p>The algebra is phase arithmetic: <code>bind</code> is
+<code>(a + b) % 2π</code>, <code>unbind</code> is
+<code>(a - b) % 2π</code>, and <code>bundle</code> is the circular mean
+of complex exponentials. <code>similarity</code> is
+<code>mean(cos(a - b))</code>.</p>
+<p><code>encode_text</code> bundles the atoms of each whitespace token —
+a <strong>bag of words</strong>. Word order is not represented, so
+"Alice owes Bob" and "Bob owes Alice" encode identically. For a store
+whose headline feature is contradiction detection, this is a material
+limitation.</p>
+<h3 id="write-path-storepyadd_fact">Write path
+(<code>store.py:add_fact</code>)</h3>
+<p>Deduplication is a <code>UNIQUE</code> constraint on exact
+<code>content</code>. On collision the existing <code>fact_id</code> is
+returned unchanged. There is no semantic dedupe, no subject/predicate
+key, and no conflict detection: two facts that contradict each other are
+simply two rows, both at trust 0.5.</p>
+<p>Entity extraction is regex-only (<code>_extract_entities</code>):
+capitalized multi-word phrases, double-quoted terms, single-quoted
+terms, and <code>X aka Y</code> patterns. Note that
+<code>_RE_CAPITALIZED</code> requires <strong>two or more</strong>
+capitalized words, so single-token entities like <code>Python</code> or
+<code>Copenhagen</code> are never extracted unless the user quotes them.
+Since <code>probe</code>, <code>related</code>, <code>reason</code>, and
+<code>contradict</code> all depend on entity links, this quietly caps
+the reach of every algebraic action.</p>
+<p><code>_resolve_entity</code> matches with
+<code>SELECT entity_id FROM entities WHERE name LIKE ?</code>.
+<code>LIKE</code> treats <code>%</code> and <code>_</code> as wildcards
+and the parameter is not escaped, so an entity containing an underscore
+can silently resolve to a different entity — distinct entities merge
+without warning.</p>
+<p>Every successful write calls <code>_rebuild_bank(category)</code>,
+which re-reads every fact vector in that category and re-bundles them.
+Write cost is therefore O(facts in category) on each add.</p>
+<h3 id="retrieval-retrievalpy">Retrieval
+(<code>retrieval.py</code>)</h3>
+<p><code>search</code> is genuine hybrid fusion: FTS5 supplies
+<code>limit*3</code> candidates, then each is rescored as
+<code>0.4*fts_rank + 0.3*jaccard + 0.3*hrr_similarity</code>, multiplied
+by <code>trust_score</code>, with optional exponential temporal decay
+(disabled by default, <code>half_life=0</code>).</p>
+<p><code>_sanitize_fts_query</code> is a well-judged detail: FTS5
+AND-joins bare multi-word MATCH arguments, which destroys recall on
+prose queries, so the helper drops stopwords, strips FTS5 operator
+characters, phrase-quotes each surviving token, and OR-joins them.</p>
+<p><code>probe</code>, <code>related</code>, and <code>reason</code> are
+the algebraic actions. <code>reason</code> is the most interesting: it
+unbinds each requested entity from every fact vector and scores by the
+<strong>minimum</strong> per-entity similarity, giving AND semantics
+across entities. <code>probe</code> has two distinct code paths —
+bank-based extraction when a category bank exists, and direct per-fact
+scoring otherwise — which return different-quality results for the same
+call.</p>
+<p><code>contradict</code> compares all fact pairs, keeps those with
+entity-overlap Jaccard ≥ 0.3, and scores
+<code>entity_overlap * (1 - normalized_content_similarity)</code>. It is
+O(n²) and guards itself by truncating to the 500 most recently updated
+facts. The truncation is silent: no field in the response indicates that
+older facts were not compared.</p>
+<h3 id="trust-feedback-storepyrecord_feedback">Trust feedback
+(<code>store.py:record_feedback</code>)</h3>
+<pre class="python"><code>_HELPFUL_DELTA   =  0.05
+_UNHELPFUL_DELTA = -0.10</code></pre>
+<p>The asymmetry is deliberate and sensible in isolation. The problem is
+what it interacts with: <code>min_trust</code> defaults to 0.3 in
+<code>search_facts</code>, <code>FactRetriever.search</code>, and the
+exposed tool schema. Starting from <code>default_trust=0.5</code>, three
+unhelpful ratings put a fact at 0.2 — below every default retrieval
+floor. The row still exists and <code>list</code> with
+<code>min_trust=0</code> still shows it, but no ordinary recall path
+will ever return it again, and nothing records that a suppression
+occurred.</p>
+<h3 id="auto-extraction-__init__py_auto_extract_facts">Auto-extraction
+(<code>__init__.py:_auto_extract_facts</code>)</h3>
+<p>Disabled by default (<code>auto_extract: false</code>). When enabled,
+<code>on_session_end</code> scans user messages against six regexes
+(<code>I prefer|like|love|use|want|need</code>,
+<code>my favorite/preferred/default … is</code>,
+<code>I always/never/usually</code>,
+<code>we decided/agreed/chose</code>,
+<code>the project uses/needs/requires</code>) and stores the <strong>raw
+matching user message</strong>, truncated to 400 characters, as a
+fact.</p>
+<p>This is zero-LLM capture, which the atlas generally endorses — but
+the stored artifact is conversational prose rather than a normalized
+claim, which then degrades the content-vector comparisons that
+<code>contradict</code> depends on.</p>
+<p>The code carries two revealing guards. Comments cite issues #57682
+and #57690: the context compactor's own handoff summaries are injected
+as <code>role="user"</code> messages, their prose reliably matched the
+decision patterns, and the compactor's generated output was consequently
+stored as durable "facts" on every context rollover. The fix
+distinguishes a merged summary's genuine pre-delimiter user content from
+its generated suffix. This is a clean, concrete instance of derived text
+laundering itself back into an evidence store — a feedback loop any
+system with automatic capture should test for explicitly.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Storage is a single SQLite database
+(<code>$HERMES_HOME/memory_store.db</code>) in WAL mode, with a
+documented fallback for NFS/SMB/FUSE mounts.</p>
+<p>The concurrency engineering is the most mature part of the codebase.
+A process-wide <code>_shared</code> registry keyed on the resolved
+database path gives every <code>MemoryStore</code> instance one
+connection and one re-entrant lock, refcounted so closing one instance
+cannot pull the connection out from under a sibling. The connection uses
+<code>isolation_level=None</code> (autocommit) specifically so a write
+that raises mid-method cannot strand a write transaction. The
+accompanying comment explains the production failure it fixes: multiple
+providers in one process — the main agent plus every
+<code>delegate_task</code> subagent — raced as independent WAL writers
+until one pinned the write lock and starved the rest.</p>
+<p>What the data model does <strong>not</strong> have is equally
+important:</p>
+<ul>
+<li><strong>No scope of any kind.</strong> <code>store.py</code>
+describes itself as a "Single-user Hermes memory store plugin". There is
+no user, agent, project, session, or tenant column.
+<code>category</code> is a four-value enum used for partitioning banks,
+not for access control.</li>
+<li><strong>No status or lifecycle state.</strong> Nothing distinguishes
+candidate from verified from rejected from stale.</li>
+<li><strong>No provenance.</strong> A fact records no source message,
+actor, or session. Once written, a model-inferred fact, a mirrored
+built-in memory write, and an explicit user statement are
+indistinguishable.</li>
+<li><strong>No supersession or correction chain.</strong>
+<code>update_fact</code> mutates the row in place.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Ranking is genuinely multi-signal and is the plugin's strongest
+conventional feature: lexical FTS5, token Jaccard, and HRR cosine, fused
+with fixed weights and multiplied by trust.</p>
+<p>Three caveats matter for anyone borrowing it.</p>
+<p><strong>Trust is baked into relevance.</strong>
+<code>score = relevance * trust_score</code> means a well-matched but
+lightly-downvoted fact loses to a poorly-matched trusted one, and there
+is no way to ask "what is the most relevant memory regardless of how it
+has been rated?"</p>
+<p><strong>HRR contributes a neutral 0.5 when unavailable.</strong> If
+NumPy is missing, <code>FactRetriever</code> silently redistributes
+weights to <code>fts=0.6, jaccard=0.4</code> and
+<code>is_available()</code> still returns <code>True</code>. The
+provider continues to advertise itself as "holographic" while running as
+an ordinary lexical store. Individual facts lacking a vector also score
+a neutral 0.5 rather than being excluded.</p>
+<p><strong>Bank capacity is computed and discarded.</strong>
+<code>snr_estimate(dim, n_items)</code> returns
+<code>sqrt(dim/n_items)</code> and logs a warning below SNR 2.0 — i.e.
+above <code>dim/4</code> = 256 facts per category at the default
+dimension. But <code>_rebuild_bank</code> calls it purely for the side
+effect and ignores the return value, so saturation produces a log line
+rather than a guard, a fallback, or a field in the response. The
+module's own <code>bundle</code> docstring gives a stricter bound still
+— "O(sqrt(dim)) items", about 32 at dim=1024 — so the two capacity
+estimates in the same file disagree by roughly 8×. Neither is
+enforced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Three write paths converge on <code>add_fact</code> with no shared
+policy layer:</p>
+<ol type="1">
+<li><strong>Explicit tool calls</strong> —
+<code>fact_store(action="add")</code> from the model.</li>
+<li><strong>Mirrored host writes</strong> — <code>on_memory_write</code>
+copies every built-in Hermes memory <code>add</code> into the fact
+store, mapping <code>target == "user"</code> to category
+<code>user_pref</code>.</li>
+<li><strong>End-of-session regex extraction</strong> — when
+<code>auto_extract</code> is enabled.</li>
+</ol>
+<p>None of these is distinguished in the stored row. Path 2 is the most
+consequential: the same content now exists in Hermes's
+<code>MEMORY.md</code>/<code>USER.md</code> <strong>and</strong> in
+<code>memory_store.db</code>, with independent lifecycles. Editing or
+deleting the Markdown does not remove the mirrored fact, because
+<code>on_memory_write</code> only handles <code>action == "add"</code> —
+the <code>remove</code> action documented in the ABC is ignored by this
+provider. Host-level forgetting therefore does not propagate.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Holographic implements Hermes's <code>MemoryProvider</code> ABC
+(<code>agent/memory_provider.py</code>, 315 lines), which is the most
+explicit pluggable-memory-provider contract in the atlas. It defines
+roughly seventeen lifecycle members: <code>initialize</code>,
+<code>system_prompt_block</code>, <code>prefetch</code>,
+<code>queue_prefetch</code>, <code>sync_turn</code>,
+<code>get_tool_schemas</code>, <code>handle_tool_call</code>,
+<code>shutdown</code>, <code>on_turn_start</code>,
+<code>on_session_end</code>, <code>on_session_switch</code>,
+<code>on_pre_compress</code>, <code>on_delegation</code>,
+<code>on_memory_write</code>, <code>get_config_schema</code>,
+<code>save_config</code>, and <code>backup_paths</code>.</p>
+<p>The same directory ships first-party adapters for every other
+provider Hermes supports — <code>byterover</code>,
+<code>hindsight</code>, <code>honcho</code>, <code>mem0</code>,
+<code>openviking</code>, <code>retaindb</code>, <code>supermemory</code>
+— so the <em>adapters</em> are reviewable even when the backing service
+is not. <code>MemoryManager</code> enforces a one-external-provider
+limit to avoid tool-schema bloat.</p>
+<p>The contract has a conspicuous hole, and it is the reason this
+ecosystem deserves its own <a
+href="../../patterns/pluggable-memory-provider/">pattern page</a>:
+<strong>there is no deletion or forgetting hook.</strong> No
+<code>forget</code>, no <code>delete_scope</code>, no tenant or user
+parameter anywhere in the ABC. A host-level erasure request has no
+defined path into a provider's store.</p>
+<p>Two model-facing surfaces deserve scrutiny:</p>
+<ul>
+<li><code>prefetch</code> injects the top five facts into the system
+prompt as <code>- [0.5] &lt;content&gt;</code> with <strong>no fencing
+or neutralization</strong>. Combined with enabled auto-extraction —
+where a raw user message becomes a durable fact — this is a persistent
+prompt-injection path: text that a user (or a quoted third party) writes
+once can be replayed into every later prompt as trusted-looking context.
+Contrast <a href="../verel/">Verel</a> and <a
+href="../rainbox/">RainBox</a>, which fence recalled memory as untrusted
+data.</li>
+<li>The <code>fact_store</code> tool description ends with "IMPORTANT:
+Before answering questions about the user, ALWAYS probe or reason first"
+— tool description as policy, which the atlas treats as necessary but
+never sufficient.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Deterministic, reproducible vectors with no embedder version to
+track.</li>
+<li>Serious, well-documented SQLite concurrency handling with refcounted
+shared connections and autocommit.</li>
+<li>Deterministic recovery path: <code>rebuild_all_vectors()</code>
+recomputes every vector and bank from stored text, so the vector layer
+is a true rebuildable projection.</li>
+<li>Graceful degradation when NumPy is absent.</li>
+<li><code>contradict</code> gives operators a way to <em>discover</em>
+inconsistency, which most systems lack entirely.</li>
+</ul>
+<p>Gaps, roughly in order of severity:</p>
+<ul>
+<li><strong>Feedback is deletion.</strong> Three downvotes suppress a
+fact permanently with no tombstone, review surface, or audit record.
+"Unhelpful" and "false" are conflated.</li>
+<li><strong>One score for truth and usefulness.</strong> No separation
+of epistemic confidence from retrieval strength.</li>
+<li><strong>No scope.</strong> Single-user by construction; nothing
+prevents facts from one project or persona surfacing in another.</li>
+<li><strong>No provenance.</strong> Source, actor, and session are not
+recorded, so a wrong fact cannot be traced or explained.</li>
+<li><strong>Unfenced prompt injection of recalled content</strong>,
+which auto-extraction makes durable.</li>
+<li><strong>No deletion propagation</strong> between the host's built-in
+memory and the mirrored fact store.</li>
+<li><strong><code>contradict</code> reports but never resolves.</strong>
+It has no supersession, tombstone, or review workflow; the operator is
+handed pairs and left to run <code>update</code>/<code>remove</code>
+manually.</li>
+<li><strong>Silent caps</strong>: the 500-fact contradiction window and
+the ignored SNR ceiling both degrade quality without signalling it.</li>
+</ul>
+<p>The <code>contradict</code> docstring asserts "no other memory system
+does this". Within this atlas that is not accurate: <a
+href="../rainbox/">RainBox</a> performs lattice-aware conflict detection
+at write time, <a href="../verel/">Verel</a> maintains explicit rejected
+states, and <a href="../engram/">engram</a> surfaces conflict candidates
+for judgment. What is genuinely unusual is doing it <em>algebraically
+over vectors</em> and exposing it as an ordinary read action rather than
+a write-time gate — which is also its weakness, since detection after
+the fact cannot prevent the contradiction from being recalled in the
+meantime.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Holographic-specific coverage is 599 lines across four files, plus
+1,662 lines exercising the provider ABC:</p>
+<ul>
+<li><code>tests/plugins/memory/test_holographic_store.py</code> (243
+lines)</li>
+<li><code>tests/plugins/memory/test_holographic_auto_extract.py</code>
+(170 lines)</li>
+<li><code>tests/plugins/memory/test_holographic_retrieval.py</code> (129
+lines)</li>
+<li><code>tests/plugins/memory/test_holographic_shutdown_closes_db.py</code>
+(57 lines)</li>
+<li><code>tests/agent/test_memory_provider.py</code> (1,662 lines)</li>
+</ul>
+<p>The suites were not run for this review. Coverage is oriented toward
+CRUD, retrieval mechanics, the auto-extract contamination guards, and
+connection shutdown — the areas where production bugs were actually
+found. There is <strong>no committed retrieval-quality
+benchmark</strong>, and no evaluation of whether HRR similarity
+outperforms the FTS5 and Jaccard signals it is fused with. Given that
+HRR carries only 0.3 of the relevance weight and falls back to a neutral
+constant when unavailable, its measured contribution to recall is
+currently unknown.</p>
+<p>The README documents configuration and the nine
+<code>fact_store</code> actions but no decay, forgetting, or capacity
+guidance. Two open issues in the tracker (<a
+href="https://github.com/NousResearch/hermes-agent/issues/4781">#4781</a>,
+<a
+href="https://github.com/NousResearch/hermes-agent/issues/31263">#31263</a>)
+report that the plugin registers but its tools or context injection do
+not fire; those threads were not read for this review, and the titles
+alone do not establish a reproducible defect in the code inspected
+here.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Deterministic hash-derived representations.</strong>
+<code>encode_atom</code> removes the entire class of embedder-drift
+problems: no model to pin, no dimension to negotiate, identical vectors
+on every machine. Worth copying for any system where reproducibility
+matters more than semantic nuance.</li>
+<li><strong>Algebraic multi-entity query.</strong> <code>reason</code>'s
+min-similarity-across-entities gives true AND semantics over structure,
+which is awkward to express in a plain vector store.</li>
+<li><strong>Contradiction as a queryable action.</strong> Entity-overlap
+× content-divergence is a cheap, model-free heuristic for surfacing
+inconsistency, and belongs in more systems as a review aid.</li>
+<li><strong>FTS5 query sanitization.</strong> Dropping stopwords and
+OR-joining phrase-quoted tokens is a small fix for a real and widespread
+recall bug in FTS5-backed memory.</li>
+<li><strong>Refcounted shared SQLite connections.</strong> The registry
+in <code>store.py</code> is a reusable answer to multi-writer WAL
+contention when subagents share a process.</li>
+<li><strong>Rebuildable vector projections.</strong>
+<code>rebuild_all_vectors()</code> treats text as canonical and vectors
+as derived.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Telemetry as truth, with deletion as a side effect.</strong>
+The clearest instance in the atlas: a rating tool directly mutates the
+score that gates retrieval, and enough ratings remove the memory from
+recall entirely.</li>
+<li><strong>One score for confidence and reachability.</strong></li>
+<li><strong>Bag-of-words encoding under a compositional banner.</strong>
+Word order is discarded, so relational facts and their inversions are
+indistinguishable.</li>
+<li><strong>Unescaped <code>LIKE</code> for identity
+resolution</strong>, allowing distinct entities to merge.</li>
+<li><strong>Capacity computed and ignored</strong>, with two mutually
+inconsistent capacity estimates in one module.</li>
+<li><strong>Silent truncation</strong> of the contradiction comparison
+set.</li>
+<li><strong>Dual-write to host and provider stores</strong> with no
+reconciliation or deletion propagation.</li>
+<li><strong>Unfenced injection</strong> of stored prose into the system
+prompt.</li>
+<li><strong>Entity extraction that misses single-word entities</strong>,
+silently limiting every algebraic action.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li><code>encode_atom</code>'s SHA-256 phase derivation, and the
+<code>bind</code>/<code>unbind</code>/<code>bundle</code> algebra, if
+compositional structure matters to you.</li>
+<li><code>_sanitize_fts_query</code> more or less verbatim.</li>
+<li>The shared-connection registry pattern.</li>
+<li>The <code>contradict</code> heuristic — as an input to a review
+queue, not as an output on its own.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The trust model. Split epistemic confidence from retrieval strength
+before wiring any feedback tool to either, and route suppression through
+an explicit rejected state rather than a threshold.</li>
+<li>Feedback that changes reachability without an audit trail.</li>
+<li>Scope-free storage, unless the deployment really is single-user
+forever.</li>
+<li><code>prefetch</code> as written; fence recalled content before it
+enters a prompt.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Does HRR similarity measurably improve retrieval over FTS5 + Jaccard
+alone? Nothing in the repository answers this, and the 0.3 weight makes
+it easy to overestimate.</li>
+<li>What is the intended behaviour when a category bank saturates past
+SNR 2.0 — should <code>probe</code> fall back to per-fact scoring, or
+should banks shard?</li>
+<li>Should <code>fact_feedback</code> write a tombstone or review row
+instead of silently crossing the <code>min_trust</code> floor?</li>
+<li>How should a host-level "forget this" propagate to a provider when
+the <code>MemoryProvider</code> ABC has no deletion hook?</li>
+<li>Should mirrored <code>on_memory_write</code> facts be marked as
+derived, so that host deletions can find and remove them?</li>
+<li>Would sequence-aware encoding (positional binding) fix the "Alice
+owes Bob" inversion problem without abandoning the deterministic-atom
+property?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>HRR algebra:
+<code>plugins/memory/holographic/holographic.py</code>.</li>
+<li>Store, schema, entities, trust:
+<code>plugins/memory/holographic/store.py</code>.</li>
+<li>Hybrid and algebraic retrieval:
+<code>plugins/memory/holographic/retrieval.py</code>.</li>
+<li>Provider, tools, auto-extraction:
+<code>plugins/memory/holographic/__init__.py</code>.</li>
+<li>Provider contract: <code>agent/memory_provider.py</code>.</li>
+<li>Sibling provider adapters:
+<code>plugins/memory/{byterover,hindsight,honcho,mem0,openviking,retaindb,supermemory}/</code>.</li>
+<li>Tests: <code>tests/plugins/memory/test_holographic_*.py</code>,
+<code>tests/agent/test_memory_provider.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
