@@ -147,6 +147,34 @@ answer formatting all move the number, and few published results state a judge
 seed or report agreement with human labels. Two runs of the same system on the
 same data are not guaranteed to produce the same score.
 
+### The model may already know the answer
+
+The trap that invalidates a memory benchmark outright: if a question can be
+answered from pre-training, a correct answer proves nothing about the memory
+layer. "Who founded the company the user works at" is answerable by the model
+alone. The memory system can fail completely and the score stays high.
+
+The usual fix is fictional data, and it is necessary but not sufficient, because
+a model can also *guess*. Asked a user's favourite colour with no memory at all,
+a model naming blue is right a fair fraction of the time; asked their dog's name,
+a model naming Max or Luna is not guessing blindly either. Low-entropy facts
+about people are exactly the facts these benchmarks like to test, and they are
+the ones a plausibility prior can hit.
+
+Three properties make a probe honest:
+
+- **Fictional**, so pre-training cannot supply it.
+- **High-entropy**, so a plausibility prior cannot hit it — a made-up compound
+  token beats a common first name.
+- **Checked against a no-memory baseline.** Run the same questions with
+  retrieval disabled. Whatever the model scores is your floor, and any headline
+  number should be reported against it rather than against zero.
+
+That last one costs one extra run and is missing from every published memory
+benchmark result this atlas has examined. Without it, a reported 82% could be an
+82% model and an inert memory layer, and nothing in the artifact distinguishes
+the two.
+
 ### The system may not be optimizing that axis at all
 
 This is the important one. The systems in this atlas with the strongest
@@ -286,12 +314,36 @@ points while tripling per-turn tokens has not obviously won.
 The metric worth reporting is **accuracy per thousand tokens of injected
 memory**, not accuracy alone. Nobody in this atlas reports it.
 
+**And the token count understates it.** Providers cache prompt prefixes, and the
+saving is large — a cached prefix costs a fraction of an uncached one. Injecting
+freshly retrieved memory *near the top* of the prompt changes the prefix on every
+turn and invalidates that cache, so a memory layer can raise the real per-turn
+cost far more than its token count suggests, and add latency to first token while
+doing it.
+
+[Hermes Agent](../systems/hermes-agent/) is the system here that treats this as a
+first-order constraint. Curated memory is rendered into the system prompt **once,
+at session start, as a frozen snapshot**, and mid-session writes deliberately do
+not update it, so the provider's prefix cache survives the whole session. That is
+an economic decision with an epistemic price — the agent cannot act on something
+it learned ten minutes ago until the next session — and it drives a safety
+decision too, since a poisoned entry would persist for the entire session, which
+is why Hermes scans content at write time rather than fencing it at read time.
+
+The general shape: **stable memory belongs in the cacheable prefix, volatile
+memory belongs after it.** A system that injects everything it retrieved at the
+top of the prompt has chosen the worst position for cost without choosing it
+deliberately. Nothing in this atlas measures the cache-hit rate its injection
+strategy produces.
+
 ### On latency, and the lag nobody measures
 
 "Time until memory has been recalled" splits into two very different numbers.
 
 **Retrieval latency** is the obvious one: how long a query takes. It is on the
-critical path of every turn, and it is measured in exactly one repository here.
+critical path of every turn — serial, before the first token, and additive with
+the cache invalidation above — and it is measured in exactly one repository
+here.
 Reported as p50 alone it is misleading — a p99 of two seconds on a hybrid
 search with a cross-encoder reranker is a user-visible stall.
 
@@ -393,6 +445,27 @@ profile, or a graph edge leaves the value present in derived form, and every
 system in this atlas that derives compact representations from raw evidence has
 this exposure.
 
+```mermaid
+flowchart LR
+    Raw["source memory<br/>DELETED ✓"]
+    Raw -. "derived earlier" .-> Sum["session summary<br/>still contains it"]
+    Raw -. "derived earlier" .-> Prof["user profile<br/>still contains it"]
+    Raw -. "derived earlier" .-> Edge["graph edge<br/>still contains it"]
+    Raw -. "derived earlier" .-> Vec["embedding + cache<br/>still retrievable"]
+    Raw -. "derived earlier" .-> Bak["export · backup<br/>still contains it"]
+    Sum --> P["prompt"]
+    Prof --> P
+    Edge --> P
+    Vec --> P
+    Bak -. "restore" .-> Raw
+```
+
+The deletion succeeded and the value is still reachable through five other
+paths. Worse, the backup path closes the loop: a restore can put the deleted row
+back, and nothing marks it as previously deleted. This is why a deletion API is
+not a deletion guarantee, and why the assertion in step 9 has to be made against
+every derived store by name rather than against the one the API touched.
+
 Two things would make such a benchmark practical to build. It needs no labelled
 dataset and no judge model — every assertion is deterministic. And it would be
 **scored as a pass/fail matrix rather than a percentage**, because "forgets
@@ -403,6 +476,73 @@ The reason to want one is not only correctness. Where a user has a legal right
 to erasure, "we deleted the row and a nightly job re-derived it from retained
 history" is a compliance failure with a benchmark-shaped hole where the
 evidence should be.
+
+### The harness
+
+Small enough to paste into a CI job. The adapter is the only part you write —
+six methods, all of which any memory system already has in some form.
+
+```python
+import re, pytest
+
+# Fictional and high-entropy, for the reason in section 3: a probe a model
+# could guess proves nothing. This one cannot be reached by a plausibility prior.
+CANARY = "the user's dog is named Plumbus Vantablack-7"
+TOKEN = "Vantablack-7"          # what to grep derived artifacts for
+SCOPE = "test-user"
+
+
+class MemoryAdapter:
+    """Implement these six against the system under test."""
+
+    def write(self, text: str, *, scope: str) -> None: ...
+    def prompt_prefix(self, query: str, *, scope: str) -> str:
+        """What actually reaches the model — after ranking, budget truncation,
+        dedupe and formatting. Not the retriever's return value."""
+    def forget(self, text: str, *, scope: str) -> None: ...
+    def run_background_jobs(self) -> None:
+        """Every one: consolidation, re-extraction, nightly distillation,
+        profile rebuild, index compaction, cloud sync."""
+    def derived_artifacts(self, *, scope: str) -> list[str]:
+        """Every store derived from memory, as text: summaries, profiles,
+        graph edges, caches, exports, backups."""
+    def audit_entries(self, *, scope: str) -> list[str]: ...
+
+
+def present(memory: MemoryAdapter, query="what is the dog called?") -> bool:
+    return TOKEN in memory.prompt_prefix(query, scope=SCOPE)
+
+
+def test_deletion_holds(memory: MemoryAdapter, source_material: str):
+    memory.write(CANARY, scope=SCOPE)                                    # 1
+    assert present(memory), "setup failed: never retrievable to begin with"  # 2
+
+    memory.forget(CANARY, scope=SCOPE)                                   # 3
+    assert not present(memory), "deletion did not take effect"           # 4
+
+    memory.write(source_material, scope=SCOPE)                           # 5
+    assert not present(memory), "re-ingestion resurrected a deleted value"  # 6
+
+    memory.run_background_jobs()                                         # 7
+    assert not present(memory), "a background job re-derived a deleted value"  # 8
+
+    leaked = [a for a in memory.derived_artifacts(scope=SCOPE) if TOKEN in a]  # 9
+    assert not leaked, f"deleted value survives in {len(leaked)} derived artifacts"
+
+    assert any(re.search(r"forget|delete|reject", e) and TOKEN in e       # 10
+               for e in memory.audit_entries(scope=SCOPE)), "deletion not auditable"
+```
+
+Two notes on running it honestly. `source_material` in step 5 must be the
+original document or transcript the fact was extracted from, not the fact
+itself — re-ingesting the raw source is the realistic path, and the easy version
+of the test skips it. And `run_background_jobs` has to be genuinely exhaustive;
+a system whose nightly distillation is not reachable from the test harness has
+an untested path, which is worth recording as a result in itself.
+
+The same adapter runs the [contradiction test](#contradiction-test) below —
+`prompt_prefix` is the B measurement, `run_background_jobs` is the C
+measurement, and only the assertions change.
 
 <a id="contradiction-test"></a>
 

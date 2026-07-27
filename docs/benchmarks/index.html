@@ -284,6 +284,34 @@ prompt, and answer formatting all move the number, and few published
 results state a judge seed or report agreement with human labels. Two
 runs of the same system on the same data are not guaranteed to produce
 the same score.</p>
+<h3 id="the-model-may-already-know-the-answer">The model may already
+know the answer</h3>
+<p>The trap that invalidates a memory benchmark outright: if a question
+can be answered from pre-training, a correct answer proves nothing about
+the memory layer. "Who founded the company the user works at" is
+answerable by the model alone. The memory system can fail completely and
+the score stays high.</p>
+<p>The usual fix is fictional data, and it is necessary but not
+sufficient, because a model can also <em>guess</em>. Asked a user's
+favourite colour with no memory at all, a model naming blue is right a
+fair fraction of the time; asked their dog's name, a model naming Max or
+Luna is not guessing blindly either. Low-entropy facts about people are
+exactly the facts these benchmarks like to test, and they are the ones a
+plausibility prior can hit.</p>
+<p>Three properties make a probe honest:</p>
+<ul>
+<li><strong>Fictional</strong>, so pre-training cannot supply it.</li>
+<li><strong>High-entropy</strong>, so a plausibility prior cannot hit it
+— a made-up compound token beats a common first name.</li>
+<li><strong>Checked against a no-memory baseline.</strong> Run the same
+questions with retrieval disabled. Whatever the model scores is your
+floor, and any headline number should be reported against it rather than
+against zero.</li>
+</ul>
+<p>That last one costs one extra run and is missing from every published
+memory benchmark result this atlas has examined. Without it, a reported
+82% could be an 82% model and an inert memory layer, and nothing in the
+artifact distinguishes the two.</p>
 <h3 id="the-system-may-not-be-optimizing-that-axis-at-all">The system
 may not be optimizing that axis at all</h3>
 <p>This is the important one. The systems in this atlas with the
@@ -506,13 +534,36 @@ tripling per-turn tokens has not obviously won.</p>
 <p>The metric worth reporting is <strong>accuracy per thousand tokens of
 injected memory</strong>, not accuracy alone. Nobody in this atlas
 reports it.</p>
+<p><strong>And the token count understates it.</strong> Providers cache
+prompt prefixes, and the saving is large — a cached prefix costs a
+fraction of an uncached one. Injecting freshly retrieved memory <em>near
+the top</em> of the prompt changes the prefix on every turn and
+invalidates that cache, so a memory layer can raise the real per-turn
+cost far more than its token count suggests, and add latency to first
+token while doing it.</p>
+<p><a href="../systems/hermes-agent/">Hermes Agent</a> is the system
+here that treats this as a first-order constraint. Curated memory is
+rendered into the system prompt <strong>once, at session start, as a
+frozen snapshot</strong>, and mid-session writes deliberately do not
+update it, so the provider's prefix cache survives the whole session.
+That is an economic decision with an epistemic price — the agent cannot
+act on something it learned ten minutes ago until the next session — and
+it drives a safety decision too, since a poisoned entry would persist
+for the entire session, which is why Hermes scans content at write time
+rather than fencing it at read time.</p>
+<p>The general shape: <strong>stable memory belongs in the cacheable
+prefix, volatile memory belongs after it.</strong> A system that injects
+everything it retrieved at the top of the prompt has chosen the worst
+position for cost without choosing it deliberately. Nothing in this
+atlas measures the cache-hit rate its injection strategy produces.</p>
 <h3 id="on-latency-and-the-lag-nobody-measures">On latency, and the lag
 nobody measures</h3>
 <p>"Time until memory has been recalled" splits into two very different
 numbers.</p>
 <p><strong>Retrieval latency</strong> is the obvious one: how long a
-query takes. It is on the critical path of every turn, and it is
-measured in exactly one repository here. Reported as p50 alone it is
+query takes. It is on the critical path of every turn — serial, before
+the first token, and additive with the cache invalidation above — and it
+is measured in exactly one repository here. Reported as p50 alone it is
 misleading — a p99 of two seconds on a hybrid search with a
 cross-encoder reranker is a user-visible stall.</p>
 <p><strong>Write-to-readable lag</strong> is the one that is never
@@ -607,6 +658,24 @@ particular: deleting a source memory that has already been folded into a
 summary, a user profile, or a graph edge leaves the value present in
 derived form, and every system in this atlas that derives compact
 representations from raw evidence has this exposure.</p>
+<pre class="mermaid"><code>flowchart LR
+    Raw[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
+    Raw -. &quot;derived earlier&quot; .-&gt; Sum[&quot;session summary&lt;br/&gt;still contains it&quot;]
+    Raw -. &quot;derived earlier&quot; .-&gt; Prof[&quot;user profile&lt;br/&gt;still contains it&quot;]
+    Raw -. &quot;derived earlier&quot; .-&gt; Edge[&quot;graph edge&lt;br/&gt;still contains it&quot;]
+    Raw -. &quot;derived earlier&quot; .-&gt; Vec[&quot;embedding + cache&lt;br/&gt;still retrievable&quot;]
+    Raw -. &quot;derived earlier&quot; .-&gt; Bak[&quot;export · backup&lt;br/&gt;still contains it&quot;]
+    Sum --&gt; P[&quot;prompt&quot;]
+    Prof --&gt; P
+    Edge --&gt; P
+    Vec --&gt; P
+    Bak -. &quot;restore&quot; .-&gt; Raw</code></pre>
+<p>The deletion succeeded and the value is still reachable through five
+other paths. Worse, the backup path closes the loop: a restore can put
+the deleted row back, and nothing marks it as previously deleted. This
+is why a deletion API is not a deletion guarantee, and why the assertion
+in step 9 has to be made against every derived store by name rather than
+against the one the API touched.</p>
 <p>Two things would make such a benchmark practical to build. It needs
 no labelled dataset and no judge model — every assertion is
 deterministic. And it would be <strong>scored as a pass/fail matrix
@@ -616,6 +685,70 @@ time" is not a meaningful thing to say about a deletion request.</p>
 legal right to erasure, "we deleted the row and a nightly job re-derived
 it from retained history" is a compliance failure with a
 benchmark-shaped hole where the evidence should be.</p>
+<h3 id="the-harness">The harness</h3>
+<p>Small enough to paste into a CI job. The adapter is the only part you
+write — six methods, all of which any memory system already has in some
+form.</p>
+<pre class="python"><code>import re, pytest
+
+# Fictional and high-entropy, for the reason in section 3: a probe a model
+# could guess proves nothing. This one cannot be reached by a plausibility prior.
+CANARY = &quot;the user&#39;s dog is named Plumbus Vantablack-7&quot;
+TOKEN = &quot;Vantablack-7&quot;          # what to grep derived artifacts for
+SCOPE = &quot;test-user&quot;
+
+
+class MemoryAdapter:
+    &quot;&quot;&quot;Implement these six against the system under test.&quot;&quot;&quot;
+
+    def write(self, text: str, *, scope: str) -&gt; None: ...
+    def prompt_prefix(self, query: str, *, scope: str) -&gt; str:
+        &quot;&quot;&quot;What actually reaches the model — after ranking, budget truncation,
+        dedupe and formatting. Not the retriever&#39;s return value.&quot;&quot;&quot;
+    def forget(self, text: str, *, scope: str) -&gt; None: ...
+    def run_background_jobs(self) -&gt; None:
+        &quot;&quot;&quot;Every one: consolidation, re-extraction, nightly distillation,
+        profile rebuild, index compaction, cloud sync.&quot;&quot;&quot;
+    def derived_artifacts(self, *, scope: str) -&gt; list[str]:
+        &quot;&quot;&quot;Every store derived from memory, as text: summaries, profiles,
+        graph edges, caches, exports, backups.&quot;&quot;&quot;
+    def audit_entries(self, *, scope: str) -&gt; list[str]: ...
+
+
+def present(memory: MemoryAdapter, query=&quot;what is the dog called?&quot;) -&gt; bool:
+    return TOKEN in memory.prompt_prefix(query, scope=SCOPE)
+
+
+def test_deletion_holds(memory: MemoryAdapter, source_material: str):
+    memory.write(CANARY, scope=SCOPE)                                    # 1
+    assert present(memory), &quot;setup failed: never retrievable to begin with&quot;  # 2
+
+    memory.forget(CANARY, scope=SCOPE)                                   # 3
+    assert not present(memory), &quot;deletion did not take effect&quot;           # 4
+
+    memory.write(source_material, scope=SCOPE)                           # 5
+    assert not present(memory), &quot;re-ingestion resurrected a deleted value&quot;  # 6
+
+    memory.run_background_jobs()                                         # 7
+    assert not present(memory), &quot;a background job re-derived a deleted value&quot;  # 8
+
+    leaked = [a for a in memory.derived_artifacts(scope=SCOPE) if TOKEN in a]  # 9
+    assert not leaked, f&quot;deleted value survives in {len(leaked)} derived artifacts&quot;
+
+    assert any(re.search(r&quot;forget|delete|reject&quot;, e) and TOKEN in e       # 10
+               for e in memory.audit_entries(scope=SCOPE)), &quot;deletion not auditable&quot;</code></pre>
+<p>Two notes on running it honestly. <code>source_material</code> in
+step 5 must be the original document or transcript the fact was
+extracted from, not the fact itself — re-ingesting the raw source is the
+realistic path, and the easy version of the test skips it. And
+<code>run_background_jobs</code> has to be genuinely exhaustive; a
+system whose nightly distillation is not reachable from the test harness
+has an untested path, which is worth recording as a result in
+itself.</p>
+<p>The same adapter runs the <a href="#contradiction-test">contradiction
+test</a> below — <code>prompt_prefix</code> is the B measurement,
+<code>run_background_jobs</code> is the C measurement, and only the
+assertions change.</p>
 <p><a id="contradiction-test"></a></p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
 <p>Forgetting has no benchmark. <strong>Supersession has half of
