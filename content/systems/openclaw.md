@@ -174,6 +174,16 @@ Memory reaches the agent as plugin-provided tools (`memory-core/src/tools.ts`), 
 
 As with Hermes, the host contract is where the interesting governance question lives: a plugin owns its own storage, and the host has no general mechanism to propagate a user's deletion request into whatever backend is mounted.
 
+### What a downstream integrator has to do
+
+NetEase Youdao's [LobsterAI](https://github.com/netease-youdao/LobsterAI) — an MIT-licensed desktop app wrapping OpenClaw, reviewed at [`2921c1e`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — is a useful natural experiment in what this contract does not provide. It has no memory system of its own; it operates OpenClaw's. To do that it ships:
+
+- `src/main/libs/openclawMemoryFile.ts` (689 lines), which **reimplements OpenClaw's memory file format** — `parseMemoryMd`, `serializeMemoryMd`, `readMemoryEntries`, `addMemoryEntry`, `updateMemoryEntry`, `deleteMemoryEntry` — because building a GUI over the host's memory required a parser the host does not expose.
+- `src/main/libs/openclawMemoryIndexMigration.ts` (409 lines) for index migration.
+- `scripts/patches/v2026.4.14/openclaw-memory-atomic-reindex-ebusy-retry.patch`, a patch against `extensions/memory-core/src/memory/manager-atomic-reindex.ts` adding a Windows `EBUSY` retry around `fs.rename()`, with the comment that "SQLite WAL-mode holds file locks that cause `fs.rename()` to fail with EBUSY on Windows" (referencing openclaw#64187).
+
+Both consequences follow from the same gap. Without a memory API, an integrator must reverse the file format to read it and patch the host's source to fix it. That is the practical cost of a plugin contract that covers capture and injection but not inspection or repair — and it is why the [pluggable memory provider](../../patterns/pluggable-memory-provider/) pattern argues for making these seams explicit before third parties arrive.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths:

@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Conversations distil into dated
+daily files and then into a ~30-entry MEMORY.md by a scheduled Deep
+Dream pass, over a self-healing chunk index with hybrid search.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CowAgent — Agent Memory Atlas">
+    <meta property="og:description" content="Conversations distil into
+dated daily files and then into a ~30-entry MEMORY.md by a scheduled
+Deep Dream pass, over a self-healing chunk index with hybrid search.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CowAgent — Agent Memory Atlas">
+    <meta name="twitter:description" content="Conversations distil into
+dated daily files and then into a ~30-entry MEMORY.md by a scheduled
+Deep Dream pass, over a self-healing chunk index with hybrid search.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CowAgent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Daily-distilled memory</p>
+          <h1>CowAgent</h1>
+          <p class="document-deck">Conversations distil into dated daily
+files and then into a ~30-entry MEMORY.md by a scheduled Deep Dream
+pass, over a self-healing chunk index with hybrid search.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zhayujie/CowAgent">
+              <span>Source</span>
+              <strong>zhayujie/CowAgent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761" title="fe88751ccb24e9b2991b6a35a2dcc538f7a38761">
+              <span>Analyzed revision</span>
+              <code>fe88751ccb24e9b2991b6a35a2dcc538f7a38761</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CowAgent is a conversational agent from zhayujie (the author of
+<code>chatgpt-on-wechat</code>), with a ~5,300-line memory subsystem
+under <code>agent/memory/</code>. Its design is the clearest
+<strong>time-boxed distillation pipeline</strong> in the atlas:</p>
+<pre class="text"><code>conversation context (short-term)
+  → memory/YYYY-MM-DD.md (daily, mid-term)
+  → MEMORY.md (long-term, ~30 entries)</code></pre>
+<p>Two things distinguish it from the other file-backed systems
+here.</p>
+<p><strong>Memory is bucketed by day before it is distilled.</strong>
+Trimmed context, a 23:55 scheduled run, and an "API overflow" emergency
+path all write into a <em>dated</em> file. That intermediate layer means
+consolidation always operates on a bounded, naturally-scoped unit — one
+day — rather than on an ever-growing archive. <a
+href="../nanobot/">nanobot</a> uses a cursor over a continuous JSONL
+archive to achieve the same bounding; CowAgent uses the calendar, which
+is cruder and considerably easier to inspect.</p>
+<p><strong>The long-term file has an explicit entry budget.</strong>
+Deep Dream "targets approximately 30 entries or fewer" because
+<code>MEMORY.md</code> is injected into the system prompt for every
+conversation. Compare <a href="../hermes-agent/">Hermes Agent</a>, which
+enforces a hard character cap and refuses writes that exceed it.
+CowAgent's budget is a target given to a model rather than an enforced
+limit — softer, and it depends on the distiller honouring it.</p>
+<p>The distillation rules are unusually well specified for a
+Markdown-file system: merge and refine, extract new, <strong>conflict
+update where newer information takes precedence</strong>, clean invalid,
+remove redundancy. That fourth rule is the correction model, and it is
+also the design's main epistemic weakness — recency wins automatically,
+with no conflict surfaced for review and no record that a value was
+replaced.</p>
+<p>Underneath sits a real retrieval layer: a SQLite <code>chunks</code>
+table with embeddings and FTS5, a chunker, an embedding provider
+factory, and index rebuild — including a <strong>self-healing FTS5
+consistency check</strong> that detects and repairs a trigger/table
+mismatch left by a crash mid-rebuild.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Durable memory is Markdown files; the index is a projection over
+them.</p>
+<pre class="sql"><code>CREATE TABLE chunks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    scope TEXT NOT NULL DEFAULT &#39;shared&#39;,
+    source TEXT NOT NULL DEFAULT &#39;memory&#39;,
+    path TEXT NOT NULL,
+    start_line INTEGER NOT NULL,
+    end_line INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    embedding TEXT,
+    hash TEXT NOT NULL,
+    metadata TEXT,
+    created_at INTEGER, updated_at INTEGER
+)
+-- plus chunks_fts (FTS5) with triggers, _meta, and files</code></pre>
+<p><code>path</code> with <code>start_line</code>/<code>end_line</code>
+means chunks point back into the source Markdown at line granularity —
+the retrieval layer can always show where a result came from.</p>
+<p>Lifecycle:</p>
+<pre class="text"><code>Stage 1 — conversation → daily memory
+  triggers: context trimming (turn/token limit), 23:55 schedule, API-overflow emergency save
+  LLM summarizes into key events -&gt; memory/YYYY-MM-DD.md
+
+Stage 2 — Deep Dream distillation (after the daily summary)
+  read MEMORY.md + today&#39;s daily file
+  LLM applies: merge &amp; refine | extract new | conflict update (newer wins)
+              | clean invalid | remove redundancy
+  overwrite MEMORY.md   (target: &lt;= ~30 entries)
+  write a &quot;dream diary&quot; recording what the consolidation found
+
+Stage 3 — injection
+  MEMORY.md goes into the system prompt for every conversation</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>agent/memory/</code> (~5,300 lines):</p>
+<ul>
+<li><code>conversation_store.py</code> (1,278) — conversation
+persistence.</li>
+<li><code>storage.py</code> (1,057) — SQLite schema, chunks, FTS5,
+self-healing.</li>
+<li><code>summarizer.py</code> (882) — daily summarization and Deep
+Dream distillation.</li>
+<li><code>manager.py</code> (555) — orchestration.</li>
+<li><code>embedding/provider.py</code> (515),
+<code>embedding/factory.py</code> (209),
+<code>embedding/rebuild.py</code> (190), <code>embedding/state.py</code>
+(51).</li>
+<li><code>service.py</code> (225), <code>chunker.py</code> (140),
+<code>config.py</code>, <code>rebuild_index.py</code>.</li>
+<li><code>agent/tools/memory/</code> — agent-facing memory tools.</li>
+<li><code>docs/memory/</code> — <code>index.mdx</code>,
+<code>context.mdx</code>, <code>deep-dream.mdx</code>,
+<code>self-evolution.mdx</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Conv[&quot;Conversation&quot;] --&gt; Trim[&quot;context trimming / 23:55 cron / overflow&quot;]
+  Trim --&gt; Daily[&quot;memory/YYYY-MM-DD.md&quot;]
+  Daily --&gt; Dream[&quot;Deep Dream distillation&quot;]
+  Mem[&quot;MEMORY.md&quot;] --&gt; Dream
+  Dream --&gt; Mem
+  Dream --&gt; Diary[&quot;dream diary&quot;]
+  Mem --&gt; Prompt[&quot;system prompt (every conversation)&quot;]
+  Files[&quot;memory files&quot;] --&gt; Chunk[&quot;chunker&quot;]
+  Chunk --&gt; DB[&quot;chunks + embeddings + FTS5&quot;]
+  DB --&gt; Search[&quot;vector + keyword search&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="three-triggers-into-the-daily-file">Three triggers into the
+daily file</h3>
+<p>Context trimming, a nightly schedule, and an emergency save on API
+overflow all land in the same dated file. The third is the interesting
+one: when the provider rejects an oversized request, the current
+conversation is summarized and saved rather than lost. That is a small
+but real reliability property — the failure mode most likely to lose a
+session's material is handled explicitly.</p>
+<h3 id="distillation-as-stated-rules">Distillation as stated rules</h3>
+<p>The five operations are written down as policy, which makes the
+consolidation behaviour reviewable in a way most LLM-summarization
+pipelines are not. "Conflict update — when new info contradicts old
+entries, newer info takes precedence" is a real correction rule, and it
+is exactly the point where this atlas would ask for more: nothing
+distinguishes <em>the user changed their mind</em> from <em>the model
+misread today's conversation</em>, no conflict is surfaced for review,
+and no tombstone prevents the superseded value from being re-extracted
+from an older daily file.</p>
+<p>The <strong>dream diary</strong> is an underrated feature — a written
+record of what each consolidation found and changed. It is not a
+structured audit log, but it means a human can read why
+<code>MEMORY.md</code> looks the way it does, which is more than most
+systems here offer.</p>
+<h3 id="self-healing-fts5">Self-healing FTS5</h3>
+<pre class="python"><code># Self-heal: if the previous process crashed mid-rebuild and left
+# triggers pointing at a missing chunks_fts (or vice versa), wipe
+# both sides and recreate cleanly. Otherwise next chunks INSERT
+# will fail with &quot;no such table: chunks_fts&quot;.</code></pre>
+<p><code>_fts5_state_inconsistent()</code> checks trigger/table
+agreement at startup and resets both sides on mismatch. FTS5
+availability is itself probed by creating and dropping a test table, so
+the system degrades to non-FTS operation on SQLite builds without the
+module rather than failing.</p>
+<p>This is the same class of defence as <a
+href="../openclaw/">OpenClaw</a>'s doctor contracts and <a
+href="../magic-context/">Magic Context</a>'s schema fence: an index is a
+projection, and a projection needs a repair path.</p>
+<h3 id="chunks-carry-line-ranges">Chunks carry line ranges</h3>
+<p><code>path</code> + <code>start_line</code> + <code>end_line</code> +
+<code>hash</code> means a search hit can be traced to its exact location
+in the source Markdown, and a changed file can be re-chunked by hash
+comparison rather than wholesale. Evidence stays addressable, which is
+the property that makes <a href="../basic-memory/">basic-memory</a>'s
+projection model work too.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown files are canonical; SQLite is a rebuildable index
+(<code>rebuild_index.py</code>, <code>embedding/rebuild.py</code>).
+<code>user_id</code> and <code>scope</code> provide multi-user
+separation, and <code>source</code> distinguishes memory files from
+other indexed material.</p>
+<p>Gaps:</p>
+<ul>
+<li><strong><code>scope</code> defaults to
+<code>'shared'</code>.</strong> The atlas raised the same concern about
+<a href="../agentmemory/">agentmemory</a>: a shared-by-default boundary
+is a scope bug waiting to happen, because the safe value is the one
+nobody has to remember to set.</li>
+<li><strong>No status, verification, or rejection state.</strong> A
+distilled entry is simply present or absent.</li>
+<li><strong>Provenance is indirect.</strong> A <code>MEMORY.md</code>
+entry does not record which daily file or conversation produced it; the
+daily files remain as evidence, but nothing links a claim to them.</li>
+<li><strong>Overwrite-in-place distillation.</strong> Deep Dream
+rewrites <code>MEMORY.md</code> wholesale rather than editing
+surgically, so there is no per-entry delta — unlike nanobot, which makes
+"the smallest honest change" specifically so git deltas mean something.
+Nothing here detects what a distillation pass silently dropped; contrast
+<a href="../byterover/">ByteRover</a>'s structural-loss guard.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over stored embeddings plus FTS5 keyword search, with a
+chunker and a pluggable embedding provider
+(<code>embedding/factory.py</code>). Both arms exist; how they are fused
+was not traced in detail for this review.</p>
+<p>The primary path for durable memory is not retrieval at all —
+<code>MEMORY.md</code> is injected in full into every conversation.
+Search covers the larger corpus of daily files and other indexed
+sources, which is the right division: small curated memory always
+present, large archive searched on demand.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>All durable writes flow through summarization: no path lets a user or
+the agent write a <code>MEMORY.md</code> entry directly with an actor or
+confidence attached. Deep Dream is the sole author of long-term memory,
+which centralizes policy but also means every durable claim has passed
+through at least two LLM summarization steps — conversation → daily,
+then daily → MEMORY.md — before it becomes authoritative.</p>
+<p>The atlas's usual concern applies with compounding force: each
+summarization is lossy, and there is no mechanism comparable to a
+structural-loss guard checking what the second pass discarded from the
+first.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Agent-facing memory tools live in <code>agent/tools/memory/</code>,
+with <code>service.py</code> and <code>manager.py</code> as the internal
+surface. The documentation set (<code>docs/memory/</code>) covers
+context management, Deep Dream, and self-evolution — better than average
+for this class of project.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>A bounded intermediate layer (the daily file) between conversation
+and long-term memory.</li>
+<li>Written, reviewable distillation rules.</li>
+<li>A dream diary recording what each consolidation did.</li>
+<li>Emergency save on API overflow.</li>
+<li>Self-healing FTS5 with an availability probe and graceful
+degradation.</li>
+<li>Line-addressable chunks with content hashes.</li>
+<li>Rebuildable index treated as a projection.</li>
+<li><code>user_id</code> scoping present in the schema.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong><code>scope</code> defaults to shared.</strong></li>
+<li><strong>Recency-wins conflict resolution</strong> with no review
+surface and no tombstone.</li>
+<li><strong>Two chained lossy summarizations</strong> with no loss
+detection.</li>
+<li><strong>Whole-file overwrite</strong> of long-term memory, so
+per-entry change history is unavailable.</li>
+<li><strong>A soft entry budget</strong> enforced only by instructing
+the distiller.</li>
+<li><strong>No provenance</strong> from a durable entry back to its
+daily source.</li>
+<li><strong>No fencing</strong> of <code>MEMORY.md</code> content
+injected into every prompt.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No memory-specific test suite was located in this checkout and no
+memory-quality benchmark was found; nothing was run for this review. For
+a design whose correctness rests on repeated LLM distillation, the
+missing measurement is retention — what fraction of durable facts
+survive a month of daily distillation passes.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>A dated intermediate layer.</strong> Bucketing evidence by
+day gives consolidation a naturally bounded unit and gives humans an
+obvious place to look. Cruder than a cursor, far easier to inspect.</li>
+<li><strong>Written distillation rules.</strong> Stating
+merge/extract/conflict/clean/dedupe as policy makes an LLM consolidation
+pass reviewable and testable.</li>
+<li><strong>A consolidation diary.</strong> A human-readable record of
+what each pass changed, which is most of the value of an audit log at a
+fraction of the cost.</li>
+<li><strong>Emergency summarization on provider overflow</strong>,
+converting a hard failure into a saved summary.</li>
+<li><strong>Self-healing index state</strong>, with a probe for feature
+availability and a reset path for crash-damaged triggers.</li>
+<li><strong>Line-addressable chunks with hashes</strong>, keeping
+evidence locatable and re-chunking cheap.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Shared-by-default scope.</strong></li>
+<li><strong>Newer-always-wins correction</strong>, which cannot
+distinguish a change of mind from a misreading.</li>
+<li><strong>Chained lossy summarization</strong> with no loss detection
+between stages.</li>
+<li><strong>Wholesale overwrite</strong> of the durable file.</li>
+<li><strong>Budgets as instructions</strong> rather than
+enforcement.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The daily-bucket intermediate layer.</li>
+<li>The explicit distillation rule table.</li>
+<li>The dream diary.</li>
+<li>The FTS5 self-heal and availability probe.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li><code>scope</code> defaulting to <code>'shared'</code>.</li>
+<li>Recency-wins conflict resolution without a review path or a
+tombstone.</li>
+<li>Whole-file distillation without a structural-loss check.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What is retained after thirty consecutive distillation passes?
+Nothing measures it.</li>
+<li>Should conflicts be surfaced rather than resolved by recency?</li>
+<li>Why does <code>scope</code> default to shared, and what breaks if it
+defaults to private?</li>
+<li>Could distillation edit surgically rather than overwrite, so
+per-entry history becomes visible?</li>
+<li>Should durable entries cite the daily files they came from, given
+those files are retained anyway?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage, schema, FTS5 self-heal:
+<code>agent/memory/storage.py</code>.</li>
+<li>Summarization and Deep Dream distillation:
+<code>agent/memory/summarizer.py</code>.</li>
+<li>Conversation persistence:
+<code>agent/memory/conversation_store.py</code>.</li>
+<li>Orchestration: <code>agent/memory/manager.py</code>,
+<code>service.py</code>.</li>
+<li>Chunking: <code>agent/memory/chunker.py</code>.</li>
+<li>Embeddings:
+<code>agent/memory/embedding/{provider,factory,rebuild,state}.py</code>.</li>
+<li>Index rebuild: <code>agent/memory/rebuild_index.py</code>.</li>
+<li>Agent tools: <code>agent/tools/memory/</code>.</li>
+<li>Documentation:
+<code>docs/memory/{index,context,deep-dream,self-evolution}.mdx</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

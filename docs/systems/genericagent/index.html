@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A four-layer file memory whose
+rules are prose axioms the agent follows — "No Execution, No Memory" —
+with an explicit ROI model for what earns a place in always-injected
+context.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GenericAgent — Agent Memory Atlas">
+    <meta property="og:description" content="A four-layer file memory
+whose rules are prose axioms the agent follows — "No Execution, No
+Memory" — with an explicit ROI model for what earns a place in
+always-injected context.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GenericAgent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A four-layer file memory
+whose rules are prose axioms the agent follows — "No Execution, No
+Memory" — with an explicit ROI model for what earns a place in
+always-injected context.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GenericAgent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory as written policy</p>
+          <h1>GenericAgent</h1>
+          <p class="document-deck">A four-layer file memory whose rules
+are prose axioms the agent follows — "No Execution, No Memory" — with an
+explicit ROI model for what earns a place in always-injected
+context.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lsdefine/GenericAgent">
+              <span>Source</span>
+              <strong>lsdefine/GenericAgent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc" title="7ffc95823b6e40ca4e10acf9fb285d923485cacc">
+              <span>Analyzed revision</span>
+              <code>7ffc95823b6e40ca4e10acf9fb285d923485cacc</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GenericAgent is an MIT-licensed self-evolving agent framework — "~3K
+lines of seed code, 9 atomic tools, ~100-line agent loop" — with an
+accompanying technical report. Its memory is unlike anything else in
+this atlas in one specific way: <strong>the memory system is written as
+policy, not implemented as a runtime.</strong></p>
+<p><code>memory/</code> contains no store, no index, and no retrieval
+engine. It contains Markdown standard operating procedures —
+<code>memory_management_sop.md</code>,
+<code>memory_cleanup_sop.md</code>, plus around thirty domain SOPs —
+that the agent reads and follows. The rules <em>are</em> the system, and
+they live in the same directory as the memory they govern. (The
+documents are written in Chinese; translations below are mine, with key
+terms given in the original.)</p>
+<p>Two of those rules deserve to be read by anyone building memory,
+regardless of what they think of the approach.</p>
+<p><strong>"No Execution, No Memory" (无行动，不记忆).</strong> The
+first core axiom, <em>Action-Verified Only</em> (行动验证原则), states
+that anything written to durable memory must originate from a
+<strong>successful tool call result</strong> — a shell command that
+succeeded, a <code>file_read</code> that confirmed content exists, code
+that ran and passed. Explicitly forbidden: the model's inherent
+knowledge, inferential guesses, unexecuted plans, and unverified
+assumptions.</p>
+<p>This is <a href="../voyager/">Voyager</a>'s environment-verified
+write gate generalized from procedures to <em>facts</em>, and it is the
+strongest formulation of the principle in the atlas. Voyager can only
+verify things it can run; GenericAgent extends the same standard to any
+claim by requiring that a tool call, not a model, be the source.</p>
+<p><strong>An explicit ROI model for prompt real estate.</strong> The
+cleanup SOP builds on what it calls <em>existence encoding</em>
+(存在性编码): the LLM is already a compressor and decoder, so the
+always-injected top layer only needs to make it <em>aware that some
+class of knowledge exists</em> — it can fetch the detail itself with a
+tool call. Entries are then judged by:</p>
+<pre class="text"><code>ROI = (probability of error without these words × cost of that error)
+      ────────────────────────────────────────────────────────────────
+                        per-turn word cost</code></pre>
+<p>Nothing else in this atlas states a cost model for what belongs in
+permanent context. It is the missing justification behind every hard
+budget elsewhere — <a href="../hermes-agent/">Hermes Agent</a>'s 2,200
+characters, <a href="../cowagent/">CowAgent</a>'s ~30 entries — none of
+which explain <em>why</em> an entry earns its place.</p>
+<p>The obvious limitation is the flip side of the design: none of this
+is enforced. Every axiom depends on the model honouring prose, with no
+runtime check that a written memory actually came from a successful tool
+call.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Four layers, navigated by pointers, with a hard cap at the top:</p>
+<pre class="text"><code>L1: global_mem_insight.txt   minimal index — HARD LIMIT ≤ 30 lines, target &lt; 1k tokens
+      ↓ pointer
+L2: global_mem.txt           fact base — currently short but expected to grow
+      ↓ reference
+L3: memory/                  record library — .md SOPs, .py helpers
+L4: memory/L4_raw_sessions/  historical sessions, auto-collected by scheduler reflection</code></pre>
+<p>The layering resembles <a href="../tencentdb-agent-memory/">TencentDB
+Agent Memory</a> and <a href="../openviking/">OpenViking</a>, but the
+discipline is different: L1 is capped in <em>lines</em>, and the fourth
+axiom — <em>Minimum Sufficient Pointer</em> (最小充分指针) — states that
+an upper layer keeps only the shortest identifier that locates the layer
+below. One extra word is redundancy.</p>
+<p>The four core axioms, in the SOP's own priority order:</p>
+<ol type="1">
+<li><strong>Action-Verified Only</strong> — only successful tool-call
+results may become memory. <em>No Execution, No Memory.</em></li>
+<li><strong>Sanctity of Verified Data</strong> (神圣不可删改性) —
+verified configs, pitfall guides, and critical paths must never be
+discarded during refactoring or garbage collection. Text may be
+compressed and entries may migrate between layers, but accuracy and
+traceability must not be lost. The SOP adds an operational instruction:
+be extremely careful when modifying memory; prefer small patches over
+overwriting; <em>if you cannot modify it properly, better not to modify
+it at all.</em></li>
+<li><strong>No Volatile State</strong> (禁止存储易变状态) — never store
+timestamps, session IDs, PIDs, specific absolute paths, or
+connected-device information.</li>
+<li><strong>Minimum Sufficient Pointer</strong> — shortest identifier
+only.</li>
+</ol>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>memory/</code> — the memory itself and its governing SOPs:
+<code>memory_management_sop.md</code>,
+<code>memory_cleanup_sop.md</code>, plus domain SOPs
+(<code>autonomous_operation_sop.md</code>,
+<code>checklist_sop.md</code>, <code>code_review_principles.md</code>,
+<code>computer_use.md</code>, <code>plan_sop.md</code>,
+<code>review_sop.md</code>, <code>vision_sop.md</code>,
+<code>github_contribution_sop.md</code>, and others) and helper scripts
+(<code>checklist_helper.py</code>, <code>procmem_scanner.py</code>,
+<code>ocr_utils.py</code>, <code>ui_detect.py</code>).</li>
+<li><code>memory/L4_raw_sessions/</code> —
+<code>compress_session.py</code> and
+<code>salient_mining_sop.md</code>.</li>
+<li><code>reflect/</code> — <code>scheduler.py</code>,
+<code>autonomous.py</code>, <code>checklist_master.py</code>,
+<code>goal_mode.py</code>, <code>agent_team_worker.py</code>.</li>
+<li><code>agent_loop.py</code>, <code>llmcore.py</code> — the ~100-line
+loop and model layer.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Tools[&quot;Tool calls (shell, file_read, code run)&quot;] --&gt; Gate{&quot;succeeded?&quot;}
+  Gate --&gt;|no| Drop[&quot;not memory&quot;]
+  Gate --&gt;|yes| Write[&quot;may be written&quot;]
+  Write --&gt; L2[&quot;L2 global_mem.txt&quot;]
+  Write --&gt; L3[&quot;L3 memory/*.md, *.py&quot;]
+  Sessions[&quot;Sessions&quot;] --&gt; Cron[&quot;scheduler: L4 archive cron, every 12h&quot;]
+  Cron --&gt; L4[&quot;L4_raw_sessions (compress_session.py)&quot;]
+  L2 --&gt; L1[&quot;L1 global_mem_insight.txt (&lt;=30 lines)&quot;]
+  L3 --&gt; L1
+  L1 --&gt; Prompt[&quot;always-injected context&quot;]
+  SOP[&quot;memory_management_sop / memory_cleanup_sop&quot;] -.governs.-&gt; Write
+  SOP -.governs.-&gt; L1</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-write-gate-as-prose">The write gate, as prose</h3>
+<p>The Action-Verified axiom is the entire write policy, and its
+enumeration of what is forbidden is more useful than most positive
+specifications: inherent model knowledge, inferential guesses,
+unexecuted plans, unverified assumptions. Those four categories are
+precisely what fills a memory store with confident nonsense, and naming
+them is a better guardrail than a vague instruction to "only save
+important things."</p>
+<p>What is missing is the enforcement <a href="../voyager/">Voyager</a>
+has. Voyager's gate is <code>if info["success"]</code> in the rollout
+loop — a machine check on an observed outcome. Here the same standard is
+a rule the model is asked to apply to itself, so compliance is a
+function of prompt adherence and cannot be audited after the fact: a
+written memory carries no record of the tool call that justified it.</p>
+<h3 id="existence-encoding-and-the-roi-test">Existence encoding and the
+ROI test</h3>
+<p>The cleanup SOP's central claim is that the top layer does not need
+to <em>contain</em> knowledge, only to make the agent aware that
+knowledge exists, because the model can retrieve detail on demand. L1
+therefore holds two things: existence pointers (the shortest trigger
+word for L2/L3 knowledge) and behaviour rules (mistakes the agent will
+make without a reminder).</p>
+<p>The worked example is unusually good.
+<code>tmwebdriver_sop(httponly cookie)</code> earns its place because
+without the phrase "httponly cookie" you would not think to consult the
+tmwebdriver SOP when you need a cookie. The trigger is
+<em>counter-intuitive</em>, so it carries real information.</p>
+<p>What the SOP says to delete is equally instructive:</p>
+<ul>
+<li><strong>Name translations</strong> —
+<code>proxy-pool/(代理池)</code> becomes just <code>proxy-pool</code>;
+the gloss is dead words.</li>
+<li><strong>Content descriptions</strong> — implementation detail
+belongs inside the SOP, not in the trigger.</li>
+<li><strong>Intuitive capabilities</strong> — if the agent would think
+of it unprompted, the entry yields zero benefit and costs tokens every
+single turn.</li>
+<li><strong>Redundancy</strong> — anything already covered by L3 or by
+another L1 line.</li>
+</ul>
+<p>The third is the sharpest. Every always-injected memory is paid for
+on every turn forever, and an entry that merely restates something the
+model already does is a permanent tax with no return. That reframing —
+permanent context as a recurring cost, not a one-time write — is worth
+more than most retrieval optimizations.</p>
+<p>The compression principles extend it: self-explanatory naming beats
+adding description (renaming an SOP often has higher ROI than editing
+L1), and related entries should collapse into one superordinate scenario
+name (<code>qq操作/飞书操作/企微操作</code> →
+<code>im操作:*_im_sop</code>) rather than being listed individually.</p>
+<h3 id="sanctity-as-a-structural-loss-guard">Sanctity, as a
+structural-loss guard</h3>
+<p>The second axiom is the same concern <a
+href="../byterover/">ByteRover</a> implements in code with
+<code>detectStructuralLoss</code>: a consolidation pass must not
+silently discard verified material. GenericAgent states it as an
+inviolable rule and adds a conservative operational default — prefer
+small patches, and decline to edit rather than risk an overwrite.</p>
+<p>Stated as a rule it is weaker than a diff-and-repair check, but it
+targets exactly the right failure and is available to any system whose
+consolidation is performed by a model reading instructions.</p>
+<h3 id="l4-archival">L4 archival</h3>
+<p><code>reflect/scheduler.py</code> runs a <strong>silent L4 archive
+cron every 12 hours</strong>, invoking <code>compress_session.py</code>
+under <code>memory/L4_raw_sessions/</code>.
+<code>salient_mining_sop.md</code> governs what is worth extracting from
+archived sessions. Raw sessions are retained beneath the distilled
+layers, so evidence survives below belief — the <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+shape, again expressed as directory structure plus policy.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. L1 and L2 are text files, L3 is a directory of
+Markdown and Python, L4 is compressed session archives.</p>
+<p>Consequences, several of which the SOPs address deliberately rather
+than by omission:</p>
+<ul>
+<li><strong>No status or verification field</strong> — but the write
+gate is meant to ensure everything in the store is already verified,
+which is a different and quite defensible position. Its weakness is that
+an entry cannot later be *re-*verified or marked stale, and nothing
+distinguishes a claim verified two years ago from one verified today.
+Contrast <a href="../magic-context/">Magic Context</a>, which
+re-verifies when the underlying files change.</li>
+<li><strong>No provenance</strong> — a memory does not record which tool
+call justified it, which is the natural audit record the Action-Verified
+axiom implies and does not produce.</li>
+<li><strong>No scope</strong> — one agent, one memory tree.</li>
+<li><strong>Volatile state is excluded by rule</strong>, which is a
+genuinely good instinct: absolute paths, PIDs, and timestamps are
+exactly the entries that rot fastest and mislead most confidently.</li>
+<li><strong>Layer migration is expected</strong> — L2 entries may move
+to L3 as they age, with L1 keeping only pointers.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>No index, no embeddings, no ranking. Retrieval is the agent reading
+L1, recognizing a trigger, and issuing a tool call to open the relevant
+L3 file. Existence encoding is what makes this viable: the
+always-present layer is a table of contents, and the model performs its
+own lookup.</p>
+<p>This is the cheapest retrieval architecture in the atlas and it
+scales exactly as far as L1's thirty lines can index. Its failure mode
+is precise — if a trigger word is missing or unintuitive, the knowledge
+below is unreachable, and nothing will report that it was never
+consulted.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen when the agent, following the management SOP, decides a
+verified result belongs in memory. There is no separate extraction
+pipeline, no background consolidation worker beyond the L4 archive cron,
+and no dedupe machinery. Cleanup is a task the agent performs against
+the cleanup SOP, applying the ROI test to L1 and the sanctity rule to
+everything else.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is internal to the framework rather than a plugin surface. The
+<code>reflect/</code> modules (<code>autonomous.py</code>,
+<code>goal_mode.py</code>, <code>checklist_master.py</code>,
+<code>scheduler.py</code>) drive the self-evolving behaviour, with
+domain SOPs supplying procedural competence — which makes most of L3
+procedural memory in the sense of the <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> pattern, written in prose rather than code.</p>
+<p>That comparison is the useful one. Voyager stores executable skills
+that can be verified by running them; GenericAgent stores
+natural-language SOPs that cannot be executed and therefore cannot be
+re-verified — but that generalize to domains where nothing is
+executable, and that a human can read and correct directly.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A stated, principled write gate</strong> naming the four
+categories of unverified content to exclude.</li>
+<li><strong>A cost model for permanent context</strong>, with a worked
+heuristic for what earns a place.</li>
+<li><strong>An explicit anti-loss rule</strong> for consolidation, with
+a conservative default of not editing.</li>
+<li><strong>Volatile state excluded by policy</strong> — the entries
+most likely to become confidently wrong.</li>
+<li><strong>Raw sessions retained</strong> beneath the distilled layers,
+archived on a fixed schedule.</li>
+<li><strong>A hard, checkable cap</strong> on the always-injected
+layer.</li>
+<li><strong>Memory policy that is human-readable and directly
+editable</strong>, living alongside the memory it governs.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>Nothing is enforced.</strong> Every axiom is prose; a
+runtime that ignores the SOP violates none of it, and there is no
+post-hoc audit.</li>
+<li><strong>No provenance</strong>, so the Action-Verified axiom leaves
+no trace and cannot be checked later.</li>
+<li><strong>No re-verification.</strong> Verified-once is treated as
+verified-forever, which is the assumption Magic Context's whole design
+exists to reject.</li>
+<li><strong>No scope, no multi-user boundary.</strong></li>
+<li><strong>Unreachable knowledge is invisible</strong> — a bad L1
+trigger produces silence, not an error.</li>
+<li><strong>Documentation is Chinese-only</strong>, which limits review
+by a large part of the potential audience.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No memory tests were located and no memory benchmark was found in
+this checkout; nothing was run for this review. The project cites an
+arXiv technical report, which was not retrieved or assessed here — the
+atlas's claims are limited to the code and SOPs at the pinned
+commit.</p>
+<p>For a design whose correctness depends entirely on prompt adherence,
+the missing measurement is compliance: how often does material that
+never came from a successful tool call end up in memory anyway?</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>"No Execution, No Memory."</strong> Require durable claims
+to originate from a successful tool call, and name the excluded
+categories explicitly — inherent knowledge, guesses, unexecuted plans,
+unverified assumptions. Then, unlike here, record which call justified
+each write so the rule can be audited.</li>
+<li><strong>The ROI test for always-injected context.</strong>
+<code>(error probability × cost) / per-turn word cost</code> is the
+missing justification behind every prompt budget in this atlas.</li>
+<li><strong>Existence encoding.</strong> The permanent layer should say
+<em>what exists</em>, not <em>what is true</em>; the model retrieves
+detail on demand. This is the cheapest workable substitute for an
+index.</li>
+<li><strong>Delete intuitive entries.</strong> Anything the model would
+do unprompted is a permanent tax with zero return — a sharper deletion
+criterion than staleness or low usage.</li>
+<li><strong>Self-explanatory naming over annotation.</strong> Renaming
+the artifact often beats describing it in the index.</li>
+<li><strong>Exclude volatile state by rule</strong>: timestamps, PIDs,
+session IDs, absolute paths.</li>
+<li><strong>"If you cannot modify it properly, better not to modify at
+all"</strong> as a consolidation default.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Policy without enforcement or audit</strong> — the central
+risk, and it applies to every axiom.</li>
+<li><strong>Verified-once treated as verified-forever.</strong></li>
+<li><strong>No record of the verification</strong> the write gate
+requires.</li>
+<li><strong>Silent unreachability</strong> when an index trigger is
+missing.</li>
+<li><strong>Single global scope.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The four axioms, more or less verbatim, as the policy layer of any
+memory system — then implement the first one as a machine check and the
+second as a structural-loss diff.</li>
+<li>The ROI formula and the four deletion categories, as the criterion
+for what lives in permanent context.</li>
+<li>The existence-encoding framing for a top-layer index.</li>
+<li>The volatile-state exclusion list.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Prose as the only enforcement mechanism, if wrong memory is
+costly.</li>
+<li>Verified-once semantics without a re-verification path.</li>
+<li>A thirty-line index as the only retrieval mechanism past a modest
+corpus.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Should each written memory record the tool call that justified it?
+The axiom implies the record; the system does not keep it.</li>
+<li>How is verified-once-verified-forever handled when the underlying
+reality changes?</li>
+<li>Is the ROI test ever applied with measured error probabilities, or
+is it a heuristic the agent estimates in the moment?</li>
+<li>What happens when L1's thirty lines cannot index the knowledge below
+— does the cap force loss, or does L2 absorb it?</li>
+<li>How much of the axiom set does a given model actually comply with,
+and is that measured anywhere?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory policy: <code>memory/memory_management_sop.md</code> (four
+core axioms, layer architecture),
+<code>memory/memory_cleanup_sop.md</code> (existence encoding, ROI test,
+compression principles).</li>
+<li>Layers: <code>global_mem_insight.txt</code> (L1),
+<code>global_mem.txt</code> (L2), <code>memory/</code> (L3),
+<code>memory/L4_raw_sessions/</code> (L4).</li>
+<li>L4 tooling: <code>memory/L4_raw_sessions/compress_session.py</code>,
+<code>salient_mining_sop.md</code>.</li>
+<li>Archive scheduling: <code>reflect/scheduler.py</code> (12-hour L4
+archive cron).</li>
+<li>Reflection and autonomy: <code>reflect/autonomous.py</code>,
+<code>goal_mode.py</code>, <code>checklist_master.py</code>,
+<code>agent_team_worker.py</code>.</li>
+<li>Domain SOPs and helpers: <code>memory/*.md</code>,
+<code>memory/*.py</code>.</li>
+<li>Agent loop: <code>agent_loop.py</code>,
+<code>llmcore.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

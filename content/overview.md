@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of thirty-two agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of thirty-six agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -256,6 +256,42 @@ trust state, scope, and above all deletion have to cross the host/provider
 boundary — and in none of the three contracts inspected here does a deletion hook
 exist.
 
+### Self-evolving file memory
+
+Repos:
+
+- `nanobot`
+- `cowagent`
+- `genericagent`
+- partly `metaclaw`
+
+These distil conversation into layered Markdown under a scheduled consolidation
+pass, keeping durable belief small enough to inject wholesale while retaining
+raw material beneath it. nanobot uses two cursors over an append-only JSONL
+archive; CowAgent buckets by calendar day before distilling into a ~30-entry
+`MEMORY.md`; GenericAgent governs four layers with written axioms rather than
+code.
+
+Tradeoff: the whole state is human-readable, diffable, and cheap to operate, and
+the top layer needs no retrieval because it is always present — but repeated
+LLM distillation is lossy with no structural-loss check, correction is usually
+recency-wins, and none of them carries a rejected-value tombstone.
+
+### Policy-learning memory
+
+Repo:
+
+- `metaclaw`
+
+MetaClaw generates bounded candidate retrieval policies, replays them against
+real past turns, and promotes one only when it does not regress on eight
+measured deltas over at least ten samples.
+
+Tradeoff: it is the only system here that can answer "are our retrieval
+parameters any good?", and it tunes reachability rather than belief — but it
+optimizes lexical-overlap proxies rather than task outcomes, and its promotion
+thresholds are themselves hand-chosen constants.
+
 ### Ground-truth-verified memory
 
 Repo:
@@ -348,6 +384,10 @@ session with an identity you could later correct.
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `openclaw` | Categorized entry (preference/fact/decision/entity/other) with embedding | LanceDB via `memory-lancedb` extension; swappable embedding adapters | Vector search with mandatory agent-scoped predicate; no lexical arm | Optional auto-capture after envelope sanitization; 500-char truncation | Exact scoped delete; no tombstones, and auto-capture can restore content | `agentId`, composed inseparably into every predicate | Plugin contract via `memory-core`; tools, CLI, doctor checks | Auto-capture cursor with fingerprint drift detection | `createdAt` and category only | Envelope sanitization before capture; scope that cannot be dropped | Vector-only reference backend; sanitization is a denylist tied to envelope formats |
+| `metaclaw` | `MemoryUnit` with type, status, importance, confidence, access count, reinforcement score | Store with embeddings, per-scope policies | Under a live `MemoryPolicyState`: mode, unit cap, token budget, weights | Conversation writes plus consolidation; no actor gate | `superseded_by` lineage, `expires_at`; no rejected state | `scope_id` throughout store, retriever, policy, metrics | OpenClaw plugin with a written spec and a sidecar manager | Self-upgrade worker: candidate → replay → gate → promote | Source session and turn range; reinforcement kept apart from confidence | Retrieval policy replayed offline and promoted only on non-regression across eight metrics | Optimizes overlap proxies; gate thresholds are themselves defaults |
+| `nanobot` | Markdown durable files plus JSONL summary lines | `SOUL.md`, `USER.md`, `memory/MEMORY.md`, `history.jsonl`, git | None; durable files are always in context | Consolidator appends evidence; Dream is the sole durable writer | Surgical edits under git; no tombstone | One workspace | Internal, with WebUI and cron | Dream on cron, gated on tool-error-free runs | Git history over an explicit durable-file allowlist | Dual cursors, and a cursor that refuses to advance after tool errors | No provenance from claim to evidence; single workspace scope |
+| `cowagent` | Markdown files, chunked into an indexed `chunks` table | SQLite with embeddings and self-healing FTS5 | Vector plus keyword over chunks; `MEMORY.md` injected in full | Summarize into dated daily files, then distil | Recency-wins conflict update; whole-file overwrite | `user_id` and `scope`, defaulting to `shared` | Agent memory tools | Deep Dream after the daily summary, 23:55 cron | Line-addressable chunks with hashes; dream diary | Dated intermediate layer and written distillation rules | Shared-by-default scope; chained lossy summarization |
+| `genericagent` | Text and Markdown across four layers | `global_mem_insight.txt`, `global_mem.txt`, `memory/`, `L4_raw_sessions/` | Agent reads a ≤30-line index and opens files by pointer | Only successful tool-call results may be written (by policy) | Layer migration and patching; "better not to modify at all" | One global tree | Internal to the framework | 12-hour L4 archive cron | Verification is a stated precondition, but no record is kept | "No Execution, No Memory" plus an ROI test for permanent context | Every axiom is prose with no enforcement or audit |
 | `magic-context` | Memory with separate lifecycle and verification state, plus compartments, facts, primers | SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed | Hybrid semantic + BM25 with source boosts and `matchType`, over memories and raw history | Agent, user, historian, or dreamer writes; synchronous promotion, async embedding | Supersession and merge lineage; archived, not tombstoned | `project` / `ecosystem` / `universe` lattice plus a `shareable` flag | Pi `ExtensionAPI` and an OpenCode adapter sharing one store | Dreamer: verify, map, classify, promote, retrospective, at commit boundaries | Four-actor `sourceType`, mutation logs, per-memory `verified_at` | Memories re-verified against the files they describe when git says those files changed | Verdict is an LLM call; no rejected-value tombstone; very large surface |
 | `pi` | None — session-tree entry, not a memory record | JSONL session tree (`id`/`parentId`), swappable in-memory backend | None; context is the tree walked to root plus discovered resource files | Append to session; compaction replaces a range | None; no durable claim exists | None | Own CLI/TUI/SDK; 20+ extension events, none memory-shaped | Compaction and branch summarization | Deterministic `readFiles`/`modifiedFiles` on compaction entries | Deterministic file manifest kept out of the model's output; branchable sessions | No memory contract at all, so scope and deletion have nowhere to live |
 | `hipporag` | Chunk plus derived entity and passage graph nodes | igraph graph with pluggable vector store (Qdrant/Chroma/Milvus) | Fact scores → LLM rerank → IDF-penalized graph seeding → Personalized PageRank diffusion | `index()`: chunk, OpenIE triples, fact/passage/synonymy edges | Chunk-scoped delete; shared entities survive by reference count | None — corpus is global | Python library only; no MCP, tools, or service | Cacheable OpenIE; incremental synonymy edges | Chunk identity only; no actor, time, or trust state | Diffusion replaces hop planning; synonymy as edges rather than merges | Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction |
@@ -414,6 +454,17 @@ not extracted as the public mental model suggests.
 
 `magic-context` promotes eligible session facts synchronously and defers embedding to a best-effort async pass, so a memory is durable before it is enriched. `pi` captures nothing as memory — its JSONL session tree is conversation history, and every memory plugin builds its own index over it.
 
+`genericagent` states the strictest capture rule in the atlas, as prose rather
+than code: its *Action-Verified Only* axiom permits a durable write only when the
+information came from a **successful tool call** — a shell command that
+succeeded, a read that confirmed content, code that passed — and explicitly
+forbids writing the model's inherent knowledge, guesses, unexecuted plans, or
+unverified assumptions. Its slogan is "No Execution, No Memory". This is
+`voyager`'s environment-verified gate generalized from procedures to facts; the
+difference is that Voyager enforces it in the rollout loop while GenericAgent
+asks the model to enforce it against itself, and keeps no record of the
+justifying call.
+
 The research lineage adds two capture disciplines the practical systems mostly lost. `voyager` writes memory **only** when a critic verifies the environment reached the intended state, so a failed attempt produces reasoning input and no durable record — the strongest write gate in the atlas, available because the memory is a procedure. `generative-agents` scores every incoming memory for importance at write time and uses that score to schedule consolidation, rather than capturing indiscriminately and compacting on a timer.
 
 ### Consolidation
@@ -432,6 +483,16 @@ proxies for "enough has happened" that the original measured directly. Its
 weakness is that the budget is denominated in one-shot LLM importance judgments,
 and its reflections are stored in the same undifferentiated pool as observations,
 so reflections of reflections can drift with no visible boundary.
+
+Four systems in the atlas now call consolidation **dreaming**, arrived at
+independently: `magic-context`'s dreamer subagent, `nanobot`'s Dream pass,
+`cowagent`'s Deep Dream, and — under a different name for the same idea —
+`metaclaw`'s replay. The convergence is not only nominal. All four run offline
+on a schedule, read accumulated raw material, and write back a smaller, more
+coherent durable layer; three of the four also emit a written record of what the
+pass decided (a dream diary, a replay report, a delta-grounded commit). The
+metaphor appears to be tracking a real architectural category: consolidation as a
+separate, slower, auditable process rather than a step in the write path.
 
 `magic-context` adds a consolidation trigger no other system here uses: its
 dreamer subagent fires at threshold pressure **or at git commit boundaries**, on
@@ -465,7 +526,17 @@ The repeated successful pattern is hybrid retrieval:
 - metadata filters for scope;
 - reranking or rank fusion when quality matters.
 
-`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `cognee` exposes lexical chunks, vectors, graph, triplet, summary, temporal, and hybrid modes, but the result contracts differ enough that each route needs separate evaluation. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `claude-mem` selects Chroma semantic search for ordinary text queries and reserves metadata/semantic intersection for file lookup. `hipporag` is the one system here that does not rank at all in the usual sense: it seeds a personalization vector from query-linked entities plus a weak dense prior, then reads relevance off a Personalized PageRank diffusion across the whole graph. `generative-agents` established the multi-signal shape everything else refines — normalized recency, relevance, and importance combined in a weighted sum — though the specific weights (`gw = [0.5, 3, 2]`, with two earlier settings left commented out) are hand-tuned with no ablation in the repository, and its recency decays by chronological *position* rather than elapsed time. `voyager` retrieves top-5 by vector similarity over generated descriptions and returns executable code, with scores computed and then discarded so there is no relevance threshold. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
+`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `cognee` exposes lexical chunks, vectors, graph, triplet, summary, temporal, and hybrid modes, but the result contracts differ enough that each route needs separate evaluation. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `claude-mem` selects Chroma semantic search for ordinary text queries and reserves metadata/semantic intersection for file lookup. `metaclaw` is the only system that treats its own ranking parameters as
+learnable: retrieval mode, injected-unit cap, token budget, and weights live in a
+`MemoryPolicyState` that is replayed against past turns and replaced only on
+non-regression. `genericagent` has no ranker at all — a ≤30-line index of
+"existence pointers" lets the model recognize that knowledge exists and open the
+file itself, which is the cheapest retrieval architecture here and fails silently
+when a trigger word is missing. `nanobot` likewise has no retrieval: its durable
+files are small enough to always inject. `cowagent` pairs vector and FTS5 search
+over chunked files while injecting `MEMORY.md` wholesale.
+
+`hipporag` is the one system here that does not rank at all in the usual sense: it seeds a personalization vector from query-linked entities plus a weak dense prior, then reads relevance off a Personalized PageRank diffusion across the whole graph. `generative-agents` established the multi-signal shape everything else refines — normalized recency, relevance, and importance combined in a weighted sum — though the specific weights (`gw = [0.5, 3, 2]`, with two earlier settings left commented out) are hand-tuned with no ablation in the repository, and its recency decays by chronological *position* rather than elapsed time. `voyager` retrieves top-5 by vector similarity over generated descriptions and returns executable code, with scores computed and then discarded so there is no relevance threshold. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
 ### Context Injection
 
@@ -570,6 +641,16 @@ Visible deletion varies from hard API deletion to lifecycle state:
 - `magic-context`: archive plus `supersededByMemoryId` and `mergedFrom` lineage,
   with age decay owning memories that cannot be verified; no tombstone.
 - `pi`: no memory to forget; deleting a session removes its JSONL file.
+- `metaclaw`: `superseded_by` lineage plus `expires_at` TTL; `archived` status,
+  no rejected state.
+- `nanobot`: Dream edits durable files surgically under git; history is bounded
+  at 1,000 entries, dropping oldest processed entries without discarding pending
+  Dream input.
+- `cowagent`: distillation prunes on a stated rule set, with recency winning
+  conflicts and no tombstone.
+- `genericagent`: forgetting is constrained by policy — verified configs,
+  pitfall guides, and critical paths must never be dropped during garbage
+  collection, only compressed or migrated to a deeper layer.
 
 Semantic forgetting is an antipattern unless there is explicit user review or exact ID targeting.
 
@@ -606,6 +687,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: `MemoryNote` in `agentic_memory/memory_system.py`.
 - `hipporag`: graph and node construction in `src/hipporag/HippoRAG.py`; config defaults in `utils/config_utils.py`.
 - `magic-context`: `packages/plugin/src/features/magic-context/memory/types.ts`; schema in `migrations.ts`.
+- `metaclaw`: `metaclaw/memory/models.py` (`MemoryUnit`, `MemoryType`, `MemoryStatus`); policy in `policy_store.py`.
+- `nanobot`: no schema; durable files plus `history.jsonl` lines in `nanobot/agent/memory.py`.
+- `cowagent`: `chunks` table in `agent/memory/storage.py`.
+- `genericagent`: no schema; layer contract in `memory/memory_management_sop.md`.
 - `pi`: session entry types in `packages/agent/src/harness/types.ts`; no memory record exists.
 - `voyager`: `skills[name] = {code, description}` in `voyager/agents/skill.py`.
 - `generative-agents`: `ConceptNode` in `persona/memory_structures/associative_memory.py`; weights in `scratch.py`.
@@ -641,6 +726,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: `AgenticMemorySystem.add_note()` and `process_memory()` in `agentic_memory/memory_system.py`.
 - `hipporag`: `index()`, `add_fact_edges()`, `add_passage_edges()`, `add_synonymy_edges()` in `src/hipporag/HippoRAG.py`.
 - `magic-context`: `memory/promotion.ts` (`promoteSessionFactsDurable`, `embedPromotedFacts`).
+- `metaclaw`: `metaclaw/memory/manager.py` and `consolidator.py`.
+- `nanobot`: Consolidator append plus Dream's surgical edits in `nanobot/agent/memory.py`.
+- `cowagent`: `agent/memory/summarizer.py` (daily summary and Deep Dream distillation).
+- `genericagent`: policy-gated writes per `memory/memory_management_sop.md`.
 - `pi`: append to the session tree; `harness/compaction/compaction.ts` for range replacement.
 - `voyager`: `SkillManager.add_new_skill()` in `voyager/agents/skill.py`, gated by `if info["success"]` in `voyager/voyager.py`.
 - `generative-agents`: `add_event()`, `add_thought()`, `add_chat()` in `associative_memory.py`.
@@ -676,6 +765,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: `search_agentic()` and Chroma wrappers in `agentic_memory/retrievers.py`.
 - `hipporag`: `graph_search_with_fact_entities()` and `run_ppr()` in `src/hipporag/HippoRAG.py`.
 - `magic-context`: `search.ts` with `matchType` semantic/fts/hybrid, plus `message-index.ts`.
+- `metaclaw`: `metaclaw/memory/retriever.py` under the live `MemoryPolicyState`.
+- `nanobot`: none; durable files are always in context.
+- `cowagent`: vector and FTS5 search in `agent/memory/storage.py`.
+- `genericagent`: L1 index lookup then file open; no ranker.
 - `pi`: none; context is the session tree walked to root.
 - `voyager`: `retrieve_skills()` in `voyager/agents/skill.py`.
 - `generative-agents`: `new_retrieve()` and the extractors in `persona/cognitive_modules/retrieve.py`.
@@ -711,6 +804,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: caller-owned; no bounded context assembler.
 - `hipporag`: ranked passages returned to the caller; QA assembly in `rag_qa()`.
 - `magic-context`: `<session-history>` and primer injection via the Pi context handler; `primer-clustering.ts`.
+- `metaclaw`: injection bounded by policy `max_injected_units` and `max_injected_tokens`.
+- `nanobot`: `SOUL.md`, `USER.md`, `memory/MEMORY.md` injected; Dream prompt capped at 8,000 chars per file.
+- `cowagent`: `MEMORY.md` injected into every conversation.
+- `genericagent`: L1 `global_mem_insight.txt`, hard-capped at 30 lines.
 - `pi`: `buildSessionContext()` plus `core/resource-loader.ts` for AGENTS.md/SYSTEM.md.
 - `voyager`: retrieved code plus the unbounded `programs` property injected into the action prompt.
 - `generative-agents`: top-30 node descriptions, no token budget.
@@ -746,6 +843,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: no worker; “consolidation” is synchronous reindexing.
 - `hipporag`: none; OpenIE is cacheable and resumable but runs inline.
 - `magic-context`: the dreamer — `task-scheduler.ts`, `cron.ts`, `lease.ts`, `verify.ts`, `map-memories.ts`.
+- `metaclaw`: `self_upgrade.py`, `upgrade_worker.py`, `replay.py`, `policy_optimizer.py`.
+- `nanobot`: Dream on cron, gated by `DreamRunProgress`.
+- `cowagent`: 23:55 daily summary then Deep Dream distillation.
+- `genericagent`: 12-hour L4 archive cron in `reflect/scheduler.py`.
 - `pi`: compaction and branch summarization only.
 - `voyager`: none; the rollout loop is synchronous.
 - `generative-agents`: reflection fires inline when the poignancy countdown crosses zero.
@@ -781,6 +882,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: direct Python API only.
 - `hipporag`: Python library, `main.py`, and `examples/`; no MCP or service.
 - `magic-context`: Pi `ExtensionAPI` adapter, an OpenCode adapter, a CLI, and a dashboard.
+- `metaclaw`: OpenClaw plugin (`openclaw-metaclaw-memory/OPENCLAW_PLUGIN_SPEC.md`) with a sidecar manager.
+- `nanobot`: internal, with WebUI and cron.
+- `cowagent`: `agent/tools/memory/` plus `service.py`.
+- `genericagent`: internal; `reflect/` drives autonomy.
 - `pi`: CLI, TUI, SDK, server, and 20+ extension events — none memory-shaped.
 - `voyager`: none; research rollout loop.
 - `generative-agents`: none; simulation with a Django frontend.
@@ -816,6 +921,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
 - `hipporag`: thin unit tests (`tests/test_bedrock_mantle.py`, `tests/integration/`) beside a well-developed `reproduce/` benchmark tree; no committed result artifacts.
 - `magic-context`: 473 test files and roughly 131,000 lines of tests, including per-version migration suites and named CAS-race tests; no retrieval or verification-precision benchmark.
+- `metaclaw`: committed `benchmark/data/metaclaw-bench*` harnesses with eval fixtures, plus dedicated `run_memory_ablation*.py` scripts — rare in this atlas; no numbers reproduced here.
+- `nanobot`: no memory tests located, which is notable given the cursor and failure-gate logic carry most of the correctness.
+- `cowagent`: no memory tests or benchmark located.
+- `genericagent`: no memory tests or benchmark located; an arXiv report is cited but was not assessed.
 - `pi`: an `evals` package and session-harness test utilities; no memory benchmark, because there is no memory.
 - `voyager`: no tests for `SkillManager`; evaluation is the paper's Minecraft tech-tree benchmark, which measures task completion rather than memory quality.
 - `generative-agents`: no memory tests; evaluation is human believability ratings, and the `gw` retrieval weights have no committed ablation.
@@ -985,6 +1094,41 @@ single run, when retrieval has no score threshold (an irrelevant callable is
 worse than an irrelevant fact), when the library has no utility signal to prune
 by, and — outside a sandbox — because a skill library is agent-authored code
 retrieved by similarity and then executed.
+
+### Promotion gates for the policy, not just the memory
+
+Repo: `metaclaw`; the memory-level analogue is `verel`.
+
+Treat the retrieval configuration as a versioned object that must earn its place.
+Generate a bounded set of candidate policies, replay them offline against real
+past turns, and promote one only when it fails to regress on several independent
+measures over a minimum sample. MetaClaw gates on eight deltas with at least ten
+samples and an explicit cap on additional zero-retrieval cases — a guard on the
+distribution rather than the mean.
+
+This works because it is the only answer in the atlas to "are our fusion weights
+right?", and because it resolves the telemetry-versus-truth tension by tuning
+*reachability* and never touching confidence. It fails when the replay metrics
+are proxies for usefulness rather than measures of it, and when the gate's own
+thresholds are unmeasured constants — both of which are true here.
+
+### Memory policy as a written artifact
+
+Repo: `genericagent`; related operator surfaces in `nanobot` (`prompts/dream.md`)
+and `cowagent` (documented distillation rules).
+
+Write the memory rules down where a human can read and edit them, next to the
+memory they govern. GenericAgent's axioms — action-verified writes, sanctity of
+verified data, no volatile state, minimum sufficient pointer — plus its ROI test
+for what earns permanent context, are more legible than most systems' code. It
+also supplies the missing justification behind every hard budget in this atlas:
+`ROI = (error probability x cost) / per-turn word cost`, with the sharp corollary
+that an entry the model would act on unprompted is a permanent tax with zero
+return.
+
+It fails on enforcement. Prose rules bind only as far as the model follows them,
+nothing audits compliance, and the action-verified axiom leaves no record of the
+tool call that justified a write.
 
 ### Verify memory against its subject
 
@@ -1532,6 +1676,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
 - Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
 
+### `metaclaw`
+
+- Best idea: candidate retrieval policies replayed offline and promoted only on non-regression across eight metrics.
+- Biggest risk: the loop optimizes lexical-overlap proxies, and its promotion thresholds are hand-chosen constants.
+- Most reusable component: `promotion.py`'s `MemoryPromotionCriteria` and the replay-then-gate loop in `self_upgrade.py`.
+- Maturity impression: substantial and unusually well evidenced, with committed benchmark fixtures and dedicated memory ablations.
+- Study when: you cannot justify your retrieval weights and want a safe way to change them.
+- Do not copy when: you need trust semantics — the memory model has no rejected state and no verification path.
+
+### `nanobot`
+
+- Best idea: two cursors over an append-only archive, with a Dream pass that refuses to advance after tool errors.
+- Biggest risk: durable claims carry no provenance back to the evidence that produced them.
+- Most reusable component: the dual-cursor split, the failure-aware advance gate, and the durable-file allowlist for audit commits.
+- Maturity impression: compact and carefully reasoned, with unusually good design documentation and no visible memory tests.
+- Study when: a fast producer feeds a slow consolidator, or you want git history that reads as a record of belief.
+- Do not copy when: memory must grow past what fits in every prompt, or must be scoped per project.
+
+### `cowagent`
+
+- Best idea: a dated intermediate layer that gives consolidation a naturally bounded unit, plus written distillation rules and a dream diary.
+- Biggest risk: two chained lossy summarizations with no loss detection, and recency-wins conflict resolution.
+- Most reusable component: the daily-bucket pipeline, the distillation rule table, and the self-healing FTS5 state check.
+- Maturity impression: practical and well documented, with real hybrid retrieval and no visible memory tests.
+- Study when: you want consolidation you can inspect by opening a file for a given day.
+- Do not copy when: scope matters — `scope` defaults to `shared` — or corrections must be reviewable.
+
+### `genericagent`
+
+- Best idea: "No Execution, No Memory", and an explicit ROI model for what earns a place in always-injected context.
+- Biggest risk: every rule is prose, with no enforcement, no audit, and no record of the verification each write claims.
+- Most reusable component: the four axioms and the cleanup SOP's ROI test and deletion categories.
+- Maturity impression: a small framework whose memory thinking is considerably more developed than its memory machinery.
+- Study when: designing the policy layer of a memory system, or deciding what belongs in permanent context.
+- Do not copy when: wrong memory is costly and you need the rules enforced rather than requested.
+
 ### `magic-context`
 
 - Best idea: memories mapped to backing files and re-verified when git reports those files changed, with lifecycle and verification on separate axes.
@@ -1707,6 +1887,10 @@ Privacy/deletion:
 - [`generative-agents`](../systems/generative-agents/)
 - [`magic-context`](../systems/magic-context/)
 - [`pi`](../systems/pi/)
+- [`metaclaw`](../systems/metaclaw/)
+- [`nanobot`](../systems/nanobot/)
+- [`cowagent`](../systems/cowagent/)
+- [`genericagent`](../systems/genericagent/)
 
 ### Repos Inspected
 
@@ -1741,6 +1925,11 @@ Privacy/deletion:
 - [joonspk-research/generative_agents](https://github.com/joonspk-research/generative_agents) at [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4)
 - [cortexkit/magic-context](https://github.com/cortexkit/magic-context) at [`113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09`](https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09)
 - [earendil-works/pi](https://github.com/earendil-works/pi) at [`a597371bda2af70372d1323d550483b5f4a0ae36`](https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36)
+- [aiming-lab/MetaClaw](https://github.com/aiming-lab/MetaClaw) at [`922caf3a1cd093fb316e95183a8acc8aa47b3b21`](https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21)
+- [HKUDS/nanobot](https://github.com/HKUDS/nanobot) at [`b99e0f937e828504e0f93dbe35dfd6b1540e20b2`](https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2)
+- [zhayujie/CowAgent](https://github.com/zhayujie/CowAgent) at [`fe88751ccb24e9b2991b6a35a2dcc538f7a38761`](https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761)
+- [lsdefine/GenericAgent](https://github.com/lsdefine/GenericAgent) at [`7ffc95823b6e40ca4e10acf9fb285d923485cacc`](https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc)
+- [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
 
@@ -1790,4 +1979,8 @@ No internet sources were used for this report. The analysis is based on the chec
 - Magic Context's verification precision — how often the verify task correctly marks a stale memory stale, and how often it wrongly confirms one — is not measured anywhere in that repository, and was not measured here. It is the central claim of the design.
 - Magic Context reads OpenCode's native session database read-only for its retrospective scanner; that behaviour was read in code but not exercised, and the user-consent story around it was not assessed.
 - Pi has no memory subsystem, so its report covers session persistence, compaction, and the extension surface only. Third-party Pi memory plugins other than Magic Context were not reviewed; the db0 integration has a closed backend and is not reviewable on this atlas's terms.
+- MetaClaw's committed benchmark fixtures and memory ablation scripts were inspected but not run, and no published numbers were reproduced. Its replay metrics are lexical-overlap proxies; no evidence linking them to task outcomes was found in the repository.
+- No memory tests or memory-quality benchmarks were located for nanobot, CowAgent, or GenericAgent. Nothing was run for any of the four systems added in this round.
+- GenericAgent's memory documentation is written in Chinese; the axioms and rules quoted in its report are the reviewer's translations, with key terms given in the original. Its cited arXiv technical report was not retrieved or assessed.
+- Three repositories examined in the same round were judged out of scope and have no reports: `KnockOutEZ/wigolo` (a web crawl, search, and extraction MCP server whose cache holds external content rather than agent belief), `siyuan-note/siyuan` (a note application whose agent kernel contains no memory concept — only conversation compaction — and whose MCP surface is note CRUD), and `netease-youdao/LobsterAI` (which operates OpenClaw's memory rather than having its own, and is covered inside the OpenClaw report).
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.

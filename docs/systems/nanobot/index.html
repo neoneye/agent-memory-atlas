@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Layered Markdown memory with an
+append-only summary archive, two independent cursors, and a Dream pass
+that refuses to advance when its own tools failed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="nanobot — Agent Memory Atlas">
+    <meta property="og:description" content="Layered Markdown memory
+with an append-only summary archive, two independent cursors, and a
+Dream pass that refuses to advance when its own tools failed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="nanobot — Agent Memory Atlas">
+    <meta name="twitter:description" content="Layered Markdown memory
+with an append-only summary archive, two independent cursors, and a
+Dream pass that refuses to advance when its own tools failed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>nanobot — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Dual-cursor file memory</p>
+          <h1>nanobot</h1>
+          <p class="document-deck">Layered Markdown memory with an
+append-only summary archive, two independent cursors, and a Dream pass
+that refuses to advance when its own tools failed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/HKUDS/nanobot">
+              <span>Source</span>
+              <strong>HKUDS/nanobot</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2" title="b99e0f937e828504e0f93dbe35dfd6b1540e20b2">
+              <span>Analyzed revision</span>
+              <code>b99e0f937e828504e0f93dbe35dfd6b1540e20b2</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>nanobot is an MIT-licensed agent from HKUDS — the lab behind LightRAG
+— and its memory is a compact, well-reasoned file-and-git design in
+about 1,200 lines (<code>nanobot/agent/memory.py</code>).</p>
+<p>The layering will be familiar from <a href="../hermes-agent/">Hermes
+Agent</a> and <a href="../llm-wiki-memory/">llm-wiki-memory</a>: live
+conversation, an append-only archive of compressed turns, and durable
+Markdown knowledge files under git. What makes it worth a report is the
+care in the seams between those layers.</p>
+<p><strong>Two independent cursors.</strong> <code>memory/.cursor</code>
+marks how far the Consolidator has written into
+<code>history.jsonl</code>; <code>memory/.dream_cursor</code> marks how
+far Dream has consumed it. Producer and consumer advance separately, so
+a slow or failed Dream never blocks consolidation and never silently
+skips material.</p>
+<p><strong>Dream refuses to advance when its own tools failed.</strong>
+<code>DreamRunProgress</code> watches for tool events with
+<code>phase == "error"</code> during a Dream run, and a
+nominally-completed run that hit tool errors is treated as unsafe to
+advance the cursor. A partially-failed consolidation therefore gets
+retried rather than banked — the inverse of the trap <a
+href="../magic-context/">Magic Context</a> had to engineer its way out
+of, reached by a different route.</p>
+<p><strong>It filters its own generated sessions out of its memory
+input.</strong>
+<code>_INTERNAL_HISTORY_SESSION_PREFIXES = ("cron:", "dream:")</code>
+and <code>_INTERNAL_HISTORY_SESSION_KEYS = {"heartbeat"}</code> exclude
+nanobot's own scheduled and consolidation sessions from history. This is
+the fourth independent implementation in the atlas of a guard against
+the harness's own output becoming evidence, after <a
+href="../openclaw/">OpenClaw</a>'s envelope sanitization, <a
+href="../holographic/">Holographic</a>'s compaction-summary exclusion,
+and Pi-adjacent cases — strong confirmation that this is a general
+failure mode, not a quirk.</p>
+<p><strong>Git commit messages are grounded in the real working-tree
+delta</strong>, over an explicit allowlist of durable files that
+<em>deliberately excludes</em> <code>.dream_cursor</code>, "so progress
+bookkeeping never appears as a durable-memory edit in the audit record."
+Someone thought carefully about what an audit log should and should not
+contain.</p>
+<p>A third durable file is unusual: alongside <code>USER.md</code> and
+<code>memory/MEMORY.md</code> sits
+<strong><code>SOUL.md</code></strong>, holding the agent's own voice and
+communication style. Identity as a separate memory kind from knowledge
+appears almost nowhere else here.</p>
+<p>The limits are the ordinary ones for file-backed memory: no retrieval
+ranking, no scope beyond the workspace, no verification or rejection
+state, and durable files that stay small because a model is asked to
+keep them small.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>workspace/
+├── SOUL.md              # the agent&#39;s long-term voice and style
+├── USER.md              # stable knowledge about the user
+├── prompts/
+│   └── dream.md         # optional instructions for how Dream organizes memory
+└── memory/
+    ├── MEMORY.md        # project facts, decisions, durable context
+    ├── history.jsonl    # append-only compressed turn summaries
+    ├── .cursor          # Consolidator write cursor
+    ├── .dream_cursor    # Dream consumption cursor
+    └── .git/            # version history for the durable files</code></pre>
+<p>Two stages, deliberately separated:</p>
+<pre class="text"><code>Stage 1 — Consolidator (pressure-driven)
+  context window under pressure
+  -&gt; summarize the oldest safe slice
+  -&gt; append one JSON line to history.jsonl
+     {&quot;cursor&quot;: 42, &quot;timestamp&quot;: &quot;...&quot;, &quot;content&quot;: &quot;- User prefers dark mode\n- Decided to use PostgreSQL&quot;}
+  -&gt; advance .cursor
+
+Stage 2 — Dream (cron-driven, or manual)
+  read new history.jsonl entries since .dream_cursor
+  + current SOUL.md, USER.md, memory/MEMORY.md   (each capped at 8,000 chars in-prompt)
+  -&gt; edit the durable files surgically in one pass
+  -&gt; git commit, message grounded in the actual working-tree delta
+  -&gt; advance .dream_cursor ONLY if no tool errors occurred</code></pre>
+<p>The documentation is explicit that <code>history.jsonl</code> "is not
+the final memory. It is the material from which final memory is shaped"
+— evidence and belief kept in separate files, which is the <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+pattern expressed as a directory layout.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>nanobot/agent/memory.py</code> (1,210 lines) —
+<code>MemoryStore</code> ("pure file I/O for memory files"),
+<code>DreamRunProgress</code>, cursor management, legacy-history
+migration, git integration.</li>
+<li><code>nanobot/templates/memory/MEMORY.md</code> — the seed
+template.</li>
+<li><code>docs/memory.md</code>,
+<code>docs/guides/ai-agent-memory.md</code> — design documentation.</li>
+<li>Workspace <code>prompts/dream.md</code> — user-editable instructions
+steering Dream's behaviour.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Conv[&quot;session.messages&quot;] --&gt; Cons[&quot;Consolidator (on context pressure)&quot;]
+  Cons --&gt; Hist[&quot;history.jsonl (append-only)&quot;]
+  Cons --&gt; C1[&quot;.cursor&quot;]
+  Hist --&gt; Dream[&quot;Dream (cron or manual)&quot;]
+  C2[&quot;.dream_cursor&quot;] --&gt; Dream
+  Soul[&quot;SOUL.md&quot;] --&gt; Dream
+  User[&quot;USER.md&quot;] --&gt; Dream
+  Mem[&quot;memory/MEMORY.md&quot;] --&gt; Dream
+  Prompt[&quot;prompts/dream.md&quot;] --&gt; Dream
+  Dream --&gt; Edit[&quot;surgical edits to durable files&quot;]
+  Edit --&gt; Git[&quot;GitStore commit (delta-grounded message)&quot;]
+  Dream --&gt; Guard{&quot;tool errors?&quot;}
+  Guard --&gt;|yes| Hold[&quot;do not advance .dream_cursor&quot;]
+  Guard --&gt;|no| Adv[&quot;advance .dream_cursor&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-dual-cursor-split">The dual-cursor split</h3>
+<p>Separating the write cursor from the consumption cursor is a small
+decision with good properties. Consolidation is driven by context
+pressure and must be fast; Dream is expensive and runs on a schedule.
+Coupling them would mean either blocking the conversation on Dream or
+losing material when Dream falls behind. With two cursors,
+<code>history.jsonl</code> acts as a durable queue between a fast
+producer and a slow consumer.</p>
+<p><code>_maybe_migrate_legacy_history</code> and the
+<code>_LEGACY_ENTRY_START_RE</code> parser handle an older free-text
+history format, converting it into the JSONL structure with backup paths
+— a real migration path rather than a breaking change.</p>
+<p>There is also a first-start guard: rather than pulling a user's
+entire historical archive into the first Dream run,
+<code>.dream_cursor</code> is initialized to the current last cursor.
+New installs do not begin with an enormous, expensive, and probably
+incoherent consolidation.</p>
+<h3 id="the-failure-aware-dream-gate">The failure-aware Dream gate</h3>
+<pre class="python"><code>class DreamRunProgress:
+    &quot;&quot;&quot;Track tool failures that make a nominally completed Dream run unsafe to advance.&quot;&quot;&quot;</code></pre>
+<p>The callback inspects <code>tool_events</code> for any entry whose
+<code>phase</code> is <code>"error"</code>. If Dream "completed" but a
+tool failed underneath it, the durable files may have been edited from
+incomplete input, so the cursor holds and the material is reprocessed
+next run.</p>
+<p>This is the <a
+href="../../patterns/recoverable-background-work/">recoverable
+background work</a> pattern applied to the <em>cursor</em> rather than
+to a retry queue: the safest way to make failed derivation retryable is
+to not record it as done.</p>
+<h3 id="grounded-commit-messages">Grounded commit messages</h3>
+<pre class="python"><code>_DREAM_CONTENT_PATHS = (&quot;SOUL.md&quot;, &quot;USER.md&quot;, &quot;memory/MEMORY.md&quot;)</code></pre>
+<p>Commit messages describe the delta on these three files only. The
+accompanying comment states that <code>memory/.dream_cursor</code> is
+excluded so bookkeeping never shows up as a durable-memory edit. The git
+log therefore reads as a history of what the agent came to believe, not
+a history of its internal counters — which is the difference between an
+audit trail and a change log.</p>
+<h3 id="self-exclusion-from-history">Self-exclusion from history</h3>
+<pre class="python"><code>_INTERNAL_HISTORY_SESSION_PREFIXES = (&quot;cron:&quot;, &quot;dream:&quot;)
+_INTERNAL_HISTORY_SESSION_KEYS = {&quot;heartbeat&quot;}</code></pre>
+<p>Scheduled runs, Dream's own runs, and heartbeats are excluded from
+the history that feeds memory. Without this, Dream would consume its own
+output and heartbeats would accumulate as remembered
+"conversations."</p>
+<h3 id="bounded-prompt-embedding">Bounded prompt embedding</h3>
+<p><code>_DREAM_FILE_EMBED_CAP = 8000</code> caps how much of each
+durable file goes into the Dream prompt, with a comment noting the files
+are ~5 KB in practice "but a runaway file must not unbounded the
+prompt." A cap sized well above the expected case, present specifically
+for the pathological one.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. Durable memory is three Markdown files; evidence
+is JSONL lines with <code>cursor</code>, <code>timestamp</code>, and
+<code>content</code>; <code>_DEFAULT_MAX_HISTORY = 1000</code> bounds
+the archive, with older processed entries dropped without discarding
+pending Dream input.</p>
+<p>Consequences:</p>
+<ul>
+<li><strong>No status, verification, or rejection state.</strong>
+Whatever Dream writes is authoritative until Dream changes it.</li>
+<li><strong>No provenance on durable claims.</strong> A line in
+<code>MEMORY.md</code> does not record which history entries produced
+it; git history is the only trail back, and it links a commit to a file
+delta rather than a claim to its evidence.</li>
+<li><strong>No scope beyond the workspace.</strong> Selecting a
+different project in the WebUI changes tool working directory and chat
+context but does not relocate the memory files, so one workspace is one
+memory.</li>
+<li><strong>Size is maintained by persuasion.</strong> Dream is asked to
+make "the smallest honest change that keeps memory coherent"; nothing
+enforces a budget the way <a href="../hermes-agent/">Hermes Agent</a>'s
+hard character cap does.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>None, and that is a design position rather than an omission. The
+durable files are small and always in context;
+<code>history.jsonl</code> is machine-oriented material for Dream, not a
+searchable corpus. There is no embedding, no ranking, and no query
+path.</p>
+<p>The trade is the same one Hermes makes: guaranteed recall of a small
+curated set, at the cost of anything that did not survive curation being
+unreachable. For a system whose memory is a few kilobytes this is
+reasonable; it does not extend to a large corpus.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two writers with different rhythms. The Consolidator writes evidence
+under context pressure and never touches durable files. Dream is the
+only writer of durable memory, editing surgically in a single pass
+rather than rewriting wholesale — which is what makes git deltas
+meaningful.</p>
+<p>Users influence Dream through <code>prompts/dream.md</code>, an
+editable instruction file. That is a genuinely nice operator surface:
+memory <em>policy</em> is a text file a person can read and change,
+without touching code.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is internal to nanobot rather than a plugin contract, with a
+WebUI, cron scheduling, and templates. Documentation is unusually good
+for this layer of the stack — <code>docs/memory.md</code> explains the
+design and its reasoning, not just the API.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Dual cursors decoupling a fast producer from a slow consumer.</li>
+<li>A failure-aware gate that will not mark unsafe work as done.</li>
+<li>First-start cursor initialization preventing a runaway initial
+Dream.</li>
+<li>Self-generated sessions excluded from memory input.</li>
+<li>Audit-clean git commits over an explicit durable-file
+allowlist.</li>
+<li>Bounded prompt embedding with a stated rationale.</li>
+<li>Legacy-format migration with backups.</li>
+<li>Human-editable memory policy in <code>prompts/dream.md</code>.</li>
+<li>Evidence and belief in separate files.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No verification or rejection state</strong>; a wrong durable
+claim persists until Dream happens to revise it, and nothing prevents
+its re-derivation from retained history.</li>
+<li><strong>Provenance stops at git.</strong> A claim cannot be traced
+to the history entries that produced it.</li>
+<li><strong>One workspace, one memory</strong> — no project or user
+scope inside it.</li>
+<li><strong>Unenforced size discipline</strong>, dependent on the model
+honouring an instruction.</li>
+<li><strong>No fencing</strong> of recalled content; durable files are
+injected as ordinary context.</li>
+<li><strong>Git is not erasure</strong> — the same caveat the atlas
+raises for llm-wiki-memory applies to deleted content in
+<code>.git/</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Memory-specific tests were not located in this checkout, and no
+memory-quality benchmark was found; the suites were not run. Given how
+much of the design's value sits in the cursor and failure-gate logic —
+exactly the code that is hard to get right and easy to regress — that is
+the most significant evidence gap here.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Two cursors, one queue.</strong> Separate the write position
+from the consume position when a fast producer feeds a slow consumer,
+and the whole class of "consolidation fell behind" bugs disappears.</li>
+<li><strong>Do not advance a cursor after a failed run.</strong> Cheaper
+and more robust than a retry queue: if derivation was unsafe, simply do
+not record it as done.</li>
+<li><strong>Initialize the consume cursor to the present on first
+run.</strong></li>
+<li><strong>Ground audit commits in a durable-file allowlist</strong>,
+keeping bookkeeping out of the memory history.</li>
+<li><strong>Exclude your own generated sessions from memory
+input</strong> — now confirmed as a general requirement across four
+independent systems in this atlas.</li>
+<li><strong>A separate identity file.</strong> <code>SOUL.md</code>
+keeps "who I am" apart from "what I know", which are corrected on
+different schedules for different reasons.</li>
+<li><strong>Memory policy as an editable prompt file</strong> the
+operator can read and change.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Durable claims without provenance to their
+evidence.</strong></li>
+<li><strong>No rejection state</strong> in a system that automatically
+re-derives from a retained archive.</li>
+<li><strong>Size maintained by instruction</strong> rather than
+enforcement.</li>
+<li><strong>Single-workspace scope</strong> presented alongside project
+switching in the UI, which invites the assumption that memory is
+per-project when it is not.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The dual-cursor architecture and the failure-aware advance gate —
+both are small, general, and correct.</li>
+<li>The durable-file allowlist for audit commits.</li>
+<li>The internal-session exclusion list.</li>
+<li><code>SOUL.md</code> as a distinct identity layer.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The absence of retrieval, if memory will grow past a few
+kilobytes.</li>
+<li>Instruction-based size discipline where prompt cost matters; use a
+hard budget.</li>
+<li>Single-workspace scope for multi-project use.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Should durable claims cite the <code>history.jsonl</code> cursors
+that produced them, making correction traceable?</li>
+<li>What stops Dream from re-deriving a claim a user explicitly
+removed?</li>
+<li>Should memory be per-project, given that the WebUI already scopes
+chats by project?</li>
+<li>How is <code>MEMORY.md</code> prevented from growing without bound
+over months, if only an instruction constrains it?</li>
+<li>Are the cursor and failure-gate paths tested anywhere? They carry
+most of the design's correctness.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory implementation: <code>nanobot/agent/memory.py</code> —
+<code>MemoryStore</code>, <code>DreamRunProgress</code>, cursor
+handling, git integration, legacy migration.</li>
+<li>Durable files: <code>SOUL.md</code>, <code>USER.md</code>,
+<code>memory/MEMORY.md</code> (template at
+<code>nanobot/templates/memory/MEMORY.md</code>).</li>
+<li>Evidence archive: <code>memory/history.jsonl</code>; cursors
+<code>memory/.cursor</code> and <code>memory/.dream_cursor</code>.</li>
+<li>Memory policy: workspace <code>prompts/dream.md</code>.</li>
+<li>Documentation: <code>docs/memory.md</code>,
+<code>docs/guides/ai-agent-memory.md</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
