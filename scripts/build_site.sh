@@ -15,7 +15,7 @@ fi
 python3 "$project_dir/scripts/generate_matrix.py"
 
 rm -rf "$output_dir"
-mkdir -p "$output_dir/assets" "$output_dir/compare" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
+mkdir -p "$output_dir/assets" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 
 cp "$project_dir/site/index.html" "$output_dir/index.html"
 cp -R "$project_dir/assets/." "$output_dir/assets/"
@@ -53,6 +53,7 @@ render_document() {
 
 render_document "$project_dir/content/overview.md" "$output_dir/compare/index.html"
 render_document "$project_dir/content/patterns/index.md" "$output_dir/patterns/index.html"
+render_document "$project_dir/content/benchmarks.md" "$output_dir/benchmarks/index.html"
 
 for input in "$project_dir"/content/systems/*.md; do
   slug="$(basename "$input" .md)"

@@ -805,6 +805,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 
 ### Evals/Tests
 
+What these harnesses do and do not measure — and why a bad benchmark score is
+often weak evidence — is covered separately in
+[benchmarking agent memory](../benchmarks/).
+
 - `mem0`: tests are present but the report focused on core implementation.
 - `langmem`: tests/examples around tools and extraction should be consulted before reuse.
 - `honcho`: rich tests under `honcho/tests`.
@@ -1254,7 +1258,7 @@ Mem0 and Supermemory both have product surfaces where advanced behavior may live
 
 The atlas has now found three variants of this. Swafra committed a `k=10` artifact that scored every returned session. TencentDB published gains with no harness in the repository at all. `openviking` is the most advanced case and the most nearly right: it commits a genuinely reproducible harness — ingest, QA, LLM judge, statistics, runners for six competing systems, and token accounting alongside accuracy, which is exactly what this atlas asks for — yet the headline figures in its README (LoCoMo accuracy of 82.08% versus 24.20% native for OpenClaw, and comparable deltas for Hermes and Claude Code) point to an off-repo blog post, and no raw result files are committed.
 
-A reproducible harness and a reproducible result are different claims. These are also vendor-run comparisons of "competitor's native memory" against "competitor plus our product", judged by an LLM, so the native baselines deserve independent scrutiny before the deltas are quoted.
+A reproducible harness and a reproducible result are different claims. See [benchmarking agent memory](../benchmarks/) for what the published numbers are and are not measuring. These are also vendor-run comparisons of "competitor's native memory" against "competitor plus our product", judged by an LLM, so the native baselines deserve independent scrutiny before the deltas are quoted.
 
 ### Throwing away raw evidence too early
 

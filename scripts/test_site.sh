@@ -7,6 +7,7 @@ site_dir="$project_dir/docs"
 required=(
   "$site_dir/index.html"
   "$site_dir/compare/index.html"
+  "$site_dir/benchmarks/index.html"
   "$site_dir/patterns/index.html"
   "$site_dir/patterns/rejected-value-tombstone/index.html"
   "$site_dir/patterns/bi-temporal-fact-validity/index.html"

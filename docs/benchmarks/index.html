@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="What the memory benchmarks
+actually test, why a bad score on one may mean nothing, what stress
+testing is for, and which metrics — cost, latency, storage, forgetting —
+nobody is measuring.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Benchmarking Agent
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="What the memory benchmarks
+actually test, why a bad score on one may mean nothing, what stress
+testing is for, and which metrics — cost, latency, storage, forgetting —
+nobody is measuring.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Benchmarking Agent
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="What the memory benchmarks
+actually test, why a bad score on one may mean nothing, what stress
+testing is for, and which metrics — cost, latency, storage, forgetting —
+nobody is measuring.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Benchmarking Agent Memory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/main.css">
+  </head>
+  <body class="document-page" data-root="..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../#systems">Systems</a>
+        <a href="../patterns/">Patterns</a>
+        <a href="../compare/">Compare</a>
+        <a href="../benchmarks/">Benchmarks</a>
+        <a href="../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Measurement</p>
+          <h1>Benchmarking Agent Memory</h1>
+          <p class="document-deck">What the memory benchmarks actually
+test, why a bad score on one may mean nothing, what stress testing is
+for, and which metrics — cost, latency, storage, forgetting — nobody is
+measuring.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-the-short-version">1. The Short Version</h2>
+<p>Six things are worth knowing before reading further.</p>
+<ol type="1">
+<li><strong>Almost every memory benchmark asks one question</strong>:
+after a long conversation, can the system answer a question about
+something said earlier? That is recall. Most of what makes memory hard —
+correction, deletion, scope, trust, cost — is not on the
+scoreboard.</li>
+<li><strong>A bad score on one benchmark is weak evidence.</strong>
+These are end-to-end pipelines judged by a language model, and the
+memory layer is one of six things that determine the number.</li>
+<li><strong>Stress testing is a different activity from
+benchmarking.</strong> A benchmark ranks systems on a task. A stress
+test finds the input that breaks one. You need both, and the second is
+cheaper.</li>
+<li><strong>Cost and latency are barely measured.</strong> One system in
+this atlas records token volume in its harness. One measures retrieval
+latency. None reports bytes on disk per memory.</li>
+<li><strong>The lag between writing a memory and being able to recall it
+is measured nowhere</strong>, even though several systems here
+deliberately delay extraction by minutes or by a batch boundary.</li>
+<li><strong>There is no forgetting benchmark.</strong> Nothing in this
+atlas, and nothing in the published benchmarks it uses, tests whether a
+deleted memory stays deleted after the next background pass.</li>
+</ol>
+<p>Everything below is evidence for those six claims, plus what a better
+measurement set would look like.</p>
+<h2 id="2-what-benchmarks-exist">2. What Benchmarks Exist</h2>
+<h3 id="found-in-the-repositories-reviewed-here">Found in the
+repositories reviewed here</h3>
+<p>These appear as committed harnesses in systems this atlas has read,
+so their existence and use are verifiable from code.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>What it tests</th>
+<th>Shipped as a harness by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LoCoMo</strong></td>
+<td>Question answering over very long multi-session conversations, with
+single-hop, multi-hop, temporal, open-domain and adversarial question
+categories</td>
+<td><a href="../systems/openviking/">OpenViking</a>, <a
+href="../systems/honcho/">Honcho</a>, <a
+href="../systems/hindsight/">Hindsight</a>, <a
+href="../systems/basic-memory/">Basic Memory</a></td>
+</tr>
+<tr>
+<td><strong>LongMemEval</strong></td>
+<td>Long-conversation QA split by ability, including <strong>knowledge
+updates</strong> and <strong>abstention</strong></td>
+<td><a href="../systems/openviking/">OpenViking</a>, <a
+href="../systems/honcho/">Honcho</a>, <a
+href="../systems/hindsight/">Hindsight</a>, <a
+href="../systems/swafra/">Swafra</a>, <a
+href="../systems/agentmemory/">agentmemory</a></td>
+</tr>
+<tr>
+<td><strong>BEAM</strong></td>
+<td>Long-conversation QA at extreme length; Cognee's committed report
+covers 100K and 10M-token conversations</td>
+<td><a href="../systems/cognee/">Cognee</a>, <a
+href="../systems/honcho/">Honcho</a></td>
+</tr>
+<tr>
+<td><strong>Oolong</strong></td>
+<td>Present in Honcho's bench tree; not characterized here</td>
+<td><a href="../systems/honcho/">Honcho</a></td>
+</tr>
+<tr>
+<td><strong>τ²-bench (tau2)</strong></td>
+<td>Agentic tool use against a simulated user with policy compliance — a
+<em>downstream task</em>, not a memory test</td>
+<td><a href="../systems/openviking/">OpenViking</a></td>
+</tr>
+<tr>
+<td><strong>SkillsBench</strong></td>
+<td>Procedural/skill retrieval; a repository-local harness</td>
+<td><a href="../systems/openviking/">OpenViking</a></td>
+</tr>
+<tr>
+<td><strong>Multi-hop QA</strong> (MuSiQue, 2Wiki, HotpotQA)</td>
+<td>Retrieval over a fixed corpus — RAG evaluation, with no writes
+accumulating over time</td>
+<td><a href="../systems/hipporag/">HippoRAG</a></td>
+</tr>
+<tr>
+<td><strong>Minecraft tech tree</strong></td>
+<td>Task completion by an agent with a skill library — measures whether
+procedural memory helps, not whether it is accurate</td>
+<td><a href="../systems/voyager/">Voyager</a></td>
+</tr>
+<tr>
+<td><strong>Human believability ratings</strong></td>
+<td>Whether simulated agents behave plausibly</td>
+<td><a href="../systems/generative-agents/">Generative Agents</a></td>
+</tr>
+<tr>
+<td><strong>Repository-local eval harnesses</strong></td>
+<td>Per-project cases with expected and forbidden hits, or replayed
+retrieval policies</td>
+<td><a href="../systems/open-cowork/">open-cowork</a>, <a
+href="../systems/metaclaw/">MetaClaw</a>, <a
+href="../systems/mempalace/">MemPalace</a>, <a
+href="../systems/agentmemory/">agentmemory</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>Two entries in that table are doing something the others are not.</p>
+<p><strong>LongMemEval's knowledge-update category</strong> is the
+closest thing the field has to a correction benchmark: the conversation
+contains a fact that is later superseded, and the system is scored on
+whether it answers with the new value. Its abstention category is the
+closest thing to a test for <em>not</em> answering. Both are still
+question-answering — the system is never asked to prove the old value is
+gone, only to prefer the new one at answer time.</p>
+<p><strong>open-cowork's harness</strong> is described below and is the
+most interesting evaluation shape in the atlas, precisely because it is
+not a public benchmark.</p>
+<h3 id="named-benchmarks-outside-these-repositories">Named benchmarks
+outside these repositories</h3>
+<p>The atlas's convention is to separate what was read in code from what
+is known otherwise, so these are listed with that caveat: they were
+<strong>not</strong> verified against their own repositories in this
+review, and the descriptions come from familiarity with the literature
+rather than inspection.</p>
+<ul>
+<li><strong>MSC (Multi-Session Chat)</strong> — an early long-term
+dialogue dataset; largely superseded by LoCoMo and LongMemEval for this
+purpose.</li>
+<li><strong>Machine-unlearning benchmarks</strong> (TOFU and similar) —
+these measure whether information can be removed from <em>model
+weights</em>. That is a genuinely different problem from removing a row
+from a memory store, and the two are often conflated in discussion.
+Relevant if you fine-tune on user data; not relevant to any system in
+this atlas.</li>
+<li><strong>Long-context benchmarks</strong> — needle-in-a-haystack,
+RULER, ∞Bench and relatives measure what a model can do with a long
+prompt. They are not memory benchmarks, and the distinction matters for
+the argument in the next section.</li>
+<li>Several newer conversational-memory benchmarks have appeared that
+this review has not inspected. Treat any list of them, including this
+one, as incomplete.</li>
+</ul>
+<h3 id="the-boundary-worth-drawing">The boundary worth drawing</h3>
+<p>A long-context benchmark asks: given all of this text in the prompt,
+can you answer? A memory benchmark should ask: given that this text is
+<em>not</em> in the prompt and never will be, can the system decide what
+to retrieve, keep it correct as it changes, and drop what it should not
+keep?</p>
+<p>The blurring of that line is the field's central measurement problem,
+and it leads directly to the next section.</p>
+<h2 id="3-does-a-bad-score-matter">3. Does a Bad Score Matter?</h2>
+<p>Usually less than it appears. Six reasons, in rough order of how
+often they apply.</p>
+<h3 id="the-number-measures-a-pipeline-not-a-memory-layer">The number
+measures a pipeline, not a memory layer</h3>
+<p>A LoCoMo or LongMemEval score is produced by: an extraction model, a
+chunking and storage choice, a retrieval stack, a prompt-assembly step,
+an answering model, and an LLM judge. The memory layer is one of six.
+Two systems with identical retrieval quality can differ by tens of
+points because one formats recalled memory more legibly for the
+answering model.</p>
+<p>This atlas has a concrete instance. <a
+href="../systems/openviking/">OpenViking</a> reports LoCoMo accuracy of
+82.08% for a host with its memory layer against 24.20% for that host's
+native memory. The harness is committed and genuinely reproducible. But
+each comparison runs through a different integration adapter, and that
+report's open questions ask the obvious thing: <em>how much of the delta
+is the memory layer, and how much is prompt-shape changes in the
+adapter?</em> Nothing in the published artifacts separates the two.</p>
+<h3
+id="vendor-run-comparisons-compare-them-with-them-plus-us">Vendor-run
+comparisons compare "them" with "them plus us"</h3>
+<p>The common shape is a memory product measuring a competitor's
+built-in memory against the same competitor running the product. The
+baseline is configured by the party with an interest in the result, and
+the judge is a language model. This atlas flags three separate instances
+of published gains that could not be traced to committed raw artifacts,
+and treats such figures as <strong>claims</strong>, not measurements. A
+harness you can run and a result you can reproduce are different things,
+and repositories routinely ship the first while the numbers in the
+README came from the second.</p>
+<h3 id="the-benchmark-may-not-be-hard-enough-to-separate-systems">The
+benchmark may not be hard enough to separate systems</h3>
+<p>If a benchmark's conversations fit inside a modern context window, a
+system with no memory design — just a long prompt — can score well, and
+one with sophisticated memory can score worse by retrieving selectively.
+This criticism has been made of LoCoMo specifically, on the grounds that
+its conversations are short enough for long-context baselines to handle
+directly. BEAM's 10M-token configuration exists because of this
+pressure. When a benchmark cannot separate "good memory" from "big
+context", a bad score on it says little.</p>
+<h3 id="judge-variance">Judge variance</h3>
+<p>Almost all of these score with an LLM judge. Judge model, judge
+prompt, and answer formatting all move the number, and few published
+results state a judge seed or report agreement with human labels. Two
+runs of the same system on the same data are not guaranteed to produce
+the same score.</p>
+<h3 id="the-system-may-not-be-optimizing-that-axis-at-all">The system
+may not be optimizing that axis at all</h3>
+<p>This is the important one. The systems in this atlas with the
+strongest <strong>correction</strong> semantics — <a
+href="../systems/verel/">Verel</a> with rejected-value tombstones and
+explicit trust states, <a href="../systems/rainbox/">RainBox</a> with
+governed atomic correction — have no benchmark numbers at all, and would
+not score better on LoCoMo if they did. Nothing in a conversational QA
+benchmark rewards refusing to re-assert a value the user rejected. The
+same holds for <a href="../systems/redis-agent-memory-server/">Redis
+Agent Memory Server</a>'s retention policy, <a
+href="../systems/magic-context/">Magic Context</a>'s re-verification
+against source files, and <a href="../systems/memora/">Memora</a>'s
+dry-run correction pass.</p>
+<p>The field measures recall because recall is measurable. The
+predictable result is that recall gets optimized and correction does
+not.</p>
+<h3 id="and-the-cases-where-a-bad-score-does-matter">And the cases where
+a bad score does matter</h3>
+<ul>
+<li><strong>The system claims retrieval quality is its point.</strong>
+Then the benchmark is on the axis it chose, and a poor result is
+real.</li>
+<li><strong>The benchmark's failure category matches your
+workload.</strong> A bad temporal-reasoning score matters if your users
+ask "what did I decide last month". A bad multi-hop score matters if
+answers require joining facts from different sessions.</li>
+<li><strong>The score is bad in a way that indicates a bug, not a
+tradeoff.</strong> Near-zero on single-hop extraction means something is
+broken, not that the system has different priorities.</li>
+<li><strong>A drop against your own previous run.</strong> The most
+useful benchmark score is the one you compare against yourself. Absolute
+cross-system numbers are confounded; a regression in your own harness,
+same models and same config, is a signal you can act on.</li>
+</ul>
+<p>Reading a benchmark table well means asking <em>what would this
+system have to be bad at to score badly here</em>, and checking whether
+that is a thing you care about.</p>
+<h2 id="4-what-stress-testing-is-for">4. What Stress Testing Is For</h2>
+<p>Benchmarking and stress testing answer different questions, and
+conflating them is why many memory systems have a score and no idea
+where they break.</p>
+<blockquote>
+<p><strong>A benchmark asks: how good is this on the normal
+case?</strong> <strong>A stress test asks: what input makes this fail,
+and how does it fail?</strong></p>
+</blockquote>
+<p>A benchmark produces a number for comparison. A stress test produces
+a <em>failure mode</em> — something you can fix. For memory
+specifically, stress testing is where almost all of the value is, for
+three reasons.</p>
+<p><strong>The failure modes are structural, not statistical.</strong> A
+memory system does not degrade smoothly as the store grows; it hits a
+point where retrieval starts returning five near-duplicates of the same
+fact, or where a stale value outranks its correction. That threshold is
+a property you can find by pushing, and it will never show up as a
+percentage point on a benchmark.</p>
+<p><strong>Memory is an injection channel.</strong> Anything written
+into memory is later placed in a prompt, so a poisoned memory is a
+persistent prompt injection with a much longer lifetime than a single
+hostile message. Several systems here take this seriously in opposite
+ways: <a href="../systems/verel/">Verel</a> and <a
+href="../systems/rainbox/">RainBox</a> fence recalled memory as
+untrusted data at read time; <a href="../systems/hermes-agent/">Hermes
+Agent</a> scans content against threat patterns at write time because
+its memory is frozen into the prompt for a whole session; <a
+href="../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> screens for instructions like "ignore previous instructions"
+before they are stored. None of that is exercised by a QA benchmark. It
+is exercised by deliberately writing hostile content into memory and
+seeing what comes out.</p>
+<p><strong>The interesting cases are adversarial by
+construction.</strong> "Does the right memory come back" has a large
+natural test set. "Does the wrong memory stay out" does not — you have
+to build it.</p>
+<h3 id="a-stress-test-checklist-for-memory">A stress-test checklist for
+memory</h3>
+<p>Each of these has produced a real finding in one of the systems
+reviewed here.</p>
+<ul>
+<li><strong>Scale</strong>: grow the store by 10× and 100× and
+re-measure retrieval quality, latency, and index size. Look for the
+point where near-duplicates crowd out diversity.</li>
+<li><strong>Contradiction density</strong>: feed a stream where 20% of
+facts supersede an earlier one. Measure how long a stale value keeps
+being retrieved after its correction lands.</li>
+<li><strong>Re-ingestion</strong>: delete a memory, then feed the source
+material again. Almost every system in this atlas will recreate it,
+because supersession without a value-level tombstone does not survive
+re-derivation.</li>
+<li><strong>Poisoned content</strong>: write memories containing
+instructions, fake system prompts, and encoded payloads. Check what
+reaches the model and whether it is fenced.</li>
+<li><strong>Scope crossing</strong>: write to project A, query from
+project B. This is a single assertion and it catches the most
+consequential class of leak.</li>
+<li><strong>Provider failure</strong>: kill the embedding or LLM
+endpoint mid-write. Does the raw evidence survive for retry, or is the
+observation lost? Does a gate that is supposed to skip work fail open or
+fail silent?</li>
+<li><strong>Concurrency</strong>: two writers, one correction,
+interleaved. Non-atomic JSON rewrites — which more than one system here
+uses — lose data under this.</li>
+<li><strong>The empty and the trivial</strong>: a store with nothing
+relevant, and a question needing no memory. A system that always returns
+its top-k will return five weak matches for "what is 2+2", and that
+noise costs both tokens and accuracy.</li>
+</ul>
+<p>Almost all of these are cheap. None of them requires a labelled
+dataset.</p>
+<h2 id="5-what-gets-measured-and-what-does-not">5. What Gets Measured,
+and What Does Not</h2>
+<p>The user-facing question — <em>do these benchmarks measure disk
+usage, LLM usage, time to recall?</em> — has a short answer: barely,
+occasionally, and no.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>What it tells you</th>
+<th>Measured anywhere in this atlas?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Answer accuracy (LLM-judged)</td>
+<td>Whether the agent got the question right</td>
+<td>Yes — the standard metric, in every public harness</td>
+</tr>
+<tr>
+<td>Recall@k / hit rate</td>
+<td>Whether the right memory was returned at all</td>
+<td>Rarely; <a href="../systems/agentmemory/">agentmemory</a>'s figures
+are retrieval-only, which is honest but partial</td>
+</tr>
+<tr>
+<td>Negative precision (forbidden hits)</td>
+<td>Whether the <em>wrong</em> memory stayed out</td>
+<td><a href="../systems/open-cowork/">open-cowork</a> only</td>
+</tr>
+<tr>
+<td>Prompt-prefix fidelity</td>
+<td>Whether the retrieved memory survived truncation into the actual
+prompt</td>
+<td><a href="../systems/open-cowork/">open-cowork</a> only</td>
+</tr>
+<tr>
+<td>Ingest token cost</td>
+<td>What it costs to remember</td>
+<td><a href="../systems/openviking/">OpenViking</a>'s harness records
+token volume</td>
+</tr>
+<tr>
+<td>Per-turn context cost</td>
+<td>What memory costs on every single turn</td>
+<td>Treated as a tunable by <a href="../systems/metaclaw/">MetaClaw</a>;
+reasoned about explicitly by <a
+href="../systems/genericagent/">GenericAgent</a></td>
+</tr>
+<tr>
+<td>Retrieval latency</td>
+<td>Whether recall is fast enough to be on the critical path</td>
+<td><a href="../systems/llm-wiki-memory/">llm-wiki-memory</a>'s
+<code>PERFORMANCE.md</code> — latency and scaling, explicitly not
+relevance</td>
+</tr>
+<tr>
+<td>Write-to-readable lag</td>
+<td>How long after something is said before it can be recalled</td>
+<td><strong>Nowhere</strong></td>
+</tr>
+<tr>
+<td>Storage footprint</td>
+<td>Bytes per memory; index growth over a year</td>
+<td><strong>Nowhere</strong></td>
+</tr>
+<tr>
+<td>Correction precision</td>
+<td>How often an automated supersession pass is wrong</td>
+<td><strong>Nowhere</strong> — though <a
+href="../systems/memora/">Memora</a>'s dry-run mode makes it directly
+measurable</td>
+</tr>
+<tr>
+<td>Deletion durability</td>
+<td>Whether a deleted memory stays deleted after the next background
+pass</td>
+<td><strong>Nowhere</strong></td>
+</tr>
+<tr>
+<td>Retrieval-gate accuracy</td>
+<td>How often a system that decides <em>not</em> to retrieve is
+wrong</td>
+<td><strong>Nowhere</strong> — <a href="../systems/waku-agent/">Waku</a>
+gates on every turn and does not measure it</td>
+</tr>
+<tr>
+<td>Verification precision</td>
+<td>Whether a staleness check correctly marks stale</td>
+<td><strong>Nowhere</strong> — it is <a
+href="../systems/magic-context/">Magic Context</a>'s central claim</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="on-llm-usage">On LLM usage</h3>
+<p>Two costs, and they behave differently.</p>
+<p><strong>Ingest cost</strong> is one-off per unit of material:
+extraction, embedding, consolidation, deduplication. It scales with
+volume written, and can be amortized or batched — <a
+href="../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> debounces so a burst produces one extraction, <a
+href="../systems/waku-agent/">Waku</a> batches consolidation because a
+summarizer needs enough material to be worth invoking.</p>
+<p><strong>Recall cost</strong> is per turn, forever, and is the one
+that hurts. Injected memory occupies context on every request for the
+lifetime of the deployment. This is why gating matters — and
+OpenViking's decision to record token volume alongside accuracy is the
+right shape: a memory layer that raises accuracy 10 points while
+tripling per-turn tokens has not obviously won.</p>
+<p>The metric worth reporting is <strong>accuracy per thousand tokens of
+injected memory</strong>, not accuracy alone. Nobody in this atlas
+reports it.</p>
+<h3 id="on-latency-and-the-lag-nobody-measures">On latency, and the lag
+nobody measures</h3>
+<p>"Time until memory has been recalled" splits into two very different
+numbers.</p>
+<p><strong>Retrieval latency</strong> is the obvious one: how long a
+query takes. It is on the critical path of every turn, and it is
+measured in exactly one repository here. Reported as p50 alone it is
+misleading — a p99 of two seconds on a hybrid search with a
+cross-encoder reranker is a user-visible stall.</p>
+<p><strong>Write-to-readable lag</strong> is the one that is never
+reported and matters more than it sounds. Many systems here extract
+asynchronously: debounced, batched after N conversations, scheduled
+nightly, or deferred to a background worker. That means there is a
+window — seconds, minutes, or a whole day — in which something the user
+just said is <em>not yet recallable</em>. Every benchmark ingests the
+full history first and then asks questions, so this window is invisible
+to all of them, while being one of the most noticeable properties in
+real use: "I told you that ten minutes ago."</p>
+<p>Anyone shipping asynchronous extraction should measure the
+distribution of that lag and state it. It is the difference between
+memory that feels present and memory that feels forgetful.</p>
+<h3 id="on-storage">On storage</h3>
+<p>Nothing in this atlas reports bytes per memory, index size, or growth
+rate, which is odd given how predictable the dominant term is: for a
+system storing embeddings, the vectors usually outweigh the text several
+times over. A 1,536-dimension float32 vector is about 6 KB, against a
+few hundred bytes for the fact it indexes. Multiply by chunk count, add
+graph edges, add the append-only audit log this atlas keeps
+recommending, and a year of a single user's memory has a size worth
+knowing in advance.</p>
+<p>The metrics worth reporting are bytes per stored memory, index bytes
+as a multiple of source bytes, and growth per active day. All three are
+trivial to collect and none of them appears anywhere.</p>
+<h2 id="6-does-anything-benchmark-forgetting">6. Does Anything Benchmark
+Forgetting?</h2>
+<p><strong>No.</strong> Not in this atlas, and not in the public
+benchmarks these repositories use. This is the clearest gap in the
+field's measurement practice, and it is worth being precise about what
+exists and what does not.</p>
+<h3 id="what-exists">What exists</h3>
+<ul>
+<li><strong>LongMemEval's knowledge-update category</strong> scores
+whether a system answers with an updated fact rather than a superseded
+one. That measures preference at answer time. It does not ask whether
+the old value is still retrievable, still in the store, or liable to
+come back.</li>
+<li><strong>LoCoMo's adversarial category</strong> includes questions
+whose answers are not in the conversation, testing whether a system
+declines rather than confabulates. Adjacent to forgetting; not the same
+thing.</li>
+<li><strong><a href="../systems/open-cowork/">open-cowork</a>'s
+<code>forbiddenHits</code></strong> is the closest mechanism in this
+atlas to a negative retrieval assertion — an eval case declares material
+that a query must <em>not</em> surface, scored against the assembled
+prompt prefix rather than the retriever's raw output. That is exactly
+the shape a forgetting test needs. It is used for relevance, not for
+deletion, and no scored results were found committed.</li>
+<li><strong><a href="../systems/redis-agent-memory-server/">Redis Agent
+Memory Server</a>'s <code>test_forgetting.py</code></strong> exercises
+the most developed retention policy in the atlas — TTL, inactivity,
+pinning, type allowlists, budget pruning. These are unit tests of policy
+logic. They confirm the code does what it says; they do not measure
+whether forgetting <em>works</em> in the sense a user means.</li>
+</ul>
+<p>That is the entire state of the art, and none of it tests the failure
+this atlas keeps finding.</p>
+<h3 id="the-failure-nobody-measures">The failure nobody measures</h3>
+<p>Deletion in these systems is usually a statement about the present
+that the next background pass is free to undo. <a
+href="../systems/cowagent/">CowAgent</a> re-distils its memory file
+nightly from retained daily files. <a
+href="../systems/atomic-agent/">Atomic Agent</a> re-clusters. Magic
+Context and Redis Agent Memory Server both extract on a schedule from
+retained history. OpenClaw's auto-capture can restore content a user
+deleted. Only <a href="../systems/verel/">Verel</a> and <a
+href="../systems/rainbox/">RainBox</a> carry a value-level tombstone
+that blocks re-assertion — and, as noted in the comparative report, the
+standard survey of this field lists neither of them.</p>
+<p>So the question "does a deleted memory stay deleted?" has, for most
+systems here, the answer "until the next scheduled job", and there is no
+benchmark that would reveal it.</p>
+<h3 id="what-a-forgetting-benchmark-would-have-to-do">What a forgetting
+benchmark would have to do</h3>
+<p>Not a QA benchmark. A state-machine test, run per system:</p>
+<pre class="text"><code>1. write a distinctive fact
+2. assert it is retrievable            → baseline
+3. delete it / mark it rejected
+4. assert it is not retrievable        → most systems pass here
+5. re-feed the original source material
+6. assert it is still not retrievable  → most systems fail here
+7. run every background job: consolidation, re-extraction,
+   nightly distillation, cloud sync
+8. assert it is still not retrievable  → almost everything fails here
+9. assert it is absent from derived artifacts too — summaries,
+   profiles, graph edges, embeddings, caches, exports, backups
+10. assert the deletion itself is auditable</code></pre>
+<p>Steps 7 and 9 are where the interesting failures live. Step 9 in
+particular: deleting a source memory that has already been folded into a
+summary, a user profile, or a graph edge leaves the value present in
+derived form, and every system in this atlas that derives compact
+representations from raw evidence has this exposure.</p>
+<p>Two things would make such a benchmark practical to build. It needs
+no labelled dataset and no judge model — every assertion is
+deterministic. And it would be <strong>scored as a pass/fail matrix
+rather than a percentage</strong>, because "forgets correctly 87% of the
+time" is not a meaningful thing to say about a deletion request.</p>
+<p>The reason to want one is not only correctness. Where a user has a
+legal right to erasure, "we deleted the row and a nightly job re-derived
+it from retained history" is a compliance failure with a
+benchmark-shaped hole where the evidence should be.</p>
+<h2 id="7-a-scorecard-worth-publishing">7. A Scorecard Worth
+Publishing</h2>
+<p>If a memory system published one table, this is the shape that would
+be useful. Every row is either already collectable from the systems
+reviewed here or requires a small harness; none needs a new dataset.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Metric</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recall</td>
+<td>Accuracy on a public long-conversation benchmark, with judge and
+config stated</td>
+<td>Comparability, with all the caveats above</td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>Forbidden-hit rate: how often material that should not surface
+does</td>
+<td>The half nobody reports</td>
+</tr>
+<tr>
+<td>Fidelity</td>
+<td>Fraction of retrieved memories that survive into the actual
+prompt</td>
+<td>Truncation silently eats what retrieval found</td>
+</tr>
+<tr>
+<td>Correction</td>
+<td>Stale-value survival time after a correction lands</td>
+<td>Turns "we support updates" into a number</td>
+</tr>
+<tr>
+<td>Deletion</td>
+<td>Pass/fail on the ten-step sequence above</td>
+<td>The compliance-relevant one</td>
+</tr>
+<tr>
+<td>Cost (write)</td>
+<td>Tokens per unit of material ingested</td>
+<td>Scales with volume</td>
+</tr>
+<tr>
+<td>Cost (read)</td>
+<td>Injected memory tokens per turn, and accuracy per thousand of
+them</td>
+<td>The recurring cost, and the honest efficiency ratio</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>Retrieval p50 and p99</td>
+<td>p50 alone hides the stalls</td>
+</tr>
+<tr>
+<td>Freshness</td>
+<td>Write-to-readable lag distribution</td>
+<td>The "I told you that ten minutes ago" metric</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>Bytes per memory; index bytes as a multiple of source bytes</td>
+<td>Predictable and never stated</td>
+</tr>
+<tr>
+<td>Abstention</td>
+<td>False-negative rate of any retrieval gate</td>
+<td>An invisible failure mode by construction</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two rules make the difference between a harness and evidence, both
+learned from failures found in this atlas:</p>
+<p><strong>Assert the cutoff.</strong> A benchmark reporting
+<code>@k</code> must score exactly the first <em>k</em> results. One
+system here committed a <code>k=10</code> artifact that scored every
+returned session — 35 on average — while truncating only the displayed
+list. The published number was not measuring what it said.</p>
+<p><strong>Commit the results, not just the harness.</strong> A
+reproducible harness with no committed results reads as measured and is
+not. This atlas has now found that pattern in several repositories,
+including some of the most carefully engineered ones.</p>
+<h2 id="8-limits-of-this-page">8. Limits of This Page</h2>
+<ul>
+<li>Benchmark harnesses in these repositories were <strong>inspected,
+not run</strong>. No numbers here were reproduced, and the atlas's
+per-system reports say the same.</li>
+<li>The benchmarks in §2's first table are grounded in committed code.
+Those in the second are from familiarity with the literature and were
+not verified against their own repositories in this review.</li>
+<li>LoCoMo's and LongMemEval's category structures are described from
+published descriptions, not from re-reading their datasets here.</li>
+<li>"Measured nowhere" in §5 means <em>not found in the systems this
+atlas has reviewed</em>, at the pinned commits listed in the <a
+href="../compare/">comparative report</a>. It is a statement about 46
+repositories, not about the whole field.</li>
+<li>The criticism of LoCoMo's difficulty in §3 is a summary of a known
+objection, not an independent finding.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../patterns/">Design patterns</a>
+        <a href="../compare/">Comparative report</a>
+        <a href="../benchmarks/">Benchmarking memory</a>
+        <a href="../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../assets/main.js"></script>
+  </body>
+</html>
