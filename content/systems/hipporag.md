@@ -9,6 +9,7 @@ source_url: https://github.com/OSU-NLP-Group/HippoRAG
 revision: e37fba2af1a951ac340d837a7c02efb9d8c9544a
 revision_url: https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a
 analyzed_at: 2026-07-27
+capabilities: ""
 matrix:
   memory_unit: "Chunk plus derived entity and passage graph nodes"
   storage: "igraph graph with pluggable vector store (Qdrant/Chroma/Milvus)"

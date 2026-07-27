@@ -103,6 +103,22 @@ def yaml_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+# Keep in step with COLUMNS in scripts/generate_matrix.py.
+MATRIX_KEYS = (
+    "memory_unit",
+    "storage",
+    "retrieval",
+    "write",
+    "update_delete",
+    "scoping",
+    "integration",
+    "background",
+    "trust",
+    "strengths",
+    "risks",
+)
+
+
 def render_report(
     *,
     title: str,
@@ -125,7 +141,14 @@ def render_report(
         f"revision: {revision}\n"
         f"revision_url: {repository_url}/commit/{revision}\n"
         f"analyzed_at: {analyzed_at}\n"
-        "---\n"
+        # Both blocks are required. generate_matrix.py fails the build if the
+        # matrix block is absent or incomplete, and if `capabilities` is
+        # missing entirely — an empty string means "assessed, carries none",
+        # which is a different claim from "nobody looked".
+        'capabilities: ""\n'
+        "matrix:\n"
+        + "".join(f'  {key}: ""\n' for key in MATRIX_KEYS)
+        + "---\n"
     )
     sections = "\n".join(
         f"\n## {section}\n\n<!-- Replace with code-grounded analysis. -->\n"

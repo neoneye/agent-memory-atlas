@@ -98,24 +98,41 @@ def read_matrix(path: Path) -> dict[str, str] | None:
     return fields or None
 
 
-def read_capabilities(path: Path) -> set[str]:
-    """Extract the `capabilities:` flag list from a report's frontmatter."""
+def read_capabilities(path: Path) -> set[str] | None:
+    """Extract the `capabilities:` flag list from a report's frontmatter.
+
+    Returns None when the key is absent. That is deliberately distinct from an
+    empty list: `capabilities: ""` says the report was assessed and carries none
+    of the mechanisms, while a missing key says nobody looked. The index would
+    render both as "not present", so the second is an error rather than a
+    silent zero.
+    """
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
-        return set()
+        return None
     end = text.find("\n---\n", 3)
     if end == -1:
-        return set()
+        return None
     for line in text[4:end].splitlines():
         match = _CAP_LINE.match(line)
         if match:
             return {flag.strip() for flag in match.group(1).split(",") if flag.strip()}
-    return set()
+    return None
 
 
 def build_capabilities() -> str:
     paths = sorted(SYSTEMS.glob("*.md"))
     carried = {path.stem: read_capabilities(path) for path in paths}
+
+    undeclared = sorted(slug for slug, flags in carried.items() if flags is None)
+    if undeclared:
+        for slug in undeclared:
+            print(
+                f'error: {slug}: no `capabilities:` key. Declare the flags it '
+                f'carries, or `capabilities: ""` if none.',
+                file=sys.stderr,
+            )
+        raise SystemExit(1)
 
     known = {flag for flag, _, _ in CAPABILITIES}
     unknown = {f for flags in carried.values() for f in flags} - known

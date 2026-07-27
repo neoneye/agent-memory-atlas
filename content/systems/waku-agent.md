@@ -9,6 +9,7 @@ source_url: https://github.com/ShenSeanChen/waku-agent
 revision: 5f638cfb5de957c14f056027833d8a9df5bbe558
 revision_url: https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558
 analyzed_at: 2026-07-27
+capabilities: ""
 matrix:
   memory_unit: "Fact (semantic), episode (episodic), and SKILL.md (procedural)"
   storage: "SQLite by default; Supabase for facts, Notion for episodes"
