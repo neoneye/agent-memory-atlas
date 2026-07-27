@@ -52,24 +52,54 @@
           </div>
         </div>
 
-        <div class="memory-map" aria-label="A conceptual map connecting memory system families">
-          <div class="map-ring ring-one"></div>
-          <div class="map-ring ring-two"></div>
-          <div class="map-ring ring-three"></div>
-          <div class="map-axis axis-x"></div>
-          <div class="map-axis axis-y"></div>
-          <a class="map-node node-core" href="./compare/"><span>Memory</span><small>architecture</small></a>
-          <a class="map-node node-library" href="./systems/cognee/"><span>Library</span><small>Graphiti · Cognee</small></a>
-          <a class="map-node node-runtime" href="./systems/claude-mem/"><span>Runtime</span><small>agentmemory · Claude-Mem</small></a>
-          <a class="map-node node-local" href="./systems/basic-memory/"><span>Local</span><small>Basic · Engram</small></a>
-          <a class="map-node node-evidence" href="./systems/hindsight/"><span>Evidence</span><small>Hindsight · Palace</small></a>
-          <a class="map-node node-trust" href="./systems/verel/"><span>Trust</span><small>Verel</small></a>
-          <a class="map-node node-service" href="./systems/honcho/"><span>Service</span><small>Honcho · MemOS</small></a>
-          <span class="map-label label-north">derived state</span>
-          <span class="map-label label-south">raw evidence</span>
-          <span class="map-label label-west">local</span>
-          <span class="map-label label-east">hosted</span>
-        </div>
+        <figure class="memory-figure">
+          <svg class="memory-figure-svg" viewBox="0 0 600 660" role="img"
+               aria-labelledby="mf-title mf-desc" preserveAspectRatio="xMidYMid meet">
+            <title id="mf-title">The asymmetry of agent memory</title>
+            <desc id="mf-desc">Three layers stacked: raw evidence at the bottom, derived
+              belief in the middle, and the context a model sees at the top. Two solid
+              arrows rise through them — extraction and retrieval — while a single dashed
+              arrow descends the full height, marked correction and forgetting.</desc>
+
+            <!-- strata: tone deepens toward raw evidence -->
+            <rect class="mf-band mf-band-context"  x="32" y="40"  width="536" height="112" rx="4"/>
+            <rect class="mf-band mf-band-belief"   x="32" y="268" width="536" height="112" rx="4"/>
+            <rect class="mf-band mf-band-evidence" x="32" y="496" width="536" height="112" rx="4"/>
+
+            <text class="mf-layer" x="300" y="94"  text-anchor="middle">Context</text>
+            <text class="mf-sub"   x="300" y="120" text-anchor="middle">what the model sees this turn</text>
+
+            <text class="mf-layer" x="300" y="322" text-anchor="middle">Belief</text>
+            <text class="mf-sub"   x="300" y="348" text-anchor="middle">claims · summaries · profiles</text>
+
+            <text class="mf-layer" x="300" y="550" text-anchor="middle">Evidence</text>
+            <text class="mf-sub"   x="300" y="576" text-anchor="middle">messages · files · tool output</text>
+
+            <!-- the two cheap ascents -->
+            <path class="mf-up" d="M96 488 L96 396"/>
+            <path class="mf-up-head" d="M96 384 L101.5 397 L90.5 397 Z"/>
+            <text class="mf-step" x="118" y="424">EXTRACT</text>
+            <text class="mf-sub"  x="118" y="444">cheap · continuous · lossy</text>
+            <text class="mf-note" x="118" y="466">inference hardens into fact</text>
+
+            <path class="mf-up" d="M96 260 L96 168"/>
+            <path class="mf-up-head" d="M96 156 L101.5 169 L90.5 169 Z"/>
+            <text class="mf-step" x="118" y="196">RETRIEVE</text>
+            <text class="mf-sub"  x="118" y="216">rank · budget · fence</text>
+            <text class="mf-note" x="118" y="238">plausible, and wrong</text>
+
+            <!-- the one hard descent, crossing every layer it must undo -->
+            <path class="mf-down" d="M500 162 L500 474"/>
+            <path class="mf-down-head" d="M500 488 L494.5 475 L505.5 475 Z"/>
+            <text class="mf-step mf-step-down" x="478" y="196" text-anchor="end">CORRECT · FORGET</text>
+            <text class="mf-note mf-note-down" x="478" y="216" text-anchor="end">every derived copy</text>
+            <text class="mf-note mf-note-down" x="478" y="238" text-anchor="end">the value returns</text>
+          </svg>
+          <figcaption class="memory-figure-caption">
+            Every system in this atlas builds the ascent. Almost none completes the
+            descent — which is why correction, not retrieval, is where memory fails.
+          </figcaption>
+        </figure>
       </section>
 
       <section class="signal-strip" aria-label="Atlas statistics">
