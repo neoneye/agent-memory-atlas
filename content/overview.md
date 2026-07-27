@@ -1,14 +1,14 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of forty-one agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of forty-three agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
 
 ## 1. High-Level Taxonomy
 
-Forty-one systems do not fall into forty-one categories. They cluster around
+Forty-three systems do not fall into forty-three categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -51,7 +51,7 @@ several documented capabilities are managed-platform-only.
 
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
-`mercury-agent`
+`mercury-agent`, `atomic-agent`, `mateclaw`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -62,7 +62,9 @@ compresses older messages into dated observations and activates them without
 blocking. **TencentDB** layers L0 conversation evidence through L3 persona with
 symbolic tool-output offload. **Mercury** grades every record on confidence,
 importance, and durability separately, and keeps a subconscious tier below
-active recall. **GenericAgent** governs four file layers with written axioms
+active recall. **Atomic Agent** cites numbered invariants from its schema into a
+design document, records votes as append-only events with derived scores, and
+ships new memory features off by default until an evaluation campaign reports. **GenericAgent** governs four file layers with written axioms
 instead of code.
 
 Tradeoff: deeper integration buys behavioural control at the cost of coupling
@@ -70,7 +72,7 @@ memory to the framework, prompt assembly, and tool loop.
 
 ### Host runtimes with pluggable memory
 
-Hosts: `hermes-agent`, `openclaw`, `pi`
+Hosts: `hermes-agent`, `openclaw`, `pi`, `mateclaw`
 Plugins mounted on them: `holographic`, `magic-context`, `metaclaw`,
 `byterover`, `tencentdb-agent-memory`, plus hosted providers
 
@@ -83,8 +85,11 @@ scope, and retrieval from scratch.
 
 Tradeoff: users choose a backend that fits their privacy and scale needs, but
 trust state, scope, and above all deletion must cross the host/provider
-boundary — and none of the three contracts inspected here has a deletion hook.
-See [pluggable memory provider](../patterns/pluggable-memory-provider/).
+boundary. **MateClaw** is the partial counterexample: its Java SPI carries an
+owner key on `prefetch` and `syncTurn`, and wraps every provider in retry and
+metrics decorators — but like the other three, it has no deletion hook. One
+contract of four carries scope; none carries deletion. See
+[pluggable memory provider](../patterns/pluggable-memory-provider/).
 
 ### Local coding-agent memory
 
@@ -194,6 +199,7 @@ session with an identity you could later correct.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `a-mem` | `MemoryNote` with content, tags, context, links, and evolution history | In-process dictionary plus ephemeral Chroma; separate persistent retriever utility | Vector similarity with optional linked-neighbor append | LLM decides links and neighbor metadata mutation before insert | Delete/re-add update; exact delete without incoming-link cleanup | None in core | Direct Python library | Periodic reindex called consolidation | No source provenance or trust state | Small, legible linked-note evolution concept | Neighbor position/identity bug can mutate wrong notes; destructive initialization; no durability |
 | `agentmemory` | Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records | iii StateModule backed by local SQLite plus persisted search projections | BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity | Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation | Delete/TTL; similarity-based version supersession; rebuildable indexes | Project, session, working directory; shared or isolated agent mode | Hooks, MCP, HTTP, CLI, iii functions | Optional compression, graph extraction, consolidation, decay, repair | Source observation IDs, versions, audit; no candidate/verified/rejected state | Cheap synchronous capture and compact-first hybrid search | Very broad surface; shared scope default; fuzzy supersession can hide conflicts |
+| `atomic-agent` | Memory, lesson, profile fact, and procedure, linked by typed edges | SQLite with versioned migrations; bi-temporal profile facts | Heuristic-gated query rewriting, links, and vote-aware ranking | Consolidator clusters; lessons and procedures from one LLM call per cluster | `supersedes`/`superseded_by` chains; deprecation retains the row | Not traced | Agent runtime with a separate reflection slot | Consolidator, reflection, neighbour evolution, vote runner | Append-only `vote_events` with derived `vote_score`; surfaced-id allowlist | Numbered invariants cited from code, and features default-off until evaluated | Large opt-in surface; evaluation campaign results not committed |
 | `basic-memory` | Canonical Markdown note; indexed entity, observation, relation | Filesystem source + SQLite/PostgreSQL projection | FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph context | MCP/API writes accepted Markdown; file watcher reconciles human edits | Distinct create/replace/edit/move/delete with stable ID and reindex | Project, workspace, tenant, local/cloud route | MCP tools, typed clients, API, CLI | Watcher, startup reconciliation, indexing workflows | Human-visible source/checksums; no candidate/verified state | Inspectable portable memory with rebuildable indexes | Bidirectional sync complexity; agent can write unsupported claims |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `claude-mem` | Hook event, pending message, observation, session summary, prompt | Canonical SQLite, optional Chroma projection and cloud sync | FTS/filter search or Chroma semantic search; file-only metadata/semantic intersection; recent timeline context | Lifecycle hooks queue work; observer generates structured XML; SQLite commit before acknowledgement | Exact row deletion with synchronized tombstones; project-wide server forget paths | Project/worktree, session, platform source; team/server scope emerging | Coding-agent hooks, HTTP, MCP, UI, multiple adapters | Durable queue, provider retries, vector/cloud projection, repair | Session/tool metadata and deterministic file evidence; generated claims have no trust state | Reliable non-blocking capture and bounded cross-session context | Ordinary search is not fused hybrid; generated observations activate automatically; dual schema transition |
@@ -215,6 +221,7 @@ session with an identity you could later correct.
 | `llm-wiki-memory` | Typed Markdown atom, plan/investigation, daily capture, or full document | Filesystem wiki, per-category embedding caches, private git history | Metadata prefilter, local embedding/chunk cosine, priority bands, federated locality boost; lexical vector fallback | MCP/CLI writes, transcript and plan hooks, daily compile, full-document absorb | Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in dedup/refresh consolidation | Private brain plus explicit repository wiki levels; workspace/area/task/subject facets | MCP, CLI, Claude Code lifecycle hooks, shared instructions | Detached flush, daily compile, opt-in consolidation, cron healing, git/cache maintenance | Body hash, capture audit, git history, user-gated lessons; no candidate/verified/rejected state | Recoverable capture, explicit targets, deterministic layout/topology, excellent operational tests | LLM atoms become active without verification; vector-only primary retrieval; linear scans; git is not erasure |
 | `magic-context` | Memory with separate lifecycle and verification state, plus compartments, facts, primers | SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed | Hybrid semantic + BM25 with source boosts and `matchType`, over memories and raw history | Agent, user, historian, or dreamer writes; synchronous promotion, async embedding | Supersession and merge lineage; archived, not tombstoned | `project` / `ecosystem` / `universe` lattice plus a `shareable` flag | Pi `ExtensionAPI` and an OpenCode adapter sharing one store | Dreamer: verify, map, classify, promote, retrospective, at commit boundaries | Four-actor `sourceType`, mutation logs, per-memory `verified_at` | Memories re-verified against the files they describe when git says those files changed | Verdict is an LLM call; no rejected-value tombstone; very large surface |
 | `mastra-observational-memory` | Raw message, dated observation group, reflected observation context | Mastra `MemoryStorage` adapters | Sequential active observations + recent raw tail; optional observation-vector retrieval | Processor observes at token thresholds; reflector compacts observations | Range replacement, buffered activation, clear/clone records | Thread or resource | Deep Mastra input/output processor integration | Early async observation/reflection buffers with activation | Exact covered ranges and markers; summary has no truth state | Non-blocking context compaction for long sessions | Distributed locking and progressive summary drift |
+| `mateclaw` | Fact, recall record, workspace file, and dream report | Relational repositories under Spring, with fact projections | Provider `prefetch`, fact projection, and search package | Turn lifecycle events drive `syncTurn` across registered providers | Contradiction detection over facts; archive package; no tombstone found | `MemoryScope` string column with TEAM and GLOBAL shared; `MemoryOwnerResolver` | `MemoryProvider` SPI with decorators; tool beans; Vue memory UI | Scheduler, dream reports, nudge service | Contradiction detector; owner key carried through the provider contract | A provider contract that carries scope, and retry/metrics as decorators | No deletion hook on the SPI; contradiction handling is detection only |
 | `mem0` | Text fact in vector payload | Vector store plus SQLite history/messages | Semantic, optional keyword/BM25, entity boost, optional rerank | LLM additive extraction, hash dedupe, entity linking | Explicit update/delete APIs; V3 default append-oriented | `user_id`, `agent_id`, `run_id`, filters | Python SDK, tool/API style | Extraction and linking on write | Attribution metadata, history; weak epistemic trust | Practical SDK, pluggable stores, hybrid search | LLM facts can become durable claims without verification |
 | `memos` | Textual item, graph tier, preference/skill, KV cache, LoRA | Configurable vector/graph stores, dumps, cache/model artifacts | Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories | Reader extraction into a memory cube; scheduler transformations | Module-specific update/delete/soft-delete/dump semantics | User plus registered memory cube | MOS chat/runtime, APIs, CLI | Scheduler and activation-memory refresh | Source metadata varies by module; no uniform trust state | Treats memory as heterogeneous mountable resources | Umbrella API hides uneven guarantees and maturity |
 | `mempalace` | Verbatim drawer chunks, closets, KG triples | Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG | Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback | Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text | Delete/update drawers, delete by source, dedup, repair; limited epistemic correction | Palace, wing, room, source file, parent drawer, backend namespace | MCP, CLI, hooks, skills, wake-up stack | Mining, closet/hallway/tunnel computation, repair/sync/backup | Strong source provenance; weak candidate/verified/rejected trust state | Evidence-preserving raw baseline, hybrid retrieval, operational hardening | Raw stores get large/noisy; contradiction resolution mostly outside core recall |
@@ -768,6 +775,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
 - `hipporag`: thin unit tests (`tests/test_bedrock_mantle.py`, `tests/integration/`) beside a well-developed `reproduce/` benchmark tree; no committed result artifacts.
 - `magic-context`: 473 test files and roughly 131,000 lines of tests, including per-version migration suites and named CAS-race tests; no retrieval or verification-precision benchmark.
+- `atomic-agent`: the most developed evaluation *process* in the atlas — a design plan with §14 acceptance criteria (`MEMORY_FABRIC_V2.md`), an implementation ledger recording which phases landed (`MEMORY_FABRIC_V2.5.md`), and a campaign whose stated purpose is "is memory actually useful" with numbered experiments E9–E12 behind `npm run eval:memory:v25`. All three v2.5 features ship `default: false` pending its verdict. No scored artifacts were found committed.
+- `mateclaw`: tests under `src/test/java/vip/mate/memory/`; no memory benchmark. Its decorator chain already instruments every provider, so per-backend comparison would be straightforward and does not appear to have been done.
 - `open-cowork`: `memory-eval-harness.ts` defines eval cases as a session plus queries carrying **both `expectedHits` and `forbiddenHits`**, scores the assembled prompt prefix rather than raw retrieval output, combines a deterministic containment score with an LLM judge, and writes reports with a run id and artifact directory. This is the most complete memory benchmark shape in the atlas; no scored results were found committed at this commit.
 - `gini-agent`: per-module and integration tests, including an assertion that a follow-up task records recalled units; no memory-quality benchmark, despite a recall implementation that cites specific published equations.
 - `moltis`: contract tests compiled under `#[cfg(test)]`; no memory benchmark.
@@ -1109,6 +1118,17 @@ RainBox explicitly avoids this: retrieval events and downvotes are signals for i
 
 `holographic` is the atlas's clearest counterexample, and it is worth studying precisely because the mechanism looks reasonable in isolation. A `fact_feedback` tool lets the model or user rate a fact helpful or unhelpful, adjusting a single `trust_score` by +0.05 or −0.10. That same score is multiplied directly into relevance during ranking *and* gates retrieval through a `min_trust` floor defaulting to 0.3. From the default trust of 0.5, three unhelpful ratings put a fact at 0.2 — below every default retrieval path, permanently, with no tombstone, no review queue, and no record that a suppression occurred. Feedback has quietly become deletion, and "unhelpful" has quietly become "false".
 
+`atomic-agent` sits at the disciplined end of the same range. Votes are written
+to an append-only `vote_events` table (`kind`, `target_id`, `direction`,
+`session_id`, `turn_index`, `created_at`) and `vote_score` is a derived, indexed
+column on memories, lessons, and profile facts. Because the raw events are
+retained, a scoring rule can be recomputed, a suspicious pattern can be audited,
+and no single vote is destructive — the atlas's own "keep retrieval events
+append-only; derive counters from events" recommendation, implemented. Ranged
+against Holographic's in-place mutation, RainBox's human gate, and MetaClaw's
+replay-gated policy tuning, it is the option that preserves the most future
+choices.
+
 ### The harness's own output captured as evidence
 
 A system that generates text and also captures text will eventually capture its own output. `openclaw` strips media notes, context markers, reply headers, sender prefixes, and timestamps from every message before capture, then rejects whatever still `looksLikeEnvelopeSludge`. `holographic` had to exclude its host's compaction handoff summaries, which arrive as `role="user"` messages and reliably matched its own decision-extraction regexes, so the compactor's output was being stored as durable facts on every context rollover.
@@ -1175,6 +1195,21 @@ be obvious.
 Make background derivation reversible by provenance. Cognee's pipeline-run
 rollback is the strongest cross-store example in the atlas, even though it
 cannot make every backend combination atomic.
+
+Number your invariants and cite them from the code. `atomic-agent`'s schema
+comments reference "cross-phase invariant 7 in `MEMORY_FABRIC_V2.md` §13.7",
+invariant 20 on never auto-executing procedures, and invariant 21 bounding
+distillation to one LLM call per cluster. It costs almost nothing and turns an
+implicit constraint into a reviewable one — across forty-three systems, nothing
+else does it.
+
+Ship new memory behaviour off by default until an evaluation says otherwise.
+`atomic-agent`'s v2.5 features are all `default: false` while its campaign runs.
+
+Put scope on the provider contract. `mateclaw`'s SPI carries an `ownerKey` on
+`prefetch` and `syncTurn`, and its decorators give every backend retry and
+metrics without per-plugin code — the two things the other host runtimes leave
+to each plugin to solve, or not.
 
 Test what memory must **not** surface. `open-cowork`'s eval cases carry
 `forbiddenHits` alongside `expectedHits`, and a leak floors the case score
@@ -1548,6 +1583,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
 - Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
 
+### `atomic-agent`
+
+- Best idea: numbered cross-phase invariants cited from the schema into a design document, and votes kept as append-only events with derived scores.
+- Biggest risk: an elaborate opt-in surface whose evaluation campaign has no committed results.
+- Most reusable component: the invariant-citation practice, the `vote_events` shape, and the surfaced-id allowlist in `neighbor-evolver.ts`.
+- Maturity impression: the most specification-like memory system in the atlas — design plan, acceptance criteria, implementation ledger, and features default-off pending evidence.
+- Study when: you want memory built as an engineering artifact rather than an accretion, or a feedback design that keeps every downstream option open.
+- Do not copy when: you need a value tombstone or an established scope model; neither surfaced here.
+
+### `mateclaw`
+
+- Best idea: a provider SPI that carries an owner key, with retry and metrics as decorators over every backend.
+- Biggest risk: the contract still has no deletion hook, and contradiction is detected without a resolution path.
+- Most reusable component: the SPI shape with scoped overloads and default methods, and `spi/decorator/`.
+- Maturity impression: the atlas's first Java system, built in the Spring tradition — layered, event-driven, and conventional in the ways that tradition is good at.
+- Study when: designing a memory contract third parties will implement, or wondering who owns provider resilience.
+- Do not copy when: you need the deletion half of the governance story, which is absent.
+
 ### `llamaindex`
 
 - Best idea: one token budget split between chat history and blocks, with each block truncating itself to fit.
@@ -1813,6 +1866,8 @@ Privacy/deletion:
 - [`moltis`](../systems/moltis/)
 - [`mercury-agent`](../systems/mercury-agent/)
 - [`llamaindex`](../systems/llamaindex/)
+- [`atomic-agent`](../systems/atomic-agent/)
+- [`mateclaw`](../systems/mateclaw/)
 
 ### Repos Inspected
 
@@ -1856,6 +1911,8 @@ Privacy/deletion:
 - [moltis-org/moltis](https://github.com/moltis-org/moltis) at [`1f53cd27b1a21c36b61ceda7a8ea65a35deb7872`](https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872)
 - [cosmicstack-labs/mercury-agent](https://github.com/cosmicstack-labs/mercury-agent) at [`6e174a4b5ea77bbc753bff5f89c76db9303439d1`](https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1)
 - [run-llama/llama_index](https://github.com/run-llama/llama_index) at [`199e9b5b130bbde72639358a08935b913e7132c0`](https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0)
+- [AtomicBot-ai/atomic-agent](https://github.com/AtomicBot-ai/atomic-agent) at [`d69332c589733e38ae7393dd81fcbc5a375d02fb`](https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb)
+- [mateaix/mateclaw](https://github.com/mateaix/mateclaw) at [`3643aed7564390f57906954286a443d5913b97a7`](https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
@@ -1909,6 +1966,8 @@ No internet sources were used for this report. The analysis is based on the chec
 - MetaClaw's committed benchmark fixtures and memory ablation scripts were inspected but not run, and no published numbers were reproduced. Its replay metrics are lexical-overlap proxies; no evidence linking them to task outcomes was found in the repository.
 - No memory tests or memory-quality benchmarks were located for nanobot, CowAgent, or GenericAgent. Nothing was run for any of the four systems added in this round.
 - GenericAgent's memory documentation is written in Chinese; the axioms and rules quoted in its report are the reviewer's translations, with key terms given in the original. Its cited arXiv technical report was not retrieved or assessed.
+- Neither Atomic Agent's nor MateClaw's suites were run, and Atomic Agent's evaluation campaign was read but not executed; no scored results were found committed for it. MateClaw's scoping and retrieval ranking were not traced in full.
+- Eight repositories examined in the same round have no reports. `beita6969/ScienceClaw` is an OpenClaw derivative whose memory extensions are OpenClaw's `memory-core` and `memory-lancedb`, already covered — its runtime skill authoring is cited in the skills pattern instead. `litanlitudan/skyagi` states that it "implements the idea of Generative Agents" and has been frozen since August 2023, so the original is the better subject. `xvirobotics/metabot` re-exports a memory client whose backend is not in the repository. `Gitlawb/zero` has context reporting and no memory module. `thClaws/thClaws` has a competent 1,644-line Rust file-entry store that adds little beyond systems already covered, and `skalesapp/skales` (~1,542 lines) is Business Source License 1.1 with no distinctive mechanism found. `wanxingai/LightAgent`'s 196-line shared memory with swappable adapters is cited in the pluggable-provider pattern rather than given a report. `rush86999/atom` has roughly 976 lines of memory-named Python inside a 459 MB repository dominated by deployment scripts; no coherent memory design was established, and that is a weaker conclusion than the others here.
 - LlamaIndex ships two APIs under the name "memory": the newer block-based `Memory` reviewed here, and an older `ChatMemoryBuffer` family that is conversation-window management and out of scope. Its tests were not run and no memory benchmark was found.
 - No suites or benchmarks were run for open-cowork, Gini, Moltis, or Mercury. open-cowork's eval harness was read but not executed, and no scored results were found committed.
 - Gini reimplements the Hindsight memory model locally rather than depending on Hindsight; its recall module cites the source paper's equation numbers, but no check was made that this implementation reproduces the published behaviour.

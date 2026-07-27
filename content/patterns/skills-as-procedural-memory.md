@@ -74,6 +74,10 @@ Do not use this to store prose "procedures" that nothing executes. Without the v
 
 [Hermes Agent](../../systems/hermes-agent/) applies the same idea without the gate. Skills are Markdown files the agent creates and edits through `skill_manage`, with provenance and usage tracked separately; only names and descriptions occupy prompt space and bodies load on demand — a better context strategy than Voyager's — but nothing verifies a skill before it becomes durable.
 
+[Atomic Agent](../../systems/atomic-agent/) takes the opposite position from Voyager and states it as a rule: its `procedures` are derived alongside a parent lesson from the same consolidator cluster, and cross-phase invariant 20 holds that the runtime **never auto-executes them** — they are "advisory text the agent reads and either follows or consciously deviates from." Voyager buys empirical verification by making skills executable and accepts the trust boundary that follows; Atomic Agent gives up verification to avoid it. Both are defensible, and the choice is the pattern's central tradeoff.
+
+ScienceClaw, an [OpenClaw](../../systems/openclaw/) derivative, demonstrates the scale end: it ships 285 skills against OpenClaw's ~54, and its README states that "the agent writes new `SKILL.md` files at runtime without any redeployment." Runtime skill authoring at that volume is what the pattern looks like when the library is the product — and it sharpens the unanswered pruning question, because nothing in the atlas has a utility signal that would work across 285 entries.
+
 [MemOS](../../systems/memos/) mounts skill memory as one cube type among several, and [agentmemory](../../systems/agentmemory/) keeps procedural records alongside semantic ones; in both, procedure is one kind in a broader taxonomy rather than a design centre, and neither gates on execution.
 
 [OpenViking](../../systems/openviking/) unifies memory, resources, and **skills** in one filesystem hierarchy, which is the most integrated treatment in the atlas — skills are retrievable through the same tiered mechanism as everything else.

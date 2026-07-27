@@ -86,6 +86,12 @@ Do not adopt this pattern to postpone deciding on a memory model. It relocates t
 
 [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) is the atlas's other plugin-shaped system, targeting both OpenClaw and Hermes, and it also lacks a first-class user-facing forget operation — the same gap arriving from the provider side rather than the host side.
 
+[MateClaw](../../systems/mateclaw/) is the counterexample that shows the gap is a choice, not an inevitability. Its Java `MemoryProvider` SPI declares paired overloads — `prefetch(agentId, query)` and `prefetch(agentId, query, ownerKey)`, `syncTurn(...)` with and without `ownerKey` — so scope crosses the boundary. It also handles the resilience question the other contracts leave to each plugin: `spi/decorator/` wraps any provider in `MetricsMemoryProvider` and `RetryableMemoryProvider`, so retry and instrumentation are solved once for every backend rather than reimplemented per plugin. Default interface methods give implicit capability negotiation — a provider implements what it supports.
+
+MateClaw still has **no deletion hook**, so it closes half the governance gap and leaves the other half open. That is the current state of the art in this atlas: one contract of four carries scope, none carries deletion.
+
+[LightAgent](https://github.com/wanxingai/LightAgent) shows the pattern at its smallest — a 196-line `shared_memory.py` with swappable adapters shipped as examples (`clawmem_memory_adapter.py`, `vector_memory_adapter.py`). The shape survives the scale reduction; so does the missing deletion path.
+
 Two providers in this ecosystem — [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) and [OpenViking](../../systems/openviking/) — have far richer internal scope and lifecycle models than the interfaces mounting them can express, which is the clearest evidence that the contract, not the backend, is the limiting factor.
 
 ## Tests to require
@@ -97,6 +103,7 @@ Two providers in this ecosystem — [Redis Agent Memory Server](../../systems/re
 - Feed the provider a message carrying the host's own envelope markers or compaction summaries and assert none of it becomes durable memory.
 - Mount a provider that fails or times out, and assert the agent degrades rather than blocking or losing the turn.
 - Fork or branch a session and assert the memory each branch sees is what you intended — an untested question wherever the host supports branching.
+- Wrap a deliberately failing provider in the host's resilience layer and assert the turn degrades rather than stalling — and that the failure is visible in metrics, not just logged.
 - Assert that a provider advertising a capability it lacks is detected — for example, one reporting "hybrid" retrieval while running vector-only.
 - Run the host's built-in memory and a provider together, and assert the same fact is not injected twice.
 

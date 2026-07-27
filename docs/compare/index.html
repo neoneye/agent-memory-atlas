@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-forty-one agent memory architectures, their retrieval mechanics, trust
+forty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,14 +12,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty-one agent memory architectures, their retrieval mechanics,
+of forty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty-one agent memory architectures, their retrieval mechanics,
+of forty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -53,7 +53,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-forty-one agent memory architectures, their retrieval mechanics, trust
+forty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
@@ -70,11 +70,11 @@ models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Forty-one systems do not fall into forty-one categories. They cluster
-around eight architectural commitments, and most systems belong to more
-than one — a coding-agent memory can also be verification-first, and a
-host runtime's plugin can also be a hosted service. The families below
-are lenses, not bins.</p>
+<p>Forty-three systems do not fall into forty-three categories. They
+cluster around eight architectural commitments, and most systems belong
+to more than one — a coding-agent memory can also be verification-first,
+and a host runtime's plugin can also be a hosted service. The families
+below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -114,7 +114,8 @@ managed-platform-only.</p>
 <code>mastra-observational-memory</code>, <code>claude-mem</code>,
 <code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
-<code>mercury-agent</code></p>
+<code>mercury-agent</code>, <code>atomic-agent</code>,
+<code>mateclaw</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -127,17 +128,20 @@ observations and activates them without blocking.
 persona with symbolic tool-output offload. <strong>Mercury</strong>
 grades every record on confidence, importance, and durability
 separately, and keeps a subconscious tier below active recall.
-<strong>GenericAgent</strong> governs four file layers with written
-axioms instead of code.</p>
+<strong>Atomic Agent</strong> cites numbered invariants from its schema
+into a design document, records votes as append-only events with derived
+scores, and ships new memory features off by default until an evaluation
+campaign reports. <strong>GenericAgent</strong> governs four file layers
+with written axioms instead of code.</p>
 <p>Tradeoff: deeper integration buys behavioural control at the cost of
 coupling memory to the framework, prompt assembly, and tool loop.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
 pluggable memory</h3>
 <p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
-<code>pi</code> Plugins mounted on them: <code>holographic</code>,
-<code>magic-context</code>, <code>metaclaw</code>,
-<code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
-providers</p>
+<code>pi</code>, <code>mateclaw</code> Plugins mounted on them:
+<code>holographic</code>, <code>magic-context</code>,
+<code>metaclaw</code>, <code>byterover</code>,
+<code>tencentdb-agent-memory</code>, plus hosted providers</p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
@@ -147,10 +151,13 @@ twenty-plus lifecycle events and no memory concept at all, so plugins
 rebuild indexing, scope, and retrieval from scratch.</p>
 <p>Tradeoff: users choose a backend that fits their privacy and scale
 needs, but trust state, scope, and above all deletion must cross the
-host/provider boundary — and none of the three contracts inspected here
-has a deletion hook. See <a
-href="../patterns/pluggable-memory-provider/">pluggable memory
-provider</a>.</p>
+host/provider boundary. <strong>MateClaw</strong> is the partial
+counterexample: its Java SPI carries an owner key on
+<code>prefetch</code> and <code>syncTurn</code>, and wraps every
+provider in retry and metrics decorators — but like the other three, it
+has no deletion hook. One contract of four carries scope; none carries
+deletion. See <a href="../patterns/pluggable-memory-provider/">pluggable
+memory provider</a>.</p>
 <h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
 <p><code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>basic-memory</code>,
@@ -316,6 +323,25 @@ candidate/verified/rejected state</td>
 <td>Cheap synchronous capture and compact-first hybrid search</td>
 <td>Very broad surface; shared scope default; fuzzy supersession can
 hide conflicts</td>
+</tr>
+<tr>
+<td><code>atomic-agent</code></td>
+<td>Memory, lesson, profile fact, and procedure, linked by typed
+edges</td>
+<td>SQLite with versioned migrations; bi-temporal profile facts</td>
+<td>Heuristic-gated query rewriting, links, and vote-aware ranking</td>
+<td>Consolidator clusters; lessons and procedures from one LLM call per
+cluster</td>
+<td><code>supersedes</code>/<code>superseded_by</code> chains;
+deprecation retains the row</td>
+<td>Not traced</td>
+<td>Agent runtime with a separate reflection slot</td>
+<td>Consolidator, reflection, neighbour evolution, vote runner</td>
+<td>Append-only <code>vote_events</code> with derived
+<code>vote_score</code>; surfaced-id allowlist</td>
+<td>Numbered invariants cited from code, and features default-off until
+evaluated</td>
+<td>Large opt-in surface; evaluation campaign results not committed</td>
 </tr>
 <tr>
 <td><code>basic-memory</code></td>
@@ -712,6 +738,28 @@ observations</td>
 <td>Exact covered ranges and markers; summary has no truth state</td>
 <td>Non-blocking context compaction for long sessions</td>
 <td>Distributed locking and progressive summary drift</td>
+</tr>
+<tr>
+<td><code>mateclaw</code></td>
+<td>Fact, recall record, workspace file, and dream report</td>
+<td>Relational repositories under Spring, with fact projections</td>
+<td>Provider <code>prefetch</code>, fact projection, and search
+package</td>
+<td>Turn lifecycle events drive <code>syncTurn</code> across registered
+providers</td>
+<td>Contradiction detection over facts; archive package; no tombstone
+found</td>
+<td><code>MemoryScope</code> string column with TEAM and GLOBAL shared;
+<code>MemoryOwnerResolver</code></td>
+<td><code>MemoryProvider</code> SPI with decorators; tool beans; Vue
+memory UI</td>
+<td>Scheduler, dream reports, nudge service</td>
+<td>Contradiction detector; owner key carried through the provider
+contract</td>
+<td>A provider contract that carries scope, and retry/metrics as
+decorators</td>
+<td>No deletion hook on the SPI; contradiction handling is detection
+only</td>
 </tr>
 <tr>
 <td><code>mem0</code></td>
@@ -2281,6 +2329,19 @@ artifacts.</li>
 <li><code>magic-context</code>: 473 test files and roughly 131,000 lines
 of tests, including per-version migration suites and named CAS-race
 tests; no retrieval or verification-precision benchmark.</li>
+<li><code>atomic-agent</code>: the most developed evaluation
+<em>process</em> in the atlas — a design plan with §14 acceptance
+criteria (<code>MEMORY_FABRIC_V2.md</code>), an implementation ledger
+recording which phases landed (<code>MEMORY_FABRIC_V2.5.md</code>), and
+a campaign whose stated purpose is "is memory actually useful" with
+numbered experiments E9–E12 behind <code>npm run eval:memory:v25</code>.
+All three v2.5 features ship <code>default: false</code> pending its
+verdict. No scored artifacts were found committed.</li>
+<li><code>mateclaw</code>: tests under
+<code>src/test/java/vip/mate/memory/</code>; no memory benchmark. Its
+decorator chain already instruments every provider, so per-backend
+comparison would be straightforward and does not appear to have been
+done.</li>
 <li><code>open-cowork</code>: <code>memory-eval-harness.ts</code>
 defines eval cases as a session plus queries carrying <strong>both
 <code>expectedHits</code> and <code>forbiddenHits</code></strong>,
@@ -2784,6 +2845,19 @@ of 0.5, three unhelpful ratings put a fact at 0.2 — below every default
 retrieval path, permanently, with no tombstone, no review queue, and no
 record that a suppression occurred. Feedback has quietly become
 deletion, and "unhelpful" has quietly become "false".</p>
+<p><code>atomic-agent</code> sits at the disciplined end of the same
+range. Votes are written to an append-only <code>vote_events</code>
+table (<code>kind</code>, <code>target_id</code>,
+<code>direction</code>, <code>session_id</code>,
+<code>turn_index</code>, <code>created_at</code>) and
+<code>vote_score</code> is a derived, indexed column on memories,
+lessons, and profile facts. Because the raw events are retained, a
+scoring rule can be recomputed, a suspicious pattern can be audited, and
+no single vote is destructive — the atlas's own "keep retrieval events
+append-only; derive counters from events" recommendation, implemented.
+Ranged against Holographic's in-place mutation, RainBox's human gate,
+and MetaClaw's replay-gated policy tuning, it is the option that
+preserves the most future choices.</p>
 <h3 id="the-harnesss-own-output-captured-as-evidence">The harness's own
 output captured as evidence</h3>
 <p>A system that generates text and also captures text will eventually
@@ -2910,6 +2984,21 @@ repair direction should be obvious.</p>
 <p>Make background derivation reversible by provenance. Cognee's
 pipeline-run rollback is the strongest cross-store example in the atlas,
 even though it cannot make every backend combination atomic.</p>
+<p>Number your invariants and cite them from the code.
+<code>atomic-agent</code>'s schema comments reference "cross-phase
+invariant 7 in <code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on
+never auto-executing procedures, and invariant 21 bounding distillation
+to one LLM call per cluster. It costs almost nothing and turns an
+implicit constraint into a reviewable one — across forty-three systems,
+nothing else does it.</p>
+<p>Ship new memory behaviour off by default until an evaluation says
+otherwise. <code>atomic-agent</code>'s v2.5 features are all
+<code>default: false</code> while its campaign runs.</p>
+<p>Put scope on the provider contract. <code>mateclaw</code>'s SPI
+carries an <code>ownerKey</code> on <code>prefetch</code> and
+<code>syncTurn</code>, and its decorators give every backend retry and
+metrics without per-plugin code — the two things the other host runtimes
+leave to each plugin to solve, or not.</p>
 <p>Test what memory must <strong>not</strong> surface.
 <code>open-cowork</code>'s eval cases carry <code>forbiddenHits</code>
 alongside <code>expectedHits</code>, and a leak floors the case score
@@ -3500,6 +3589,41 @@ capturing from a channel that wraps messages in scaffolding.</li>
 <li>Do not copy when: you need hybrid retrieval, per-user scope inside
 an agent, or deletion that survives auto-capture.</li>
 </ul>
+<h3 id="atomic-agent"><code>atomic-agent</code></h3>
+<ul>
+<li>Best idea: numbered cross-phase invariants cited from the schema
+into a design document, and votes kept as append-only events with
+derived scores.</li>
+<li>Biggest risk: an elaborate opt-in surface whose evaluation campaign
+has no committed results.</li>
+<li>Most reusable component: the invariant-citation practice, the
+<code>vote_events</code> shape, and the surfaced-id allowlist in
+<code>neighbor-evolver.ts</code>.</li>
+<li>Maturity impression: the most specification-like memory system in
+the atlas — design plan, acceptance criteria, implementation ledger, and
+features default-off pending evidence.</li>
+<li>Study when: you want memory built as an engineering artifact rather
+than an accretion, or a feedback design that keeps every downstream
+option open.</li>
+<li>Do not copy when: you need a value tombstone or an established scope
+model; neither surfaced here.</li>
+</ul>
+<h3 id="mateclaw"><code>mateclaw</code></h3>
+<ul>
+<li>Best idea: a provider SPI that carries an owner key, with retry and
+metrics as decorators over every backend.</li>
+<li>Biggest risk: the contract still has no deletion hook, and
+contradiction is detected without a resolution path.</li>
+<li>Most reusable component: the SPI shape with scoped overloads and
+default methods, and <code>spi/decorator/</code>.</li>
+<li>Maturity impression: the atlas's first Java system, built in the
+Spring tradition — layered, event-driven, and conventional in the ways
+that tradition is good at.</li>
+<li>Study when: designing a memory contract third parties will
+implement, or wondering who owns provider resilience.</li>
+<li>Do not copy when: you need the deletion half of the governance
+story, which is absent.</li>
+</ul>
 <h3 id="llamaindex"><code>llamaindex</code></h3>
 <ul>
 <li>Best idea: one token budget split between chat history and blocks,
@@ -3897,6 +4021,9 @@ href="../systems/genericagent/"><code>genericagent</code></a></li>
 <li><a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a></li>
 <li><a href="../systems/llamaindex/"><code>llamaindex</code></a></li>
+<li><a
+href="../systems/atomic-agent/"><code>atomic-agent</code></a></li>
+<li><a href="../systems/mateclaw/"><code>mateclaw</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4044,6 +4171,13 @@ href="https://github.com/run-llama/llama_index">run-llama/llama_index</a>
 at <a
 href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0"><code>199e9b5b130bbde72639358a08935b913e7132c0</code></a></li>
 <li><a
+href="https://github.com/AtomicBot-ai/atomic-agent">AtomicBot-ai/atomic-agent</a>
+at <a
+href="https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb"><code>d69332c589733e38ae7393dd81fcbc5a375d02fb</code></a></li>
+<li><a href="https://github.com/mateaix/mateclaw">mateaix/mateclaw</a>
+at <a
+href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7"><code>3643aed7564390f57906954286a443d5913b97a7</code></a></li>
+<li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
 href="https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2"><code>2921c1e5bddbd96a503da4acd7538cac45bcd0f2</code></a>
@@ -4177,6 +4311,30 @@ systems added in this round.</li>
 axioms and rules quoted in its report are the reviewer's translations,
 with key terms given in the original. Its cited arXiv technical report
 was not retrieved or assessed.</li>
+<li>Neither Atomic Agent's nor MateClaw's suites were run, and Atomic
+Agent's evaluation campaign was read but not executed; no scored results
+were found committed for it. MateClaw's scoping and retrieval ranking
+were not traced in full.</li>
+<li>Eight repositories examined in the same round have no reports.
+<code>beita6969/ScienceClaw</code> is an OpenClaw derivative whose
+memory extensions are OpenClaw's <code>memory-core</code> and
+<code>memory-lancedb</code>, already covered — its runtime skill
+authoring is cited in the skills pattern instead.
+<code>litanlitudan/skyagi</code> states that it "implements the idea of
+Generative Agents" and has been frozen since August 2023, so the
+original is the better subject. <code>xvirobotics/metabot</code>
+re-exports a memory client whose backend is not in the repository.
+<code>Gitlawb/zero</code> has context reporting and no memory module.
+<code>thClaws/thClaws</code> has a competent 1,644-line Rust file-entry
+store that adds little beyond systems already covered, and
+<code>skalesapp/skales</code> (~1,542 lines) is Business Source License
+1.1 with no distinctive mechanism found.
+<code>wanxingai/LightAgent</code>'s 196-line shared memory with
+swappable adapters is cited in the pluggable-provider pattern rather
+than given a report. <code>rush86999/atom</code> has roughly 976 lines
+of memory-named Python inside a 459 MB repository dominated by
+deployment scripts; no coherent memory design was established, and that
+is a weaker conclusion than the others here.</li>
 <li>LlamaIndex ships two APIs under the name "memory": the newer
 block-based <code>Memory</code> reviewed here, and an older
 <code>ChatMemoryBuffer</code> family that is conversation-window

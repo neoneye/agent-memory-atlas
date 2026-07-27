@@ -202,6 +202,29 @@ Memory</a> is the atlas's other plugin-shaped system, targeting both
 OpenClaw and Hermes, and it also lacks a first-class user-facing forget
 operation — the same gap arriving from the provider side rather than the
 host side.</p>
+<p><a href="../../systems/mateclaw/">MateClaw</a> is the counterexample
+that shows the gap is a choice, not an inevitability. Its Java
+<code>MemoryProvider</code> SPI declares paired overloads —
+<code>prefetch(agentId, query)</code> and
+<code>prefetch(agentId, query, ownerKey)</code>,
+<code>syncTurn(...)</code> with and without <code>ownerKey</code> — so
+scope crosses the boundary. It also handles the resilience question the
+other contracts leave to each plugin: <code>spi/decorator/</code> wraps
+any provider in <code>MetricsMemoryProvider</code> and
+<code>RetryableMemoryProvider</code>, so retry and instrumentation are
+solved once for every backend rather than reimplemented per plugin.
+Default interface methods give implicit capability negotiation — a
+provider implements what it supports.</p>
+<p>MateClaw still has <strong>no deletion hook</strong>, so it closes
+half the governance gap and leaves the other half open. That is the
+current state of the art in this atlas: one contract of four carries
+scope, none carries deletion.</p>
+<p><a href="https://github.com/wanxingai/LightAgent">LightAgent</a>
+shows the pattern at its smallest — a 196-line
+<code>shared_memory.py</code> with swappable adapters shipped as
+examples (<code>clawmem_memory_adapter.py</code>,
+<code>vector_memory_adapter.py</code>). The shape survives the scale
+reduction; so does the missing deletion path.</p>
 <p>Two providers in this ecosystem — <a
 href="../../systems/redis-agent-memory-server/">Redis Agent Memory
 Server</a> and <a href="../../systems/openviking/">OpenViking</a> — have
@@ -226,6 +249,9 @@ degrades rather than blocking or losing the turn.</li>
 <li>Fork or branch a session and assert the memory each branch sees is
 what you intended — an untested question wherever the host supports
 branching.</li>
+<li>Wrap a deliberately failing provider in the host's resilience layer
+and assert the turn degrades rather than stalling — and that the failure
+is visible in metrics, not just logged.</li>
 <li>Assert that a provider advertising a capability it lacks is detected
 — for example, one reporting "hybrid" retrieval while running
 vector-only.</li>

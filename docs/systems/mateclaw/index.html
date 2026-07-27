@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="The atlas's first Java memory
+system — a Spring service-provider interface whose contract carries an
+owner key, with cross-cutting concerns handled by provider decorators.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MateClaw — Agent Memory Atlas">
+    <meta property="og:description" content="The atlas's first Java
+memory system — a Spring service-provider interface whose contract
+carries an owner key, with cross-cutting concerns handled by provider
+decorators.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MateClaw — Agent Memory Atlas">
+    <meta name="twitter:description" content="The atlas's first Java
+memory system — a Spring service-provider interface whose contract
+carries an owner key, with cross-cutting concerns handled by provider
+decorators.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MateClaw — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Java provider SPI</p>
+          <h1>MateClaw</h1>
+          <p class="document-deck">The atlas's first Java memory system
+— a Spring service-provider interface whose contract carries an owner
+key, with cross-cutting concerns handled by provider decorators.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mateaix/mateclaw">
+              <span>Source</span>
+              <strong>mateaix/mateclaw</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7" title="3643aed7564390f57906954286a443d5913b97a7">
+              <span>Analyzed revision</span>
+              <code>3643aed7564390f57906954286a443d5913b97a7</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MateClaw is the <strong>first Java system in this atlas</strong>. Its
+memory subsystem is about 12,900 lines under
+<code>vip/mate/memory/</code> in a Spring server, plus a Vue memory UI
+and externalized memory prompts, and it is worth reading precisely
+because it was built in a different engineering tradition from
+everything else here.</p>
+<p>That tradition shows in the package layout — <code>archive</code>,
+<code>controller</code>, <code>event</code>, <code>fact</code>,
+<code>identity</code>, <code>lifecycle</code>, <code>listener</code>,
+<code>model</code>, <code>nudge</code>, <code>provider</code>,
+<code>repository</code>, <code>scheduler</code>, <code>search</code>,
+<code>service</code>, <code>spi</code>, <code>tool</code>, with a
+<code>MemoryAutoConfiguration</code> — and in two design choices the
+atlas has not seen before.</p>
+<p><strong>The provider contract carries an owner key.</strong>
+<code>MemoryProvider</code> declares
+<code>prefetch(agentId, userQuery)</code> <em>and</em>
+<code>prefetch(agentId, userQuery, ownerKey)</code>,
+<code>syncTurn(...)</code> with and without <code>ownerKey</code>. This
+matters because the <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> pattern was written from three host runtimes — <a
+href="../hermes-agent/">Hermes Agent</a>, <a
+href="../openclaw/">OpenClaw</a>, and <a href="../pi/">Pi</a> — whose
+contracts carry <strong>no scope parameter at all</strong>. MateClaw
+shows the alternative, and confirms the gap in the others was a choice
+rather than an inevitability.</p>
+<p><strong>Cross-cutting concerns are decorators, not per-provider
+code.</strong> <code>spi/decorator/</code> holds
+<code>MemoryProviderDecorator</code>,
+<code>MetricsMemoryProvider</code>, and
+<code>RetryableMemoryProvider</code>. Any provider wrapped in these gets
+metrics and retry for free. In Hermes and OpenClaw, every plugin
+implements its own resilience — or does not, which is why <a
+href="../magic-context/">Magic Context</a> had to build fail-closed
+registration itself and <a
+href="https://github.com/netease-youdao/LobsterAI">LobsterAI</a> had to
+patch OpenClaw for a rename race. Decorating the interface solves that
+once for all providers.</p>
+<p>The rest is competent and recognizable: turn lifecycle events
+(<code>TurnStartedEvent</code>, <code>TurnCompletedEvent</code>,
+<code>TurnContext</code>) mediated through a
+<code>MemoryLifecycleMediator</code>, a
+<code>ContradictionDetector</code> over extracted facts, a
+<code>MemoryScope</code> with team and global sharing, dream reports for
+consolidation, and a <code>MemoryNudgeService</code>.</p>
+<p>The main reservations: the SPI still has <strong>no deletion
+hook</strong>, so MateClaw closes half the provider gap and leaves the
+other half open; and contradiction handling appears to be detection
+without a resolution workflow.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="java"><code>public interface MemoryProvider {
+    String id();
+    default String systemPromptBlock(Long agentId);
+    default String prefetch(Long agentId, String userQuery);
+    default String prefetch(Long agentId, String userQuery, String ownerKey);   // scoped
+    default void   syncTurn(Long agentId, String conversationId,
+                            String userMessage, String assistantReply);
+    default void   syncTurn(Long agentId, String conversationId,
+                            String userMessage, String assistantReply,
+                            String ownerKey);                                    // scoped
+    default List&lt;Object&gt; getToolBeans();
+    default void   onSessionEnd(Long agentId, String conversationId);
+}</code></pre>
+<p>Everything but <code>id()</code> is a default method, so a provider
+implements only what it supports — capability negotiation by language
+feature rather than by a <code>capabilities()</code> call.</p>
+<p>Scope is a string column with a documented rationale:</p>
+<pre class="java"><code>/** Visibility scope for a memory row (workspace file, fact, recall).
+ *  ... persona files (AGENTS.md, SOUL.md, PROFILE.md) and legacy rows live ...
+ *  Stored as a plain string column (scope) rather than a DB enum so ... */
+public static boolean isShared(String scope) {
+    return TEAM.equals(scope) || GLOBAL.equals(scope);
+}</code></pre>
+<p><code>TEAM</code> and <code>GLOBAL</code> are the shared scopes; a
+<code>MemoryOwnerResolver</code> maps requests to owners.</p>
+<p>Turn lifecycle:</p>
+<pre class="text"><code>TurnStartedEvent → MemoryLifecycleMediator → providers.prefetch(..., ownerKey)
+                                            → TurnContext assembled
+TurnCompletedEvent → providers.syncTurn(..., ownerKey)
+session end        → providers.onSessionEnd(...)
+scheduler          → dream reports, nudges</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>mateclaw-server/src/main/java/vip/mate/memory/</code>:</p>
+<ul>
+<li><code>spi/</code> — <code>MemoryProvider</code>,
+<code>MemoryManager</code>, <code>AbstractExternalProvider</code>, and
+<code>decorator/</code> (<code>MemoryProviderDecorator</code>,
+<code>MetricsMemoryProvider</code>,
+<code>RetryableMemoryProvider</code>).</li>
+<li><code>lifecycle/</code> — <code>MemoryLifecycleMediator</code>,
+<code>MemoryLifecycleEventListener</code>,
+<code>TurnStartedEvent</code>, <code>TurnCompletedEvent</code>,
+<code>TurnContext</code>.</li>
+<li><code>fact/</code> — <code>extraction</code>,
+<code>contradiction</code> (<code>ContradictionDetector</code>),
+<code>projection</code>, <code>provider</code>, <code>model</code>,
+<code>controller</code>.</li>
+<li><code>identity/</code> — <code>MemoryScope</code>,
+<code>MemoryOwnerResolver</code>.</li>
+<li><code>model/</code> — <code>MemoryRecallEntity</code>,
+<code>DreamReportEntity</code>, <code>MorningCardSeenEntity</code>.</li>
+<li><code>archive/</code>, <code>search/</code>,
+<code>repository/</code>, <code>service/</code>,
+<code>scheduler/</code>, <code>nudge/</code>, <code>tool/</code>,
+<code>event/</code>, <code>listener/</code>, <code>controller/</code>,
+<code>MemoryAutoConfiguration</code>,
+<code>MemoryProperties</code>.</li>
+<li><code>mateclaw-ui/src/views/Memory/</code> and
+<code>stores/useMemoryStore.ts</code> — the review UI.</li>
+<li><code>mateclaw-server/src/main/resources/prompts/memory/</code> —
+externalized prompts.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Turn[&quot;TurnStartedEvent&quot;] --&gt; Med[&quot;MemoryLifecycleMediator&quot;]
+  Med --&gt; Mgr[&quot;MemoryManager&quot;]
+  Mgr --&gt; Dec[&quot;decorators: Metrics, Retryable&quot;]
+  Dec --&gt; P1[&quot;provider A&quot;]
+  Dec --&gt; P2[&quot;provider B (AbstractExternalProvider)&quot;]
+  P1 --&gt; Ctx[&quot;TurnContext&quot;]
+  P2 --&gt; Ctx
+  Done[&quot;TurnCompletedEvent&quot;] --&gt; Mgr
+  Mgr --&gt; Facts[&quot;fact/extraction&quot;]
+  Facts --&gt; Contra[&quot;ContradictionDetector&quot;]
+  Facts --&gt; Proj[&quot;fact/projection&quot;]
+  Sched[&quot;scheduler&quot;] --&gt; Dream[&quot;DreamReportEntity&quot;]
+  Sched --&gt; Nudge[&quot;MemoryNudgeService&quot;]
+  Proj --&gt; UI[&quot;Vue Memory views&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="a-provider-contract-that-carries-scope">A provider contract that
+carries scope</h3>
+<p>The paired overloads — one with <code>ownerKey</code>, one without —
+are a pragmatic migration shape: existing providers keep working on the
+unscoped signature while scope-aware ones opt in. It is less rigorous
+than requiring scope on every call (the discipline <a
+href="../openclaw/">OpenClaw</a> enforces inside its store with
+<code>scopedPredicate</code>), because a provider can still be invoked
+unscoped. But it is far more than the three host runtimes previously
+reviewed offer, where scope cannot be expressed at all.</p>
+<p>The atlas's pattern page argues a workable contract needs scope on
+every call, a deletion hook, and capability reporting. MateClaw supplies
+scope (optionally), supplies capability reporting implicitly through
+default methods, and supplies no deletion path — one and a half of
+three.</p>
+<h3 id="decorators-for-resilience-and-observability">Decorators for
+resilience and observability</h3>
+<p><code>MetricsMemoryProvider</code> and
+<code>RetryableMemoryProvider</code> wrap any
+<code>MemoryProvider</code>, so a flaky external backend gets retried
+and every backend gets instrumented without touching provider code.
+<code>AbstractExternalProvider</code> presumably supplies the common
+shape for remote backends.</p>
+<p>This is the clearest answer in the atlas to a question the
+pluggable-provider pattern raises and does not resolve: when a mounted
+provider fails or is slow, whose problem is it? Here it is the host's,
+solved once, in the decorator chain.</p>
+<h3 id="turn-lifecycle-as-events">Turn lifecycle as events</h3>
+<p>Rather than the host calling providers directly,
+<code>TurnStartedEvent</code> and <code>TurnCompletedEvent</code> flow
+through a mediator and listener. <code>TurnContext</code> carries the
+assembled state. This is Spring-idiomatic and has a real benefit:
+additional memory concerns can subscribe to turn events without
+modifying the call path — the <code>nudge</code> service and scheduler
+plug in the same way.</p>
+<h3 id="contradiction-detection">Contradiction detection</h3>
+<p><code>fact/contradiction/ContradictionDetector.java</code> is a
+dedicated component, which few systems here have at all. What was not
+found is what happens next: no resolution workflow, review queue, or
+supersession path surfaced alongside it. That mirrors <a
+href="../gini-agent/">Gini</a>, which models a <code>conflicted</code>
+status without a visible way to act on it — detection is necessary and,
+on its own, incomplete.</p>
+<h3 id="dream-reports-and-nudges">Dream reports and nudges</h3>
+<p><code>DreamReportEntity</code> puts MateClaw in the group of systems
+that call consolidation dreaming, and <code>MorningCardSeenEntity</code>
+alongside <code>MemoryNudgeService</code> suggests memory is surfaced
+proactively — a morning summary the user can be shown, tracked so it is
+not repeated. Proactive memory delivery is rare in the atlas, where
+recall is almost always query-driven.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Relational, through Spring repositories, with fact extraction feeding
+projections and a separate <code>archive</code> package.
+<code>MemoryScope</code> is deliberately a string rather than a database
+enum — the comment explains this is so the value set can evolve without
+a schema migration, which is a sensible tradeoff at the cost of
+database-level validation.</p>
+<p>Gaps:</p>
+<ul>
+<li><strong>No tombstone</strong> was found; the <code>archive</code>
+package suggests retention rather than negative memory.</li>
+<li><strong>Contradiction is detected, not resolved.</strong></li>
+<li><strong>No verification state</strong> on facts surfaced in what was
+read.</li>
+<li><strong>The SPI has no deletion hook</strong>, so a user's erasure
+request has no defined route into a mounted provider.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Provider <code>prefetch</code> plus a dedicated <code>search</code>
+package and fact projections. Ranking specifics were not traced. The
+projection layer is worth noting on its own: separating stored facts
+from the projections used for display and recall is the <a
+href="../basic-memory/">treat semantic indexes as projections</a>
+discipline expressed in a relational idiom.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>syncTurn</code> after each completed turn, dispatched to every
+registered provider through the manager and its decorators, with fact
+extraction and contradiction detection downstream. Because writes flow
+through the lifecycle mediator rather than direct calls, the write path
+is observable in one place — the same chokepoint benefit <a
+href="../rainbox/">RainBox</a> gets from <code>record_belief</code>,
+though without the trust policy.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>getToolBeans()</code> lets a provider contribute Spring-managed
+tool beans to the agent, which is an elegant use of the container:
+memory tools are registered by the provider that implements them rather
+than declared centrally. The Vue UI under <code>views/Memory/</code>
+with <code>useMemoryStore.ts</code> gives operators a review surface,
+and prompts live in <code>resources/prompts/memory/</code> where they
+can be edited without recompiling.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Scope on the provider contract</strong>, closing half the
+gap the atlas documents in three other host runtimes.</li>
+<li><strong>Retry and metrics as decorators</strong>, so resilience is
+solved once for every backend.</li>
+<li><strong>Default methods</strong> for implicit capability
+negotiation.</li>
+<li><strong>Event-driven turn lifecycle</strong> with a single
+mediator.</li>
+<li><strong>A dedicated contradiction detector.</strong></li>
+<li><strong>Provider-contributed tool beans.</strong></li>
+<li><strong>Externalized prompts</strong> and an operator UI.</li>
+<li><strong>Scope stored as a string</strong> with a documented
+rationale.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No deletion hook on the SPI.</strong></li>
+<li><strong>Contradiction detection without resolution.</strong></li>
+<li><strong>Unscoped overloads remain callable</strong>, so scope is
+opt-in per call site.</li>
+<li><strong>No tombstone or verification state</strong> found.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests exist under <code>src/test/java/vip/mate/memory/</code>,
+including an <code>archive</code> package. Nothing was run for this
+review, and no memory-quality benchmark was found.</p>
+<p>The measurement this design invites is provider-level: with metrics
+already decorating every provider, per-provider recall quality and
+latency are collectable, and comparing two mounted backends on the same
+traffic would be straightforward. Nothing indicates that has been
+done.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Put scope on the provider contract.</strong> Paired
+overloads are a pragmatic way to add it to an existing interface without
+breaking implementations.</li>
+<li><strong>Decorate the provider interface</strong> for retry, metrics,
+and any other cross-cutting concern, so every backend inherits
+them.</li>
+<li><strong>Default methods as capability negotiation</strong> — a
+provider implements what it supports, and the host does not need a
+<code>capabilities()</code> call to find out.</li>
+<li><strong>Drive memory from turn lifecycle events</strong> so new
+concerns subscribe rather than modify.</li>
+<li><strong>Let providers contribute tool beans</strong>, keeping a
+memory backend's tools with the backend.</li>
+<li><strong>Externalize memory prompts</strong> to resources.</li>
+<li><strong>Track what has been proactively shown</strong>
+(<code>MorningCardSeenEntity</code>) so a nudge is not repeated.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A provider contract with scope but no deletion</strong> —
+half a governance story.</li>
+<li><strong>Optional scope</strong>, since an unscoped overload will
+eventually be called.</li>
+<li><strong>Contradiction detection with no resolution
+path.</strong></li>
+<li><strong>String scope without database validation.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The SPI shape, especially the scoped overloads and default
+methods.</li>
+<li>The decorator chain for metrics and retry.</li>
+<li>Turn lifecycle events as the memory trigger.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The contract as complete; add <code>forget(scope|id)</code> before
+third parties mount backends.</li>
+<li>Detection without resolution.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How does a deletion request reach a mounted provider? Nothing on the
+SPI expresses it.</li>
+<li>What resolves a detected contradiction?</li>
+<li>Are unscoped <code>prefetch</code>/<code>syncTurn</code> calls still
+in use, and is there a plan to retire them?</li>
+<li>What does the nudge service decide to surface, and on what
+signal?</li>
+<li>Do the decorators cover failure isolation as well as retry — can one
+slow provider stall a turn?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Provider contract:
+<code>mateclaw-server/src/main/java/vip/mate/memory/spi/MemoryProvider.java</code>,
+<code>MemoryManager.java</code>,
+<code>AbstractExternalProvider.java</code>.</li>
+<li>Decorators: <code>spi/decorator/MemoryProviderDecorator.java</code>,
+<code>MetricsMemoryProvider.java</code>,
+<code>RetryableMemoryProvider.java</code>.</li>
+<li>Lifecycle: <code>lifecycle/MemoryLifecycleMediator.java</code>,
+<code>MemoryLifecycleEventListener.java</code>,
+<code>TurnStartedEvent.java</code>,
+<code>TurnCompletedEvent.java</code>,
+<code>TurnContext.java</code>.</li>
+<li>Facts: <code>fact/extraction/</code>,
+<code>fact/contradiction/ContradictionDetector.java</code>,
+<code>fact/projection/</code>, <code>fact/provider/</code>.</li>
+<li>Identity and scope: <code>identity/MemoryScope.java</code>,
+<code>identity/MemoryOwnerResolver.java</code>.</li>
+<li>Entities: <code>model/MemoryRecallEntity.java</code>,
+<code>DreamReportEntity.java</code>,
+<code>MorningCardSeenEntity.java</code>.</li>
+<li>Operations: <code>scheduler/</code>,
+<code>nudge/MemoryNudgeService.java</code>, <code>archive/</code>,
+<code>search/</code>, <code>repository/</code>.</li>
+<li>Configuration: <code>MemoryAutoConfiguration.java</code>,
+<code>MemoryProperties.java</code>.</li>
+<li>UI and prompts: <code>mateclaw-ui/src/views/Memory/</code>,
+<code>stores/useMemoryStore.ts</code>,
+<code>mateclaw-server/src/main/resources/prompts/memory/</code>.</li>
+<li>Tests:
+<code>mateclaw-server/src/test/java/vip/mate/memory/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

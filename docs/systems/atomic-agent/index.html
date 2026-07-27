@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A memory system built like a
+specification — numbered invariants cited from the schema, append-only
+vote events with derived scores, and features shipped off by default
+until an evaluation campaign says otherwise.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Atomic
+Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A memory system built like
+a specification — numbered invariants cited from the schema, append-only
+vote events with derived scores, and features shipped off by default
+until an evaluation campaign says otherwise.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Atomic
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A memory system built like
+a specification — numbered invariants cited from the schema, append-only
+vote events with derived scores, and features shipped off by default
+until an evaluation campaign says otherwise.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Atomic Agent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Evaluated memory fabric</p>
+          <h1>Atomic Agent</h1>
+          <p class="document-deck">A memory system built like a
+specification — numbered invariants cited from the schema, append-only
+vote events with derived scores, and features shipped off by default
+until an evaluation campaign says otherwise.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AtomicBot-ai/atomic-agent">
+              <span>Source</span>
+              <strong>AtomicBot-ai/atomic-agent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb" title="d69332c589733e38ae7393dd81fcbc5a375d02fb">
+              <span>Analyzed revision</span>
+              <code>d69332c589733e38ae7393dd81fcbc5a375d02fb</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Atomic Agent is an MIT-licensed agent whose <code>src/memory/</code>
+is about <strong>14,000 lines</strong> across
+<code>consolidator/</code>, <code>embeddings/</code>,
+<code>evolution/</code>, <code>lessons/</code>, <code>links/</code>,
+<code>procedures/</code>, <code>reflection/</code>,
+<code>retrieve/</code>, and <code>voting/</code>, with a test file
+beside nearly every module.</p>
+<p>The code is substantial, but what makes it worth studying is that
+<strong>the memory system is built like a specification</strong>. Three
+artifacts sit alongside it:</p>
+<ul>
+<li><code>MEMORY_FABRIC_V2.md</code> — the design plan, including §14
+acceptance criteria.</li>
+<li><code>MEMORY_FABRIC_V2.5.md</code> — an <strong>implementation
+ledger</strong> recording which phases actually landed, with all three
+v2.5 features shipped <strong>opt-in</strong>
+(<code>default: false</code> in config v18+).</li>
+<li><code>eval-memory/PLAN.md</code> — an evaluation campaign whose
+stated purpose is <em>"is memory actually useful"</em>, with numbered
+integration experiments E9–E12 behind
+<code>npm run eval:memory:v25</code>.</li>
+</ul>
+<p>And the design document is not decorative. The SQL schema comments
+cite <strong>numbered cross-phase invariants</strong> back into it —
+"cross-phase invariant 7 in <code>MEMORY_FABRIC_V2.md</code> §13.7",
+invariant 20, invariant 21 — so a reader can trace a column to the rule
+that governs it. Across the atlas, nothing else has invariants as
+first-class, referenced artifacts.</p>
+<p>Three mechanisms stand out.</p>
+<p><strong>Votes are append-only events with derived scores.</strong>
+<code>vote_events(id, kind, target_id, direction, session_id, turn_index, created_at)</code>
+is the log; <code>vote_score</code> columns on <code>memories</code>,
+<code>lessons</code>, and <code>profile_facts</code> are derived and
+indexed. This is precisely what this atlas recommends — "keep retrieval
+events append-only; derive counters from events" — and the direct
+opposite of <a href="../holographic/">Holographic</a>, where a rating
+mutates the score that gates retrieval and enough ratings silently
+delete a fact.</p>
+<p><strong>Procedures are advisory and never executed.</strong>
+Invariant 20 states that the runtime never auto-executes a procedure;
+they are "advisory text the agent reads and either follows or
+consciously deviates from." <a href="../voyager/">Voyager</a> stores
+executable skills and gains an empirical verification gate; Atomic Agent
+stores procedural knowledge and deliberately gives up execution to avoid
+the trust boundary that comes with it. Both positions are defensible,
+and having both in the atlas makes the <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> tradeoff concrete.</p>
+<p><strong>The vote prompt is isolated from the main KV cache.</strong>
+The schema comment records that the vote micro-prompt "lives entirely on
+the reflection slot — the main agent slot's KV cache is untouched." That
+is the same prompt-caching concern driving <a
+href="../hermes-agent/">Hermes Agent</a>'s frozen snapshot, solved by
+slot isolation instead.</p>
+<p>The reservation is scale of surface: v2.5 adds a query rewriter,
+reflection segmentation, and typed NOTE extraction, all optional, on top
+of an already large fabric — and no scored campaign results were found
+committed, so the evaluation machinery's verdict is unknown.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Four domain objects, connected by typed links:</p>
+<pre class="sql"><code>memories        -- extracted memory rows, with vote_score
+lessons         -- distilled guidance; status &#39;active&#39; | &#39;deprecated&#39;
+profile_facts   -- bi-temporal user facts
+procedures      -- read-only how-to templates, advisory only
+
+memory_links (from_id, to_id, kind)   -- PRIMARY KEY (from_id, to_id, kind)
+                                      -- multiple link kinds between one pair
+vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)</code></pre>
+<p>Profile facts are bi-temporal with an explicit supersession
+chain:</p>
+<pre class="sql"><code>profile_facts(
+  key, value, pinned, keywords,
+  valid_from      INTEGER NOT NULL,   -- when the row started being authoritative
+  created_at      INTEGER NOT NULL,   -- audit timestamp
+  superseded_by, supersedes,
+  ...
+)</code></pre>
+<p>The comments document the legacy migration explicitly —
+<code>valid_from = legacy.updated_at</code>,
+<code>created_at = legacy.updated_at</code> — so the point at which
+bi-temporality was retrofitted is recoverable rather than silently
+assumed.</p>
+<p>Lifecycle:</p>
+<pre class="text"><code>session → consolidator clusters related material
+        → ONE LLM call per cluster emits a lesson AND (optionally) a procedure
+          [invariant 21: ≤ 1 call per cluster even when both are produced]
+        → links generated between surfaced ids only
+        → reflection (vote-aware) on a separate prompt slot
+        → vote_events appended; vote_score derived
+        → deprecation flips status; the row is retained</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/memory/</code> (~14,000 lines):</p>
+<ul>
+<li><code>memory-schema.ts</code> — versioned migrations with commentary
+and invariant references.</li>
+<li><code>memory-store.ts</code>, <code>profile-store.ts</code> —
+storage, with <code>profile-store-bitemporal.test.ts</code>.</li>
+<li><code>consolidator/</code> — clustering and distillation.</li>
+<li><code>voting/</code> — <code>vote-grammar.ts</code>,
+<code>vote-prompt.ts</code>, <code>vote-parser.ts</code>,
+<code>vote-response-format.ts</code>, <code>vote-runner.ts</code>,
+<code>vote-store.ts</code>, <code>vote-aware-reflection.ts</code>.</li>
+<li><code>evolution/neighbor-evolver.ts</code> — neighbour metadata
+evolution.</li>
+<li><code>lessons/</code>, <code>procedures/</code>,
+<code>links/</code>, <code>reflection/</code>, <code>retrieve/</code>,
+<code>embeddings/</code>.</li>
+<li><code>notes-renderer.ts</code>, <code>profile-renderer.ts</code>,
+<code>memory-context-provider.ts</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Sess[&quot;Session&quot;] --&gt; Cons[&quot;consolidator: cluster&quot;]
+  Cons --&gt;|&quot;1 LLM call (inv. 21)&quot;| Lesson[&quot;lesson&quot;]
+  Cons --&gt;|same call| Proc[&quot;procedure (advisory, inv. 20)&quot;]
+  Cons --&gt; Mem[&quot;memories&quot;]
+  Mem --&gt; Links[&quot;memory_links (typed, surfaced-id allowlist)&quot;]
+  Mem --&gt; Evolve[&quot;neighbor-evolver&quot;]
+  Q[&quot;Query&quot;] --&gt; Rewrite[&quot;heuristic-gated query rewriter (v2.5, opt-in)&quot;]
+  Rewrite --&gt; Retr[&quot;retrieve&quot;]
+  Links --&gt; Retr
+  Retr --&gt; Ctx[&quot;memory-context-provider&quot;]
+  Ctx --&gt; Refl[&quot;vote-aware reflection (separate slot, KV cache untouched)&quot;]
+  Refl --&gt; VE[&quot;vote_events (append-only)&quot;]
+  VE --&gt; Score[&quot;derived vote_score&quot;]
+  Score --&gt; Retr</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="invariants-as-referenced-artifacts">Invariants as referenced
+artifacts</h3>
+<p>The schema does not merely implement rules; it cites them. Reading
+<code>memory-schema.ts</code> you encounter "cross-phase invariant 7 in
+<code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on procedure
+execution, and invariant 21 on LLM call budget per cluster.</p>
+<p>This matters more than it sounds. Most systems in this atlas encode
+their rules implicitly in code, so a later contributor cannot tell an
+intentional constraint from an accident. Numbered invariants with stable
+references make the difference visible, and make a violation reviewable
+as a violation rather than as a diff.</p>
+<h3 id="append-only-votes">Append-only votes</h3>
+<p><code>vote_events</code> records direction, target kind and id,
+session, turn index, and timestamp. <code>vote_score</code> is a
+derived, indexed column on each votable kind. Because the events are
+retained, a scoring change can be recomputed from history, a suspicious
+pattern can be audited, and no single vote is destructive.</p>
+<p>Set against the atlas's other feedback designs, this is the
+disciplined end of the range. Holographic mutates trust directly and
+deletes by threshold. <a href="../rainbox/">RainBox</a> keeps feedback
+as a review signal behind a human gate. <a
+href="../metaclaw/">MetaClaw</a> lets telemetry tune retrieval policy
+through a promotion gate. Atomic Agent keeps the raw signal and derives
+from it — which preserves the option to do any of the others later.</p>
+<p>The voting subsystem is also unusually complete for what could have
+been a thumbs-up counter: a grammar, a response format, a parser with
+tests, a runner, a store, and a reflection path that consumes votes.</p>
+<h3 id="procedures-without-execution">Procedures without execution</h3>
+<p>Invariant 20 is a deliberate limit: procedures are "advisory text the
+agent reads and either follows or consciously deviates from," never
+auto-executed. Invariant 21 constrains their cost — a lesson and its
+procedure come from the <em>same</em> consolidator cluster in a single
+LLM call.</p>
+<p>The pairing is neat. A procedure derived alongside its parent lesson
+shares that lesson's evidence, so the how-to and the why-it-matters
+cannot drift apart, and the budget rule stops the procedures layer from
+doubling distillation cost.</p>
+<h3 id="surfaced-id-allowlist-in-neighbour-evolution">Surfaced-id
+allowlist in neighbour evolution</h3>
+<p><code>neighbor-evolver.ts</code> operates against "the surfaced-id
+allowlist used by the link-generator", with <code>skipped_invalid</code>
+as an explicit outcome and metrics recorded per outcome.</p>
+<p>This is precisely the defence <a href="../a-mem/">A-MEM</a> lacks.
+A-MEM's evolution returns vector rank positions and later applies them
+to insertion order, so an LLM can rewrite a different neighbour than the
+one it saw — the atlas's "ranking positions used as identities"
+antipattern. Atomic Agent constrains evolution to ids that were actually
+surfaced and counts the rejections.</p>
+<h3 id="deprecation-retains-the-row">Deprecation retains the row</h3>
+<p>Lessons carry <code>status: 'active' | 'deprecated'</code>, and the
+comment is explicit that "deprecated lessons stay". Combined with
+<code>supersedes</code>/<code>superseded_by</code> on profile facts,
+correction is a state transition with history rather than a delete.</p>
+<p>What is still missing is a value-level tombstone: a deprecated lesson
+is a deprecated row, and nothing found here prevents an equivalent
+lesson being distilled again from the same cluster.</p>
+<h3 id="default-off-features">Default-off features</h3>
+<p>All three v2.5 features ship with <code>default: false</code> in
+config v18+. Shipping behind a flag while the evaluation campaign runs
+is the ordinary discipline of software that intends to know whether it
+works — and it is close to unique in this atlas, where new memory
+behaviour typically arrives on by default.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>SQLite with numbered migrations (V9 introduces voting, V10 the
+procedures layer), each documented in place. Typed links with a
+composite primary key allow several relationship kinds between the same
+pair, which is more expressive than the single-edge graphs elsewhere
+here.</p>
+<p>Gaps:</p>
+<ul>
+<li><strong>Scoping was not traced.</strong> No user, project, or tenant
+key surfaced in the schema sections read; for a single-user agent that
+may be by design.</li>
+<li><strong>No rejected-value tombstone</strong>, so deprecation does
+not prevent re-derivation.</li>
+<li><strong><code>vote_score</code> semantics are undocumented</strong>
+in what was read — whether it can influence anything other than ranking
+is the line this atlas cares about, and it was not established.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>retrieve/</code> plus embeddings and links, with v2.5 adding a
+<strong>heuristic-gated query rewriter</strong> — gated so rewriting
+only runs when a heuristic says it is worth the call, rather than on
+every query. Links participate in retrieval, and votes inform ranking
+through <code>vote_score</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The consolidator clusters material and distils it; the
+one-call-per-cluster invariant bounds cost. Reflection is vote-aware and
+runs on its own prompt slot. Neighbour evolution adjusts metadata within
+the surfaced-id allowlist.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>memory-context-provider.ts</code> supplies memory to the agent,
+with <code>notes-renderer.ts</code> and <code>profile-renderer.ts</code>
+formatting the two durable surfaces. The separate reflection slot is the
+notable structural choice: the expensive, prompt-heavy memory work
+happens off the main conversational slot, protecting its cache.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Numbered invariants cited from code</strong> into a design
+document.</li>
+<li><strong>Append-only vote events</strong> with derived, indexed
+scores.</li>
+<li><strong>Bi-temporal profile facts</strong> with a documented legacy
+migration.</li>
+<li><strong>Surfaced-id allowlist</strong> closing the rank-as-identity
+failure.</li>
+<li><strong>Procedures never auto-executed</strong>, stated as an
+invariant.</li>
+<li><strong>One LLM call per cluster</strong>, stated as an
+invariant.</li>
+<li><strong>KV-cache isolation</strong> for the vote prompt.</li>
+<li><strong>Deprecation retains rows.</strong></li>
+<li><strong>Features default-off</strong> pending evaluation.</li>
+<li><strong>A design plan with acceptance criteria and a numbered
+experiment campaign.</strong></li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No tombstone</strong>; deprecation is not durable against
+re-distillation.</li>
+<li><strong>Scope not established.</strong></li>
+<li><strong>Large optional surface</strong> — three v2.5 features on an
+already substantial fabric.</li>
+<li><strong>No committed campaign results</strong>, so the acceptance
+criteria's verdict is unknown.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test files sit beside nearly every module
+(<code>memory-store-v2</code>, <code>memory-store-archive</code>,
+<code>memory-store-evolve</code>, <code>profile-store-bitemporal</code>,
+<code>vote-parser</code>, <code>vote-runner</code>,
+<code>vote-store</code>, <code>neighbor-evolver</code>,
+<code>notes-renderer</code>, <code>profile-renderer</code>,
+<code>memory-schema</code>, <code>memory-context-provider</code>), plus
+<code>eval-memory/</code> with its own <code>vitest.config.ts</code>,
+campaign profiles, and environment config.</p>
+<p>Nothing was run for this review. The campaign structure — a plan
+document, acceptance criteria in the design doc, numbered experiments, a
+runner script — is the most developed evaluation <em>process</em> in the
+atlas. What is absent is the output: no scored artifacts were found
+committed, which is the same gap the atlas records for <a
+href="../openviking/">OpenViking</a> and <a
+href="../open-cowork/">open-cowork</a>. A campaign that has run and
+reported would be a first here.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Number your invariants and cite them from the code.</strong>
+A schema comment pointing at "§13.7 invariant 7" turns an implicit rule
+into a reviewable one, and is nearly free.</li>
+<li><strong>Votes as append-only events, scores as derived
+columns.</strong> Keeps the raw signal, permits recomputation, and
+leaves every downstream policy choice open.</li>
+<li><strong>Advisory-only procedures.</strong> If you store how-to
+knowledge but do not want the trust boundary of executing it, say so as
+an invariant rather than by omission.</li>
+<li><strong>Bound distillation cost explicitly</strong> — one LLM call
+per cluster even when producing two artifacts.</li>
+<li><strong>Isolate expensive prompts to a separate slot</strong> so the
+main conversation's cache survives.</li>
+<li><strong>Constrain evolution to surfaced ids</strong>, and count the
+rejections.</li>
+<li><strong>Ship new memory behaviour default-off</strong> until an
+evaluation says otherwise.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Deprecation without a value tombstone</strong> in a system
+that re-distils from clusters.</li>
+<li><strong>A large optional surface</strong>, where the configuration
+matrix determines behaviour.</li>
+<li><strong>Evaluation machinery without published
+results.</strong></li>
+<li><strong>Unestablished scope</strong> in a memory system this
+elaborate.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The invariant-numbering practice — the highest value-per-effort idea
+here.</li>
+<li>The <code>vote_events</code> table shape and derived-score
+approach.</li>
+<li>The surfaced-id allowlist.</li>
+<li>The default-off-pending-evaluation discipline.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The full fabric unless you need it; the practices transfer better
+than the surface.</li>
+<li>Deprecation as the only correction mechanism.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What did the E9–E12 experiments conclude? The machinery exists; the
+answers are not committed.</li>
+<li>Can <code>vote_score</code> influence anything beyond ranking? If it
+can reach confidence, the Holographic failure is reachable from
+here.</li>
+<li>What prevents a deprecated lesson from being re-distilled from the
+same cluster?</li>
+<li>What is the scope model for a multi-user deployment?</li>
+<li>Are the numbered invariants tested anywhere, or only documented and
+cited?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema, migrations, invariant citations:
+<code>src/memory/memory-schema.ts</code>.</li>
+<li>Stores: <code>src/memory/memory-store.ts</code>,
+<code>profile-store.ts</code> (bi-temporal).</li>
+<li>Voting:
+<code>src/memory/voting/vote-{grammar,prompt,parser,response-format,runner,store}.ts</code>,
+<code>vote-aware-reflection.ts</code>.</li>
+<li>Evolution:
+<code>src/memory/evolution/neighbor-evolver.ts</code>.</li>
+<li>Distillation and layers: <code>src/memory/consolidator/</code>,
+<code>lessons/</code>, <code>procedures/</code>, <code>links/</code>,
+<code>reflection/</code>, <code>retrieve/</code>,
+<code>embeddings/</code>.</li>
+<li>Rendering and provision: <code>notes-renderer.ts</code>,
+<code>profile-renderer.ts</code>,
+<code>memory-context-provider.ts</code>.</li>
+<li>Design and evaluation: <code>MEMORY_FABRIC_V2.md</code> (§14
+acceptance criteria), <code>MEMORY_FABRIC_V2.5.md</code> (implementation
+ledger), <code>eval-memory/PLAN.md</code>,
+<code>eval-memory/config/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
