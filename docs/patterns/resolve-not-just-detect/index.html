@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Give contradiction detection
+somewhere to go — a disposition, an actor, and a record — or the status
+field you added becomes a queue nobody drains.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Resolve, Don't Just
+Detect — Agent Memory Atlas">
+    <meta property="og:description" content="Give contradiction
+detection somewhere to go — a disposition, an actor, and a record — or
+the status field you added becomes a queue nobody drains.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Resolve, Don't Just
+Detect — Agent Memory Atlas">
+    <meta name="twitter:description" content="Give contradiction
+detection somewhere to go — a disposition, an actor, and a record — or
+the status field you added becomes a queue nobody drains.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Resolve, Don't Just Detect — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Conflict</p>
+          <h1>Resolve, Don't Just Detect</h1>
+          <p class="document-deck">Give contradiction detection
+somewhere to go — a disposition, an actor, and a record — or the status
+field you added becomes a queue nobody drains.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Every contradiction a memory system finds must end in a
+<strong>disposition</strong>: a named outcome, chosen by someone,
+recorded where the write path can see it. Detection without a
+disposition adds a status field and a growing backlog.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Contradiction detection is the easy half and the half everyone
+builds. Across the systems reviewed here, the same shape recurs: a
+detector runs, a memory gets a flag, and nothing in the codebase says
+what clears it.</p>
+<p>The failure is not that the flag is wrong. It is that a flagged
+memory is still <em>retrievable</em> and now also <em>ambiguous</em> —
+the system knows two things disagree and still hands both to the model,
+which is strictly worse than not knowing, because the cost of detection
+was paid and none of the benefit collected.</p>
+<p>Three specific traps:</p>
+<ul>
+<li><strong>A binary resolver forces wrong answers.</strong> "I work at
+Acme" and "I work at Globex" conflict only if you assume one employer.
+Systems that can only supersede or reject cannot say <em>both are
+true</em>, so someone eventually resolves a non-conflict incorrectly, or
+leaves it forever.</li>
+<li><strong>A blocking queue makes memory useless.</strong> Quarantining
+every flagged memory until a human clears it means the store degrades
+whenever nobody is looking.</li>
+<li><strong>A resolution that deletes gets undone.</strong> If the
+pipeline that produced the contradiction runs again — nightly
+extraction, re-ingestion, re-clustering — and the resolution left no
+trace it can consult, the next pass recreates what was just decided
+against.</li>
+</ul>
+<h2 id="the-pattern">The pattern</h2>
+<pre class="text"><code>detect ──▶ typed finding ──▶ queue (non-blocking) ──▶ disposition ──▶ record
+             contradiction        pending items          keep_old        so the
+             update               stay retrievable       keep_new        write path
+             duplicate                                   keep_both       can consult
+             conflict                                    remove_both     it later
+                                                         manual(content)</code></pre>
+<p>Five requirements:</p>
+<ol type="1">
+<li><strong>Type the finding.</strong> "Contradiction", "update",
+"duplicate" and "semantic conflict" deserve different dispositions;
+collapsing them into one flag discards the information the detector just
+produced.</li>
+<li><strong>Offer a non-binary disposition set</strong>, including
+<em>both are valid</em> and <em>a human writes the
+replacement</em>.</li>
+<li><strong>Keep pending findings retrievable.</strong> The flag is a
+signal, not a gate. Only a disposition removes.</li>
+<li><strong>Name the actor and the reason.</strong> A resolution with
+neither is indistinguishable from a bug.</li>
+<li><strong>Record it where the write path looks.</strong> Otherwise the
+next extraction pass undoes it — see <a
+href="../rejected-value-tombstone/">rejected-value tombstone</a>.</li>
+</ol>
+<p>Keep the detector's <em>recommendation</em> vocabulary narrower than
+the resolver's <em>action</em> vocabulary, so the model's framing does
+not bound the operator's options.</p>
+<pre class="mermaid"><code>flowchart LR
+    D[&quot;detector&quot;] --&gt; F[&quot;typed finding: old id, new id, description&quot;]
+    F --&gt; Q[&quot;queue — pending stays retrievable&quot;]
+    Q --&gt; R{&quot;disposition&quot;}
+    R --&gt;|keep_old / keep_new| S[&quot;supersede, chain retained&quot;]
+    R --&gt;|keep_both| B[&quot;both remain; not a contradiction&quot;]
+    R --&gt;|remove_both| T[&quot;remove + tombstone the value&quot;]
+    R --&gt;|manual| H[&quot;human writes the replacement&quot;]
+    T --&gt; W[&quot;write path consults on next extraction&quot;]
+    S --&gt; W</code></pre>
+<h2 id="why-it-works">Why it works</h2>
+<p>It converts a standing ambiguity into a decision with an owner.
+Retrieval stops handing the model two conflicting memories and hoping;
+the store gains a record of <em>why</em> it believes what it believes;
+and the detector's precision becomes measurable, because
+kept-versus-dismissed is now data.</p>
+<p>The <code>keep_both</code> option carries more weight than it looks.
+Most detected "contradictions" are two true statements about different
+times, scopes, or aspects, and a resolver that cannot express that will
+either corrupt the store or stall.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li><strong>It needs a human, or a policy that stands in for
+one.</strong> A queue with no drain rate is a slower version of the
+original problem.</li>
+<li><strong>The detector's false-negative rate stays invisible.</strong>
+Nothing that never reaches the queue can be counted, and no system here
+measures this.</li>
+<li><strong>Dispositions can be wrong</strong>, and unless the finding
+and its resolution are both retained, a bad resolution is
+unreviewable.</li>
+<li><strong>It is only as durable as its record.</strong> A carefully
+reasoned <code>remove_both</code> that leaves no tombstone is undone by
+the next scheduled extraction.</li>
+</ul>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> a typed finding record, a queue with a
+non-blocking read semantic, a disposition enum, and one surface — CLI or
+UI — where a person acts on it.</p>
+<p><strong>Forces elsewhere:</strong> retrieval must know what a pending
+finding means, and the write path must consult resolutions or they
+decay. Bounding the detection scan matters too: comparing everything
+against everything re-surfaces settled pairs forever.</p>
+<p><strong>Ongoing:</strong> somebody has to drain the queue, and the
+detector needs its precision watched or the queue fills with noise and
+stops being read.</p>
+<p><strong>Skip it if</strong> nothing automatically writes memory. A
+store only a human edits resolves conflicts at the keyboard.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/memanto/">Memanto</a> is the only complete
+instance. A scheduled local LLM pass writes a dated JSON report typed as
+<code>contradiction | update | duplicate | conflict</code> with old and
+new ids, and a person resolves each entry through the CLI or web UI as
+<code>keep_old</code>, <code>keep_new</code>, <code>keep_both</code>,
+<code>remove_both</code>, or <code>manual</code> with content they write
+themselves — a model validator refuses <code>manual</code> without it.
+The detection prompt requires at least one side to be new, keeping the
+pass linear and stopping the queue refilling with pairs someone already
+dismissed. What it lacks is requirement 5: <code>remove_both</code>
+deletes without a tombstone, so the next night's extraction may restore
+it.</p>
+<p><a href="../../systems/core-memory/">Core Memory</a> has the
+governance half. Its approval workflow states the non-blocking rule
+explicitly — "pending beads stay retrievable… rejection is the only
+state that removes" — distinguishes <em>rejected</em> (not
+memory-worthy, excluded unconditionally, retained with rejecter and
+reason) from <em>superseded</em> (once true, surfaced on request), and
+makes a reason mandatory on every governance action. It is aimed at
+review rather than at contradiction specifically.</p>
+<p>The absence is the more common finding, and four reports arrived at
+it independently. <a href="../../systems/gini-agent/">Gini</a> has
+<code>rejected</code> and <code>conflicted</code> as states with no
+operator-facing resolution. <a
+href="../../systems/mateclaw/">MateClaw</a> ships a dedicated
+<code>ContradictionDetector</code> and no resolution workflow, review
+queue, or supersession behind it. <a
+href="../../systems/magic-context/">Magic Context</a>'s
+<code>flagged</code> "marks a problem without an operator surface". <a
+href="../../systems/openviking/">OpenViking</a> has merge operations but
+"no operator-facing review queue for contradictions". <a
+href="../../systems/holographic/">Holographic</a> surfaces
+contradictions as an ordinary query and only reports them.</p>
+<p><a href="../../systems/memora/">Memora</a> sits between the two
+groups: it classifies pairs into a defined vocabulary including
+<code>contradicts</code> as an edge between two named memories, and its
+correction pass defaults to a dry run — a report a human reads — but the
+dispositions available are supersede or nothing.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Detect a contradiction, resolve it every available way, and assert
+retrieval changes correspondingly for each.</li>
+<li>Resolve, then re-run the pipeline that produced the finding, and
+assert the resolution survives.</li>
+<li>Assert a pending finding is still retrievable and a resolved one is
+not ambiguous.</li>
+<li>Feed the detector known non-conflicts (same fact, different
+phrasing; two facts about different periods) and count false
+positives.</li>
+<li>Assert every resolution records an actor and a reason.</li>
+<li>Leave a finding unresolved for the retention period and assert
+something sensible happens.</li>
+<li>Measure kept-versus-dismissed over a real queue; that ratio is the
+detector's precision and nothing else reports it.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../rejected-value-tombstone/">Rejected-value
+tombstone</a></li>
+<li><a href="../trust-state-machine/">Trust-state machine</a></li>
+<li><a href="../governed-write-gateway/">Governed write gateway</a></li>
+<li><a href="../bi-temporal-fact-validity/">Bi-temporal fact
+validity</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

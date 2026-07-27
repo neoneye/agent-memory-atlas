@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-forty-nine agent memory architectures, their retrieval mechanics, trust
+fifty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty-nine agent memory architectures, their retrieval mechanics,
+of fifty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty-nine agent memory architectures, their retrieval mechanics,
+of fifty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -55,7 +55,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-forty-nine agent memory architectures, their retrieval mechanics, trust
+fifty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
@@ -120,11 +120,11 @@ are three different products with three different failure modes.</li>
 readers need. The <a href="#capability-index">capability index</a> is
 the fastest way in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Forty-nine systems do not fall into forty-nine categories. They
-cluster around eight architectural commitments, and most systems belong
-to more than one — a coding-agent memory can also be verification-first,
-and a host runtime's plugin can also be a hosted service. The families
-below are lenses, not bins.</p>
+<p>Fifty-two systems do not fall into fifty-two categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -228,7 +228,8 @@ memory provider</a>.</p>
 <p><code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>basic-memory</code>,
 <code>moltis</code>, <code>open-cowork</code>, <code>byterover</code>,
-<code>magic-context</code>, <code>swafra</code>, <code>memora</code></p>
+<code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
+<code>ai-memory</code>, <code>ctx</code>, <code>optmem</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -241,7 +242,19 @@ substrate as curated ones. <strong>open-cowork</strong> separates core
 from experience memory and ships the atlas's most complete memory
 benchmark. <strong>Swafra</strong> shows how little code a local
 graph-RAG sidecar needs, and why flat JSON is not a database.
-<strong>Memora</strong> is the only system here whose automated
+<strong>OptMem</strong> is the limit case in the other direction: 860
+lines, an append-only log the code never edits, a binary merge tree
+whose resolution decays with age by geometry rather than policy, and
+<strong>no background work at all</strong> — every compression is
+printed in the output of <code>note</code> for the agent to answer in
+its own turn. <strong>ctx</strong> is the only system here that bounds
+where its background consolidation may write — a path guard with one
+disposition-gated exception — and the only one whose tests include a
+corruption corpus drawn from published research.
+<strong>ai-memory</strong> models the thing an interrupted task leaves
+behind: a <code>Handoff</code> addressed from one harness to another,
+carrying open questions and next steps, which expires if nobody accepts
+it. <strong>Memora</strong> is the only system here whose automated
 correction pass defaults to a dry run: the sweep that would hide
 superseded memories reports its findings unless mutation is explicitly
 requested.</p>
@@ -428,6 +441,30 @@ candidate/verified/rejected state</td>
 hide conflicts</td>
 </tr>
 <tr>
+<td><code>ai-memory</code></td>
+<td>Markdown page in git, plus observation, handoff, and workstream
+records</td>
+<td>Markdown in git as the human source of truth; SQLite as derived
+index and state</td>
+<td>Authority- and tier-ranked search over pages, with a retention
+score</td>
+<td>Harness lifecycle hooks capture observations; opt-in LLM
+consolidation into pages</td>
+<td>Versioned supersession; generation-based supersession of pending
+work</td>
+<td>Workspace and project ids with per-project UUID isolation;
+capability-gated actors</td>
+<td>MCP plus lifecycle hooks for Claude Code, Codex, Cursor, Gemini,
+opencode, Devin, Grok, Kimi</td>
+<td>Consolidation workers, retention/decay scoring, wiki migrations</td>
+<td>Actor capabilities and auth levels; no candidate/verified state on a
+memory</td>
+<td>A handoff with a lifecycle, carrying open questions and next steps
+across harnesses</td>
+<td>No trust state or tombstone; supersession is page-keyed and
+re-capture is unguarded</td>
+</tr>
+<tr>
 <td><code>atomic-agent</code></td>
 <td>Memory, lesson, profile fact, and procedure, linked by typed
 edges</td>
@@ -570,6 +607,30 @@ full</td>
 <td>Line-addressable chunks with hashes; dream diary</td>
 <td>Dated intermediate layer and written distillation rules</td>
 <td>Shared-by-default scope; chained lossy summarization</td>
+</tr>
+<tr>
+<td><code>ctx</code></td>
+<td>Markdown entry staged, then digested into a themed region of a root
+document</td>
+<td>Files in the project tree; a dream ledger and journal alongside</td>
+<td>Progressive disclosure — roots, themes, regions read by any tool
+that can read files</td>
+<td>Staged entries; <code>dream</code> proposes, a schema gate
+validates, apply writes within a guarded scope</td>
+<td>Proposal dispositions including promote; region folding; no
+value-level tombstone</td>
+<td>Write scope enforced by path — dreams/ and ideas/, with specs/ only
+on promote</td>
+<td>CLI, MCP, VS Code extension, skills; any tool that can read
+files</td>
+<td><code>dream</code> scan, propose, validate, apply, with a ledger and
+resume</td>
+<td>Provenance required on proposals; invalid proposals rejected rather
+than admitted</td>
+<td>A write-scope guard on consolidation, and a corruption regression
+corpus from the literature</td>
+<td>Correction is region folding; nothing records that a digested claim
+was wrong</td>
 </tr>
 <tr>
 <td><code>engram</code></td>
@@ -1166,6 +1227,29 @@ confidence</td>
 AGPL-3.0</td>
 </tr>
 <tr>
+<td><code>optmem</code></td>
+<td>One line of at most 280 characters, fixed width,
+position-addressed</td>
+<td><code>LOG.txt</code> append-only, never edited; <code>TREE/</code>
+of compressed blocks, a rebuildable cache</td>
+<td><code>wake</code> prints a budgeted cover of the merge tree —
+verbatim recent, compressed ancient</td>
+<td><code>note</code> appends one line and may return a compression for
+the agent to answer</td>
+<td><code>forget &lt;lo&gt;-&lt;hi&gt;</code> drops a summary; the next
+nap rebuilds it. The log is never edited</td>
+<td>One store per <code>$MEMORY_DIR</code>; none within it</td>
+<td>A 426-token prompt block pasted into AGENTS.md or CLAUDE.md</td>
+<td>None, by design — every compression is requested inline in the
+output of <code>note</code></td>
+<td>None; the log is append-only and everything derived is rebuildable
+from it</td>
+<td>Detail decays by geometry, not policy, and no job can rewrite memory
+behind your back</td>
+<td>No licence file; no scope, trust, or correction of the log
+itself</td>
+</tr>
+<tr>
 <td><code>pi</code></td>
 <td>None — session-tree entry, not a memory record</td>
 <td>JSONL session tree (<code>id</code>/<code>parentId</code>),
@@ -1400,13 +1484,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 49:</em> <a
+<p><em>2 of 52:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 49:</em> <a
+<p><em>5 of 52:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1414,7 +1498,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>5 of 49:</em> <a
+<p><em>5 of 52:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1423,13 +1507,15 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>29 of 49:</em> <a
+<p><em>31 of 52:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
+href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
 href="../systems/cognee/"><code>cognee</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
+href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
@@ -1457,13 +1543,14 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>2 of 49:</em> <a
+<p><em>4 of 52:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
-href="../systems/memora/"><code>memora</code></a></p>
+href="../systems/memora/"><code>memora</code></a>, <a
+href="../systems/optmem/"><code>optmem</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>8 of 49:</em> <a
+<p><em>8 of 52:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -1475,7 +1562,7 @@ href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 49:</em> <a
+<p><em>1 of 52:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -3248,6 +3335,22 @@ exact source range it covers, and activate it atomically when needed.
 This removes LLM compression from the critical path. It fails without
 durable markers, range-aware replacement, recovery, and distributed
 coordination.</p>
+<h3 id="resolve-do-not-just-detect">Resolve, do not just detect</h3>
+<p>Repos: <code>memanto</code>; governance half in
+<code>core-memory</code>; the absence in <code>gini-agent</code>,
+<code>mateclaw</code>, <code>magic-context</code>,
+<code>openviking</code>, <code>holographic</code>.</p>
+<p>Every contradiction a system detects must end in a named disposition,
+chosen by someone, recorded where the write path can consult it. Five
+systems here detect and stop, which leaves a flagged memory both
+retrievable and ambiguous — the cost of detection paid and none of the
+benefit collected. The disposition set must be non-binary, because most
+detected contradictions are two true statements about different times or
+scopes, and it must include a human-authored replacement. Pending
+findings should stay retrievable, since a blocking queue degrades memory
+whenever nobody is looking. It fails when the resolution leaves no trace
+the next extraction pass can consult, which is exactly where Memanto's
+<code>remove_both</code> stops.</p>
 <h3 id="rehearse-the-correction-before-committing-it">Rehearse the
 correction before committing it</h3>
 <p>Repos: <code>memora</code>; related staging in
@@ -4501,6 +4604,60 @@ the schema which memories each may read.</li>
 <li>Do not copy when: you need correction semantics —
 <code>replace</code> overwrites in place and leaves no history.</li>
 </ul>
+<h3 id="ai-memory"><code>ai-memory</code></h3>
+<ul>
+<li>Best idea: a <code>Handoff</code> with an open/accepted/expired
+lifecycle, typed sender and recipient, and an
+<code>open_questions</code> list — memory of what is <em>not</em>
+known.</li>
+<li>Biggest risk: hooks re-capture every session and supersession is
+page-keyed, so a deleted page returns through the path that first
+produced it.</li>
+<li>Most reusable component: <code>handoff.rs</code>, which is small and
+independent of the rest of the system.</li>
+<li>Maturity impression: broad and well packaged, with harness adapters
+for eight agents and committed prior-art analyses of four systems in
+this atlas.</li>
+<li>Study when: work is interrupted and resumed in a different harness,
+and re-explaining the state is the actual cost.</li>
+<li>Do not copy when: you need trust state — and do not assume its
+<code>do_not_answer_from</code> tag does anything; it appears only in a
+test fixture.</li>
+</ul>
+<h3 id="ctx"><code>ctx</code></h3>
+<ul>
+<li>Best idea: a write-scope guard on the consolidation pass, with one
+crossing gated on the disposition rather than the caller, plus refusals
+that carry a registered reason.</li>
+<li>Biggest risk: correction is structural folding with no tombstone, so
+a dream can re-propose what a human folded away.</li>
+<li>Most reusable component: <code>WriteScope</code>, and the
+corrupted-artifact regression corpus, which any system with an LLM
+rewrite path could adopt in an afternoon.</li>
+<li>Maturity impression: dense tests in the packages that matter, an
+append-only ledger, and a 61,000-line CLI wrapped around them.</li>
+<li>Study when: a background model pass can write into the user's own
+repository and you have no answer for where it may write.</li>
+<li>Do not copy when: you need ranked retrieval — there is no ranker,
+only progressive disclosure over files.</li>
+</ul>
+<h3 id="optmem"><code>optmem</code></h3>
+<ul>
+<li>Best idea: no background work at all — consolidation is requested
+inline in the output of <code>note</code>, so write-to-readable lag is
+zero and nothing rewrites memory unobserved.</li>
+<li>Biggest risk: no licence file, so nothing here is reusable; and a
+wrong memory is permanent, because the log is never edited.</li>
+<li>Most reusable component: the <code>cover</code> geometry — one
+parameter, closed form, and no compression at all while everything
+fits.</li>
+<li>Maturity impression: 860 lines with a 611-line test file, and the
+only committed footprint-and-latency figures in the atlas.</li>
+<li>Study when: you are about to build a consolidation queue and have
+not asked whether you need one.</li>
+<li>Do not copy when: you need to fix a mistake — OptMem can always tell
+you what was written and can never repair it.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -4666,6 +4823,9 @@ href="../systems/atomic-agent/"><code>atomic-agent</code></a></li>
 <li><a href="../systems/memanto/"><code>memanto</code></a></li>
 <li><a
 href="../systems/memory-engine/"><code>memory-engine</code></a></li>
+<li><a href="../systems/ai-memory/"><code>ai-memory</code></a></li>
+<li><a href="../systems/ctx/"><code>ctx</code></a></li>
+<li><a href="../systems/optmem/"><code>optmem</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4843,6 +5003,18 @@ href="https://github.com/moorcheh-ai/memanto/commit/d19024193213"><code>d1902419
 href="https://github.com/timescale/memory-engine">timescale/memory-engine</a>
 at <a
 href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5"><code>54e4d7d201b5</code></a></li>
+<li><a
+href="https://github.com/akitaonrails/ai-memory">akitaonrails/ai-memory</a>
+at <a
+href="https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf4"><code>5d3c08344cf4</code></a></li>
+<li><a href="https://github.com/ActiveMemory/ctx">ActiveMemory/ctx</a>
+at <a
+href="https://github.com/ActiveMemory/ctx/commit/ce5a832885d6"><code>ce5a832885d6</code></a></li>
+<li><a
+href="https://github.com/VictorTaelin/OptMem">VictorTaelin/OptMem</a> at
+<a
+href="https://github.com/VictorTaelin/OptMem/commit/e36da5581595"><code>e36da5581595</code></a>
+— <strong>no licence file</strong></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
@@ -5096,6 +5268,22 @@ no licence file, and is a different repository from the OpenClaw-derived
 <code>beita6969/ScienceClaw</code> noted above.
 <code>ArtificialAnalysis/Stirrup</code> and
 <code>howl-anderson/agentsilex</code> have no memory subsystem.</li>
+<li>Nothing was run for the six systems added in this round. OptMem is
+reviewed <strong>without a licence file</strong> — all rights reserved
+by default — as a deliberate exception to the rule applied to
+<code>openyak</code> and others, because it carries mechanisms the atlas
+has not otherwise found; the exception covers reading it, not reusing
+it. MemAgent, HiAgent, Mi-Memory and langchain-ai/memory-agent were
+examined in the same round and have no reports: MemAgent and HiAgent are
+conversation-window management (MemAgent is discussed in the
+scope-boundary section), <code>Darwin-Agent/Mi-Memory</code> is a paper
+PDF and a landing page with no implementation, and
+<code>langchain-ai/memory-agent</code> is a 235-line LangGraph template
+whose substantive counterpart, LangMem, is already reviewed here.</li>
+<li>Core Memory's grounding ceiling, Memanto's conflict-detection
+precision, Memory Engine's agent clamp, ai-memory's cross-harness
+continuity claim, ctx's disclosure reachability, and OptMem's cover loss
+are all directly testable and none was measured here.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>

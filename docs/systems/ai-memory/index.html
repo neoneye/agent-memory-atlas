@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Memory for coding agents built
+around a handoff that expires — a typed record of unfinished work
+addressed from one harness to another, carrying open questions rather
+than conclusions.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ai-memory — Agent Memory Atlas">
+    <meta property="og:description" content="Memory for coding agents
+built around a handoff that expires — a typed record of unfinished work
+addressed from one harness to another, carrying open questions rather
+than conclusions.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ai-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="Memory for coding agents
+built around a handoff that expires — a typed record of unfinished work
+addressed from one harness to another, carrying open questions rather
+than conclusions.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ai-memory — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Cross-harness handoff</p>
+          <h1>ai-memory</h1>
+          <p class="document-deck">Memory for coding agents built around
+a handoff that expires — a typed record of unfinished work addressed
+from one harness to another, carrying open questions rather than
+conclusions.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/akitaonrails/ai-memory">
+              <span>Source</span>
+              <strong>akitaonrails/ai-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf4" title="5d3c08344cf4">
+              <span>Analyzed revision</span>
+              <code>5d3c08344cf4</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ai-memory is an MIT-licensed Rust workspace of about 140,000 lines
+across ten crates, aimed at one scenario stated in its own opening
+line:</p>
+<blockquote>
+<p>"Quit Claude Code mid-task, start OpenAI Codex in the same directory,
+continue without re-explaining the architecture, the failed approaches,
+or the open questions."</p>
+</blockquote>
+<p>Most of the design is familiar and well executed: Markdown in git as
+the human source of truth with SQLite as a derived index, harness
+lifecycle hooks for capture, opt-in LLM consolidation, a retention
+score. That combination is <a href="../basic-memory/">Basic Memory</a>'s
+position with <a href="../agentmemory/">agentmemory</a>'s decay, and the
+repository says so — it carries
+<code>docs/research-basic-memory.md</code>,
+<code>research-agentmemory.md</code>, <code>research-cognee.md</code>
+and <code>research-karpathy-llm-wiki.md</code>, plus a
+<code>prior-art-implementation-findings.md</code> comparing those
+analyses against its own implementation. A system that has explicitly
+read the same prior art this atlas reviews is unusual, and the findings
+document is candid about what it took and what it did not.</p>
+<p>The novel part is the <strong>handoff</strong>, and it is worth the
+review on its own:</p>
+<pre class="rust"><code>pub enum HandoffState { Open, Accepted, Expired }
+
+pub struct NewHandoff {
+    pub workspace_id: WorkspaceId,
+    pub project_id: ProjectId,
+    pub from_session_id: Option&lt;SessionId&gt;,
+    pub from_agent: AgentKind,
+    pub to_agent: Option&lt;AgentKind&gt;,
+    pub cwd: Option&lt;PathBuf&gt;,
+    pub summary: String,
+    pub open_questions: Vec&lt;String&gt;,
+    pub next_steps: Vec&lt;String&gt;,
+    pub files_touched: Vec&lt;String&gt;,
+}</code></pre>
+<p>Three things about that type are absent from every other system in
+this atlas.</p>
+<p><strong>It is addressed.</strong> <code>from_agent</code> and
+<code>to_agent</code> are typed harness kinds, so a handoff is a message
+from Claude Code to Codex rather than an undirected note left in a
+store. Memory here has a sender and a recipient.</p>
+<p><strong>It carries open questions.</strong> Every other system in
+this atlas stores conclusions — facts, lessons, decisions, skills.
+<code>open_questions: Vec&lt;String&gt;</code> is memory of <em>what is
+not known</em>, which is the state a half-finished task actually leaves
+behind and the thing a fresh agent most needs.</p>
+<p><strong>It expires.</strong> <code>Open → Accepted → Expired</code>
+means an unclaimed handoff decays out rather than lingering as
+authoritative-looking stale context. The atlas has found decay applied
+to facts many times and never to a work item, where it is more obviously
+correct: nobody picked this up for a week, so it is probably no longer
+the state of the world.</p>
+<p>Reservations. There is no trust state and no tombstone; supersession
+is page-keyed, and the hooks re-capture on every session, so a corrected
+page can be re-derived. And the surface is large — 39,000 lines of CLI
+and 23,000 of MCP — for a system whose distinctive idea is a few hundred
+lines.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>harness lifecycle hooks
+  SessionStart · UserPrompt · PreToolUse · PostToolUse
+  PreCompact · PostCompaction · Notification · Stop · SessionEnd
+        │
+        ▼
+  observations (raw, captured without an LLM call)
+        │  opt-in consolidation
+        ▼
+  Markdown pages in git  ── human source of truth, editable, diffable
+        │  derived
+        ▼
+  SQLite index + state ── tiers, authority ranking, retention score
+
+  handoff ── open ──▶ accepted        (a later session picks it up)
+              └────▶ expired          (nobody did)</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Crates, in lines of Rust:</p>
+<ul>
+<li><code>ai-memory-cli</code> (39,508), <code>ai-memory-mcp</code>
+(23,708), <code>ai-memory-store</code> (23,752),
+<code>ai-memory-hooks</code> (13,074),
+<code>ai-memory-consolidate</code> (11,198), <code>ai-memory-llm</code>
+(7,687), <code>ai-memory-wiki</code> (7,320), <code>ai-memory-web</code>
+(5,731), <code>ai-memory-workstream</code> (4,447),
+<code>ai-memory-core</code> (4,237).</li>
+<li><code>ai-memory-core</code> holds the model:
+<code>handoff.rs</code>, <code>observation.rs</code>,
+<code>actor.rs</code>, <code>workstream.rs</code>, <code>page.rs</code>,
+<code>active_project.rs</code>, <code>routing_skills.rs</code>,
+<code>sanitize.rs</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  H[&quot;harness hooks (8 agents)&quot;] --&gt; Obs[&quot;observations&quot;]
+  Obs --&gt; Cons[&quot;opt-in consolidation&quot;]
+  Cons --&gt; Pages[&quot;Markdown pages in git&quot;]
+  Pages --&gt; Idx[&quot;SQLite index&quot;]
+  Idx --&gt; Search[&quot;authority + tier ranked search&quot;]
+  Idx --&gt; Ret[&quot;retention_score(age, last access)&quot;]
+  Sess1[&quot;session A · Claude Code&quot;] --&gt; HO[&quot;handoff: summary, open_questions,\nnext_steps, files_touched&quot;]
+  HO --&gt; St{&quot;state&quot;}
+  St --&gt;|accepted| Sess2[&quot;session B · Codex&quot;]
+  St --&gt;|expired| Gone[&quot;decays out&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-handoff-as-a-memory-type">The handoff as a memory type</h3>
+<p>Continuity across an interrupted task is a problem every coding-agent
+memory in this atlas gestures at and none models. The usual approach is
+to make session history retrievable and hope the next agent's query
+finds the right part of it. That fails in a specific way: the most
+important thing about an abandoned task is not what was
+<em>concluded</em> but what was <em>still open</em>, and open questions
+are exactly what a similarity search over prior conversation surfaces
+worst.</p>
+<p>Making the handoff a record with <code>open_questions</code>,
+<code>next_steps</code> and <code>files_touched</code> moves that from a
+retrieval problem to a schema one. And the state machine is what keeps
+it honest — a handoff that nobody accepted for long enough becomes
+<code>Expired</code>, so the store does not accumulate
+confident-sounding descriptions of work whose context has moved on.</p>
+<p><code>from_agent</code> / <code>to_agent</code> being typed
+<code>AgentKind</code> values is the part that serves the stated goal.
+The handoff knows it came from a different harness, which means the
+receiving agent can be told so rather than inferring it.</p>
+<h3 id="capture-without-a-model-call">Capture without a model call</h3>
+<p><code>ObservationKind</code> maps the harness lifecycle directly —
+<code>SessionStart</code>, <code>UserPrompt</code>,
+<code>PreToolUse</code>, <code>PostToolUse</code>,
+<code>PreCompact</code>, <code>PostCompaction</code>,
+<code>Notification</code>, <code>Stop</code>, <code>SessionEnd</code> —
+and observations are recorded as they arrive. Consolidation into pages
+is opt-in and happens later.</p>
+<p>This is <a href="../../patterns/zero-llm-capture/">zero-LLM
+capture</a> with an unusually complete event vocabulary.
+<code>PreCompact</code> and <code>PostCompaction</code> are worth
+noting: capturing around the harness's own compaction boundary means the
+material the harness is about to discard is preserved on the way past,
+which is the moment most systems lose it.</p>
+<p>Capturing the assistant's final turn is <strong>double
+opt-in</strong> — the hook must be installed with
+<code>--capture-assistant</code> <em>and</em> the server must enable
+<code>capture_assistant</code>, off by default. Requiring both sides to
+agree before recording model output is a defensible default for a system
+whose store is a git repository the user reads.</p>
+<h3 id="generation-based-supersession-of-pending-work">Generation-based
+supersession of pending work</h3>
+<pre class="sql"><code>SET state = &#39;superseded&#39;, completed_at = ?1, claim_id = …
+    last_error = &#39;superseded by a newer observation generation&#39;</code></pre>
+<p>with a test named
+<code>newer_generation_supersedes_older_pending_work</code> asserting
+"the superseded first generation must not run".</p>
+<p>This is supersession applied to <em>queued consolidation jobs</em>
+rather than to memories: when newer observations arrive, older pending
+work for the same target is cancelled instead of racing to write a stale
+page. Several systems in this atlas have background consolidation and
+none visibly handles the case where two generations of work are in
+flight at once.</p>
+<h3 id="retention-as-a-scored-decision">Retention as a scored
+decision</h3>
+<p><code>decay.rs</code> computes a <code>retention_score</code> —
+"Higher = keep this page" — from tunable coefficients with
+<strong>separate per-day exponential decay for age since
+<code>updated_at</code> and for days since last access</strong>.</p>
+<p>Splitting those two is right and rare: a page nobody has touched in a
+month is a different case from a page nobody has <em>read</em> in a
+month, and collapsing them into one recency term makes an
+actively-consulted reference look stale. The <a
+href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> pattern asks for exactly this separation.</p>
+<h3 id="an-actor-model-with-capabilities">An actor model with
+capabilities</h3>
+<p><code>AuthLevel</code> is <code>Anonymous | Root | User</code>;
+<code>Capability</code> is <code>Admin</code>,
+<code>UserManagement</code>, <code>NormalRead</code>,
+<code>NormalWrite</code>, <code>SkipAdmissionChain</code>. Combined with
+workspace and project ids and per-project UUID isolation, that gives a
+real authorization surface, which most local coding-agent memories in
+this atlas do not have at all.</p>
+<p><code>SkipAdmissionChain</code> is the interesting entry: an
+explicit, named capability for bypassing the write-admission path,
+rather than an implicit trusted-caller assumption. A bypass that has a
+name can be audited.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown pages in git are canonical; SQLite holds the index, tiers,
+and state. Pages carry frontmatter, a tier (<code>Episodic</code> and
+others), and an authority that participates in ranking. Observations,
+handoffs and workstream events are their own record types.</p>
+<p>What is absent:</p>
+<ul>
+<li><strong>No trust state.</strong> Nothing marks a page candidate,
+verified, or rejected.</li>
+<li><strong>No value-level tombstone.</strong> Supersession is
+page-keyed, and the hooks re-capture every session, so material a user
+deleted can return through the same path that first produced it.</li>
+<li><strong>A <code>do_not_answer_from</code> tag exists only in a test
+fixture.</strong> A fixture in <code>ai-memory-store</code> builds a
+page tagged <code>["superseded", "do_not_answer_from"]</code> and
+asserts that authority ranking puts the canonical decision first. That
+is a test of <em>ranking</em>, not of the tag: no read-path filter on
+<code>do_not_answer_from</code> was found in the crates. The name
+describes the mechanism the atlas keeps asking for; the mechanism itself
+was not located.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search over pages scoped to workspace and project, ranked with
+authority and tier participating, plus the retention score for lifecycle
+decisions. The prior-art findings document lists "first-class graph/link
+retrieval" and "bounded raw/verbatim fallback recall" among improvements
+it identified, which suggests the retrieval layer is the newer part of
+the system.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Hooks capture observations; consolidation turns them into pages under
+an explicit opt-in; the wiki crate manages migrations of the Markdown
+corpus. Git is the durability and audit story, which the atlas treats as
+a real mechanism distinct from an event table.</p>
+<p>Single-writer durability is named in the prior-art document as a
+lesson already taken, and the generation-supersession logic above is the
+concurrency guard on the consolidation path.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP plus lifecycle hooks for Claude Code, Codex, Cursor, Gemini CLI,
+opencode, Devin, Grok and Kimi — the broadest harness coverage in this
+atlas, and the reason the handoff type can be addressed between
+harnesses at all. Native packaging (AUR, systemd units), Docker images,
+and per-platform binaries.</p>
+<p><code>install-mcp --session-aware</code> optionally isolates scope
+per session through a local stdio bridge.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A handoff with a lifecycle</strong>, carrying open questions
+and next steps.</li>
+<li><strong>Expiry on unclaimed work</strong>, so stale context decays
+rather than accumulating.</li>
+<li><strong>Typed sender and recipient</strong>, making cross-harness
+continuity explicit.</li>
+<li><strong>Zero-LLM capture</strong> over a complete lifecycle
+vocabulary, including around the harness's own compaction.</li>
+<li><strong>Double opt-in</strong> for capturing assistant output.</li>
+<li><strong>Generation-based cancellation</strong> of superseded pending
+consolidation.</li>
+<li><strong>Separate decay terms</strong> for modification age and
+access age.</li>
+<li><strong>A named <code>SkipAdmissionChain</code> capability</strong>
+rather than an implicit bypass.</li>
+<li><strong>Markdown in git canonical</strong>, SQLite derived and
+rebuildable.</li>
+<li><strong>Committed prior-art analyses</strong> of four systems in
+this atlas, with an honest gap list.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state.</strong></li>
+<li><strong>No tombstone</strong>, and hooks re-capture, so deletion is
+undone by the next session.</li>
+<li><strong><code>do_not_answer_from</code> is fixture-only</strong>;
+the read path does not appear to honour it.</li>
+<li><strong>A large surface</strong> relative to the distinctive
+idea.</li>
+<li><strong>Handoff expiry is time-based</strong>, so a genuinely
+still-relevant handoff expires on the same schedule as an abandoned
+one.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests are present throughout, including targeted concurrency tests
+such as <code>newer_generation_supersedes_older_pending_work</code>, and
+an <code>e2e</code> tree with hook fixtures. Nothing was run for this
+review, and no retrieval-quality benchmark was found.</p>
+<p>The claim worth measuring is the product claim: does a session
+resumed from a handoff in a <em>different</em> harness actually avoid
+re-explaining the architecture? That is testable with a fixed task and a
+scripted interruption, and no such evaluation was located.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Model the handoff, do not retrieve it.</strong> What an
+interrupted task leaves behind is open questions and next steps, and
+those are the worst possible target for similarity search over
+transcript history.</li>
+<li><strong>Store open questions as memory.</strong> Every system here
+records conclusions; the unresolved parts are what a fresh agent most
+needs and nothing else keeps them.</li>
+<li><strong>Give work items an expiry state.</strong> Decay applied to a
+task is more obviously correct than decay applied to a fact.</li>
+<li><strong>Address memory between harnesses.</strong> Typed
+<code>from_agent</code>/<code>to_agent</code> turns a note in a store
+into a message with a recipient.</li>
+<li><strong>Capture around the harness's compaction boundary</strong>,
+where the material is about to be discarded.</li>
+<li><strong>Cancel superseded pending work by generation</strong>, so
+two consolidation runs cannot race to write the same page.</li>
+<li><strong>Split decay into modification age and access
+age.</strong></li>
+<li><strong>Name the bypass.</strong> <code>SkipAdmissionChain</code> as
+an explicit capability is auditable in a way an implicit trusted path is
+not.</li>
+<li><strong>Require both sides to opt in</strong> before recording model
+output into a store the user reads.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Supersession undone by re-capture</strong>, in a system
+whose hooks fire every session.</li>
+<li><strong>A tag that names the right mechanism without implementing
+it</strong> — the read path decides whether
+<code>do_not_answer_from</code> means anything, and here it does not
+appear to.</li>
+<li><strong>Time-based expiry</strong> as the only signal for handoff
+relevance.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The <code>Handoff</code> type more or less wholesale, including the
+state machine and the open-questions list. It is small, independent of
+the rest of the system, and solves a problem the atlas has otherwise
+seen only gestured at.</li>
+<li>Generation-based cancellation of pending background work.</li>
+<li>The two-term decay split.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Page-keyed supersession as the correction story where hooks
+re-capture.</li>
+<li>The assumption that a <code>do_not_answer_from</code> tag does
+anything unless the read path enforces it.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Does any read path filter <code>do_not_answer_from</code>, or is it
+only a fixture tag?</li>
+<li>What expires a handoff, and can an accepted-then-abandoned handoff
+be reopened?</li>
+<li>What stops a consolidated page returning after a user deletes it,
+given that hooks re-capture every session?</li>
+<li>Has the cross-harness continuity claim been measured end to
+end?</li>
+<li>Does <code>SkipAdmissionChain</code> get logged when exercised?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Handoff: <code>crates/ai-memory-core/src/handoff.rs</code>
+(<code>HandoffState</code>, <code>NewHandoff</code>,
+<code>Handoff</code>).</li>
+<li>Capture vocabulary:
+<code>crates/ai-memory-core/src/observation.rs</code>
+(<code>ObservationKind</code>).</li>
+<li>Actors and capabilities:
+<code>crates/ai-memory-core/src/actor.rs</code> (<code>AuthLevel</code>,
+<code>Capability</code>, <code>AuthzError</code>).</li>
+<li>Retention: <code>crates/ai-memory-store/src/decay.rs</code>
+(<code>retention_score</code>).</li>
+<li>Consolidation concurrency:
+<code>crates/ai-memory-store/src/session_consolidation.rs</code>.</li>
+<li>Prior-art analyses: <code>docs/research-agentmemory.md</code>,
+<code>docs/research-basic-memory.md</code>,
+<code>docs/research-cognee.md</code>,
+<code>docs/research-karpathy-llm-wiki.md</code>,
+<code>docs/prior-art-implementation-findings.md</code>.</li>
+<li>Harness adapters: <code>hooks/</code> and
+<code>crates/ai-memory-hooks/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A file-based context system whose
+background consolidation writes only inside a sanctioned path scope, and
+whose test suite includes a regression corpus built from a published
+paper on LLM memory corruption.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ctx — Agent Memory Atlas">
+    <meta property="og:description" content="A file-based context system
+whose background consolidation writes only inside a sanctioned path
+scope, and whose test suite includes a regression corpus built from a
+published paper on LLM memory corruption.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ctx — Agent Memory Atlas">
+    <meta name="twitter:description" content="A file-based context
+system whose background consolidation writes only inside a sanctioned
+path scope, and whose test suite includes a regression corpus built from
+a published paper on LLM memory corruption.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ctx — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Guarded consolidation</p>
+          <h1>ctx</h1>
+          <p class="document-deck">A file-based context system whose
+background consolidation writes only inside a sanctioned path scope, and
+whose test suite includes a regression corpus built from a published
+paper on LLM memory corruption.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ActiveMemory/ctx">
+              <span>Source</span>
+              <strong>ActiveMemory/ctx</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ActiveMemory/ctx/commit/ce5a832885d6" title="ce5a832885d6">
+              <span>Analyzed revision</span>
+              <code>ce5a832885d6</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ctx is an Apache-2.0 Go system of roughly 140,000 lines under
+<code>internal/</code>, positioned as "a system, not a prompt" —
+file-based context that any tool able to read files can consume, with a
+CLI, an MCP server, a VS Code extension, and a documentation site.</p>
+<p>Two things in it are worth the atlas's attention, and both concern
+the moment memory is <em>changed by a model</em> rather than the moment
+it is written.</p>
+<p><strong>The consolidation pass writes inside a guarded path
+scope.</strong> ctx calls its background consolidation
+<code>dream</code>, and <code>dream/guard.go</code> decides where a
+dream may write:</p>
+<blockquote>
+<p>"A target is allowed iff it resolves under <code>dreams/</code> or
+<code>ideas/</code> relative to projectRoot, OR under
+<code>specs/</code> when the action is <code>ActionPromote</code> — the
+one sanctioned boundary crossing (deliberate declassification into a
+tracked spec)."</p>
+</blockquote>
+<p>Every other background consolidator in this atlas can write wherever
+its code happens to point. <a href="../cowagent/">CowAgent</a> rewrites
+<code>MEMORY.md</code> nightly, <a href="../byterover/">ByteRover</a>
+curates documents, <a href="../magic-context/">Magic Context</a>
+re-verifies and marks. None of them has a stated, enforced answer to
+<em>which files may a background LLM pass modify</em>, and the answer
+matters most for exactly the systems whose store is the user's own
+project tree.</p>
+<p>Naming a single sanctioned crossing — promote, into
+<code>specs/</code> — is the better half of the idea. A guard with no
+exit becomes a guard people disable; a guard with one named,
+disposition-gated exit stays enforceable.</p>
+<p><strong>The test suite carries a corruption corpus taken from the
+literature.</strong></p>
+<blockquote>
+<p>"corruptedFixture is a regression corpus modeled on the
+corrupted-artifact appendix of arXiv 2605.12978 ('Useful Memories Become
+Faulty When Continuously Updated by LLMs'): one well-formed proposal
+among several corrupted ones (an unknown status enum, stripped evidence,
+a dropped target). It guards the review/dedup gate against silently
+admitting a faulty artifact."</p>
+</blockquote>
+<p><code>TestCorruptedArtifactGate</code> feeds four proposals through
+the real reader and the schema gate and asserts that <strong>exactly
+one</strong> — the well-formed, provenance-bearing one — survives. This
+is the first system in the atlas that tests against a documented failure
+mode from published research rather than against its own happy path, and
+the failure mode chosen is precisely the one the atlas keeps warning
+about: memory degrading as an LLM repeatedly rewrites it.</p>
+<p>Reservations. Correction is structural — entries fold into themed
+regions — with no trust state and nothing recording that a digested
+claim was later judged wrong. And the surface is very large for what it
+does, with 61,000 lines of CLI.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>staging ── entries land here first, undigested
+   │
+   │  ctx names a theme:  AddTheme folds a gist bullet into the
+   │  root&#39;s ## Themes region, creating the region if absent.
+   │  &quot;Nothing moves out of staging — this is how a theme is
+   │   named before any entries are digested into it.&quot;
+   ▼
+root document
+   ## Themes
+   ## &lt;region per theme&gt;   ── entries digested into place
+
+dream (background):
+   scan ──▶ proposals ──▶ schema gate (provenance required)
+                            │ invalid → rejected, not admitted
+                            ▼
+                        write-scope guard
+                            dreams/ · ideas/          allowed
+                            specs/                    only on promote
+                            anything else             refused, with a reason
+                            ▼
+                        apply ──▶ ledger (resumable)</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Largest packages under <code>internal/</code>, in lines of Go
+excluding tests:</p>
+<ul>
+<li><code>cli</code> (61,118), <code>config</code> (21,044),
+<code>write</code> (13,084), <code>err</code> (8,183), <code>mcp</code>
+(5,145), <code>journal</code> (4,228), <code>hub</code> (2,605),
+<code>assets</code> (2,509), <code>ctxctl</code> (1,807),
+<code>entity</code> (1,600), <code>disclosure</code> (1,569),
+<code>rc</code> (1,483), <code>trace</code> (1,301), <code>dream</code>
+(1,278), <code>drift</code> (925).</li>
+</ul>
+<p>The interesting logic is concentrated in the small packages:
+<code>dream</code>, <code>disclosure</code>, <code>drift</code>,
+<code>journal</code>, <code>entity</code>.</p>
+<pre class="mermaid"><code>flowchart LR
+  E[&quot;entries&quot;] --&gt; Stage[&quot;staging&quot;]
+  Theme[&quot;AddTheme: name a theme first&quot;] --&gt; Root[&quot;root doc ## Themes&quot;]
+  Stage --&gt; Dig[&quot;digest into region&quot;]
+  Dig --&gt; Root
+  Scan[&quot;dream scan&quot;] --&gt; Prop[&quot;proposals&quot;]
+  Prop --&gt; Gate{&quot;schema gate\nprovenance required&quot;}
+  Gate --&gt;|invalid| Rej[&quot;rejected&quot;]
+  Gate --&gt;|valid| WS{&quot;write-scope guard&quot;}
+  WS --&gt;|dreams/ ideas/| Apply[&quot;apply&quot;]
+  WS --&gt;|specs/ on promote| Apply
+  WS --&gt;|elsewhere| Ref[&quot;refused with a reason&quot;]
+  Apply --&gt; Led[&quot;ledger — resumable&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="a-write-scope-for-the-consolidator">A write scope for the
+consolidator</h3>
+<p><code>WriteScope(projectRoot, target, action)</code> returns a
+<code>GuardDecision</code> carrying "Allowed plus a registry-sourced
+refusal Reason", and errors only when a path cannot be resolved. Two
+details make it more than a path check.</p>
+<p><strong>Refusals carry a reason from a registry.</strong> A guard
+that returns a bare false produces an unexplainable failure; one that
+returns a registered reason produces a message an operator can act on,
+and a set of refusal categories that can be counted.</p>
+<p><strong>The exception is gated on the disposition, not the
+caller.</strong> <code>specs/</code> opens only when the action is
+<code>ActionPromote</code>, described as "deliberate declassification
+into a tracked spec". Tying the boundary crossing to <em>what the pass
+decided</em> rather than to <em>who is asking</em> is the right axis: it
+means the guard cannot be widened by adding a privileged caller.</p>
+<p>This is the <a href="../../patterns/governed-write-gateway/">governed
+write gateway</a> pattern applied to the background path specifically,
+which is where this atlas has repeatedly found governance missing. A
+human write goes through review in several systems here; the nightly job
+goes wherever its code points in all of them but this one.</p>
+<h3 id="a-corruption-regression-corpus">A corruption regression
+corpus</h3>
+<p>Most memory systems in this atlas are tested against their own
+intended behaviour. ctx is tested against a published account of how
+systems like it fail.</p>
+<p>The fixture is four proposals: one clean, and three corrupted in ways
+the paper's appendix catalogues — an unknown status enum, stripped
+evidence, a dropped target. The assertion is not "the pipeline survives"
+but that exactly one proposal, <code>clean-1</code>, passes
+<code>ProposalValid</code>, and that the corrupted entries are
+"rejected, not silently admitted".</p>
+<p>Silent admission is the failure that matters. A pipeline that rejects
+loudly is debuggable; one that accepts a proposal with stripped evidence
+produces a memory that looks well-formed and is not, and the <a
+href="../byterover/">structural-loss guard</a> in ByteRover exists
+because the same thing happens during curation. ctx is the only system
+here that keeps a <em>corpus</em> of the failure and re-runs it.</p>
+<p>Requiring provenance for survival is the other half — a proposal with
+its evidence stripped is rejected by construction rather than by a
+heuristic about its content.</p>
+<h3 id="name-the-theme-before-digesting-into-it">Name the theme before
+digesting into it</h3>
+<p><code>AddTheme</code> "declares a theme in a root: it folds the gist
+bullet into the root's <code>## Themes</code> region, creating that
+region when the root has none", and the docstring is explicit that
+"<strong>Nothing moves out of staging</strong> — this is how a theme is
+named before any entries are digested into it."</p>
+<p>Separating <em>declaring a category</em> from <em>filing things into
+it</em> prevents the failure that turned this atlas's own taxonomy into
+a list once: categories created implicitly, one per item, because filing
+and naming happened in the same step. Making theme creation a distinct,
+visible act with its own command puts a human decision in front of
+structure growth.</p>
+<h3 id="an-append-only-ledger-in-two-formats-at-once">An append-only
+ledger in two formats at once</h3>
+<p><code>AppendLedger</code> "appends one disposition to the append-only
+ledger at <code>&lt;dreamsDir&gt;/ledger.md</code>… Each entry is
+written as a Markdown list item whose payload is the JSON encoding of
+the <code>LedgerEntry</code> — human-readable as a list, and
+machine-parseable by <code>ReadLedger</code>. The ledger is never
+rewritten, only" appended.</p>
+<p>Two properties, both cheap. It is genuinely append-only, so the
+record of what the dream decided cannot be edited by the next dream. And
+the same file is a document a person reads and a structure a program
+parses, which removes the usual choice between an audit log nobody opens
+and a changelog nothing can query. That, with
+<code>resume_test.go</code> and <code>state.go</code>, gives the <a
+href="../../patterns/recoverable-background-work/">recoverable
+background work</a> and <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> shapes at once. Proposals are staged to disk with
+<code>SafeWriteFileAtomic</code> at secret permissions before the gate
+runs, so a crash mid-pass leaves the input intact.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown in the project tree. Entries stage, themes are declared into
+a root's <code>## Themes</code> region, entries digest into per-theme
+regions. <code>disclosure/</code> carries <code>regions.go</code>,
+<code>invariant.go</code>, <code>split.go</code>, <code>move.go</code>,
+<code>validate.go</code> — region manipulation with invariants and a
+validator, tested by <code>apply_invariants_test.go</code> and
+<code>apply_conserve_test.go</code>.</p>
+<p>A conservation test on an apply path is a good sign: it asks whether
+the rewrite lost anything, which is the same question ByteRover's
+<code>detectStructuralLoss</code> asks and which most rewrite paths in
+this atlas never ask.</p>
+<p>What is absent:</p>
+<ul>
+<li><strong>No trust state</strong> on an entry.</li>
+<li><strong>No value-level tombstone.</strong> A digested claim later
+judged wrong is edited or folded away; nothing prevents the next dream
+proposing it again from the same staged material.</li>
+<li><strong>No explicit scope key</strong> beyond the project tree
+itself — scoping here is the filesystem, which is honest for a
+per-project tool and does not extend to multi-user use.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranker. Retrieval is progressive disclosure over files:
+roots carry themes, themes carry regions, and any tool that can read
+files can walk them. That places ctx with <a
+href="../genericagent/">GenericAgent</a> and <a
+href="../nanobot/">nanobot</a> — the cheapest retrieval architecture in
+the atlas, which works while the corpus stays small and human-organized,
+and fails silently when a reader does not know a region exists.</p>
+<p>The <code>drift/</code> package exists to detect when the organized
+structure and the underlying reality have diverged, which is the
+mechanism that failure mode calls for.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Staged entries, an explicit digest step, and a <code>dream</code>
+pass that proposes rather than rewrites. Proposals are validated before
+application and applied within the guard. <code>journal/</code> (4,228
+lines) records the history alongside.</p>
+<p>Notably, <code>write/</code> is its own 13,000-line package with
+<code>err/</code> at 8,183 — a system that treats writing files and
+reporting failures as first-class concerns rather than incidental ones,
+which matches a design whose store is the user's own repository.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>CLI, MCP server, a VS Code extension, a skills contract
+(<code>CONTRIBUTING-SKILLS.md</code>), and steering/hooks packages. The
+stated position is that it "works with any AI tool that can read files;
+no model or vendor lock-in", which is the same bet <a
+href="../basic-memory/">Basic Memory</a> makes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A write-scope guard on the consolidation pass</strong>, with
+one disposition-gated exception and registry-sourced refusal
+reasons.</li>
+<li><strong>A corruption regression corpus</strong> drawn from published
+research on LLM memory degradation, asserting rejection rather than
+survival.</li>
+<li><strong>Provenance required</strong> for a proposal to pass the
+gate.</li>
+<li><strong>Theme declaration separated from digestion</strong>, so
+structure grows by decision.</li>
+<li><strong>Conservation and invariant tests</strong> on the
+region-apply path.</li>
+<li><strong>An append-only ledger</strong>, never rewritten, readable as
+Markdown and parseable as JSON, with atomic staging at restrictive
+permissions.</li>
+<li><strong>A drift package</strong> aimed at the failure mode a
+ranker-free design has.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state or tombstone</strong>; correction is
+structural editing.</li>
+<li><strong>No ranker</strong>, so recall depends on the reader knowing
+where to look.</li>
+<li><strong>Very large surface</strong>, dominated by a 61,000-line
+CLI.</li>
+<li><strong>Filesystem-scoped</strong>, with no multi-user story.</li>
+<li><strong>The guard protects the project tree, not the memory's
+meaning</strong> — a dream may write a wrong thing inside
+<code>dreams/</code> all it likes.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests are dense in the small packages — <code>disclosure/</code>
+alone has apply, invariant, conserve, convention, firstrun and abort
+tests, and <code>dream/</code> has guard, ledger, resume, validate,
+proposals and the corrupted-corpus test.</p>
+<p>Nothing was run for this review, and no retrieval-quality benchmark
+exists — consistent with a design that has no ranker to benchmark. The
+measurement that would matter here is whether progressive disclosure
+actually gets read: how often a relevant region exists and the agent
+never opens it. Nothing measures that, and it is the same unmeasured
+false-negative the atlas notes for GenericAgent.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Give the background consolidator a write scope</strong>,
+enforced by path, with refusals carrying a registered reason. A nightly
+LLM pass that can write anywhere in the user's repository is a risk most
+systems here simply run.</li>
+<li><strong>Gate the one sanctioned crossing on the
+disposition</strong>, not on the caller, so the boundary cannot be
+widened by adding a privileged path.</li>
+<li><strong>Build a regression corpus from published failure
+modes.</strong> Testing against documented ways systems like yours
+degrade is more useful than another happy-path fixture, and the paper
+appendices are already written.</li>
+<li><strong>Assert rejection, not survival.</strong> The interesting
+property is that a malformed artifact does <em>not</em> get admitted
+silently.</li>
+<li><strong>Require provenance for admission</strong>, so
+evidence-stripped material fails by construction.</li>
+<li><strong>Separate naming a category from filing into it</strong>, or
+categories multiply one-per-item.</li>
+<li><strong>Test conservation on any rewrite path</strong> — did the
+transformation lose anything?</li>
+<li><strong>Write the audit log in two formats at once.</strong> A
+Markdown list whose items are JSON payloads is readable by a person and
+parseable by a program, which is why it might actually get read.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Structural correction without a tombstone</strong>, in a
+system whose dream pass re-reads staged material.</li>
+<li><strong>No ranker and no measurement of whether disclosure is
+reached.</strong></li>
+<li><strong>Surface area</strong> far exceeding the mechanisms that make
+it distinctive.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li><code>WriteScope</code> and its disposition-gated exception, which
+is a small function with an outsized safety return.</li>
+<li>The corrupted-artifact corpus idea, which any system with an LLM
+rewrite path can adopt in an afternoon.</li>
+<li>Theme-before-digest.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Progressive disclosure as the whole retrieval story unless the
+corpus stays small and curated.</li>
+<li>Region folding as the correction story if a background pass can
+re-propose.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What stops a dream re-proposing something a human folded away?</li>
+<li>Is the write-scope guard applied to every write path, or only to
+dream apply?</li>
+<li>How often does an agent fail to open a region that would have
+answered it?</li>
+<li>Does <code>drift</code> detect divergence between themes and
+reality, or only within the documents?</li>
+<li>Are the refusal reasons counted anywhere, or only shown?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Write-scope guard: <code>internal/dream/guard.go</code>
+(<code>WriteScope</code>, <code>GuardDecision</code>,
+<code>ActionPromote</code>), <code>guard_helpers.go</code>.</li>
+<li>Corruption corpus: <code>internal/dream/corrupted_test.go</code>
+(<code>TestCorruptedArtifactGate</code>,
+<code>testdata/corrupted-2605.12978.json</code>).</li>
+<li>Proposal lifecycle: <code>internal/dream/proposals.go</code>,
+<code>validate.go</code>, <code>ledger.go</code>, <code>state.go</code>,
+<code>scan.go</code>, <code>apply.go</code>.</li>
+<li>Disclosure and regions:
+<code>internal/disclosure/addtheme.go</code>, <code>regions.go</code>,
+<code>invariant.go</code>, <code>split.go</code>, <code>move.go</code>,
+<code>validate.go</code>.</li>
+<li>Drift detection: <code>internal/drift/</code>.</li>
+<li>History: <code>internal/journal/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -340,6 +340,8 @@ Do not copy:
   extraction?
 - What sets `confidence` other than the default?
 
+This lifecycle is generalized as [resolve, don't just detect](../../patterns/resolve-not-just-detect/).
+
 ## Appendix: File Index
 
 - Conflict detection: `memanto/app/services/daily_analysis_service.py`
