@@ -135,6 +135,18 @@ users switch projects — an invitation to assume isolation that does not exist.
 [A-MEM](../../systems/a-mem/) and [Swafra](../../systems/swafra/) remain global
 corpora.
 
+[Memory Engine](../../systems/memory-engine/) is the only system in the atlas
+that makes the **agent** a scope principal rather than a process borrowing the
+user's authority. Grants are `(space, principal, ltree path, level)`, and
+delegation is safe because `agent_tree_access` clamps an agent to
+`least(agent, owner)` at every path — so a member can grant their own agents
+freely and an over-grant clamps down rather than escalating. It also evaluates
+authorization *inside* the ranking query rather than as a post-filter, which is
+what keeps `LIMIT` meaning the same thing for a caller with narrow grants and
+one with wide ones. Its design notes record that row-level security was tried
+and rejected on performance, with the benchmark retained — a negative result
+this atlas would like to see more often.
+
 ## Tests to require
 
 - Cross-user, cross-agent, and cross-project leakage.

@@ -194,6 +194,20 @@ isolation that does not exist. <a
 href="../../systems/moltis/">Moltis</a> scopes only by indexed
 directory, and <a href="../../systems/a-mem/">A-MEM</a> and <a
 href="../../systems/swafra/">Swafra</a> remain global corpora.</p>
+<p><a href="../../systems/memory-engine/">Memory Engine</a> is the only
+system in the atlas that makes the <strong>agent</strong> a scope
+principal rather than a process borrowing the user's authority. Grants
+are <code>(space, principal, ltree path, level)</code>, and delegation
+is safe because <code>agent_tree_access</code> clamps an agent to
+<code>least(agent, owner)</code> at every path — so a member can grant
+their own agents freely and an over-grant clamps down rather than
+escalating. It also evaluates authorization <em>inside</em> the ranking
+query rather than as a post-filter, which is what keeps
+<code>LIMIT</code> meaning the same thing for a caller with narrow
+grants and one with wide ones. Its design notes record that row-level
+security was tried and rejected on performance, with the benchmark
+retained — a negative result this atlas would like to see more
+often.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>

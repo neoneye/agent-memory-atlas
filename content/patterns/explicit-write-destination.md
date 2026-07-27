@@ -107,6 +107,12 @@ which.
 - Require stronger confirmation for shared or organization-wide writes.
 - Keep private automatic capture separate from shared publication.
 
+[Memory Engine](../../systems/memory-engine/) is the strongest instance found:
+`memory.create` and `batchCreate` **require** an explicit `tree`, because callers
+should "choose `share` vs `~` deliberately". The default is not safe-and-surfaced
+— it is *absent* on the interactive path, and exists only for file importers,
+where a human already chose the source.
+
 ## Tests to require
 
 - Omitted and ambiguous write targets fail safely.
