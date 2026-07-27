@@ -308,12 +308,32 @@ frontmatter as the matrix, so it cannot drift from the reports.
 
 Definitions are strict, and a flag is present only where the mechanism was found
 in code. Near-misses do not count, and the near-misses are frequently the
-interesting part: [`claude-mem`](../systems/claude-mem/) has "tombstones" that
-synchronize row deletion across stores, which is not a rejected-value tombstone;
-[`mercury-agent`](../systems/mercury-agent/) grades confidence but has no
-discrete trust state; [`nanobot`](../systems/nanobot/) and
-[`basic-memory`](../systems/basic-memory/) get an audit trail from git rather
-than from an event table. Carrying none of these flags is not the same as
+interesting part:
+
+- [`claude-mem`](../systems/claude-mem/) has "tombstones" that synchronize row
+  deletion across stores, which is not a rejected-value tombstone.
+- [`mercury-agent`](../systems/mercury-agent/) grades confidence three ways but
+  has no discrete state.
+- Of the four trust-state systems, only [`verel`](../systems/verel/),
+  [`rainbox`](../systems/rainbox/) and [`gini-agent`](../systems/gini-agent/)
+  carry an explicitly **rejected** state.
+  [`magic-context`](../systems/magic-context/) qualifies on `stale` and
+  `flagged` — states that withhold a memory from being trusted — and it is the
+  one system here keeping lifecycle and epistemic state on genuinely separate
+  axes, but it has no rejected state and its own report notes that `flagged` has
+  no resolution workflow.
+- The mutation-audit flag is deliberately narrow, and five systems that look
+  like holders are not. [`rainbox`](../systems/rainbox/)'s `RetrievalEvent` and
+  [`atomic-agent`](../systems/atomic-agent/)'s `vote_events` are append-only
+  event tables recording *use and feedback* — the other half of the
+  [append-only memory audit](../patterns/append-only-memory-audit/) pattern, and
+  valuable, but not a record of what changed.
+  [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`nanobot`](../systems/nanobot/)
+  and [`basic-memory`](../systems/basic-memory/) get an audit trail from git,
+  which is a real mechanism and a different one. For
+  [`hindsight`](../systems/hindsight/) and [`agentmemory`](../systems/agentmemory/)
+  the word "audit" appears in this atlas's own summary of them without a named
+  artifact behind it, so the flag is withheld until one is verified. Carrying none of these flags is not the same as
 being bad: [`waku-agent`](../systems/waku-agent/)'s entire design is about doing
 less on purpose, and [`moltis`](../systems/moltis/) is a corpus-and-index system
 that never claims to model belief.
@@ -323,7 +343,7 @@ that never claims to model belief.
 
 *2 of 46:* [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
-**Explicit trust state** — Discrete epistemic status — at least candidate versus verified versus rejected — as a field, not a confidence score.
+**Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
 *4 of 46:* [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
@@ -335,9 +355,9 @@ that never claims to model belief.
 
 *26 of 46:* [`agentmemory`](../systems/agentmemory/), [`basic-memory`](../systems/basic-memory/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`cowagent`](../systems/cowagent/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`openclaw`](../systems/openclaw/), [`openviking`](../systems/openviking/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`verel`](../systems/verel/)
 
-**Append-only mutation audit** — An explicit event or audit record of memory mutations in the system's own store.
+**Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*7 of 46:* [`agentmemory`](../systems/agentmemory/), [`atomic-agent`](../systems/atomic-agent/), [`hindsight`](../systems/hindsight/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`rainbox`](../systems/rainbox/)
+*2 of 46:* [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
@@ -348,13 +368,24 @@ that never claims to model belief.
 *1 of 46:* [`open-cowork`](../systems/open-cowork/)
 <!-- END GENERATED CAPABILITIES -->
 
-Three observations follow directly from the counts. **Scope is solved and
-correction is not**: over half the atlas enforces a scope key on the read path,
-while two systems carry a value-level tombstone. **Trust is usually a number,
-not a state**, which collapses "how sure am I" into "how findable is this" —
-see [decay and reinforcement](../patterns/decay-and-reinforcement/). And
-**negative evidence is almost never tested**: one repository asserts that
-particular material must not be retrieved, which is the assertion every scope,
+Three observations follow from the counts, stated no more strongly than the
+counts support.
+
+**Read-path scoping is common; correction is not.** Over half the atlas applies
+a scope key when retrieving, while two systems carry a value-level tombstone.
+That is not the same as saying scope is solved — this flag measures the read
+path only. It says nothing about write authorization, whether background
+consolidation respects the same boundary, whether cache and embedding keys
+include it, or whether deletion reaches every scoped copy. A summary that spans
+two projects has crossed a boundary the retriever would have enforced, and
+nothing here measures that.
+
+**Trust is usually a number, not a state**, which collapses "how sure am I" into
+"how findable is this" — see
+[decay and reinforcement](../patterns/decay-and-reinforcement/).
+
+**Negative evidence is almost never tested.** One repository asserts that
+particular material must *not* be retrieved, which is the assertion every scope,
 deletion, and correction claim in this document ultimately rests on.
 
 ## 3. End-to-End Memory Lifecycle Comparison

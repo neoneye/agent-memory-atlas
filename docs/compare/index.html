@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
 forty-six agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
@@ -1238,20 +1239,47 @@ is generated from the same frontmatter as the matrix, so it cannot drift
 from the reports.</p>
 <p>Definitions are strict, and a flag is present only where the
 mechanism was found in code. Near-misses do not count, and the
-near-misses are frequently the interesting part: <a
-href="../systems/claude-mem/"><code>claude-mem</code></a> has
+near-misses are frequently the interesting part:</p>
+<ul>
+<li><a href="../systems/claude-mem/"><code>claude-mem</code></a> has
 "tombstones" that synchronize row deletion across stores, which is not a
-rejected-value tombstone; <a
-href="../systems/mercury-agent/"><code>mercury-agent</code></a> grades
-confidence but has no discrete trust state; <a
+rejected-value tombstone.</li>
+<li><a href="../systems/mercury-agent/"><code>mercury-agent</code></a>
+grades confidence three ways but has no discrete state.</li>
+<li>Of the four trust-state systems, only <a
+href="../systems/verel/"><code>verel</code></a>, <a
+href="../systems/rainbox/"><code>rainbox</code></a> and <a
+href="../systems/gini-agent/"><code>gini-agent</code></a> carry an
+explicitly <strong>rejected</strong> state. <a
+href="../systems/magic-context/"><code>magic-context</code></a>
+qualifies on <code>stale</code> and <code>flagged</code> — states that
+withhold a memory from being trusted — and it is the one system here
+keeping lifecycle and epistemic state on genuinely separate axes, but it
+has no rejected state and its own report notes that <code>flagged</code>
+has no resolution workflow.</li>
+<li>The mutation-audit flag is deliberately narrow, and five systems
+that look like holders are not. <a
+href="../systems/rainbox/"><code>rainbox</code></a>'s
+<code>RetrievalEvent</code> and <a
+href="../systems/atomic-agent/"><code>atomic-agent</code></a>'s
+<code>vote_events</code> are append-only event tables recording <em>use
+and feedback</em> — the other half of the <a
+href="../patterns/append-only-memory-audit/">append-only memory
+audit</a> pattern, and valuable, but not a record of what changed. <a
+href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
 href="../systems/nanobot/"><code>nanobot</code></a> and <a
 href="../systems/basic-memory/"><code>basic-memory</code></a> get an
-audit trail from git rather than from an event table. Carrying none of
-these flags is not the same as being bad: <a
+audit trail from git, which is a real mechanism and a different one. For
+<a href="../systems/hindsight/"><code>hindsight</code></a> and <a
+href="../systems/agentmemory/"><code>agentmemory</code></a> the word
+"audit" appears in this atlas's own summary of them without a named
+artifact behind it, so the flag is withheld until one is verified.
+Carrying none of these flags is not the same as being bad: <a
 href="../systems/waku-agent/"><code>waku-agent</code></a>'s entire
 design is about doing less on purpose, and <a
 href="../systems/moltis/"><code>moltis</code></a> is a corpus-and-index
-system that never claims to model belief.</p>
+system that never claims to model belief.</li>
+</ul>
 <!-- BEGIN GENERATED CAPABILITIES -->
 
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
@@ -1260,9 +1288,9 @@ silently re-assert it.</p>
 <p><em>2 of 46:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
-<p><strong>Explicit trust state</strong> — Discrete epistemic status —
-at least candidate versus verified versus rejected — as a field, not a
-confidence score.</p>
+<p><strong>Explicit trust state</strong> — Discrete epistemic status as
+a field rather than a confidence score, including at least one state
+that withholds a memory from being treated as true.</p>
 <p><em>4 of 46:</em> <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1304,16 +1332,13 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
 <a href="../systems/supermemory/"><code>supermemory</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
-<p><strong>Append-only mutation audit</strong> — An explicit event or
-audit record of memory mutations in the system's own store.</p>
-<p><em>7 of 46:</em> <a
-href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
-href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
-href="../systems/hindsight/"><code>hindsight</code></a>, <a
-href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
+<p><strong>Append-only mutation audit</strong> — A named append-only
+event record of memory <em>mutations</em> in the system's own store.
+Logs of retrieval or feedback are the other half of the pattern and do
+not count here, nor does git history.</p>
+<p><em>2 of 46:</em> <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
-href="../systems/memora/"><code>memora</code></a>, <a
-href="../systems/rainbox/"><code>rainbox</code></a></p>
+href="../systems/memora/"><code>memora</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
@@ -1331,16 +1356,25 @@ retrieved.</p>
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
-<p>Three observations follow directly from the counts. <strong>Scope is
-solved and correction is not</strong>: over half the atlas enforces a
-scope key on the read path, while two systems carry a value-level
-tombstone. <strong>Trust is usually a number, not a state</strong>,
-which collapses "how sure am I" into "how findable is this" — see <a
-href="../patterns/decay-and-reinforcement/">decay and reinforcement</a>.
-And <strong>negative evidence is almost never tested</strong>: one
-repository asserts that particular material must not be retrieved, which
-is the assertion every scope, deletion, and correction claim in this
-document ultimately rests on.</p>
+<p>Three observations follow from the counts, stated no more strongly
+than the counts support.</p>
+<p><strong>Read-path scoping is common; correction is not.</strong> Over
+half the atlas applies a scope key when retrieving, while two systems
+carry a value-level tombstone. That is not the same as saying scope is
+solved — this flag measures the read path only. It says nothing about
+write authorization, whether background consolidation respects the same
+boundary, whether cache and embedding keys include it, or whether
+deletion reaches every scoped copy. A summary that spans two projects
+has crossed a boundary the retriever would have enforced, and nothing
+here measures that.</p>
+<p><strong>Trust is usually a number, not a state</strong>, which
+collapses "how sure am I" into "how findable is this" — see <a
+href="../patterns/decay-and-reinforcement/">decay and
+reinforcement</a>.</p>
+<p><strong>Negative evidence is almost never tested.</strong> One
+repository asserts that particular material must <em>not</em> be
+retrieved, which is the assertion every scope, deletion, and correction
+claim in this document ultimately rests on.</p>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>

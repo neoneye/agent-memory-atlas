@@ -34,8 +34,9 @@ CAPABILITIES = [
      "A durable record of a *rejected value*, keyed on the value, so later "
      "extraction cannot silently re-assert it."),
     ("trust_state", "Explicit trust state",
-     "Discrete epistemic status — at least candidate versus verified versus "
-     "rejected — as a field, not a confidence score."),
+     "Discrete epistemic status as a field rather than a confidence score, "
+     "including at least one state that withholds a memory from being treated "
+     "as true."),
     ("bitemporal", "Bi-temporal validity",
      "When a fact was true tracked separately from when the system recorded "
      "or expired it."),
@@ -43,8 +44,9 @@ CAPABILITIES = [
      "A stored scope key (user, project, agent, tenant) applied as a filter "
      "on the read path, not merely available as a tag."),
     ("audit_log", "Append-only mutation audit",
-     "An explicit event or audit record of memory mutations in the system's "
-     "own store."),
+     "A named append-only event record of memory *mutations* in the system's "
+     "own store. Logs of retrieval or feedback are the other half of the "
+     "pattern and do not count here, nor does git history."),
     ("human_review", "Human review surface",
      "A place where a person inspects, approves, or adjudicates memory "
      "content before or after it takes effect."),
@@ -120,6 +122,18 @@ def read_capabilities(path: Path) -> set[str] | None:
     return None
 
 
+PLACEHOLDER_BODY = "<!-- Replace with code-grounded analysis. -->"
+
+
+def find_placeholder_reports() -> list[str]:
+    """Reports still carrying scaffolder placeholder sections."""
+    return sorted(
+        path.stem
+        for path in SYSTEMS.glob("*.md")
+        if PLACEHOLDER_BODY in path.read_text(encoding="utf-8")
+    )
+
+
 def build_capabilities() -> str:
     paths = sorted(SYSTEMS.glob("*.md"))
     carried = {path.stem: read_capabilities(path) for path in paths}
@@ -170,6 +184,18 @@ def build_table() -> str:
         if missing:
             problems.append(f"{slug}: missing {', '.join(missing)}")
             continue
+        # The scaffolder emits the block with empty values, so key presence
+        # alone would let an unfinished draft build and publish as a row of
+        # blanks. Require a value, and reject the placeholder text too.
+        blank = [key for key, _ in COLUMNS if not fields[key].strip()]
+        if blank:
+            problems.append(f"{slug}: empty matrix values: {', '.join(blank)}")
+            continue
+        placeholder = [key for key, _ in COLUMNS if "TODO" in fields[key]
+                       or "Replace with" in fields[key]]
+        if placeholder:
+            problems.append(f"{slug}: placeholder matrix values: {', '.join(placeholder)}")
+            continue
         cells = [escape_cell(fields[key]) for key, _ in COLUMNS]
         rows.append("| `" + slug + "` | " + " | ".join(cells) + " |")
 
@@ -193,6 +219,16 @@ def splice(text: str, begin: str, end: str, body: str, label: str) -> str:
 
 
 def main() -> int:
+    drafts = find_placeholder_reports()
+    if drafts:
+        for slug in drafts:
+            print(
+                f"error: {slug}: still contains scaffolder placeholder sections. "
+                "Finish the report or keep the draft outside content/systems/.",
+                file=sys.stderr,
+            )
+        return 1
+
     table = build_table()
     capabilities = build_capabilities()
     text = OVERVIEW.read_text(encoding="utf-8")

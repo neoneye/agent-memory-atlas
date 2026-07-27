@@ -56,6 +56,13 @@ if [[ "$matrix_rows" != "$expected_systems" ]]; then
   exit 1
 fi
 
+# The homepage is hand-written while the reports are not, so its cards and
+# statistics drift silently as systems are added.
+if ! python3 "$project_dir/scripts/check_homepage.py" "$project_dir"; then
+  echo "Homepage is out of step with content/systems." >&2
+  exit 1
+fi
+
 # Heading ids are generated from heading text, so a numbered section changes its
 # anchor whenever sections are renumbered. Catch fragment links that no longer land.
 broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"

@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="What the memory benchmarks
 actually test, why a bad score on one may mean nothing, what stress
 testing is for, which metrics nobody measures, and two tests worth
@@ -689,30 +690,57 @@ benchmark-shaped hole where the evidence should be.</p>
 <p>Small enough to paste into a CI job. The adapter is the only part you
 write — six methods, all of which any memory system already has in some
 form.</p>
-<pre class="python"><code>import re, pytest
+<pre class="python"><code>import pytest
 
 # Fictional and high-entropy, for the reason in section 3: a probe a model
 # could guess proves nothing. This one cannot be reached by a plausibility prior.
 CANARY = &quot;the user&#39;s dog is named Plumbus Vantablack-7&quot;
-TOKEN = &quot;Vantablack-7&quot;          # what to grep derived artifacts for
+TOKEN = &quot;Vantablack-7&quot;          # what to probe derived stores for
 SCOPE = &quot;test-user&quot;
 
 
 class MemoryAdapter:
-    &quot;&quot;&quot;Implement these six against the system under test.&quot;&quot;&quot;
+    &quot;&quot;&quot;Implement these against the system under test.&quot;&quot;&quot;
 
     def write(self, text: str, *, scope: str) -&gt; None: ...
+
+    def settle(self, *, timeout_s: float = 120) -&gt; None:
+        &quot;&quot;&quot;Block until every queued write, extraction and index update has been
+        applied. Without this the test measures write-to-readable lag (section 5)
+        and calls it a deletion success. If the system cannot expose a quiescence
+        signal, that is a finding: record it and poll `prompt_prefix` to a
+        timeout instead of sleeping a guessed interval.&quot;&quot;&quot;
+
     def prompt_prefix(self, query: str, *, scope: str) -&gt; str:
         &quot;&quot;&quot;What actually reaches the model — after ranking, budget truncation,
         dedupe and formatting. Not the retriever&#39;s return value.&quot;&quot;&quot;
+
     def forget(self, text: str, *, scope: str) -&gt; None: ...
+
     def run_background_jobs(self) -&gt; None:
         &quot;&quot;&quot;Every one: consolidation, re-extraction, nightly distillation,
-        profile rebuild, index compaction, cloud sync.&quot;&quot;&quot;
-    def derived_artifacts(self, *, scope: str) -&gt; list[str]:
-        &quot;&quot;&quot;Every store derived from memory, as text: summaries, profiles,
-        graph edges, caches, exports, backups.&quot;&quot;&quot;
-    def audit_entries(self, *, scope: str) -&gt; list[str]: ...
+        profile rebuild, index compaction, cloud sync. Then settle() again.&quot;&quot;&quot;
+
+    def leak_probes(self, *, scope: str) -&gt; dict[str, bool]:
+        &quot;&quot;&quot;One probe per derived store, each returning True if the value is
+        still reachable there. Text stores can be searched directly; the rest
+        cannot, and need a probe of their own:
+
+            summaries / profiles / exports  → substring search
+            graph edges                     → query by entity, not by text
+            vector index                    → embed the canary, nearest-neighbour
+                                              search, check the distance
+            caches                          → look up by the key the system uses
+            encrypted backups               → restore to a scratch instance and
+                                              run this same probe set against it
+
+        A store returning no probe is an untested path, which is a result.
+        Refusing to model this as list[str] is the point: a deleted value living
+        on as a vector nobody can grep for is the leak most likely to survive.&quot;&quot;&quot;
+
+    def audit_entries(self, *, scope: str) -&gt; list[dict]:
+        &quot;&quot;&quot;Mutation events as records: {event, memory_id, actor, at}. Not text
+        containing the memory — see below.&quot;&quot;&quot;
 
 
 def present(memory: MemoryAdapter, query=&quot;what is the dog called?&quot;) -&gt; bool:
@@ -720,31 +748,51 @@ def present(memory: MemoryAdapter, query=&quot;what is the dog called?&quot;) -&
 
 
 def test_deletion_holds(memory: MemoryAdapter, source_material: str):
-    memory.write(CANARY, scope=SCOPE)                                    # 1
+    memory.write(CANARY, scope=SCOPE); memory.settle()                   # 1
     assert present(memory), &quot;setup failed: never retrievable to begin with&quot;  # 2
 
-    memory.forget(CANARY, scope=SCOPE)                                   # 3
+    memory_id = memory.forget(CANARY, scope=SCOPE); memory.settle()      # 3
     assert not present(memory), &quot;deletion did not take effect&quot;           # 4
 
-    memory.write(source_material, scope=SCOPE)                           # 5
+    memory.write(source_material, scope=SCOPE); memory.settle()          # 5
     assert not present(memory), &quot;re-ingestion resurrected a deleted value&quot;  # 6
 
     memory.run_background_jobs()                                         # 7
     assert not present(memory), &quot;a background job re-derived a deleted value&quot;  # 8
 
-    leaked = [a for a in memory.derived_artifacts(scope=SCOPE) if TOKEN in a]  # 9
-    assert not leaked, f&quot;deleted value survives in {len(leaked)} derived artifacts&quot;
+    leaks = {store: hit for store, hit                                   # 9
+             in memory.leak_probes(scope=SCOPE).items() if hit}
+    assert not leaks, f&quot;deleted value still reachable in {sorted(leaks)}&quot;
 
-    assert any(re.search(r&quot;forget|delete|reject&quot;, e) and TOKEN in e       # 10
-               for e in memory.audit_entries(scope=SCOPE)), &quot;deletion not auditable&quot;</code></pre>
-<p>Two notes on running it honestly. <code>source_material</code> in
-step 5 must be the original document or transcript the fact was
-extracted from, not the fact itself — re-ingesting the raw source is the
-realistic path, and the easy version of the test skips it. And
-<code>run_background_jobs</code> has to be genuinely exhaustive; a
-system whose nightly distillation is not reachable from the test harness
-has an untested path, which is worth recording as a result in
-itself.</p>
+    events = memory.audit_entries(scope=SCOPE)                           # 10
+    assert any(e[&quot;event&quot;] in {&quot;forget&quot;, &quot;delete&quot;, &quot;reject&quot;}
+               and e[&quot;memory_id&quot;] == memory_id for e in events), &quot;deletion not auditable&quot;
+    assert not any(TOKEN in str(e) for e in events), \
+        &quot;the audit trail retains the value that was supposed to be deleted&quot;</code></pre>
+<p>Four notes on running it honestly.</p>
+<p><strong>Step 5 must re-feed the original source</strong>, the
+document or transcript the fact was extracted from, not the fact itself.
+Re-ingesting the raw source is the realistic path, and the easy version
+of the test skips it.</p>
+<p><strong><code>settle()</code> is not optional.</strong> A system that
+extracts asynchronously will pass step 4 for the wrong reason — the
+value is not retrievable yet because it was never indexed, not because
+deletion worked. Without a quiescence contract the test conflates
+write-to-readable lag with deletion success in one direction and flags a
+slow system as broken in the other.</p>
+<p><strong>Step 10 asserts the audit does <em>not</em> contain the
+value.</strong> This is the inversion that matters: an audit row quoting
+a deleted value has not deleted it, as the <a
+href="../patterns/append-only-memory-audit/">append-only memory
+audit</a> pattern says directly. Audit the <em>event</em> — type, memory
+id, actor, timestamp — and if you need to prove which value was removed,
+store a salted digest rather than the plaintext. A deletion log that
+reproduces the deleted secret is a compliance problem wearing a
+compliance mechanism's clothes.</p>
+<p><strong><code>run_background_jobs</code> has to be genuinely
+exhaustive.</strong> A system whose nightly distillation is not
+reachable from the harness has an untested path, which is worth
+recording as a result rather than passing over.</p>
 <p>The same adapter runs the <a href="#contradiction-test">contradiction
 test</a> below — <code>prompt_prefix</code> is the B measurement,
 <code>run_background_jobs</code> is the C measurement, and only the
@@ -813,27 +861,45 @@ separately from record time can answer "was I vegetarian in 2022?"</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Score four things, not one.</strong> The single question
+<p><strong>Score five things, not one.</strong> The single question
 "what does it answer" hides the interesting failures:</p>
 <ul>
-<li><strong>A — Answer.</strong> Does the agent say Lisbon? This is what
-knowledge-update scoring already measures, and the weakest of the
-four.</li>
-<li><strong>B — Retrieval hygiene.</strong> Does <em>Berlin</em> still
-appear in the assembled prompt? A system that retrieves both and gets
-the right answer anyway has not corrected anything; it has handed the
-contradiction to the model and got lucky. Measure this against the
-prompt prefix, the way <a
+<li><p><strong>A — Answer.</strong> Does the agent say Lisbon? This is
+what knowledge-update scoring already measures, and the weakest of the
+four.</p></li>
+<li><p><strong>B — Retrieval hygiene.</strong> Does the assembled prompt
+still present <em>Berlin as where the user lives?</em> Note the wording:
+the test is not whether the string appears. A bi-temporal system may
+legitimately surface both, labelled — "Berlin until March 2026, Lisbon
+since" — and that is correct behaviour, not a failure. What fails is an
+<strong>unqualified</strong> stale assertion sitting beside the current
+one, leaving the model to guess which holds. A system that retrieves
+both unlabelled and gets the right answer anyway has not corrected
+anything; it has handed the contradiction to the model and got lucky.
+Measure this against the prompt prefix, the way <a
 href="../systems/open-cowork/">open-cowork</a>'s harness does, not
-against the retriever's return value.</li>
-<li><strong>C — Durability.</strong> Run every background job —
+against the retriever's return value.</p>
+<p>This is the one criterion a plain string check cannot score, and
+pretending otherwise would penalise exactly the systems this atlas
+argues are doing it right. B needs a judge — or a machine-readable
+qualifier on each injected memory, which is a good reason to emit
+one.</p></li>
+<li><p><strong>C — Durability.</strong> Run every background job —
 consolidation, re-extraction, nightly distillation, profile rebuild —
 and ask again. This is where systems that re-derive from retained
-history quietly restore the old value.</li>
-<li><strong>D — History.</strong> Ask "where did I use to live?" A
+history quietly restore the old value.</p></li>
+<li><p><strong>D — History.</strong> Ask "where did I use to live?" A
 system that hard-deletes Berlin passes A, B and C and fails here.
 <strong>Correction is not amnesia</strong>, and a test that only rewards
-the current answer will push designs toward destructive overwrite.</li>
+the current answer will push designs toward destructive
+overwrite.</p></li>
+<li><p><strong>E — Derived reach.</strong> Do the summaries, profiles
+and graph edges agree with the correction? Same qualification as B: a
+derived artifact that records Berlin <em>as a former address</em> is
+correct; one asserting it as current has not received the correction. A
+raw string grep over derived stores answers the deletion question in §6,
+where the value should be gone entirely — it does not answer this one,
+where the value may legitimately remain in qualified form.</p></li>
 </ul>
 <p>C and D pull in opposite directions, which is the point: passing both
 is what <a href="../patterns/bi-temporal-fact-validity/">bi-temporal
@@ -858,18 +924,30 @@ the surface layer.</p>
            assert it is retrievable                        → setup
     day 3  write the contradicting statement
     A      ask the question                                 → is the answer current?
-    B      inspect the assembled prompt                     → is the stale value absent?
+    B      inspect the assembled prompt                     → is the stale value
+                                                              absent, or present
+                                                              but qualified?
     D      ask the historical form of the question          → is the old value still knowable?
-           run every background job
+           drain every queue, then run every background job
     C      repeat A and B                                   → did the correction survive?
            re-feed the day-1 material by another write path
     C&#39;     repeat A and B                                   → did re-entry undo it?
            inspect derived artifacts: summaries, profiles,
            graph edges, embeddings, exports
-    E      grep them for the stale value                    → did the correction reach them?</code></pre>
-<p>Ten to twenty cases is enough. A and D need a judge or a human; B, C
-and E are deterministic string checks against material the system
-produced.</p>
+    E      check whether they assert the stale value        → did the correction reach them?
+           as current</code></pre>
+<p>Ten to twenty cases is enough. <strong>A, B, D and E need a judge or
+a human</strong>, because all four turn on whether a value is asserted
+as current rather than whether a string is present. Only C is
+deterministic, and only because it is "did the B verdict change after
+the background jobs ran".</p>
+<p>If that judging cost is unwelcome, the cheap alternative is to make
+the system under test emit a qualifier — a validity interval, a
+<code>superseded</code> marker, an <code>as-of</code> label — on every
+injected memory. Then B and E become mechanical. A memory layer that
+cannot tell the model which of two conflicting facts is current is
+relying on the model to work it out, which is the failure the criterion
+exists to catch.</p>
 <h3 id="what-this-would-show-and-what-it-would-not">What this would
 show, and what it would not</h3>
 <p>Reporting it as a percentage would waste it. The useful output is a
