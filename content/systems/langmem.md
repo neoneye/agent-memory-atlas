@@ -9,6 +9,18 @@ source_url: https://github.com/langchain-ai/langmem
 revision: c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
 revision_url: https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Store item, usually JSON memory"
+  storage: "LangGraph `BaseStore`"
+  retrieval: "`store.search/asearch` delegated to backend"
+  write: "Tools call create/update/delete/search; extraction via Trustcall"
+  update_delete: "Tool-level CRUD"
+  scoping: "Namespace templates"
+  integration: "LangChain/LangGraph tools"
+  background: "Reflection executor local/remote"
+  trust: "Mostly application-defined"
+  strengths: "Clean primitives, schema-driven extraction"
+  risks: "Too low-level to solve memory quality alone"
 ---
 
 ## 1. Executive Summary

@@ -43,6 +43,18 @@ if [[ "$revision_count" != "$expected_systems" ]]; then
   exit 1
 fi
 
+if ! python3 "$project_dir/scripts/generate_matrix.py" --check >/dev/null 2>&1; then
+  echo "Comparative matrix is out of sync with content/systems frontmatter." >&2
+  echo "Run 'npm run build' to regenerate it." >&2
+  exit 1
+fi
+
+matrix_rows="$(grep -c '^| `' "$project_dir/content/overview.md" | tr -d ' ')"
+if [[ "$matrix_rows" != "$expected_systems" ]]; then
+  echo "Expected $expected_systems matrix rows, found $matrix_rows" >&2
+  exit 1
+fi
+
 missing_dates="$(grep -RLs '^analyzed_at:' "$project_dir/content/systems" --include='*.md' || true)"
 if [[ -n "$missing_dates" ]]; then
   echo "System reports missing analyzed_at frontmatter:" >&2

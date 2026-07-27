@@ -9,6 +9,18 @@ source_url: https://github.com/NousResearch/hermes-agent
 revision: 0fa5e41c86f022bba147797849f0b44865721476
 revision_url: https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Flat fact row plus HRR phase vector and linked entities"
+  storage: "Local SQLite (WAL) with FTS5 and per-category bundled banks"
+  retrieval: "FTS5 + Jaccard + HRR cosine, multiplied by trust; algebraic `probe`/`related`/`reason`"
+  write: "`fact_store` tool, mirrored host writes, optional end-of-session regex extraction"
+  update_delete: "Exact update/remove; feedback shifts trust; no supersession"
+  scoping: "Category only; no user/project/session scope"
+  integration: "Hermes `MemoryProvider` plugin; `fact_store` and `fact_feedback` tools"
+  background: "None; bank rebuild is synchronous on every write"
+  trust: "None — no source, actor, or session on a fact"
+  strengths: "Deterministic hash-derived vectors; `contradict` as a query action"
+  risks: "Three downvotes silently drop a fact below the retrieval floor; one score for truth and reachability"
 ---
 
 ## 1. Executive Summary

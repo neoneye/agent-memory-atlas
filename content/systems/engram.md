@@ -9,6 +9,18 @@ source_url: https://github.com/Gentleman-Programming/engram
 revision: 44faeee1fb4fabdee4ba9619df55af485f3d06eb
 revision_url: https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Observation and prompt records"
+  storage: "Local SQLite WAL, FTS5"
+  retrieval: "FTS5, topic-key lookup, context assembly"
+  write: "MCP `mem_save`, conflict candidate flow, dedupe/update rules"
+  update_delete: "Topic-key updates, duplicate counts, soft delete/sync mutation"
+  scoping: "Project, scope, session, topic key"
+  integration: "MCP tools for coding agents"
+  background: "Sync queue, local conflict workflows"
+  trust: "Source/session/project metadata, explicit judgment path"
+  strengths: "Simple durable local design, inspectable code"
+  risks: "Lexical retrieval limits; conflict UX depends on agent behavior"
 ---
 
 ## 1. Executive Summary

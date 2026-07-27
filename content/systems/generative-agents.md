@@ -9,6 +9,18 @@ source_url: https://github.com/joonspk-research/generative_agents
 revision: fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 revision_url: https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "`ConceptNode` typed event, thought, or chat with poignancy"
+  storage: "Per-persona JSON plus in-memory embedding dict"
+  retrieval: "Normalized recency + relevance + importance, hand-tuned `gw = [0.5, 3, 2]`"
+  write: "Perception, conversation, and reflection all write ungated"
+  update_delete: "None; observations are never deleted or overwritten"
+  scoping: "One persona directory"
+  integration: "Simulation only; tightly coupled to `Persona`"
+  background: "Reflection fired by accumulated poignancy"
+  trust: "Reflections cite supporting nodes, but citations are never used"
+  strengths: "Consolidation triggered by significance rather than a timer"
+  risks: "Derived thoughts share one pool with observations; positional not temporal decay"
 ---
 
 ## 1. Executive Summary

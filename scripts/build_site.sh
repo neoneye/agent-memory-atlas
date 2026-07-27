@@ -10,6 +10,10 @@ if ! command -v pandoc >/dev/null 2>&1; then
   exit 1
 fi
 
+# The comparative matrix is derived from each report's frontmatter, so adding a
+# system never means editing a forty-row table by hand.
+python3 "$project_dir/scripts/generate_matrix.py"
+
 rm -rf "$output_dir"
 mkdir -p "$output_dir/assets" "$output_dir/compare" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 

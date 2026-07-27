@@ -9,6 +9,18 @@ source_url: https://github.com/moltis-org/moltis
 revision: 1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 revision_url: https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Chunk of a Markdown file"
+  storage: "SQLite with vectors; pluggable local, OpenAI, batch, and fallback embeddings"
+  retrieval: "Hybrid keyword plus vector, optional LLM rerank, citation modes"
+  write: "Corpus files plus sanitized session transcripts, one `sync()` chokepoint"
+  update_delete: "Edit or delete the file and reindex"
+  scoping: "Indexed directory only"
+  integration: "Rust crate inside the workspace"
+  background: "File watcher and scheduled memory work"
+  trust: "Citations to path and chunk; content-hash addressing"
+  strengths: "`keyword_only()` makes a no-embeddings mode constructible and inspectable"
+  risks: "Transcripts and curated notes rank identically; no trust state"
 ---
 
 ## 1. Executive Summary

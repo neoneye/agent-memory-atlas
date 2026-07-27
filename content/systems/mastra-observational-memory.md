@@ -9,6 +9,18 @@ source_url: https://github.com/mastra-ai/mastra
 revision: 40547102f655596178346ad2f883fbde735c3333
 revision_url: https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Raw message, dated observation group, reflected observation context"
+  storage: "Mastra `MemoryStorage` adapters"
+  retrieval: "Sequential active observations + recent raw tail; optional observation-vector retrieval"
+  write: "Processor observes at token thresholds; reflector compacts observations"
+  update_delete: "Range replacement, buffered activation, clear/clone records"
+  scoping: "Thread or resource"
+  integration: "Deep Mastra input/output processor integration"
+  background: "Early async observation/reflection buffers with activation"
+  trust: "Exact covered ranges and markers; summary has no truth state"
+  strengths: "Non-blocking context compaction for long sessions"
+  risks: "Distributed locking and progressive summary drift"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/MemTensor/MemOS
 revision: 3fd109e7cbaba291af2253f107e0a595dbf62b00
 revision_url: https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Textual item, graph tier, preference/skill, KV cache, LoRA"
+  storage: "Configurable vector/graph stores, dumps, cache/model artifacts"
+  retrieval: "Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories"
+  write: "Reader extraction into a memory cube; scheduler transformations"
+  update_delete: "Module-specific update/delete/soft-delete/dump semantics"
+  scoping: "User plus registered memory cube"
+  integration: "MOS chat/runtime, APIs, CLI"
+  background: "Scheduler and activation-memory refresh"
+  trust: "Source metadata varies by module; no uniform trust state"
+  strengths: "Treats memory as heterogeneous mountable resources"
+  risks: "Umbrella API hides uneven guarantees and maturity"
 ---
 
 ## 1. Executive Summary

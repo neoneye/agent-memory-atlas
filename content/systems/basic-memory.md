@@ -9,6 +9,18 @@ source_url: https://github.com/basicmachines-co/basic-memory
 revision: 232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
 revision_url: https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Canonical Markdown note; indexed entity, observation, relation"
+  storage: "Filesystem source + SQLite/PostgreSQL projection"
+  retrieval: "FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph context"
+  write: "MCP/API writes accepted Markdown; file watcher reconciles human edits"
+  update_delete: "Distinct create/replace/edit/move/delete with stable ID and reindex"
+  scoping: "Project, workspace, tenant, local/cloud route"
+  integration: "MCP tools, typed clients, API, CLI"
+  background: "Watcher, startup reconciliation, indexing workflows"
+  trust: "Human-visible source/checksums; no candidate/verified state"
+  strengths: "Inspectable portable memory with rebuildable indexes"
+  risks: "Bidirectional sync complexity; agent can write unsupported claims"
 ---
 
 ## 1. Executive Summary

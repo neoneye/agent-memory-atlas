@@ -9,6 +9,18 @@ source_url: https://github.com/letta-ai/letta
 revision: 6d8cb7fd48938b629aad5770faa051a8d42e1e9f
 revision_url: https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Core memory block, archival passage, message"
+  storage: "ORM database; passages with embeddings; optional git memory"
+  retrieval: "Archival search, conversation search, compiled core prompt"
+  write: "Agent tools mutate core/archival memory"
+  update_delete: "Append/replace/patch, passage insert, block update"
+  scoping: "Agent, block labels, files/sources"
+  integration: "Deep runtime tool executor integration"
+  background: "Prompt rebuilds, manager services"
+  trust: "Block tags/metadata, message timestamps; limited truth model"
+  strengths: "Clear core/archive/recall separation"
+  risks: "Agent can rewrite important memory without strong verification"
 ---
 
 ## 1. Executive Summary

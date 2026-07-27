@@ -9,6 +9,18 @@ source_url: https://github.com/cortexkit/magic-context
 revision: 113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 revision_url: https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Memory with separate lifecycle and verification state, plus compartments, facts, primers"
+  storage: "SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed"
+  retrieval: "Hybrid semantic + BM25 with source boosts and `matchType`, over memories and raw history"
+  write: "Agent, user, historian, or dreamer writes; synchronous promotion, async embedding"
+  update_delete: "Supersession and merge lineage; archived, not tombstoned"
+  scoping: "`project` / `ecosystem` / `universe` lattice plus a `shareable` flag"
+  integration: "Pi `ExtensionAPI` and an OpenCode adapter sharing one store"
+  background: "Dreamer: verify, map, classify, promote, retrospective, at commit boundaries"
+  trust: "Four-actor `sourceType`, mutation logs, per-memory `verified_at`"
+  strengths: "Memories re-verified against the files they describe when git says those files changed"
+  risks: "Verdict is an LLM call; no rejected-value tombstone; very large surface"
 ---
 
 ## 1. Executive Summary

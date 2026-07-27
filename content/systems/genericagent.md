@@ -9,6 +9,18 @@ source_url: https://github.com/lsdefine/GenericAgent
 revision: 7ffc95823b6e40ca4e10acf9fb285d923485cacc
 revision_url: https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Text and Markdown across four layers"
+  storage: "`global_mem_insight.txt`, `global_mem.txt`, `memory/`, `L4_raw_sessions/`"
+  retrieval: "Agent reads a ≤30-line index and opens files by pointer"
+  write: "Only successful tool-call results may be written (by policy)"
+  update_delete: "Layer migration and patching; \"better not to modify at all\""
+  scoping: "One global tree"
+  integration: "Internal to the framework"
+  background: "12-hour L4 archive cron"
+  trust: "Verification is a stated precondition, but no record is kept"
+  strengths: "\"No Execution, No Memory\" plus an ROI test for permanent context"
+  risks: "Every axiom is prose with no enforcement or audit"
 ---
 
 ## 1. Executive Summary

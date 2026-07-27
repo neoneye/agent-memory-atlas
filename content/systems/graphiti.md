@@ -9,6 +9,18 @@ source_url: https://github.com/getzep/graphiti
 revision: 9140123a7282d44efc077a0af09179919f3defdf
 revision_url: https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Episode, entity, temporal relationship edge, community/saga"
+  storage: "Neo4j, FalkorDB, Kuzu, Neptune"
+  retrieval: "BM25 + cosine + BFS across edges/nodes/episodes/communities; RRF/MMR/cross-encoder"
+  write: "Episode ingestion, entity/edge extraction, resolution, temporal invalidation"
+  update_delete: "Close `valid_at` intervals, expire edges, remove episodes"
+  scoping: "`group_id`, entity/edge types"
+  integration: "Python library, MCP, server"
+  background: "Ingestion maintenance; saga summaries"
+  trust: "Source episode UUIDs and bi-temporal history; no verified state"
+  strengths: "Preserves changing facts without erasing history"
+  risks: "Entity merge/invalidation mistakes reshape the graph"
 ---
 
 ## 1. Executive Summary

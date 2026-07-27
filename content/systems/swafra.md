@@ -9,6 +9,18 @@ source_url: https://github.com/kunal12203/swafra
 revision: 24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
 revision_url: https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Verbatim or synthetic chunk plus directed chunk edges"
+  storage: "Three local JSON files"
+  retrieval: "BM25 + vector + entity/date/preference heuristics + char n-gram; graph walk; best chunk per title"
+  write: "MCP add; Leiden or exchange/paragraph chunks; synchronous full-file rewrite"
+  update_delete: "Exact source delete; implicit same-ID reindex; broken supersession path"
+  scoping: "Source ID/title only; no user/project/tenant scope"
+  integration: "Python FastMCP; Node MCP over Python subprocess"
+  background: "None"
+  trust: "Caller title and raw chunk; no actor, span-quality provenance, trust state, or injection fence"
+  strengths: "Very compact local hybrid graph-RAG; optional dependencies; source diversity"
+  risks: "Non-atomic concurrent writes; unbounded context; dangling edges; benchmark cutoff invalid"
 ---
 
 ## 1. Executive Summary

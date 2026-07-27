@@ -9,6 +9,18 @@ source_url: https://github.com/thedotmack/claude-mem
 revision: 132b46343e60ecf4057c427736c57b08f7615dfe
 revision_url: https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Hook event, pending message, observation, session summary, prompt"
+  storage: "Canonical SQLite, optional Chroma projection and cloud sync"
+  retrieval: "FTS/filter search or Chroma semantic search; file-only metadata/semantic intersection; recent timeline context"
+  write: "Lifecycle hooks queue work; observer generates structured XML; SQLite commit before acknowledgement"
+  update_delete: "Exact row deletion with synchronized tombstones; project-wide server forget paths"
+  scoping: "Project/worktree, session, platform source; team/server scope emerging"
+  integration: "Coding-agent hooks, HTTP, MCP, UI, multiple adapters"
+  background: "Durable queue, provider retries, vector/cloud projection, repair"
+  trust: "Session/tool metadata and deterministic file evidence; generated claims have no trust state"
+  strengths: "Reliable non-blocking capture and bounded cross-session context"
+  risks: "Ordinary search is not fused hybrid; generated observations activate automatically; dual schema transition"
 ---
 
 ## 1. Executive Summary

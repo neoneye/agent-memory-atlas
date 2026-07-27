@@ -9,6 +9,18 @@ source_url: https://github.com/vectorize-io/hindsight
 revision: ed120a256d51d731085ec8aca724573a7f2f1e1c
 revision_url: https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Source chunk, world/experience fact, observation, reflection"
+  storage: "PostgreSQL/pgvector or Oracle"
+  retrieval: "Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder rerank"
+  write: "Screen, chunk, extract, embed, link, consolidate"
+  update_delete: "Replace/append source; observation create/update/history; exact bank/document operations"
+  scoping: "Memory bank, tags, schemas/tenants"
+  integration: "REST, MCP, generated SDKs, framework integrations"
+  background: "Queued consolidation and maintenance with retries"
+  trust: "Source IDs, proof counts, audit/LLM traces; no explicit truth state"
+  strengths: "Complete service pipeline; task-specific fusion; temporal recall"
+  risks: "LLM facts/observations can harden errors; operational complexity"
 ---
 
 ## 1. Executive Summary

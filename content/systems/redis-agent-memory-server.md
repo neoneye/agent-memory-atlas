@@ -9,6 +9,18 @@ source_url: https://github.com/redis/agent-memory-server
 revision: 886437963dc02289e828872f0ae21fdaa734c337
 revision_url: https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message"
+  storage: "Redis with TTL for working memory; pluggable vector DB for long-term"
+  retrieval: "Vector search plus metadata filters, reranked by recency with dual half-lives"
+  write: "Debounced trailing extraction via swappable strategies, then layered dedupe"
+  update_delete: "Exact delete; composite forgetting policy; no tombstones"
+  scoping: "Namespace, `user_id`, `session_id`, with auth"
+  integration: "REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin"
+  background: "Debounced extraction, compaction, dedupe, forgetting sweeps"
+  trust: "Session linkage and per-message extraction flags; no trust state"
+  strengths: "Best-specified retention policy in the atlas; cohesion-gated semantic merge"
+  risks: "Deletion is not durable against re-extraction; access-driven reinforcement"
 ---
 
 ## 1. Executive Summary

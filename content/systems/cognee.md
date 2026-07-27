@@ -9,6 +9,18 @@ source_url: https://github.com/topoteretes/cognee
 revision: 325acf356a81545b9892f19ab1ea7b61c51a776b
 revision_url: https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Source data, chunk, typed `DataPoint`, graph edge, summary, session entry"
+  storage: "SQLite/PostgreSQL plus pluggable graph/vector stores"
+  retrieval: "Chunk, lexical, vector, graph, triplet, summary, temporal, hybrid, and routed modes"
+  write: "`add` + `cognify`; unified `remember`; session-hot writes with background improvement"
+  update_delete: "Exact data/dataset/all forget; memory-only reprocessing; provenance rollback"
+  scoping: "User permissions and dataset; optional per-user/dataset backend isolation"
+  integration: "Python, REST, CLI, MCP, typed memory entries"
+  background: "Composable pipelines, session bridge, memify, rollback/recovery"
+  trust: "Source records, content hashes, pipeline/task/user provenance; no factual trust state"
+  strengths: "Ontology-aware multimodal graph pipeline with serious rollback"
+  risks: "Large configuration surface; cross-store consistency; extracted graph can harden errors"
 ---
 
 ## 1. Executive Summary

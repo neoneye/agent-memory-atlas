@@ -9,6 +9,18 @@ source_url: https://github.com/HKUDS/nanobot
 revision: b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 revision_url: https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Markdown durable files plus JSONL summary lines"
+  storage: "`SOUL.md`, `USER.md`, `memory/MEMORY.md`, `history.jsonl`, git"
+  retrieval: "None; durable files are always in context"
+  write: "Consolidator appends evidence; Dream is the sole durable writer"
+  update_delete: "Surgical edits under git; no tombstone"
+  scoping: "One workspace"
+  integration: "Internal, with WebUI and cron"
+  background: "Dream on cron, gated on tool-error-free runs"
+  trust: "Git history over an explicit durable-file allowlist"
+  strengths: "Dual cursors, and a cursor that refuses to advance after tool errors"
+  risks: "No provenance from claim to evidence; single workspace scope"
 ---
 
 ## 1. Executive Summary

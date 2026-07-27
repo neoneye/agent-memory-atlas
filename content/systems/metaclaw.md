@@ -9,6 +9,18 @@ source_url: https://github.com/aiming-lab/MetaClaw
 revision: 922caf3a1cd093fb316e95183a8acc8aa47b3b21
 revision_url: https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "`MemoryUnit` with type, status, importance, confidence, access count, reinforcement score"
+  storage: "Store with embeddings, per-scope policies"
+  retrieval: "Under a live `MemoryPolicyState`: mode, unit cap, token budget, weights"
+  write: "Conversation writes plus consolidation; no actor gate"
+  update_delete: "`superseded_by` lineage, `expires_at`; no rejected state"
+  scoping: "`scope_id` throughout store, retriever, policy, metrics"
+  integration: "OpenClaw plugin with a written spec and a sidecar manager"
+  background: "Self-upgrade worker: candidate → replay → gate → promote"
+  trust: "Source session and turn range; reinforcement kept apart from confidence"
+  strengths: "Retrieval policy replayed offline and promoted only on non-regression across eight metrics"
+  risks: "Optimizes overlap proxies; gate thresholds are themselves defaults"
 ---
 
 ## 1. Executive Summary

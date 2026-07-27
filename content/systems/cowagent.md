@@ -9,6 +9,18 @@ source_url: https://github.com/zhayujie/CowAgent
 revision: fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 revision_url: https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Markdown files, chunked into an indexed `chunks` table"
+  storage: "SQLite with embeddings and self-healing FTS5"
+  retrieval: "Vector plus keyword over chunks; `MEMORY.md` injected in full"
+  write: "Summarize into dated daily files, then distil"
+  update_delete: "Recency-wins conflict update; whole-file overwrite"
+  scoping: "`user_id` and `scope`, defaulting to `shared`"
+  integration: "Agent memory tools"
+  background: "Deep Dream after the daily summary, 23:55 cron"
+  trust: "Line-addressable chunks with hashes; dream diary"
+  strengths: "Dated intermediate layer and written distillation rules"
+  risks: "Shared-by-default scope; chained lossy summarization"
 ---
 
 ## 1. Executive Summary

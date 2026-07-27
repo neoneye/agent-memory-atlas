@@ -9,6 +9,18 @@ source_url: https://github.com/supermemoryai/supermemory
 revision: 603d0512fd40e4575e2a075938c1851a898ceeb6
 revision_url: https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Document, chunk, memory entry, space"
+  storage: "Hosted backend; visible schemas/client only"
+  retrieval: "Hosted search/profile API; SDK uses hybrid settings"
+  write: "API/MCP add memory/document"
+  update_delete: "Version chains, relations, forget API"
+  scoping: "Space, container tags, org/user/project"
+  integration: "SDK, AI SDK tools, MCP"
+  background: "Hosted processing not visible"
+  trust: "Rich schema fields and relations; implementation not visible"
+  strengths: "Product/API surface, document-memory graph"
+  risks: "Backend black box; semantic forget needs care"
 ---
 
 ## 1. Executive Summary

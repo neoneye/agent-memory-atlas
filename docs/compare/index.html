@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-forty agent memory architectures, their retrieval mechanics, trust
+forty-one agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,15 +12,15 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+of forty-one agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+of forty-one agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -52,9 +52,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of forty
-agent memory architectures, their retrieval mechanics, trust models, and
-operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of
+forty-one agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -70,421 +70,194 @@ operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>This workspace contains several different answers to "agent memory".
-They should not be evaluated as one category.</p>
-<h3 id="library-first-memory-layer">Library-first memory layer</h3>
-<p>Repos:</p>
-<ul>
-<li><code>mem0</code></li>
-<li><code>langmem</code></li>
-<li><code>graphiti</code></li>
-<li><code>cognee</code></li>
-<li><code>a-mem</code></li>
-</ul>
-<p>These optimize for easy embedding into an existing agent application.
-The application calls memory tools or SDK functions; the library handles
-extraction, storage, and retrieval.</p>
-<p>Tradeoff: the memory layer is easy to adopt but usually has weak
-authority over the agent loop. It can store and retrieve, but it cannot
-guarantee the model calls the right tool at the right time, verifies
-facts, or uses the recall output safely. Cognee is the broad exception
-in surface area: it is library-accessible but operates more like a
-knowledge pipeline platform. A-MEM sits at the opposite extreme: a
-compact research sketch whose linked-note evolution idea is stronger
-than its current implementation.</p>
+<p>Forty-one systems do not fall into forty-one categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
+<p>Where a system is the clearest instance of an idea, it is named in
+bold and characterized in place rather than given a category of its
+own.</p>
+<h3 id="embeddable-memory-libraries">Embeddable memory libraries</h3>
+<p><code>mem0</code>, <code>langmem</code>, <code>llamaindex</code>,
+<code>cognee</code>, <code>a-mem</code></p>
+<p>Called from an application that owns the agent loop. Easy to adopt;
+weak authority over when memory is written or how recall is used.
+<strong>Cognee</strong> is the outlier in surface area — a knowledge
+pipeline platform with ontologies, dataset permissions, and provenance
+rollback behind a small remember/recall API. <strong>LlamaIndex</strong>
+composes memory from pluggable blocks that each truncate themselves to
+budget. <strong>A-MEM</strong> is a compact Zettelkasten research sketch
+whose linked-note evolution idea outruns its implementation.</p>
+<p>Tradeoff: a library can store and retrieve, but it cannot guarantee
+the model calls the right tool, verifies a fact, or uses recall
+safely.</p>
+<h3 id="hosted-and-service-memory">Hosted and service memory</h3>
+<p><code>honcho</code>, <code>supermemory</code>,
+<code>hindsight</code>, <code>redis-agent-memory-server</code>,
+<code>openviking</code></p>
+<p>Multi-user, API-first, with background derivation.
+<strong>Honcho</strong> models workspaces, peers, sessions, and derived
+representations rather than flat facts. <strong>Hindsight</strong> runs
+four independent recall arms with task-specific fusion. <strong>Redis
+Agent Memory Server</strong> splits TTL-scoped working memory from
+promoted long-term memory and carries the atlas's most developed
+retention policy. <strong>OpenViking</strong> unifies memory, resources,
+and skills in one filesystem hierarchy with three retrievable
+granularities per record.</p>
+<p>Tradeoff: the API surface is usually easier to study than the
+decision machinery. In <code>supermemory</code> the hosted core is not
+visible at all; in <code>mem0</code> several documented capabilities are
+managed-platform-only.</p>
 <h3 id="agent-runtime-memory">Agent-runtime memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>letta</code></li>
-<li><code>rainbox</code></li>
-<li><code>mastra-observational-memory</code></li>
-<li><code>memos</code></li>
-<li><code>agentmemory</code></li>
-<li><code>tencentdb-agent-memory</code></li>
-<li><code>claude-mem</code></li>
-<li><code>hermes-agent</code></li>
-<li><code>openclaw</code></li>
-</ul>
-<p>This treats memory as part of the agent runtime. Memory is not merely
-an external RAG sidecar; it is compiled into or injected into
-prompt/context, mutated through first-class tools/actions, searched
-through runtime services, and tied to agent state.</p>
-<p>Tradeoff: deeper integration gives better control over behavior, but
-the memory subsystem becomes coupled to the agent framework, tool
-execution, message manager, prompt/context assembly, review UI, and
-compatibility surface.</p>
-<h3 id="hostedproduct-memory-service">Hosted/product memory service</h3>
-<p>Repos:</p>
-<ul>
-<li><code>honcho</code></li>
-<li><code>supermemory</code></li>
-<li><code>hindsight</code></li>
-<li><code>redis-agent-memory-server</code></li>
-<li><code>openviking</code></li>
-<li>partly <code>mem0</code></li>
-</ul>
-<p>These optimize for multi-user, multi-session, product-oriented
-memory. They expose APIs, SDKs, MCP tools, and background
-processing.</p>
-<p>Tradeoff: the API surface is often much easier to study than the
-actual decision machinery. In <code>supermemory</code>, the most
-important hosted backend logic is not visible in this checkout. In
-<code>mem0</code>, several advanced capabilities mentioned in docs are
-managed-platform-only in the OSS code.</p>
-<h3 id="coding-agent-local-memory">Coding-agent local memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>engram</code></li>
-<li><code>mempalace</code></li>
-<li><code>llm-wiki-memory</code></li>
-<li><code>basic-memory</code></li>
-<li><code>agentmemory</code></li>
-<li><code>claude-mem</code></li>
-<li><code>byterover</code></li>
-</ul>
-<p>This optimizes for a local developer workflow: durable local memory,
-MCP/tools/hooks, project scopes, exact search, vector search, conflict
-or dedupe handling, and sync/repair hooks.</p>
-<p>Tradeoff: local-first design is operationally simple and inspectable,
-but it does not solve large-scale hosted ranking, multi-tenant APIs, or
-rich social/user modeling. <code>engram</code> is compact and
-FTS-oriented; <code>mempalace</code> is broader, benchmark-heavy, and
-vector/hybrid retrieval-oriented; <code>llm-wiki-memory</code> is
-filesystem/git-oriented, hook-heavy, federated across private and
-repository wikis, and unusually focused on capture recovery and
-operations; <code>agentmemory</code> is a much broader hook-native
-runtime with lexical, vector, graph, consolidation, governance, and team
-subsystems; <code>claude-mem</code> makes a durable event queue,
-background observer, canonical SQLite rows, and bounded cross-session
-timeline the center of the design.</p>
-<h3 id="knowledge-graph-memory-platform">Knowledge-graph memory
-platform</h3>
-<p>Repo:</p>
-<ul>
-<li><code>cognee</code></li>
-</ul>
-<p>Cognee preserves source data, runs configurable cognify pipelines,
-and stores typed graph, vector, summary, ontology, and session
-projections across pluggable backends. Its newer remember/recall API
-presents this platform through a smaller memory vocabulary.</p>
-<p>Tradeoff: the pipeline, provenance rollback, access control, and
-backend breadth are unusually strong, but LLM extraction remains
-probabilistic and consistency must be maintained across several
-stores.</p>
-<h3 id="evolving-linked-note-research-memory">Evolving linked-note
-research memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>a-mem</code></li>
-</ul>
-<p>A-MEM retrieves vector-nearest notes and asks an LLM to link the new
-note or rewrite neighboring tags and context. It is the clearest
-Zettelkasten-inspired research design in the atlas.</p>
-<p>Tradeoff: evolving organization is interesting, but the inspected
-implementation confuses retrieval positions with note identities, resets
-a global ephemeral Chroma collection, and lacks durable scope,
-provenance, and trust semantics.</p>
-<h3 id="layered-symbolic-context-memory">Layered symbolic context
-memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>tencentdb-agent-memory</code></li>
-</ul>
-<p>TencentDB Agent Memory combines long-term L0 conversation evidence,
-L1 records, L2 scene documents, and an L3 persona with short-term
-tool-output offload into files, summaries, and navigable Mermaid
-maps.</p>
-<p>Tradeoff: progressive disclosure preserves drill-down evidence and
-reduces prompt pressure, but generated layers and cross-store writes
-require a clear authority, review, and recovery contract.</p>
-<h3 id="temporal-knowledge-graph-memory">Temporal knowledge-graph
-memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>graphiti</code></li>
-</ul>
-<p>Graphiti preserves episodes as evidence, resolves entities and
-relationships, and tracks both transaction time and real-world validity
-time. Facts can be invalidated by closing a temporal interval without
-erasing history.</p>
-<p>Tradeoff: temporal graphs answer changing-world questions that flat
-fact stores cannot, but LLM entity resolution and edge invalidation can
-make structural mistakes with a wide blast radius.</p>
-<h3 id="observation-reflection-context-memory">Observation-reflection
-context memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>mastra-observational-memory</code></li>
-</ul>
-<p>Mastra Observational Memory compresses older messages into dated
-observations, then reflects growing observations into a smaller context.
-Buffered results can be computed before a hard threshold and activated
-without blocking.</p>
-<p>Tradeoff: this is excellent context-window management, not a general
-evidence or truth system. Its correctness depends on a complex
-threshold, marker, storage, and concurrency state machine.</p>
-<h3 id="memory-operating-substrate">Memory operating substrate</h3>
-<p>Repo:</p>
-<ul>
-<li><code>memos</code></li>
-</ul>
-<p>MemOS packages textual, preference, skill, activation/KV-cache, and
-parametric/LoRA memory into mountable memory cubes managed by a
-user-aware runtime and schedulers.</p>
-<p>Tradeoff: the abstraction is unusually broad, but configured modules
-have different search, durability, deletion, compatibility, and maturity
-guarantees.</p>
-<h3 id="human-editable-canonical-memory">Human-editable canonical
-memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>basic-memory</code></li>
-</ul>
-<p>Basic Memory makes Markdown notes authoritative while
-SQLite/PostgreSQL entities, observations, relations, FTS rows, and
-semantic chunks remain rebuildable projections.</p>
-<p>Tradeoff: direct human ownership and portability are strong, but
-bidirectional file/database synchronization is a substantial consistency
-problem rather than “just Markdown”.</p>
-<h3 id="compact-local-graph-rag-memory">Compact local graph-RAG
-memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>swafra</code></li>
-</ul>
-<p>Swafra optimizes for a tiny, no-cloud MCP sidecar: ingest titled
-text, retain it as chunks, index with local embeddings and lexical
-signals, connect chunks in a graph, and return source-diverse
-context.</p>
-<p>Tradeoff: the implementation is easy to understand and run, but it
-has no database transactions, scopes, trust states, bounded context
-assembly, or ordinary tests. Its checked-in benchmark does not enforce
-the advertised retrieval cutoff.</p>
-<h3 id="verbatim-evidence-memory">Verbatim evidence memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>mempalace</code></li>
-</ul>
-<p>MemPalace optimizes for preserving original evidence. It stores raw
-conversation/file text as drawers and treats extracted/indexed layers as
-navigation aids rather than the authoritative memory.</p>
-<p>Tradeoff: this avoids lossy LLM extraction and preserves
-auditability, but it creates larger corpora and pushes more work into
-retrieval, context selection, privacy, and deletion.</p>
-<h3 id="peersession-representation-system">Peer/session representation
-system</h3>
-<p>Repo:</p>
-<ul>
-<li><code>honcho</code></li>
-</ul>
-<p>Honcho is not just "save facts and search them". It models
-workspaces, peers, sessions, messages, observations, and
-representations. It derives observations from conversation events and
-serves a working representation back to applications.</p>
-<p>Tradeoff: richer domain modeling gives more useful cross-session
-state, but it requires queueing, derivation, reconciliation, and
-consistency semantics.</p>
-<h3 id="operator-governed-assistant-memory">Operator-governed assistant
-memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>rainbox</code></li>
-</ul>
-<p>RainBox optimizes for memory that an operator can inspect, correct,
-audit, and evaluate. Its distinctive layer is not the vector ranker; it
-is the loop from memory claims/evidence to retrieval telemetry,
-feedback, eval cases, and review UI.</p>
-<p>Tradeoff: this works well inside a full assistant product, but it is
-much heavier than a library and less source-preserving than MemPalace's
-verbatim drawer model.</p>
+<p><code>letta</code>, <code>rainbox</code>, <code>memos</code>,
+<code>mastra-observational-memory</code>, <code>claude-mem</code>,
+<code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
+<code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
+<code>mercury-agent</code></p>
+<p>Memory is part of the runtime: compiled into context, mutated through
+first-class actions, tied to agent state. <strong>Letta</strong>
+separates core, archival, and recall memory inside the loop.
+<strong>RainBox</strong> routes every belief through one governed write
+path with a five-actor trust model. <strong>MemOS</strong> mounts
+textual, preference, skill, KV-cache, and parametric memory as one cube.
+<strong>Mastra</strong> compresses older messages into dated
+observations and activates them without blocking.
+<strong>TencentDB</strong> layers L0 conversation evidence through L3
+persona with symbolic tool-output offload. <strong>Mercury</strong>
+grades every record on confidence, importance, and durability
+separately, and keeps a subconscious tier below active recall.
+<strong>GenericAgent</strong> governs four file layers with written
+axioms instead of code.</p>
+<p>Tradeoff: deeper integration buys behavioural control at the cost of
+coupling memory to the framework, prompt assembly, and tool loop.</p>
+<h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
+pluggable memory</h3>
+<p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
+<code>pi</code> Plugins mounted on them: <code>holographic</code>,
+<code>magic-context</code>, <code>metaclaw</code>,
+<code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
+providers</p>
+<p>The runtime ships an interface, not a memory model.
+<strong>Hermes</strong> bounds its own curated Markdown hard and freezes
+it into the prompt at session start while mounting one external
+provider. <strong>OpenClaw</strong> ships memory entirely as extensions
+over a plugin contract. <strong>Pi</strong> is the limit case:
+twenty-plus lifecycle events and no memory concept at all, so plugins
+rebuild indexing, scope, and retrieval from scratch.</p>
+<p>Tradeoff: users choose a backend that fits their privacy and scale
+needs, but trust state, scope, and above all deletion must cross the
+host/provider boundary — and none of the three contracts inspected here
+has a deletion hook. See <a
+href="../patterns/pluggable-memory-provider/">pluggable memory
+provider</a>.</p>
+<h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
+<p><code>engram</code>, <code>mempalace</code>,
+<code>llm-wiki-memory</code>, <code>basic-memory</code>,
+<code>moltis</code>, <code>open-cowork</code>, <code>byterover</code>,
+<code>magic-context</code>, <code>swafra</code></p>
+<p>Durable local state for a developer workflow: hooks, MCP, project
+scopes, exact search. <strong>Engram</strong> is the small no-extraction
+baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
+drawers authoritative and treats extracted layers as navigation aids.
+<strong>Basic Memory</strong> makes human-editable Markdown canonical
+and every index a rebuildable projection. <strong>Moltis</strong> is the
+atlas's only Rust implementation, indexing a Markdown corpus that
+sanitized session transcripts are exported into.
+<strong>open-cowork</strong> separates core from experience memory and
+ships the atlas's most complete memory benchmark.
+<strong>Swafra</strong> shows how little code a local graph-RAG sidecar
+needs, and why flat JSON is not a database.</p>
+<p>Tradeoff: operationally simple and inspectable; no answer to hosted
+ranking, multi-tenancy, or rich user modelling.</p>
+<h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
+symbolic memory</h3>
+<p><code>graphiti</code>, <code>cognee</code>, <code>hipporag</code>,
+<code>holographic</code>, <code>gini-agent</code></p>
+<p>Structure is the retrieval mechanism. <strong>Graphiti</strong>
+tracks transaction time and real-world validity separately, invalidating
+facts by closing an interval rather than erasing history.
+<strong>HippoRAG</strong> seeds a personalization vector and lets
+Personalized PageRank diffuse relevance instead of planning hops, and
+links similar entities rather than merging them.
+<strong>Holographic</strong> encodes facts as SHA-256-derived phase
+vectors so entities can be bound and unbound algebraically, with no
+embedding model to version. <strong>Gini</strong> reimplements the
+Hindsight model locally with bi-temporal columns and four RRF-fused
+channels.</p>
+<p>Tradeoff: structure answers questions flat stores cannot, but
+extraction and resolution mistakes have a blast radius proportional to
+how connected the graph is.</p>
+<h3 id="verification-and-trust-first-memory">Verification and
+trust-first memory</h3>
+<p><code>verel</code>, <code>rainbox</code>, <code>magic-context</code>,
+<code>metaclaw</code>, <code>gini-agent</code></p>
+<p>These treat memory as a trust problem before a retrieval problem.
+<strong>Verel</strong> separates confidence, retrieval strength, and
+verification state, carries rejected values forward, and fences recall
+as untrusted data. <strong>RainBox</strong> adds governed atomic
+correction, lattice-aware conflict detection, and rejected-value
+tombstones that block model re-assertion. <strong>Magic Context</strong>
+maps each memory to the files it describes and re-verifies when git
+reports those files changed, keeping lifecycle and verification on
+separate axes. <strong>MetaClaw</strong> applies the idea one level up,
+promoting a candidate <em>retrieval policy</em> only when it does not
+regress across eight measured deltas.</p>
+<p>Tradeoff: more machinery than an MVP needs, and it directly addresses
+the failures simpler systems discover in production.</p>
 <h3 id="research-lineage">Research lineage</h3>
-<p>Repos:</p>
-<ul>
-<li><code>generative-agents</code></li>
-<li><code>voyager</code></li>
-<li><code>hipporag</code></li>
-<li><code>a-mem</code></li>
-</ul>
-<p>These are research artifacts rather than deployable systems, and they
-are in the atlas because the practical systems above are largely
-responses to them. Generative Agents established the
+<p><code>generative-agents</code>, <code>voyager</code>,
+<code>hipporag</code>, <code>a-mem</code></p>
+<p>Artifacts the practical systems are largely responses to.
+<strong>Generative Agents</strong> established the
 observation/reflection/planning stream and the
-importance-recency-relevance retrieval score; Voyager established
-procedural skill memory with an execution-verified write gate; HippoRAG
-established diffusion-based associative retrieval; A-MEM explored
-evolving linked notes.</p>
-<p>Tradeoff: the architectural ideas are unusually clear because nothing
-is obscured by production concerns — and nothing is solved by them
-either. None of these has scope, correction, deletion, or a trust model,
-and Generative Agents and Voyager have been frozen since 2023. Read them
-for the design, not for adoption.</p>
-<h3 id="vector-symbolic-memory">Vector-symbolic memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>holographic</code></li>
-</ul>
-<p>Holographic encodes facts as Holographic Reduced Representation phase
-vectors derived deterministically from SHA-256, so entities can be bound
-into and unbound out of a fact algebraically rather than matched by
-embedding similarity.</p>
-<p>Tradeoff: representations are reproducible with no embedding model to
-version, and compositional multi-entity queries become expressible, but
-the encoding is bag-of-words, capacity degrades as facts bundle into a
-category bank, and the plugin folds truth and usefulness into one
-feedback-trained score.</p>
-<h3 id="host-runtime-with-pluggable-memory">Host runtime with pluggable
-memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>hermes-agent</code></li>
-<li><code>openclaw</code></li>
-<li><code>pi</code></li>
-</ul>
-<p>These are agent runtimes that ship a memory interface rather than a
-single memory model. Hermes bounds its own curated Markdown memory hard
-and freezes it into the system prompt, while mounting one external
-provider at a time; OpenClaw ships memory entirely as extensions over a
-plugin contract.</p>
-<p>Pi is the limit case: it exposes more than twenty lifecycle events
-and no memory concept whatsoever, so plugins such as
-<code>magic-context</code> rebuild indexing, scope, and retrieval from
-scratch.</p>
-<p>Tradeoff: users can choose a backend matching their privacy and scale
-needs, but trust state, scope, and above all deletion have to cross the
-host/provider boundary — and in none of the three contracts inspected
-here does a deletion hook exist.</p>
-<h3 id="file-corpus-memory">File-corpus memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>moltis</code></li>
-<li>partly <code>basic-memory</code> and <code>cowagent</code></li>
-</ul>
-<p>Moltis treats memory as a Markdown corpus: files chunked, embedded,
-and hybrid-searched in SQLite, with sanitized session transcripts
-exported back into the same corpus so conversation and documents share
-one index and one retrieval path. It is the atlas's first Rust memory
-implementation.</p>
-<p>Tradeoff: one substrate means one thing to back up, edit, and cite,
-and a no-embeddings mode is a first-class constructor rather than a
-failure state — but a chunk is not a claim, so there is no trust state,
-no correction record, and an exported transcript ranks beside a
-carefully written note.</p>
-<h3 id="self-evolving-file-memory">Self-evolving file memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>nanobot</code></li>
-<li><code>cowagent</code></li>
-<li><code>genericagent</code></li>
-<li>partly <code>metaclaw</code></li>
-</ul>
-<p>These distil conversation into layered Markdown under a scheduled
-consolidation pass, keeping durable belief small enough to inject
-wholesale while retaining raw material beneath it. nanobot uses two
-cursors over an append-only JSONL archive; CowAgent buckets by calendar
-day before distilling into a ~30-entry <code>MEMORY.md</code>;
-GenericAgent governs four layers with written axioms rather than
-code.</p>
-<p>Tradeoff: the whole state is human-readable, diffable, and cheap to
-operate, and the top layer needs no retrieval because it is always
-present — but repeated LLM distillation is lossy with no structural-loss
-check, correction is usually recency-wins, and none of them carries a
-rejected-value tombstone.</p>
-<h3 id="graded-personal-memory">Graded personal memory</h3>
-<p>Repos:</p>
-<ul>
-<li><code>mercury-agent</code></li>
-<li>partly <code>gini-agent</code></li>
-</ul>
-<p>Mercury grades every record on three independent axes —
-<code>confidence</code>, <code>importance</code>, and
-<code>durability</code> — keeps a <code>subconscious</code> tier below
-active recall, models people and relations alongside facts, and exposes
-a <code>learningPaused</code> switch that stops new memory formation
-entirely.</p>
-<p>Tradeoff: separating durability from importance is the schema-level
-fix for a single global half-life, and a demotion tier is a gentler
-default than deletion — but the scores are estimated once at extraction
-rather than earned, and <code>dismissed</code> is a boolean rather than
-a value-level tombstone.</p>
-<h3 id="policy-learning-memory">Policy-learning memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>metaclaw</code></li>
-</ul>
-<p>MetaClaw generates bounded candidate retrieval policies, replays them
-against real past turns, and promotes one only when it does not regress
-on eight measured deltas over at least ten samples.</p>
-<p>Tradeoff: it is the only system here that can answer "are our
-retrieval parameters any good?", and it tunes reachability rather than
-belief — but it optimizes lexical-overlap proxies rather than task
-outcomes, and its promotion thresholds are themselves hand-chosen
-constants.</p>
-<h3 id="ground-truth-verified-memory">Ground-truth-verified memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>magic-context</code></li>
-</ul>
-<p>Magic Context maps each memory to the files it describes and
-re-verifies it when git reports that those files changed, tracking
-<code>verified_at</code> per memory and keeping lifecycle state
-(<code>active|permanent|archived</code>) on a separate axis from
-verification state (<code>unverified|verified|stale|flagged</code>).</p>
-<p>Tradeoff: for memory about an inspectable artifact this converts
-trust from judgment into observation, and it is honest that
-file-independent memories fall outside the scheme — but the verdict
-itself is still an LLM call, and there is no tombstone preventing an
-archived memory from being re-derived.</p>
-<h3 id="verification-first-memory">Verification-first memory</h3>
-<p>Repo:</p>
-<ul>
-<li><code>verel</code></li>
-</ul>
-<p>Verel treats memory as a trust problem. It separates confidence,
-retrieval strength, and verification state; carries rejected values
-forward; fences recalled memory as untrusted data; and uses promotion
-gates for induced rules.</p>
-<p>Tradeoff: this is more complex than most systems need for an MVP, but
-it directly addresses failures that simpler memory systems usually
-ignore.</p>
+importance-recency-relevance score — whose weights, read at the source,
+are hand-tuned constants with two abandoned settings left in comments.
+<strong>Voyager</strong> established procedural skill memory with an
+execution-verified write gate. <strong>HippoRAG</strong> established
+diffusion-based associative retrieval.</p>
+<p>Tradeoff: the ideas are unusually legible because no production
+concern obscures them, and none of these has scope, correction,
+deletion, or a trust model. Voyager and Generative Agents have been
+frozen since 2023; read them for design, not adoption.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
 <p>Most agent frameworks ship something called "memory" that is a
-<strong>chat buffer</strong>, and the naming collision is worth stating
-plainly because it misleads people evaluating options.</p>
+<strong>chat buffer</strong>, and the naming collision misleads people
+evaluating options.</p>
 <p>IBM's <a href="https://github.com/i-am-bee/beeai-framework">BeeAI
 framework</a> is the cleanest example. At commit <a
 href="https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b"><code>21284d7</code></a>
 its entire memory subsystem is about 1,300 lines across both the Python
 and TypeScript implementations, and consists of four strategies for
-deciding which messages stay in the current context:
-<code>UnconstrainedMemory</code> (keep everything),
-<code>SlidingMemory</code> (keep the last <em>k</em>),
-<code>TokenMemory</code> (stay inside a token budget), and
-<code>SummarizeMemory</code> (replace history with a running summary),
-plus a <code>ReadOnlyMemory</code> wrapper. Its own documentation states
-that "Messages are the fundamental units stored in memory". The memory
-modules contain no reference to embeddings, vectors, or any persistent
-store; BeeAI keeps document retrieval in a separate <code>rag</code>
-module, so the framework's own architecture agrees these are different
-concerns. LangChain's original <code>ConversationBufferMemory</code>
-family is the same category, which is why this atlas reviews
-<code>langmem</code> instead.</p>
-<p>None of this is a criticism of those implementations. Deciding what
-stays in the context window is a real and necessary problem. But it is a
-<em>different</em> problem from the one this atlas compares: nothing
-survives the session, nothing is retrieved, nothing is scoped,
-corrected, verified, or forgotten on request. A system whose memory is a
-window has no answer to "why do you believe that?" or "forget what I
-told you last week", because it never claimed to remember.</p>
-<p>Compaction does appear in this atlas — but as a component of systems
-that also persist. <code>mastra-observational-memory</code> is the
-serious treatment, with exact covered ranges, buffered activation, and
-range-aware replacement; <code>hermes-agent</code> bounds its curated
-memory and forces in-turn consolidation; <code>pi</code> attaches
-deterministic file manifests to compaction entries. The test for
+deciding which messages stay in context:
+<code>UnconstrainedMemory</code>, <code>SlidingMemory</code>,
+<code>TokenMemory</code>, and <code>SummarizeMemory</code>, plus a
+<code>ReadOnlyMemory</code> wrapper. Its documentation states that
+"Messages are the fundamental units stored in memory". The memory
+modules reference no embeddings, vectors, or persistent store; BeeAI
+keeps document retrieval in a separate <code>rag</code> module, so the
+framework's own architecture agrees these are different concerns.
+LlamaIndex's older <code>ChatMemoryBuffer</code> family and LangChain's
+original <code>ConversationBufferMemory</code> are the same category —
+which is why this atlas reviews <code>langmem</code> and LlamaIndex's
+newer block-based <code>Memory</code> instead.</p>
+<p>Deciding what stays in the context window is a real problem. It is a
+different problem: nothing survives the session, nothing is retrieved,
+nothing is scoped, corrected, verified, or forgotten on request. A
+system whose memory is a window has no answer to "why do you believe
+that?" or "forget what I told you last week", because it never claimed
+to remember.</p>
+<p>Compaction appears in this atlas only as a component of systems that
+also persist — <code>mastra-observational-memory</code> with exact
+covered ranges and buffered activation, <code>hermes-agent</code> with a
+hard budget forcing in-turn consolidation, <code>pi</code> with
+deterministic file manifests on compaction entries. The test for
 inclusion is not whether a system compacts, but whether anything
 survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
+<!-- BEGIN GENERATED MATRIX -->
+
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -504,291 +277,22 @@ survives the session with an identity you could later correct.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>mem0</code></td>
-<td>Text fact in vector payload</td>
-<td>Vector store plus SQLite history/messages</td>
-<td>Semantic, optional keyword/BM25, entity boost, optional rerank</td>
-<td>LLM additive extraction, hash dedupe, entity linking</td>
-<td>Explicit update/delete APIs; V3 default append-oriented</td>
-<td><code>user_id</code>, <code>agent_id</code>, <code>run_id</code>,
-filters</td>
-<td>Python SDK, tool/API style</td>
-<td>Extraction and linking on write</td>
-<td>Attribution metadata, history; weak epistemic trust</td>
-<td>Practical SDK, pluggable stores, hybrid search</td>
-<td>LLM facts can become durable claims without verification</td>
-</tr>
-<tr>
-<td><code>langmem</code></td>
-<td>Store item, usually JSON memory</td>
-<td>LangGraph <code>BaseStore</code></td>
-<td><code>store.search/asearch</code> delegated to backend</td>
-<td>Tools call create/update/delete/search; extraction via
-Trustcall</td>
-<td>Tool-level CRUD</td>
-<td>Namespace templates</td>
-<td>LangChain/LangGraph tools</td>
-<td>Reflection executor local/remote</td>
-<td>Mostly application-defined</td>
-<td>Clean primitives, schema-driven extraction</td>
-<td>Too low-level to solve memory quality alone</td>
-</tr>
-<tr>
-<td><code>honcho</code></td>
-<td>Message, document/observation, representation</td>
-<td>Postgres/SQLAlchemy, pgvector or vector adapter</td>
-<td>Working representation blends semantic, recent, most-derived;
-message search with windows</td>
-<td>Message ingestion plus queued derivation</td>
-<td>Soft delete, representation reconciliation</td>
-<td>Workspace, peer, session, collection</td>
-<td>Hosted API/service model</td>
-<td>Deriver queues and workers</td>
-<td>Source IDs, derived observations, peer/session provenance</td>
-<td>Strong event-to-representation pipeline</td>
-<td>Operational complexity; LLM-derived observations still need trust
-policy</td>
-</tr>
-<tr>
-<td><code>engram</code></td>
-<td>Observation and prompt records</td>
-<td>Local SQLite WAL, FTS5</td>
-<td>FTS5, topic-key lookup, context assembly</td>
-<td>MCP <code>mem_save</code>, conflict candidate flow, dedupe/update
-rules</td>
-<td>Topic-key updates, duplicate counts, soft delete/sync mutation</td>
-<td>Project, scope, session, topic key</td>
-<td>MCP tools for coding agents</td>
-<td>Sync queue, local conflict workflows</td>
-<td>Source/session/project metadata, explicit judgment path</td>
-<td>Simple durable local design, inspectable code</td>
-<td>Lexical retrieval limits; conflict UX depends on agent behavior</td>
-</tr>
-<tr>
-<td><code>mempalace</code></td>
-<td>Verbatim drawer chunks, closets, KG triples</td>
-<td>Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG</td>
-<td>Direct drawer vector search, BM25 rerank, closet boost, metadata
-filters, FTS fallback</td>
-<td>Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert
-verbatim text</td>
-<td>Delete/update drawers, delete by source, dedup, repair; limited
-epistemic correction</td>
-<td>Palace, wing, room, source file, parent drawer, backend
-namespace</td>
-<td>MCP, CLI, hooks, skills, wake-up stack</td>
-<td>Mining, closet/hallway/tunnel computation, repair/sync/backup</td>
-<td>Strong source provenance; weak candidate/verified/rejected trust
-state</td>
-<td>Evidence-preserving raw baseline, hybrid retrieval, operational
-hardening</td>
-<td>Raw stores get large/noisy; contradiction resolution mostly outside
-core recall</td>
-</tr>
-<tr>
-<td><code>swafra</code></td>
-<td>Verbatim or synthetic chunk plus directed chunk edges</td>
-<td>Three local JSON files</td>
-<td>BM25 + vector + entity/date/preference heuristics + char n-gram;
-graph walk; best chunk per title</td>
-<td>MCP add; Leiden or exchange/paragraph chunks; synchronous full-file
-rewrite</td>
-<td>Exact source delete; implicit same-ID reindex; broken supersession
-path</td>
-<td>Source ID/title only; no user/project/tenant scope</td>
-<td>Python FastMCP; Node MCP over Python subprocess</td>
-<td>None</td>
-<td>Caller title and raw chunk; no actor, span-quality provenance, trust
-state, or injection fence</td>
-<td>Very compact local hybrid graph-RAG; optional dependencies; source
-diversity</td>
-<td>Non-atomic concurrent writes; unbounded context; dangling edges;
-benchmark cutoff invalid</td>
-</tr>
-<tr>
-<td><code>llm-wiki-memory</code></td>
-<td>Typed Markdown atom, plan/investigation, daily capture, or full
-document</td>
-<td>Filesystem wiki, per-category embedding caches, private git
-history</td>
-<td>Metadata prefilter, local embedding/chunk cosine, priority bands,
-federated locality boost; lexical vector fallback</td>
-<td>MCP/CLI writes, transcript and plan hooks, daily compile,
-full-document absorb</td>
-<td>Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in
-dedup/refresh consolidation</td>
-<td>Private brain plus explicit repository wiki levels;
-workspace/area/task/subject facets</td>
-<td>MCP, CLI, Claude Code lifecycle hooks, shared instructions</td>
-<td>Detached flush, daily compile, opt-in consolidation, cron healing,
-git/cache maintenance</td>
-<td>Body hash, capture audit, git history, user-gated lessons; no
-candidate/verified/rejected state</td>
-<td>Recoverable capture, explicit targets, deterministic
-layout/topology, excellent operational tests</td>
-<td>LLM atoms become active without verification; vector-only primary
-retrieval; linear scans; git is not erasure</td>
-</tr>
-<tr>
-<td><code>rainbox</code></td>
-<td>Claim, evidence, embedding, retrieval event</td>
-<td>Postgres/SQLAlchemy plus pgvector</td>
-<td>Hard-filtered hybrid (vector + Postgres full-text + entity boost)
-for both chat and assistant; profile digest</td>
-<td>User commands, assistant actions, review UI; single governed atomic
-path (<code>record_belief</code>); write-time conflict detection;
-active/candidate flows</td>
-<td>Reject/supersede/reactivate/expiry/sensitivity;
-<code>MemoryRejectedValue</code> tombstones block model re-assertion of
-rejected values; governed atomic correction
-(<code>correct_belief</code>); UI stale-write guards</td>
-<td>Global, agent, room, project; sensitivity</td>
-<td>Full assistant app: chat prompt (via
-<code>build_chat_memory_block</code>→hybrid), action loop, review
-UI</td>
-<td>Embedding sync/prune, telemetry, feedback/eval loop</td>
-<td>Five-actor trust model (3 human/override + 2 model/candidate);
-rejected-value tombstones; write-time lattice-aware conflict detection;
-governed atomic correction; fenced prompt injection; claim/evidence
-provenance and retrieval audit</td>
-<td>Operator governance, trust/correction machinery (tombstones +
-conflict detection + fenced recall + governed writes), telemetry, eval
-integration</td>
-<td>Compact claims may lose source nuance; no automatic candidate
-extraction;
-<code>epistemic_confidence</code>/<code>retrieval_strength</code>
-columns exist but Tier-1 ranking still uses <code>confidence</code>
-(schema groundwork only); attribution is context-injection, not
-causal</td>
-</tr>
-<tr>
-<td><code>letta</code></td>
-<td>Core memory block, archival passage, message</td>
-<td>ORM database; passages with embeddings; optional git memory</td>
-<td>Archival search, conversation search, compiled core prompt</td>
-<td>Agent tools mutate core/archival memory</td>
-<td>Append/replace/patch, passage insert, block update</td>
-<td>Agent, block labels, files/sources</td>
-<td>Deep runtime tool executor integration</td>
-<td>Prompt rebuilds, manager services</td>
-<td>Block tags/metadata, message timestamps; limited truth model</td>
-<td>Clear core/archive/recall separation</td>
-<td>Agent can rewrite important memory without strong verification</td>
-</tr>
-<tr>
-<td><code>supermemory</code></td>
-<td>Document, chunk, memory entry, space</td>
-<td>Hosted backend; visible schemas/client only</td>
-<td>Hosted search/profile API; SDK uses hybrid settings</td>
-<td>API/MCP add memory/document</td>
-<td>Version chains, relations, forget API</td>
-<td>Space, container tags, org/user/project</td>
-<td>SDK, AI SDK tools, MCP</td>
-<td>Hosted processing not visible</td>
-<td>Rich schema fields and relations; implementation not visible</td>
-<td>Product/API surface, document-memory graph</td>
-<td>Backend black box; semantic forget needs care</td>
-</tr>
-<tr>
-<td><code>verel</code></td>
-<td><code>MemoryRecord</code> fact/rule/schema/failure/skill</td>
-<td>SQLite local plus backend adapters</td>
-<td>Rank blends relevance, retrieval strength, confidence, trust;
-budgeted recall</td>
-<td>Candidate extraction, attested/corroborated promotion</td>
-<td>Correction chains, rejected tombstones, decay/prune</td>
-<td>Scope lattice</td>
-<td>Helpers, MCP, hosted/replicated adapters</td>
-<td>Consolidation, promotion gate, replication</td>
-<td>Explicit candidate/verified/rejected, provenance, confidence</td>
-<td>Best correctness model in set</td>
-<td>Complex; may be heavy for product MVP</td>
-</tr>
-<tr>
-<td><code>hindsight</code></td>
-<td>Source chunk, world/experience fact, observation, reflection</td>
-<td>PostgreSQL/pgvector or Oracle</td>
-<td>Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder
-rerank</td>
-<td>Screen, chunk, extract, embed, link, consolidate</td>
-<td>Replace/append source; observation create/update/history; exact
-bank/document operations</td>
-<td>Memory bank, tags, schemas/tenants</td>
-<td>REST, MCP, generated SDKs, framework integrations</td>
-<td>Queued consolidation and maintenance with retries</td>
-<td>Source IDs, proof counts, audit/LLM traces; no explicit truth
-state</td>
-<td>Complete service pipeline; task-specific fusion; temporal
-recall</td>
-<td>LLM facts/observations can harden errors; operational
-complexity</td>
-</tr>
-<tr>
-<td><code>graphiti</code></td>
-<td>Episode, entity, temporal relationship edge, community/saga</td>
-<td>Neo4j, FalkorDB, Kuzu, Neptune</td>
-<td>BM25 + cosine + BFS across edges/nodes/episodes/communities;
-RRF/MMR/cross-encoder</td>
-<td>Episode ingestion, entity/edge extraction, resolution, temporal
-invalidation</td>
-<td>Close <code>valid_at</code> intervals, expire edges, remove
-episodes</td>
-<td><code>group_id</code>, entity/edge types</td>
-<td>Python library, MCP, server</td>
-<td>Ingestion maintenance; saga summaries</td>
-<td>Source episode UUIDs and bi-temporal history; no verified state</td>
-<td>Preserves changing facts without erasing history</td>
-<td>Entity merge/invalidation mistakes reshape the graph</td>
-</tr>
-<tr>
-<td><code>mastra-observational-memory</code></td>
-<td>Raw message, dated observation group, reflected observation
-context</td>
-<td>Mastra <code>MemoryStorage</code> adapters</td>
-<td>Sequential active observations + recent raw tail; optional
-observation-vector retrieval</td>
-<td>Processor observes at token thresholds; reflector compacts
-observations</td>
-<td>Range replacement, buffered activation, clear/clone records</td>
-<td>Thread or resource</td>
-<td>Deep Mastra input/output processor integration</td>
-<td>Early async observation/reflection buffers with activation</td>
-<td>Exact covered ranges and markers; summary has no truth state</td>
-<td>Non-blocking context compaction for long sessions</td>
-<td>Distributed locking and progressive summary drift</td>
-</tr>
-<tr>
-<td><code>memos</code></td>
-<td>Textual item, graph tier, preference/skill, KV cache, LoRA</td>
-<td>Configurable vector/graph stores, dumps, cache/model artifacts</td>
-<td>Direct vector or graph + BM25 + rerank + reasoner; optional
-auxiliary memories</td>
-<td>Reader extraction into a memory cube; scheduler transformations</td>
-<td>Module-specific update/delete/soft-delete/dump semantics</td>
-<td>User plus registered memory cube</td>
-<td>MOS chat/runtime, APIs, CLI</td>
-<td>Scheduler and activation-memory refresh</td>
-<td>Source metadata varies by module; no uniform trust state</td>
-<td>Treats memory as heterogeneous mountable resources</td>
-<td>Umbrella API hides uneven guarantees and maturity</td>
-</tr>
-<tr>
-<td><code>basic-memory</code></td>
-<td>Canonical Markdown note; indexed entity, observation, relation</td>
-<td>Filesystem source + SQLite/PostgreSQL projection</td>
-<td>FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph
-context</td>
-<td>MCP/API writes accepted Markdown; file watcher reconciles human
-edits</td>
-<td>Distinct create/replace/edit/move/delete with stable ID and
-reindex</td>
-<td>Project, workspace, tenant, local/cloud route</td>
-<td>MCP tools, typed clients, API, CLI</td>
-<td>Watcher, startup reconciliation, indexing workflows</td>
-<td>Human-visible source/checksums; no candidate/verified state</td>
-<td>Inspectable portable memory with rebuildable indexes</td>
-<td>Bidirectional sync complexity; agent can write unsupported
-claims</td>
+<td><code>a-mem</code></td>
+<td><code>MemoryNote</code> with content, tags, context, links, and
+evolution history</td>
+<td>In-process dictionary plus ephemeral Chroma; separate persistent
+retriever utility</td>
+<td>Vector similarity with optional linked-neighbor append</td>
+<td>LLM decides links and neighbor metadata mutation before insert</td>
+<td>Delete/re-add update; exact delete without incoming-link
+cleanup</td>
+<td>None in core</td>
+<td>Direct Python library</td>
+<td>Periodic reindex called consolidation</td>
+<td>No source provenance or trust state</td>
+<td>Small, legible linked-note evolution concept</td>
+<td>Neighbor position/identity bug can mutate wrong notes; destructive
+initialization; no durability</td>
 </tr>
 <tr>
 <td><code>agentmemory</code></td>
@@ -814,47 +318,43 @@ candidate/verified/rejected state</td>
 hide conflicts</td>
 </tr>
 <tr>
-<td><code>tencentdb-agent-memory</code></td>
-<td>L0 conversation, L1 memory record, L2 scene, L3 persona, offload
-reference/map</td>
-<td>JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB</td>
-<td>FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona
+<td><code>basic-memory</code></td>
+<td>Canonical Markdown note; indexed entity, observation, relation</td>
+<td>Filesystem source + SQLite/PostgreSQL projection</td>
+<td>FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph
 context</td>
-<td>Successful-turn capture, LLM extraction, store/update/merge/skip
-judge, symbolic tool-output offload</td>
-<td>Internal merge/delete/cleanup; no first-class correction/forget
-tool</td>
-<td>Session fields and data directories; no general tenant boundary</td>
-<td>OpenClaw hooks/tools/context engine; Hermes gateway</td>
-<td>Deferred embeddings, scene/persona generation, retention
-reclamation</td>
-<td>Source message IDs and raw evidence; no verification/rejection
-state</td>
-<td>Layered progressive disclosure with raw drill-down</td>
-<td>Non-atomic dual writes, fail-open dedup, thin core tests,
-unsupported benchmark claims</td>
+<td>MCP/API writes accepted Markdown; file watcher reconciles human
+edits</td>
+<td>Distinct create/replace/edit/move/delete with stable ID and
+reindex</td>
+<td>Project, workspace, tenant, local/cloud route</td>
+<td>MCP tools, typed clients, API, CLI</td>
+<td>Watcher, startup reconciliation, indexing workflows</td>
+<td>Human-visible source/checksums; no candidate/verified state</td>
+<td>Inspectable portable memory with rebuildable indexes</td>
+<td>Bidirectional sync complexity; agent can write unsupported
+claims</td>
 </tr>
 <tr>
-<td><code>cognee</code></td>
-<td>Source data, chunk, typed <code>DataPoint</code>, graph edge,
-summary, session entry</td>
-<td>SQLite/PostgreSQL plus pluggable graph/vector stores</td>
-<td>Chunk, lexical, vector, graph, triplet, summary, temporal, hybrid,
-and routed modes</td>
-<td><code>add</code> + <code>cognify</code>; unified
-<code>remember</code>; session-hot writes with background
-improvement</td>
-<td>Exact data/dataset/all forget; memory-only reprocessing; provenance
-rollback</td>
-<td>User permissions and dataset; optional per-user/dataset backend
-isolation</td>
-<td>Python, REST, CLI, MCP, typed memory entries</td>
-<td>Composable pipelines, session bridge, memify, rollback/recovery</td>
-<td>Source records, content hashes, pipeline/task/user provenance; no
-factual trust state</td>
-<td>Ontology-aware multimodal graph pipeline with serious rollback</td>
-<td>Large configuration surface; cross-store consistency; extracted
-graph can harden errors</td>
+<td><code>byterover</code></td>
+<td>Flat memory with source/pinned metadata; structured knowledge
+<code>ContextData</code></td>
+<td>Local Markdown under <code>.byterover/</code>, optional cloud
+sync</td>
+<td>Metadata filter and pagination only in inspected modules</td>
+<td>LLM dedup returning CREATE/MERGE/SKIP; <code>DECISIONS</code> always
+creates</td>
+<td>Structural-loss guard repairs destructive curation; no
+tombstones</td>
+<td>Storage directory only</td>
+<td><code>brv</code> CLI, MCP, Hermes provider</td>
+<td>LLM dedup at bounded concurrency</td>
+<td><code>source</code> of agent/system/user recorded but not
+enforced</td>
+<td>Deterministic structural-loss detection and repair on LLM
+rewrites</td>
+<td>Elastic License 2.0, not open source; merge path itself is
+unguarded</td>
 </tr>
 <tr>
 <td><code>claude-mem</code></td>
@@ -879,150 +379,91 @@ claims have no trust state</td>
 automatically; dual schema transition</td>
 </tr>
 <tr>
-<td><code>holographic</code></td>
-<td>Flat fact row plus HRR phase vector and linked entities</td>
-<td>Local SQLite (WAL) with FTS5 and per-category bundled banks</td>
-<td>FTS5 + Jaccard + HRR cosine, multiplied by trust; algebraic
-<code>probe</code>/<code>related</code>/<code>reason</code></td>
-<td><code>fact_store</code> tool, mirrored host writes, optional
-end-of-session regex extraction</td>
-<td>Exact update/remove; feedback shifts trust; no supersession</td>
-<td>Category only; no user/project/session scope</td>
-<td>Hermes <code>MemoryProvider</code> plugin; <code>fact_store</code>
-and <code>fact_feedback</code> tools</td>
-<td>None; bank rebuild is synchronous on every write</td>
-<td>None — no source, actor, or session on a fact</td>
-<td>Deterministic hash-derived vectors; <code>contradict</code> as a
-query action</td>
-<td>Three downvotes silently drop a fact below the retrieval floor; one
-score for truth and reachability</td>
+<td><code>cognee</code></td>
+<td>Source data, chunk, typed <code>DataPoint</code>, graph edge,
+summary, session entry</td>
+<td>SQLite/PostgreSQL plus pluggable graph/vector stores</td>
+<td>Chunk, lexical, vector, graph, triplet, summary, temporal, hybrid,
+and routed modes</td>
+<td><code>add</code> + <code>cognify</code>; unified
+<code>remember</code>; session-hot writes with background
+improvement</td>
+<td>Exact data/dataset/all forget; memory-only reprocessing; provenance
+rollback</td>
+<td>User permissions and dataset; optional per-user/dataset backend
+isolation</td>
+<td>Python, REST, CLI, MCP, typed memory entries</td>
+<td>Composable pipelines, session bridge, memify, rollback/recovery</td>
+<td>Source records, content hashes, pipeline/task/user provenance; no
+factual trust state</td>
+<td>Ontology-aware multimodal graph pipeline with serious rollback</td>
+<td>Large configuration surface; cross-store consistency; extracted
+graph can harden errors</td>
 </tr>
 <tr>
-<td><code>hermes-agent</code></td>
-<td>Delimited text entry in <code>MEMORY.md</code> /
-<code>USER.md</code>; session message; skill</td>
-<td>Markdown files plus SQLite <code>state.db</code> with FTS5</td>
-<td>Curated memory always in prompt; session history via FTS5; no
-cross-layer fusion</td>
-<td>Explicit <code>memory</code> tool through a staged write-approval
-gate</td>
-<td>Substring-addressed replace/remove; hard char cap forces in-turn
-consolidation</td>
-<td>Profile-level only; no project or room boundary within a
-profile</td>
-<td>Own tools plus one mounted <code>MemoryProvider</code>; MCP
-serve</td>
-<td>None for curated memory; providers may run their own</td>
-<td>Threat-scanned at write; no provenance on entries</td>
-<td>Frozen prompt snapshot preserves cache; foreign-write detection with
-backup</td>
-<td>Model writes are instantly authoritative; unlogged budget-driven
-eviction</td>
+<td><code>cowagent</code></td>
+<td>Markdown files, chunked into an indexed <code>chunks</code>
+table</td>
+<td>SQLite with embeddings and self-healing FTS5</td>
+<td>Vector plus keyword over chunks; <code>MEMORY.md</code> injected in
+full</td>
+<td>Summarize into dated daily files, then distil</td>
+<td>Recency-wins conflict update; whole-file overwrite</td>
+<td><code>user_id</code> and <code>scope</code>, defaulting to
+<code>shared</code></td>
+<td>Agent memory tools</td>
+<td>Deep Dream after the daily summary, 23:55 cron</td>
+<td>Line-addressable chunks with hashes; dream diary</td>
+<td>Dated intermediate layer and written distillation rules</td>
+<td>Shared-by-default scope; chained lossy summarization</td>
 </tr>
 <tr>
-<td><code>openviking</code></td>
-<td>Typed memory file with L0 abstract, L1 overview, L2 content, links
-and backlinks</td>
-<td>Pluggable vector/graph stores plus native Rust/C++ index</td>
-<td>Directory-recursive dense + sparse, level filter, per-type quota,
-rerank, hotness blend</td>
-<td>LLM extraction into typed files; write target resolved before
-persistence</td>
-<td>Merge ops with
-<code>upsert</code>/<code>add_only</code>/<code>update_only</code>; no
-rejection state</td>
-<td>Tenant and permission via <code>RequestContext</code>; user space
-plus <code>peers/&lt;id&gt;</code></td>
-<td>Server, SDKs, CLI, web studio; Hermes and OpenClaw provider</td>
-<td>Extraction, streaming update, reindex, hotness maintenance</td>
-<td>URIs, types, timestamps; no evidential spans or trust state</td>
-<td>Three-granularity progressive disclosure; hotness kept apart from
-confidence</td>
-<td>Headline benchmark numbers lack committed raw artifacts;
-AGPL-3.0</td>
+<td><code>engram</code></td>
+<td>Observation and prompt records</td>
+<td>Local SQLite WAL, FTS5</td>
+<td>FTS5, topic-key lookup, context assembly</td>
+<td>MCP <code>mem_save</code>, conflict candidate flow, dedupe/update
+rules</td>
+<td>Topic-key updates, duplicate counts, soft delete/sync mutation</td>
+<td>Project, scope, session, topic key</td>
+<td>MCP tools for coding agents</td>
+<td>Sync queue, local conflict workflows</td>
+<td>Source/session/project metadata, explicit judgment path</td>
+<td>Simple durable local design, inspectable code</td>
+<td>Lexical retrieval limits; conflict UX depends on agent behavior</td>
 </tr>
 <tr>
-<td><code>redis-agent-memory-server</code></td>
-<td>Working-memory message; long-term <code>MemoryRecord</code> typed
-episodic/semantic/message</td>
-<td>Redis with TTL for working memory; pluggable vector DB for
-long-term</td>
-<td>Vector search plus metadata filters, reranked by recency with dual
-half-lives</td>
-<td>Debounced trailing extraction via swappable strategies, then layered
-dedupe</td>
-<td>Exact delete; composite forgetting policy; no tombstones</td>
-<td>Namespace, <code>user_id</code>, <code>session_id</code>, with
-auth</td>
-<td>REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin</td>
-<td>Debounced extraction, compaction, dedupe, forgetting sweeps</td>
-<td>Session linkage and per-message extraction flags; no trust
-state</td>
-<td>Best-specified retention policy in the atlas; cohesion-gated
-semantic merge</td>
-<td>Deletion is not durable against re-extraction; access-driven
-reinforcement</td>
+<td><code>generative-agents</code></td>
+<td><code>ConceptNode</code> typed event, thought, or chat with
+poignancy</td>
+<td>Per-persona JSON plus in-memory embedding dict</td>
+<td>Normalized recency + relevance + importance, hand-tuned
+<code>gw = [0.5, 3, 2]</code></td>
+<td>Perception, conversation, and reflection all write ungated</td>
+<td>None; observations are never deleted or overwritten</td>
+<td>One persona directory</td>
+<td>Simulation only; tightly coupled to <code>Persona</code></td>
+<td>Reflection fired by accumulated poignancy</td>
+<td>Reflections cite supporting nodes, but citations are never used</td>
+<td>Consolidation triggered by significance rather than a timer</td>
+<td>Derived thoughts share one pool with observations; positional not
+temporal decay</td>
 </tr>
 <tr>
-<td><code>byterover</code></td>
-<td>Flat memory with source/pinned metadata; structured knowledge
-<code>ContextData</code></td>
-<td>Local Markdown under <code>.byterover/</code>, optional cloud
-sync</td>
-<td>Metadata filter and pagination only in inspected modules</td>
-<td>LLM dedup returning CREATE/MERGE/SKIP; <code>DECISIONS</code> always
-creates</td>
-<td>Structural-loss guard repairs destructive curation; no
-tombstones</td>
-<td>Storage directory only</td>
-<td><code>brv</code> CLI, MCP, Hermes provider</td>
-<td>LLM dedup at bounded concurrency</td>
-<td><code>source</code> of agent/system/user recorded but not
-enforced</td>
-<td>Deterministic structural-loss detection and repair on LLM
-rewrites</td>
-<td>Elastic License 2.0, not open source; merge path itself is
-unguarded</td>
-</tr>
-<tr>
-<td><code>openclaw</code></td>
-<td>Categorized entry (preference/fact/decision/entity/other) with
-embedding</td>
-<td>LanceDB via <code>memory-lancedb</code> extension; swappable
-embedding adapters</td>
-<td>Vector search with mandatory agent-scoped predicate; no lexical
-arm</td>
-<td>Optional auto-capture after envelope sanitization; 500-char
-truncation</td>
-<td>Exact scoped delete; no tombstones, and auto-capture can restore
-content</td>
-<td><code>agentId</code>, composed inseparably into every predicate</td>
-<td>Plugin contract via <code>memory-core</code>; tools, CLI, doctor
-checks</td>
-<td>Auto-capture cursor with fingerprint drift detection</td>
-<td><code>createdAt</code> and category only</td>
-<td>Envelope sanitization before capture; scope that cannot be
-dropped</td>
-<td>Vector-only reference backend; sanitization is a denylist tied to
-envelope formats</td>
-</tr>
-<tr>
-<td><code>open-cowork</code></td>
-<td>Core memory and experience memory as separately extracted kinds</td>
-<td>Per-kind stores plus SQLite FTS, with an ingestion queue</td>
-<td>Retriever then navigator assembles the prompt prefix; tested
-FTS-absent path</td>
-<td>Queue, then per-kind extractors with independently optimized
-prompts</td>
-<td>No visible trust state or tombstone</td>
-<td>Workspace field on eval queries; scope model not traced</td>
-<td>Memory tools plus an extension entry point</td>
-<td>Ingestion queue and prompt optimization</td>
-<td>Not traced; no verification modules found</td>
-<td>A committed eval harness with <code>forbiddenHits</code> — negative
-retrieval assertions</td>
-<td>Harness present, results absent; substring scoring favours
-extractive memory</td>
+<td><code>genericagent</code></td>
+<td>Text and Markdown across four layers</td>
+<td><code>global_mem_insight.txt</code>, <code>global_mem.txt</code>,
+<code>memory/</code>, <code>L4_raw_sessions/</code></td>
+<td>Agent reads a ≤30-line index and opens files by pointer</td>
+<td>Only successful tool-call results may be written (by policy)</td>
+<td>Layer migration and patching; "better not to modify at all"</td>
+<td>One global tree</td>
+<td>Internal to the framework</td>
+<td>12-hour L4 archive cron</td>
+<td>Verification is a stated precondition, but no record is kept</td>
+<td>"No Execution, No Memory" plus an ROI test for permanent
+context</td>
+<td>Every axiom is prose with no enforcement or audit</td>
 </tr>
 <tr>
 <td><code>gini-agent</code></td>
@@ -1049,21 +490,279 @@ decisions kept as ADRs</td>
 tombstone</td>
 </tr>
 <tr>
-<td><code>moltis</code></td>
-<td>Chunk of a Markdown file</td>
-<td>SQLite with vectors; pluggable local, OpenAI, batch, and fallback
-embeddings</td>
-<td>Hybrid keyword plus vector, optional LLM rerank, citation modes</td>
-<td>Corpus files plus sanitized session transcripts, one
-<code>sync()</code> chokepoint</td>
-<td>Edit or delete the file and reindex</td>
-<td>Indexed directory only</td>
-<td>Rust crate inside the workspace</td>
-<td>File watcher and scheduled memory work</td>
-<td>Citations to path and chunk; content-hash addressing</td>
-<td><code>keyword_only()</code> makes a no-embeddings mode constructible
-and inspectable</td>
-<td>Transcripts and curated notes rank identically; no trust state</td>
+<td><code>graphiti</code></td>
+<td>Episode, entity, temporal relationship edge, community/saga</td>
+<td>Neo4j, FalkorDB, Kuzu, Neptune</td>
+<td>BM25 + cosine + BFS across edges/nodes/episodes/communities;
+RRF/MMR/cross-encoder</td>
+<td>Episode ingestion, entity/edge extraction, resolution, temporal
+invalidation</td>
+<td>Close <code>valid_at</code> intervals, expire edges, remove
+episodes</td>
+<td><code>group_id</code>, entity/edge types</td>
+<td>Python library, MCP, server</td>
+<td>Ingestion maintenance; saga summaries</td>
+<td>Source episode UUIDs and bi-temporal history; no verified state</td>
+<td>Preserves changing facts without erasing history</td>
+<td>Entity merge/invalidation mistakes reshape the graph</td>
+</tr>
+<tr>
+<td><code>hermes-agent</code></td>
+<td>Delimited text entry in <code>MEMORY.md</code> /
+<code>USER.md</code>; session message; skill</td>
+<td>Markdown files plus SQLite <code>state.db</code> with FTS5</td>
+<td>Curated memory always in prompt; session history via FTS5; no
+cross-layer fusion</td>
+<td>Explicit <code>memory</code> tool through a staged write-approval
+gate</td>
+<td>Substring-addressed replace/remove; hard char cap forces in-turn
+consolidation</td>
+<td>Profile-level only; no project or room boundary within a
+profile</td>
+<td>Own tools plus one mounted <code>MemoryProvider</code>; MCP
+serve</td>
+<td>None for curated memory; providers may run their own</td>
+<td>Threat-scanned at write; no provenance on entries</td>
+<td>Frozen prompt snapshot preserves cache; foreign-write detection with
+backup</td>
+<td>Model writes are instantly authoritative; unlogged budget-driven
+eviction</td>
+</tr>
+<tr>
+<td><code>hindsight</code></td>
+<td>Source chunk, world/experience fact, observation, reflection</td>
+<td>PostgreSQL/pgvector or Oracle</td>
+<td>Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder
+rerank</td>
+<td>Screen, chunk, extract, embed, link, consolidate</td>
+<td>Replace/append source; observation create/update/history; exact
+bank/document operations</td>
+<td>Memory bank, tags, schemas/tenants</td>
+<td>REST, MCP, generated SDKs, framework integrations</td>
+<td>Queued consolidation and maintenance with retries</td>
+<td>Source IDs, proof counts, audit/LLM traces; no explicit truth
+state</td>
+<td>Complete service pipeline; task-specific fusion; temporal
+recall</td>
+<td>LLM facts/observations can harden errors; operational
+complexity</td>
+</tr>
+<tr>
+<td><code>hipporag</code></td>
+<td>Chunk plus derived entity and passage graph nodes</td>
+<td>igraph graph with pluggable vector store (Qdrant/Chroma/Milvus)</td>
+<td>Fact scores → LLM rerank → IDF-penalized graph seeding →
+Personalized PageRank diffusion</td>
+<td><code>index()</code>: chunk, OpenIE triples, fact/passage/synonymy
+edges</td>
+<td>Chunk-scoped delete; shared entities survive by reference count</td>
+<td>None — corpus is global</td>
+<td>Python library only; no MCP, tools, or service</td>
+<td>Cacheable OpenIE; incremental synonymy edges</td>
+<td>Chunk identity only; no actor, time, or trust state</td>
+<td>Diffusion replaces hop planning; synonymy as edges rather than
+merges</td>
+<td>Assertion instead of fallback on unlinked queries; undirected
+diffusion discards predicate direction</td>
+</tr>
+<tr>
+<td><code>holographic</code></td>
+<td>Flat fact row plus HRR phase vector and linked entities</td>
+<td>Local SQLite (WAL) with FTS5 and per-category bundled banks</td>
+<td>FTS5 + Jaccard + HRR cosine, multiplied by trust; algebraic
+<code>probe</code>/<code>related</code>/<code>reason</code></td>
+<td><code>fact_store</code> tool, mirrored host writes, optional
+end-of-session regex extraction</td>
+<td>Exact update/remove; feedback shifts trust; no supersession</td>
+<td>Category only; no user/project/session scope</td>
+<td>Hermes <code>MemoryProvider</code> plugin; <code>fact_store</code>
+and <code>fact_feedback</code> tools</td>
+<td>None; bank rebuild is synchronous on every write</td>
+<td>None — no source, actor, or session on a fact</td>
+<td>Deterministic hash-derived vectors; <code>contradict</code> as a
+query action</td>
+<td>Three downvotes silently drop a fact below the retrieval floor; one
+score for truth and reachability</td>
+</tr>
+<tr>
+<td><code>honcho</code></td>
+<td>Message, document/observation, representation</td>
+<td>Postgres/SQLAlchemy, pgvector or vector adapter</td>
+<td>Working representation blends semantic, recent, most-derived;
+message search with windows</td>
+<td>Message ingestion plus queued derivation</td>
+<td>Soft delete, representation reconciliation</td>
+<td>Workspace, peer, session, collection</td>
+<td>Hosted API/service model</td>
+<td>Deriver queues and workers</td>
+<td>Source IDs, derived observations, peer/session provenance</td>
+<td>Strong event-to-representation pipeline</td>
+<td>Operational complexity; LLM-derived observations still need trust
+policy</td>
+</tr>
+<tr>
+<td><code>langmem</code></td>
+<td>Store item, usually JSON memory</td>
+<td>LangGraph <code>BaseStore</code></td>
+<td><code>store.search/asearch</code> delegated to backend</td>
+<td>Tools call create/update/delete/search; extraction via
+Trustcall</td>
+<td>Tool-level CRUD</td>
+<td>Namespace templates</td>
+<td>LangChain/LangGraph tools</td>
+<td>Reflection executor local/remote</td>
+<td>Mostly application-defined</td>
+<td>Clean primitives, schema-driven extraction</td>
+<td>Too low-level to solve memory quality alone</td>
+</tr>
+<tr>
+<td><code>letta</code></td>
+<td>Core memory block, archival passage, message</td>
+<td>ORM database; passages with embeddings; optional git memory</td>
+<td>Archival search, conversation search, compiled core prompt</td>
+<td>Agent tools mutate core/archival memory</td>
+<td>Append/replace/patch, passage insert, block update</td>
+<td>Agent, block labels, files/sources</td>
+<td>Deep runtime tool executor integration</td>
+<td>Prompt rebuilds, manager services</td>
+<td>Block tags/metadata, message timestamps; limited truth model</td>
+<td>Clear core/archive/recall separation</td>
+<td>Agent can rewrite important memory without strong verification</td>
+</tr>
+<tr>
+<td><code>llamaindex</code></td>
+<td>Block-owned content; no memory record</td>
+<td>Application-chosen; vector store via the framework's
+abstractions</td>
+<td>Per-block: vector retrieval, extracted facts, static text —
+composed, not fused</td>
+<td>Short-term history overflow flushes <code>token_flush_size</code>
+into blocks</td>
+<td>Condensation rewrites the fact list wholesale; no tombstone</td>
+<td>None; application-owned</td>
+<td>LlamaIndex agents and workflows; custom blocks via
+<code>BaseMemoryBlock</code></td>
+<td>None; extraction runs on flush</td>
+<td>None — extracted facts record no source</td>
+<td>Self-truncating blocks and one explicit budget split</td>
+<td>No provenance, correction, or scope; capture depends on conversation
+length</td>
+</tr>
+<tr>
+<td><code>llm-wiki-memory</code></td>
+<td>Typed Markdown atom, plan/investigation, daily capture, or full
+document</td>
+<td>Filesystem wiki, per-category embedding caches, private git
+history</td>
+<td>Metadata prefilter, local embedding/chunk cosine, priority bands,
+federated locality boost; lexical vector fallback</td>
+<td>MCP/CLI writes, transcript and plan hooks, daily compile,
+full-document absorb</td>
+<td>Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in
+dedup/refresh consolidation</td>
+<td>Private brain plus explicit repository wiki levels;
+workspace/area/task/subject facets</td>
+<td>MCP, CLI, Claude Code lifecycle hooks, shared instructions</td>
+<td>Detached flush, daily compile, opt-in consolidation, cron healing,
+git/cache maintenance</td>
+<td>Body hash, capture audit, git history, user-gated lessons; no
+candidate/verified/rejected state</td>
+<td>Recoverable capture, explicit targets, deterministic
+layout/topology, excellent operational tests</td>
+<td>LLM atoms become active without verification; vector-only primary
+retrieval; linear scans; git is not erasure</td>
+</tr>
+<tr>
+<td><code>magic-context</code></td>
+<td>Memory with separate lifecycle and verification state, plus
+compartments, facts, primers</td>
+<td>SQLite (70 migrations) with FTS5, embeddings keyed by
+<code>(memory_id, model_id)</code>, git commits indexed</td>
+<td>Hybrid semantic + BM25 with source boosts and
+<code>matchType</code>, over memories and raw history</td>
+<td>Agent, user, historian, or dreamer writes; synchronous promotion,
+async embedding</td>
+<td>Supersession and merge lineage; archived, not tombstoned</td>
+<td><code>project</code> / <code>ecosystem</code> /
+<code>universe</code> lattice plus a <code>shareable</code> flag</td>
+<td>Pi <code>ExtensionAPI</code> and an OpenCode adapter sharing one
+store</td>
+<td>Dreamer: verify, map, classify, promote, retrospective, at commit
+boundaries</td>
+<td>Four-actor <code>sourceType</code>, mutation logs, per-memory
+<code>verified_at</code></td>
+<td>Memories re-verified against the files they describe when git says
+those files changed</td>
+<td>Verdict is an LLM call; no rejected-value tombstone; very large
+surface</td>
+</tr>
+<tr>
+<td><code>mastra-observational-memory</code></td>
+<td>Raw message, dated observation group, reflected observation
+context</td>
+<td>Mastra <code>MemoryStorage</code> adapters</td>
+<td>Sequential active observations + recent raw tail; optional
+observation-vector retrieval</td>
+<td>Processor observes at token thresholds; reflector compacts
+observations</td>
+<td>Range replacement, buffered activation, clear/clone records</td>
+<td>Thread or resource</td>
+<td>Deep Mastra input/output processor integration</td>
+<td>Early async observation/reflection buffers with activation</td>
+<td>Exact covered ranges and markers; summary has no truth state</td>
+<td>Non-blocking context compaction for long sessions</td>
+<td>Distributed locking and progressive summary drift</td>
+</tr>
+<tr>
+<td><code>mem0</code></td>
+<td>Text fact in vector payload</td>
+<td>Vector store plus SQLite history/messages</td>
+<td>Semantic, optional keyword/BM25, entity boost, optional rerank</td>
+<td>LLM additive extraction, hash dedupe, entity linking</td>
+<td>Explicit update/delete APIs; V3 default append-oriented</td>
+<td><code>user_id</code>, <code>agent_id</code>, <code>run_id</code>,
+filters</td>
+<td>Python SDK, tool/API style</td>
+<td>Extraction and linking on write</td>
+<td>Attribution metadata, history; weak epistemic trust</td>
+<td>Practical SDK, pluggable stores, hybrid search</td>
+<td>LLM facts can become durable claims without verification</td>
+</tr>
+<tr>
+<td><code>memos</code></td>
+<td>Textual item, graph tier, preference/skill, KV cache, LoRA</td>
+<td>Configurable vector/graph stores, dumps, cache/model artifacts</td>
+<td>Direct vector or graph + BM25 + rerank + reasoner; optional
+auxiliary memories</td>
+<td>Reader extraction into a memory cube; scheduler transformations</td>
+<td>Module-specific update/delete/soft-delete/dump semantics</td>
+<td>User plus registered memory cube</td>
+<td>MOS chat/runtime, APIs, CLI</td>
+<td>Scheduler and activation-memory refresh</td>
+<td>Source metadata varies by module; no uniform trust state</td>
+<td>Treats memory as heterogeneous mountable resources</td>
+<td>Umbrella API hides uneven guarantees and maturity</td>
+</tr>
+<tr>
+<td><code>mempalace</code></td>
+<td>Verbatim drawer chunks, closets, KG triples</td>
+<td>Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG</td>
+<td>Direct drawer vector search, BM25 rerank, closet boost, metadata
+filters, FTS fallback</td>
+<td>Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert
+verbatim text</td>
+<td>Delete/update drawers, delete by source, dedup, repair; limited
+epistemic correction</td>
+<td>Palace, wing, room, source file, parent drawer, backend
+namespace</td>
+<td>MCP, CLI, hooks, skills, wake-up stack</td>
+<td>Mining, closet/hallway/tunnel computation, repair/sync/backup</td>
+<td>Strong source provenance; weak candidate/verified/rejected trust
+state</td>
+<td>Evidence-preserving raw baseline, hybrid retrieval, operational
+hardening</td>
+<td>Raw stores get large/noisy; contradiction resolution mostly outside
+core recall</td>
 </tr>
 <tr>
 <td><code>mercury-agent</code></td>
@@ -1108,6 +807,23 @@ non-regression across eight metrics</td>
 defaults</td>
 </tr>
 <tr>
+<td><code>moltis</code></td>
+<td>Chunk of a Markdown file</td>
+<td>SQLite with vectors; pluggable local, OpenAI, batch, and fallback
+embeddings</td>
+<td>Hybrid keyword plus vector, optional LLM rerank, citation modes</td>
+<td>Corpus files plus sanitized session transcripts, one
+<code>sync()</code> chokepoint</td>
+<td>Edit or delete the file and reindex</td>
+<td>Indexed directory only</td>
+<td>Rust crate inside the workspace</td>
+<td>File watcher and scheduled memory work</td>
+<td>Citations to path and chunk; content-hash addressing</td>
+<td><code>keyword_only()</code> makes a no-embeddings mode constructible
+and inspectable</td>
+<td>Transcripts and curated notes rank identically; no trust state</td>
+</tr>
+<tr>
 <td><code>nanobot</code></td>
 <td>Markdown durable files plus JSONL summary lines</td>
 <td><code>SOUL.md</code>, <code>USER.md</code>,
@@ -1124,61 +840,66 @@ errors</td>
 <td>No provenance from claim to evidence; single workspace scope</td>
 </tr>
 <tr>
-<td><code>cowagent</code></td>
-<td>Markdown files, chunked into an indexed <code>chunks</code>
-table</td>
-<td>SQLite with embeddings and self-healing FTS5</td>
-<td>Vector plus keyword over chunks; <code>MEMORY.md</code> injected in
-full</td>
-<td>Summarize into dated daily files, then distil</td>
-<td>Recency-wins conflict update; whole-file overwrite</td>
-<td><code>user_id</code> and <code>scope</code>, defaulting to
-<code>shared</code></td>
-<td>Agent memory tools</td>
-<td>Deep Dream after the daily summary, 23:55 cron</td>
-<td>Line-addressable chunks with hashes; dream diary</td>
-<td>Dated intermediate layer and written distillation rules</td>
-<td>Shared-by-default scope; chained lossy summarization</td>
+<td><code>open-cowork</code></td>
+<td>Core memory and experience memory as separately extracted kinds</td>
+<td>Per-kind stores plus SQLite FTS, with an ingestion queue</td>
+<td>Retriever then navigator assembles the prompt prefix; tested
+FTS-absent path</td>
+<td>Queue, then per-kind extractors with independently optimized
+prompts</td>
+<td>No visible trust state or tombstone</td>
+<td>Workspace field on eval queries; scope model not traced</td>
+<td>Memory tools plus an extension entry point</td>
+<td>Ingestion queue and prompt optimization</td>
+<td>Not traced; no verification modules found</td>
+<td>A committed eval harness with <code>forbiddenHits</code> — negative
+retrieval assertions</td>
+<td>Harness present, results absent; substring scoring favours
+extractive memory</td>
 </tr>
 <tr>
-<td><code>genericagent</code></td>
-<td>Text and Markdown across four layers</td>
-<td><code>global_mem_insight.txt</code>, <code>global_mem.txt</code>,
-<code>memory/</code>, <code>L4_raw_sessions/</code></td>
-<td>Agent reads a ≤30-line index and opens files by pointer</td>
-<td>Only successful tool-call results may be written (by policy)</td>
-<td>Layer migration and patching; "better not to modify at all"</td>
-<td>One global tree</td>
-<td>Internal to the framework</td>
-<td>12-hour L4 archive cron</td>
-<td>Verification is a stated precondition, but no record is kept</td>
-<td>"No Execution, No Memory" plus an ROI test for permanent
-context</td>
-<td>Every axiom is prose with no enforcement or audit</td>
+<td><code>openclaw</code></td>
+<td>Categorized entry (preference/fact/decision/entity/other) with
+embedding</td>
+<td>LanceDB via <code>memory-lancedb</code> extension; swappable
+embedding adapters</td>
+<td>Vector search with mandatory agent-scoped predicate; no lexical
+arm</td>
+<td>Optional auto-capture after envelope sanitization; 500-char
+truncation</td>
+<td>Exact scoped delete; no tombstones, and auto-capture can restore
+content</td>
+<td><code>agentId</code>, composed inseparably into every predicate</td>
+<td>Plugin contract via <code>memory-core</code>; tools, CLI, doctor
+checks</td>
+<td>Auto-capture cursor with fingerprint drift detection</td>
+<td><code>createdAt</code> and category only</td>
+<td>Envelope sanitization before capture; scope that cannot be
+dropped</td>
+<td>Vector-only reference backend; sanitization is a denylist tied to
+envelope formats</td>
 </tr>
 <tr>
-<td><code>magic-context</code></td>
-<td>Memory with separate lifecycle and verification state, plus
-compartments, facts, primers</td>
-<td>SQLite (70 migrations) with FTS5, embeddings keyed by
-<code>(memory_id, model_id)</code>, git commits indexed</td>
-<td>Hybrid semantic + BM25 with source boosts and
-<code>matchType</code>, over memories and raw history</td>
-<td>Agent, user, historian, or dreamer writes; synchronous promotion,
-async embedding</td>
-<td>Supersession and merge lineage; archived, not tombstoned</td>
-<td><code>project</code> / <code>ecosystem</code> /
-<code>universe</code> lattice plus a <code>shareable</code> flag</td>
-<td>Pi <code>ExtensionAPI</code> and an OpenCode adapter sharing one
-store</td>
-<td>Dreamer: verify, map, classify, promote, retrospective, at commit
-boundaries</td>
-<td>Four-actor <code>sourceType</code>, mutation logs, per-memory
-<code>verified_at</code></td>
-<td>Memories re-verified against the files they describe when git says
-those files changed</td>
-<td>Verdict is an LLM call; no rejected-value tombstone; very large
-surface</td>
+<td><code>openviking</code></td>
+<td>Typed memory file with L0 abstract, L1 overview, L2 content, links
+and backlinks</td>
+<td>Pluggable vector/graph stores plus native Rust/C++ index</td>
+<td>Directory-recursive dense + sparse, level filter, per-type quota,
+rerank, hotness blend</td>
+<td>LLM extraction into typed files; write target resolved before
+persistence</td>
+<td>Merge ops with
+<code>upsert</code>/<code>add_only</code>/<code>update_only</code>; no
+rejection state</td>
+<td>Tenant and permission via <code>RequestContext</code>; user space
+plus <code>peers/&lt;id&gt;</code></td>
+<td>Server, SDKs, CLI, web studio; Hermes and OpenClaw provider</td>
+<td>Extraction, streaming update, reindex, hotness maintenance</td>
+<td>URIs, types, timestamps; no evidential spans or trust state</td>
+<td>Three-granularity progressive disclosure; hotness kept apart from
+confidence</td>
+<td>Headline benchmark numbers lack committed raw artifacts;
+AGPL-3.0</td>
 </tr>
 <tr>
 <td><code>pi</code></td>
@@ -1200,22 +921,128 @@ branchable sessions</td>
 live</td>
 </tr>
 <tr>
-<td><code>hipporag</code></td>
-<td>Chunk plus derived entity and passage graph nodes</td>
-<td>igraph graph with pluggable vector store (Qdrant/Chroma/Milvus)</td>
-<td>Fact scores → LLM rerank → IDF-penalized graph seeding →
-Personalized PageRank diffusion</td>
-<td><code>index()</code>: chunk, OpenIE triples, fact/passage/synonymy
-edges</td>
-<td>Chunk-scoped delete; shared entities survive by reference count</td>
-<td>None — corpus is global</td>
-<td>Python library only; no MCP, tools, or service</td>
-<td>Cacheable OpenIE; incremental synonymy edges</td>
-<td>Chunk identity only; no actor, time, or trust state</td>
-<td>Diffusion replaces hop planning; synonymy as edges rather than
-merges</td>
-<td>Assertion instead of fallback on unlinked queries; undirected
-diffusion discards predicate direction</td>
+<td><code>rainbox</code></td>
+<td>Claim, evidence, embedding, retrieval event</td>
+<td>Postgres/SQLAlchemy plus pgvector</td>
+<td>Hard-filtered hybrid (vector + Postgres full-text + entity boost)
+for both chat and assistant; profile digest</td>
+<td>User commands, assistant actions, review UI; single governed atomic
+path (<code>record_belief</code>); write-time conflict detection;
+active/candidate flows</td>
+<td>Reject/supersede/reactivate/expiry/sensitivity;
+<code>MemoryRejectedValue</code> tombstones block model re-assertion of
+rejected values; governed atomic correction
+(<code>correct_belief</code>); UI stale-write guards</td>
+<td>Global, agent, room, project; sensitivity</td>
+<td>Full assistant app: chat prompt (via
+<code>build_chat_memory_block</code>→hybrid), action loop, review
+UI</td>
+<td>Embedding sync/prune, telemetry, feedback/eval loop</td>
+<td>Five-actor trust model (3 human/override + 2 model/candidate);
+rejected-value tombstones; write-time lattice-aware conflict detection;
+governed atomic correction; fenced prompt injection; claim/evidence
+provenance and retrieval audit</td>
+<td>Operator governance, trust/correction machinery (tombstones +
+conflict detection + fenced recall + governed writes), telemetry, eval
+integration</td>
+<td>Compact claims may lose source nuance; no automatic candidate
+extraction;
+<code>epistemic_confidence</code>/<code>retrieval_strength</code>
+columns exist but Tier-1 ranking still uses <code>confidence</code>
+(schema groundwork only); attribution is context-injection, not
+causal</td>
+</tr>
+<tr>
+<td><code>redis-agent-memory-server</code></td>
+<td>Working-memory message; long-term <code>MemoryRecord</code> typed
+episodic/semantic/message</td>
+<td>Redis with TTL for working memory; pluggable vector DB for
+long-term</td>
+<td>Vector search plus metadata filters, reranked by recency with dual
+half-lives</td>
+<td>Debounced trailing extraction via swappable strategies, then layered
+dedupe</td>
+<td>Exact delete; composite forgetting policy; no tombstones</td>
+<td>Namespace, <code>user_id</code>, <code>session_id</code>, with
+auth</td>
+<td>REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin</td>
+<td>Debounced extraction, compaction, dedupe, forgetting sweeps</td>
+<td>Session linkage and per-message extraction flags; no trust
+state</td>
+<td>Best-specified retention policy in the atlas; cohesion-gated
+semantic merge</td>
+<td>Deletion is not durable against re-extraction; access-driven
+reinforcement</td>
+</tr>
+<tr>
+<td><code>supermemory</code></td>
+<td>Document, chunk, memory entry, space</td>
+<td>Hosted backend; visible schemas/client only</td>
+<td>Hosted search/profile API; SDK uses hybrid settings</td>
+<td>API/MCP add memory/document</td>
+<td>Version chains, relations, forget API</td>
+<td>Space, container tags, org/user/project</td>
+<td>SDK, AI SDK tools, MCP</td>
+<td>Hosted processing not visible</td>
+<td>Rich schema fields and relations; implementation not visible</td>
+<td>Product/API surface, document-memory graph</td>
+<td>Backend black box; semantic forget needs care</td>
+</tr>
+<tr>
+<td><code>swafra</code></td>
+<td>Verbatim or synthetic chunk plus directed chunk edges</td>
+<td>Three local JSON files</td>
+<td>BM25 + vector + entity/date/preference heuristics + char n-gram;
+graph walk; best chunk per title</td>
+<td>MCP add; Leiden or exchange/paragraph chunks; synchronous full-file
+rewrite</td>
+<td>Exact source delete; implicit same-ID reindex; broken supersession
+path</td>
+<td>Source ID/title only; no user/project/tenant scope</td>
+<td>Python FastMCP; Node MCP over Python subprocess</td>
+<td>None</td>
+<td>Caller title and raw chunk; no actor, span-quality provenance, trust
+state, or injection fence</td>
+<td>Very compact local hybrid graph-RAG; optional dependencies; source
+diversity</td>
+<td>Non-atomic concurrent writes; unbounded context; dangling edges;
+benchmark cutoff invalid</td>
+</tr>
+<tr>
+<td><code>tencentdb-agent-memory</code></td>
+<td>L0 conversation, L1 memory record, L2 scene, L3 persona, offload
+reference/map</td>
+<td>JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB</td>
+<td>FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona
+context</td>
+<td>Successful-turn capture, LLM extraction, store/update/merge/skip
+judge, symbolic tool-output offload</td>
+<td>Internal merge/delete/cleanup; no first-class correction/forget
+tool</td>
+<td>Session fields and data directories; no general tenant boundary</td>
+<td>OpenClaw hooks/tools/context engine; Hermes gateway</td>
+<td>Deferred embeddings, scene/persona generation, retention
+reclamation</td>
+<td>Source message IDs and raw evidence; no verification/rejection
+state</td>
+<td>Layered progressive disclosure with raw drill-down</td>
+<td>Non-atomic dual writes, fail-open dedup, thin core tests,
+unsupported benchmark claims</td>
+</tr>
+<tr>
+<td><code>verel</code></td>
+<td><code>MemoryRecord</code> fact/rule/schema/failure/skill</td>
+<td>SQLite local plus backend adapters</td>
+<td>Rank blends relevance, retrieval strength, confidence, trust;
+budgeted recall</td>
+<td>Candidate extraction, attested/corroborated promotion</td>
+<td>Correction chains, rejected tombstones, decay/prune</td>
+<td>Scope lattice</td>
+<td>Helpers, MCP, hosted/replicated adapters</td>
+<td>Consolidation, promotion gate, replication</td>
+<td>Explicit candidate/verified/rejected, provenance, confidence</td>
+<td>Best correctness model in set</td>
+<td>Complex; may be heavy for product MVP</td>
 </tr>
 <tr>
 <td><code>voyager</code></td>
@@ -1233,43 +1060,10 @@ descriptions</td>
 <td>Unbounded skill concatenation into prompts; no failure memory;
 frozen since 2023</td>
 </tr>
-<tr>
-<td><code>generative-agents</code></td>
-<td><code>ConceptNode</code> typed event, thought, or chat with
-poignancy</td>
-<td>Per-persona JSON plus in-memory embedding dict</td>
-<td>Normalized recency + relevance + importance, hand-tuned
-<code>gw = [0.5, 3, 2]</code></td>
-<td>Perception, conversation, and reflection all write ungated</td>
-<td>None; observations are never deleted or overwritten</td>
-<td>One persona directory</td>
-<td>Simulation only; tightly coupled to <code>Persona</code></td>
-<td>Reflection fired by accumulated poignancy</td>
-<td>Reflections cite supporting nodes, but citations are never used</td>
-<td>Consolidation triggered by significance rather than a timer</td>
-<td>Derived thoughts share one pool with observations; positional not
-temporal decay</td>
-</tr>
-<tr>
-<td><code>a-mem</code></td>
-<td><code>MemoryNote</code> with content, tags, context, links, and
-evolution history</td>
-<td>In-process dictionary plus ephemeral Chroma; separate persistent
-retriever utility</td>
-<td>Vector similarity with optional linked-neighbor append</td>
-<td>LLM decides links and neighbor metadata mutation before insert</td>
-<td>Delete/re-add update; exact delete without incoming-link
-cleanup</td>
-<td>None in core</td>
-<td>Direct Python library</td>
-<td>Periodic reindex called consolidation</td>
-<td>No source provenance or trust state</td>
-<td>Small, legible linked-note evolution concept</td>
-<td>Neighbor position/identity bug can mutate wrong notes; destructive
-initialization; no durability</td>
-</tr>
 </tbody>
 </table></div>
+<!-- END GENERATED MATRIX -->
+
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
@@ -3706,6 +3500,23 @@ capturing from a channel that wraps messages in scaffolding.</li>
 <li>Do not copy when: you need hybrid retrieval, per-user scope inside
 an agent, or deletion that survives auto-capture.</li>
 </ul>
+<h3 id="llamaindex"><code>llamaindex</code></h3>
+<ul>
+<li>Best idea: one token budget split between chat history and blocks,
+with each block truncating itself to fit.</li>
+<li>Biggest risk: no provenance, correction, or scope, and long-term
+capture is triggered by conversation length rather than importance.</li>
+<li>Most reusable component: the <code>BaseMemoryBlock</code> contract —
+<code>aget</code>, <code>aput</code>, <code>atruncate</code> — and the
+explicit budget split.</li>
+<li>Maturity impression: a widely deployed framework whose newer block
+API is a real memory layer, shipped alongside an older window-management
+API of the same name.</li>
+<li>Study when: you need a memory component contract, or a budget that
+several contributors must share.</li>
+<li>Do not copy when: facts must be traceable, correctable, or scoped —
+those are left to the application.</li>
+</ul>
 <h3 id="open-cowork"><code>open-cowork</code></h3>
 <ul>
 <li>Best idea: a committed memory benchmark whose queries assert
@@ -4085,6 +3896,7 @@ href="../systems/genericagent/"><code>genericagent</code></a></li>
 <li><a href="../systems/moltis/"><code>moltis</code></a></li>
 <li><a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a></li>
+<li><a href="../systems/llamaindex/"><code>llamaindex</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4228,6 +4040,10 @@ href="https://github.com/cosmicstack-labs/mercury-agent">cosmicstack-labs/mercur
 at <a
 href="https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1"><code>6e174a4b5ea77bbc753bff5f89c76db9303439d1</code></a></li>
 <li><a
+href="https://github.com/run-llama/llama_index">run-llama/llama_index</a>
+at <a
+href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0"><code>199e9b5b130bbde72639358a08935b913e7132c0</code></a></li>
+<li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
 href="https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2"><code>2921c1e5bddbd96a503da4acd7538cac45bcd0f2</code></a>
@@ -4361,6 +4177,11 @@ systems added in this round.</li>
 axioms and rules quoted in its report are the reviewer's translations,
 with key terms given in the original. Its cited arXiv technical report
 was not retrieved or assessed.</li>
+<li>LlamaIndex ships two APIs under the name "memory": the newer
+block-based <code>Memory</code> reviewed here, and an older
+<code>ChatMemoryBuffer</code> family that is conversation-window
+management and out of scope. Its tests were not run and no memory
+benchmark was found.</li>
 <li>No suites or benchmarks were run for open-cowork, Gini, Moltis, or
 Mercury. open-cowork's eval harness was read but not executed, and no
 scored results were found committed.</li>

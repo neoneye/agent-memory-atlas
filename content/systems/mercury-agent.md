@@ -9,6 +9,18 @@ source_url: https://github.com/cosmicstack-labs/mercury-agent
 revision: 6e174a4b5ea77bbc753bff5f89c76db9303439d1
 revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "`UserMemoryRecord` graded on confidence, importance, and durability"
+  storage: "Second-brain DB, with people and relation records"
+  retrieval: "Retrieval records `lastUsedAt` and `lastUsedQuery`"
+  write: "Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration"
+  update_delete: "`dismissed` boolean and `supersededBy`; no tombstone"
+  scoping: "`durable`, `active`, `subconscious` tiers; single user"
+  integration: "Internal, with a `brain/Memory.tsx` review page"
+  background: "Not traced"
+  trust: "Four-way `evidenceKind`, corroboration counts, free-text provenance"
+  strengths: "Durability separated from importance; a subconscious tier; a learning-pause switch"
+  risks: "Scores estimated once at write time; dismissal is not durable"
 ---
 
 ## 1. Executive Summary

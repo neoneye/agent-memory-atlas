@@ -9,6 +9,18 @@ source_url: https://github.com/agiresearch/A-mem
 revision: ceffb860f0712bbae97b184d440df62bc910ca8d
 revision_url: https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "`MemoryNote` with content, tags, context, links, and evolution history"
+  storage: "In-process dictionary plus ephemeral Chroma; separate persistent retriever utility"
+  retrieval: "Vector similarity with optional linked-neighbor append"
+  write: "LLM decides links and neighbor metadata mutation before insert"
+  update_delete: "Delete/re-add update; exact delete without incoming-link cleanup"
+  scoping: "None in core"
+  integration: "Direct Python library"
+  background: "Periodic reindex called consolidation"
+  trust: "No source provenance or trust state"
+  strengths: "Small, legible linked-note evolution concept"
+  risks: "Neighbor position/identity bug can mutate wrong notes; destructive initialization; no durability"
 ---
 
 ## 1. Executive Summary

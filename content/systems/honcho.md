@@ -9,6 +9,18 @@ source_url: https://github.com/plastic-labs/honcho
 revision: eb386c3ceb77774b29108f9ab114e71d52b7d420
 revision_url: https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Message, document/observation, representation"
+  storage: "Postgres/SQLAlchemy, pgvector or vector adapter"
+  retrieval: "Working representation blends semantic, recent, most-derived; message search with windows"
+  write: "Message ingestion plus queued derivation"
+  update_delete: "Soft delete, representation reconciliation"
+  scoping: "Workspace, peer, session, collection"
+  integration: "Hosted API/service model"
+  background: "Deriver queues and workers"
+  trust: "Source IDs, derived observations, peer/session provenance"
+  strengths: "Strong event-to-representation pipeline"
+  risks: "Operational complexity; LLM-derived observations still need trust policy"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/MemPalace/mempalace
 revision: afd0428823b47f9a9d1d68c450d54bb0045a4988
 revision_url: https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Verbatim drawer chunks, closets, KG triples"
+  storage: "Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG"
+  retrieval: "Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback"
+  write: "Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text"
+  update_delete: "Delete/update drawers, delete by source, dedup, repair; limited epistemic correction"
+  scoping: "Palace, wing, room, source file, parent drawer, backend namespace"
+  integration: "MCP, CLI, hooks, skills, wake-up stack"
+  background: "Mining, closet/hallway/tunnel computation, repair/sync/backup"
+  trust: "Strong source provenance; weak candidate/verified/rejected trust state"
+  strengths: "Evidence-preserving raw baseline, hybrid retrieval, operational hardening"
+  risks: "Raw stores get large/noisy; contradiction resolution mostly outside core recall"
 ---
 
 ## 1. Executive Summary

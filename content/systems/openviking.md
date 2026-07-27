@@ -9,6 +9,18 @@ source_url: https://github.com/volcengine/OpenViking
 revision: c67222c3d46de4874eed65af8918fc55513812ef
 revision_url: https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Typed memory file with L0 abstract, L1 overview, L2 content, links and backlinks"
+  storage: "Pluggable vector/graph stores plus native Rust/C++ index"
+  retrieval: "Directory-recursive dense + sparse, level filter, per-type quota, rerank, hotness blend"
+  write: "LLM extraction into typed files; write target resolved before persistence"
+  update_delete: "Merge ops with `upsert`/`add_only`/`update_only`; no rejection state"
+  scoping: "Tenant and permission via `RequestContext`; user space plus `peers/<id>`"
+  integration: "Server, SDKs, CLI, web studio; Hermes and OpenClaw provider"
+  background: "Extraction, streaming update, reindex, hotness maintenance"
+  trust: "URIs, types, timestamps; no evidential spans or trust state"
+  strengths: "Three-granularity progressive disclosure; hotness kept apart from confidence"
+  risks: "Headline benchmark numbers lack committed raw artifacts; AGPL-3.0"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/campfirein/cipher
 revision: 1052ac1a5dd0fde4da8693d4712064f7876c269c
 revision_url: https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Flat memory with source/pinned metadata; structured knowledge `ContextData`"
+  storage: "Local Markdown under `.byterover/`, optional cloud sync"
+  retrieval: "Metadata filter and pagination only in inspected modules"
+  write: "LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates"
+  update_delete: "Structural-loss guard repairs destructive curation; no tombstones"
+  scoping: "Storage directory only"
+  integration: "`brv` CLI, MCP, Hermes provider"
+  background: "LLM dedup at bounded concurrency"
+  trust: "`source` of agent/system/user recorded but not enforced"
+  strengths: "Deterministic structural-loss detection and repair on LLM rewrites"
+  risks: "Elastic License 2.0, not open source; merge path itself is unguarded"
 ---
 
 ## 1. Executive Summary

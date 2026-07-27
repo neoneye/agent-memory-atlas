@@ -9,6 +9,18 @@ source_url: https://github.com/mem0ai/mem0
 revision: 31cec11a790868f88c9acafb8b70eb25071f2150
 revision_url: https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Text fact in vector payload"
+  storage: "Vector store plus SQLite history/messages"
+  retrieval: "Semantic, optional keyword/BM25, entity boost, optional rerank"
+  write: "LLM additive extraction, hash dedupe, entity linking"
+  update_delete: "Explicit update/delete APIs; V3 default append-oriented"
+  scoping: "`user_id`, `agent_id`, `run_id`, filters"
+  integration: "Python SDK, tool/API style"
+  background: "Extraction and linking on write"
+  trust: "Attribution metadata, history; weak epistemic trust"
+  strengths: "Practical SDK, pluggable stores, hybrid search"
+  risks: "LLM facts can become durable claims without verification"
 ---
 
 ## 1. Executive Summary

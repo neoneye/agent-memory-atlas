@@ -9,6 +9,18 @@ source_url: https://github.com/OSU-NLP-Group/HippoRAG
 revision: e37fba2af1a951ac340d837a7c02efb9d8c9544a
 revision_url: https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Chunk plus derived entity and passage graph nodes"
+  storage: "igraph graph with pluggable vector store (Qdrant/Chroma/Milvus)"
+  retrieval: "Fact scores → LLM rerank → IDF-penalized graph seeding → Personalized PageRank diffusion"
+  write: "`index()`: chunk, OpenIE triples, fact/passage/synonymy edges"
+  update_delete: "Chunk-scoped delete; shared entities survive by reference count"
+  scoping: "None — corpus is global"
+  integration: "Python library only; no MCP, tools, or service"
+  background: "Cacheable OpenIE; incremental synonymy edges"
+  trust: "Chunk identity only; no actor, time, or trust state"
+  strengths: "Diffusion replaces hop planning; synonymy as edges rather than merges"
+  risks: "Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/NousResearch/hermes-agent
 revision: 0fa5e41c86f022bba147797849f0b44865721476
 revision_url: https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Delimited text entry in `MEMORY.md` / `USER.md`; session message; skill"
+  storage: "Markdown files plus SQLite `state.db` with FTS5"
+  retrieval: "Curated memory always in prompt; session history via FTS5; no cross-layer fusion"
+  write: "Explicit `memory` tool through a staged write-approval gate"
+  update_delete: "Substring-addressed replace/remove; hard char cap forces in-turn consolidation"
+  scoping: "Profile-level only; no project or room boundary within a profile"
+  integration: "Own tools plus one mounted `MemoryProvider`; MCP serve"
+  background: "None for curated memory; providers may run their own"
+  trust: "Threat-scanned at write; no provenance on entries"
+  strengths: "Frozen prompt snapshot preserves cache; foreign-write detection with backup"
+  risks: "Model writes are instantly authoritative; unlogged budget-driven eviction"
 ---
 
 ## 1. Executive Summary

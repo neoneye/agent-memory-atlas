@@ -9,6 +9,18 @@ source_url: https://github.com/TencentCloud/tencentdb-agent-memory
 revision: 45e6e80ae2e63b65fad0d89f5e13171229c8f295
 revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map"
+  storage: "JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB"
+  retrieval: "FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context"
+  write: "Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload"
+  update_delete: "Internal merge/delete/cleanup; no first-class correction/forget tool"
+  scoping: "Session fields and data directories; no general tenant boundary"
+  integration: "OpenClaw hooks/tools/context engine; Hermes gateway"
+  background: "Deferred embeddings, scene/persona generation, retention reclamation"
+  trust: "Source message IDs and raw evidence; no verification/rejection state"
+  strengths: "Layered progressive disclosure with raw drill-down"
+  risks: "Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims"
 ---
 
 ## 1. Executive Summary

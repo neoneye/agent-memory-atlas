@@ -9,6 +9,18 @@ source_url: https://github.com/MineDojo/Voyager
 revision: 55e45a880755d0c8c66ca7fb5fe7962ac8974f89
 revision_url: https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Executable JavaScript skill plus generated description"
+  storage: "`skills.json` and flat files, Chroma index over descriptions"
+  retrieval: "Vector similarity over descriptions, top-5, returns code"
+  write: "Written only when a critic verifies environment success"
+  update_delete: "Same-name rewrite; old versions on disk but unreachable"
+  scoping: "Single agent checkpoint directory"
+  integration: "Research rollout loop; prompt injection of retrieved code"
+  background: "None"
+  trust: "Verified execution is the provenance"
+  strengths: "Environment-verified write gate — the strongest in the atlas"
+  risks: "Unbounded skill concatenation into prompts; no failure memory; frozen since 2023"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/earendil-works/pi
 revision: a597371bda2af70372d1323d550483b5f4a0ae36
 revision_url: https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "None — session-tree entry, not a memory record"
+  storage: "JSONL session tree (`id`/`parentId`), swappable in-memory backend"
+  retrieval: "None; context is the tree walked to root plus discovered resource files"
+  write: "Append to session; compaction replaces a range"
+  update_delete: "None; no durable claim exists"
+  scoping: "None"
+  integration: "Own CLI/TUI/SDK; 20+ extension events, none memory-shaped"
+  background: "Compaction and branch summarization"
+  trust: "Deterministic `readFiles`/`modifiedFiles` on compaction entries"
+  strengths: "Deterministic file manifest kept out of the model's output; branchable sessions"
+  risks: "No memory contract at all, so scope and deletion have nowhere to live"
 ---
 
 ## 1. Executive Summary

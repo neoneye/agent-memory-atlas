@@ -9,6 +9,18 @@ source_url: https://github.com/openclaw/openclaw
 revision: 570eab59e7c7ce052f4550af7507e7dd77c73e11
 revision_url: https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Categorized entry (preference/fact/decision/entity/other) with embedding"
+  storage: "LanceDB via `memory-lancedb` extension; swappable embedding adapters"
+  retrieval: "Vector search with mandatory agent-scoped predicate; no lexical arm"
+  write: "Optional auto-capture after envelope sanitization; 500-char truncation"
+  update_delete: "Exact scoped delete; no tombstones, and auto-capture can restore content"
+  scoping: "`agentId`, composed inseparably into every predicate"
+  integration: "Plugin contract via `memory-core`; tools, CLI, doctor checks"
+  background: "Auto-capture cursor with fingerprint drift detection"
+  trust: "`createdAt` and category only"
+  strengths: "Envelope sanitization before capture; scope that cannot be dropped"
+  risks: "Vector-only reference backend; sanitization is a denylist tied to envelope formats"
 ---
 
 ## 1. Executive Summary

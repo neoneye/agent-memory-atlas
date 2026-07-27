@@ -9,6 +9,18 @@ source_url: https://github.com/amitpatole/verel
 revision: df80efe8207a99585a2ebce36fc6e32ba5077e2e
 revision_url: https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "`MemoryRecord` fact/rule/schema/failure/skill"
+  storage: "SQLite local plus backend adapters"
+  retrieval: "Rank blends relevance, retrieval strength, confidence, trust; budgeted recall"
+  write: "Candidate extraction, attested/corroborated promotion"
+  update_delete: "Correction chains, rejected tombstones, decay/prune"
+  scoping: "Scope lattice"
+  integration: "Helpers, MCP, hosted/replicated adapters"
+  background: "Consolidation, promotion gate, replication"
+  trust: "Explicit candidate/verified/rejected, provenance, confidence"
+  strengths: "Best correctness model in set"
+  risks: "Complex; may be heavy for product MVP"
 ---
 
 ## 1. Executive Summary

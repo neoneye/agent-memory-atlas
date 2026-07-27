@@ -9,6 +9,18 @@ source_url: https://github.com/rohitg00/agentmemory
 revision: d8b5267c367a5da07ad3619363520b7f1a506c6b
 revision_url: https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records"
+  storage: "iii StateModule backed by local SQLite plus persisted search projections"
+  retrieval: "BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity"
+  write: "Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation"
+  update_delete: "Delete/TTL; similarity-based version supersession; rebuildable indexes"
+  scoping: "Project, session, working directory; shared or isolated agent mode"
+  integration: "Hooks, MCP, HTTP, CLI, iii functions"
+  background: "Optional compression, graph extraction, consolidation, decay, repair"
+  trust: "Source observation IDs, versions, audit; no candidate/verified/rejected state"
+  strengths: "Cheap synchronous capture and compact-first hybrid search"
+  risks: "Very broad surface; shared scope default; fuzzy supersession can hide conflicts"
 ---
 
 ## 1. Executive Summary

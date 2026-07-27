@@ -9,6 +9,18 @@ source_url: https://github.com/neoneye/RainBox
 revision: 9f565bf26175bc5e09288f70ec666a4616a2323c
 revision_url: https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Claim, evidence, embedding, retrieval event"
+  storage: "Postgres/SQLAlchemy plus pgvector"
+  retrieval: "Hard-filtered hybrid (vector + Postgres full-text + entity boost) for both chat and assistant; profile digest"
+  write: "User commands, assistant actions, review UI; single governed atomic path (`record_belief`); write-time conflict detection; active/candidate flows"
+  update_delete: "Reject/supersede/reactivate/expiry/sensitivity; `MemoryRejectedValue` tombstones block model re-assertion of rejected values; governed atomic correction (`correct_belief`); UI stale-write guards"
+  scoping: "Global, agent, room, project; sensitivity"
+  integration: "Full assistant app: chat prompt (via `build_chat_memory_block`→hybrid), action loop, review UI"
+  background: "Embedding sync/prune, telemetry, feedback/eval loop"
+  trust: "Five-actor trust model (3 human/override + 2 model/candidate); rejected-value tombstones; write-time lattice-aware conflict detection; governed atomic correction; fenced prompt injection; claim/evidence provenance and retrieval audit"
+  strengths: "Operator governance, trust/correction machinery (tombstones + conflict detection + fenced recall + governed writes), telemetry, eval integration"
+  risks: "Compact claims may lose source nuance; no automatic candidate extraction; `epistemic_confidence`/`retrieval_strength` columns exist but Tier-1 ranking still uses `confidence` (schema groundwork only); attribution is context-injection, not causal"
 ---
 
 ## 1. Executive Summary

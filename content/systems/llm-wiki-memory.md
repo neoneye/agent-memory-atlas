@@ -9,6 +9,18 @@ source_url: https://github.com/ctxr-dev/llm-wiki-memory
 revision: b7cc76a493573baac133969b324a874990556146
 revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146
 analyzed_at: 2026-07-26
+matrix:
+  memory_unit: "Typed Markdown atom, plan/investigation, daily capture, or full document"
+  storage: "Filesystem wiki, per-category embedding caches, private git history"
+  retrieval: "Metadata prefilter, local embedding/chunk cosine, priority bands, federated locality boost; lexical vector fallback"
+  write: "MCP/CLI writes, transcript and plan hooks, daily compile, full-document absorb"
+  update_delete: "Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in dedup/refresh consolidation"
+  scoping: "Private brain plus explicit repository wiki levels; workspace/area/task/subject facets"
+  integration: "MCP, CLI, Claude Code lifecycle hooks, shared instructions"
+  background: "Detached flush, daily compile, opt-in consolidation, cron healing, git/cache maintenance"
+  trust: "Body hash, capture audit, git history, user-gated lessons; no candidate/verified/rejected state"
+  strengths: "Recoverable capture, explicit targets, deterministic layout/topology, excellent operational tests"
+  risks: "LLM atoms become active without verification; vector-only primary retrieval; linear scans; git is not erasure"
 ---
 
 ## 1. Executive Summary

@@ -9,6 +9,18 @@ source_url: https://github.com/OpenCoworkAI/open-cowork
 revision: 6f0c04741386b8600aa977f14ac0679d2203bd1b
 revision_url: https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b
 analyzed_at: 2026-07-27
+matrix:
+  memory_unit: "Core memory and experience memory as separately extracted kinds"
+  storage: "Per-kind stores plus SQLite FTS, with an ingestion queue"
+  retrieval: "Retriever then navigator assembles the prompt prefix; tested FTS-absent path"
+  write: "Queue, then per-kind extractors with independently optimized prompts"
+  update_delete: "No visible trust state or tombstone"
+  scoping: "Workspace field on eval queries; scope model not traced"
+  integration: "Memory tools plus an extension entry point"
+  background: "Ingestion queue and prompt optimization"
+  trust: "Not traced; no verification modules found"
+  strengths: "A committed eval harness with `forbiddenHits` — negative retrieval assertions"
+  risks: "Harness present, results absent; substring scoring favours extractive memory"
 ---
 
 ## 1. Executive Summary

@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A framework memory that splits one
+token budget between short-term chat history and pluggable long-term
+blocks, flushing messages from the first into the second.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LlamaIndex — Agent Memory Atlas">
+    <meta property="og:description" content="A framework memory that
+splits one token budget between short-term chat history and pluggable
+long-term blocks, flushing messages from the first into the second.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LlamaIndex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A framework memory that
+splits one token budget between short-term chat history and pluggable
+long-term blocks, flushing messages from the first into the second.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LlamaIndex — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Composable memory blocks</p>
+          <h1>LlamaIndex</h1>
+          <p class="document-deck">A framework memory that splits one
+token budget between short-term chat history and pluggable long-term
+blocks, flushing messages from the first into the second.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/run-llama/llama_index">
+              <span>Source</span>
+              <strong>run-llama/llama_index</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0" title="199e9b5b130bbde72639358a08935b913e7132c0">
+              <span>Analyzed revision</span>
+              <code>199e9b5b130bbde72639358a08935b913e7132c0</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LlamaIndex is one of the two Python agent frameworks most teams
+actually evaluate; the atlas already covers the other's memory layer as
+<a href="../langmem/">langmem</a>. Its
+<code>llama-index-core/llama_index/core/memory/</code> is about 2,350
+lines, and it clears this atlas's scope bar where <a
+href="../../compare/">BeeAI</a> does not:
+<code>FactExtractionMemoryBlock</code> extracts durable facts that
+survive the conversation, rather than only deciding which messages stay
+in the window.</p>
+<p>The architecture is a <strong>single token budget split between two
+tiers, with flow between them</strong>:</p>
+<pre class="python"><code>Memory(
+    token_limit,                      # total budget
+    chat_history_token_ratio = 0.7,   # share reserved for short-term history
+    token_flush_size,                 # how much spills to long-term at a time
+    insert_method = SYSTEM | USER,    # where blocks land in the prompt
+)</code></pre>
+<p>Short-term chat history gets 70% of the budget by default. When it
+overflows, <code>token_flush_size</code> worth of messages are flushed
+<strong>into the memory blocks</strong>, which own the remaining share.
+Long-term memory is therefore fed by short-term pressure rather than by
+a separate capture path — the two tiers are one pipeline, not two
+systems.</p>
+<p>Blocks are the composable part. <code>BaseMemoryBlock</code> is
+generic over its content type and declares three operations:
+<code>aget</code> (contribute to context), <code>aput</code> (receive
+flushed messages), and — the interesting one —
+<strong><code>atruncate(content, tokens_to_truncate)</code></strong>, so
+each block knows how to shrink <em>itself</em> when the budget is tight.
+An orchestrator that truncates blindly cuts wherever the string ends; a
+block that truncates itself can drop its least valuable content. Very
+little else in the atlas pushes budget enforcement down to the component
+that understands the content.</p>
+<p>Three blocks ship: <code>StaticMemoryBlock</code> (fixed content),
+<code>VectorMemoryBlock</code> (retrieval over past messages), and
+<code>FactExtractionMemoryBlock</code> (LLM-extracted facts with a
+<code>max_facts</code> cap).</p>
+<p>The reservation is the familiar framework one: these are primitives,
+and memory <em>policy</em> is left to the application. There is no trust
+state, no provenance, no correction path, and no scope key — the same
+limitation the atlas records for langmem.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>                    token_limit
+   ┌──────────────────────────┴──────────────────────────┐
+   │ chat history (chat_history_token_ratio, default 0.7)│
+   │                                                      │
+   │   overflow → flush token_flush_size worth of msgs ───┼──┐
+   └──────────────────────────────────────────────────────┘  │
+   ┌──────────────────────────────────────────────────────┐  │
+   │ memory blocks (remaining budget, split among blocks) │◄─┘
+   │   StaticMemoryBlock    fixed content                 │
+   │   VectorMemoryBlock    retrieval over past messages  │
+   │   FactExtractionBlock  facts, capped at max_facts    │
+   └──────────────────────────────────────────────────────┘
+                    ↓ insert_method: SYSTEM | USER
+                       assembled prompt</code></pre>
+<p>Block interface:</p>
+<pre class="python"><code>class BaseMemoryBlock(BaseModel, Generic[T]):
+    async def aget(...) -&gt; T                 # contribute content
+    async def aput(messages) -&gt; None         # receive flushed messages
+    async def atruncate(content: T, tokens_to_truncate: int) -&gt; Optional[T]</code></pre>
+<p>Returning <code>Optional[T]</code> from <code>atruncate</code>
+matters: a block may decline to shrink and be dropped entirely rather
+than emit something misleading when cut in half.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>memory/memory.py</code> (870 lines) — <code>Memory</code>,
+<code>BaseMemoryBlock</code>, <code>InsertMethod</code>, budget
+arithmetic.</li>
+<li><code>memory/memory_blocks/</code> — <code>static.py</code> (39),
+<code>fact.py</code> (182), <code>vector.py</code> (201).</li>
+<li>Legacy surfaces retained: <code>chat_memory_buffer.py</code> (168),
+<code>chat_summary_memory_buffer.py</code> (340),
+<code>vector_memory.py</code> (206),
+<code>simple_composable_memory.py</code> (163).</li>
+<li><code>memory/types.py</code> (152) — base types.</li>
+</ul>
+<p>The legacy modules are the conversation-window family the atlas
+excludes from scope; the newer <code>Memory</code> plus blocks is what
+makes LlamaIndex reviewable here. Both ship, which is worth knowing when
+reading the docs — "memory" in LlamaIndex means two quite different
+things depending on which API you land on.</p>
+<pre class="mermaid"><code>flowchart LR
+  Msgs[&quot;Chat messages&quot;] --&gt; Hist[&quot;short-term history (0.7 of budget)&quot;]
+  Hist --&gt;|overflow: token_flush_size| Flush[&quot;flush&quot;]
+  Flush --&gt; Static[&quot;StaticMemoryBlock&quot;]
+  Flush --&gt; Vec[&quot;VectorMemoryBlock&quot;]
+  Flush --&gt; Fact[&quot;FactExtractionMemoryBlock&quot;]
+  Static --&gt; Assemble[&quot;aget + atruncate to budget&quot;]
+  Vec --&gt; Assemble
+  Fact --&gt; Assemble
+  Hist --&gt; Assemble
+  Assemble --&gt; Prompt[&quot;prompt (insert_method: SYSTEM | USER)&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="budget-arithmetic-with-guards">Budget arithmetic with
+guards</h3>
+<p>Validation clamps the configuration rather than trusting it: if
+<code>token_flush_size</code> is unset or exceeds
+<code>token_limit</code>, it is reset to 10% of the limit; a separate
+path resets it to 70% if it arrives larger than the limit through the
+constructor. Defensive, and the kind of thing that prevents a
+misconfigured flush from evacuating the entire history in one step.</p>
+<h3 id="self-truncating-blocks">Self-truncating blocks</h3>
+<p><code>atruncate(content, tokens_to_truncate)</code> is the design's
+best idea. When the assembled context exceeds budget, each block is
+asked to give back a specific number of tokens and decides how. A vector
+block can drop its lowest-scoring result; a fact block can drop its
+least important fact; a static block can decline and be omitted.</p>
+<p>Compare how the rest of the atlas handles this. <a
+href="../hermes-agent/">Hermes Agent</a> refuses the write and makes the
+model consolidate. <a href="../voyager/">Voyager</a> concatenates its
+entire skill library with no budget at all. <a
+href="../genericagent/">GenericAgent</a> caps its index at thirty lines
+by policy. LlamaIndex is the only one that delegates the <em>how</em> of
+shrinking to the component holding the content.</p>
+<h3 id="fact-extraction-and-condensation">Fact extraction and
+condensation</h3>
+<p><code>FactExtractionMemoryBlock</code> runs two prompts. The extract
+prompt receives <code>existing_facts</code> and is told not to duplicate
+them, so extraction is incremental. When the count passes
+<code>max_facts</code>, the condense prompt runs — and its instruction
+is unusually careful:</p>
+<blockquote>
+<p>"The condensed list you return completely replaces the existing
+facts, so it must be the full, self-contained snapshot of everything
+worth keeping — not just newly added or changed facts."</p>
+</blockquote>
+<p>That sentence exists because the obvious failure is a model returning
+a delta where a replacement was expected, silently deleting everything
+it did not mention. LlamaIndex addresses it by making the contract
+explicit in the prompt. <a href="../byterover/">ByteRover</a> addresses
+the same failure by diffing before and after and merging back what would
+be lost — a guard rather than an instruction. The prompt is cheaper; the
+diff is verifiable.</p>
+<p>The extract prompt also carries an epistemic constraint: <em>"Do not
+include opinions, summaries, or interpretations — only extract explicit
+information."</em> That is the same instinct as <a
+href="../genericagent/">GenericAgent</a>'s action-verified axiom, at
+much lower strength — an instruction against inference rather than a
+requirement of evidence.</p>
+<h3 id="insert-method">Insert method</h3>
+<p><code>InsertMethod.SYSTEM</code> or <code>USER</code> determines
+whether block content lands in the system prompt or as a user message.
+This matters more than it looks: system-prompt placement is stable and
+cache-friendly (the concern driving <a href="../hermes-agent/">Hermes
+Agent</a>'s frozen snapshot), while user-message placement is fresher
+but breaks the prefix. LlamaIndex exposes the trade as a setting rather
+than choosing for you.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no memory record. A block owns whatever representation it
+likes — <code>BaseMemoryBlock</code> is generic over <code>T</code> — so
+facts are a string, vectors are retrieved nodes, static content is fixed
+text.</p>
+<p>The consequences are the ones the atlas records for every framework
+primitive layer:</p>
+<ul>
+<li><strong>No status, confidence, or verification.</strong> An
+extracted fact is a line in a list.</li>
+<li><strong>No provenance.</strong> A fact does not record the messages
+it came from, even though those messages were in hand at extraction
+time.</li>
+<li><strong>No correction.</strong> Facts change only by condensation
+rewriting the whole list.</li>
+<li><strong>No scope.</strong> Multi-user or multi-project separation is
+the application's problem.</li>
+<li><strong>No tombstone</strong>, so a fact a user removed will be
+re-extracted from the same conversation.</li>
+</ul>
+<p>That is a reasonable position for a framework — <a
+href="../langmem/">langmem</a> makes the same choice — but it means
+"LlamaIndex has memory" and "LlamaIndex has a memory system" are
+different claims.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>VectorMemoryBlock</code> retrieves over past messages using the
+framework's vector-store abstractions, so any LlamaIndex-supported
+backend applies. There is no fusion with a lexical arm inside the block,
+and no reranking in the memory layer — both available elsewhere in the
+framework, neither wired in by default.</p>
+<p>Because blocks compose, hybrid behaviour is achievable by stacking
+blocks rather than by fusing scores inside one retriever. That is a
+different composition model from the weighted-fusion approach most of
+the atlas uses, and it has a real property: each block's contribution to
+the final context is separately visible and separately budgeted, which
+makes the assembled prompt easier to reason about than a single fused
+ranking.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The only write path into long-term memory is the flush from
+short-term history. There is no explicit "remember this" surface at the
+<code>Memory</code> level and no actor model — whatever survives the
+flush is what the blocks see, and each block decides independently what
+to keep from it.</p>
+<p>Coupling long-term capture to short-term overflow is elegant but has
+a consequence worth stating: <strong>a short conversation never writes
+long-term memory at all.</strong> If history never exceeds its share of
+the budget, nothing flushes, and the fact block never runs. Memory
+formation depends on conversation length rather than on content
+importance.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>Memory</code> plugs into LlamaIndex agents and workflows.
+Custom blocks are the extension point — subclass
+<code>BaseMemoryBlock</code>, implement three async methods, add it to
+the list. That is a genuinely low-friction way to add a memory kind, and
+lower-friction than any provider contract in the atlas.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>One budget, explicitly split</strong>, rather than two
+subsystems with independent limits.</li>
+<li><strong>Self-truncating blocks</strong>, delegating shrinkage to the
+component that understands the content.</li>
+<li><strong>Configuration clamping</strong> on flush size.</li>
+<li><strong>An explicit full-replacement contract</strong> in the
+condense prompt.</li>
+<li><strong>An anti-inference instruction</strong> in the extract
+prompt.</li>
+<li><strong>Insert placement as a setting</strong>, exposing the
+cache-versus-freshness trade.</li>
+<li><strong>Composable blocks</strong> whose contributions stay
+separately visible.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust, provenance, correction, or scope</strong> —
+application-owned by design.</li>
+<li><strong>No tombstone</strong>, so removed facts return.</li>
+<li><strong>Write depends on conversation length</strong>, not
+importance.</li>
+<li><strong>Condensation is a wholesale rewrite</strong> guarded by
+prompt wording rather than verification.</li>
+<li><strong>Two coexisting "memory" APIs</strong>, one of which is
+conversation-window management, which invites confusion about what the
+framework actually provides.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests accompany the core memory modules; nothing was run for this
+review, and no memory-quality benchmark was found. For a framework this
+widely deployed, the absent measurement is whether the default
+<code>chat_history_token_ratio</code> of 0.7 is a good split — it
+silently determines how much of every prompt is recent conversation
+versus durable memory, and no evidence for it appears in the
+repository.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Self-truncating components.</strong> Ask each contributor to
+give back N tokens and let it choose how, instead of cutting the
+assembled string. Allowing a component to decline and be dropped is the
+right escape hatch.</li>
+<li><strong>One budget with an explicit split</strong>, rather than
+independent caps per subsystem that can jointly overflow.</li>
+<li><strong>Overflow as the capture trigger.</strong> Coupling long-term
+writes to short-term pressure keeps the two tiers in one pipeline —
+provided you accept that quiet conversations write nothing.</li>
+<li><strong>State the replacement contract in the prompt.</strong> If a
+condensation pass replaces rather than appends, say so in the
+instruction; the default model behaviour is to return a delta.</li>
+<li><strong>Expose insert placement</strong>, since system-prompt versus
+user-message placement is a real cache-versus-freshness decision.</li>
+<li><strong>A three-method block interface</strong> as an extension
+point — get, put, truncate is close to the minimum viable memory
+component contract.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Extraction with no provenance</strong>, when the source
+messages were available at extraction time.</li>
+<li><strong>No tombstone</strong> under automatic re-extraction.</li>
+<li><strong>Memory formation gated by conversation length.</strong></li>
+<li><strong>Wholesale condensation</strong> without a loss check.</li>
+<li><strong>Two APIs sharing the word "memory"</strong> with very
+different guarantees.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The <code>atruncate</code> contract and the budget split — both are
+small, general, and better than what most systems here do.</li>
+<li>The block interface as the shape of a pluggable memory
+component.</li>
+<li>The explicit full-replacement wording in any condensation
+prompt.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The absence of provenance, if you will ever need to explain a
+fact.</li>
+<li>Overflow-triggered capture as the only write path.</li>
+<li>Condensation without a structural-loss guard, if facts matter.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is <code>chat_history_token_ratio = 0.7</code> right? It shapes
+every prompt and is undefended.</li>
+<li>Should facts carry the message ids they were extracted from? The
+information is present at extraction and discarded.</li>
+<li>What happens to a user-corrected fact when the next condensation
+runs?</li>
+<li>Should a short conversation be able to write long-term memory
+without an overflow?</li>
+<li>How do multiple blocks divide the long-term budget among themselves
+when several want more room?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Core:
+<code>llama-index-core/llama_index/core/memory/memory.py</code>
+(<code>Memory</code>, <code>BaseMemoryBlock</code>,
+<code>InsertMethod</code>).</li>
+<li>Blocks: <code>memory/memory_blocks/static.py</code>,
+<code>fact.py</code> (<code>FactExtractionMemoryBlock</code>, extract
+and condense prompts), <code>vector.py</code>.</li>
+<li>Types: <code>memory/types.py</code>.</li>
+<li>Legacy window-management APIs:
+<code>memory/chat_memory_buffer.py</code>,
+<code>chat_summary_memory_buffer.py</code>,
+<code>vector_memory.py</code>,
+<code>simple_composable_memory.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
