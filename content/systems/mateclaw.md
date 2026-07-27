@@ -1,7 +1,7 @@
 ---
 title: MateClaw
-eyebrow: Java provider SPI
-description: The atlas's first Java memory system — a Spring service-provider interface whose contract carries an owner key, with cross-cutting concerns handled by provider decorators.
+eyebrow: Scoped provider SPI
+description: A memory service-provider interface whose contract carries an owner key on every call, with retry and metrics handled by provider decorators instead of per-backend code.
 root: ../..
 page_kind: system
 source_name: mateaix/mateclaw
@@ -11,7 +11,7 @@ revision_url: https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954
 analyzed_at: 2026-07-27
 matrix:
   memory_unit: "Fact, recall record, workspace file, and dream report"
-  storage: "Relational repositories under Spring, with fact projections"
+  storage: "Relational repositories with fact projections"
   retrieval: "Provider `prefetch`, fact projection, and search package"
   write: "Turn lifecycle events drive `syncTurn` across registered providers"
   update_delete: "Contradiction detection over facts; archive package; no tombstone found"
@@ -25,7 +25,7 @@ matrix:
 
 ## 1. Executive Summary
 
-MateClaw is the **first Java system in this atlas**. Its memory subsystem is about 12,900 lines under `vip/mate/memory/` in a Spring server, plus a Vue memory UI and externalized memory prompts, and it is worth reading precisely because it was built in a different engineering tradition from everything else here.
+MateClaw's memory subsystem is about 12,900 lines under `vip/mate/memory/`, plus a memory UI and externalized memory prompts, and it is worth reading because it was built in a different engineering tradition from everything else here: enterprise-framework conventions — dependency injection, a service-provider interface, event listeners, auto-configuration — applied to agent memory.
 
 That tradition shows in the package layout — `archive`, `controller`, `event`, `fact`, `identity`, `lifecycle`, `listener`, `model`, `nudge`, `provider`, `repository`, `scheduler`, `search`, `service`, `spi`, `tool`, with a `MemoryAutoConfiguration` — and in two design choices the atlas has not seen before.
 

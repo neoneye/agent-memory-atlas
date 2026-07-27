@@ -1,7 +1,7 @@
 ---
 title: Moltis
-eyebrow: Rust file-corpus memory
-description: The atlas's first Rust memory implementation — Markdown files chunked, embedded, and hybrid-searched in SQLite, with sanitized session transcripts exported back into the corpus.
+eyebrow: File-corpus memory
+description: Markdown files chunked, embedded, and hybrid-searched in SQLite, with sanitized session transcripts exported back into the same corpus so conversations become searchable notes.
 root: ../..
 page_kind: system
 source_name: moltis-org/moltis
@@ -16,7 +16,7 @@ matrix:
   write: "Corpus files plus sanitized session transcripts, one `sync()` chokepoint"
   update_delete: "Edit or delete the file and reindex"
   scoping: "Indexed directory only"
-  integration: "Rust crate inside the workspace"
+  integration: "In-process library inside the host workspace"
   background: "File watcher and scheduled memory work"
   trust: "Citations to path and chunk; content-hash addressing"
   strengths: "`keyword_only()` makes a no-embeddings mode constructible and inspectable"
@@ -25,7 +25,7 @@ matrix:
 
 ## 1. Executive Summary
 
-Moltis carries the **first Rust memory implementation in this atlas** — `crates/memory/`, about 6,330 lines, whose crate doc states the design in one line:
+Moltis's memory layer is `crates/memory/`, about 6,330 lines, whose module doc states the design in one line:
 
 > "Memory management: markdown files → chunked → embedded → hybrid search in SQLite."
 

@@ -60,7 +60,7 @@ deletes are scoped the same way. Most systems apply scope as a filter somewhere
 in the read path; making it structurally inseparable survives refactoring.
 
 [MateClaw](../../systems/mateclaw/) extends the idea across a plugin boundary:
-its Java `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
+its `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
 `syncTurn(..., ownerKey)`, so scope crosses into third-party backends. It is the
 only one of four host contracts in the atlas that carries scope at all — see
 [pluggable memory provider](../pluggable-memory-provider/).

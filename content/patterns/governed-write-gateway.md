@@ -70,8 +70,8 @@ schema comments cite numbered cross-phase rules back into a design document
 keep the vote prompt off the main KV cache). Rules that are cited can be reviewed
 as rules; rules that are merely implemented are indistinguishable from accidents.
 
-[MateClaw](../../systems/mateclaw/) gets a chokepoint from Spring conventions
-rather than a lock: turn lifecycle events flow through a `MemoryLifecycleMediator`
+[MateClaw](../../systems/mateclaw/) gets a chokepoint from framework
+conventions rather than a lock: turn lifecycle events flow through a `MemoryLifecycleMediator`
 to every registered provider, so the write path is observable in one place. Its
 decorators (`MetricsMemoryProvider`, `RetryableMemoryProvider`) add resilience
 and instrumentation to every backend without per-plugin code.
