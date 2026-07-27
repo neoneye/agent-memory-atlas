@@ -282,6 +282,42 @@ Verel treats memory as a trust problem. It separates confidence, retrieval stren
 
 Tradeoff: this is more complex than most systems need for an MVP, but it directly addresses failures that simpler memory systems usually ignore.
 
+### Not in scope: conversation-window management
+
+Most agent frameworks ship something called "memory" that is a **chat buffer**, and
+the naming collision is worth stating plainly because it misleads people
+evaluating options.
+
+IBM's [BeeAI framework](https://github.com/i-am-bee/beeai-framework) is the
+cleanest example. At commit
+[`21284d7`](https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b)
+its entire memory subsystem is about 1,300 lines across both the Python and
+TypeScript implementations, and consists of four strategies for deciding which
+messages stay in the current context: `UnconstrainedMemory` (keep everything),
+`SlidingMemory` (keep the last *k*), `TokenMemory` (stay inside a token budget),
+and `SummarizeMemory` (replace history with a running summary), plus a
+`ReadOnlyMemory` wrapper. Its own documentation states that "Messages are the
+fundamental units stored in memory". The memory modules contain no reference to
+embeddings, vectors, or any persistent store; BeeAI keeps document retrieval in a
+separate `rag` module, so the framework's own architecture agrees these are
+different concerns. LangChain's original `ConversationBufferMemory` family is the
+same category, which is why this atlas reviews `langmem` instead.
+
+None of this is a criticism of those implementations. Deciding what stays in the
+context window is a real and necessary problem. But it is a *different* problem
+from the one this atlas compares: nothing survives the session, nothing is
+retrieved, nothing is scoped, corrected, verified, or forgotten on request. A
+system whose memory is a window has no answer to "why do you believe that?" or
+"forget what I told you last week", because it never claimed to remember.
+
+Compaction does appear in this atlas — but as a component of systems that also
+persist. `mastra-observational-memory` is the serious treatment, with exact
+covered ranges, buffered activation, and range-aware replacement;
+`hermes-agent` bounds its curated memory and forces in-turn consolidation; `pi`
+attaches deterministic file manifests to compaction entries. The test for
+inclusion is not whether a system compacts, but whether anything survives the
+session with an identity you could later correct.
+
 ## 2. Comparative Matrix
 
 | Repo | Memory unit | Storage backend | Retrieval strategy | Write strategy | Update/delete model | Scoping model | Agent integration | Background processing | Trust/provenance model | Notable strengths | Main risks |

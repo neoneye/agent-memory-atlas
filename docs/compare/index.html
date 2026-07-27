@@ -380,6 +380,44 @@ gates for induced rules.</p>
 <p>Tradeoff: this is more complex than most systems need for an MVP, but
 it directly addresses failures that simpler memory systems usually
 ignore.</p>
+<h3 id="not-in-scope-conversation-window-management">Not in scope:
+conversation-window management</h3>
+<p>Most agent frameworks ship something called "memory" that is a
+<strong>chat buffer</strong>, and the naming collision is worth stating
+plainly because it misleads people evaluating options.</p>
+<p>IBM's <a href="https://github.com/i-am-bee/beeai-framework">BeeAI
+framework</a> is the cleanest example. At commit <a
+href="https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b"><code>21284d7</code></a>
+its entire memory subsystem is about 1,300 lines across both the Python
+and TypeScript implementations, and consists of four strategies for
+deciding which messages stay in the current context:
+<code>UnconstrainedMemory</code> (keep everything),
+<code>SlidingMemory</code> (keep the last <em>k</em>),
+<code>TokenMemory</code> (stay inside a token budget), and
+<code>SummarizeMemory</code> (replace history with a running summary),
+plus a <code>ReadOnlyMemory</code> wrapper. Its own documentation states
+that "Messages are the fundamental units stored in memory". The memory
+modules contain no reference to embeddings, vectors, or any persistent
+store; BeeAI keeps document retrieval in a separate <code>rag</code>
+module, so the framework's own architecture agrees these are different
+concerns. LangChain's original <code>ConversationBufferMemory</code>
+family is the same category, which is why this atlas reviews
+<code>langmem</code> instead.</p>
+<p>None of this is a criticism of those implementations. Deciding what
+stays in the context window is a real and necessary problem. But it is a
+<em>different</em> problem from the one this atlas compares: nothing
+survives the session, nothing is retrieved, nothing is scoped,
+corrected, verified, or forgotten on request. A system whose memory is a
+window has no answer to "why do you believe that?" or "forget what I
+told you last week", because it never claimed to remember.</p>
+<p>Compaction does appear in this atlas — but as a component of systems
+that also persist. <code>mastra-observational-memory</code> is the
+serious treatment, with exact covered ranges, buffered activation, and
+range-aware replacement; <code>hermes-agent</code> bounds its curated
+memory and forces in-turn consolidation; <code>pi</code> attaches
+deterministic file manifests to compaction entries. The test for
+inclusion is not whether a system compacts, but whether anything
+survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <div class="table-wrap"><table>
 <thead>
