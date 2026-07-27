@@ -162,6 +162,77 @@
 
     document.fonts?.ready.then(requestStickyTableSync);
     syncStickyTables();
+
+    // Wide tables (the comparative matrix is 12 columns) are squeezed into the
+    // ~820px prose column while the viewport is often far wider. Offer a toggle
+    // that breaks the table out to the full viewport. The prose column is a grid
+    // cell rather than a centred block, so the usual `margin-left: calc(50% -
+    // 50vw)` full-bleed trick would mis-centre it — measure the host instead.
+    const EXPAND_GUTTER = 24;
+    const EXPAND_MIN_GAIN = 120;
+
+    tableWraps.forEach((wrap) => {
+      const host = wrap.parentElement;
+      if (!host) return;
+
+      const tools = document.createElement("div");
+      tools.className = "table-tools";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "table-expand";
+      button.setAttribute("aria-expanded", "false");
+      button.textContent = "Expand to full width";
+      tools.appendChild(button);
+      host.insertBefore(tools, wrap);
+
+      const sizeToViewport = () => {
+        if (!wrap.classList.contains("is-expanded")) return;
+        const viewport = document.documentElement.clientWidth;
+        wrap.style.marginLeft = `${EXPAND_GUTTER - host.getBoundingClientRect().left}px`;
+        wrap.style.width = `${viewport - EXPAND_GUTTER * 2}px`;
+      };
+
+      const collapse = () => {
+        wrap.classList.remove("is-expanded");
+        wrap.style.marginLeft = "";
+        wrap.style.width = "";
+        button.setAttribute("aria-expanded", "false");
+        button.textContent = "Expand to full width";
+      };
+
+      const expand = () => {
+        wrap.classList.add("is-expanded");
+        sizeToViewport();
+        button.setAttribute("aria-expanded", "true");
+        button.textContent = "Collapse to column";
+      };
+
+      const toggle = () => {
+        // Widening the columns makes cells wrap less, so the table gets shorter.
+        // Hold the table's position under the cursor instead of letting the page
+        // jump.
+        const before = wrap.getBoundingClientRect().top;
+        wrap.classList.contains("is-expanded") ? collapse() : expand();
+        const after = wrap.getBoundingClientRect().top;
+        window.scrollBy(0, after - before);
+        requestStickyTableSync();
+      };
+
+      const evaluate = () => {
+        const viewport = document.documentElement.clientWidth;
+        const gain = viewport - host.getBoundingClientRect().width - EXPAND_GUTTER * 2;
+        const worthwhile = gain > EXPAND_MIN_GAIN;
+        tools.classList.toggle("is-available", worthwhile);
+        if (!worthwhile && wrap.classList.contains("is-expanded")) collapse();
+        sizeToViewport();
+        requestStickyTableSync();
+      };
+
+      button.addEventListener("click", toggle);
+      window.addEventListener("resize", evaluate);
+      evaluate();
+    });
   }
 
   const progress = document.querySelector(".reading-progress span");

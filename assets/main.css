@@ -1297,6 +1297,9 @@ a {
   background: #eee9df;
   font-family: var(--mono);
   font-size: 0.82em;
+  /* Long unbroken spans (commit ids, file paths) were widening the whole
+     document and giving every page a horizontal scrollbar. */
+  overflow-wrap: anywhere;
 }
 
 .prose pre {
@@ -1371,6 +1374,55 @@ a {
 
 .prose tr:nth-child(even) td {
   background: rgb(255 253 248 / 0.66);
+}
+
+.table-tools {
+  display: none;
+  justify-content: flex-end;
+  margin: 30px 0 10px;
+}
+
+.table-tools.is-available {
+  display: flex;
+}
+
+.table-tools + .table-wrap {
+  margin-top: 0;
+}
+
+.table-expand {
+  padding: 7px 13px;
+  border: 1px solid var(--line-dark);
+  border-radius: 4px;
+  color: var(--ink-soft);
+  background: var(--paper-light);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.table-expand:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: #fff;
+}
+
+.table-expand:focus-visible {
+  outline: 2px solid var(--sage-dark);
+  outline-offset: 2px;
+}
+
+/* Breaking out of the prose column: width and offset are set in JS because the
+   column is a grid cell, not a centred block. */
+.prose .table-wrap.is-expanded {
+  position: relative;
+  z-index: 20;
+  max-width: none;
+  background: var(--paper-light);
+  box-shadow: var(--shadow);
 }
 
 .sticky-table-head {
