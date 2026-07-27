@@ -108,31 +108,48 @@ job writes several stores that lack a shared transaction.</p>
 <p>Expose freshness to callers; do not make asynchronous derivation look
 immediately consistent.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/claude-mem/">Claude-Mem</a> is the clearest
-durable hook-queue example: provider authentication and quota failures
-return claimed work to pending, canonical SQLite storage precedes
-acknowledgement, and Chroma synchronization is a best-effort projection.
-<a href="../../systems/cognee/">Cognee</a> stamps cognify artifacts with
-pipeline provenance, rolls failed runs back, and recovers sufficiently
-old non-terminal runs at startup. <a
+<p><a href="../../systems/nanobot/">nanobot</a> contributes the cheapest
+correct mechanism in the atlas, and it is worth trying before any retry
+queue. Its <code>Dream</code> consolidation runs against an append-only
+archive tracked by a <strong>consumption cursor</strong>, and
+<code>DreamRunProgress</code> watches for tool events with
+<code>phase == "error"</code>. A run that nominally completed but hit
+tool errors <strong>does not advance the cursor</strong> — so the
+material is simply reprocessed next time. No retry queue, no dead-letter
+table, no partial state to reconcile: the work is not recorded as done,
+so it is not done.</p>
+<p>The producer/consumer split is what makes this safe.
+<code>.cursor</code> marks how far the Consolidator has written;
+<code>.dream_cursor</code> marks how far Dream has read. A slow or
+failing consumer never blocks the producer and never silently skips
+material.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> reached the
+same conclusion from the opposite direction, and its code records the
+lesson: an earlier version used a <strong>global commit watermark with
+all-or-nothing coverage</strong>, reworked to per-memory
+<code>verified_at</code> so that "partial progress STICKS: a timed-out
+verify banks the memories it checked; the next run skips them and
+continues (the cold-start trap is gone)." Global watermarks make partial
+progress worthless.</p>
+<p><a href="../../systems/claude-mem/">Claude-Mem</a> is the durable
+hook-queue example: failures return claimed work to pending, canonical
+SQLite precedes acknowledgement, and Chroma sync is a best-effort
+projection. <a href="../../systems/cognee/">Cognee</a> stamps artifacts
+with pipeline provenance, rolls failed runs back, and recovers stale
+non-terminal runs at startup. <a
 href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> retains failed
-inputs and uses redistillation to turn provider failure into delayed
-work. <a href="../../systems/hindsight/">Hindsight</a> gives
-consolidation indefinite capped retries, deterministic-error filtering,
-and per-bank deduplication. <a
-href="../../systems/mastra-observational-memory/">Mastra Observational
-Memory</a> persists early observation/reflection buffers with durable
-range markers before activation. <a
-href="../../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a>
-checkpoints capture, persists L0 before deferred embeddings, and drains
-registered tasks at shutdown, but its JSONL/store update path is not
-atomic. <a href="../../systems/agentmemory/">agentmemory</a> keeps
-synchronous capture cheap and makes indexing/consolidation repairable
-projections. <a href="../../systems/basic-memory/">Basic Memory</a> can
-rebuild file-derived graph/search projections through startup
-reconciliation. <a href="../../systems/honcho/">Honcho</a> uses
-derivation queues; <a href="../../systems/mempalace/">MemPalace</a>
-includes repair and reindex paths.</p>
+inputs for redistillation. <a
+href="../../systems/hindsight/">Hindsight</a> gives consolidation capped
+retries with deterministic-error filtering. <a
+href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> debounces and defers extraction, so a failure delays work
+rather than losing it. <a
+href="../../systems/mastra-observational-memory/">Mastra</a> persists
+buffers with durable range markers before activation. <a
+href="../../systems/tencentdb-agent-memory/">TencentDB</a> checkpoints
+capture, but its JSONL/store update path is not atomic. <a
+href="../../systems/basic-memory/">Basic Memory</a> rebuilds projections
+through startup reconciliation.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

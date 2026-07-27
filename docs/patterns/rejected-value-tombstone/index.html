@@ -117,15 +117,50 @@ correction may be allowed to override with an auditable action.</li>
 <p>Do not use tombstones as the sole conflict model. A new competing
 value may deserve a candidate state rather than immediate rejection.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong>Across forty-three systems, two have this.</strong> That is
+the most striking negative result in the atlas, and it is the reason
+this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
-superseded; model writes check these rows to prevent re-assertion. The
-<a href="../../systems/llm-wiki-memory/">llm-wiki-memory report</a>
-illustrates the gap: operational supersession can archive an old leaf
-but cannot prevent the same rejected content from being distilled
-again.</p>
+superseded, and model writes check them before asserting.</p>
+<p>Everything else stops at supersession, archival, or deletion —
+mechanisms that remove a value from view without recording that it was
+<em>judged wrong</em>:</p>
+<ul>
+<li><a href="../../systems/gini-agent/">Gini</a> has a
+<code>rejected</code> <strong>status</strong> on a unit, which is closer
+than most, but nothing keyed on the value: an equivalent claim can be
+retained again under a new id.</li>
+<li><a href="../../systems/atomic-agent/">Atomic Agent</a> deprecates
+lessons and retains the row — good for history, silent on
+re-distillation from the same cluster.</li>
+<li><a href="../../systems/mercury-agent/">Mercury</a> has a
+<code>dismissed</code> boolean on the record.</li>
+<li><a href="../../systems/magic-context/">Magic Context</a>, <a
+href="../../systems/metaclaw/">MetaClaw</a>, <a
+href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a>, <a href="../../systems/nanobot/">nanobot</a>, <a
+href="../../systems/cowagent/">CowAgent</a>, <a
+href="../../systems/holographic/">Holographic</a>, <a
+href="../../systems/openclaw/">OpenClaw</a>, <a
+href="../../systems/hermes-agent/">Hermes Agent</a>, and <a
+href="../../systems/llamaindex/">LlamaIndex</a> have supersession,
+archival, or exact deletion and no value-level negative memory at
+all.</li>
+</ul>
+<p>The absence matters most where it co-occurs with <strong>automatic
+re-derivation</strong>, which is now the common case. CowAgent
+re-distils <code>MEMORY.md</code> nightly from retained daily files.
+Atomic Agent re-clusters. Magic Context and Redis Agent Memory Server
+both extract on a schedule from retained history. OpenClaw's
+auto-capture can restore content a user deleted. In each, "forget that"
+is a statement about the present that the next background pass is free
+to undo.</p>
+<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> states
+the limit plainly: operational supersession can archive an old leaf but
+cannot prevent the same rejected content from being distilled again.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Reject a value, rerun extraction, and prove it stays inactive.</li>

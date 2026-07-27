@@ -116,22 +116,45 @@ and scoped to the consequences of being wrong.</p>
 It matters most when memory changes decisions, identity, permissions, or
 long-lived behavior.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/verel/">Verel</a> is the clearest reference:
-candidate, verified, and rejected states participate in recall,
-promotion, consolidation, and pruning. It also separates epistemic
-confidence from retrieval strength. <a
-href="../../systems/rainbox/">RainBox</a> distinguishes human/override
-writes from model-originated candidates and couples trust with operator
-review. Other systems often expose CRUD without an equivalent promotion
-boundary.</p>
-<p><a href="../../systems/cognee/">Cognee</a> has rich provenance and
-ontology validity but no equivalent factual promotion state. <a
-href="../../systems/claude-mem/">Claude-Mem</a> activates generated
-observations in project context, and <a
-href="../../systems/a-mem/">A-MEM</a> can rewrite neighboring metadata,
-without candidate or rejected states. These are useful reminders that
-provenance, schema validity, and LLM confidence do not replace trust
-transitions.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> contributes
+the sharpest refinement: it keeps <strong>two independent axes</strong>
+rather than one column. <code>status</code> is
+<code>active | permanent | archived</code> — where a memory sits in its
+lifecycle — and <code>verificationStatus</code> is
+<code>unverified | verified | stale | flagged</code> — what is known
+about its truth. A memory can be <code>active</code> and
+<code>stale</code> at once, which a single enum cannot express. Anyone
+building a trust model should start here.</p>
+<p><a href="../../systems/gini-agent/">Gini</a> has the richest single
+enum — <code>proposed | active | archived | rejected | conflicted</code>
+— and <code>conflicted</code> is unusual: most systems either resolve
+contradictions silently or handle them outside the data model. Gini also
+carries a <code>network</code> of
+<code>world | experience | opinion | observation</code>, so <em>what
+kind of claim</em> it is stays separate from <em>how much it is
+believed</em>.</p>
+<p><a href="../../systems/verel/">Verel</a> remains the reference for
+how states participate in recall, promotion, consolidation, and pruning,
+and for separating epistemic confidence from retrieval strength. <a
+href="../../systems/rainbox/">RainBox</a> ties the transitions to an
+actor model and an operator review queue.</p>
+<p>Two later systems show the states are only half the work. Gini models
+<code>conflicted</code> with no visible resolution workflow, and <a
+href="../../systems/mateclaw/">MateClaw</a> ships a dedicated
+<code>ContradictionDetector</code> with nothing found downstream of it.
+Detection without a path to resolution leaves the operator holding a
+list.</p>
+<p>Counterexamples remain instructive. <a
+href="../../systems/holographic/">Holographic</a> collapses truth and
+reachability into one <code>trust_score</code> that feedback mutates
+directly. <a href="../../systems/mercury-agent/">Mercury</a> grades
+confidence, importance, and durability separately — good — but assigns
+all three once at extraction, so they are estimates rather than states
+that change with evidence. <a href="../../systems/cognee/">Cognee</a>
+has rich provenance and ontology validity with no factual promotion
+state; <a href="../../systems/claude-mem/">Claude-Mem</a> and <a
+href="../../systems/a-mem/">A-MEM</a> activate generated content with
+none at all.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

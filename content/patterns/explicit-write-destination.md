@@ -39,7 +39,35 @@ Do not infer a write target from the top search result. Relevance and ownership 
 
 ## Seen in the atlas
 
-[llm-wiki-memory](../../systems/llm-wiki-memory/) provides the clearest implementation: reads federate across a private brain and repository-owned wikis, while mutations require an explicit target. Its repository scopes also avoid silently auto-committing shared changes. [RainBox](../../systems/rainbox/) and [Verel](../../systems/verel/) reinforce the broader principle through explicit claim scopes and scoped policy.
+[llm-wiki-memory](../../systems/llm-wiki-memory/) remains the clearest case:
+reads fan out across private and repository wikis while every mutation must name
+a concrete target, so a shared read scope never becomes a shared write.
+
+[OpenViking](../../systems/openviking/) enforces the same discipline
+structurally. `MemoryIsolationHandler` resolves the write target **before**
+anything is persisted, and `peer_user_space()` returns `user_space` for the
+sentinel `__self` and `user_space/peers/<peer_id>` otherwise — so memory *about*
+a third party is physically separated from memory about the user, by path, at
+write time.
+
+[Magic Context](../../systems/magic-context/) pairs a `project | ecosystem |
+universe` scope with a `shareable` flag, making "may this cross a boundary?" a
+property of the record rather than a property of the caller.
+[MateClaw](../../systems/mateclaw/) puts the destination on the provider contract
+itself as an `ownerKey`, and its `MemoryScope` marks `TEAM` and `GLOBAL` as the
+shared values with an `isShared()` helper — the sharing decision is explicit and
+centrally testable.
+
+[CowAgent](../../systems/cowagent/) is the counterexample, and a common one: its
+`chunks.scope` column defaults to `'shared'`. A default that shares is a default
+that leaks, because the safe value is the one nobody has to remember to set —
+the same hazard the atlas flags in [agentmemory](../../systems/agentmemory/),
+whose strictest isolation requires opting in.
+
+[Moltis](../../systems/moltis/) shows what happens without the discipline at all:
+sanitized session transcripts are exported into the same Markdown corpus as
+curated notes, sharing one index and one rank, with nothing marking which is
+which.
 
 ## Implementation checklist
 

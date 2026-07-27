@@ -112,14 +112,46 @@ keys may need locks or serializable transactions. Not every note
 deserves belief governance; distinguish low-risk archival capture from
 claims that influence behavior.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/rainbox/">RainBox</a> is the strongest product
-example: <code>record_belief</code> centralizes writes, actor types
-determine active versus candidate state, and <code>correct_belief</code>
-performs governed correction with conflict and tombstone handling. <a
-href="../../systems/verel/">Verel</a> similarly routes promotion and
-rejection through explicit trust machinery. <a
-href="../../systems/langmem/">LangMem</a> provides clean store tools but
-intentionally leaves the governing policy to the application.</p>
+<p><a href="../../systems/rainbox/">RainBox</a> remains the reference:
+<code>record_belief</code> is the single path, taken under a Postgres
+advisory lock, running dedupe, tombstone checks, lattice-aware conflict
+detection, and actor-based trust in one transaction, with
+<code>correct_belief</code> as its atomic correction counterpart.</p>
+<p>Later systems show the gateway idea applied to different things.</p>
+<p><a href="../../systems/metaclaw/">MetaClaw</a> governs the
+<em>policy</em> rather than the claim. A candidate retrieval policy is
+replayed against real past turns and promoted only if it does not
+regress on eight measured deltas over at least ten samples, with an
+explicit cap on additional zero-retrieval cases. It is the same shape —
+one gate, several checks, an auditable decision — applied one level
+up.</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> governs by
+<strong>stated invariant</strong>: its schema comments cite numbered
+cross-phase rules back into a design document (never auto-execute a
+procedure; at most one LLM call per consolidator cluster; keep the vote
+prompt off the main KV cache). Rules that are cited can be reviewed as
+rules; rules that are merely implemented are indistinguishable from
+accidents.</p>
+<p><a href="../../systems/mateclaw/">MateClaw</a> gets a chokepoint from
+Spring conventions rather than a lock: turn lifecycle events flow
+through a <code>MemoryLifecycleMediator</code> to every registered
+provider, so the write path is observable in one place. Its decorators
+(<code>MetricsMemoryProvider</code>,
+<code>RetryableMemoryProvider</code>) add resilience and instrumentation
+to every backend without per-plugin code.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> enforces the
+negative form — <strong>fail-closed</strong>: if persistent storage is
+unavailable, the plugin refuses to register rather than running without
+it.</p>
+<p><a href="../../systems/hermes-agent/">Hermes Agent</a> routes memory
+mutations through a staged write-approval gate that can allow, block, or
+hold a write for human approval — but the gate <strong>fails
+open</strong> if its module cannot be imported, which is documented in
+the code and worth noticing: a gateway's failure mode is part of its
+design.</p>
+<p><a href="../../systems/verel/">Verel</a> gates promotion rather than
+writing; <a href="../../systems/engram/">engram</a> surfaces conflict
+candidates for judgment.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>

@@ -66,17 +66,43 @@ finishes.
 
 ## Seen in the atlas
 
-[agentmemory](../../systems/agentmemory/) captures hooks and creates a synthetic
-structured observation without an LLM by default, then optionally compresses
-and consolidates later. [Claude-Mem](../../systems/claude-mem/) durably queues
-hook events before observer generation, so provider and parser failures need
-not block the coding agent. [llm-wiki-memory](../../systems/llm-wiki-memory/)
-retains transcripts and failed capture inputs before map/reduce distillation.
-[TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) stores L0
-conversation JSONL and raw offloaded tool output beneath later extracted
-layers. [Honcho](../../systems/honcho/) preserves ordinary message streams
-before deriving representations. [Engram](../../systems/engram/) demonstrates
-the value of a compact SQLite/FTS baseline when extraction is not required.
+[OpenClaw](../../systems/openclaw/) captures with no model call at all, and
+spends its effort on a problem model-based capture never has to face: 567 lines in
+`memory-capture-sanitization.ts` stripping its own message envelope — media
+notes, `⟦openclaw:ctx⟧` markers, reply headers, sender prefixes, timestamps —
+with `looksLikeEnvelopeSludge()` rejecting whatever is still mostly wrapper.
+
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) shows the
+scheduling version: messages land in TTL-scoped working memory immediately, and
+`should_extract_session_thread` plus `schedule_trailing_extraction` defer the
+model call behind a trailing-edge debounce. The message is durable before
+anything expensive happens.
+
+[Magic Context](../../systems/magic-context/) applies the same ordering inside a
+single write: `promoteSessionFactsDurable` persists synchronously and
+`embedPromotedFacts` runs as a best-effort async pass. Durable first, enriched
+after.
+
+[Holographic](../../systems/holographic/) is the minimal version — six regexes
+over user turns (`I prefer|like|use`, `we decided/agreed/chose`) storing the raw
+matching message. It also demonstrates the cost: what is stored is conversational
+prose rather than a normalized claim, which then degrades the contradiction
+detection built on top of it.
+
+[Moltis](../../systems/moltis/) exports sanitized session transcripts into its
+Markdown corpus; [GenericAgent](../../systems/genericagent/) archives raw sessions
+to an L4 layer on a 12-hour cron; [agentmemory](../../systems/agentmemory/) keeps
+a synthetic observation path on the hot loop; [Claude-Mem](../../systems/claude-mem/)
+queues hook events durably before its observer runs; and
+[engram](../../systems/engram/) remains the small no-extraction baseline.
+
+**The recurring hazard is capturing your own output.** Five systems independently
+built guards against it: OpenClaw's envelope sanitizer, Holographic excluding
+compaction handoff summaries that were being stored as facts on every context
+rollover, nanobot filtering its own `cron:` and `dream:` sessions, Moltis
+sanitizing before export, and CowAgent's distillation rules. If you capture
+without a model, capture cheaply enough that everything flows in — which means
+something must decide what does not.
 
 ## Implementation checklist
 

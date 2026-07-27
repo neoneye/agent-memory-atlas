@@ -124,21 +124,48 @@ or correction requirements.</p>
 <p>For small bounded corpora, explicit archive and review may be simpler
 and safer than continuous scoring.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/verel/">Verel</a> is the clearest
-implementation: recall can reinforce <code>retrieval_strength</code>
-while confidence and trust remain separate; decay affects reachability,
-and verified, rejected, or pinned records receive special lifecycle
-treatment. <a href="../../systems/agentmemory/">agentmemory</a> includes
-TTL, retention, strength, and an optional decay pipeline, though its
-broad policy surface requires careful configuration. <a
-href="../../systems/honcho/">Honcho</a> tracks repeated derivation and
-blends recent with reinforced observations. <a
-href="../../systems/swafra/">Swafra</a> is the useful counterexample:
-unconditional age decay can penalize durable facts even when they are
-still current. <a href="../../systems/mem0/">Mem0</a> documents
-temporal/decay behavior whose OSS paths remain platform-only,
-illustrating why lifecycle claims must be checked against the actual
-deployment.</p>
+<p>Three systems added since this page was written show what the pattern
+looks like done carefully, and one shows the failure it warns about.</p>
+<p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> has the most developed retention policy in the atlas.
+<code>select_ids_for_forgetting</code> combines TTL and inactivity so a
+recently-used memory survives its nominal age <strong>unless</strong> it
+exceeds a hard-age multiple (default 12×), honours pinning and per-type
+allowlists, and prunes to a budget using a recency composite with
+<strong>two half-lives</strong> — 7 days on last access, 30 on creation.
+Separating "recently used" decay from "recently learned" decay is the
+refinement most systems miss.</p>
+<p><a href="../../systems/mercury-agent/">Mercury</a> makes the same
+distinction in the schema rather than the policy:
+<code>confidence</code>, <code>importance</code>, and
+<code>durability</code> are three independent fields. How much a memory
+matters and how long it should last are different questions, and one
+column cannot answer both. Mercury also keeps a
+<code>subconscious</code> tier — retained but below active recall — so
+demotion is available where most systems only have deletion.</p>
+<p><a href="../../systems/openviking/">OpenViking</a> computes hotness
+as
+<code>sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)</code>
+and states plainly that it blends into <em>search ranking</em>. It never
+touches correctness — the right side of the line. Its remaining risk is
+the one this pattern names: <code>active_count</code> increments on
+retrieval, so frequency is self-reinforcing, and a uniform 7-day
+half-life applies to every memory kind.</p>
+<p><a href="../../systems/holographic/">Holographic</a> is the
+counterexample, and it is worth studying because each piece looks
+reasonable alone. <code>fact_feedback</code> moves a single
+<code>trust_score</code> by +0.05 or −0.10; that same score is
+multiplied into relevance <em>and</em> gates retrieval at a
+<code>min_trust</code> floor of 0.3. From a default of 0.5, three
+unhelpful ratings put a fact below every default retrieval path —
+permanently, with no tombstone and no record that suppression occurred.
+Reinforcement became deletion because reachability and belief were the
+same number.</p>
+<p><a href="../../systems/verel/">Verel</a> remains the reference for
+the separation itself. <a href="../../systems/atomic-agent/">Atomic
+Agent</a> suggests the safest implementation shape: keep votes as
+append-only events and derive the score, so a reinforcement rule can be
+changed or recomputed rather than baked irreversibly into a column.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

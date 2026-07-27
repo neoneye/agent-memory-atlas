@@ -45,7 +45,42 @@ Expose freshness to callers; do not make asynchronous derivation look immediatel
 
 ## Seen in the atlas
 
-[Claude-Mem](../../systems/claude-mem/) is the clearest durable hook-queue example: provider authentication and quota failures return claimed work to pending, canonical SQLite storage precedes acknowledgement, and Chroma synchronization is a best-effort projection. [Cognee](../../systems/cognee/) stamps cognify artifacts with pipeline provenance, rolls failed runs back, and recovers sufficiently old non-terminal runs at startup. [llm-wiki-memory](../../systems/llm-wiki-memory/) retains failed inputs and uses redistillation to turn provider failure into delayed work. [Hindsight](../../systems/hindsight/) gives consolidation indefinite capped retries, deterministic-error filtering, and per-bank deduplication. [Mastra Observational Memory](../../systems/mastra-observational-memory/) persists early observation/reflection buffers with durable range markers before activation. [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) checkpoints capture, persists L0 before deferred embeddings, and drains registered tasks at shutdown, but its JSONL/store update path is not atomic. [agentmemory](../../systems/agentmemory/) keeps synchronous capture cheap and makes indexing/consolidation repairable projections. [Basic Memory](../../systems/basic-memory/) can rebuild file-derived graph/search projections through startup reconciliation. [Honcho](../../systems/honcho/) uses derivation queues; [MemPalace](../../systems/mempalace/) includes repair and reindex paths.
+[nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism in
+the atlas, and it is worth trying before any retry queue. Its `Dream`
+consolidation runs against an append-only archive tracked by a **consumption
+cursor**, and `DreamRunProgress` watches for tool events with `phase == "error"`.
+A run that nominally completed but hit tool errors **does not advance the
+cursor** — so the material is simply reprocessed next time. No retry queue, no
+dead-letter table, no partial state to reconcile: the work is not recorded as
+done, so it is not done.
+
+The producer/consumer split is what makes this safe. `.cursor` marks how far the
+Consolidator has written; `.dream_cursor` marks how far Dream has read. A slow or
+failing consumer never blocks the producer and never silently skips material.
+
+[Magic Context](../../systems/magic-context/) reached the same conclusion from
+the opposite direction, and its code records the lesson: an earlier version used
+a **global commit watermark with all-or-nothing coverage**, reworked to
+per-memory `verified_at` so that "partial progress STICKS: a timed-out verify
+banks the memories it checked; the next run skips them and continues (the
+cold-start trap is gone)." Global watermarks make partial progress worthless.
+
+[Claude-Mem](../../systems/claude-mem/) is the durable hook-queue example:
+failures return claimed work to pending, canonical SQLite precedes
+acknowledgement, and Chroma sync is a best-effort projection.
+[Cognee](../../systems/cognee/) stamps artifacts with pipeline provenance, rolls
+failed runs back, and recovers stale non-terminal runs at startup.
+[llm-wiki-memory](../../systems/llm-wiki-memory/) retains failed inputs for
+redistillation. [Hindsight](../../systems/hindsight/) gives consolidation capped
+retries with deterministic-error filtering.
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) debounces
+and defers extraction, so a failure delays work rather than losing it.
+[Mastra](../../systems/mastra-observational-memory/) persists buffers with
+durable range markers before activation.
+[TencentDB](../../systems/tencentdb-agent-memory/) checkpoints capture, but its
+JSONL/store update path is not atomic.
+[Basic Memory](../../systems/basic-memory/) rebuilds projections through startup
+reconciliation.
 
 ## Tests to require
 

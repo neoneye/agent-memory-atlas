@@ -43,7 +43,49 @@ Scope is not a substitute for authorization. A row tagged `user_id` is unsafe if
 
 ## Seen in the atlas
 
-[Cognee](../../systems/cognee/) places datasets inside user permissions and can isolate supported graph/vector backends per user and dataset. [Claude-Mem](../../systems/claude-mem/) carries project, worktree lineage, session, and platform source through capture and retrieval; its local mode still assumes a trusted-user boundary. [Hindsight](../../systems/hindsight/) makes the memory bank an isolation and configuration boundary. [Graphiti](../../systems/graphiti/) carries `group_id` through nodes, edges, episodes, and search. [Mastra Observational Memory](../../systems/mastra-observational-memory/) chooses thread or resource scope. [MemOS](../../systems/memos/) registers memory cubes to users. [Basic Memory](../../systems/basic-memory/) uses projects and workspaces for identity, routing, and search. [Honcho](../../systems/honcho/) models workspace, peer, session, and representation boundaries. [RainBox](../../systems/rainbox/) uses a scope lattice with sensitivity rules. [agentmemory](../../systems/agentmemory/) carries project/session/agent fields and fails closed in isolated-agent mode, but the safer agent boundary is opt-in rather than default. [Engram](../../systems/engram/), [llm-wiki-memory](../../systems/llm-wiki-memory/), and [Verel](../../systems/verel/) reinforce the pattern. [A-MEM](../../systems/a-mem/), [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/), and [Swafra](../../systems/swafra/) demonstrate increasingly weak cases where process, session, or source labels are not enforceable tenant boundaries.
+[OpenClaw](../../systems/openclaw/) has the strongest enforcement, and the idea
+is one line:
+
+```typescript
+function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
+  const scope = memoryAgentPredicate(agentId);
+  return filter ? `(${scope}) AND (${formatQueryFilter(filter)})` : scope;
+}
+```
+
+Every `query`, `list`, and `delete` builds its WHERE clause through this helper,
+with the comment stating the intent: scope and user filter are composed into one
+predicate **so scope cannot be lost**. An unscoped read is not expressible, and
+deletes are scoped the same way. Most systems apply scope as a filter somewhere
+in the read path; making it structurally inseparable survives refactoring.
+
+[MateClaw](../../systems/mateclaw/) extends the idea across a plugin boundary:
+its Java `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
+`syncTurn(..., ownerKey)`, so scope crosses into third-party backends. It is the
+only one of four host contracts in the atlas that carries scope at all — see
+[pluggable memory provider](../pluggable-memory-provider/).
+
+[Gini](../../systems/gini-agent/) applies `agent_id` across all four recall
+channels and the HTTP API, and documents the decision as an ADR naming the bug it
+fixed: a coding agent's pinned memories were polluting a research agent's recall.
+[Magic Context](../../systems/magic-context/) has a `project | ecosystem | universe`
+lattice plus a `shareable` flag, with project identity resolved to the git root
+and a rekey map for repositories that move.
+[Honcho](../../systems/honcho/) and [OpenViking](../../systems/openviking/) carry
+tenant and peer boundaries into retrieval itself, OpenViking separating memory
+*about* a peer under `peers/<peer_id>`.
+
+The counterexamples are as instructive as the implementations.
+[Holographic](../../systems/holographic/) describes itself as a "single-user
+memory store" and has no scope column at all; `category` partitions banks, not
+access. [CowAgent](../../systems/cowagent/) defaults `scope` to `'shared'`, the
+same hazard the atlas flags in [agentmemory](../../systems/agentmemory/) — the
+safe value should be the one nobody has to remember to set.
+[nanobot](../../systems/nanobot/) is one workspace, one memory, while its UI lets
+users switch projects — an invitation to assume isolation that does not exist.
+[Moltis](../../systems/moltis/) scopes only by indexed directory, and
+[A-MEM](../../systems/a-mem/) and [Swafra](../../systems/swafra/) remain global
+corpora.
 
 ## Tests to require
 

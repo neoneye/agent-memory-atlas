@@ -116,20 +116,50 @@ while deferred enrichment creates a freshness window. A zero-LLM capture
 claim is misleading if the system cannot retrieve or inspect the event
 until later processing finishes.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/agentmemory/">agentmemory</a> captures hooks
-and creates a synthetic structured observation without an LLM by
-default, then optionally compresses and consolidates later. <a
-href="../../systems/claude-mem/">Claude-Mem</a> durably queues hook
-events before observer generation, so provider and parser failures need
-not block the coding agent. <a
-href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> retains
-transcripts and failed capture inputs before map/reduce distillation. <a
-href="../../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a>
-stores L0 conversation JSONL and raw offloaded tool output beneath later
-extracted layers. <a href="../../systems/honcho/">Honcho</a> preserves
-ordinary message streams before deriving representations. <a
-href="../../systems/engram/">Engram</a> demonstrates the value of a
-compact SQLite/FTS baseline when extraction is not required.</p>
+<p><a href="../../systems/openclaw/">OpenClaw</a> captures with no model
+call at all, and spends its effort on a problem model-based capture
+never has to face: 567 lines in
+<code>memory-capture-sanitization.ts</code> stripping its own message
+envelope — media notes, <code>⟦openclaw:ctx⟧</code> markers, reply
+headers, sender prefixes, timestamps — with
+<code>looksLikeEnvelopeSludge()</code> rejecting whatever is still
+mostly wrapper.</p>
+<p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> shows the scheduling version: messages land in TTL-scoped
+working memory immediately, and
+<code>should_extract_session_thread</code> plus
+<code>schedule_trailing_extraction</code> defer the model call behind a
+trailing-edge debounce. The message is durable before anything expensive
+happens.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> applies the
+same ordering inside a single write:
+<code>promoteSessionFactsDurable</code> persists synchronously and
+<code>embedPromotedFacts</code> runs as a best-effort async pass.
+Durable first, enriched after.</p>
+<p><a href="../../systems/holographic/">Holographic</a> is the minimal
+version — six regexes over user turns (<code>I prefer|like|use</code>,
+<code>we decided/agreed/chose</code>) storing the raw matching message.
+It also demonstrates the cost: what is stored is conversational prose
+rather than a normalized claim, which then degrades the contradiction
+detection built on top of it.</p>
+<p><a href="../../systems/moltis/">Moltis</a> exports sanitized session
+transcripts into its Markdown corpus; <a
+href="../../systems/genericagent/">GenericAgent</a> archives raw
+sessions to an L4 layer on a 12-hour cron; <a
+href="../../systems/agentmemory/">agentmemory</a> keeps a synthetic
+observation path on the hot loop; <a
+href="../../systems/claude-mem/">Claude-Mem</a> queues hook events
+durably before its observer runs; and <a
+href="../../systems/engram/">engram</a> remains the small no-extraction
+baseline.</p>
+<p><strong>The recurring hazard is capturing your own output.</strong>
+Five systems independently built guards against it: OpenClaw's envelope
+sanitizer, Holographic excluding compaction handoff summaries that were
+being stored as facts on every context rollover, nanobot filtering its
+own <code>cron:</code> and <code>dream:</code> sessions, Moltis
+sanitizing before export, and CowAgent's distillation rules. If you
+capture without a model, capture cheaply enough that everything flows in
+— which means something must decide what does not.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

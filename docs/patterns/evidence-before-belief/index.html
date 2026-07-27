@@ -109,34 +109,50 @@ source-aware deletion, and bounded context assembly. Keeping a source is
 not the same as proving it is true; provenance answers “where did this
 come from?”, not “should I believe it?”</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/mempalace/">MemPalace</a> makes verbatim
-drawers the retrieval floor and treats extracted structures as
-navigation aids. <a href="../../systems/cognee/">Cognee</a> preserves
-source data below graph, vector, and summary projections and uses
-pipeline provenance for rollback. <a
-href="../../systems/claude-mem/">Claude-Mem</a> durably queues hook
-events before storing generated observations, though its active
-observation schema does not preserve a first-class source row for every
-compressed claim. <a href="../../systems/graphiti/">Graphiti</a>
-preserves episodes behind temporal graph facts. <a
-href="../../systems/hindsight/">Hindsight</a> retains documents/chunks
-and carries source-memory IDs into consolidated observations. <a
-href="../../systems/basic-memory/">Basic Memory</a> makes Markdown notes
-canonical and treats graph/search state as rebuildable projection. <a
-href="../../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a>
-retains L0 conversation JSONL and raw offloaded tool outputs beneath L1
-records, scenes, persona, and symbolic maps. <a
-href="../../systems/agentmemory/">agentmemory</a> links consolidated
-memory to source observation IDs, though its explicit remember path can
-still create claims without a verification state. <a
-href="../../systems/mastra-observational-memory/">Mastra Observational
-Memory</a> binds summaries to exact covered message ranges. <a
-href="../../systems/honcho/">Honcho</a> keeps message streams and
-derives peer representations. <a
-href="../../systems/rainbox/">RainBox</a> separates claims from evidence
-rows. <a href="../../systems/verel/">Verel</a> carries provenance
-through its trust model. <a href="../../systems/swafra/">Swafra</a>
-preserves chunk text, but its source metadata is thin.</p>
+<p><a href="../../systems/nanobot/">nanobot</a> states the principle
+better than this page originally did. Its documentation says of the
+append-only summary archive: <em>"It is not the final memory. It is the
+material from which final memory is shaped."</em> The layout enforces it
+— <code>memory/history.jsonl</code> holds evidence,
+<code>SOUL.md</code>/<code>USER.md</code>/<code>memory/MEMORY.md</code>
+hold belief, and only the Dream pass moves material from one to the
+other.</p>
+<p><a href="../../systems/cowagent/">CowAgent</a> gets the same
+separation from the calendar: conversations become dated
+<code>memory/YYYY-MM-DD.md</code> files, and only distillation turns
+those into <code>MEMORY.md</code>. The daily files remain. Bucketing by
+day is cruder than a cursor and considerably easier for a human to
+inspect — "what did it learn on the 14th?" is answerable by opening a
+file.</p>
+<p><a href="../../systems/genericagent/">GenericAgent</a> keeps raw
+sessions beneath three distilled layers in
+<code>L4_raw_sessions/</code>, archived on a 12-hour cron, and states
+the strongest capture rule in the atlas as an axiom: <em>"No Execution,
+No Memory"</em> — nothing enters durable memory unless it came from a
+successful tool call, with model guesses, unexecuted plans, and
+unverified assumptions explicitly forbidden.</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> preserves the
+link in the other direction: a lesson and its procedure are derived from
+the <strong>same consolidator cluster</strong> in one LLM call, so the
+how-to and the why cannot drift apart.</p>
+<p><a href="../../systems/mempalace/">MemPalace</a> remains the
+strongest verbatim-first design — extracted structures are navigation
+aids, drawers are authoritative. <a
+href="../../systems/cognee/">Cognee</a> retains source data below its
+projections and can rebuild them; <a
+href="../../systems/graphiti/">Graphiti</a> keeps episodes behind edges;
+<a href="../../systems/hindsight/">Hindsight</a> links observations to
+source facts; <a href="../../systems/honcho/">Honcho</a> derives
+representations from a retained message stream; <a
+href="../../systems/basic-memory/">Basic Memory</a> keeps human-authored
+Markdown canonical.</p>
+<p>The recurring failure is not losing evidence but <strong>failing to
+link back to it</strong>. nanobot's durable claims do not cite the
+<code>history.jsonl</code> cursors that produced them; CowAgent's
+<code>MEMORY.md</code> entries do not name their daily file;
+GenericAgent's action-verified axiom leaves no record of the tool call
+that justified a write. Evidence retained but unlinked supports
+recomputation and not explanation.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>

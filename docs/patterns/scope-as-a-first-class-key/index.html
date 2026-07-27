@@ -106,34 +106,52 @@ and lifecycle coupling.</p>
 <p>Scope is not a substitute for authorization. A row tagged
 <code>user_id</code> is unsafe if callers can choose arbitrary IDs.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/cognee/">Cognee</a> places datasets inside
-user permissions and can isolate supported graph/vector backends per
-user and dataset. <a href="../../systems/claude-mem/">Claude-Mem</a>
-carries project, worktree lineage, session, and platform source through
-capture and retrieval; its local mode still assumes a trusted-user
-boundary. <a href="../../systems/hindsight/">Hindsight</a> makes the
-memory bank an isolation and configuration boundary. <a
-href="../../systems/graphiti/">Graphiti</a> carries
-<code>group_id</code> through nodes, edges, episodes, and search. <a
-href="../../systems/mastra-observational-memory/">Mastra Observational
-Memory</a> chooses thread or resource scope. <a
-href="../../systems/memos/">MemOS</a> registers memory cubes to users.
-<a href="../../systems/basic-memory/">Basic Memory</a> uses projects and
-workspaces for identity, routing, and search. <a
-href="../../systems/honcho/">Honcho</a> models workspace, peer, session,
-and representation boundaries. <a
-href="../../systems/rainbox/">RainBox</a> uses a scope lattice with
-sensitivity rules. <a href="../../systems/agentmemory/">agentmemory</a>
-carries project/session/agent fields and fails closed in isolated-agent
-mode, but the safer agent boundary is opt-in rather than default. <a
-href="../../systems/engram/">Engram</a>, <a
-href="../../systems/llm-wiki-memory/">llm-wiki-memory</a>, and <a
-href="../../systems/verel/">Verel</a> reinforce the pattern. <a
-href="../../systems/a-mem/">A-MEM</a>, <a
-href="../../systems/tencentdb-agent-memory/">TencentDB Agent Memory</a>,
-and <a href="../../systems/swafra/">Swafra</a> demonstrate increasingly
-weak cases where process, session, or source labels are not enforceable
-tenant boundaries.</p>
+<p><a href="../../systems/openclaw/">OpenClaw</a> has the strongest
+enforcement, and the idea is one line:</p>
+<pre class="typescript"><code>function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
+  const scope = memoryAgentPredicate(agentId);
+  return filter ? `(${scope}) AND (${formatQueryFilter(filter)})` : scope;
+}</code></pre>
+<p>Every <code>query</code>, <code>list</code>, and <code>delete</code>
+builds its WHERE clause through this helper, with the comment stating
+the intent: scope and user filter are composed into one predicate
+<strong>so scope cannot be lost</strong>. An unscoped read is not
+expressible, and deletes are scoped the same way. Most systems apply
+scope as a filter somewhere in the read path; making it structurally
+inseparable survives refactoring.</p>
+<p><a href="../../systems/mateclaw/">MateClaw</a> extends the idea
+across a plugin boundary: its Java <code>MemoryProvider</code> SPI
+declares <code>prefetch(agentId, query, ownerKey)</code> and
+<code>syncTurn(..., ownerKey)</code>, so scope crosses into third-party
+backends. It is the only one of four host contracts in the atlas that
+carries scope at all — see <a
+href="../pluggable-memory-provider/">pluggable memory provider</a>.</p>
+<p><a href="../../systems/gini-agent/">Gini</a> applies
+<code>agent_id</code> across all four recall channels and the HTTP API,
+and documents the decision as an ADR naming the bug it fixed: a coding
+agent's pinned memories were polluting a research agent's recall. <a
+href="../../systems/magic-context/">Magic Context</a> has a
+<code>project | ecosystem | universe</code> lattice plus a
+<code>shareable</code> flag, with project identity resolved to the git
+root and a rekey map for repositories that move. <a
+href="../../systems/honcho/">Honcho</a> and <a
+href="../../systems/openviking/">OpenViking</a> carry tenant and peer
+boundaries into retrieval itself, OpenViking separating memory
+<em>about</em> a peer under <code>peers/&lt;peer_id&gt;</code>.</p>
+<p>The counterexamples are as instructive as the implementations. <a
+href="../../systems/holographic/">Holographic</a> describes itself as a
+"single-user memory store" and has no scope column at all;
+<code>category</code> partitions banks, not access. <a
+href="../../systems/cowagent/">CowAgent</a> defaults <code>scope</code>
+to <code>'shared'</code>, the same hazard the atlas flags in <a
+href="../../systems/agentmemory/">agentmemory</a> — the safe value
+should be the one nobody has to remember to set. <a
+href="../../systems/nanobot/">nanobot</a> is one workspace, one memory,
+while its UI lets users switch projects — an invitation to assume
+isolation that does not exist. <a
+href="../../systems/moltis/">Moltis</a> scopes only by indexed
+directory, and <a href="../../systems/a-mem/">A-MEM</a> and <a
+href="../../systems/swafra/">Swafra</a> remain global corpora.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>

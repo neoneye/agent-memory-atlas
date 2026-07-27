@@ -49,7 +49,48 @@ Do not call retrieval “hybrid” merely because two backends exist. The import
 
 ## Seen in the atlas
 
-[Hindsight](../../systems/hindsight/) runs semantic, BM25, graph, and temporal arms, caps each arm, uses reciprocal-rank fusion for recall, and switches to interleaving when dedup needs semantic rank one to survive. [Graphiti](../../systems/graphiti/) searches edges, nodes, episodes, and communities through BM25, cosine, and BFS with configurable fusion/reranking. [Cognee](../../systems/cognee/) offers chunk, lexical, vector, graph, summary, triplet, and hybrid strategies; because the strategies return different shapes, each configured path needs its own cutoff and quality evaluation. [Basic Memory](../../systems/basic-memory/) fuses FTS5 or `tsvector` with optional semantic chunks. [agentmemory](../../systems/agentmemory/) combines BM25, vector, and graph arms with weighted RRF, then applies per-session diversity. [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) fuses FTS and vector rankings with RRF or delegates to native Tencent VectorDB hybrid search. [MemOS](../../systems/memos/) composes vector, graph, BM25, reranker, and optional reasoning channels per cube. [Mem0](../../systems/mem0/), [MemPalace](../../systems/mempalace/), and [RainBox](../../systems/rainbox/) provide other strong variants. [Claude-Mem](../../systems/claude-mem/) is a naming counterexample: ordinary text search selects Chroma rather than fusing it with FTS, and its `HybridSearchStrategy` is limited to file lookup. [A-MEM](../../systems/a-mem/) also labels vector-only code as hybrid. [Swafra](../../systems/swafra/) is a compact warning about unbounded heuristics and result-count drift. [Engram](../../systems/engram/) shows that reliable FTS and exact keys can be the right local baseline.
+[Gini](../../systems/gini-agent/) is the most legible implementation, because it
+documents its channels and their provenance in a header comment: semantic cosine,
+BM25 over FTS5, graph spreading activation seeded from the top semantic hits with
+decay δ=0.5, and a temporal range match — fused with reciprocal rank fusion and
+reranked. The temporal arm **only participates when the query contains a temporal
+expression**, which is a small idea worth copying: a channel that cannot
+contribute should not dilute the fusion.
+
+[HippoRAG](../../systems/hipporag/) is the instructive alternative — it does not
+fuse at all. It seeds a personalization vector from query-linked entities plus a
+weak dense prior (passage nodes at 0.05) and reads relevance off a Personalized
+PageRank diffusion. Multi-hop association becomes a property of the diffusion
+rather than of a traversal policy or a weighted sum.
+
+[LlamaIndex](../../systems/llamaindex/) composes instead of fusing: each memory
+block contributes independently under its own share of a token budget, and each
+truncates itself when over. The assembled context is easier to reason about than
+a single fused ranking, because every contributor's share is separately visible.
+
+[Hindsight](../../systems/hindsight/) runs four arms with task-specific fusion and
+cross-encoder reranking; [MemPalace](../../systems/mempalace/) contributes the
+reusable rule that extracted indexes *boost* drawer ranking but never gate direct
+evidence retrieval; [mem0](../../systems/mem0/), [Honcho](../../systems/honcho/),
+[Basic Memory](../../systems/basic-memory/), [agentmemory](../../systems/agentmemory/),
+[CowAgent](../../systems/cowagent/), [Magic Context](../../systems/magic-context/),
+and [OpenViking](../../systems/openviking/) all fuse lexical and semantic signals.
+
+Two cautions have strengthened with evidence. **Naming is not fusing** —
+[Claude-Mem](../../systems/claude-mem/)'s ordinary text search selects semantic
+rather than combining it with FTS, and [A-MEM](../../systems/a-mem/)'s "hybrid"
+path is vector-only. And **silent degradation is worse than no fusion**:
+[Holographic](../../systems/holographic/) redistributes its weights to
+lexical-only when NumPy is missing while `is_available()` still returns `True`,
+where [Moltis](../../systems/moltis/) makes the same situation explicit with a
+`keyword_only()` constructor and a `has_embeddings()` predicate callers can
+branch on.
+
+Nobody has shown their weights are right. [MetaClaw](../../systems/metaclaw/) is
+the only system in the atlas that could — it replays candidate policies against
+past turns and promotes one only on non-regression across eight metrics.
+Everyone else, including [Generative Agents](../../systems/generative-agents/)
+with its hand-tuned `gw = [0.5, 3, 2]`, ships constants nobody has defended.
 
 ## Tests to require
 

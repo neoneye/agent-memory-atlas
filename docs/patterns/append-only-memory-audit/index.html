@@ -108,15 +108,41 @@ prove that a model used a memory. Audit events also need transactional
 coupling to state changes or they can describe mutations that never
 committed.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> is now the
+clearest implementation, and its shape is the one to copy:</p>
+<pre class="sql"><code>vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
+-- and, derived from it:
+memories.vote_score, lessons.vote_score, profile_facts.vote_score  (indexed)</code></pre>
+<p>The events are the record; the scores are a projection. A scoring
+rule can be changed and recomputed, a suspicious voting pattern can be
+audited, and no single vote is destructive. Set against the alternatives
+the atlas has collected — <a
+href="../../systems/holographic/">Holographic</a> mutating a trust score
+in place until a fact falls below the retrieval floor, <a
+href="../../systems/rainbox/">RainBox</a> holding feedback behind a
+human gate, <a href="../../systems/metaclaw/">MetaClaw</a> letting
+telemetry tune retrieval policy through a promotion gate — the
+append-only log is the option that preserves every one of those choices
+for later.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> keeps
+dedicated mutation logs (<code>storage-memory-mutation-log.ts</code>,
+<code>storage-m0-mutation-log.ts</code>) alongside per-run dream
+records, so both what changed and what decided it are retained.</p>
+<p><a href="../../systems/nanobot/">nanobot</a> shows that the audit's
+<em>scope</em> is itself a design decision. Its git commits are grounded
+in the real working-tree delta over an explicit allowlist of durable
+files — and deliberately exclude <code>memory/.dream_cursor</code> "so
+progress bookkeeping never appears as a durable-memory edit in the audit
+record." The log reads as a history of what the agent came to believe,
+not of its counters.</p>
 <p><a href="../../systems/rainbox/">RainBox</a> combines claim/evidence
 state with <code>RetrievalEvent</code>, feedback, review UI, and eval
 flows, while explicitly treating telemetry as a review signal rather
 than truth. <a href="../../systems/mem0/">Mem0</a> keeps SQLite history
 around memory changes. <a
 href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> uses git
-history for inspectable mutation groups, demonstrating strong
-recoverability but also why audit history is not the same as privacy
-erasure.</p>
+history for inspectable mutation groups — and demonstrates why audit
+history is not privacy erasure.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

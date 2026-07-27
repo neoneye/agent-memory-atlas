@@ -42,7 +42,41 @@ Event volume grows quickly. Schema evolution and privacy deletion become harder.
 
 ## Seen in the atlas
 
-[RainBox](../../systems/rainbox/) combines claim/evidence state with `RetrievalEvent`, feedback, review UI, and eval flows, while explicitly treating telemetry as a review signal rather than truth. [Mem0](../../systems/mem0/) keeps SQLite history around memory changes. [llm-wiki-memory](../../systems/llm-wiki-memory/) uses git history for inspectable mutation groups, demonstrating strong recoverability but also why audit history is not the same as privacy erasure.
+[Atomic Agent](../../systems/atomic-agent/) is now the clearest implementation,
+and its shape is the one to copy:
+
+```sql
+vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
+-- and, derived from it:
+memories.vote_score, lessons.vote_score, profile_facts.vote_score  (indexed)
+```
+
+The events are the record; the scores are a projection. A scoring rule can be
+changed and recomputed, a suspicious voting pattern can be audited, and no single
+vote is destructive. Set against the alternatives the atlas has collected —
+[Holographic](../../systems/holographic/) mutating a trust score in place until a
+fact falls below the retrieval floor, [RainBox](../../systems/rainbox/) holding
+feedback behind a human gate, [MetaClaw](../../systems/metaclaw/) letting
+telemetry tune retrieval policy through a promotion gate — the append-only log is
+the option that preserves every one of those choices for later.
+
+[Magic Context](../../systems/magic-context/) keeps dedicated mutation logs
+(`storage-memory-mutation-log.ts`, `storage-m0-mutation-log.ts`) alongside
+per-run dream records, so both what changed and what decided it are retained.
+
+[nanobot](../../systems/nanobot/) shows that the audit's *scope* is itself a
+design decision. Its git commits are grounded in the real working-tree delta over
+an explicit allowlist of durable files — and deliberately exclude
+`memory/.dream_cursor` "so progress bookkeeping never appears as a durable-memory
+edit in the audit record." The log reads as a history of what the agent came to
+believe, not of its counters.
+
+[RainBox](../../systems/rainbox/) combines claim/evidence state with
+`RetrievalEvent`, feedback, review UI, and eval flows, while explicitly treating
+telemetry as a review signal rather than truth. [Mem0](../../systems/mem0/) keeps
+SQLite history around memory changes. [llm-wiki-memory](../../systems/llm-wiki-memory/)
+uses git history for inspectable mutation groups — and demonstrates why audit
+history is not privacy erasure.
 
 ## Tests to require
 

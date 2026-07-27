@@ -112,35 +112,55 @@ candidates after cheaper retrieval has narrowed the set.</p>
 important behavior is intentional candidate fusion under one measured
 cutoff.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/hindsight/">Hindsight</a> runs semantic, BM25,
-graph, and temporal arms, caps each arm, uses reciprocal-rank fusion for
-recall, and switches to interleaving when dedup needs semantic rank one
-to survive. <a href="../../systems/graphiti/">Graphiti</a> searches
-edges, nodes, episodes, and communities through BM25, cosine, and BFS
-with configurable fusion/reranking. <a
-href="../../systems/cognee/">Cognee</a> offers chunk, lexical, vector,
-graph, summary, triplet, and hybrid strategies; because the strategies
-return different shapes, each configured path needs its own cutoff and
-quality evaluation. <a href="../../systems/basic-memory/">Basic
-Memory</a> fuses FTS5 or <code>tsvector</code> with optional semantic
-chunks. <a href="../../systems/agentmemory/">agentmemory</a> combines
-BM25, vector, and graph arms with weighted RRF, then applies per-session
-diversity. <a href="../../systems/tencentdb-agent-memory/">TencentDB
-Agent Memory</a> fuses FTS and vector rankings with RRF or delegates to
-native Tencent VectorDB hybrid search. <a
-href="../../systems/memos/">MemOS</a> composes vector, graph, BM25,
-reranker, and optional reasoning channels per cube. <a
-href="../../systems/mem0/">Mem0</a>, <a
-href="../../systems/mempalace/">MemPalace</a>, and <a
-href="../../systems/rainbox/">RainBox</a> provide other strong variants.
-<a href="../../systems/claude-mem/">Claude-Mem</a> is a naming
-counterexample: ordinary text search selects Chroma rather than fusing
-it with FTS, and its <code>HybridSearchStrategy</code> is limited to
-file lookup. <a href="../../systems/a-mem/">A-MEM</a> also labels
-vector-only code as hybrid. <a href="../../systems/swafra/">Swafra</a>
-is a compact warning about unbounded heuristics and result-count drift.
-<a href="../../systems/engram/">Engram</a> shows that reliable FTS and
-exact keys can be the right local baseline.</p>
+<p><a href="../../systems/gini-agent/">Gini</a> is the most legible
+implementation, because it documents its channels and their provenance
+in a header comment: semantic cosine, BM25 over FTS5, graph spreading
+activation seeded from the top semantic hits with decay δ=0.5, and a
+temporal range match — fused with reciprocal rank fusion and reranked.
+The temporal arm <strong>only participates when the query contains a
+temporal expression</strong>, which is a small idea worth copying: a
+channel that cannot contribute should not dilute the fusion.</p>
+<p><a href="../../systems/hipporag/">HippoRAG</a> is the instructive
+alternative — it does not fuse at all. It seeds a personalization vector
+from query-linked entities plus a weak dense prior (passage nodes at
+0.05) and reads relevance off a Personalized PageRank diffusion.
+Multi-hop association becomes a property of the diffusion rather than of
+a traversal policy or a weighted sum.</p>
+<p><a href="../../systems/llamaindex/">LlamaIndex</a> composes instead
+of fusing: each memory block contributes independently under its own
+share of a token budget, and each truncates itself when over. The
+assembled context is easier to reason about than a single fused ranking,
+because every contributor's share is separately visible.</p>
+<p><a href="../../systems/hindsight/">Hindsight</a> runs four arms with
+task-specific fusion and cross-encoder reranking; <a
+href="../../systems/mempalace/">MemPalace</a> contributes the reusable
+rule that extracted indexes <em>boost</em> drawer ranking but never gate
+direct evidence retrieval; <a href="../../systems/mem0/">mem0</a>, <a
+href="../../systems/honcho/">Honcho</a>, <a
+href="../../systems/basic-memory/">Basic Memory</a>, <a
+href="../../systems/agentmemory/">agentmemory</a>, <a
+href="../../systems/cowagent/">CowAgent</a>, <a
+href="../../systems/magic-context/">Magic Context</a>, and <a
+href="../../systems/openviking/">OpenViking</a> all fuse lexical and
+semantic signals.</p>
+<p>Two cautions have strengthened with evidence. <strong>Naming is not
+fusing</strong> — <a href="../../systems/claude-mem/">Claude-Mem</a>'s
+ordinary text search selects semantic rather than combining it with FTS,
+and <a href="../../systems/a-mem/">A-MEM</a>'s "hybrid" path is
+vector-only. And <strong>silent degradation is worse than no
+fusion</strong>: <a href="../../systems/holographic/">Holographic</a>
+redistributes its weights to lexical-only when NumPy is missing while
+<code>is_available()</code> still returns <code>True</code>, where <a
+href="../../systems/moltis/">Moltis</a> makes the same situation
+explicit with a <code>keyword_only()</code> constructor and a
+<code>has_embeddings()</code> predicate callers can branch on.</p>
+<p>Nobody has shown their weights are right. <a
+href="../../systems/metaclaw/">MetaClaw</a> is the only system in the
+atlas that could — it replays candidate policies against past turns and
+promotes one only on non-regression across eight metrics. Everyone else,
+including <a href="../../systems/generative-agents/">Generative
+Agents</a> with its hand-tuned <code>gw = [0.5, 3, 2]</code>, ships
+constants nobody has defended.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

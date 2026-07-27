@@ -56,9 +56,37 @@ Temporal precision is not truth. Store the evidence and confidence behind inferr
 
 ## Seen in the atlas
 
-[Graphiti](../../systems/graphiti/) is the clearest implementation. Episodes carry a reference time; entity edges carry `valid_at`, `invalid_at`, `created_at`, and `expired_at`; contradiction handling closes older intervals while source episode UUIDs preserve evidence. Saga summaries keep separate wall-clock and episode-time watermarks so backfilled episodes remain processable.
+[Graphiti](../../systems/graphiti/) remains the fullest treatment — edges carry
+both transaction time and real-world validity, and a fact is invalidated by
+closing an interval rather than erasing history.
 
-[Hindsight](../../systems/hindsight/) provides a complementary fact-store implementation with event dates, occurrence ranges, mentioned-at time, and a dedicated temporal retrieval arm. It demonstrates that the pattern is useful outside a graph, although Graphiti has the stronger interval-correction model.
+The useful new finding is that **you do not need a graph database for this.**
+
+[Gini](../../systems/gini-agent/) gets most of the value from three columns on an
+ordinary SQLite row:
+
+```sql
+occurred_start TEXT, occurred_end TEXT,   -- when it was true
+mentioned_at   TEXT NOT NULL             -- when it was said
+```
+
+Its temporal recall channel parses a query for an absolute or relative range and
+matches units whose occurred window overlaps it — and only participates when the
+query actually contains a temporal expression, so it does not dilute fusion
+elsewhere. A memory recorded on Friday about Tuesday's deploy answers a question
+about Tuesday.
+
+[Atomic Agent](../../systems/atomic-agent/) applies the same split to profile
+facts — `valid_from` for when a row started being authoritative, `created_at` as
+the audit timestamp, with `supersedes`/`superseded_by` chaining — and documents
+the retrofit explicitly (`valid_from = legacy.updated_at`), so the point at which
+bi-temporality was added stays recoverable rather than silently assumed.
+
+[Hindsight](../../systems/hindsight/) extracts temporal spans alongside facts.
+[MetaClaw](../../systems/metaclaw/) and
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) carry
+`expires_at` and TTL, which is validity's poorer relative: an expiry says when to
+stop believing something but not when it was true.
 
 ## Tests to require
 

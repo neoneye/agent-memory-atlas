@@ -38,7 +38,37 @@ Use a bounded escape hatch: reserve part of the context for source coverage and 
 
 ## Seen in the atlas
 
-[Swafra](../../systems/swafra/) explicitly chooses the best chunk per source title after hybrid search and graph traversal. That compact design makes the value of source coverage obvious, while also showing two hazards: source titles are weak identities, and a percentage-of-sources target can exceed the advertised `k`. [MemPalace](../../systems/mempalace/) uses source structure, drawers, neighbors, and higher-level indexes to balance direct evidence with navigation. [Honcho](../../systems/honcho/) blends recent and derived observations rather than relying on one similarity list.
+[Swafra](../../systems/swafra/) remains the compact illustration — best chunk per
+source title, so one document cannot fill the context.
+
+Two later systems generalize the idea beyond source documents.
+
+[OpenViking](../../systems/openviking/)'s `type_quota_recall.py` (519 lines)
+enforces per-memory-type quotas in the result set, so a prolific memory *kind*
+cannot crowd out every other kind of context. Diversity keyed on type rather than
+document is the right generalization once a system has several memory kinds.
+
+[LlamaIndex](../../systems/llamaindex/) achieves it by construction: each memory
+block gets its own share of the long-term token budget and truncates itself to
+fit. Static content, retrieved vectors, and extracted facts each keep a
+guaranteed slice, and no single contributor can consume the whole budget by
+ranking well.
+
+[open-cowork](../../systems/open-cowork/) separates core memory from experience
+memory at the *extractor* level, with independent stores — which makes budget
+separation between them a natural next step rather than a special case.
+
+[agentmemory](../../systems/agentmemory/) applies per-session diversity within
+weighted RRF, and [Hindsight](../../systems/hindsight/) balances four retrieval
+arms through task-specific fusion.
+
+The tradeoff sharpens with these examples: a quota guarantees breadth and
+forfeits depth. When a question genuinely needs three passages from one document,
+or four facts of one kind, a strict quota is the mechanism standing in the way —
+which is why every implementation here needs an escape hatch, and why
+[LlamaIndex](../../systems/llamaindex/)'s per-block `atruncate` returning
+`Optional` is a good shape: a block may decline to shrink and be dropped whole
+rather than emit something misleading.
 
 ## Tests to require
 

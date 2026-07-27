@@ -101,13 +101,38 @@ links.</p>
 <p>Do not infer a write target from the top search result. Relevance and
 ownership are different decisions.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> provides
-the clearest implementation: reads federate across a private brain and
-repository-owned wikis, while mutations require an explicit target. Its
-repository scopes also avoid silently auto-committing shared changes. <a
-href="../../systems/rainbox/">RainBox</a> and <a
-href="../../systems/verel/">Verel</a> reinforce the broader principle
-through explicit claim scopes and scoped policy.</p>
+<p><a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> remains
+the clearest case: reads fan out across private and repository wikis
+while every mutation must name a concrete target, so a shared read scope
+never becomes a shared write.</p>
+<p><a href="../../systems/openviking/">OpenViking</a> enforces the same
+discipline structurally. <code>MemoryIsolationHandler</code> resolves
+the write target <strong>before</strong> anything is persisted, and
+<code>peer_user_space()</code> returns <code>user_space</code> for the
+sentinel <code>__self</code> and
+<code>user_space/peers/&lt;peer_id&gt;</code> otherwise — so memory
+<em>about</em> a third party is physically separated from memory about
+the user, by path, at write time.</p>
+<p><a href="../../systems/magic-context/">Magic Context</a> pairs a
+<code>project | ecosystem | universe</code> scope with a
+<code>shareable</code> flag, making "may this cross a boundary?" a
+property of the record rather than a property of the caller. <a
+href="../../systems/mateclaw/">MateClaw</a> puts the destination on the
+provider contract itself as an <code>ownerKey</code>, and its
+<code>MemoryScope</code> marks <code>TEAM</code> and <code>GLOBAL</code>
+as the shared values with an <code>isShared()</code> helper — the
+sharing decision is explicit and centrally testable.</p>
+<p><a href="../../systems/cowagent/">CowAgent</a> is the counterexample,
+and a common one: its <code>chunks.scope</code> column defaults to
+<code>'shared'</code>. A default that shares is a default that leaks,
+because the safe value is the one nobody has to remember to set — the
+same hazard the atlas flags in <a
+href="../../systems/agentmemory/">agentmemory</a>, whose strictest
+isolation requires opting in.</p>
+<p><a href="../../systems/moltis/">Moltis</a> shows what happens without
+the discipline at all: sanitized session transcripts are exported into
+the same Markdown corpus as curated notes, sharing one index and one
+rank, with nothing marking which is which.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Give every store a stable, human-readable destination ID.</li>

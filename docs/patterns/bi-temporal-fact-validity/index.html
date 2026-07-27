@@ -116,18 +116,35 @@ requirements.</li>
 <p>Temporal precision is not truth. Store the evidence and confidence
 behind inferred dates.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/graphiti/">Graphiti</a> is the clearest
-implementation. Episodes carry a reference time; entity edges carry
-<code>valid_at</code>, <code>invalid_at</code>, <code>created_at</code>,
-and <code>expired_at</code>; contradiction handling closes older
-intervals while source episode UUIDs preserve evidence. Saga summaries
-keep separate wall-clock and episode-time watermarks so backfilled
-episodes remain processable.</p>
-<p><a href="../../systems/hindsight/">Hindsight</a> provides a
-complementary fact-store implementation with event dates, occurrence
-ranges, mentioned-at time, and a dedicated temporal retrieval arm. It
-demonstrates that the pattern is useful outside a graph, although
-Graphiti has the stronger interval-correction model.</p>
+<p><a href="../../systems/graphiti/">Graphiti</a> remains the fullest
+treatment — edges carry both transaction time and real-world validity,
+and a fact is invalidated by closing an interval rather than erasing
+history.</p>
+<p>The useful new finding is that <strong>you do not need a graph
+database for this.</strong></p>
+<p><a href="../../systems/gini-agent/">Gini</a> gets most of the value
+from three columns on an ordinary SQLite row:</p>
+<pre class="sql"><code>occurred_start TEXT, occurred_end TEXT,   -- when it was true
+mentioned_at   TEXT NOT NULL             -- when it was said</code></pre>
+<p>Its temporal recall channel parses a query for an absolute or
+relative range and matches units whose occurred window overlaps it — and
+only participates when the query actually contains a temporal
+expression, so it does not dilute fusion elsewhere. A memory recorded on
+Friday about Tuesday's deploy answers a question about Tuesday.</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> applies the
+same split to profile facts — <code>valid_from</code> for when a row
+started being authoritative, <code>created_at</code> as the audit
+timestamp, with <code>supersedes</code>/<code>superseded_by</code>
+chaining — and documents the retrofit explicitly
+(<code>valid_from = legacy.updated_at</code>), so the point at which
+bi-temporality was added stays recoverable rather than silently
+assumed.</p>
+<p><a href="../../systems/hindsight/">Hindsight</a> extracts temporal
+spans alongside facts. <a href="../../systems/metaclaw/">MetaClaw</a>
+and <a href="../../systems/redis-agent-memory-server/">Redis Agent
+Memory Server</a> carry <code>expires_at</code> and TTL, which is
+validity's poorer relative: an expiry says when to stop believing
+something but not when it was true.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Backfilled old events ingested today.</li>

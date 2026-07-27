@@ -55,7 +55,41 @@ Do not use tombstones as the sole conflict model. A new competing value may dese
 
 ## Seen in the atlas
 
-[Verel](../../systems/verel/) uses rejected memory records as a correctness mechanism and protects rejected states from ordinary pruning. [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims are rejected or superseded; model writes check these rows to prevent re-assertion. The [llm-wiki-memory report](../../systems/llm-wiki-memory/) illustrates the gap: operational supersession can archive an old leaf but cannot prevent the same rejected content from being distilled again.
+**Across forty-three systems, two have this.** That is the most striking
+negative result in the atlas, and it is the reason this page exists.
+
+[Verel](../../systems/verel/) uses rejected memory records as a correctness
+mechanism and protects rejected states from ordinary pruning.
+[RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims
+are rejected or superseded, and model writes check them before asserting.
+
+Everything else stops at supersession, archival, or deletion — mechanisms that
+remove a value from view without recording that it was *judged wrong*:
+
+- [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
+  is closer than most, but nothing keyed on the value: an equivalent claim can be
+  retained again under a new id.
+- [Atomic Agent](../../systems/atomic-agent/) deprecates lessons and retains the
+  row — good for history, silent on re-distillation from the same cluster.
+- [Mercury](../../systems/mercury-agent/) has a `dismissed` boolean on the record.
+- [Magic Context](../../systems/magic-context/), [MetaClaw](../../systems/metaclaw/),
+  [Redis Agent Memory Server](../../systems/redis-agent-memory-server/),
+  [nanobot](../../systems/nanobot/), [CowAgent](../../systems/cowagent/),
+  [Holographic](../../systems/holographic/), [OpenClaw](../../systems/openclaw/),
+  [Hermes Agent](../../systems/hermes-agent/), and
+  [LlamaIndex](../../systems/llamaindex/) have supersession, archival, or exact
+  deletion and no value-level negative memory at all.
+
+The absence matters most where it co-occurs with **automatic re-derivation**,
+which is now the common case. CowAgent re-distils `MEMORY.md` nightly from
+retained daily files. Atomic Agent re-clusters. Magic Context and Redis Agent
+Memory Server both extract on a schedule from retained history. OpenClaw's
+auto-capture can restore content a user deleted. In each, "forget that" is a
+statement about the present that the next background pass is free to undo.
+
+[llm-wiki-memory](../../systems/llm-wiki-memory/) states the limit plainly:
+operational supersession can archive an old leaf but cannot prevent the same
+rejected content from being distilled again.
 
 ## Tests to require
 

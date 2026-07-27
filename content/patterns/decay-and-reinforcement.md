@@ -72,18 +72,43 @@ than continuous scoring.
 
 ## Seen in the atlas
 
-[Verel](../../systems/verel/) is the clearest implementation: recall can
-reinforce `retrieval_strength` while confidence and trust remain separate;
-decay affects reachability, and verified, rejected, or pinned records receive
-special lifecycle treatment. [agentmemory](../../systems/agentmemory/) includes
-TTL, retention, strength, and an optional decay pipeline, though its broad
-policy surface requires careful configuration. [Honcho](../../systems/honcho/)
-tracks repeated derivation and blends recent with reinforced observations.
-[Swafra](../../systems/swafra/) is the useful counterexample: unconditional age
-decay can penalize durable facts even when they are still current.
-[Mem0](../../systems/mem0/) documents temporal/decay behavior whose OSS paths
-remain platform-only, illustrating why lifecycle claims must be checked against
-the actual deployment.
+Three systems added since this page was written show what the pattern looks like
+done carefully, and one shows the failure it warns about.
+
+[Redis Agent Memory Server](../../systems/redis-agent-memory-server/) has the
+most developed retention policy in the atlas. `select_ids_for_forgetting`
+combines TTL and inactivity so a recently-used memory survives its nominal age
+**unless** it exceeds a hard-age multiple (default 12×), honours pinning and
+per-type allowlists, and prunes to a budget using a recency composite with **two
+half-lives** — 7 days on last access, 30 on creation. Separating "recently used"
+decay from "recently learned" decay is the refinement most systems miss.
+
+[Mercury](../../systems/mercury-agent/) makes the same distinction in the schema
+rather than the policy: `confidence`, `importance`, and `durability` are three
+independent fields. How much a memory matters and how long it should last are
+different questions, and one column cannot answer both. Mercury also keeps a
+`subconscious` tier — retained but below active recall — so demotion is available
+where most systems only have deletion.
+
+[OpenViking](../../systems/openviking/) computes hotness as
+`sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)` and states plainly
+that it blends into *search ranking*. It never touches correctness — the right
+side of the line. Its remaining risk is the one this pattern names: `active_count`
+increments on retrieval, so frequency is self-reinforcing, and a uniform 7-day
+half-life applies to every memory kind.
+
+[Holographic](../../systems/holographic/) is the counterexample, and it is worth
+studying because each piece looks reasonable alone. `fact_feedback` moves a single
+`trust_score` by +0.05 or −0.10; that same score is multiplied into relevance
+*and* gates retrieval at a `min_trust` floor of 0.3. From a default of 0.5, three
+unhelpful ratings put a fact below every default retrieval path — permanently,
+with no tombstone and no record that suppression occurred. Reinforcement became
+deletion because reachability and belief were the same number.
+
+[Verel](../../systems/verel/) remains the reference for the separation itself.
+[Atomic Agent](../../systems/atomic-agent/) suggests the safest implementation
+shape: keep votes as append-only events and derive the score, so a reinforcement
+rule can be changed or recomputed rather than baked irreversibly into a column.
 
 ## Implementation checklist
 

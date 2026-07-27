@@ -49,9 +49,39 @@ For low-risk note retrieval, a full trust machine may be excessive. It matters m
 
 ## Seen in the atlas
 
-[Verel](../../systems/verel/) is the clearest reference: candidate, verified, and rejected states participate in recall, promotion, consolidation, and pruning. It also separates epistemic confidence from retrieval strength. [RainBox](../../systems/rainbox/) distinguishes human/override writes from model-originated candidates and couples trust with operator review. Other systems often expose CRUD without an equivalent promotion boundary.
+[Magic Context](../../systems/magic-context/) contributes the sharpest
+refinement: it keeps **two independent axes** rather than one column. `status` is
+`active | permanent | archived` — where a memory sits in its lifecycle — and
+`verificationStatus` is `unverified | verified | stale | flagged` — what is known
+about its truth. A memory can be `active` and `stale` at once, which a single
+enum cannot express. Anyone building a trust model should start here.
 
-[Cognee](../../systems/cognee/) has rich provenance and ontology validity but no equivalent factual promotion state. [Claude-Mem](../../systems/claude-mem/) activates generated observations in project context, and [A-MEM](../../systems/a-mem/) can rewrite neighboring metadata, without candidate or rejected states. These are useful reminders that provenance, schema validity, and LLM confidence do not replace trust transitions.
+[Gini](../../systems/gini-agent/) has the richest single enum —
+`proposed | active | archived | rejected | conflicted` — and `conflicted` is
+unusual: most systems either resolve contradictions silently or handle them
+outside the data model. Gini also carries a `network` of
+`world | experience | opinion | observation`, so *what kind of claim* it is stays
+separate from *how much it is believed*.
+
+[Verel](../../systems/verel/) remains the reference for how states participate in
+recall, promotion, consolidation, and pruning, and for separating epistemic
+confidence from retrieval strength. [RainBox](../../systems/rainbox/) ties the
+transitions to an actor model and an operator review queue.
+
+Two later systems show the states are only half the work. Gini models
+`conflicted` with no visible resolution workflow, and
+[MateClaw](../../systems/mateclaw/) ships a dedicated `ContradictionDetector`
+with nothing found downstream of it. Detection without a path to resolution
+leaves the operator holding a list.
+
+Counterexamples remain instructive. [Holographic](../../systems/holographic/)
+collapses truth and reachability into one `trust_score` that feedback mutates
+directly. [Mercury](../../systems/mercury-agent/) grades confidence, importance,
+and durability separately — good — but assigns all three once at extraction, so
+they are estimates rather than states that change with evidence.
+[Cognee](../../systems/cognee/) has rich provenance and ontology validity with no
+factual promotion state; [Claude-Mem](../../systems/claude-mem/) and
+[A-MEM](../../systems/a-mem/) activate generated content with none at all.
 
 ## Tests to require
 

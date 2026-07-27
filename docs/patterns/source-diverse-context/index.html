@@ -104,16 +104,38 @@ claim.</p>
 <p>Use a bounded escape hatch: reserve part of the context for source
 coverage and part for globally best evidence or neighbor expansion.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><a href="../../systems/swafra/">Swafra</a> explicitly chooses the
-best chunk per source title after hybrid search and graph traversal.
-That compact design makes the value of source coverage obvious, while
-also showing two hazards: source titles are weak identities, and a
-percentage-of-sources target can exceed the advertised <code>k</code>.
-<a href="../../systems/mempalace/">MemPalace</a> uses source structure,
-drawers, neighbors, and higher-level indexes to balance direct evidence
-with navigation. <a href="../../systems/honcho/">Honcho</a> blends
-recent and derived observations rather than relying on one similarity
-list.</p>
+<p><a href="../../systems/swafra/">Swafra</a> remains the compact
+illustration — best chunk per source title, so one document cannot fill
+the context.</p>
+<p>Two later systems generalize the idea beyond source documents.</p>
+<p><a href="../../systems/openviking/">OpenViking</a>'s
+<code>type_quota_recall.py</code> (519 lines) enforces per-memory-type
+quotas in the result set, so a prolific memory <em>kind</em> cannot
+crowd out every other kind of context. Diversity keyed on type rather
+than document is the right generalization once a system has several
+memory kinds.</p>
+<p><a href="../../systems/llamaindex/">LlamaIndex</a> achieves it by
+construction: each memory block gets its own share of the long-term
+token budget and truncates itself to fit. Static content, retrieved
+vectors, and extracted facts each keep a guaranteed slice, and no single
+contributor can consume the whole budget by ranking well.</p>
+<p><a href="../../systems/open-cowork/">open-cowork</a> separates core
+memory from experience memory at the <em>extractor</em> level, with
+independent stores — which makes budget separation between them a
+natural next step rather than a special case.</p>
+<p><a href="../../systems/agentmemory/">agentmemory</a> applies
+per-session diversity within weighted RRF, and <a
+href="../../systems/hindsight/">Hindsight</a> balances four retrieval
+arms through task-specific fusion.</p>
+<p>The tradeoff sharpens with these examples: a quota guarantees breadth
+and forfeits depth. When a question genuinely needs three passages from
+one document, or four facts of one kind, a strict quota is the mechanism
+standing in the way — which is why every implementation here needs an
+escape hatch, and why <a
+href="../../systems/llamaindex/">LlamaIndex</a>'s per-block
+<code>atruncate</code> returning <code>Optional</code> is a good shape:
+a block may decline to shrink and be dropped whole rather than emit
+something misleading.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Repeated adjacent chunks from one source.</li>

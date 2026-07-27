@@ -48,7 +48,44 @@ Raw evidence increases storage, privacy exposure, and retrieval noise. Evidence 
 
 ## Seen in the atlas
 
-[MemPalace](../../systems/mempalace/) makes verbatim drawers the retrieval floor and treats extracted structures as navigation aids. [Cognee](../../systems/cognee/) preserves source data below graph, vector, and summary projections and uses pipeline provenance for rollback. [Claude-Mem](../../systems/claude-mem/) durably queues hook events before storing generated observations, though its active observation schema does not preserve a first-class source row for every compressed claim. [Graphiti](../../systems/graphiti/) preserves episodes behind temporal graph facts. [Hindsight](../../systems/hindsight/) retains documents/chunks and carries source-memory IDs into consolidated observations. [Basic Memory](../../systems/basic-memory/) makes Markdown notes canonical and treats graph/search state as rebuildable projection. [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) retains L0 conversation JSONL and raw offloaded tool outputs beneath L1 records, scenes, persona, and symbolic maps. [agentmemory](../../systems/agentmemory/) links consolidated memory to source observation IDs, though its explicit remember path can still create claims without a verification state. [Mastra Observational Memory](../../systems/mastra-observational-memory/) binds summaries to exact covered message ranges. [Honcho](../../systems/honcho/) keeps message streams and derives peer representations. [RainBox](../../systems/rainbox/) separates claims from evidence rows. [Verel](../../systems/verel/) carries provenance through its trust model. [Swafra](../../systems/swafra/) preserves chunk text, but its source metadata is thin.
+[nanobot](../../systems/nanobot/) states the principle better than this page
+originally did. Its documentation says of the append-only summary archive:
+*"It is not the final memory. It is the material from which final memory is
+shaped."* The layout enforces it — `memory/history.jsonl` holds evidence,
+`SOUL.md`/`USER.md`/`memory/MEMORY.md` hold belief, and only the Dream pass moves
+material from one to the other.
+
+[CowAgent](../../systems/cowagent/) gets the same separation from the calendar:
+conversations become dated `memory/YYYY-MM-DD.md` files, and only distillation
+turns those into `MEMORY.md`. The daily files remain. Bucketing by day is cruder
+than a cursor and considerably easier for a human to inspect — "what did it learn
+on the 14th?" is answerable by opening a file.
+
+[GenericAgent](../../systems/genericagent/) keeps raw sessions beneath three
+distilled layers in `L4_raw_sessions/`, archived on a 12-hour cron, and states
+the strongest capture rule in the atlas as an axiom: *"No Execution, No Memory"* —
+nothing enters durable memory unless it came from a successful tool call, with
+model guesses, unexecuted plans, and unverified assumptions explicitly forbidden.
+
+[Atomic Agent](../../systems/atomic-agent/) preserves the link in the other
+direction: a lesson and its procedure are derived from the **same consolidator
+cluster** in one LLM call, so the how-to and the why cannot drift apart.
+
+[MemPalace](../../systems/mempalace/) remains the strongest verbatim-first design
+— extracted structures are navigation aids, drawers are authoritative.
+[Cognee](../../systems/cognee/) retains source data below its projections and can
+rebuild them; [Graphiti](../../systems/graphiti/) keeps episodes behind edges;
+[Hindsight](../../systems/hindsight/) links observations to source facts;
+[Honcho](../../systems/honcho/) derives representations from a retained message
+stream; [Basic Memory](../../systems/basic-memory/) keeps human-authored Markdown
+canonical.
+
+The recurring failure is not losing evidence but **failing to link back to it**.
+nanobot's durable claims do not cite the `history.jsonl` cursors that produced
+them; CowAgent's `MEMORY.md` entries do not name their daily file;
+GenericAgent's action-verified axiom leaves no record of the tool call that
+justified a write. Evidence retained but unlinked supports recomputation and not
+explanation.
 
 ## Implementation checklist
 

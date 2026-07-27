@@ -51,7 +51,43 @@ The gateway can become a monolith. Keep storage, normalization, and policy compo
 
 ## Seen in the atlas
 
-[RainBox](../../systems/rainbox/) is the strongest product example: `record_belief` centralizes writes, actor types determine active versus candidate state, and `correct_belief` performs governed correction with conflict and tombstone handling. [Verel](../../systems/verel/) similarly routes promotion and rejection through explicit trust machinery. [LangMem](../../systems/langmem/) provides clean store tools but intentionally leaves the governing policy to the application.
+[RainBox](../../systems/rainbox/) remains the reference: `record_belief` is the
+single path, taken under a Postgres advisory lock, running dedupe, tombstone
+checks, lattice-aware conflict detection, and actor-based trust in one
+transaction, with `correct_belief` as its atomic correction counterpart.
+
+Later systems show the gateway idea applied to different things.
+
+[MetaClaw](../../systems/metaclaw/) governs the *policy* rather than the claim.
+A candidate retrieval policy is replayed against real past turns and promoted
+only if it does not regress on eight measured deltas over at least ten samples,
+with an explicit cap on additional zero-retrieval cases. It is the same shape —
+one gate, several checks, an auditable decision — applied one level up.
+
+[Atomic Agent](../../systems/atomic-agent/) governs by **stated invariant**: its
+schema comments cite numbered cross-phase rules back into a design document
+(never auto-execute a procedure; at most one LLM call per consolidator cluster;
+keep the vote prompt off the main KV cache). Rules that are cited can be reviewed
+as rules; rules that are merely implemented are indistinguishable from accidents.
+
+[MateClaw](../../systems/mateclaw/) gets a chokepoint from Spring conventions
+rather than a lock: turn lifecycle events flow through a `MemoryLifecycleMediator`
+to every registered provider, so the write path is observable in one place. Its
+decorators (`MetricsMemoryProvider`, `RetryableMemoryProvider`) add resilience
+and instrumentation to every backend without per-plugin code.
+
+[Magic Context](../../systems/magic-context/) enforces the negative form —
+**fail-closed**: if persistent storage is unavailable, the plugin refuses to
+register rather than running without it.
+
+[Hermes Agent](../../systems/hermes-agent/) routes memory mutations through a
+staged write-approval gate that can allow, block, or hold a write for human
+approval — but the gate **fails open** if its module cannot be imported, which is
+documented in the code and worth noticing: a gateway's failure mode is part of
+its design.
+
+[Verel](../../systems/verel/) gates promotion rather than writing;
+[engram](../../systems/engram/) surfaces conflict candidates for judgment.
 
 ## Tests to require
 
