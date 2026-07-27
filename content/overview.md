@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of thirty agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of thirty-two agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -240,15 +240,37 @@ Repos:
 
 - `hermes-agent`
 - `openclaw`
+- `pi`
 
 These are agent runtimes that ship a memory interface rather than a single
 memory model. Hermes bounds its own curated Markdown memory hard and freezes it
 into the system prompt, while mounting one external provider at a time;
 OpenClaw ships memory entirely as extensions over a plugin contract.
 
+Pi is the limit case: it exposes more than twenty lifecycle events and no memory
+concept whatsoever, so plugins such as `magic-context` rebuild indexing, scope,
+and retrieval from scratch.
+
 Tradeoff: users can choose a backend matching their privacy and scale needs, but
 trust state, scope, and above all deletion have to cross the host/provider
-boundary — and in both contracts inspected here, no deletion hook exists.
+boundary — and in none of the three contracts inspected here does a deletion hook
+exist.
+
+### Ground-truth-verified memory
+
+Repo:
+
+- `magic-context`
+
+Magic Context maps each memory to the files it describes and re-verifies it when
+git reports that those files changed, tracking `verified_at` per memory and
+keeping lifecycle state (`active|permanent|archived`) on a separate axis from
+verification state (`unverified|verified|stale|flagged`).
+
+Tradeoff: for memory about an inspectable artifact this converts trust from
+judgment into observation, and it is honest that file-independent memories fall
+outside the scheme — but the verdict itself is still an LLM call, and there is no
+tombstone preventing an archived memory from being re-derived.
 
 ### Verification-first memory
 
@@ -290,6 +312,8 @@ Tradeoff: this is more complex than most systems need for an MVP, but it directl
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `openclaw` | Categorized entry (preference/fact/decision/entity/other) with embedding | LanceDB via `memory-lancedb` extension; swappable embedding adapters | Vector search with mandatory agent-scoped predicate; no lexical arm | Optional auto-capture after envelope sanitization; 500-char truncation | Exact scoped delete; no tombstones, and auto-capture can restore content | `agentId`, composed inseparably into every predicate | Plugin contract via `memory-core`; tools, CLI, doctor checks | Auto-capture cursor with fingerprint drift detection | `createdAt` and category only | Envelope sanitization before capture; scope that cannot be dropped | Vector-only reference backend; sanitization is a denylist tied to envelope formats |
+| `magic-context` | Memory with separate lifecycle and verification state, plus compartments, facts, primers | SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed | Hybrid semantic + BM25 with source boosts and `matchType`, over memories and raw history | Agent, user, historian, or dreamer writes; synchronous promotion, async embedding | Supersession and merge lineage; archived, not tombstoned | `project` / `ecosystem` / `universe` lattice plus a `shareable` flag | Pi `ExtensionAPI` and an OpenCode adapter sharing one store | Dreamer: verify, map, classify, promote, retrospective, at commit boundaries | Four-actor `sourceType`, mutation logs, per-memory `verified_at` | Memories re-verified against the files they describe when git says those files changed | Verdict is an LLM call; no rejected-value tombstone; very large surface |
+| `pi` | None — session-tree entry, not a memory record | JSONL session tree (`id`/`parentId`), swappable in-memory backend | None; context is the tree walked to root plus discovered resource files | Append to session; compaction replaces a range | None; no durable claim exists | None | Own CLI/TUI/SDK; 20+ extension events, none memory-shaped | Compaction and branch summarization | Deterministic `readFiles`/`modifiedFiles` on compaction entries | Deterministic file manifest kept out of the model's output; branchable sessions | No memory contract at all, so scope and deletion have nowhere to live |
 | `hipporag` | Chunk plus derived entity and passage graph nodes | igraph graph with pluggable vector store (Qdrant/Chroma/Milvus) | Fact scores → LLM rerank → IDF-penalized graph seeding → Personalized PageRank diffusion | `index()`: chunk, OpenIE triples, fact/passage/synonymy edges | Chunk-scoped delete; shared entities survive by reference count | None — corpus is global | Python library only; no MCP, tools, or service | Cacheable OpenIE; incremental synonymy edges | Chunk identity only; no actor, time, or trust state | Diffusion replaces hop planning; synonymy as edges rather than merges | Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction |
 | `voyager` | Executable JavaScript skill plus generated description | `skills.json` and flat files, Chroma index over descriptions | Vector similarity over descriptions, top-5, returns code | Written only when a critic verifies environment success | Same-name rewrite; old versions on disk but unreachable | Single agent checkpoint directory | Research rollout loop; prompt injection of retrieved code | None | Verified execution is the provenance | Environment-verified write gate — the strongest in the atlas | Unbounded skill concatenation into prompts; no failure memory; frozen since 2023 |
 | `generative-agents` | `ConceptNode` typed event, thought, or chat with poignancy | Per-persona JSON plus in-memory embedding dict | Normalized recency + relevance + importance, hand-tuned `gw = [0.5, 3, 2]` | Perception, conversation, and reflection all write ungated | None; observations are never deleted or overwritten | One persona directory | Simulation only; tightly coupled to `Persona` | Reflection fired by accumulated poignancy | Reflections cite supporting nodes, but citations are never used | Consolidation triggered by significance rather than a timer | Derived thoughts share one pool with observations; positional not temporal decay |
@@ -352,6 +376,8 @@ calls. `a-mem` asks an LLM to organize a new note and rewrite nearby metadata;
 its `analyze_content()` method has no call site, so ordinary note metadata is
 not extracted as the public mental model suggests.
 
+`magic-context` promotes eligible session facts synchronously and defers embedding to a best-effort async pass, so a memory is durable before it is enriched. `pi` captures nothing as memory — its JSONL session tree is conversation history, and every memory plugin builds its own index over it.
+
 The research lineage adds two capture disciplines the practical systems mostly lost. `voyager` writes memory **only** when a critic verifies the environment reached the intended state, so a failed attempt produces reasoning input and no durable record — the strongest write gate in the atlas, available because the memory is a procedure. `generative-agents` scores every incoming memory for importance at write time and uses that score to schedule consolidation, rather than capturing indiscriminately and compacting on a timer.
 
 ### Consolidation
@@ -370,6 +396,13 @@ proxies for "enough has happened" that the original measured directly. Its
 weakness is that the budget is denominated in one-shot LLM importance judgments,
 and its reflections are stored in the same undifferentiated pool as observations,
 so reflections of reflections can drift with no visible boundary.
+
+`magic-context` adds a consolidation trigger no other system here uses: its
+dreamer subagent fires at threshold pressure **or at git commit boundaries**, on
+the reasoning that a commit is the moment a coding agent's work becomes durable
+and therefore the right moment to reconcile memory against the repository. The
+same run verifies, maps, classifies, promotes primers, and sweeps orphans, under
+a lease so two runs cannot overlap.
 
 `redis-agent-memory-server` has the most careful consolidation guard in the
 atlas: hash, ID, and semantic dedupe are separate passes, and the semantic path
@@ -416,6 +449,20 @@ Graphiti closes a fact's validity interval and retains history, which is the str
 supersede a conflict without an explicit judgment. `tencentdb-agent-memory`
 offers internal merge/delete paths and editable generated files, but no
 first-class agent/user correction or forget operation.
+
+`magic-context` introduces a correction mechanism the atlas has not seen before:
+memories are **re-verified against the artifacts they describe**. Each memory is
+mapped to backing files and carries its own `verified_at`; when git reports a
+committed change, an uncommitted edit, or a deletion touching a mapped file since
+that memory's last verification, the memory re-enters verify scope. Lifecycle
+state (`active|permanent|archived`) and verification state
+(`unverified|verified|stale|flagged`) are separate columns, which is the split
+Verel argues for and most systems collapse. The design is also explicit about its
+own limits: file-independent memories are excluded from verification entirely and
+handed to curation and age decay, because they "describe external behavior and
+cannot be checked against local code". Its remaining gap is the familiar one —
+supersession without a rejected-value tombstone, so an archived memory can be
+re-derived from retained history.
 
 The six systems added from the Hermes/OpenClaw ecosystem are uniformly weak
 here, and usefully so: none of `holographic`, `hermes-agent`, `openviking`,
@@ -484,13 +531,17 @@ Visible deletion varies from hard API deletion to lifecycle state:
 - `openclaw`: exact agent-scoped delete, undermined by auto-capture, which can
   restore the same content from a later matching message.
 
+- `magic-context`: archive plus `supersededByMemoryId` and `mergedFrom` lineage,
+  with age decay owning memories that cannot be verified; no tombstone.
+- `pi`: no memory to forget; deleting a session removes its JSONL file.
+
 Semantic forgetting is an antipattern unless there is explicit user review or exact ID targeting.
 
 Deletion is also where pluggable memory breaks down. Both host runtimes in the atlas — `hermes-agent` and `openclaw` — define a memory-provider contract with **no deletion hook and no scope parameter**, so a user's "forget that" has no defined path into whatever backend is mounted. `holographic` shows the resulting hazard concretely: it mirrors the host's built-in memory additions into its own store but implements only the `add` action, so removing an entry from `MEMORY.md` leaves the mirrored copy behind indefinitely.
 
 ### Cross-Session and Cross-Agent Persistence
 
-`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Cognee authorizes datasets per user and can isolate supported backend stores per user/dataset. Claude-Mem scopes local reads by project/worktree, session, and platform source, while its newer server model adds teams and API keys. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `agentmemory` supports project/session keys and an opt-in isolated agent mode, but defaults to shared agent scope. TencentDB records session identity but does not turn it into a general tenant boundary; one persona per data directory is especially important operationally. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. `openviking` carries tenant and permission filtering into every retrieval call and physically separates memory about the user from memory about a peer under `peers/<peer_id>`. `redis-agent-memory-server` scopes by namespace, user, and session behind auth. `openclaw` has a single `agentId` axis but defends it unusually well, composing scope and user filter into one predicate "so scope cannot be lost" and scoping deletes the same way. `hermes-agent` isolates by profile but has no project or room boundary within one. `byterover` scopes only by storage directory, and `holographic` has no scope at all — it describes itself as a single-user store, with `category` serving as partitioning rather than access control. A-MEM, Swafra, and Holographic remain the outliers with effectively global local corpora.
+`honcho` has the richest multi-actor model: workspace, peer, session, collections, and derived representations. Cognee authorizes datasets per user and can isolate supported backend stores per user/dataset. Claude-Mem scopes local reads by project/worktree, session, and platform source, while its newer server model adds teams and API keys. Hindsight isolates memory banks and database schemas. Graphiti uses `group_id`. Mastra scopes observations to a thread or resource. MemOS registers cubes to users. Basic Memory uses project/workspace/tenant boundaries with per-project local/cloud routing. `agentmemory` supports project/session keys and an opt-in isolated agent mode, but defaults to shared agent scope. TencentDB records session identity but does not turn it into a general tenant boundary; one persona per data directory is especially important operationally. `supermemory`, `mem0`, `rainbox`, `engram`, `mempalace`, `llm-wiki-memory`, `verel`, `letta`, and `langmem` each expose explicit boundaries. `openviking` carries tenant and permission filtering into every retrieval call and physically separates memory about the user from memory about a peer under `peers/<peer_id>`. `redis-agent-memory-server` scopes by namespace, user, and session behind auth. `openclaw` has a single `agentId` axis but defends it unusually well, composing scope and user filter into one predicate "so scope cannot be lost" and scoping deletes the same way. `hermes-agent` isolates by profile but has no project or room boundary within one. `magic-context` has a three-level lattice — `project`, `ecosystem`, `universe` — plus a `shareable` flag governing what may cross a boundary, with project identity resolved to the git root and a rekey map for when a repository moves. `pi` has no scope because it has no memory. `byterover` scopes only by storage directory, and `holographic` has no scope at all — it describes itself as a single-user store, with `category` serving as partitioning rather than access control. A-MEM, Swafra, and Holographic remain the outliers with effectively global local corpora.
 
 ## 4. Implementation Hotspots by Repo
 
@@ -518,6 +569,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: canonical tables and migrations in `src/services/sqlite/SessionStore.ts`; future server model in `src/storage/sqlite/schema.ts`.
 - `a-mem`: `MemoryNote` in `agentic_memory/memory_system.py`.
 - `hipporag`: graph and node construction in `src/hipporag/HippoRAG.py`; config defaults in `utils/config_utils.py`.
+- `magic-context`: `packages/plugin/src/features/magic-context/memory/types.ts`; schema in `migrations.ts`.
+- `pi`: session entry types in `packages/agent/src/harness/types.ts`; no memory record exists.
 - `voyager`: `skills[name] = {code, description}` in `voyager/agents/skill.py`.
 - `generative-agents`: `ConceptNode` in `persona/memory_structures/associative_memory.py`; weights in `scratch.py`.
 - `holographic`: `_SCHEMA` in `plugins/memory/holographic/store.py`; HRR encoding in `holographic.py`.
@@ -551,6 +604,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: hook adapters, `SessionMessageBuffer.ts`, and `worker/agents/ResponseProcessor.ts`.
 - `a-mem`: `AgenticMemorySystem.add_note()` and `process_memory()` in `agentic_memory/memory_system.py`.
 - `hipporag`: `index()`, `add_fact_edges()`, `add_passage_edges()`, `add_synonymy_edges()` in `src/hipporag/HippoRAG.py`.
+- `magic-context`: `memory/promotion.ts` (`promoteSessionFactsDurable`, `embedPromotedFacts`).
+- `pi`: append to the session tree; `harness/compaction/compaction.ts` for range replacement.
 - `voyager`: `SkillManager.add_new_skill()` in `voyager/agents/skill.py`, gated by `if info["success"]` in `voyager/voyager.py`.
 - `generative-agents`: `add_event()`, `add_thought()`, `add_chat()` in `associative_memory.py`.
 - `holographic`: `add_fact()` and `_rebuild_bank()` in `plugins/memory/holographic/store.py`; `_auto_extract_facts()` in `__init__.py`.
@@ -584,6 +639,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: `worker/search/SearchOrchestrator.ts`, Chroma/SQLite strategies, and `services/sqlite/SessionSearch.ts`.
 - `a-mem`: `search_agentic()` and Chroma wrappers in `agentic_memory/retrievers.py`.
 - `hipporag`: `graph_search_with_fact_entities()` and `run_ppr()` in `src/hipporag/HippoRAG.py`.
+- `magic-context`: `search.ts` with `matchType` semantic/fts/hybrid, plus `message-index.ts`.
+- `pi`: none; context is the session tree walked to root.
 - `voyager`: `retrieve_skills()` in `voyager/agents/skill.py`.
 - `generative-agents`: `new_retrieve()` and the extractors in `persona/cognitive_modules/retrieve.py`.
 - `holographic`: `FactRetriever.search/probe/related/reason/contradict` in `plugins/memory/holographic/retrieval.py`.
@@ -617,6 +674,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: `src/services/context/ContextBuilder.ts` and `ObservationCompiler.ts`.
 - `a-mem`: caller-owned; no bounded context assembler.
 - `hipporag`: ranked passages returned to the caller; QA assembly in `rag_qa()`.
+- `magic-context`: `<session-history>` and primer injection via the Pi context handler; `primer-clustering.ts`.
+- `pi`: `buildSessionContext()` plus `core/resource-loader.ts` for AGENTS.md/SYSTEM.md.
 - `voyager`: retrieved code plus the unbounded `programs` property injected into the action prompt.
 - `generative-agents`: top-30 node descriptions, no token budget.
 - `holographic`: `prefetch()` in `plugins/memory/holographic/__init__.py` — top-5, unfenced.
@@ -650,6 +709,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: durable pending queue, observer providers, Chroma/cloud sync, and backfill/repair.
 - `a-mem`: no worker; “consolidation” is synchronous reindexing.
 - `hipporag`: none; OpenIE is cacheable and resumable but runs inline.
+- `magic-context`: the dreamer — `task-scheduler.ts`, `cron.ts`, `lease.ts`, `verify.ts`, `map-memories.ts`.
+- `pi`: compaction and branch summarization only.
 - `voyager`: none; the rollout loop is synchronous.
 - `generative-agents`: reflection fires inline when the poignancy countdown crosses zero.
 - `holographic`: none; `_rebuild_bank()` runs synchronously on every write.
@@ -683,6 +744,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: coding-agent hooks, worker HTTP API, local/server MCP, and UI.
 - `a-mem`: direct Python API only.
 - `hipporag`: Python library, `main.py`, and `examples/`; no MCP or service.
+- `magic-context`: Pi `ExtensionAPI` adapter, an OpenCode adapter, a CLI, and a dashboard.
+- `pi`: CLI, TUI, SDK, server, and 20+ extension events — none memory-shaped.
 - `voyager`: none; research rollout loop.
 - `generative-agents`: none; simulation with a Django frontend.
 - `holographic`: `fact_store` and `fact_feedback` tools through the Hermes `MemoryProvider` ABC.
@@ -716,6 +779,8 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `claude-mem`: 237 TypeScript test files spanning hooks, queues, privacy, migrations, Chroma/cloud sync, and server paths; no committed memory-quality benchmark found.
 - `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
 - `hipporag`: thin unit tests (`tests/test_bedrock_mantle.py`, `tests/integration/`) beside a well-developed `reproduce/` benchmark tree; no committed result artifacts.
+- `magic-context`: 473 test files and roughly 131,000 lines of tests, including per-version migration suites and named CAS-race tests; no retrieval or verification-precision benchmark.
+- `pi`: an `evals` package and session-harness test utilities; no memory benchmark, because there is no memory.
 - `voyager`: no tests for `SkillManager`; evaluation is the paper's Minecraft tech-tree benchmark, which measures task completion rather than memory quality.
 - `generative-agents`: no memory tests; evaluation is human believability ratings, and the `gw` retrieval weights have no committed ablation.
 - `holographic`: 599 lines across four plugin test files plus 1,662 lines exercising the provider ABC; no retrieval-quality benchmark, and the measured contribution of the HRR arm is unknown.
@@ -884,6 +949,26 @@ single run, when retrieval has no score threshold (an irrelevant callable is
 worse than an irrelevant fact), when the library has no utility signal to prune
 by, and — outside a sandbox — because a skill library is agent-authored code
 retrieved by similarity and then executed.
+
+### Verify memory against its subject
+
+Repos: `magic-context`; the procedural analogue is `voyager`; contrast the
+judgment-based gates in `verel` and `rainbox`.
+
+Where a memory describes something inspectable, do not adjudicate it — check it.
+Map each memory to the artifacts it is about, record a per-memory verification
+timestamp, and let a change in those artifacts put the memory back in scope.
+Magic Context does this against files in a git repository; Voyager does the
+procedural version by re-running a skill. This works because it replaces "do I
+believe this claim?" with "does reality still agree?", which is enormously
+cheaper. It fails for memories with no inspectable subject — Magic Context
+excludes them explicitly rather than marking them verified — and it degrades if
+the verdict itself is a model call, which it currently is.
+
+The reusable sub-lesson is about watermarks: Magic Context's comments record that
+an earlier version used a global commit watermark with all-or-nothing coverage,
+and that it was reworked to per-memory timestamps so a timed-out run banks what
+it checked. Global watermarks make partial progress worthless.
 
 ### Diffusion instead of traversal
 
@@ -1411,6 +1496,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
 - Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
 
+### `magic-context`
+
+- Best idea: memories mapped to backing files and re-verified when git reports those files changed, with lifecycle and verification on separate axes.
+- Biggest risk: no rejected-value tombstone, so archived memories can be re-derived; and the verification verdict is still an LLM call.
+- Most reusable component: `dreamer/verify-gate.ts`, the two-axis state model, and `(memory_id, model_id)` embedding keys.
+- Maturity impression: the heaviest test posture in the atlas — 473 test files, seventy tested migrations, CAS-race suites, fail-closed registration.
+- Study when: memory describes an inspectable artifact and you want trust to be observed rather than judged.
+- Do not copy when: you need a small memory layer; most projects want the verify gate and the state model, not the whole platform.
+
+### `pi`
+
+- Best idea: deterministic `readFiles`/`modifiedFiles` manifests attached to compaction entries, derived from tool calls rather than from the summarizing model.
+- Biggest risk: no memory contract at all, so scope and deletion have nowhere to live and every plugin reinvents indexing.
+- Most reusable component: the typed session-entry model and the result-returning extension events.
+- Maturity impression: actively developed, well-factored harness; memory is deliberately out of scope.
+- Study when: designing a host runtime, or thinking about what branchable sessions mean for memory.
+- Do not copy when: you expect third-party memory — define scope and deletion in the interface before plugins exist.
+
 ### `hipporag`
 
 - Best idea: Personalized PageRank diffusion replaces hop planning, with IDF-penalized seeding and a weak dense prior.
@@ -1566,6 +1669,8 @@ Privacy/deletion:
 - [`hipporag`](../systems/hipporag/)
 - [`voyager`](../systems/voyager/)
 - [`generative-agents`](../systems/generative-agents/)
+- [`magic-context`](../systems/magic-context/)
+- [`pi`](../systems/pi/)
 
 ### Repos Inspected
 
@@ -1598,6 +1703,8 @@ Privacy/deletion:
 - [OSU-NLP-Group/HippoRAG](https://github.com/OSU-NLP-Group/HippoRAG) at [`e37fba2af1a951ac340d837a7c02efb9d8c9544a`](https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a)
 - [MineDojo/Voyager](https://github.com/MineDojo/Voyager) at [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89)
 - [joonspk-research/generative_agents](https://github.com/joonspk-research/generative_agents) at [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4)
+- [cortexkit/magic-context](https://github.com/cortexkit/magic-context) at [`113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09`](https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09)
+- [earendil-works/pi](https://github.com/earendil-works/pi) at [`a597371bda2af70372d1323d550483b5f4a0ae36`](https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36)
 
 ### Commands Used
 
@@ -1644,3 +1751,7 @@ No internet sources were used for this report. The analysis is based on the chec
 - Voyager's and Generative Agents' published evaluations measure task completion and human believability, not retrieval quality; neither repository contains a memory-quality benchmark.
 - Generative Agents' retrieval gain weights (`gw = [0.5, 3, 2]`) have no committed ablation; the atlas treats them as hand-tuned constants rather than a derived result.
 - No suites were run for the three systems added in this round, and no retrieval quality was independently measured.
+- Magic Context's verification precision — how often the verify task correctly marks a stale memory stale, and how often it wrongly confirms one — is not measured anywhere in that repository, and was not measured here. It is the central claim of the design.
+- Magic Context reads OpenCode's native session database read-only for its retrospective scanner; that behaviour was read in code but not exercised, and the user-consent story around it was not assessed.
+- Pi has no memory subsystem, so its report covers session persistence, compaction, and the extension surface only. Third-party Pi memory plugins other than Magic Context were not reviewed; the db0 integration has a closed backend and is not reviewable on this atlas's terms.
+- `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.

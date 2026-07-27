@@ -185,6 +185,18 @@ host's built-in memory additions into its own SQLite store, but
 implements only the <code>add</code> action — so removing an entry from
 the host's <code>MEMORY.md</code> leaves the mirrored fact in place,
 with no reconciliation path.</p>
+<p><a href="../../systems/pi/">Pi</a> is the strongest form of the
+argument, because it has no memory contract at all. Its
+<code>ExtensionAPI</code> exposes more than twenty lifecycle events —
+<code>session_start</code>, <code>session_before_fork</code>,
+<code>session_before_compact</code>, <code>context</code> with a result
+type, and more — which is ample <em>mechanism</em>, and none of it is
+memory-shaped. A plugin can capture, inject, and consolidate; it cannot
+be handed a scope or told to forget, because nothing in the host knows
+memory exists. <a href="../../systems/magic-context/">Magic Context</a>
+consequently rebuilds message indexing, FTS, embeddings, and scope from
+scratch on top of those events, and has to decide for itself what a
+forked session inherits.</p>
 <p><a href="../../systems/tencentdb-agent-memory/">TencentDB Agent
 Memory</a> is the atlas's other plugin-shaped system, targeting both
 OpenClaw and Hermes, and it also lacks a first-class user-facing forget
@@ -211,6 +223,9 @@ or compaction summaries and assert none of it becomes durable
 memory.</li>
 <li>Mount a provider that fails or times out, and assert the agent
 degrades rather than blocking or losing the turn.</li>
+<li>Fork or branch a session and assert the memory each branch sees is
+what you intended — an untested question wherever the host supports
+branching.</li>
 <li>Assert that a provider advertising a capability it lacks is detected
 — for example, one reporting "hybrid" retrieval while running
 vector-only.</li>

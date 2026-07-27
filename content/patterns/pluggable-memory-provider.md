@@ -82,6 +82,8 @@ Do not adopt this pattern to postpone deciding on a memory model. It relocates t
 
 [Holographic](../../systems/holographic/) demonstrates the mirroring hazard concretely. Its `on_memory_write` copies the host's built-in memory additions into its own SQLite store, but implements only the `add` action — so removing an entry from the host's `MEMORY.md` leaves the mirrored fact in place, with no reconciliation path.
 
+[Pi](../../systems/pi/) is the strongest form of the argument, because it has no memory contract at all. Its `ExtensionAPI` exposes more than twenty lifecycle events — `session_start`, `session_before_fork`, `session_before_compact`, `context` with a result type, and more — which is ample *mechanism*, and none of it is memory-shaped. A plugin can capture, inject, and consolidate; it cannot be handed a scope or told to forget, because nothing in the host knows memory exists. [Magic Context](../../systems/magic-context/) consequently rebuilds message indexing, FTS, embeddings, and scope from scratch on top of those events, and has to decide for itself what a forked session inherits.
+
 [TencentDB Agent Memory](../../systems/tencentdb-agent-memory/) is the atlas's other plugin-shaped system, targeting both OpenClaw and Hermes, and it also lacks a first-class user-facing forget operation — the same gap arriving from the provider side rather than the host side.
 
 Two providers in this ecosystem — [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) and [OpenViking](../../systems/openviking/) — have far richer internal scope and lifecycle models than the interfaces mounting them can express, which is the clearest evidence that the contract, not the backend, is the limiting factor.
@@ -94,6 +96,7 @@ Two providers in this ecosystem — [Redis Agent Memory Server](../../systems/re
 - Issue a request under one scope and assert no provider call can return another scope's memory.
 - Feed the provider a message carrying the host's own envelope markers or compaction summaries and assert none of it becomes durable memory.
 - Mount a provider that fails or times out, and assert the agent degrades rather than blocking or losing the turn.
+- Fork or branch a session and assert the memory each branch sees is what you intended — an untested question wherever the host supports branching.
 - Assert that a provider advertising a capability it lacks is detected — for example, one reporting "hybrid" retrieval while running vector-only.
 - Run the host's built-in memory and a provider together, and assert the same fact is not injected twice.
 
