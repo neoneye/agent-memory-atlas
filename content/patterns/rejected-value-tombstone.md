@@ -109,6 +109,14 @@ statement about the present that the next background pass is free to undo.
 operational supersession can archive an old leaf but cannot prevent the same
 rejected content from being distilled again.
 
+[Memanto](../../systems/memanto/) shows that a *resolution* is not a tombstone
+either. Its conflict workflow ends in a human choosing `remove_both`, which is a
+deliberate, reasoned, human judgement that two memories are wrong — and it
+deletes them. The next night's extraction pass runs over the same sessions with
+nothing to consult, so the most carefully made correction in the atlas can be
+undone by a scheduled job. The lesson generalizes: the quality of the *decision*
+does not matter if the decision leaves no trace the write path can check.
+
 [Memora](../../systems/memora/) comes closest to the shape without arriving at
 it. Its supersession pass classifies memory pairs into a defined vocabulary —
 including `contradicts` as an edge between two named memories — and hides rather

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-forty-seven agent memory architectures, their retrieval mechanics, trust
+forty-eight agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty-seven agent memory architectures, their retrieval mechanics,
+of forty-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty-seven agent memory architectures, their retrieval mechanics,
+of forty-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -55,7 +55,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-forty-seven agent memory architectures, their retrieval mechanics, trust
+forty-eight agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
@@ -120,7 +120,7 @@ are three different products with three different failure modes.</li>
 readers need. The <a href="#capability-index">capability index</a> is
 the fastest way in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Forty-seven systems do not fall into forty-seven categories. They
+<p>Forty-eight systems do not fall into forty-eight categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -145,7 +145,7 @@ safely.</p>
 <h3 id="hosted-and-service-memory">Hosted and service memory</h3>
 <p><code>honcho</code>, <code>supermemory</code>,
 <code>hindsight</code>, <code>redis-agent-memory-server</code>,
-<code>openviking</code></p>
+<code>openviking</code>, <code>memanto</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -154,7 +154,12 @@ Agent Memory Server</strong> splits TTL-scoped working memory from
 promoted long-term memory and carries the atlas's most developed
 retention policy. <strong>OpenViking</strong> unifies memory, resources,
 and skills in one filesystem hierarchy with three retrievable
-granularities per record.</p>
+granularities per record. <strong>Memanto</strong> is the only system
+here whose contradiction pipeline ends in a decision: a nightly pass
+writes a dated conflict report, and a human resolves each entry as
+<code>keep_old</code>, <code>keep_new</code>, <code>keep_both</code>,
+<code>remove_both</code>, or <code>manual</code> with content they write
+themselves.</p>
 <p>Tradeoff: the API surface is usually easier to study than the
 decision machinery. In <code>supermemory</code> the hosted core is not
 visible at all; in <code>mem0</code> several documented capabilities are
@@ -917,6 +922,30 @@ filters</td>
 <td>LLM facts can become durable claims without verification</td>
 </tr>
 <tr>
+<td><code>memanto</code></td>
+<td>Typed memory with title, content, confidence, tags, and session
+linkage</td>
+<td>Moorcheh vector service, hosted or on-prem; conflict reports as
+dated JSON on disk</td>
+<td>Vector search with filters, confidence, and an
+<code>as_of_date</code> read</td>
+<td>Direct store, batch write, and LLM extraction from conversation</td>
+<td>Update and delete APIs; conflicts resolved by keep_old, keep_new,
+keep_both, remove_both, or manual</td>
+<td><code>agent_id</code> throughout the API surface; per-agent conflict
+reports</td>
+<td>FastAPI service, CLI, web UI, MCP, plus LangGraph, CrewAI, Claude
+Code and Hermes integrations</td>
+<td>Scheduled daily analysis producing an AI summary and a dated
+conflict report</td>
+<td>Per-memory confidence; typed conflicts with old/new ids and a
+recommendation</td>
+<td>A conflict workflow that ends in a resolution, including
+<code>keep_both</code> and human-authored <code>manual</code></td>
+<td>Detection is one unvalidated LLM pass; resolution does not tombstone
+what it removes</td>
+</tr>
+<tr>
 <td><code>memora</code></td>
 <td>Memory row with content, tags, metadata, importance, and access
 count</td>
@@ -1343,13 +1372,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 47:</em> <a
+<p><em>2 of 48:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 47:</em> <a
+<p><em>5 of 48:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1357,7 +1386,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>4 of 47:</em> <a
+<p><em>4 of 48:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1365,7 +1394,7 @@ href="../systems/graphiti/"><code>graphiti</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>27 of 47:</em> <a
+<p><em>28 of 48:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
@@ -1384,6 +1413,7 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
 <a href="../systems/mateclaw/"><code>mateclaw</code></a>, <a
 href="../systems/mem0/"><code>mem0</code></a>, <a
+href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memos/"><code>memos</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
@@ -1397,24 +1427,25 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>2 of 47:</em> <a
+<p><em>2 of 48:</em> <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>7 of 47:</em> <a
+<p><em>8 of 48:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
 href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
+href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 47:</em> <a
+<p><em>1 of 48:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -1870,6 +1901,25 @@ this" is not accurate within this atlas.</p>
 contradiction can take, and the four things worth scoring separately —
 is in <a href="../benchmarks/#contradiction-test">the contradiction
 test</a>.</p>
+<p><strong>Memanto closes the loop the rest of this section leaves
+open.</strong> Every other contradiction mechanism here detects and
+stops — Gini's <code>conflicted</code> status, MateClaw's
+<code>ContradictionDetector</code>, Holographic's
+<code>contradict</code> query, all of them produce a flag and no
+disposition. Memanto's scheduled pass writes a dated JSON report typed
+as <code>contradiction | update | duplicate | conflict</code>, and a
+human resolves each entry through the CLI or web UI with one of five
+actions. Two are absent everywhere else:
+<strong><code>keep_both</code></strong>, which says the disagreement is
+not a contradiction — the right answer whenever two memories differ
+because they cover different times or scopes — and
+<strong><code>manual</code></strong>, where a person writes the
+reconciling content, enforced by a validator that refuses the action
+without it. The model's <code>recommendation</code> vocabulary is
+deliberately narrower than the operator's action set, so the proposal
+does not bound the decision. What it still lacks is the tombstone:
+<code>remove_both</code> deletes, and the next night's extraction is
+free to bring the content back.</p>
 <p><code>memora</code> contributes the one procedural idea this section
 has been missing. Its supersession pass runs in three phases — candidate
 pairs by embedding similarity, LLM classification, then edge creation —
@@ -4373,6 +4423,22 @@ permanent, and want the answer to be structural.</li>
 subpackages and forty store-ops modules is a real maintenance
 budget.</li>
 </ul>
+<h3 id="memanto"><code>memanto</code></h3>
+<ul>
+<li>Best idea: a conflict workflow that terminates in a human decision,
+including <code>keep_both</code> and a human-authored
+<code>manual</code> resolution.</li>
+<li>Biggest risk: detection is one unmeasured LLM pass, and resolution
+deletes without a tombstone, so scheduled extraction can undo it.</li>
+<li>Most reusable component: the five-action resolver plus the
+bounded-scan instruction that keeps the nightly pass linear.</li>
+<li>Maturity impression: a real service with CLI, web UI, MCP and four
+framework integrations, and an unusually on-topic test tree.</li>
+<li>Study when: you have contradiction detection and no idea what to do
+with the flags it produces.</li>
+<li>Do not copy when: you need trust state or ranking you can inspect —
+storage is the vendor's own service.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -4535,6 +4601,7 @@ href="../systems/atomic-agent/"><code>atomic-agent</code></a></li>
 <li><a href="../systems/memora/"><code>memora</code></a></li>
 <li><a href="../systems/loongflow/"><code>loongflow</code></a></li>
 <li><a href="../systems/core-memory/"><code>core-memory</code></a></li>
+<li><a href="../systems/memanto/"><code>memanto</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4704,6 +4771,10 @@ href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b
 href="https://github.com/JohnnyFiv3r/Core-Memory">JohnnyFiv3r/Core-Memory</a>
 at <a
 href="https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda350"><code>dfe306cda350</code></a></li>
+<li><a
+href="https://github.com/moorcheh-ai/memanto">moorcheh-ai/memanto</a> at
+<a
+href="https://github.com/moorcheh-ai/memanto/commit/d19024193213"><code>d19024193213</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
