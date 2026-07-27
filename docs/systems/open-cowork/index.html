@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Core and experience memory as
+separately extracted kinds, with the atlas's most complete committed
+memory benchmark — including forbidden-hit tests that assert what recall
+must not surface.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="open-cowork — Agent Memory Atlas">
+    <meta property="og:description" content="Core and experience memory
+as separately extracted kinds, with the atlas's most complete committed
+memory benchmark — including forbidden-hit tests that assert what recall
+must not surface.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="open-cowork — Agent Memory Atlas">
+    <meta name="twitter:description" content="Core and experience memory
+as separately extracted kinds, with the atlas's most complete committed
+memory benchmark — including forbidden-hit tests that assert what recall
+must not surface.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>open-cowork — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Evaluated memory</p>
+          <h1>open-cowork</h1>
+          <p class="document-deck">Core and experience memory as
+separately extracted kinds, with the atlas's most complete committed
+memory benchmark — including forbidden-hit tests that assert what recall
+must not surface.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OpenCoworkAI/open-cowork">
+              <span>Source</span>
+              <strong>OpenCoworkAI/open-cowork</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b" title="6f0c04741386b8600aa977f14ac0679d2203bd1b">
+              <span>Analyzed revision</span>
+              <code>6f0c04741386b8600aa977f14ac0679d2203bd1b</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>open-cowork is an MIT-licensed agent application with a ~4,100-line
+memory subsystem under <code>src/main/memory/</code>. It earns a report
+for something the atlas has complained about in almost every review:
+<strong>it ships a committed memory-quality benchmark.</strong></p>
+<p><code>memory-eval-harness.ts</code> (297 lines) defines eval cases as
+a session plus a set of queries, and each query declares two things:</p>
+<pre class="typescript"><code>interface MemoryEvalQuery {
+  id: string;
+  prompt: string;
+  workspace?: string;
+  expectedHits: string[];
+  forbiddenHits?: string[];
+}</code></pre>
+<p><code>expectedHits</code> is ordinary recall testing.
+<strong><code>forbiddenHits</code> is not, and it is the most valuable
+idea here</strong> — an assertion that a query must <em>not</em> surface
+particular material. Nothing else in the atlas tests retrieval
+negatively. It is the executable form of the scope-leak test, the
+tombstone test, and the sensitivity test that this atlas keeps asking
+for in the abstract.</p>
+<p>Two more details make the harness credible. It scores the
+<strong>prompt prefix</strong> — what actually reached the model —
+rather than raw retrieval output, so it measures the thing that matters.
+And it combines a deterministic score with an LLM judge:</p>
+<pre class="typescript"><code>deterministicScore = max(0, matchedExpected/expected − matchedForbidden/forbidden)
+finalScore         = deterministic + judge (judge clamped to [0,1])</code></pre>
+<p>The deterministic half is string containment — crude, but
+reproducible and free, and it cannot drift the way a judge can. Reports
+carry a <code>runId</code>, timestamps, per-case results, and an
+<code>artifactDir</code>.</p>
+<p>The memory model behind it is also well shaped: <strong>core memory
+and experience memory are separate kinds</strong>, each with its own
+extractor and store
+(<code>core-memory-extractor.ts</code>/<code>core-memory-store.ts</code>,
+<code>experience-memory-extractor.ts</code>/<code>experience-memory-store.ts</code>)
+rather than one pipeline with a type column.</p>
+<p>Reservations: the deterministic scorer is substring matching, which
+rewards verbatim overlap; and no committed eval <em>results</em> were
+found, only the harness — the same "reproducible harness, unreproduced
+result" gap the atlas flagged for <a
+href="../openviking/">OpenViking</a>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two memory kinds with parallel machinery:</p>
+<pre class="text"><code>core memory        stable facts about the user and their work
+  core-memory-extractor.ts  →  core-memory-store.ts
+
+experience memory  what happened, and what was learned from it
+  experience-memory-extractor.ts  →  experience-memory-store.ts</code></pre>
+<p>Separating them at the <em>extractor</em> level, not just by a type
+field, means the prompts, thresholds, and storage semantics can differ
+per kind — a stable preference and a recorded episode genuinely need
+different extraction rules. <a href="../metaclaw/">MetaClaw</a> and <a
+href="../redis-agent-memory-server/">Redis Agent Memory Server</a>
+express similar distinctions as enum values on one pipeline; open-cowork
+forks the pipeline.</p>
+<p>Supporting modules: <code>memory-ingestion-queue.ts</code> (durable
+capture ahead of extraction), <code>memory-navigator.ts</code>,
+<code>memory-retriever.ts</code>, <code>memory-service.ts</code>,
+<code>memory-state-store.ts</code>, <code>memory-tools.ts</code>,
+<code>memory-llm-client.ts</code>, <code>memory-prompts.ts</code>,
+<code>memory-prompt-optimizer.ts</code>, <code>memory-manager.ts</code>,
+<code>memory-types.ts</code>, <code>memory-utils.ts</code>.</p>
+<p>Eval lifecycle:</p>
+<pre class="text"><code>MemoryEvalCase { sessionTitle, messages[{role, text, timestamp}], queries[] }
+  -&gt; replay the session into memory
+  -&gt; for each query: build the prompt prefix as the agent would
+  -&gt; scorePromptPrefix(prefix, expectedHits, forbiddenHits)
+       deterministic = expectedCoverage − forbiddenPenalty, floored at 0
+  -&gt; optional LLM judge: {&quot;score&quot;: number, &quot;reason&quot;: string}, clamped [0,1]
+  -&gt; MemoryEvalCaseResult.averageScore
+  -&gt; MemoryEvalReport { runId, startedAt, completedAt, averageScore, artifactDir }</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/main/memory/</code> — about 4,100 lines across eighteen
+modules, plus tests under <code>src/tests/memory</code> and
+<code>docs/memory-live-smoke-checklist.md</code>.</p>
+<pre class="mermaid"><code>flowchart LR
+  Sess[&quot;Session messages&quot;] --&gt; Queue[&quot;memory-ingestion-queue&quot;]
+  Queue --&gt; CoreX[&quot;core-memory-extractor&quot;]
+  Queue --&gt; ExpX[&quot;experience-memory-extractor&quot;]
+  CoreX --&gt; CoreS[&quot;core-memory-store&quot;]
+  ExpX --&gt; ExpS[&quot;experience-memory-store&quot;]
+  CoreS --&gt; Retr[&quot;memory-retriever&quot;]
+  ExpS --&gt; Retr
+  Retr --&gt; Nav[&quot;memory-navigator&quot;]
+  Nav --&gt; Prefix[&quot;prompt prefix&quot;]
+  Prompts[&quot;memory-prompts&quot;] --&gt; Opt[&quot;memory-prompt-optimizer&quot;]
+  Opt --&gt; CoreX
+  Opt --&gt; ExpX
+  Eval[&quot;memory-eval-harness&quot;] --&gt; Prefix
+  Prefix --&gt; Score[&quot;scorePromptPrefix + LLM judge&quot;]
+  Score --&gt; Report[&quot;MemoryEvalReport + artifacts&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="forbidden-hits">Forbidden hits</h3>
+<pre class="typescript"><code>const matchedForbiddenHits = forbiddenHits.filter((item) =&gt;
+  normalized.includes(item.toLowerCase())
+);
+const forbiddenPenalty = forbiddenHits.length
+  ? matchedForbiddenHits.length / forbiddenHits.length : 0;
+deterministicScore = Math.max(0, expectedScore - forbiddenPenalty);</code></pre>
+<p>A query that surfaces forbidden material loses score proportionally,
+and enough forbidden hits floor the case at zero regardless of how much
+expected material it also found. That asymmetry is right: a recall that
+leaks the wrong thing is not partially correct.</p>
+<p>This is the mechanism the atlas has repeatedly asked for and never
+found. Its "tests to require" lists ask for scope-leakage cases,
+prompt-injection recall cases, and proof that a rejected value stays
+inactive — all of which are <code>forbiddenHits</code> assertions. Here
+they are executable.</p>
+<h3 id="scoring-the-prompt-prefix">Scoring the prompt prefix</h3>
+<p>The harness scores <code>promptPrefix</code>, not the retriever's
+return value. That distinction matters because between retrieval and the
+model sit budget truncation, deduplication, formatting, and ordering —
+any of which can drop the memory that retrieval correctly found.
+Measuring the prefix measures what the model actually saw.</p>
+<h3 id="dual-scoring">Dual scoring</h3>
+<p>The deterministic scorer is case-insensitive substring containment:
+cheap, deterministic, and reproducible across runs and machines. The LLM
+judge returns <code>{"score": number, "reason": string}</code>, is
+validated for finiteness, and is clamped to <code>[0,1]</code>.</p>
+<p>Keeping both is the right call. The deterministic half gives a floor
+that cannot silently drift when a judge model changes; the judge half
+catches correct recall phrased differently from the fixture. The
+weakness is that the deterministic component rewards verbatim overlap,
+so it under-credits a system that surfaces the right fact in different
+words — which biases toward extractive rather than abstractive
+memory.</p>
+<h3 id="split-extraction">Split extraction</h3>
+<p>Running separate extractors for core and experience memory means each
+can have its own prompt in <code>memory-prompts.ts</code>, tuned
+independently by <code>memory-prompt-optimizer.ts</code>. It also means
+the two stores can differ in retention: stable facts and episodic
+experience have genuinely different lifetimes.</p>
+<h3 id="ingestion-queue-and-fts-fallback">Ingestion queue and FTS
+fallback</h3>
+<p><code>memory-ingestion-queue.ts</code> decouples capture from
+extraction — the <a href="../../patterns/zero-llm-capture/">zero-LLM
+capture</a> ordering. <code>memory-manager-no-fts.test.ts</code>
+exercises the path where SQLite FTS is unavailable, which is the same
+defensive instinct as <a href="../cowagent/">CowAgent</a>'s FTS5 probe
+and <a href="../openclaw/">OpenClaw</a>'s doctor contracts.</p>
+<p><code>docs/memory-live-smoke-checklist.md</code> is a manual
+checklist for verifying memory against a live system — an
+acknowledgement that the automated harness does not cover
+everything.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Types live in <code>memory-types.ts</code> with separate stores per
+kind and a <code>memory-state-store.ts</code> for subsystem state.
+Detailed schema was not traced exhaustively for this review.</p>
+<p>What the module list does and does not imply:</p>
+<ul>
+<li><strong>Two first-class memory kinds</strong> with independent
+pipelines.</li>
+<li><strong>A queue before extraction</strong>, so capture is not
+blocked on a model call.</li>
+<li><strong>No module suggesting trust state</strong> — nothing named
+for verification, rejection, or conflict, so a wrong extracted memory
+appears to have no lifecycle beyond existing.</li>
+<li><strong>No tombstone module</strong>, meaning a removed memory can
+presumably be re-extracted from retained sessions.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>memory-retriever.ts</code> and <code>memory-navigator.ts</code>
+split finding from assembling — navigation being the step that turns
+retrieved memories into the prefix the eval harness scores. FTS is used
+where available with a tested fallback path.</p>
+<p>Because the eval harness exists, retrieval quality here is at least
+<em>measurable</em>, which is more than can be said for most systems in
+the atlas. Whether it has been measured is a separate question — see
+below.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Sessions enter the ingestion queue; extractors run per kind; stores
+persist. <code>memory-prompt-optimizer.ts</code> implies extraction
+prompts are themselves tuned, which pairs with <a
+href="../metaclaw/">MetaClaw</a>'s policy tuning — MetaClaw optimizes
+what gets <em>retrieved</em>, open-cowork optimizes what gets
+<em>extracted</em>. Both are learning loops over memory machinery rather
+than over memory content.</p>
+<p>No write gate, actor model, or corroboration path was found;
+extraction output appears to become memory directly.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>memory-tools.ts</code> exposes memory to the agent,
+<code>memory-service.ts</code> and <code>memory-manager.ts</code>
+provide the internal surface, and <code>memory-extension.ts</code> (45
+lines) is the wiring point.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A committed memory benchmark with negative
+assertions</strong> — the strongest evaluation posture in the
+atlas.</li>
+<li><strong>Scoring the prompt prefix</strong>, not an
+intermediate.</li>
+<li><strong>A deterministic score alongside the LLM judge</strong>, so
+results do not drift with the judge.</li>
+<li><strong>Run artifacts</strong> with ids and timestamps.</li>
+<li><strong>Separate pipelines per memory kind.</strong></li>
+<li><strong>An ingestion queue</strong> decoupling capture from model
+calls.</li>
+<li><strong>A tested FTS-unavailable path</strong> and a live smoke
+checklist.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No visible trust state</strong> — no verification,
+rejection, or conflict handling.</li>
+<li><strong>No tombstones</strong>, so deletion is likely undone by
+re-extraction.</li>
+<li><strong>Substring-based deterministic scoring</strong> biases toward
+extractive memory.</li>
+<li><strong>No committed eval results</strong> were found, only the
+harness.</li>
+<li><strong>Prompt optimization without a promotion gate</strong> —
+unlike MetaClaw, nothing visible requires an optimized prompt to beat
+the incumbent on held-out cases before it ships.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests live under <code>src/tests/memory</code> and alongside the
+modules, including <code>memory-manager-no-fts.test.ts</code>. Nothing
+was run for this review.</p>
+<p>The headline is the harness itself. Its shape — cases with expected
+and forbidden hits, prefix scoring, dual deterministic/judge scoring,
+artifact-producing reports — is close to what the atlas's own "tests to
+require" sections have been describing across fifteen pattern pages. The
+gap between shipping a harness and publishing results is the same one <a
+href="../openviking/">OpenViking</a> has: no scored artifacts were found
+at this commit, so the system's measured memory quality is unknown even
+though the means to measure it is present.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Forbidden hits.</strong> Every memory eval should assert
+what recall must <em>not</em> surface, not only what it must. This
+single field turns scope leakage, rejected values, and sensitivity
+filtering into testable properties.</li>
+<li><strong>Score the prompt prefix.</strong> Measure what reached the
+model, not what the retriever returned.</li>
+<li><strong>Pair a deterministic score with a judge.</strong> The
+deterministic half is your regression floor; the judge is your recall of
+paraphrase.</li>
+<li><strong>Floor the score at zero on leakage.</strong> Retrieval that
+surfaces the wrong thing is not partially right.</li>
+<li><strong>Fork the pipeline per memory kind</strong> when extraction
+rules genuinely differ, instead of branching on a type column.</li>
+<li><strong>Queue capture ahead of extraction.</strong></li>
+<li><strong>Keep a manual smoke checklist</strong> for what the harness
+cannot cover.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Extraction into memory with no trust state.</strong></li>
+<li><strong>Substring scoring</strong> rewarding verbatim overlap.</li>
+<li><strong>Prompt optimization without a held-out gate.</strong></li>
+<li><strong>A harness with no committed results</strong>, which reads as
+measured but is not.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The eval-case shape — <code>expectedHits</code> plus
+<code>forbiddenHits</code>, prefix scoring, dual scoring, artifact
+reports. This is the most directly reusable artifact in the repository
+and is largely independent of the rest of the design.</li>
+<li>The split core/experience extractors.</li>
+<li>The FTS-unavailable test path.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Extraction without a verification tier, if wrong memory is
+costly.</li>
+<li>Deterministic scoring alone as your quality signal.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Have the evals been run, and what did they score? The harness
+exists; results do not appear to be committed.</li>
+<li>Should the deterministic scorer use normalized semantic matching
+rather than substring containment?</li>
+<li>Does an optimized extraction prompt have to beat the incumbent on
+held-out cases before shipping?</li>
+<li>What prevents a deleted memory from being re-extracted from retained
+sessions?</li>
+<li>How do core and experience memory interact at retrieval time —
+separate budgets, or one ranked pool?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Evaluation: <code>src/main/memory/memory-eval-harness.ts</code>
+(<code>MemoryEvalCase</code>, <code>MemoryEvalQuery</code>,
+<code>scorePromptPrefix</code>, <code>MemoryEvalReport</code>).</li>
+<li>Core memory: <code>core-memory-extractor.ts</code>,
+<code>core-memory-store.ts</code>.</li>
+<li>Experience memory: <code>experience-memory-extractor.ts</code>,
+<code>experience-memory-store.ts</code>.</li>
+<li>Capture and orchestration: <code>memory-ingestion-queue.ts</code>,
+<code>memory-manager.ts</code>, <code>memory-service.ts</code>,
+<code>memory-state-store.ts</code>.</li>
+<li>Retrieval and assembly: <code>memory-retriever.ts</code>,
+<code>memory-navigator.ts</code>.</li>
+<li>Prompts: <code>memory-prompts.ts</code>,
+<code>memory-prompt-optimizer.ts</code>,
+<code>memory-llm-client.ts</code>.</li>
+<li>Agent surface: <code>memory-tools.ts</code>,
+<code>memory-extension.ts</code>.</li>
+<li>Types and utilities: <code>memory-types.ts</code>,
+<code>memory-utils.ts</code>.</li>
+<li>Tests and checks: <code>src/tests/memory</code>,
+<code>tests/memory-manager-no-fts.test.ts</code>,
+<code>docs/memory-live-smoke-checklist.md</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

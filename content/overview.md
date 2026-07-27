@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of thirty-six agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of forty agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -256,6 +256,23 @@ trust state, scope, and above all deletion have to cross the host/provider
 boundary — and in none of the three contracts inspected here does a deletion hook
 exist.
 
+### File-corpus memory
+
+Repos:
+
+- `moltis`
+- partly `basic-memory` and `cowagent`
+
+Moltis treats memory as a Markdown corpus: files chunked, embedded, and
+hybrid-searched in SQLite, with sanitized session transcripts exported back into
+the same corpus so conversation and documents share one index and one retrieval
+path. It is the atlas's first Rust memory implementation.
+
+Tradeoff: one substrate means one thing to back up, edit, and cite, and a
+no-embeddings mode is a first-class constructor rather than a failure state —
+but a chunk is not a claim, so there is no trust state, no correction record,
+and an exported transcript ranks beside a carefully written note.
+
 ### Self-evolving file memory
 
 Repos:
@@ -276,6 +293,23 @@ Tradeoff: the whole state is human-readable, diffable, and cheap to operate, and
 the top layer needs no retrieval because it is always present — but repeated
 LLM distillation is lossy with no structural-loss check, correction is usually
 recency-wins, and none of them carries a rejected-value tombstone.
+
+### Graded personal memory
+
+Repos:
+
+- `mercury-agent`
+- partly `gini-agent`
+
+Mercury grades every record on three independent axes — `confidence`,
+`importance`, and `durability` — keeps a `subconscious` tier below active
+recall, models people and relations alongside facts, and exposes a
+`learningPaused` switch that stops new memory formation entirely.
+
+Tradeoff: separating durability from importance is the schema-level fix for a
+single global half-life, and a demotion tier is a gentler default than deletion
+— but the scores are estimated once at extraction rather than earned, and
+`dismissed` is a boolean rather than a value-level tombstone.
 
 ### Policy-learning memory
 
@@ -384,6 +418,10 @@ session with an identity you could later correct.
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `openclaw` | Categorized entry (preference/fact/decision/entity/other) with embedding | LanceDB via `memory-lancedb` extension; swappable embedding adapters | Vector search with mandatory agent-scoped predicate; no lexical arm | Optional auto-capture after envelope sanitization; 500-char truncation | Exact scoped delete; no tombstones, and auto-capture can restore content | `agentId`, composed inseparably into every predicate | Plugin contract via `memory-core`; tools, CLI, doctor checks | Auto-capture cursor with fingerprint drift detection | `createdAt` and category only | Envelope sanitization before capture; scope that cannot be dropped | Vector-only reference backend; sanitization is a denylist tied to envelope formats |
+| `open-cowork` | Core memory and experience memory as separately extracted kinds | Per-kind stores plus SQLite FTS, with an ingestion queue | Retriever then navigator assembles the prompt prefix; tested FTS-absent path | Queue, then per-kind extractors with independently optimized prompts | No visible trust state or tombstone | Workspace field on eval queries; scope model not traced | Memory tools plus an extension entry point | Ingestion queue and prompt optimization | Not traced; no verification modules found | A committed eval harness with `forbiddenHits` — negative retrieval assertions | Harness present, results absent; substring scoring favours extractive memory |
+| `gini-agent` | `memory_units` with network, status, confidence, bi-temporal occurrence | SQLite (`memory_banks`, `entities`, `entity_mentions`, `memory_links`) | Four channels — semantic, BM25, graph spreading activation, temporal — fused by RRF then reranked | `retain.ts`; `proposed` status as a candidate tier | `rejected` and `conflicted` states, `archived`, supersession | `agent_id` enforced across every channel and the HTTP API | CLI, HTTP, web UI | `reflect.ts` consolidation, `reinforce.ts` | Per-unit `embedding_model`, source task and session ids | Bi-temporal columns and a rejected/conflicted trust model, with decisions kept as ADRs | Conflict state has no visible resolution workflow; no value tombstone |
+| `moltis` | Chunk of a Markdown file | SQLite with vectors; pluggable local, OpenAI, batch, and fallback embeddings | Hybrid keyword plus vector, optional LLM rerank, citation modes | Corpus files plus sanitized session transcripts, one `sync()` chokepoint | Edit or delete the file and reindex | Indexed directory only | Rust crate inside the workspace | File watcher and scheduled memory work | Citations to path and chunk; content-hash addressing | `keyword_only()` makes a no-embeddings mode constructible and inspectable | Transcripts and curated notes rank identically; no trust state |
+| `mercury-agent` | `UserMemoryRecord` graded on confidence, importance, and durability | Second-brain DB, with people and relation records | Retrieval records `lastUsedAt` and `lastUsedQuery` | Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration | `dismissed` boolean and `supersededBy`; no tombstone | `durable`, `active`, `subconscious` tiers; single user | Internal, with a `brain/Memory.tsx` review page | Not traced | Four-way `evidenceKind`, corroboration counts, free-text provenance | Durability separated from importance; a subconscious tier; a learning-pause switch | Scores estimated once at write time; dismissal is not durable |
 | `metaclaw` | `MemoryUnit` with type, status, importance, confidence, access count, reinforcement score | Store with embeddings, per-scope policies | Under a live `MemoryPolicyState`: mode, unit cap, token budget, weights | Conversation writes plus consolidation; no actor gate | `superseded_by` lineage, `expires_at`; no rejected state | `scope_id` throughout store, retriever, policy, metrics | OpenClaw plugin with a written spec and a sidecar manager | Self-upgrade worker: candidate → replay → gate → promote | Source session and turn range; reinforcement kept apart from confidence | Retrieval policy replayed offline and promoted only on non-regression across eight metrics | Optimizes overlap proxies; gate thresholds are themselves defaults |
 | `nanobot` | Markdown durable files plus JSONL summary lines | `SOUL.md`, `USER.md`, `memory/MEMORY.md`, `history.jsonl`, git | None; durable files are always in context | Consolidator appends evidence; Dream is the sole durable writer | Surgical edits under git; no tombstone | One workspace | Internal, with WebUI and cron | Dream on cron, gated on tool-error-free runs | Git history over an explicit durable-file allowlist | Dual cursors, and a cursor that refuses to advance after tool errors | No provenance from claim to evidence; single workspace scope |
 | `cowagent` | Markdown files, chunked into an indexed `chunks` table | SQLite with embeddings and self-healing FTS5 | Vector plus keyword over chunks; `MEMORY.md` injected in full | Summarize into dated daily files, then distil | Recency-wins conflict update; whole-file overwrite | `user_id` and `scope`, defaulting to `shared` | Agent memory tools | Deep Dream after the daily summary, 23:55 cron | Line-addressable chunks with hashes; dream diary | Dated intermediate layer and written distillation rules | Shared-by-default scope; chained lossy summarization |
@@ -483,6 +521,13 @@ proxies for "enough has happened" that the original measured directly. Its
 weakness is that the budget is denominated in one-shot LLM importance judgments,
 and its reflections are stored in the same undifferentiated pool as observations,
 so reflections of reflections can drift with no visible boundary.
+
+`moltis` adds a fifth instance of a guard that is now unmistakably a general
+requirement: it exports session transcripts into its corpus only after
+**sanitizing** them, joining `openclaw`'s envelope stripping, `holographic`'s
+compaction-summary exclusion, `nanobot`'s internal-session filter, and
+`cowagent`'s distillation rules. Any system that both generates text and
+captures text will eventually capture its own.
 
 Four systems in the atlas now call consolidation **dreaming**, arrived at
 independently: `magic-context`'s dreamer subagent, `nanobot`'s Dream pass,
@@ -921,6 +966,10 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
 - `hipporag`: thin unit tests (`tests/test_bedrock_mantle.py`, `tests/integration/`) beside a well-developed `reproduce/` benchmark tree; no committed result artifacts.
 - `magic-context`: 473 test files and roughly 131,000 lines of tests, including per-version migration suites and named CAS-race tests; no retrieval or verification-precision benchmark.
+- `open-cowork`: `memory-eval-harness.ts` defines eval cases as a session plus queries carrying **both `expectedHits` and `forbiddenHits`**, scores the assembled prompt prefix rather than raw retrieval output, combines a deterministic containment score with an LLM judge, and writes reports with a run id and artifact directory. This is the most complete memory benchmark shape in the atlas; no scored results were found committed at this commit.
+- `gini-agent`: per-module and integration tests, including an assertion that a follow-up task records recalled units; no memory-quality benchmark, despite a recall implementation that cites specific published equations.
+- `moltis`: contract tests compiled under `#[cfg(test)]`; no memory benchmark.
+- `mercury-agent`: `user-memory.test.ts`; no memory benchmark.
 - `metaclaw`: committed `benchmark/data/metaclaw-bench*` harnesses with eval fixtures, plus dedicated `run_memory_ablation*.py` scripts — rare in this atlas; no numbers reproduced here.
 - `nanobot`: no memory tests located, which is notable given the cursor and failure-gate logic carry most of the correctness.
 - `cowagent`: no memory tests or benchmark located.
@@ -1325,6 +1374,27 @@ Make background derivation reversible by provenance. Cognee's pipeline-run
 rollback is the strongest cross-store example in the atlas, even though it
 cannot make every backend combination atomic.
 
+Test what memory must **not** surface. `open-cowork`'s eval cases carry
+`forbiddenHits` alongside `expectedHits`, and a leak floors the case score
+regardless of how much correct material was also retrieved. Every "tests to
+require" list in the pattern library asks for scope-leakage, rejected-value, and
+sensitivity assertions; this is what they look like as an executable fixture.
+
+Score the prompt prefix, not the retriever. Between retrieval and the model sit
+truncation, deduplication, ordering, and formatting — any of which can drop a
+memory that retrieval correctly found. `open-cowork` scores what reached the
+model.
+
+Separate durability from importance. `mercury-agent` grades confidence,
+importance, and durability independently, which is the schema-level answer to
+this atlas's warning against applying one half-life to every memory kind.
+
+Write your memory decisions down. `gini-agent` keeps ADRs recording the
+decision, its context, and the failure that motivated it — its per-agent
+isolation ADR states plainly that a coding agent's pinned memories were
+polluting a research agent's recall. Across forty systems, almost none can
+explain why they are shaped the way they are.
+
 Make scope structurally inseparable from the query. OpenClaw composes agent scope and user filter into a single predicate so an unscoped read is not expressible, and scopes deletes the same way. This is stronger than applying a scope filter somewhere in the read path, and it is the kind of guarantee that survives refactoring.
 
 Specify retention as a policy, not a TTL. Redis Agent Memory Server's `select_ids_for_forgetting` combines age and inactivity so recent use buys a memory time but not immunity, honours pinning and per-type allowlists, and prunes to a budget using separate half-lives for last access and creation. Most systems here either never forget or forget on one crude axis.
@@ -1676,6 +1746,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
 - Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
 
+### `open-cowork`
+
+- Best idea: a committed memory benchmark whose queries assert forbidden hits as well as expected ones, scored against the assembled prompt prefix.
+- Biggest risk: the harness exists but no scored results are committed, and no trust state guards extraction.
+- Most reusable component: `memory-eval-harness.ts` — the eval-case shape is largely independent of the rest of the system.
+- Maturity impression: a well-factored memory subsystem whose evaluation thinking is ahead of most of the atlas.
+- Study when: you need to turn "our memory works" into something a CI job can check.
+- Do not copy when: you need verification or correction semantics; neither appears in the module set.
+
+### `gini-agent`
+
+- Best idea: bi-temporal units with `rejected` and `conflicted` states, four RRF-fused recall channels, and architecture decisions recorded as ADRs.
+- Biggest risk: `conflicted` is modelled with no visible workflow to resolve it, and rejection has no value-level tombstone.
+- Most reusable component: the `memory_units` schema, and the ADR practice itself.
+- Maturity impression: a faithful local reimplementation of a published memory model, with unusually good written rationale.
+- Study when: you want a trust-and-time-aware unit schema you can implement in plain SQLite.
+- Do not copy when: you need the conflict workflow the schema implies but does not ship.
+
+### `moltis`
+
+- Best idea: a no-embeddings mode that is a constructor and a predicate rather than a degraded state, plus content-hash file addressing.
+- Biggest risk: exported session transcripts share one index and one rank with curated notes, with nothing distinguishing them.
+- Most reusable component: `MemoryManager::keyword_only()` / `has_embeddings()`, and the single `sync()` chokepoint.
+- Maturity impression: careful Rust with feature-gated backends and committed plans naming its own gaps.
+- Study when: memory and documents should be one substrate, or you need a genuinely offline path.
+- Do not copy when: a chunk is not a good enough unit — there is no claim, status, or correction record.
+
+### `mercury-agent`
+
+- Best idea: three independent grades — confidence, importance, durability — plus a subconscious tier and a user-facing learning pause.
+- Biggest risk: `dismissed` is a boolean, so dismissal is not durable against re-extraction.
+- Most reusable component: the record model, especially the durability/importance split and the narrowed candidate type.
+- Maturity impression: small but opinionated, with an operator review page and clear provenance kinds.
+- Study when: building personal memory where different facts should live for different lengths of time.
+- Do not copy when: automatic extraction can regenerate what a user dismissed.
+
 ### `metaclaw`
 
 - Best idea: candidate retrieval policies replayed offline and promoted only on non-regression across eight metrics.
@@ -1891,6 +1997,10 @@ Privacy/deletion:
 - [`nanobot`](../systems/nanobot/)
 - [`cowagent`](../systems/cowagent/)
 - [`genericagent`](../systems/genericagent/)
+- [`open-cowork`](../systems/open-cowork/)
+- [`gini-agent`](../systems/gini-agent/)
+- [`moltis`](../systems/moltis/)
+- [`mercury-agent`](../systems/mercury-agent/)
 
 ### Repos Inspected
 
@@ -1929,6 +2039,10 @@ Privacy/deletion:
 - [HKUDS/nanobot](https://github.com/HKUDS/nanobot) at [`b99e0f937e828504e0f93dbe35dfd6b1540e20b2`](https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2)
 - [zhayujie/CowAgent](https://github.com/zhayujie/CowAgent) at [`fe88751ccb24e9b2991b6a35a2dcc538f7a38761`](https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761)
 - [lsdefine/GenericAgent](https://github.com/lsdefine/GenericAgent) at [`7ffc95823b6e40ca4e10acf9fb285d923485cacc`](https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc)
+- [OpenCoworkAI/open-cowork](https://github.com/OpenCoworkAI/open-cowork) at [`6f0c04741386b8600aa977f14ac0679d2203bd1b`](https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b)
+- [Open-Curiosity/gini-agent](https://github.com/Open-Curiosity/gini-agent) at [`6c5d85ed0ecd7fe8567124bd4890b16c329970d8`](https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8)
+- [moltis-org/moltis](https://github.com/moltis-org/moltis) at [`1f53cd27b1a21c36b61ceda7a8ea65a35deb7872`](https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872)
+- [cosmicstack-labs/mercury-agent](https://github.com/cosmicstack-labs/mercury-agent) at [`6e174a4b5ea77bbc753bff5f89c76db9303439d1`](https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
@@ -1982,5 +2096,9 @@ No internet sources were used for this report. The analysis is based on the chec
 - MetaClaw's committed benchmark fixtures and memory ablation scripts were inspected but not run, and no published numbers were reproduced. Its replay metrics are lexical-overlap proxies; no evidence linking them to task outcomes was found in the repository.
 - No memory tests or memory-quality benchmarks were located for nanobot, CowAgent, or GenericAgent. Nothing was run for any of the four systems added in this round.
 - GenericAgent's memory documentation is written in Chinese; the axioms and rules quoted in its report are the reviewer's translations, with key terms given in the original. Its cited arXiv technical report was not retrieved or assessed.
+- No suites or benchmarks were run for open-cowork, Gini, Moltis, or Mercury. open-cowork's eval harness was read but not executed, and no scored results were found committed.
+- Gini reimplements the Hindsight memory model locally rather than depending on Hindsight; its recall module cites the source paper's equation numbers, but no check was made that this implementation reproduces the published behaviour.
+- Moltis's session sanitization was identified from its module documentation; exactly what it strips was not traced, which matters because transcripts can carry secrets, tool output, and previously injected memory blocks.
+- Five further repositories examined in this round have no reports: `he-yufeng/CoreCoder` (1,166 lines whose `context.py` is conversation-window compaction with nothing persisted), `chrysb/alphaclaw` (an OpenClaw deployment harness whose only "memory" reference is host RAM), `Intelligent-Internet/ii-agent` (a SaaS agent platform with chat context and caches but no durable memory), `neomjs/neo` (39 AgentOS documents describing a "Memory Core" that does not appear in `src/` — documentation without a reviewable implementation), and `AgentsMesh/AgentsMesh` (a real pgvector-backed block memory with a `memory.retrieve` MCP tool, set aside for now because it is licensed under Business Source License 1.1 rather than an open-source licence).
 - Three repositories examined in the same round were judged out of scope and have no reports: `KnockOutEZ/wigolo` (a web crawl, search, and extraction MCP server whose cache holds external content rather than agent belief), `siyuan-note/siyuan` (a note application whose agent kernel contains no memory concept — only conversation compaction — and whose MCP surface is note CRUD), and `netease-youdao/LobsterAI` (which operates OpenClaw's memory rather than having its own, and is covered inside the OpenClaw report).
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.

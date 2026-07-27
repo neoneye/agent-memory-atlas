@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local reimplementation of the
+Hindsight memory model with four RRF-fused recall channels, bi-temporal
+units, rejected and conflicted states, and memory decisions recorded as
+ADRs.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gini Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A local reimplementation of
+the Hindsight memory model with four RRF-fused recall channels,
+bi-temporal units, rejected and conflicted states, and memory decisions
+recorded as ADRs.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gini
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local reimplementation
+of the Hindsight memory model with four RRF-fused recall channels,
+bi-temporal units, rejected and conflicted states, and memory decisions
+recorded as ADRs.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gini Agent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Reimplemented memory model</p>
+          <h1>Gini Agent</h1>
+          <p class="document-deck">A local reimplementation of the
+Hindsight memory model with four RRF-fused recall channels, bi-temporal
+units, rejected and conflicted states, and memory decisions recorded as
+ADRs.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Open-Curiosity/gini-agent">
+              <span>Source</span>
+              <strong>Open-Curiosity/gini-agent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8" title="6c5d85ed0ecd7fe8567124bd4890b16c329970d8">
+              <span>Analyzed revision</span>
+              <code>6c5d85ed0ecd7fe8567124bd4890b16c329970d8</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Gini is an MIT-licensed agent whose memory is a <strong>local
+reimplementation of the Hindsight memory model</strong> rather than an
+integration of it. The code says so directly:</p>
+<blockquote>
+<p><code>recall.ts</code>: "This is Gini's local retrieval
+implementation for the hindsight memory model." <code>retain.ts</code>:
+"This is Gini's local retain implementation for the hindsight memory
+model."</p>
+</blockquote>
+<p>It borrows the vocabulary — memory banks, memory units,
+retain/recall/reflect, four parallel recall channels — and implements
+them over its own SQLite schema in <code>state/memory-db.ts</code>
+(1,436 lines). The recall module cites the source paper's equation
+numbers (Eqs. 9–12), so this is a faithful implementation, not a loose
+homage.</p>
+<p>That makes it the atlas's first <strong>second implementation of a
+memory model it already documents</strong>, which is interesting on its
+own. But two things make it worth reading independently of <a
+href="../hindsight/">Hindsight</a>.</p>
+<p><strong>The unit schema is one of the richest here.</strong>
+<code>memory_units</code> carries a <code>status</code> of
+<code>proposed | active | archived | rejected | conflicted</code> —
+including both a rejected state <em>and</em> an explicit conflicted
+state, which almost nothing else has — alongside a <code>network</code>
+of <code>world | experience | opinion | observation</code>, separate
+<code>occurred_start</code>/<code>occurred_end</code> and
+<code>mentioned_at</code> timestamps (bi-temporal),
+<code>embedding_model</code> and <code>embedding_dim</code> stored per
+unit, <code>confidence</code>, <code>agent_id</code>, and
+<code>source_task_id</code>/<code>source_session_id</code>
+provenance.</p>
+<p><strong>Memory decisions are recorded as ADRs.</strong>
+<code>docs/adr/agent-memory-isolation.md</code> documents making agent
+id the isolation key across all four recall channels, and states the
+failure that forced it: before isolation, "a 'coding' agent's pinned
+memories would pollute the 'research' agent's recall and vice versa."
+The atlas has thirty-odd systems and almost no written record of
+<em>why</em> any of them made the choices they did; Gini keeps one.</p>
+<p>The main reservation is unusual for this atlas: the design is strong
+enough that the gaps are subtle. <code>conflicted</code> and
+<code>rejected</code> exist as states, but no operator-facing resolution
+workflow comparable to <a href="../rainbox/">RainBox</a>'s review page
+was found, and no memory-quality benchmark is committed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="sql"><code>CREATE TABLE memory_units (
+  id TEXT PRIMARY KEY,
+  bank_id TEXT NOT NULL REFERENCES memory_banks(id) ON DELETE CASCADE,
+  agent_id TEXT,                       -- isolation key
+  text TEXT NOT NULL,
+  embedding BLOB, embedding_dim INTEGER, embedding_model TEXT,
+  occurred_start TEXT, occurred_end TEXT,   -- when it was true
+  mentioned_at TEXT NOT NULL,               -- when it was said
+  network TEXT NOT NULL
+    CHECK (network IN (&#39;world&#39;,&#39;experience&#39;,&#39;opinion&#39;,&#39;observation&#39;)),
+  confidence REAL,
+  metadata TEXT NOT NULL DEFAULT &#39;{}&#39;,
+  source_task_id TEXT, source_session_id TEXT,
+  status TEXT NOT NULL DEFAULT &#39;active&#39;
+    CHECK (status IN (&#39;proposed&#39;,&#39;active&#39;,&#39;archived&#39;,&#39;rejected&#39;,&#39;conflicted&#39;)),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+)
+-- plus memory_banks, entities, entity_mentions, memory_links, schema_meta</code></pre>
+<p>Three axes are worth separating out.</p>
+<p><strong>Epistemic kind (<code>network</code>).</strong>
+<code>world</code> (how things are), <code>experience</code> (what
+happened to me), <code>opinion</code> (a view held),
+<code>observation</code> (what was seen). Distinguishing an
+<em>opinion</em> from a <em>world fact</em> at the schema level is rare
+and consequential — a stated preference and a verifiable fact should not
+decay, conflict, or corroborate the same way.</p>
+<p><strong>Lifecycle state (<code>status</code>).</strong>
+<code>proposed</code> is a candidate tier, <code>rejected</code> is a
+durable negative judgment, and <code>conflicted</code> marks a unit
+known to disagree with another. Together with <code>confidence</code>,
+this is a genuine trust model.</p>
+<p><strong>Time.</strong>
+<code>occurred_start</code>/<code>occurred_end</code> versus
+<code>mentioned_at</code> is <a
+href="../../patterns/bi-temporal-fact-validity/">bi-temporal fact
+validity</a> — the pattern the atlas credits to <a
+href="../graphiti/">Graphiti</a>, implemented here as ordinary
+columns.</p>
+<p>Recall:</p>
+<pre class="text"><code>query
+ ├─ semantic — cosine similarity vs query embedding            (Eqs. 9–10)
+ ├─ bm25     — SQLite FTS5 MATCH against memory_units_fts      (Eq. 11)
+ ├─ graph    — spreading activation seeded from top semantic
+ │             hits; decay δ=0.5, per-channel multipliers      (Eq. 12)
+ └─ temporal — query parsed for absolute/relative range; units
+               whose occurred window overlaps it
+ → reciprocal rank fusion → rerank → agent_id filter applied throughout</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>packages/runtime/src/memory/</code> — <code>retain.ts</code>,
+<code>recall.ts</code>, <code>reflect.ts</code>,
+<code>reinforce.ts</code>, <code>embedding.ts</code>,
+<code>entities.ts</code>, <code>temporal.ts</code>,
+<code>reranker.ts</code>, <code>schemas.ts</code>,
+<code>migrate.ts</code>, <code>migrate-pinned-to-user-md.ts</code>, plus
+<code>integration.test.ts</code> and per-module tests.</li>
+<li><code>packages/runtime/src/state/memory-db.ts</code> (1,436 lines) —
+schema and storage.</li>
+<li><code>packages/runtime/src/cli/commands/memory.ts</code> — CLI
+surface.</li>
+<li><code>packages/web/</code> — query and view types for a memory
+UI.</li>
+<li><code>docs/memory.md</code> and an extensive <code>docs/adr/</code>
+corpus.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Task[&quot;Task / session&quot;] --&gt; Retain[&quot;retain.ts&quot;]
+  Retain --&gt; Units[&quot;memory_units (banks, agent_id)&quot;]
+  Units --&gt; Ent[&quot;entities / entity_mentions / memory_links&quot;]
+  Q[&quot;Query&quot;] --&gt; Recall[&quot;recall.ts&quot;]
+  Units --&gt; Sem[&quot;semantic&quot;]
+  Units --&gt; BM[&quot;bm25 (FTS5)&quot;]
+  Ent --&gt; Graph[&quot;graph: spreading activation δ=0.5&quot;]
+  Units --&gt; Temp[&quot;temporal (parsed range)&quot;]
+  Sem --&gt; RRF[&quot;reciprocal rank fusion&quot;]
+  BM --&gt; RRF
+  Graph --&gt; RRF
+  Temp --&gt; RRF
+  RRF --&gt; Rank[&quot;reranker.ts&quot;]
+  Rank --&gt; Ctx[&quot;recalled context&quot;]
+  Ctx --&gt; Reinf[&quot;reinforce.ts&quot;]
+  Units --&gt; Refl[&quot;reflect.ts&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="four-channels-fused">Four channels, fused</h3>
+<p><code>recall.ts</code> documents its channels and their equation
+provenance in a header comment, which is unusually good practice — a
+reader can check the implementation against the paper. The graph channel
+is spreading activation seeded from the top semantic hits with decay
+δ=0.5 and per-channel multipliers; the temporal channel only
+participates when the query actually contains a temporal expression, so
+it does not dilute fusion on queries where time is irrelevant.</p>
+<p>Default channel weights appear in the module
+(<code>semantic: 1.0</code>, <code>temporal: 0.8</code>, among others),
+so fusion is tunable — though, as with most of the atlas, there is no
+committed evidence that the defaults are right. <a
+href="../metaclaw/">MetaClaw</a> is the only system here that could
+answer that question.</p>
+<h3 id="per-agent-isolation-as-a-documented-decision">Per-agent
+isolation, as a documented decision</h3>
+<p>The ADR is worth quoting for its structure as much as its content. It
+records status and date, links related ADRs, states the decision (agent
+id is the isolation key; banks and units carry it; recall filters on it
+across all four channels; legacy rows carry <code>agentId</code>;
+<code>/api/memory*</code> filters by active agent), then gives the
+context — the cross-persona pollution that motivated it — and the
+consequence that a new agent starts with empty memory, config copied
+from defaults but content not.</p>
+<p>"Configuration is copied at creation; content is not" is a small,
+precise rule that many systems get wrong by cloning too much or too
+little.</p>
+<h3 id="bi-temporal-columns">Bi-temporal columns</h3>
+<p>Separating <code>occurred_start</code>/<code>occurred_end</code> from
+<code>mentioned_at</code> means a unit can record "the deploy failed on
+Tuesday" learned on Friday, and the temporal channel can match a query
+about Tuesday rather than about Friday. Graphiti achieves the same with
+edge validity intervals and a graph database; Gini achieves it with
+three columns and a range-overlap test, which is dramatically simpler
+and sufficient for unit-level facts.</p>
+<h3 id="embedder-identity-per-unit">Embedder identity per unit</h3>
+<p><code>embedding_model</code> and <code>embedding_dim</code> are
+stored on each unit rather than globally, so a model change does not
+silently invalidate the index — units embedded with different models are
+distinguishable and can be re-embedded selectively. The atlas praises <a
+href="../mempalace/">MemPalace</a> for checking embedder identity and <a
+href="../magic-context/">Magic Context</a> for keying embeddings by
+<code>(item, model_id)</code>; this is the same discipline.</p>
+<h3 id="migration-as-a-first-class-concern">Migration as a first-class
+concern</h3>
+<p><code>migrate.ts</code> and <code>migrate-pinned-to-user-md.ts</code>
+handle schema evolution and a specific data migration (pinned memories
+into a user Markdown file), and <code>memory-db.ts</code> comments
+describe an additive-column strategy where fresh installs get columns
+via <code>CREATE TABLE</code> while existing installs get them added.
+<code>schema_meta</code> tracks version.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Beyond <code>memory_units</code>, the schema carries
+<code>memory_banks</code>, <code>entities</code>,
+<code>entity_mentions</code>, and <code>memory_links</code> — an entity
+layer supporting the graph recall channel, and explicit links between
+units.</p>
+<p>Gaps relative to the strongest models here:</p>
+<ul>
+<li><strong><code>conflicted</code> and <code>rejected</code> exist
+without a visible resolution surface.</strong> The states are modelled;
+what an operator does about a conflicted unit was not found in the
+inspected code. Compare RainBox, whose four resolution options
+(supersede, reject, not-conflict, scoped exception) are the point of
+having the state.</li>
+<li><strong>No rejected-<em>value</em> tombstone.</strong> A rejected
+unit is a rejected row; nothing was found preventing an equivalent claim
+from being retained again under a new id.</li>
+<li><strong><code>confidence</code> has no documented
+provenance</strong> — how it is set, and whether anything updates it,
+was not traced.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Genuine four-arm hybrid with RRF and reranking, agent-scoped
+throughout, with the temporal arm activating conditionally.
+<code>reinforce.ts</code> suggests retrieval feeds back into unit
+standing — the atlas's standing caution about popularity loops applies,
+and whether reinforcement touches <code>confidence</code> or only
+ranking is the question that matters. Keeping it out of
+<code>confidence</code> is the <a href="../metaclaw/">MetaClaw</a>
+discipline; the schema here would permit either.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>retain.ts</code> is the write path; <code>reflect.ts</code> the
+consolidation pass; <code>proposed</code> status provides a candidate
+tier before a unit becomes <code>active</code>. Whether promotion from
+<code>proposed</code> is automatic or gated was not determined.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI (<code>cli/commands/memory.ts</code>), an HTTP surface
+(<code>/api/memory*</code>), and web query/view types indicate a memory
+UI. Agents are the isolation boundary, and the related ADR
+<code>agents-replace-profiles.md</code> explains that agents — not
+profiles — drive runtime behaviour, which is what made per-agent memory
+necessary.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A real trust model</strong>:
+<code>proposed</code>/<code>active</code>/<code>archived</code>/<code>rejected</code>/<code>conflicted</code>
+plus <code>confidence</code>.</li>
+<li><strong>Epistemic kind on every unit</strong>, separating opinion
+from world fact.</li>
+<li><strong>Bi-temporal columns</strong>, cheaply.</li>
+<li><strong>Per-unit embedder identity.</strong></li>
+<li><strong>Four-channel recall with documented equation
+provenance.</strong></li>
+<li><strong>Agent-level isolation enforced across every channel and the
+HTTP API.</strong></li>
+<li><strong>Architecture decisions written down</strong>, with the
+failure each fixed.</li>
+<li><strong>Versioned, additive schema migration.</strong></li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No visible conflict-resolution workflow</strong> for the
+<code>conflicted</code> state.</li>
+<li><strong>No value-level tombstone</strong>, so re-retention of a
+rejected claim appears possible.</li>
+<li><strong>Channel weights undefended</strong> by any committed
+evaluation.</li>
+<li><strong>No memory-quality benchmark</strong> found.</li>
+<li><strong><code>reinforce</code> semantics unclear</strong> — whether
+usage can move <code>confidence</code> is exactly the line the atlas
+cares about.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Per-module tests (<code>recall.test.ts</code>,
+<code>retain.test.ts</code>, <code>reflect.test.ts</code>,
+<code>embedding.test.ts</code>, <code>integration.test.ts</code>,
+<code>migrate-pinned-to-user-md.test.ts</code>) sit alongside the
+implementation, and <code>integration.test.ts</code> asserts end-to-end
+behaviour including that a follow-up task records recalled units.
+Nothing was run for this review.</p>
+<p>No memory-quality benchmark was found. Given that the recall
+implementation cites specific equations from a published model, the
+natural evaluation — does this implementation reproduce the source
+model's reported behaviour? — is absent, and would be unusually easy to
+justify here.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Write down memory decisions as ADRs.</strong> Status, date,
+decision, context, consequences — and crucially the failure that
+motivated it. Forty systems into this atlas, Gini is the clearest
+example of a project that can explain itself.</li>
+<li><strong><code>conflicted</code> as a first-class status.</strong>
+Most systems either resolve conflicts silently or surface them outside
+the data model; making it a state means a conflicted unit can be found,
+counted, and worked through.</li>
+<li><strong>Epistemic kind as a column.</strong>
+<code>world | experience | opinion | observation</code> costs one field
+and prevents a whole class of category errors.</li>
+<li><strong>Bi-temporal without a graph database.</strong> Two
+occurrence columns plus a mention timestamp gets most of the value of
+temporal validity at unit granularity.</li>
+<li><strong>Store the embedding model on the row.</strong></li>
+<li><strong>Conditional temporal channel</strong> — only fuse a time arm
+when the query has a time expression.</li>
+<li><strong>"Configuration is copied at creation; content is
+not."</strong></li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Modelled states without workflows</strong> —
+<code>conflicted</code> and <code>rejected</code> need somewhere for a
+human to act.</li>
+<li><strong>Rejection without a value tombstone.</strong></li>
+<li><strong>Fusion weights as undefended defaults.</strong></li>
+<li><strong>Reinforcement of unclear reach.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The <code>memory_units</code> schema more or less wholesale; it is
+among the best-shaped in the atlas.</li>
+<li>The ADR practice — the cheapest quality improvement available to any
+memory project.</li>
+<li>The conditional temporal channel and the per-unit embedder
+identity.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The trust states without building the workflow that resolves
+them.</li>
+<li>Fusion defaults without measuring them.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>What resolves a <code>conflicted</code> unit, and who sees it?</li>
+<li>Does <code>reinforce</code> touch <code>confidence</code>, or only
+ranking? The schema allows both; only one is safe.</li>
+<li>What promotes a unit from <code>proposed</code> to
+<code>active</code>?</li>
+<li>Does this implementation reproduce the source model's published
+retrieval behaviour? The equation citations invite the comparison.</li>
+<li>Should rejection write a value-level tombstone, given that retention
+is automatic?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and storage:
+<code>packages/runtime/src/state/memory-db.ts</code>
+(<code>memory_units</code>, <code>memory_banks</code>,
+<code>entities</code>, <code>entity_mentions</code>,
+<code>memory_links</code>, <code>schema_meta</code>).</li>
+<li>Write path: <code>packages/runtime/src/memory/retain.ts</code>.</li>
+<li>Retrieval: <code>packages/runtime/src/memory/recall.ts</code> (four
+channels, RRF), <code>reranker.ts</code>, <code>temporal.ts</code>,
+<code>entities.ts</code>.</li>
+<li>Consolidation and reinforcement: <code>reflect.ts</code>,
+<code>reinforce.ts</code>.</li>
+<li>Embeddings: <code>embedding.ts</code>.</li>
+<li>Migration: <code>migrate.ts</code>,
+<code>migrate-pinned-to-user-md.ts</code>.</li>
+<li>CLI: <code>packages/runtime/src/cli/commands/memory.ts</code>.</li>
+<li>Decisions: <code>docs/adr/agent-memory-isolation.md</code>,
+<code>docs/adr/agents-replace-profiles.md</code>,
+<code>docs/adr/prompt-cache-in-memory-tier.md</code>,
+<code>docs/adr/stable-system-prefix.md</code>,
+<code>docs/memory.md</code>.</li>
+<li>Tests: <code>packages/runtime/src/memory/*.test.ts</code>,
+<code>integration.test.ts</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
