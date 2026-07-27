@@ -40,6 +40,21 @@ Telemetry is not truth. A frequently retrieved memory is reachable, not necessar
 
 Event volume grows quickly. Schema evolution and privacy deletion become harder. Causal attribution remains limited: injection does not prove that a model used a memory. Audit events also need transactional coupling to state changes or they can describe mutations that never committed.
 
+## Cost to adopt
+
+**Build:** an event table, a writer on every mutation path, and a retention
+policy for the log itself.
+
+**Forces elsewhere:** the log is often the largest table in the system, and it
+inherits the same deletion obligations as the memory it describes — an audit row
+quoting a deleted value has not deleted it.
+
+**Ongoing:** logs that nobody queries rot. The pattern pays off only if
+something reads it: a review surface, an investigation path, or a test.
+
+**Skip it if** you already have durable evidence records and git history. Two
+audit trails that disagree are worse than one.
+
 ## Seen in the atlas
 
 [Atomic Agent](../../systems/atomic-agent/) is now the clearest implementation,

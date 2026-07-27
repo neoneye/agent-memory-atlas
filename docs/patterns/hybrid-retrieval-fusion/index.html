@@ -112,6 +112,20 @@ candidates after cheaper retrieval has narrowed the set.</p>
 <p>Do not call retrieval “hybrid” merely because two backends exist. The
 important behavior is intentional candidate fusion under one measured
 cutoff.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> a second retrieval arm, a fusion step, and a
+way to inspect which arm contributed each result. RRF is a dozen lines;
+the inspection is what makes it maintainable.</p>
+<p><strong>Forces elsewhere:</strong> each arm needs its own index kept
+in sync with writes, and a backend that silently lacks one of them
+degrades to single-arm search while still reporting itself as hybrid — a
+failure this atlas has found more than once.</p>
+<p><strong>Ongoing:</strong> fusion weights are tuning surface, and
+nothing tells you they have drifted except a benchmark you probably do
+not have.</p>
+<p><strong>Skip it if</strong> your corpus is small enough that exact
+search alone answers well. Boring FTS over a few thousand records
+outperforms an untuned hybrid stack.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/gini-agent/">Gini</a> is the most legible
 implementation, because it documents its channels and their provenance

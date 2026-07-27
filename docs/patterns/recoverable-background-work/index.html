@@ -108,6 +108,19 @@ storms can amplify provider failures. Idempotency is difficult when one
 job writes several stores that lack a shared transaction.</p>
 <p>Expose freshness to callers; do not make asynchronous derivation look
 immediately consistent.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> durable input records, an explicit job state,
+idempotent processing, and a dead-letter path with something that
+actually looks at it.</p>
+<p><strong>Forces elsewhere:</strong> idempotency is the expensive
+requirement — every extractor and consolidator needs a stable key so a
+retry does not duplicate. Retrofitting that is harder than building it
+in.</p>
+<p><strong>Ongoing:</strong> a queue is an operational surface. It needs
+monitoring, and a dead-letter path nobody reads is the same as no
+dead-letter path.</p>
+<p><strong>Skip it if</strong> capture is synchronous and cheap. The
+pattern exists to protect work that happens away from the user.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/nanobot/">nanobot</a> contributes the cheapest
 correct mechanism in the atlas, and it is worth trying before any retry

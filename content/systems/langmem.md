@@ -9,6 +9,7 @@ source_url: https://github.com/langchain-ai/langmem
 revision: c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
 revision_url: https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Store item, usually JSON memory"
   storage: "LangGraph `BaseStore`"

@@ -37,6 +37,21 @@ Explicit targets add friction. Agents may choose poorly, and users may not under
 
 Do not infer a write target from the top search result. Relevance and ownership are different decisions.
 
+## Cost to adopt
+
+**Build:** a required destination argument on the write API and a default that is
+absent rather than convenient.
+
+**Forces elsewhere:** every caller must decide, and the tool description or
+prompt must make the decision legible to a model, which is where this usually
+fails — a model that cannot tell private from shared will pick one anyway.
+
+**Ongoing:** destinations proliferate; without a policy about who may write
+where, the model is making an access-control decision on every turn.
+
+**Skip it if** there is no shared store. This pattern exists to stop private
+material reaching a shared one.
+
 ## Seen in the atlas
 
 [llm-wiki-memory](../../systems/llm-wiki-memory/) remains the clearest case:

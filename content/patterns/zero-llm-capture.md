@@ -64,6 +64,22 @@ enrichment creates a freshness window. A zero-LLM capture claim is misleading
 if the system cannot retrieve or inspect the event until later processing
 finishes.
 
+## Cost to adopt
+
+**Build:** a synchronous write path with no model dependency, and an enrichment
+stage that runs later against the same records.
+
+**Forces elsewhere:** you now store material that has not been structured yet,
+so retrieval must handle both enriched and raw records, and the enrichment lag
+becomes user-visible — something said is not yet recallable in the enriched
+form.
+
+**Ongoing:** two representations of the same memory drift unless enrichment is
+idempotent and re-runnable.
+
+**Skip it if** capture volume is low and the model call is reliable. The pattern
+buys resilience, and resilience you do not need is complexity.
+
 ## Seen in the atlas
 
 [OpenClaw](../../systems/openclaw/) captures with no model call at all, and

@@ -68,6 +68,21 @@ And it sidesteps the hardest problem in the rest of this atlas. Every pattern he
 
 Do not use this to store prose "procedures" that nothing executes. Without the verification gate, this is just tagged notes, and it inherits none of the property that makes it worth doing.
 
+## Cost to adopt
+
+**Build:** a store for runnable procedures, a description index to retrieve them
+by, and an execution gate that only writes on verified success.
+
+**Forces elsewhere:** you need a sandbox and a real success signal. Without one,
+this degrades into storing plausible-looking code that nothing has ever run —
+which is worse than not storing it, because it looks authoritative.
+
+**Ongoing:** skills go stale as the environment changes, and nothing invalidates
+them automatically. Progressive disclosure keeps their context cost bounded but
+adds a loading mechanism.
+
+**Skip it if** you have no execution environment to verify against.
+
 ## Seen in the atlas
 
 [Voyager](../../systems/voyager/) is the clearest implementation. Its `SkillManager` stores JavaScript functions written by the agent, indexed by an LLM-generated description; the write happens only inside `if info["success"]:`, where success comes from a critic that inspects environment state. Retrieved skills are injected as callable functions, so the library composes. It also shows the failure modes: unbounded concatenation of every skill into the prompt, retrieval with no score threshold, versions written to disk with no lineage, no failure memory, and one hardcoded exclusion standing in for a memory-worthiness policy.

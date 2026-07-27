@@ -9,6 +9,7 @@ source_url: https://github.com/basicmachines-co/basic-memory
 revision: 232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
 revision_url: https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Canonical Markdown note; indexed entity, observation, relation"
   storage: "Filesystem source + SQLite/PostgreSQL projection"

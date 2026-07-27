@@ -97,6 +97,23 @@ Do not gate an operation you have not measured. If you cannot say what the
 expensive step costs and how often it helps, a gate is a guess with a latency
 penalty.
 
+## Cost to adopt
+
+**Build:** a decision cheap enough to run always, a fail-open error path, and a
+recorded reason for every skip.
+
+**Forces elsewhere:** a model-based gate adds latency and a failure mode to
+every turn in order to remove work from some, so the trade depends on the
+fraction of turns that need the operation. Gates also encode policy — "does this
+need memory?" is a view about what memory is for, living in a prompt nobody
+reviews as policy.
+
+**Ongoing:** the false-negative rate is invisible by construction and needs
+deliberate measurement. Nothing in this atlas measures its gate.
+
+**Skip it if** you have not measured what the expensive step costs and how often
+it helps. A gate without that is a guess with a latency penalty.
+
 ## Seen in the atlas
 
 [Waku Agent](../../systems/waku-agent/) is the clearest case, and it gates at

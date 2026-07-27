@@ -9,6 +9,7 @@ source_url: https://github.com/rohitg00/agentmemory
 revision: d8b5267c367a5da07ad3619363520b7f1a506c6b
 revision_url: https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced, audit_log"
 matrix:
   memory_unit: "Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records"
   storage: "iii StateModule backed by local SQLite plus persisted search projections"

@@ -47,6 +47,22 @@ The channels fail differently. Semantic search recalls meaning; lexical search p
 
 Do not call retrieval “hybrid” merely because two backends exist. The important behavior is intentional candidate fusion under one measured cutoff.
 
+## Cost to adopt
+
+**Build:** a second retrieval arm, a fusion step, and a way to inspect which arm
+contributed each result. RRF is a dozen lines; the inspection is what makes it
+maintainable.
+
+**Forces elsewhere:** each arm needs its own index kept in sync with writes, and
+a backend that silently lacks one of them degrades to single-arm search while
+still reporting itself as hybrid — a failure this atlas has found more than once.
+
+**Ongoing:** fusion weights are tuning surface, and nothing tells you they have
+drifted except a benchmark you probably do not have.
+
+**Skip it if** your corpus is small enough that exact search alone answers well.
+Boring FTS over a few thousand records outperforms an untuned hybrid stack.
+
 ## Seen in the atlas
 
 [Gini](../../systems/gini-agent/) is the most legible implementation, because it

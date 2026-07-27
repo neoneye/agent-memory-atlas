@@ -9,6 +9,7 @@ source_url: https://github.com/volcengine/OpenViking
 revision: c67222c3d46de4874eed65af8918fc55513812ef
 revision_url: https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef
 analyzed_at: 2026-07-27
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Typed memory file with L0 abstract, L1 overview, L2 content, links and backlinks"
   storage: "Pluggable vector/graph stores plus native Rust/C++ index"

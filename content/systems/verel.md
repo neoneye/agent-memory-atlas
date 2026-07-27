@@ -9,6 +9,7 @@ source_url: https://github.com/amitpatole/verel
 revision: df80efe8207a99585a2ebce36fc6e32ba5077e2e
 revision_url: https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e
 analyzed_at: 2026-07-26
+capabilities: "tombstone, trust_state, scope_enforced"
 matrix:
   memory_unit: "`MemoryRecord` fact/rule/schema/failure/skill"
   storage: "SQLite local plus backend adapters"

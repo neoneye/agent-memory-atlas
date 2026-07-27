@@ -41,6 +41,23 @@ Users often expect some memories to inherit: a project may read global preferenc
 
 Scope is not a substitute for authorization. A row tagged `user_id` is unsafe if callers can choose arbitrary IDs.
 
+## Cost to adopt
+
+**Build:** the key in the schema, in every write, and in the read filter — and
+resolution logic for what the current scope *is*, which is usually the harder
+half.
+
+**Forces elsewhere:** background jobs must carry scope too. Consolidation that
+summarizes across two projects has crossed a boundary the retriever would have
+enforced, and this is the most common way scope leaks after it is "done".
+
+**Ongoing:** every new memory kind and every new integration is a chance to
+forget the key. Composing it into an identity or a storage prefix costs more up
+front and survives refactoring; a filter parameter does not.
+
+**Skip it if** the system genuinely has one scope forever. Retrofitting is
+painful, so be honest about whether that is true.
+
 ## Seen in the atlas
 
 [OpenClaw](../../systems/openclaw/) has the strongest enforcement, and the idea

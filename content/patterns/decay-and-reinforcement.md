@@ -70,6 +70,21 @@ loses reversibility and may violate audit or correction requirements.
 For small bounded corpora, explicit archive and review may be simpler and safer
 than continuous scoring.
 
+## Cost to adopt
+
+**Build:** a strength field separate from confidence, a decay function, and
+bounded reinforcement with a recorded reason.
+
+**Forces elsewhere:** ranking becomes time-dependent, so results are no longer
+reproducible across runs and any benchmark must pin a clock. Reinforcement
+driven by retrieval creates a feedback loop that needs an explicit damper.
+
+**Ongoing:** decay rates are per memory kind, and getting them wrong is
+invisible — memory that faded too fast produces no error, just a worse answer.
+
+**Skip it if** your store is small. Decay solves a crowding problem you may not
+have.
+
 ## Seen in the atlas
 
 Three systems added since this page was written show what the pattern looks like

@@ -9,6 +9,7 @@ source_url: https://github.com/cortexkit/magic-context
 revision: 113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 revision_url: https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 analyzed_at: 2026-07-27
+capabilities: "trust_state, scope_enforced, audit_log"
 matrix:
   memory_unit: "Memory with separate lifecycle and verification state, plus compartments, facts, primers"
   storage: "SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed"

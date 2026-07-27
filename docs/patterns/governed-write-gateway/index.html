@@ -112,6 +112,18 @@ policy components separate behind the command boundary. High-contention
 keys may need locks or serializable transactions. Not every note
 deserves belief governance; distinguish low-risk archival capture from
 claims that influence behavior.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> one transactional path all mutations pass
+through, plus enforcement that they cannot bypass it — a private store,
+a lint rule, or a type that only the gateway can construct.</p>
+<p><strong>Forces elsewhere:</strong> the gateway becomes a bottleneck
+for feature work, and every new write path is a negotiation with it. Its
+failure mode is a design decision, not an accident: fail-closed loses
+writes during an outage, fail-open admits ungoverned ones.</p>
+<p><strong>Ongoing:</strong> policy lives here and needs review as
+policy, not as code.</p>
+<p><strong>Skip it if</strong> there is exactly one writer. A gateway in
+front of a single caller is ceremony.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/rainbox/">RainBox</a> remains the reference:
 <code>record_belief</code> is the single path, taken under a Postgres

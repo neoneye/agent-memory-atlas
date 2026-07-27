@@ -47,6 +47,23 @@ More states create more transitions, UI, and operational policy. A candidate que
 
 For low-risk note retrieval, a full trust machine may be excessive. It matters most when memory changes decisions, identity, permissions, or long-lived behavior.
 
+## Cost to adopt
+
+**Build:** a status column, the legal transitions, and a promotion rule. The
+column is trivial; the promotion rule is a policy decision that no schema makes
+for you.
+
+**Forces elsewhere:** retrieval must filter by status, or the states are
+decoration. Every consumer — prompt assembly, exports, summaries, the UI — has
+to decide which states it accepts, and each is a place to get it wrong.
+
+**Ongoing:** candidates pile up unless something promotes or expires them, and
+"what verifies a candidate" is a question most systems never answer, which is
+how a trust model quietly becomes an unused column.
+
+**Skip it if** you have no verification signal at all. Three states with nothing
+able to move a memory between them is worse than one honest bucket.
+
 ## Seen in the atlas
 
 [Magic Context](../../systems/magic-context/) contributes the sharpest

@@ -9,6 +9,7 @@ source_url: https://github.com/cosmicstack-labs/mercury-agent
 revision: 6e174a4b5ea77bbc753bff5f89c76db9303439d1
 revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1
 analyzed_at: 2026-07-27
+capabilities: "human_review"
 matrix:
   memory_unit: "`UserMemoryRecord` graded on confidence, importance, and durability"
   storage: "Second-brain DB, with people and relation records"

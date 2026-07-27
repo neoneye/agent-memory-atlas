@@ -9,6 +9,7 @@ source_url: https://github.com/MemPalace/mempalace
 revision: afd0428823b47f9a9d1d68c450d54bb0045a4988
 revision_url: https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Verbatim drawer chunks, closets, KG triples"
   storage: "Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG"

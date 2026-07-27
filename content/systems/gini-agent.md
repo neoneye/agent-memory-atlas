@@ -9,6 +9,7 @@ source_url: https://github.com/Open-Curiosity/gini-agent
 revision: 6c5d85ed0ecd7fe8567124bd4890b16c329970d8
 revision_url: https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8
 analyzed_at: 2026-07-27
+capabilities: "trust_state, bitemporal, scope_enforced"
 matrix:
   memory_unit: "`memory_units` with network, status, confidence, bi-temporal occurrence"
   storage: "SQLite (`memory_banks`, `entities`, `entity_mentions`, `memory_links`)"

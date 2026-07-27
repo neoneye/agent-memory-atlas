@@ -160,6 +160,19 @@ headers, or compaction summaries, it becomes memory.</li>
 </ul>
 <p>Do not adopt this pattern to postpone deciding on a memory model. It
 relocates the decision; it does not remove it.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> an interface, a lifecycle for mounting
+providers, and — the part most implementations skip — scope and deletion
+in the contract itself.</p>
+<p><strong>Forces elsewhere:</strong> the contract is the ceiling on
+every backend's capabilities. Anything absent from it (deletion, scope,
+trust state) is unreachable no matter what the backend supports, and
+widening a published contract breaks implementers.</p>
+<p><strong>Ongoing:</strong> every provider needs its own tests, and
+cross-cutting concerns like retry and metrics belong in decorators
+rather than in each backend.</p>
+<p><strong>Skip it if</strong> you will only ever run one backend. An
+interface with one implementation is a guess about the future.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/hermes-agent/">Hermes Agent</a> has the most
 explicit contract: a <code>MemoryProvider</code> ABC with roughly

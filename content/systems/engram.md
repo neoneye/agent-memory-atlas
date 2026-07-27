@@ -9,6 +9,7 @@ source_url: https://github.com/Gentleman-Programming/engram
 revision: 44faeee1fb4fabdee4ba9619df55af485f3d06eb
 revision_url: https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced, human_review"
 matrix:
   memory_unit: "Observation and prompt records"
   storage: "Local SQLite WAL, FTS5"

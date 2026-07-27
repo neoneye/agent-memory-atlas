@@ -9,6 +9,7 @@ source_url: https://github.com/getzep/graphiti
 revision: 9140123a7282d44efc077a0af09179919f3defdf
 revision_url: https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf
 analyzed_at: 2026-07-26
+capabilities: "bitemporal, scope_enforced"
 matrix:
   memory_unit: "Episode, entity, temporal relationship edge, community/saga"
   storage: "Neo4j, FalkorDB, Kuzu, Neptune"

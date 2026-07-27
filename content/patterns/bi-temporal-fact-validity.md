@@ -54,6 +54,21 @@ The graph can answer current-state and historical questions from the same record
 
 Temporal precision is not truth. Store the evidence and confidence behind inferred dates.
 
+## Cost to adopt
+
+**Build:** two time dimensions on the record, interval-closing instead of
+overwriting, and an as-of parameter on the read path.
+
+**Forces elsewhere:** every query must now say *when*, and defaults become
+load-bearing. Extraction has to produce validity times, which usually means
+asking a model for a date and inheriting its mistakes.
+
+**Ongoing:** interval arithmetic accumulates edge cases — open intervals,
+overlapping updates, corrections to the validity time itself.
+
+**Skip it if** your facts do not change on a timeline anyone will ask about.
+Most personal preferences do not need as-of queries.
+
 ## Seen in the atlas
 
 [Graphiti](../../systems/graphiti/) remains the fullest treatment — edges carry

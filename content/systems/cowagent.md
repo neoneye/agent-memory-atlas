@@ -9,6 +9,7 @@ source_url: https://github.com/zhayujie/CowAgent
 revision: fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 revision_url: https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 analyzed_at: 2026-07-27
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Markdown files, chunked into an indexed `chunks` table"
   storage: "SQLite with embeddings and self-healing FTS5"

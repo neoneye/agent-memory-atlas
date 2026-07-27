@@ -9,6 +9,7 @@ source_url: https://github.com/redis/agent-memory-server
 revision: 886437963dc02289e828872f0ae21fdaa734c337
 revision_url: https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337
 analyzed_at: 2026-07-27
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message"
   storage: "Redis with TTL for working memory; pluggable vector DB for long-term"

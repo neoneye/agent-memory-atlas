@@ -9,6 +9,7 @@ source_url: https://github.com/mem0ai/mem0
 revision: 31cec11a790868f88c9acafb8b70eb25071f2150
 revision_url: https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150
 analyzed_at: 2026-07-26
+capabilities: "scope_enforced"
 matrix:
   memory_unit: "Text fact in vector payload"
   storage: "Vector store plus SQLite history/messages"

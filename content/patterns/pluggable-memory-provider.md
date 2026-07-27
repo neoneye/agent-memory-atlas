@@ -74,6 +74,22 @@ It also concentrates governance in one place: if the interface requires scope on
 
 Do not adopt this pattern to postpone deciding on a memory model. It relocates the decision; it does not remove it.
 
+## Cost to adopt
+
+**Build:** an interface, a lifecycle for mounting providers, and — the part most
+implementations skip — scope and deletion in the contract itself.
+
+**Forces elsewhere:** the contract is the ceiling on every backend's
+capabilities. Anything absent from it (deletion, scope, trust state) is
+unreachable no matter what the backend supports, and widening a published
+contract breaks implementers.
+
+**Ongoing:** every provider needs its own tests, and cross-cutting concerns like
+retry and metrics belong in decorators rather than in each backend.
+
+**Skip it if** you will only ever run one backend. An interface with one
+implementation is a guess about the future.
+
 ## Seen in the atlas
 
 [Hermes Agent](../../systems/hermes-agent/) has the most explicit contract: a `MemoryProvider` ABC with roughly seventeen lifecycle members covering initialization, prompt blocks, prefetch, per-turn sync, tool schemas and dispatch, session end and switch, pre-compression extraction, delegation observation, config, and backup paths, with a `MemoryManager` that mounts exactly one external provider. First-party adapters ship in-tree for Honcho, Mem0, Hindsight, Supermemory, OpenViking, ByteRover, RetainDB, and the built-in Holographic plugin — so the adapters are reviewable even when a backing service is not. The contract has **no deletion hook and no scope parameter**.

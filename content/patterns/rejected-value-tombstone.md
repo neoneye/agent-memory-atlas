@@ -53,6 +53,24 @@ It is stronger than a soft-delete flag on the old claim because the check is val
 
 Do not use tombstones as the sole conflict model. A new competing value may deserve a candidate state rather than immediate rejection.
 
+## Cost to adopt
+
+**Build:** a normalized form for values so "Berlin" and "berlin" hash the same;
+a tombstone table keyed on (subject, predicate, normalized value, scope); a check
+on the write path of every ingestion route, including background ones.
+
+**Forces elsewhere:** every extractor and background job must consult the check,
+so a system with several write paths pays this per path. Normalization is where
+the real work is — too strict and the tombstone never fires, too loose and it
+blocks legitimate updates.
+
+**Ongoing:** tombstones accumulate and need their own retention policy, and a
+user who changes their mind needs a way to lift one.
+
+**Skip it if** nothing re-derives memory automatically. A store written only by
+explicit user action cannot resurrect a value on its own, and supersession is
+enough.
+
 ## Seen in the atlas
 
 **Two systems in the atlas have this.** That is the most striking

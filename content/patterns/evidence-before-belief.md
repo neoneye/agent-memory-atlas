@@ -46,6 +46,23 @@ Retrieval should retain a direct path to evidence. Derived structures may boost 
 
 Raw evidence increases storage, privacy exposure, and retrieval noise. Evidence retention needs access control, retention windows, source-aware deletion, and bounded context assembly. Keeping a source is not the same as proving it is true; provenance answers “where did this come from?”, not “should I believe it?”
 
+## Cost to adopt
+
+**Build:** an append-only evidence store, stable references from derived records
+back to it, and a rebuild path that can regenerate derivations from evidence.
+
+**Forces elsewhere:** storage grows with raw volume rather than with distilled
+volume, and the evidence store inherits the strictest retention and privacy
+requirements in the system — deleting a user now means deleting from evidence
+*and* everything derived from it.
+
+**Ongoing:** the rebuild path decays unless exercised, so it needs to be run
+regularly rather than kept for emergencies.
+
+**Skip it if** the raw material is already durable somewhere you control (a
+transcript store, a git history) and you can reference it rather than copying
+it.
+
 ## Seen in the atlas
 
 [nanobot](../../systems/nanobot/) states the principle better than this page

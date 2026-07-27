@@ -9,6 +9,7 @@ source_url: https://github.com/NousResearch/hermes-agent
 revision: 0fa5e41c86f022bba147797849f0b44865721476
 revision_url: https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476
 analyzed_at: 2026-07-27
+capabilities: "human_review"
 matrix:
   memory_unit: "Delimited text entry in `MEMORY.md` / `USER.md`; session message; skill"
   storage: "Markdown files plus SQLite `state.db` with FTS5"

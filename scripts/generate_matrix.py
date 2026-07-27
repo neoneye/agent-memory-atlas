@@ -20,6 +20,40 @@ OVERVIEW = ROOT / "content" / "overview.md"
 
 BEGIN = "<!-- BEGIN GENERATED MATRIX -->"
 END = "<!-- END GENERATED MATRIX -->"
+CAP_BEGIN = "<!-- BEGIN GENERATED CAPABILITIES -->"
+CAP_END = "<!-- END GENERATED CAPABILITIES -->"
+
+# The free-text matrix answers "what does this system do". It does not answer
+# "which systems actually have X", which is the question a reader arrives with.
+# Each report declares the decisive capabilities it carries; absence of a flag
+# means the mechanism was not found at the pinned commit, not that it cannot
+# exist. Definitions are deliberately strict — a near-miss does not count, and
+# the near-misses are the interesting part, so they are named in the prose.
+CAPABILITIES = [
+    ("tombstone", "Rejected-value tombstone",
+     "A durable record of a *rejected value*, keyed on the value, so later "
+     "extraction cannot silently re-assert it."),
+    ("trust_state", "Explicit trust state",
+     "Discrete epistemic status — at least candidate versus verified versus "
+     "rejected — as a field, not a confidence score."),
+    ("bitemporal", "Bi-temporal validity",
+     "When a fact was true tracked separately from when the system recorded "
+     "or expired it."),
+    ("scope_enforced", "Scope enforced in retrieval",
+     "A stored scope key (user, project, agent, tenant) applied as a filter "
+     "on the read path, not merely available as a tag."),
+    ("audit_log", "Append-only mutation audit",
+     "An explicit event or audit record of memory mutations in the system's "
+     "own store."),
+    ("human_review", "Human review surface",
+     "A place where a person inspects, approves, or adjudicates memory "
+     "content before or after it takes effect."),
+    ("negative_eval", "Negative retrieval assertion",
+     "Committed evaluation cases asserting that particular material must "
+     "*not* be retrieved."),
+]
+
+_CAP_LINE = re.compile(r'^capabilities:\s*"(.*)"\s*$')
 
 # (frontmatter key, column header)
 COLUMNS = [
@@ -64,6 +98,43 @@ def read_matrix(path: Path) -> dict[str, str] | None:
     return fields or None
 
 
+def read_capabilities(path: Path) -> set[str]:
+    """Extract the `capabilities:` flag list from a report's frontmatter."""
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return set()
+    end = text.find("\n---\n", 3)
+    if end == -1:
+        return set()
+    for line in text[4:end].splitlines():
+        match = _CAP_LINE.match(line)
+        if match:
+            return {flag.strip() for flag in match.group(1).split(",") if flag.strip()}
+    return set()
+
+
+def build_capabilities() -> str:
+    paths = sorted(SYSTEMS.glob("*.md"))
+    carried = {path.stem: read_capabilities(path) for path in paths}
+
+    known = {flag for flag, _, _ in CAPABILITIES}
+    unknown = {f for flags in carried.values() for f in flags} - known
+    if unknown:
+        print(f"error: unknown capability flags: {sorted(unknown)}", file=sys.stderr)
+        raise SystemExit(1)
+
+    total = len(paths)
+    blocks: list[str] = []
+    for flag, label, definition in CAPABILITIES:
+        holders = sorted(slug for slug, flags in carried.items() if flag in flags)
+        listing = ", ".join(f"[`{slug}`](../systems/{slug}/)" for slug in holders)
+        blocks.append(
+            f"**{label}** — {definition}\n\n"
+            f"*{len(holders)} of {total}:* {listing or 'none found'}"
+        )
+    return "\n\n".join(blocks)
+
+
 def escape_cell(value: str) -> str:
     return value.replace("|", "\\|")
 
@@ -95,34 +166,36 @@ def build_table() -> str:
     return "\n".join([header, divider, *rows])
 
 
+def splice(text: str, begin: str, end: str, body: str, label: str) -> str:
+    if begin not in text or end not in text:
+        print(f"error: overview.md is missing the {begin} / {end} markers", file=sys.stderr)
+        raise SystemExit(1)
+    start = text.index(begin) + len(begin)
+    stop = text.index(end)
+    return text[:start] + "\n" + body + "\n" + text[stop:]
+
+
 def main() -> int:
     table = build_table()
+    capabilities = build_capabilities()
     text = OVERVIEW.read_text(encoding="utf-8")
 
-    if BEGIN not in text or END not in text:
-        print(
-            f"error: overview.md is missing the {BEGIN} / {END} markers",
-            file=sys.stderr,
-        )
-        return 1
-
-    start = text.index(BEGIN) + len(BEGIN)
-    stop = text.index(END)
-    updated = text[:start] + "\n" + table + "\n" + text[stop:]
+    updated = splice(text, BEGIN, END, table, "matrix")
+    updated = splice(updated, CAP_BEGIN, CAP_END, capabilities, "capabilities")
 
     if updated == text:
-        print("Matrix already up to date.")
+        print("Matrix and capability index already up to date.")
         return 0
 
     if "--check" in sys.argv:
         print(
-            "error: generated matrix is out of date. Run 'npm run build'.",
+            "error: generated matrix/capability index is out of date. Run 'npm run build'.",
             file=sys.stderr,
         )
         return 1
 
     OVERVIEW.write_text(updated, encoding="utf-8")
-    print(f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems).")
+    print(f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems) and capability index.")
     return 0
 
 

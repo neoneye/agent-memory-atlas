@@ -106,6 +106,21 @@ memories across scopes creates drift; sharing references creates access
 and lifecycle coupling.</p>
 <p>Scope is not a substitute for authorization. A row tagged
 <code>user_id</code> is unsafe if callers can choose arbitrary IDs.</p>
+<h2 id="cost-to-adopt">Cost to adopt</h2>
+<p><strong>Build:</strong> the key in the schema, in every write, and in
+the read filter — and resolution logic for what the current scope
+<em>is</em>, which is usually the harder half.</p>
+<p><strong>Forces elsewhere:</strong> background jobs must carry scope
+too. Consolidation that summarizes across two projects has crossed a
+boundary the retriever would have enforced, and this is the most common
+way scope leaks after it is "done".</p>
+<p><strong>Ongoing:</strong> every new memory kind and every new
+integration is a chance to forget the key. Composing it into an identity
+or a storage prefix costs more up front and survives refactoring; a
+filter parameter does not.</p>
+<p><strong>Skip it if</strong> the system genuinely has one scope
+forever. Retrofitting is painful, so be honest about whether that is
+true.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><a href="../../systems/openclaw/">OpenClaw</a> has the strongest
 enforcement, and the idea is one line:</p>

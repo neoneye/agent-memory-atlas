@@ -36,6 +36,20 @@ Some questions genuinely need several neighboring chunks from one source. A rigi
 
 Use a bounded escape hatch: reserve part of the context for source coverage and part for globally best evidence or neighbor expansion.
 
+## Cost to adopt
+
+**Build:** a per-source cap or MMR-style diversity step after ranking, and a
+notion of what "source" means for your corpus.
+
+**Forces elsewhere:** it makes retrieval non-monotonic — the best result set is
+no longer simply the top *k* by score — so caching and pagination get harder,
+and a genuinely single-source question now returns weaker material.
+
+**Ongoing:** the cap is a tuning constant that nothing validates.
+
+**Skip it if** your memories are already one-fact-per-record. Diversity control
+matters most when chunking can produce many near-identical neighbours.
+
 ## Seen in the atlas
 
 [Swafra](../../systems/swafra/) remains the compact illustration — best chunk per

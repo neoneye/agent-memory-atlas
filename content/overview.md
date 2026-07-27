@@ -6,6 +6,52 @@ root: ..
 page_kind: comparison
 ---
 
+## Reading This Report
+
+**What is in the atlas.** A system qualifies if something it stores **survives
+the session with an identity that can later be corrected**. That single test
+does the work: it admits a 300-line Markdown file with stable entry IDs and
+excludes a sophisticated chat-buffer compactor, however good the compaction is.
+Systems reviewed and excluded on this basis, or on licence grounds, are named in
+the limitations at the end rather than quietly dropped — the exclusions are part
+of the evidence.
+
+**How systems were selected.** Opportunistically: repositories encountered,
+suggested, or found while looking for the ones already here. This is not a
+sample of a population and no sampling frame is claimed. It skews toward
+actively developed open-source projects, toward things adjacent to coding
+agents, and toward whatever was visible in mid-2026. Absence from this atlas is
+not evidence of anything.
+
+**What an absence claim means.** "There is no trust state", "no tombstone was
+found", "no benchmark exists" all mean the same thing: *not found in the
+inspected code at the pinned commit*. Every claim here is static review — code
+read, not run — and the reports are opinionated by design. Where the code is
+partly closed, or a capability is documented but managed-platform-only, the
+reports say so at that point rather than hedging every sentence.
+
+**The divergences that actually separate these systems.** If you read nothing
+else:
+
+1. **Whether correction is possible at all.** Almost everything can overwrite
+   or supersede. Two systems of forty-six can record that a *value* was
+   rejected so extraction cannot bring it back. This is the single widest gap in
+   the field, and it is invisible on every benchmark.
+2. **Whether evidence outlives its derivations.** Systems that keep the raw
+   event and treat summaries, profiles, and graphs as rebuildable projections
+   can repair a bad extraction. Systems that discard the source cannot.
+3. **Whether scope is identity or decoration.** A scope key applied on the read
+   path is a boundary; a scope tag stored beside the memory is a hope.
+4. **Whether retrieval can decline.** Most systems always return their top *k*.
+   Very few can decide that this turn needs no memory, and irrelevant memory in
+   a prompt is not inert — it bends the answer.
+5. **Who decides.** Fully automatic memory, memory a person can review before it
+   takes effect, and memory a person authors are three different products with
+   three different failure modes.
+
+Everything below is evidence for those five, in more detail than most readers
+need. The [capability index](#capability-index) is the fastest way in.
+
 ## 1. High-Level Taxonomy
 
 Forty-six systems do not fall into forty-six categories. They cluster around
@@ -252,6 +298,64 @@ session with an identity you could later correct.
 | `voyager` | Executable JavaScript skill plus generated description | `skills.json` and flat files, Chroma index over descriptions | Vector similarity over descriptions, top-5, returns code | Written only when a critic verifies environment success | Same-name rewrite; old versions on disk but unreachable | Single agent checkpoint directory | Research rollout loop; prompt injection of retrieved code | None | Verified execution is the provenance | Environment-verified write gate — the strongest in the atlas | Unbounded skill concatenation into prompts; no failure memory; frozen since 2023 |
 | `waku-agent` | Fact (semantic), episode (episodic), and SKILL.md (procedural) | SQLite by default; Supabase for facts, Notion for episodes | Gated — a small model decides whether to search at all, and supplies the query | Consolidation batched after N new chats, not per message | None found; no supersession or tombstone | Single user | CLI agent; skills in the Anthropic Agent Skills format | Batched consolidation into facts and episodes | Gate decisions carry a reason string; no trust state on memories | Refusing expensive work at three levels, and failing open when the gate errors | No correction, scope, or trust model; gate adds a model call per turn |
 <!-- END GENERATED MATRIX -->
+
+### Capability index
+
+The matrix above says what each system does. This index answers the other
+question — *which systems actually have X* — for the mechanisms that most often
+decide whether a memory layer is usable. It is generated from the same
+frontmatter as the matrix, so it cannot drift from the reports.
+
+Definitions are strict, and a flag is present only where the mechanism was found
+in code. Near-misses do not count, and the near-misses are frequently the
+interesting part: [`claude-mem`](../systems/claude-mem/) has "tombstones" that
+synchronize row deletion across stores, which is not a rejected-value tombstone;
+[`mercury-agent`](../systems/mercury-agent/) grades confidence but has no
+discrete trust state; [`nanobot`](../systems/nanobot/) and
+[`basic-memory`](../systems/basic-memory/) get an audit trail from git rather
+than from an event table. Carrying none of these flags is not the same as
+being bad: [`waku-agent`](../systems/waku-agent/)'s entire design is about doing
+less on purpose, and [`moltis`](../systems/moltis/) is a corpus-and-index system
+that never claims to model belief.
+
+<!-- BEGIN GENERATED CAPABILITIES -->
+**Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
+
+*2 of 46:* [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+
+**Explicit trust state** — Discrete epistemic status — at least candidate versus verified versus rejected — as a field, not a confidence score.
+
+*4 of 46:* [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+
+**Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
+
+*3 of 46:* [`atomic-agent`](../systems/atomic-agent/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/)
+
+**Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
+
+*26 of 46:* [`agentmemory`](../systems/agentmemory/), [`basic-memory`](../systems/basic-memory/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`cowagent`](../systems/cowagent/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`openclaw`](../systems/openclaw/), [`openviking`](../systems/openviking/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`verel`](../systems/verel/)
+
+**Append-only mutation audit** — An explicit event or audit record of memory mutations in the system's own store.
+
+*7 of 46:* [`agentmemory`](../systems/agentmemory/), [`atomic-agent`](../systems/atomic-agent/), [`hindsight`](../systems/hindsight/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`rainbox`](../systems/rainbox/)
+
+**Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
+
+*6 of 46:* [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`rainbox`](../systems/rainbox/)
+
+**Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
+
+*1 of 46:* [`open-cowork`](../systems/open-cowork/)
+<!-- END GENERATED CAPABILITIES -->
+
+Three observations follow directly from the counts. **Scope is solved and
+correction is not**: over half the atlas enforces a scope key on the read path,
+while two systems carry a value-level tombstone. **Trust is usually a number,
+not a state**, which collapses "how sure am I" into "how findable is this" —
+see [decay and reinforcement](../patterns/decay-and-reinforcement/). And
+**negative evidence is almost never tested**: one repository asserts that
+particular material must not be retrieved, which is the assertion every scope,
+deletion, and correction claim in this document ultimately rests on.
 
 ## 3. End-to-End Memory Lifecycle Comparison
 
@@ -2077,6 +2181,23 @@ No internet sources were used for this report. The analysis is based on the chec
 - Supermemory's hosted backend implementation was not visible in this checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph UI.
 - Some mem0 advanced capabilities appear to be managed-platform-only in the inspected OSS code.
 - This is an implementation-oriented static review, not a runtime benchmark.
+- Four dimensions that matter operationally are not covered systematically here,
+  and a reader choosing a system should investigate them directly. **Behaviour
+  under embedding-model change or vector-store migration**: only a few systems
+  visibly stamp records with the model that produced them, and a silent
+  re-embedding is a silent corpus-wide quality change. **Whether scope survives
+  background derivation**: the capability index records that a scope key is
+  applied on the read path, not that consolidation, summarization, and profile
+  building respect the same boundary — a summary spanning two projects has
+  crossed a scope the retriever would have enforced. **Recall observability**
+  beyond which memories were returned: why they outranked others, and what was
+  dropped by budget truncation. **Cost and latency under realistic load**, which
+  is treated separately in [benchmarking agent memory](../benchmarks/) — as an
+  absence, because it is almost never measured.
+- The capability flags in the index are the reviewer's judgements against
+  strict definitions, applied to code read at the pinned commits. A flag's
+  absence means the mechanism was not found, not that it is impossible to build
+  on that system.
 - Retrieval quality and extraction quality were not independently re-measured; committed benchmark artifacts were inspected for MemPalace but not rerun.
 - Swafra was reviewed at commit `24dba18`; its full LongMemEval run was not rerun. Static inspection, committed artifact analysis, and a small hash-embedder smoke check exposed the `k` mismatch and same-title source behavior.
 - `llm-wiki-memory` was reviewed at commit `b7cc76a493573baac133969b324a874990556146`; its broad test tree and committed latency report were inspected, but the suites and benchmarks were not rerun.

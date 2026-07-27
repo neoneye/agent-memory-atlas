@@ -43,6 +43,21 @@ Queues and checkpoints add operational machinery and eventual consistency. Retai
 
 Expose freshness to callers; do not make asynchronous derivation look immediately consistent.
 
+## Cost to adopt
+
+**Build:** durable input records, an explicit job state, idempotent processing,
+and a dead-letter path with something that actually looks at it.
+
+**Forces elsewhere:** idempotency is the expensive requirement — every extractor
+and consolidator needs a stable key so a retry does not duplicate. Retrofitting
+that is harder than building it in.
+
+**Ongoing:** a queue is an operational surface. It needs monitoring, and a
+dead-letter path nobody reads is the same as no dead-letter path.
+
+**Skip it if** capture is synchronous and cheap. The pattern exists to protect
+work that happens away from the user.
+
 ## Seen in the atlas
 
 [nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism in

@@ -9,6 +9,7 @@ source_url: https://github.com/AtomicBot-ai/atomic-agent
 revision: d69332c589733e38ae7393dd81fcbc5a375d02fb
 revision_url: https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb
 analyzed_at: 2026-07-27
+capabilities: "bitemporal, audit_log"
 matrix:
   memory_unit: "Memory, lesson, profile fact, and procedure, linked by typed edges"
   storage: "SQLite with versioned migrations; bi-temporal profile facts"

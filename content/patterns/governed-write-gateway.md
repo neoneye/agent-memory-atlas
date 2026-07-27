@@ -49,6 +49,22 @@ One gateway makes policy auditable and testable. New integrations inherit existi
 
 The gateway can become a monolith. Keep storage, normalization, and policy components separate behind the command boundary. High-contention keys may need locks or serializable transactions. Not every note deserves belief governance; distinguish low-risk archival capture from claims that influence behavior.
 
+## Cost to adopt
+
+**Build:** one transactional path all mutations pass through, plus enforcement
+that they cannot bypass it — a private store, a lint rule, or a type that only
+the gateway can construct.
+
+**Forces elsewhere:** the gateway becomes a bottleneck for feature work, and
+every new write path is a negotiation with it. Its failure mode is a design
+decision, not an accident: fail-closed loses writes during an outage, fail-open
+admits ungoverned ones.
+
+**Ongoing:** policy lives here and needs review as policy, not as code.
+
+**Skip it if** there is exactly one writer. A gateway in front of a single
+caller is ceremony.
+
 ## Seen in the atlas
 
 [RainBox](../../systems/rainbox/) remains the reference: `record_belief` is the

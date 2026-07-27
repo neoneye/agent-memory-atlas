@@ -128,4 +128,6 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Retrieval runs every turn and irrelevant memory bends the answer: [gate the expensive path](./gate-the-expensive-path/).
 - The agent rediscovers how to do things it already solved: store [skills as procedural memory](./skills-as-procedural-memory/) behind a verified-execution gate.
 
-The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Add the smallest set that closes a demonstrated failure mode.
+The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Every page now states that cost explicitly under **Cost to adopt** — what you must build, what it forces on the rest of the system, what it costs to keep running, and when to skip it. Add the smallest set that closes a demonstrated failure mode.
+
+To check which systems already implement a given mechanism, see the [capability index](../compare/#capability-index) in the comparative report.
