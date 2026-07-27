@@ -1,0 +1,34 @@
+name: Site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pin the pandoc version used for local builds so the drift check below
+      # compares like with like.
+      - name: Install pandoc 3.10
+        run: |
+          curl -sSLo /tmp/pandoc.deb https://github.com/jgm/pandoc/releases/download/3.10/pandoc-3.10-1-amd64.deb
+          sudo dpkg -i /tmp/pandoc.deb
+          pandoc --version | head -n 1
+
+      - name: Build site
+        run: npm run build
+
+      - name: Validate site
+        run: npm test
+
+      - name: Verify committed docs/ matches a fresh build
+        run: |
+          if [[ -n "$(git status --porcelain -- docs)" ]]; then
+            echo "docs/ is out of sync with content/. Run 'npm run build' and commit the result." >&2
+            git status --porcelain -- docs >&2
+            exit 1
+          fi

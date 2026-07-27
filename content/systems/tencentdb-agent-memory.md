@@ -8,6 +8,7 @@ source_name: "TencentCloud/tencentdb-agent-memory"
 source_url: https://github.com/TencentCloud/tencentdb-agent-memory
 revision: 45e6e80ae2e63b65fad0d89f5e13171229c8f295
 revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

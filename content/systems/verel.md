@@ -8,6 +8,7 @@ source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
 revision: df80efe8207a99585a2ebce36fc6e32ba5077e2e
 revision_url: https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

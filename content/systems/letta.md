@@ -8,6 +8,7 @@ source_name: letta-ai/letta
 source_url: https://github.com/letta-ai/letta
 revision: 6d8cb7fd48938b629aad5770faa051a8d42e1e9f
 revision_url: https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

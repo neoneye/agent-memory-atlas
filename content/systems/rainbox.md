@@ -8,9 +8,12 @@ source_name: neoneye/RainBox
 source_url: https://github.com/neoneye/RainBox
 revision: 9f565bf26175bc5e09288f70ec666a4616a2323c
 revision_url: https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary
+
+> **Disclosure:** RainBox is the atlas author's own project. This report applies the same code-grounded rubric used for every other system, but read its judgments as a self-assessment; the cited files, tests, and residual limitations are the checkable parts.
 
 `rainbox` is a local-model personal assistant application with a first-class memory subsystem. It is not a standalone memory library like `mem0`, not a local corpus retriever like `mempalace`, and not a verification framework like `verel`. It is an operator-facing assistant platform where memory is tied into chat, assistant actions, review UI, telemetry, feedback, and evals.
 

@@ -34,7 +34,7 @@ python3 .agents/skills/add-memory-system/scripts/scaffold_report.py \
   --description "A concise architectural description grounded in the implementation."
 ```
 
-The script reads the checkout's `origin` and `HEAD`, normalizes GitHub links, and creates `content/systems/<slug>.md`. It refuses to overwrite an existing report. Use `--stdout` to inspect the generated document without writing it.
+The script reads the checkout's `origin` and `HEAD`, normalizes GitHub links, stamps `analyzed_at` with today's date, and creates `content/systems/<slug>.md`. It refuses to overwrite an existing report. Use `--stdout` to inspect the generated document without writing it.
 
 For a non-GitHub or unusual remote, pass `--source-url` with the public repository URL. Verify that `source_url`, `revision`, and `revision_url` resolve to the repository and exact analyzed commit.
 
@@ -89,6 +89,7 @@ Before integration, verify:
 - The frontmatter matches nearby reports.
 - The full commit ID appears in `revision`.
 - The commit URL appears in `revision_url`.
+- `analyzed_at` reflects the date the analysis was actually performed.
 - Important architectural claims point to concrete implementation locations.
 - Strengths and risks are supported by evidence.
 
@@ -146,7 +147,7 @@ rg -n "\\b${current_count}\\b|repositories traced|across all|Expected [0-9]+|Val
 
 Review every match and search for a spelled-out version of the current count. Do not mechanically change unrelated section numbers or commit IDs.
 
-If `scripts/test_site.sh` contains an expected report count, increment it and keep its revision-metadata expectation aligned.
+`scripts/test_site.sh` derives its expected report and pattern counts from `content/`, so it needs no count edits; only touch it when adding a new required file or invariant.
 
 ## Build and validate
 

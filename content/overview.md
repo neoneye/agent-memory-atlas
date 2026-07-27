@@ -925,6 +925,8 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ### `rainbox`
 
+Disclosure: RainBox is the atlas author's own project; this verdict is a self-assessment against the shared rubric.
+
 - Best idea: claim/evidence memory tied to governed writes (single `record_belief` path, five-actor trust model, tombstones, conflict detection), review UI, retrieval telemetry, feedback, and eval gates.
 - Biggest risk: active compact claims can steer behavior while losing nuance from original source context; no automatic candidate extraction means claims enter only through explicit writes.
 - Most reusable component: `MemoryClaim`/`MemoryEvidence`/`MemoryRejectedValue`/`RetrievalEvent` model, `record_belief`/`correct_belief` governed write paths, `retrieve_memories_hybrid()`.

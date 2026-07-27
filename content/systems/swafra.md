@@ -8,6 +8,7 @@ source_name: kunal12203/swafra
 source_url: https://github.com/kunal12203/swafra
 revision: 24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
 revision_url: https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

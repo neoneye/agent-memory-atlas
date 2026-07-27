@@ -8,6 +8,7 @@ source_name: "mastra-ai/mastra"
 source_url: https://github.com/mastra-ai/mastra
 revision: 40547102f655596178346ad2f883fbde735c3333
 revision_url: https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

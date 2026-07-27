@@ -8,6 +8,7 @@ source_name: "rohitg00/agentmemory"
 source_url: https://github.com/rohitg00/agentmemory
 revision: d8b5267c367a5da07ad3619363520b7f1a506c6b
 revision_url: https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

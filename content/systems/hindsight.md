@@ -8,6 +8,7 @@ source_name: "vectorize-io/hindsight"
 source_url: https://github.com/vectorize-io/hindsight
 revision: ed120a256d51d731085ec8aca724573a7f2f1e1c
 revision_url: https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

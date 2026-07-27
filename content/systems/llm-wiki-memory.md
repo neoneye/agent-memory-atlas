@@ -8,6 +8,7 @@ source_name: ctxr-dev/llm-wiki-memory
 source_url: https://github.com/ctxr-dev/llm-wiki-memory
 revision: b7cc76a493573baac133969b324a874990556146
 revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

@@ -8,6 +8,7 @@ source_name: supermemoryai/supermemory
 source_url: https://github.com/supermemoryai/supermemory
 revision: 603d0512fd40e4575e2a075938c1851a898ceeb6
 revision_url: https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

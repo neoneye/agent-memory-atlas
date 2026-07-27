@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import re
 import subprocess
@@ -110,6 +111,7 @@ def render_report(
     repository_name: str,
     repository_url: str,
     revision: str,
+    analyzed_at: str,
 ) -> str:
     frontmatter = (
         "---\n"
@@ -122,6 +124,7 @@ def render_report(
         f"source_url: {repository_url}\n"
         f"revision: {revision}\n"
         f"revision_url: {repository_url}/commit/{revision}\n"
+        f"analyzed_at: {analyzed_at}\n"
         "---\n"
     )
     sections = "\n".join(
@@ -221,6 +224,7 @@ def main() -> int:
             repository_name=name,
             repository_url=repository_url,
             revision=revision,
+            analyzed_at=datetime.date.today().isoformat(),
         )
 
         if arguments.stdout:

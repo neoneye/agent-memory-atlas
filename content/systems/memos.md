@@ -8,6 +8,7 @@ source_name: "MemTensor/MemOS"
 source_url: https://github.com/MemTensor/MemOS
 revision: 3fd109e7cbaba291af2253f107e0a595dbf62b00
 revision_url: https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

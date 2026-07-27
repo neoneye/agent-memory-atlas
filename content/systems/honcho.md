@@ -8,6 +8,7 @@ source_name: plastic-labs/honcho
 source_url: https://github.com/plastic-labs/honcho
 revision: eb386c3ceb77774b29108f9ab114e71d52b7d420
 revision_url: https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420
+analyzed_at: 2026-07-26
 ---
 
 ## 1. Executive Summary

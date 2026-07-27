@@ -22,13 +22,17 @@ render_document() {
   local destination="$2"
   local source_href
   local revision_href
+  local analyzed_at
 
   source_href="$(sed -n 's/^source_url:[[:space:]]*//p' "$input" | head -n 1)"
   revision_href="$(sed -n 's/^revision_url:[[:space:]]*//p' "$input" | head -n 1)"
+  analyzed_at="$(sed -n 's/^analyzed_at:[[:space:]]*//p' "$input" | head -n 1)"
   source_href="${source_href#\"}"
   source_href="${source_href%\"}"
   revision_href="${revision_href#\"}"
   revision_href="${revision_href%\"}"
+  analyzed_at="${analyzed_at#\"}"
+  analyzed_at="${analyzed_at%\"}"
 
   mkdir -p "$(dirname "$destination")"
   pandoc "$input" \
@@ -39,6 +43,7 @@ render_document() {
     --template="$template" \
     --variable="source_href:$source_href" \
     --variable="revision_href:$revision_href" \
+    --variable="analyzed_at_text:$analyzed_at" \
     --output="$destination"
 }
 
