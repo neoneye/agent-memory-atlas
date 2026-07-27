@@ -4,23 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-twenty-seven agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+thirty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of twenty-seven agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of thirty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of twenty-seven agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of thirty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -52,9 +52,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of
-twenty-seven agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of thirty
+agent memory architectures, their retrieval mechanics, trust models, and
+operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -297,6 +297,27 @@ feedback, eval cases, and review UI.</p>
 <p>Tradeoff: this works well inside a full assistant product, but it is
 much heavier than a library and less source-preserving than MemPalace's
 verbatim drawer model.</p>
+<h3 id="research-lineage">Research lineage</h3>
+<p>Repos:</p>
+<ul>
+<li><code>generative-agents</code></li>
+<li><code>voyager</code></li>
+<li><code>hipporag</code></li>
+<li><code>a-mem</code></li>
+</ul>
+<p>These are research artifacts rather than deployable systems, and they
+are in the atlas because the practical systems above are largely
+responses to them. Generative Agents established the
+observation/reflection/planning stream and the
+importance-recency-relevance retrieval score; Voyager established
+procedural skill memory with an execution-verified write gate; HippoRAG
+established diffusion-based associative retrieval; A-MEM explored
+evolving linked notes.</p>
+<p>Tradeoff: the architectural ideas are unusually clear because nothing
+is obscured by production concerns — and nothing is solved by them
+either. None of these has scope, correction, deletion, or a trust model,
+and Generative Agents and Voyager have been frozen since 2023. Read them
+for the design, not for adoption.</p>
 <h3 id="vector-symbolic-memory">Vector-symbolic memory</h3>
 <p>Repo:</p>
 <ul>
@@ -862,6 +883,57 @@ dropped</td>
 envelope formats</td>
 </tr>
 <tr>
+<td><code>hipporag</code></td>
+<td>Chunk plus derived entity and passage graph nodes</td>
+<td>igraph graph with pluggable vector store (Qdrant/Chroma/Milvus)</td>
+<td>Fact scores → LLM rerank → IDF-penalized graph seeding →
+Personalized PageRank diffusion</td>
+<td><code>index()</code>: chunk, OpenIE triples, fact/passage/synonymy
+edges</td>
+<td>Chunk-scoped delete; shared entities survive by reference count</td>
+<td>None — corpus is global</td>
+<td>Python library only; no MCP, tools, or service</td>
+<td>Cacheable OpenIE; incremental synonymy edges</td>
+<td>Chunk identity only; no actor, time, or trust state</td>
+<td>Diffusion replaces hop planning; synonymy as edges rather than
+merges</td>
+<td>Assertion instead of fallback on unlinked queries; undirected
+diffusion discards predicate direction</td>
+</tr>
+<tr>
+<td><code>voyager</code></td>
+<td>Executable JavaScript skill plus generated description</td>
+<td><code>skills.json</code> and flat files, Chroma index over
+descriptions</td>
+<td>Vector similarity over descriptions, top-5, returns code</td>
+<td>Written only when a critic verifies environment success</td>
+<td>Same-name rewrite; old versions on disk but unreachable</td>
+<td>Single agent checkpoint directory</td>
+<td>Research rollout loop; prompt injection of retrieved code</td>
+<td>None</td>
+<td>Verified execution is the provenance</td>
+<td>Environment-verified write gate — the strongest in the atlas</td>
+<td>Unbounded skill concatenation into prompts; no failure memory;
+frozen since 2023</td>
+</tr>
+<tr>
+<td><code>generative-agents</code></td>
+<td><code>ConceptNode</code> typed event, thought, or chat with
+poignancy</td>
+<td>Per-persona JSON plus in-memory embedding dict</td>
+<td>Normalized recency + relevance + importance, hand-tuned
+<code>gw = [0.5, 3, 2]</code></td>
+<td>Perception, conversation, and reflection all write ungated</td>
+<td>None; observations are never deleted or overwritten</td>
+<td>One persona directory</td>
+<td>Simulation only; tightly coupled to <code>Persona</code></td>
+<td>Reflection fired by accumulated poignancy</td>
+<td>Reflections cite supporting nodes, but citations are never used</td>
+<td>Consolidation triggered by significance rather than a timer</td>
+<td>Derived thoughts share one pool with observations; positional not
+temporal decay</td>
+</tr>
+<tr>
 <td><code>a-mem</code></td>
 <td><code>MemoryNote</code> with content, tags, context, links, and
 evolution history</td>
@@ -1012,6 +1084,15 @@ paths deterministically derived from tool calls. <code>a-mem</code> asks
 an LLM to organize a new note and rewrite nearby metadata; its
 <code>analyze_content()</code> method has no call site, so ordinary note
 metadata is not extracted as the public mental model suggests.</p>
+<p>The research lineage adds two capture disciplines the practical
+systems mostly lost. <code>voyager</code> writes memory
+<strong>only</strong> when a critic verifies the environment reached the
+intended state, so a failed attempt produces reasoning input and no
+durable record — the strongest write gate in the atlas, available
+because the memory is a procedure. <code>generative-agents</code> scores
+every incoming memory for importance at write time and uses that score
+to schedule consolidation, rather than capturing indiscriminately and
+compacting on a timer.</p>
 <h3 id="consolidation">Consolidation</h3>
 <p><code>honcho</code>, <code>hindsight</code>,
 <code>mastra-observational-memory</code>, and <code>verel</code> have
@@ -1045,6 +1126,19 @@ mechanism in the inspected files. <code>langmem</code> provides
 reflection hooks rather than a fixed consolidation policy.
 <code>engram</code> keeps a pragmatic local model: update topic keys,
 count duplicates, surface conflicts.</p>
+<p><code>generative-agents</code> is the origin of the reflection loop
+that several systems here descend from, and its trigger is still the
+most elegant: a countdown seeded with
+<code>importance_trigger_max</code> is decremented by each new memory's
+poignancy, so reflection fires on accumulated significance rather than
+on elapsed time, token count, or message count. Compare
+<code>mastra-observational-memory</code>, which triggers on token
+thresholds, and <code>claude-mem</code>, which triggers on lifecycle
+hooks — both are proxies for "enough has happened" that the original
+measured directly. Its weakness is that the budget is denominated in
+one-shot LLM importance judgments, and its reflections are stored in the
+same undifferentiated pool as observations, so reflections of
+reflections can drift with no visible boundary.</p>
 <p><code>redis-agent-memory-server</code> has the most careful
 consolidation guard in the atlas: hash, ID, and semantic dedupe are
 separate passes, and the semantic path runs
@@ -1097,19 +1191,32 @@ weighted RRF and per-session diversity.
 RRF or uses native Tencent VectorDB hybrid search.
 <code>claude-mem</code> selects Chroma semantic search for ordinary text
 queries and reserves metadata/semantic intersection for file lookup.
-<code>openviking</code> runs directory-recursive dense plus sparse
-retrieval with level filters, per-type quotas, optional reranking, and a
-hotness blend. <code>redis-agent-memory-server</code> pairs vector
-search with a recency reranker using separate half-lives for last access
-and creation. <code>holographic</code> fuses FTS5, Jaccard, and HRR
-cosine, then multiplies by trust — and silently reweights to
-lexical-only when NumPy is absent while still reporting itself as
-available. <code>openclaw</code>'s reference backend is vector-only,
-which sits awkwardly with a category set dominated by preferences,
-entities, and decisions. <code>a-mem</code> is vector-only despite
-hybrid wording. <code>mastra-observational-memory</code> is the
-deliberate exception: its primary path is sequential observations plus a
-recent raw tail, with semantic observation retrieval optional.</p>
+<code>hipporag</code> is the one system here that does not rank at all
+in the usual sense: it seeds a personalization vector from query-linked
+entities plus a weak dense prior, then reads relevance off a
+Personalized PageRank diffusion across the whole graph.
+<code>generative-agents</code> established the multi-signal shape
+everything else refines — normalized recency, relevance, and importance
+combined in a weighted sum — though the specific weights
+(<code>gw = [0.5, 3, 2]</code>, with two earlier settings left commented
+out) are hand-tuned with no ablation in the repository, and its recency
+decays by chronological <em>position</em> rather than elapsed time.
+<code>voyager</code> retrieves top-5 by vector similarity over generated
+descriptions and returns executable code, with scores computed and then
+discarded so there is no relevance threshold. <code>openviking</code>
+runs directory-recursive dense plus sparse retrieval with level filters,
+per-type quotas, optional reranking, and a hotness blend.
+<code>redis-agent-memory-server</code> pairs vector search with a
+recency reranker using separate half-lives for last access and creation.
+<code>holographic</code> fuses FTS5, Jaccard, and HRR cosine, then
+multiplies by trust — and silently reweights to lexical-only when NumPy
+is absent while still reporting itself as available.
+<code>openclaw</code>'s reference backend is vector-only, which sits
+awkwardly with a category set dominated by preferences, entities, and
+decisions. <code>a-mem</code> is vector-only despite hybrid wording.
+<code>mastra-observational-memory</code> is the deliberate exception:
+its primary path is sequential observations plus a recent raw tail, with
+semantic observation retrieval optional.</p>
 <h3 id="context-injection">Context Injection</h3>
 <p><code>letta</code> and <code>mastra-observational-memory</code> have
 the deepest runtime prompt integration. Mastra removes observed raw
@@ -1377,6 +1484,15 @@ edge/triplet models, and relational dataset/data/session models.</li>
 <code>src/storage/sqlite/schema.ts</code>.</li>
 <li><code>a-mem</code>: <code>MemoryNote</code> in
 <code>agentic_memory/memory_system.py</code>.</li>
+<li><code>hipporag</code>: graph and node construction in
+<code>src/hipporag/HippoRAG.py</code>; config defaults in
+<code>utils/config_utils.py</code>.</li>
+<li><code>voyager</code>:
+<code>skills[name] = {code, description}</code> in
+<code>voyager/agents/skill.py</code>.</li>
+<li><code>generative-agents</code>: <code>ConceptNode</code> in
+<code>persona/memory_structures/associative_memory.py</code>; weights in
+<code>scratch.py</code>.</li>
 <li><code>holographic</code>: <code>_SCHEMA</code> in
 <code>plugins/memory/holographic/store.py</code>; HRR encoding in
 <code>holographic.py</code>.</li>
@@ -1469,6 +1585,16 @@ and <code>l1-writer.ts</code>.</li>
 <li><code>a-mem</code>: <code>AgenticMemorySystem.add_note()</code> and
 <code>process_memory()</code> in
 <code>agentic_memory/memory_system.py</code>.</li>
+<li><code>hipporag</code>: <code>index()</code>,
+<code>add_fact_edges()</code>, <code>add_passage_edges()</code>,
+<code>add_synonymy_edges()</code> in
+<code>src/hipporag/HippoRAG.py</code>.</li>
+<li><code>voyager</code>: <code>SkillManager.add_new_skill()</code> in
+<code>voyager/agents/skill.py</code>, gated by
+<code>if info["success"]</code> in <code>voyager/voyager.py</code>.</li>
+<li><code>generative-agents</code>: <code>add_event()</code>,
+<code>add_thought()</code>, <code>add_chat()</code> in
+<code>associative_memory.py</code>.</li>
 <li><code>holographic</code>: <code>add_fact()</code> and
 <code>_rebuild_bank()</code> in
 <code>plugins/memory/holographic/store.py</code>;
@@ -1560,6 +1686,13 @@ and backend repositories inheriting
 strategies, and <code>services/sqlite/SessionSearch.ts</code>.</li>
 <li><code>a-mem</code>: <code>search_agentic()</code> and Chroma
 wrappers in <code>agentic_memory/retrievers.py</code>.</li>
+<li><code>hipporag</code>:
+<code>graph_search_with_fact_entities()</code> and
+<code>run_ppr()</code> in <code>src/hipporag/HippoRAG.py</code>.</li>
+<li><code>voyager</code>: <code>retrieve_skills()</code> in
+<code>voyager/agents/skill.py</code>.</li>
+<li><code>generative-agents</code>: <code>new_retrieve()</code> and the
+extractors in <code>persona/cognitive_modules/retrieve.py</code>.</li>
 <li><code>holographic</code>:
 <code>FactRetriever.search/probe/related/reason/contradict</code> in
 <code>plugins/memory/holographic/retrieval.py</code>.</li>
@@ -1634,6 +1767,12 @@ final prompt placement remains integration-owned.</li>
 <code>src/services/context/ContextBuilder.ts</code> and
 <code>ObservationCompiler.ts</code>.</li>
 <li><code>a-mem</code>: caller-owned; no bounded context assembler.</li>
+<li><code>hipporag</code>: ranked passages returned to the caller; QA
+assembly in <code>rag_qa()</code>.</li>
+<li><code>voyager</code>: retrieved code plus the unbounded
+<code>programs</code> property injected into the action prompt.</li>
+<li><code>generative-agents</code>: top-30 node descriptions, no token
+budget.</li>
 <li><code>holographic</code>: <code>prefetch()</code> in
 <code>plugins/memory/holographic/__init__.py</code> — top-5,
 unfenced.</li>
@@ -1701,6 +1840,11 @@ improvement, cognify rollback, and stale-run recovery.</li>
 Chroma/cloud sync, and backfill/repair.</li>
 <li><code>a-mem</code>: no worker; “consolidation” is synchronous
 reindexing.</li>
+<li><code>hipporag</code>: none; OpenIE is cacheable and resumable but
+runs inline.</li>
+<li><code>voyager</code>: none; the rollout loop is synchronous.</li>
+<li><code>generative-agents</code>: reflection fires inline when the
+poignancy countdown crosses zero.</li>
 <li><code>holographic</code>: none; <code>_rebuild_bank()</code> runs
 synchronously on every write.</li>
 <li><code>hermes-agent</code>: none for curated memory; a mounted
@@ -1762,6 +1906,11 @@ migration/export APIs.</li>
 <li><code>claude-mem</code>: coding-agent hooks, worker HTTP API,
 local/server MCP, and UI.</li>
 <li><code>a-mem</code>: direct Python API only.</li>
+<li><code>hipporag</code>: Python library, <code>main.py</code>, and
+<code>examples/</code>; no MCP or service.</li>
+<li><code>voyager</code>: none; research rollout loop.</li>
+<li><code>generative-agents</code>: none; simulation with a Django
+frontend.</li>
 <li><code>holographic</code>: <code>fact_store</code> and
 <code>fact_feedback</code> tools through the Hermes
 <code>MemoryProvider</code> ABC.</li>
@@ -1835,6 +1984,17 @@ queues, privacy, migrations, Chroma/cloud sync, and server paths; no
 committed memory-quality benchmark found.</li>
 <li><code>a-mem</code>: small CRUD/retriever test suite; paper
 reproduction and benchmark artifacts live in a separate repository.</li>
+<li><code>hipporag</code>: thin unit tests
+(<code>tests/test_bedrock_mantle.py</code>,
+<code>tests/integration/</code>) beside a well-developed
+<code>reproduce/</code> benchmark tree; no committed result
+artifacts.</li>
+<li><code>voyager</code>: no tests for <code>SkillManager</code>;
+evaluation is the paper's Minecraft tech-tree benchmark, which measures
+task completion rather than memory quality.</li>
+<li><code>generative-agents</code>: no memory tests; evaluation is human
+believability ratings, and the <code>gw</code> retrieval weights have no
+committed ablation.</li>
 <li><code>holographic</code>: 599 lines across four plugin test files
 plus 1,662 lines exercising the provider ABC; no retrieval-quality
 benchmark, and the measured contribution of the HRR arm is unknown.</li>
@@ -2078,6 +2238,49 @@ neither contract inspected here carries a scope parameter or a deletion
 hook, so host-level erasure cannot reach a mounted store, trust state
 cannot cross, and mirroring host writes into a provider creates
 duplicates with independent lifecycles.</p>
+<h3 id="skills-as-procedural-memory">Skills as procedural memory</h3>
+<p>Pattern guide: <a
+href="../patterns/skills-as-procedural-memory/">Skills as procedural
+memory</a>.</p>
+<p>Repos: strongest in <code>voyager</code>; present without a
+verification gate in <code>hermes-agent</code>, <code>openviking</code>,
+<code>memos</code>, and <code>agentmemory</code>; the failure-side
+counterpart is <code>verel</code>.</p>
+<p>Store the executable procedure rather than a description of it, index
+it by a generated summary, and gate the write on verified execution.
+This works because procedural truth is cheap to establish where actions
+have observable effects — "did it run and produce the intended state?"
+is checkable in a way "is this fact true?" is not, which is why
+Voyager's gate is stronger than any judgment-based gate in the atlas. It
+fails when success in one context is generalized from a single run, when
+retrieval has no score threshold (an irrelevant callable is worse than
+an irrelevant fact), when the library has no utility signal to prune by,
+and — outside a sandbox — because a skill library is agent-authored code
+retrieved by similarity and then executed.</p>
+<h3 id="diffusion-instead-of-traversal">Diffusion instead of
+traversal</h3>
+<p>Repo: <code>hipporag</code>; contrast with BFS traversal in
+<code>graphiti</code> and the graph arm in <code>agentmemory</code>.</p>
+<p>Rather than deciding how many hops to walk and in which direction,
+seed a personalization vector with query-relevant graph nodes and run
+Personalized PageRank over the whole graph. Multi-hop association
+becomes a property of the diffusion rather than of a traversal policy,
+and a weak dense-retrieval prior can be mixed into the same vector.
+HippoRAG adds two refinements worth copying: seed weights divided by the
+entity's chunk count so hubs do not dominate, and low damping (0.5) to
+keep relevance near the query's entities. It fails on cost — PPR runs
+over the entire graph per query — and on attribution, since no single
+signal explains a ranking.</p>
+<h3 id="non-destructive-entity-resolution">Non-destructive entity
+resolution</h3>
+<p>Repo: <code>hipporag</code>; contrast with <code>graphiti</code>.</p>
+<p>Link similar entities with weighted edges instead of merging them.
+Graphiti's own stated biggest risk is that entity-resolution mistakes
+reshape a large portion of the graph; adding a synonymy edge instead
+means a wrong decision creates a weak spurious path rather than
+destroying two identities irreversibly. It fails when the graph becomes
+dense enough that diffusion blurs everything together, and it does not
+give you a canonical entity to display or key on.</p>
 <h3 id="bounded-prompt-memory-with-in-turn-consolidation">Bounded prompt
 memory with in-turn consolidation</h3>
 <p>Repo: <code>hermes-agent</code>; contrast with the
@@ -2903,6 +3106,54 @@ capturing from a channel that wraps messages in scaffolding.</li>
 <li>Do not copy when: you need hybrid retrieval, per-user scope inside
 an agent, or deletion that survives auto-capture.</li>
 </ul>
+<h3 id="hipporag"><code>hipporag</code></h3>
+<ul>
+<li>Best idea: Personalized PageRank diffusion replaces hop planning,
+with IDF-penalized seeding and a weak dense prior.</li>
+<li>Biggest risk: no scope, trust, provenance, or temporal model, and a
+wrong extracted edge has graph-wide blast radius.</li>
+<li>Most reusable component:
+<code>graph_search_with_fact_entities()</code> plus
+<code>run_ppr()</code>, and synonymy-as-edges instead of entity
+merging.</li>
+<li>Maturity impression: actively maintained research framework with a
+strong reproduction tree and thin unit tests.</li>
+<li>Study when: recall must cross documents associatively, or
+entity-resolution merges have burned you.</li>
+<li>Do not copy when: you need agent memory rather than corpus QA —
+scope, correction, and time all have to be added.</li>
+</ul>
+<h3 id="voyager"><code>voyager</code></h3>
+<ul>
+<li>Best idea: memory written only after the environment verifies the
+procedure worked.</li>
+<li>Biggest risk: a frozen 2023 artifact that generalizes from a single
+verified run and keeps no failure memory.</li>
+<li>Most reusable component: the verified write gate, and
+description-indexed / code-retrieved storage.</li>
+<li>Maturity impression: a 127-line memory subsystem inside a research
+agent; unmaintained since July 2023.</li>
+<li>Study when: your agent's actions have observable outcomes and
+competence is worth remembering, not just facts.</li>
+<li>Do not copy when: procedures will be executed outside a sandbox, or
+success is a matter of judgment rather than observation.</li>
+</ul>
+<h3 id="generative-agents"><code>generative-agents</code></h3>
+<ul>
+<li>Best idea: consolidation triggered by accumulated significance
+rather than by a timer or token count.</li>
+<li>Biggest risk: its famous retrieval weights are hand-tuned constants,
+and reflections share one pool with observations.</li>
+<li>Most reusable component: the reflection trigger, and the
+three-signal retrieval structure — recalibrated, with time-based
+recency.</li>
+<li>Maturity impression: the field's reference architecture, frozen
+since August 2023 and never engineered for production.</li>
+<li>Study when: you want to understand where most of this atlas came
+from, or need a consolidation schedule that tracks salience.</li>
+<li>Do not copy when: you need any operational property at all — there
+is no scope, correction, deletion, or index.</li>
+</ul>
 <h3 id="a-mem"><code>a-mem</code></h3>
 <ul>
 <li>Best idea: small linked notes whose organization can be reconsidered
@@ -3055,6 +3306,10 @@ href="../systems/hermes-agent/"><code>hermes-agent</code></a></li>
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a></li>
 <li><a href="../systems/byterover/"><code>byterover</code></a></li>
 <li><a href="../systems/openclaw/"><code>openclaw</code></a></li>
+<li><a href="../systems/hipporag/"><code>hipporag</code></a></li>
+<li><a href="../systems/voyager/"><code>voyager</code></a></li>
+<li><a
+href="../systems/generative-agents/"><code>generative-agents</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -3151,6 +3406,17 @@ href="https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064
 <li><a href="https://github.com/openclaw/openclaw">openclaw/openclaw</a>
 at <a
 href="https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11"><code>570eab59e7c7ce052f4550af7507e7dd77c73e11</code></a></li>
+<li><a
+href="https://github.com/OSU-NLP-Group/HippoRAG">OSU-NLP-Group/HippoRAG</a>
+at <a
+href="https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a"><code>e37fba2af1a951ac340d837a7c02efb9d8c9544a</code></a></li>
+<li><a href="https://github.com/MineDojo/Voyager">MineDojo/Voyager</a>
+at <a
+href="https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89"><code>55e45a880755d0c8c66ca7fb5fe7962ac8974f89</code></a></li>
+<li><a
+href="https://github.com/joonspk-research/generative_agents">joonspk-research/generative_agents</a>
+at <a
+href="https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4"><code>fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -3242,6 +3508,21 @@ conclusions here apply only to the inspected code, and the managed
 product may differ.</li>
 <li>Retrieval quality was not measured for any of the six systems added
 in this round.</li>
+<li>Voyager and Generative Agents are frozen research artifacts, last
+committed in July and August 2023 respectively. Their reports are
+historical architectural reviews, not assessments of maintained
+software.</li>
+<li>HippoRAG's <code>reproduce/</code> tree provides benchmark
+scaffolding, but no raw result artifacts are committed and no published
+numbers were reproduced here.</li>
+<li>Voyager's and Generative Agents' published evaluations measure task
+completion and human believability, not retrieval quality; neither
+repository contains a memory-quality benchmark.</li>
+<li>Generative Agents' retrieval gain weights
+(<code>gw = [0.5, 3, 2]</code>) have no committed ablation; the atlas
+treats them as hand-tuned constants rather than a derived result.</li>
+<li>No suites were run for the three systems added in this round, and no
+retrieval quality was independently measured.</li>
 </ul>
         </article>
       </div>

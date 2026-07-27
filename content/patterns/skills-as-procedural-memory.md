@@ -1,0 +1,99 @@
+---
+title: Skills as Procedural Memory
+eyebrow: Pattern · Procedure
+description: Remember what worked as a reusable procedure rather than as a fact, and gate the write on evidence that it actually worked.
+root: ../..
+page_kind: pattern
+---
+
+## Intent
+
+Store an agent's competence, not just its knowledge. When the agent works out how to do something, keep the procedure itself — a script, a function, a checklist — so the next attempt starts from a working solution rather than from a description of one.
+
+## The problem
+
+Most agent memory remembers propositions: the user prefers dark mode, the deploy failed at step three, the schema has a `tenant_id` column. Propositional memory answers "what is true?"
+
+It answers "how do I do this?" badly. An agent that solved a fiddly multi-step task last week can retrieve a *summary* of having solved it and still have to rediscover every detail. Worse, a summary of a procedure is exactly the kind of memory that looks right and is subtly wrong — the steps are there, the ordering constraint that made it work is not.
+
+Procedures also have a property propositions lack, and it is the whole opportunity: **you can run them.** "Is this fact true?" requires judgment. "Does this procedure work?" can be answered by executing it and checking the result.
+
+## The pattern
+
+Store the executable artifact. Index it by a generated description of what it does. Gate the write on verified execution.
+
+```text
+task -> agent produces a procedure (code, script, sequence)
+     -> execute
+     -> verify against observable outcome, not model self-report
+     -> on success: generate a natural-language description
+                    embed the DESCRIPTION, store the PROCEDURE
+     -> on failure: feed the failure back as reasoning input; write nothing
+retrieval: embed the task -> search descriptions -> return procedures
+           -> earlier procedures become primitives for new ones
+```
+
+```mermaid
+flowchart LR
+    T["Task"] --> Gen["Agent writes procedure"]
+    Lib["Skill library"] --> Gen
+    Gen --> Exec["Execute"]
+    Exec --> Ver{"Verified by outcome?"}
+    Ver -- "no" --> Crit["Critique -> retry<br/>(nothing stored)"]
+    Crit --> Gen
+    Ver -- "yes" --> Desc["Generate description"]
+    Desc --> Lib
+```
+
+Three invariants make it work:
+
+1. **The retrieval key is not the payload.** Embed a description of intent; return the artifact. Source code embeds poorly.
+2. **Verification precedes storage.** The gate is an observed outcome, not the model's confidence.
+3. **Failures inform, they do not persist** — at least not in the same store, and not as callable procedures.
+
+## Why it works
+
+It converts memory from recall into capability. A propositional store gets larger as the agent works; a skill library gets *more capable*, because retrieved procedures become building blocks for new ones.
+
+And it sidesteps the hardest problem in the rest of this atlas. Every pattern here about trust — [rejected-value tombstones](../rejected-value-tombstone/), [trust-state machines](../trust-state-machine/), [evidence before belief](../evidence-before-belief/) — exists because propositional truth is expensive to establish. Procedural truth is cheap to establish where actions have observable effects: run it and look.
+
+## Tradeoffs
+
+- **Verification is only as good as the check.** Succeeding once in one state is not evidence of generality, and a skill stored after a single lucky execution is a false memory with a confident-looking provenance.
+- **Executing stored artifacts is a trust boundary.** A skill library is durable, agent-authored, retrieved-by-similarity code. Outside a sandbox, in any setting where inputs are not trusted, this is an obvious attack surface.
+- **Libraries need pruning, and nobody has a good policy.** Without a utility signal — reuse count, success rate on reuse, composition depth — the library accumulates near-duplicate one-offs.
+- **Retrieving the wrong procedure is worse than retrieving the wrong fact.** An irrelevant fact is noise the model can ignore; an irrelevant callable invites the model to call it. Score thresholds matter more here than elsewhere.
+- **Supersession needs lineage.** Replacing a skill with a better version is a correction, and correction without a lineage record leaves you unable to answer why behaviour changed.
+- **Not every domain has a checkable outcome.** The pattern degrades toward ordinary memory wherever success is a matter of judgment.
+
+Do not use this to store prose "procedures" that nothing executes. Without the verification gate, this is just tagged notes, and it inherits none of the property that makes it worth doing.
+
+## Seen in the atlas
+
+[Voyager](../../systems/voyager/) is the clearest implementation. Its `SkillManager` stores JavaScript functions written by the agent, indexed by an LLM-generated description; the write happens only inside `if info["success"]:`, where success comes from a critic that inspects environment state. Retrieved skills are injected as callable functions, so the library composes. It also shows the failure modes: unbounded concatenation of every skill into the prompt, retrieval with no score threshold, versions written to disk with no lineage, no failure memory, and one hardcoded exclusion standing in for a memory-worthiness policy.
+
+[Hermes Agent](../../systems/hermes-agent/) applies the same idea without the gate. Skills are Markdown files the agent creates and edits through `skill_manage`, with provenance and usage tracked separately; only names and descriptions occupy prompt space and bodies load on demand — a better context strategy than Voyager's — but nothing verifies a skill before it becomes durable.
+
+[MemOS](../../systems/memos/) mounts skill memory as one cube type among several, and [agentmemory](../../systems/agentmemory/) keeps procedural records alongside semantic ones; in both, procedure is one kind in a broader taxonomy rather than a design centre, and neither gates on execution.
+
+[OpenViking](../../systems/openviking/) unifies memory, resources, and **skills** in one filesystem hierarchy, which is the most integrated treatment in the atlas — skills are retrievable through the same tiered mechanism as everything else.
+
+[Verel](../../systems/verel/) approaches the same territory from the opposite direction: it clusters *failures* into induced candidate rules and requires promotion gates before they become trusted. Read together with Voyager, the two halves of the missing system are visible — Voyager verifies successes and discards failures; Verel mines failures and gates promotion.
+
+## Tests to require
+
+- Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.
+- Assert that a failed attempt produces no durable procedural memory.
+- Retrieve against an unrelated task and assert no skill is returned above threshold.
+- Supersede a skill and assert the prior version remains retrievable with a lineage link.
+- Compose: build a skill that calls a stored skill, then modify the callee and assert the caller's behaviour change is detected.
+- Assert the injected skill context stays inside a token budget as the library grows.
+- Execute a deliberately malicious stored procedure in the sandbox and assert containment.
+- Track reuse and assert that never-reused skills are surfaced for pruning.
+
+## Related patterns
+
+- [Evidence before belief](../evidence-before-belief/)
+- [Trust-state machine](../trust-state-machine/)
+- [Governed write gateway](../governed-write-gateway/)
+- [Decay and reinforcement](../decay-and-reinforcement/)

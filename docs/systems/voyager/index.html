@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An embodied agent whose memory is
+a library of executable skills, written only after the environment
+verifies they worked and retrieved by natural-language description.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Voyager — Agent Memory Atlas">
+    <meta property="og:description" content="An embodied agent whose
+memory is a library of executable skills, written only after the
+environment verifies they worked and retrieved by natural-language
+description.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Voyager — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embodied agent whose
+memory is a library of executable skills, written only after the
+environment verifies they worked and retrieved by natural-language
+description.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Voyager — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Procedural skill memory</p>
+          <h1>Voyager</h1>
+          <p class="document-deck">An embodied agent whose memory is a
+library of executable skills, written only after the environment
+verifies they worked and retrieved by natural-language description.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MineDojo/Voyager">
+              <span>Source</span>
+              <strong>MineDojo/Voyager</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89" title="55e45a880755d0c8c66ca7fb5fe7962ac8974f89">
+              <span>Analyzed revision</span>
+              <code>55e45a880755d0c8c66ca7fb5fe7962ac8974f89</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Voyager (NVIDIA / Caltech, 2023) is an embodied LLM agent that plays
+Minecraft. Its last commit is from <strong>July 2023</strong>, so this
+is a historical review of a frozen research artifact, not an assessment
+of a maintained system — read it for the architecture, not for
+adoption.</p>
+<p>It earns a place in this atlas because it is the clearest
+implementation of a memory kind the rest of the atlas treats as a
+footnote: <strong>procedural memory whose unit is executable
+code.</strong></p>
+<p>Every other system here remembers propositions — facts, claims,
+observations, summaries, notes. Voyager's <code>SkillManager</code>
+remembers <em>programs</em>. When the agent solves a novel task, the
+JavaScript function it wrote is stored, indexed, and later retrieved
+into the prompt so it can be called or adapted. Skills compose: earlier
+skills become primitives available to later ones, so the library grows
+in capability rather than just in size.</p>
+<p>The single most transferable idea is the write gate, and it is
+stronger than anything else in the atlas:</p>
+<pre class="python"><code>if info[&quot;success&quot;]:
+    self.skill_manager.add_new_skill(info)</code></pre>
+<p><code>info["success"]</code> comes from a critic agent that inspects
+the <strong>environment state</strong> after execution. A skill enters
+memory only when the world confirms it worked. <a
+href="../rainbox/">RainBox</a> gates writes on actor authority and <a
+href="../verel/">Verel</a> on corroboration; both are judgments about a
+claim. Voyager's gate is empirical — the memory is a procedure, so "is
+this true?" collapses into "did it run and produce the intended state?",
+which is checkable.</p>
+<p>The second idea worth stealing is the <strong>split between retrieval
+key and payload</strong>: an LLM writes a natural-language description
+of the code, the description is embedded and searched, and the
+<em>code</em> is what gets returned. Programs make poor embedding
+targets; their descriptions make good ones.</p>
+<p>The limits are those of a 127-line research component: no scope, no
+provenance, no decay, a versioning scheme that keeps history on disk but
+makes it unreachable, unbounded prompt growth, and one hardcoded task
+exclusion standing in for any real "is this worth remembering?"
+policy.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The memory unit is a named program plus its generated
+description:</p>
+<pre class="python"><code>skills[program_name] = {
+    &quot;code&quot;:        program_code,     # executable JavaScript (Mineflayer bot API)
+    &quot;description&quot;: skill_description # LLM-generated summary, used as the retrieval key
+}</code></pre>
+<p>Persisted across three stores that must agree:</p>
+<pre class="text"><code>ckpt/skill/code/&lt;name&gt;.js          the executable
+ckpt/skill/description/&lt;name&gt;.txt  the retrieval key
+ckpt/skill/skills.json             the authoritative map
+ckpt/skill/vectordb/               Chroma index over descriptions</code></pre>
+<p>Write lifecycle — note where the gate sits:</p>
+<pre class="text"><code>curriculum proposes task
+-&gt; action agent writes code (given retrieved skills as context)
+-&gt; execute in environment
+-&gt; critic agent inspects resulting environment state -&gt; success | critique
+-&gt; if NOT success: feed critique back, retry (no memory write)
+-&gt; if success: add_new_skill()
+      -&gt; LLM generates description from code
+      -&gt; embed description into Chroma under program_name
+      -&gt; write code + description + skills.json, persist vectordb</code></pre>
+<p>Read lifecycle:</p>
+<pre class="text"><code>task context
+-&gt; retrieve_skills(query=context)
+-&gt; Chroma similarity_search_with_score over descriptions, k = min(count, 5)
+-&gt; return the CODE of the top-k matches
+-&gt; injected into the action agent&#39;s prompt as callable functions</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Voyager is small — about 1,459 lines across five agent modules — and
+the memory piece is smaller still:</p>
+<ul>
+<li><code>voyager/agents/skill.py</code> (127 lines) —
+<code>SkillManager</code>: the entire memory subsystem.</li>
+<li><code>voyager/agents/curriculum.py</code> (498) — proposes the next
+task; the exploration driver.</li>
+<li><code>voyager/agents/action.py</code> (280) — writes code, given
+retrieved skills.</li>
+<li><code>voyager/agents/critic.py</code> (138) — environment-grounded
+success verification.</li>
+<li><code>voyager/voyager.py</code> (411) — the rollout loop that wires
+them together.</li>
+<li><code>voyager/control_primitives/</code> — hand-written base
+functions always available.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Curr[&quot;Curriculum agent&quot;] --&gt; Task[&quot;Next task&quot;]
+  Task --&gt; Retr[&quot;retrieve_skills(context)&quot;]
+  Skills[&quot;Chroma: descriptions&quot;] --&gt; Retr
+  Retr --&gt; Act[&quot;Action agent writes code&quot;]
+  Act --&gt; Env[&quot;Execute in Minecraft&quot;]
+  Env --&gt; Critic[&quot;Critic inspects env state&quot;]
+  Critic --&gt;|failure + critique| Act
+  Critic --&gt;|success| Add[&quot;add_new_skill()&quot;]
+  Add --&gt; Desc[&quot;LLM writes description&quot;]
+  Desc --&gt; Skills
+  Add --&gt; Code[&quot;ckpt/skill/code/*.js&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-verified-write-gate-voyagerpy">The verified write gate
+(<code>voyager.py</code>)</h3>
+<p>The rollout loop retries on failure by feeding the critic's critique
+back to the action agent, and only calls <code>add_new_skill</code> when
+<code>info["success"]</code> is true. Failures produce
+<em>reasoning</em> input, not memory. This is a cleaner separation than
+most atlas systems manage: the transient learning signal and the durable
+artifact are different things.</p>
+<p>The asymmetry is worth noting, because it is also a limitation —
+Voyager remembers only what worked. <a href="../verel/">Verel</a>
+clusters failures into candidate rules and <a
+href="../rainbox/">RainBox</a> keeps rejected values as tombstones;
+Voyager discards the failed attempts entirely, so it cannot learn "this
+approach does not work" and may rediscover the same dead end
+repeatedly.</p>
+<h3
+id="description-as-retrieval-key-generate_skill_description">Description
+as retrieval key (<code>generate_skill_description</code>)</h3>
+<p>An LLM is given the program code and asked to summarize it; the
+result is wrapped as a comment inside a function signature and stored as
+the searchable text. Retrieval then runs
+<code>similarity_search_with_score</code> over descriptions and returns
+<code>self.skills[name]["code"]</code>.</p>
+<p>This indirection is the right instinct. Embedding source code
+directly conflates identifier names with behaviour and retrieves poorly
+for "how do I smelt iron?"; embedding an intent description does
+not.</p>
+<h3 id="composition-through-the-programs-property">Composition through
+the <code>programs</code> property</h3>
+<pre class="python"><code>@property
+def programs(self):
+    for skill_name, entry in self.skills.items():
+        programs += f&quot;{entry[&#39;code&#39;]}\n\n&quot;
+    for primitives in self.control_primitives:
+        programs += f&quot;{primitives}\n\n&quot;</code></pre>
+<p>Every stored skill plus every hand-written primitive is concatenated.
+This is what makes skills compose — a new program can call an old one —
+and it is also an <strong>unbounded context</strong>: the string grows
+with every skill learned, with no budget, no relevance filter, and no
+eviction. The <code>retrieve_skills</code> path is bounded at k=5; this
+path is not.</p>
+<h3 id="versioning-that-keeps-history-but-loses-access">Versioning that
+keeps history but loses access</h3>
+<p>On a name collision the manager deletes the Chroma entry, finds the
+next free <code>{name}V{i}.js</code>, writes the code there, and
+overwrites <code>skills[program_name]</code> in place:</p>
+<pre class="python"><code>if program_name in self.skills:
+    self.vectordb._collection.delete(ids=[program_name])
+    i = 2
+    while f&quot;{program_name}V{i}.js&quot; in os.listdir(...): i += 1
+    dumped_program_name = f&quot;{program_name}V{i}&quot;</code></pre>
+<p>So prior versions survive on disk as <code>mineIronV2.js</code>,
+<code>mineIronV3.js</code>, but <code>skills.json</code> and the vector
+index hold only the newest. There is no lineage field, no way to
+retrieve a superseded version, and no record of <em>why</em> it was
+replaced. The atlas's <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> pattern describes what is missing: files accumulate without
+being an audit trail.</p>
+<h3 id="store-consistency-assertion">Store-consistency assertion</h3>
+<pre class="python"><code>assert self.vectordb._collection.count() == len(self.skills), (
+    &quot;Skill Manager&#39;s vectordb is not synced with skills.json...&quot;
+)</code></pre>
+<p>Checked at construction and again after every write, with an error
+message that names the likely cause and the fix. It is crude — an
+assertion, not a repair path — but it makes a dual-store divergence loud
+instead of silent, which is more than several production systems in this
+atlas manage.</p>
+<h3 id="the-hardcoded-exclusion">The hardcoded exclusion</h3>
+<pre class="python"><code>if info[&quot;task&quot;].startswith(&quot;Deposit useless items into the chest at&quot;):
+    return</code></pre>
+<p>One task is excluded from memory by string prefix. This is honest
+about what is absent: there is no principled policy for whether a
+successful skill is <em>worth</em> remembering, so a single degenerate
+case is special-cased. Any system storing procedures needs a real answer
+— utility, generality, reuse frequency — or the library fills with
+one-off variations.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three stores (JSON map, flat files, Chroma) with
+<code>skills.json</code> as authoritative and the vector index as a
+projection — the <a href="../../systems/claude-mem/">treat semantic
+indexes as projections</a> discipline, arrived at implicitly.</p>
+<p>Absent:</p>
+<ul>
+<li><strong>No scope.</strong> One agent, one checkpoint directory, no
+user/session/world boundary.</li>
+<li><strong>No provenance.</strong> A skill records neither the task
+that produced it, the code iterations it took, nor the critique
+history.</li>
+<li><strong>No usage or utility tracking.</strong> Nothing counts
+retrievals or successful reuse, so ranking cannot improve with
+experience and dead skills are never identified.</li>
+<li><strong>No decay, expiry, or deletion.</strong>
+<code>add_new_skill</code> is the only mutation; nothing is ever
+removed.</li>
+<li><strong>No failure memory.</strong> Only successes are
+retained.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Pure vector similarity over descriptions,
+<code>k = min(count, 5)</code>, no lexical arm, no metadata filter, no
+reranking, and scores are retrieved
+(<code>similarity_search_with_score</code>) but discarded — there is no
+relevance threshold, so the top-5 are injected regardless of how poor
+the match is.</p>
+<p>For a skill library this matters more than for a fact store: an
+irrelevant fact in context is noise, while an irrelevant
+<em>program</em> is an invitation for the model to call something
+inappropriate.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One path, one gate: environment-verified success. There is no manual
+curation surface, no human review, and no way to correct a skill except
+by producing a same-named replacement — which silently supersedes
+without lineage.</p>
+<p>A subtle risk follows from the gate being <em>environment</em>
+verification rather than <em>generality</em> verification: a skill can
+succeed in the specific state it was written for and be stored as a
+general capability. Nothing tests it a second time in a different
+context before it becomes durable memory.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None, in the modern sense — no MCP, no tools, no service. Voyager is
+a research rollout loop, and <code>SkillManager</code> is a Python class
+inside it. Its interface to the agent is prompt injection: retrieved
+code goes into the action agent's context.</p>
+<p>Its relevance to this atlas is architectural. <a
+href="../hermes-agent/">Hermes Agent</a> stores skills as Markdown
+written by <code>skill_manage</code>, <a href="../memos/">MemOS</a>
+mounts skill memory as a cube type, and <a
+href="../agentmemory/">agentmemory</a> keeps procedural records — all
+three treat procedure as one memory kind among several. Voyager is the
+case where procedure is the <em>whole</em> memory, which is why its gate
+design is so clean.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Empirical write gate</strong> — the strongest verification
+signal in the atlas, because the artifact is executable.</li>
+<li><strong>Retrieval key separated from payload.</strong></li>
+<li><strong>Authoritative store with a checked projection</strong>, and
+a loud consistency assertion.</li>
+<li><strong>Failures feed reasoning, not memory.</strong></li>
+<li><strong>Composability</strong>, so the library grows in
+capability.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>Unbounded <code>programs</code> concatenation</strong>
+injected into prompts.</li>
+<li><strong>No relevance threshold</strong> on retrieved skills.</li>
+<li><strong>Supersession without lineage</strong>; old versions are on
+disk but unreachable.</li>
+<li><strong>No failure memory</strong>, so dead ends can be
+rediscovered.</li>
+<li><strong>No utility signal</strong>, so the library cannot
+self-prune.</li>
+<li><strong>Single-context verification</strong> — success once is
+treated as general capability.</li>
+<li><strong>Stored code is executed</strong>, which in any non-sandboxed
+setting is a serious trust boundary the research context does not have
+to confront.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No test suite for <code>SkillManager</code> was found in this
+checkout. The project's evaluation is the paper's Minecraft benchmark —
+tech-tree milestones, distance travelled, items unlocked — which is a
+task-completion measure, not a memory-quality measure. Nothing evaluates
+retrieval precision over the skill library, or how often a retrieved
+skill is actually reused versus ignored.</p>
+<p>The repository has been unchanged since July 2023, so this report
+describes an artifact, not a maintained project.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Verify against the world before writing.</strong> Where a
+memory is a procedure, correctness is testable — run it and check the
+resulting state. This is the strongest write gate available, and it
+generalizes to any agent whose actions have observable effects.</li>
+<li><strong>Separate the retrieval key from the payload.</strong> Embed
+a generated description; return the artifact.</li>
+<li><strong>Let failures inform reasoning without entering
+memory.</strong> Retry with critique; store only outcomes.</li>
+<li><strong>Compose memory into capability.</strong> Retrieved skills
+become primitives for new ones.</li>
+<li><strong>Assert cross-store consistency</strong> with an error
+message that states the fix.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Unbounded prompt growth</strong> from concatenating the
+entire library.</li>
+<li><strong>Top-k with no score threshold</strong> for artifacts that
+will be executed.</li>
+<li><strong>Version files without lineage</strong> — history retained,
+history unreachable.</li>
+<li><strong>Discarding failures entirely.</strong></li>
+<li><strong>A hardcoded exclusion</strong> in place of a
+memory-worthiness policy.</li>
+<li><strong>Generalizing from a single verified execution.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The environment-verified write gate — the central idea, and
+applicable well beyond embodied agents.</li>
+<li>Description-indexed, code-retrieved storage.</li>
+<li>The critique-retry loop that keeps failure out of durable
+memory.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The retrieval path; add a score threshold, metadata filters, and a
+token budget before injecting executable artifacts.</li>
+<li>The versioning scheme; add explicit supersession with lineage.</li>
+<li>The unbounded <code>programs</code> property.</li>
+<li>Anything at all without a sandbox, if stored code will be executed
+in a setting where inputs are not trusted.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Should failed attempts be stored as negative procedural memory, so
+dead ends are not rediscovered?</li>
+<li>How should a skill's <em>generality</em> be verified, given that
+success once is not evidence it transfers?</li>
+<li>What is the right utility signal for pruning a skill library —
+retrieval count, reuse success rate, or composition depth?</li>
+<li>Would lexical search over identifiers complement description-vector
+search for code retrieval?</li>
+<li>Does the pattern hold outside a game environment, where "success" is
+rarely as cleanly observable?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Skill memory: <code>voyager/agents/skill.py</code> —
+<code>SkillManager.add_new_skill()</code>,
+<code>retrieve_skills()</code>,
+<code>generate_skill_description()</code>, <code>programs</code>.</li>
+<li>Write gate: <code>voyager/voyager.py</code>
+(<code>if info["success"]: self.skill_manager.add_new_skill(info)</code>).</li>
+<li>Environment verification: <code>voyager/agents/critic.py</code> —
+<code>check_task_success()</code>.</li>
+<li>Code generation: <code>voyager/agents/action.py</code>.</li>
+<li>Task proposal: <code>voyager/agents/curriculum.py</code>.</li>
+<li>Base functions: <code>voyager/control_primitives/</code>,
+<code>voyager/control_primitives_context/</code>.</li>
+<li>Prompts: <code>voyager/prompts/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

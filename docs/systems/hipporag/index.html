@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A neurobiologically inspired
+memory framework that seeds a knowledge graph with query-relevant
+entities and lets Personalized PageRank diffuse relevance instead of
+planning explicit multi-hop traversals.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HippoRAG — Agent Memory Atlas">
+    <meta property="og:description" content="A neurobiologically
+inspired memory framework that seeds a knowledge graph with
+query-relevant entities and lets Personalized PageRank diffuse relevance
+instead of planning explicit multi-hop traversals.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HippoRAG — Agent Memory Atlas">
+    <meta name="twitter:description" content="A neurobiologically
+inspired memory framework that seeds a knowledge graph with
+query-relevant entities and lets Personalized PageRank diffuse relevance
+instead of planning explicit multi-hop traversals.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HippoRAG — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Associative graph memory</p>
+          <h1>HippoRAG</h1>
+          <p class="document-deck">A neurobiologically inspired memory
+framework that seeds a knowledge graph with query-relevant entities and
+lets Personalized PageRank diffuse relevance instead of planning
+explicit multi-hop traversals.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OSU-NLP-Group/HippoRAG">
+              <span>Source</span>
+              <strong>OSU-NLP-Group/HippoRAG</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a" title="e37fba2af1a951ac340d837a7c02efb9d8c9544a">
+              <span>Analyzed revision</span>
+              <code>e37fba2af1a951ac340d837a7c02efb9d8c9544a</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HippoRAG is an MIT-licensed research framework from OSU-NLP-Group
+(NeurIPS'24, with HippoRAG 2 reframing the work as non-parametric
+continual learning). It is the only system in this atlas whose retrieval
+mechanism is <strong>Personalized PageRank over a knowledge
+graph</strong>, and that single choice makes it worth studying
+regardless of whether you adopt the rest.</p>
+<p>The analogy the paper draws is explicit: the LLM is the neocortex, an
+encoder is the parahippocampal region, and an open knowledge graph is
+the hippocampus. What matters architecturally is what falls out of
+it.</p>
+<p>Every other graph-backed system in the atlas performs multi-hop
+retrieval by <strong>traversing</strong>: <a
+href="../graphiti/">Graphiti</a> runs BFS across edges and nodes, <a
+href="../cognee/">Cognee</a> exposes triplet retrievers, <a
+href="../agentmemory/">agentmemory</a> fuses a graph arm into weighted
+RRF. Each has to decide how far to walk and in which direction. HippoRAG
+does not walk. It builds a <strong>personalization vector</strong> —
+seeding graph nodes with query-relevant weight — and lets a
+random-walk-with-restart diffuse relevance across the whole graph in one
+operation. Multi-hop association becomes a property of the diffusion,
+not of a traversal policy.</p>
+<p>Two design details deserve attention beyond the headline:</p>
+<p><strong>Entities are linked, never merged.</strong>
+<code>add_synonymy_edges</code> runs KNN over entity embeddings and adds
+<em>edges</em> between similar phrases above a threshold. Compare
+Graphiti, whose report's stated biggest risk is that entity-resolution
+mistakes reshape a large portion of the graph. HippoRAG sidesteps that
+entire failure class: a wrong synonymy edge adds a weak diffusion path,
+while a wrong merge destroys two identities irreversibly.</p>
+<p><strong>Seed weights are inverse-frequency penalized.</strong> A
+phrase's seed weight is its fact score divided by the number of chunks
+that entity appears in, so ubiquitous entities do not dominate the
+diffusion. This is an IDF instinct applied to graph seeding, and it is
+the kind of detail that separates a working PPR system from one that
+always returns the hub nodes.</p>
+<p>The limits are those of a research artifact aimed at benchmarks
+rather than agents: there is no scope, no trust state, no provenance
+beyond chunk identity, deletion is explicitly partial, and unit-test
+coverage is thin next to a well-developed benchmark reproduction tree.
+It is also corpus-oriented — it indexes documents, not conversations —
+so using it as agent memory means deciding what a "document" is.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no memory record type. The unit is a <strong>chunk</strong>
+plus the graph derived from it:</p>
+<pre class="text"><code>Nodes
+  entity-&lt;hash&gt;   phrase nodes from OpenIE triples
+  passage nodes   one per indexed chunk
+Edges
+  fact edges      subject --predicate--&gt; object, from extracted triples
+  passage edges   entity --appears-in--&gt; chunk
+  synonymy edges  entity &lt;--similarity--&gt; entity  (KNN above threshold)</code></pre>
+<p>Indexing:</p>
+<pre class="text"><code>docs -&gt; chunk -&gt; OpenIE (LLM) -&gt; (subject, predicate, object) triples
+     -&gt; add_fact_edges / add_passage_edges / add_synonymy_edges
+     -&gt; embed entities, facts, and chunks into an embedding store
+     -&gt; augment_graph / save_igraph</code></pre>
+<p>Retrieval — the part worth copying:</p>
+<pre class="text"><code>query
+ -&gt; get_fact_scores(query)              embedding similarity against fact triples
+ -&gt; rerank_facts(...)                   LLM filter/rerank to top-k facts
+ -&gt; for each top fact, take subject and object phrases:
+        weight = fact_score / |chunks containing that entity|      # IDF-style penalty
+        accumulate into phrase_weights, then average per phrase
+ -&gt; dense_passage_retrieval(query)      normalized, scaled by passage_node_weight (0.05)
+ -&gt; node_weights = phrase_weights + passage_weights                # personalization vector
+ -&gt; run_ppr(node_weights, damping)      igraph personalized_pagerank, prpack, undirected
+ -&gt; rank passage nodes by resulting PageRank score</code></pre>
+<p>The dense retrieval arm is deliberately weak — passage nodes are
+seeded at 0.05 — so it acts as a prior that nudges the diffusion rather
+than a competing ranker.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/hipporag/</code> is about 7,500 lines, dominated by one
+orchestrator:</p>
+<ul>
+<li><code>HippoRAG.py</code> (1,756 lines) — indexing, graph
+construction, retrieval, PPR, QA, and deletion.</li>
+<li><code>StandardRAG.py</code> (429) — a baseline for comparison.</li>
+<li><code>information_extraction/openie_{openai,vllm_offline,transformers_offline}.py</code>
+— triple extraction backends.</li>
+<li><code>embedding_store.py</code>, <code>embedding_model/</code>,
+<code>vector_stores/{qdrant,chroma,milvus}_store.py</code> — pluggable
+embedding and vector storage.</li>
+<li><code>llm/</code> — OpenAI, Bedrock, vLLM, and transformers
+backends.</li>
+<li><code>rerank.py</code>, <code>utils/config_utils.py</code> (295),
+<code>utils/llm_utils.py</code> (436).</li>
+<li><code>reproduce/</code> — benchmark reproduction harness and dataset
+scaffolding.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Docs[&quot;Documents&quot;] --&gt; Chunk[&quot;Chunking&quot;]
+  Chunk --&gt; OpenIE[&quot;OpenIE triple extraction (LLM)&quot;]
+  OpenIE --&gt; Graph[&quot;igraph: entity + passage nodes&quot;]
+  OpenIE --&gt; Syn[&quot;add_synonymy_edges (KNN, threshold)&quot;]
+  Syn --&gt; Graph
+  Query[&quot;Query&quot;] --&gt; Facts[&quot;get_fact_scores -&gt; rerank_facts&quot;]
+  Facts --&gt; Seed[&quot;phrase weights / |chunks per entity|&quot;]
+  Query --&gt; DPR[&quot;dense_passage_retrieval x 0.05&quot;]
+  Seed --&gt; Vec[&quot;personalization vector&quot;]
+  DPR --&gt; Vec
+  Vec --&gt; PPR[&quot;run_ppr (damping 0.5, undirected)&quot;]
+  Graph --&gt; PPR
+  PPR --&gt; Ranked[&quot;ranked passages&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3
+id="seeding-the-personalization-vector-graph_search_with_fact_entities">Seeding
+the personalization vector
+(<code>graph_search_with_fact_entities</code>)</h3>
+<p>For each reranked fact, both the subject and object phrase are hashed
+to an <code>entity-</code> node key and looked up in the graph. When
+found, the fact's score is added to that node's weight — divided first
+by the number of chunks the entity occurs in. Weights are then averaged
+across occurrences, and optionally truncated to <code>link_top_k</code>
+phrases.</p>
+<p>Dense passage retrieval scores are min-max normalized and written
+into the same vector at <code>passage_node_weight = 0.05</code>.</p>
+<p>One line is worth flagging as a robustness issue:</p>
+<pre class="python"><code>assert sum(node_weights) &gt; 0, f&#39;No phrases found in the graph for the given facts: {top_k_facts}&#39;</code></pre>
+<p>A query whose extracted phrases do not link to any graph node raises
+an <code>AssertionError</code> rather than degrading to dense retrieval.
+In a benchmark harness that is a reasonable loud failure; in an agent's
+recall path it is an outage.</p>
+<h3 id="running-the-diffusion-run_ppr">Running the diffusion
+(<code>run_ppr</code>)</h3>
+<pre class="python"><code>pagerank_scores = self.graph.personalized_pagerank(
+    vertices=range(len(self.node_name_to_vertex_idx)),
+    damping=damping,          # default 0.5
+    directed=False,
+    weights=&#39;weight&#39;,
+    reset=reset_prob,
+    implementation=&#39;prpack&#39;,
+)</code></pre>
+<p>Two choices matter. <code>damping=0.5</code> is far lower than
+PageRank's conventional 0.85, meaning the walk teleports back to the
+seed nodes very often — relevance stays close to the query's entities
+rather than drifting toward globally central hubs. And
+<code>directed=False</code> means predicate direction is discarded for
+diffusion: "A acquired B" and "B acquired A" propagate identically. That
+is fine for associative recall and wrong for directional reasoning, and
+it is not stated as a limitation anywhere in the code.</p>
+<p>NaN and negative reset probabilities are clamped to zero before the
+call, which is a small but real defence against a malformed seed
+vector.</p>
+<h3 id="synonymy-edges-add_synonymy_edges">Synonymy edges
+(<code>add_synonymy_edges</code>)</h3>
+<p>KNN over all entity embeddings, filtered by
+<code>synonymy_edge_sim_threshold</code>, with batched query/key
+processing and — importantly — edges built only between newly inserted
+phrase nodes and existing ones, so incremental indexing does not rebuild
+the full N² comparison.</p>
+<p>This is the atlas's <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
+fusion</a> instinct expressed as topology: instead of fusing a lexical
+score with a vector score at rank time, embedding similarity becomes
+permanent graph structure that the diffusion traverses.</p>
+<h3 id="deletion-delete">Deletion (<code>delete</code>)</h3>
+<p>The docstring is admirably explicit: "triples and entities which are
+indexed from chunks that are not being removed will not be removed."
+Deletion removes chunks and the triples unique to them, while shared
+entities and facts survive because other chunks still support them.</p>
+<p>This is defensible — it is reference counting, not a bug — but it
+means deleting a document does not guarantee that everything it
+contributed disappears. An entity introduced by a deleted chunk and
+later mentioned in a surviving one remains a node with its accumulated
+edges. For a memory system with privacy obligations, that distinction
+needs to be stated to users.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Storage is an igraph graph plus an embedding store with pluggable
+vector backends (Qdrant, Chroma, Milvus). Nodes are content-hashed
+(<code>compute_mdhash_id</code>), so identity is deterministic from
+text.</p>
+<p>What is absent, relative to the agent-memory systems in this
+atlas:</p>
+<ul>
+<li><strong>No scope.</strong> There is no user, session, agent, or
+tenant key anywhere. The corpus is global.</li>
+<li><strong>No trust or lifecycle state.</strong> No
+candidate/verified/rejected, no pinning, no expiry, no decay.</li>
+<li><strong>Provenance is chunk identity only.</strong> A fact edge
+records which chunks support it; it records nothing about who said it,
+when, or with what authority.</li>
+<li><strong>No correction semantics.</strong> A wrong extracted triple
+can be removed only by deleting the chunks that produced it, and
+re-indexing that chunk reproduces it.</li>
+<li><strong>Time is absent.</strong> There is no event time, no validity
+interval, nothing comparable to <a href="../graphiti/">Graphiti</a>'s
+bi-temporal edges.</li>
+</ul>
+<p>These are consistent with the project's actual goal — corpus QA
+benchmarks — but they are the gap between "retrieval framework" and
+"agent memory", and HippoRAG 2's continual-learning framing does not
+close it in the inspected code.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The pipeline is genuinely multi-stage: fact-level embedding
+similarity, LLM reranking of candidate facts, IDF-penalized graph
+seeding, a weak dense-passage prior, and PPR diffusion.
+<code>retrieve_ircot</code> / <code>answer_with_ircot</code> add
+interleaved retrieve-and-reason for multi-hop QA, and
+<code>retrieve_dpr</code> provides a pure dense baseline.</p>
+<p>Its distinctive strength is <strong>sense-making across
+documents</strong>: because diffusion crosses synonymy and fact edges, a
+query can surface a passage that shares no vocabulary with it, reached
+through two or three intermediate entities. That is exactly the case
+flat vector search handles worst.</p>
+<p>Its distinctive weakness is <strong>cost and opacity</strong>.
+Retrieval requires an LLM rerank call before the graph step, PPR runs
+over the entire graph per query (timed separately as
+<code>ppr_time</code>), and the resulting ranking is not attributable to
+any single signal — you cannot easily answer "why did this passage rank
+first?" beyond "the diffusion put weight there."</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>index(docs)</code> chunks, extracts triples via OpenIE, builds
+fact/passage/synonymy edges, embeds everything, and augments the graph.
+<code>pre_openie</code> allows extraction to be run ahead of time, and
+<code>load_existing_openie</code> / <code>merge_openie_results</code> /
+<code>save_openie_results</code> make extraction results cacheable and
+resumable across runs — a practical touch, since OpenIE over a large
+corpus is the expensive step.</p>
+<p>Extraction quality is LLM-dependent and ungated: a hallucinated
+triple becomes a permanent edge that shapes every future diffusion, with
+no verification tier and no way to mark it rejected. The atlas's
+standing objection to treating LLM-extracted facts as truth applies here
+with extra force, because in a diffusion model a single wrong edge
+affects far more than one retrieval result.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no MCP server, no tool surface, no hooks, and no service.
+HippoRAG is a Python library with <code>main.py</code> and
+<code>examples/</code> as entry points, aimed at researchers reproducing
+benchmark numbers.</p>
+<p>Anyone mounting it as agent memory has to supply scope, lifecycle,
+provenance, correction, and an injection strategy themselves, and has to
+decide what a "document" is when the input is conversation rather than
+corpus.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>Deterministic content-hashed node identity.</li>
+<li>Non-destructive entity resolution — synonymy as edges, not
+merges.</li>
+<li>Incremental synonymy construction that avoids full
+recomputation.</li>
+<li>Cacheable, resumable OpenIE with explicit merge/save paths.</li>
+<li>NaN/negative clamping on the reset vector.</li>
+<li>Honest documentation of deletion's reference-counted semantics.</li>
+<li>Pluggable LLM, embedding, and vector-store backends.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>Assertion instead of fallback</strong> when no query phrase
+links into the graph.</li>
+<li><strong>Undirected diffusion</strong> silently discards predicate
+direction.</li>
+<li><strong>No scope, trust state, provenance, or temporal
+model.</strong></li>
+<li><strong>Extracted triples are permanent</strong> and unverifiable; a
+wrong edge has graph-wide blast radius.</li>
+<li><strong>Deletion is partial by design</strong> and needs to be
+surfaced to users with privacy requirements.</li>
+<li><strong>Per-query PPR over the whole graph</strong> is a real cost
+that grows with corpus size.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>This is the inverse of most systems in the atlas: benchmark
+reproduction is well developed and unit testing is thin.
+<code>tests/</code> contains <code>test_bedrock_mantle.py</code> (73
+lines) plus an <code>integration/</code> directory, while
+<code>reproduce/</code> carries the dataset and harness scaffolding for
+the published evaluations.</p>
+<p>The suites were not run for this review, and no numbers were
+reproduced. The published claims — multi-hop retrieval and sense-making
+gains over standard RAG — rest on the papers and the
+<code>reproduce/</code> tree rather than on committed result artifacts
+in this checkout, so the same caution the atlas applies to <a
+href="../openviking/">OpenViking</a> applies here: a reproduction
+harness is not a reproduced result.</p>
+<p>For a system whose ranking is a diffusion process, the most valuable
+missing tests are the ones nobody has written: what happens to ranking
+when a single synonymy edge is wrong, and how much does the
+<code>damping</code> and <code>passage_node_weight</code> pair move
+results?</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Diffusion instead of traversal.</strong> Seeding a
+personalization vector and running PPR removes the hop-depth and
+direction decisions that make BFS-based graph memory hard to tune.</li>
+<li><strong>Inverse-frequency seed weighting.</strong> Dividing a seed
+weight by the entity's chunk count is a one-line defence against hub
+domination.</li>
+<li><strong>Synonymy as edges, not merges.</strong> Non-destructive
+entity resolution: a wrong link degrades ranking slightly; a wrong merge
+destroys identity.</li>
+<li><strong>A weak dense prior.</strong> Seeding passage nodes at 0.05
+lets vector search inform the diffusion without competing with it.</li>
+<li><strong>Low damping for query-locality.</strong> 0.5 keeps relevance
+near the seeds; it is a tunable that directly expresses "how associative
+should recall be?"</li>
+<li><strong>Cacheable extraction.</strong> Separating
+<code>pre_openie</code> from <code>index</code> makes the expensive LLM
+stage resumable.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Hard assertion on an empty seed vector</strong>, where a
+fallback to dense retrieval is the obvious behaviour.</li>
+<li><strong>Direction discarded</strong> without documentation.</li>
+<li><strong>LLM-extracted edges treated as permanent structure</strong>
+with no verification or rejection state.</li>
+<li><strong>Deletion that does not remove derived structure</strong>,
+undocumented outside a docstring.</li>
+<li><strong>Corpus-global scope</strong> with no isolation of any
+kind.</li>
+<li><strong>Whole-graph computation per query</strong>, which is a
+scaling cliff rather than a gradient.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The PPR retrieval formulation, essentially as written — it is the
+most transferable idea, and igraph's <code>personalized_pagerank</code>
+makes it a small amount of code.</li>
+<li>IDF-style seed penalization.</li>
+<li>Synonymy-as-edges in place of entity merging, particularly if you
+have been burned by resolution mistakes.</li>
+<li>The cacheable OpenIE split.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The assertion; degrade to dense retrieval instead.</li>
+<li>Undirected diffusion if your predicates carry meaning.</li>
+<li>The data model as agent memory — it has no scope, trust, provenance,
+or time, and all four would have to be added before it could carry a
+user's memory.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How sensitive is ranking to <code>damping</code> and
+<code>passage_node_weight</code>? Both are defaults with no published
+ablation in the repository.</li>
+<li>What is the right behaviour when a query's phrases miss the graph
+entirely?</li>
+<li>Could edges carry direction for reasoning while remaining undirected
+for diffusion?</li>
+<li>How would scope be added — one graph per tenant, or scope-filtered
+subgraphs before PPR?</li>
+<li>Does per-query PPR remain viable at agent-memory corpus sizes, or
+does it need approximation?</li>
+<li>Can a wrong synonymy edge be detected after the fact, given that its
+effect is diffuse by construction?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Orchestrator, indexing, retrieval, PPR, deletion:
+<code>src/hipporag/HippoRAG.py</code>.</li>
+<li>PPR seeding: <code>graph_search_with_fact_entities()</code>;
+diffusion: <code>run_ppr()</code>.</li>
+<li>Graph construction: <code>add_fact_edges()</code>,
+<code>add_passage_edges()</code>, <code>add_synonymy_edges()</code>,
+<code>augment_graph()</code>.</li>
+<li>Triple extraction:
+<code>src/hipporag/information_extraction/openie_*.py</code>.</li>
+<li>Embedding and vector storage:
+<code>src/hipporag/embedding_store.py</code>,
+<code>embedding_model/</code>, <code>vector_stores/</code>.</li>
+<li>Baseline: <code>src/hipporag/StandardRAG.py</code>.</li>
+<li>Configuration defaults (<code>damping</code>,
+<code>passage_node_weight</code>,
+<code>synonymy_edge_sim_threshold</code>, <code>linking_top_k</code>):
+<code>src/hipporag/utils/config_utils.py</code>.</li>
+<li>Benchmark reproduction: <code>reproduce/</code>.</li>
+<li>Tests: <code>tests/test_bedrock_mantle.py</code>,
+<code>tests/integration/</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of twenty-seven agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of thirty agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -197,6 +197,28 @@ RainBox optimizes for memory that an operator can inspect, correct, audit, and e
 
 Tradeoff: this works well inside a full assistant product, but it is much heavier than a library and less source-preserving than MemPalace's verbatim drawer model.
 
+### Research lineage
+
+Repos:
+
+- `generative-agents`
+- `voyager`
+- `hipporag`
+- `a-mem`
+
+These are research artifacts rather than deployable systems, and they are in the
+atlas because the practical systems above are largely responses to them.
+Generative Agents established the observation/reflection/planning stream and the
+importance-recency-relevance retrieval score; Voyager established procedural
+skill memory with an execution-verified write gate; HippoRAG established
+diffusion-based associative retrieval; A-MEM explored evolving linked notes.
+
+Tradeoff: the architectural ideas are unusually clear because nothing is
+obscured by production concerns — and nothing is solved by them either. None of
+these has scope, correction, deletion, or a trust model, and Generative Agents
+and Voyager have been frozen since 2023. Read them for the design, not for
+adoption.
+
 ### Vector-symbolic memory
 
 Repo:
@@ -268,6 +290,9 @@ Tradeoff: this is more complex than most systems need for an MVP, but it directl
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `openclaw` | Categorized entry (preference/fact/decision/entity/other) with embedding | LanceDB via `memory-lancedb` extension; swappable embedding adapters | Vector search with mandatory agent-scoped predicate; no lexical arm | Optional auto-capture after envelope sanitization; 500-char truncation | Exact scoped delete; no tombstones, and auto-capture can restore content | `agentId`, composed inseparably into every predicate | Plugin contract via `memory-core`; tools, CLI, doctor checks | Auto-capture cursor with fingerprint drift detection | `createdAt` and category only | Envelope sanitization before capture; scope that cannot be dropped | Vector-only reference backend; sanitization is a denylist tied to envelope formats |
+| `hipporag` | Chunk plus derived entity and passage graph nodes | igraph graph with pluggable vector store (Qdrant/Chroma/Milvus) | Fact scores → LLM rerank → IDF-penalized graph seeding → Personalized PageRank diffusion | `index()`: chunk, OpenIE triples, fact/passage/synonymy edges | Chunk-scoped delete; shared entities survive by reference count | None — corpus is global | Python library only; no MCP, tools, or service | Cacheable OpenIE; incremental synonymy edges | Chunk identity only; no actor, time, or trust state | Diffusion replaces hop planning; synonymy as edges rather than merges | Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction |
+| `voyager` | Executable JavaScript skill plus generated description | `skills.json` and flat files, Chroma index over descriptions | Vector similarity over descriptions, top-5, returns code | Written only when a critic verifies environment success | Same-name rewrite; old versions on disk but unreachable | Single agent checkpoint directory | Research rollout loop; prompt injection of retrieved code | None | Verified execution is the provenance | Environment-verified write gate — the strongest in the atlas | Unbounded skill concatenation into prompts; no failure memory; frozen since 2023 |
+| `generative-agents` | `ConceptNode` typed event, thought, or chat with poignancy | Per-persona JSON plus in-memory embedding dict | Normalized recency + relevance + importance, hand-tuned `gw = [0.5, 3, 2]` | Perception, conversation, and reflection all write ungated | None; observations are never deleted or overwritten | One persona directory | Simulation only; tightly coupled to `Persona` | Reflection fired by accumulated poignancy | Reflections cite supporting nodes, but citations are never used | Consolidation triggered by significance rather than a timer | Derived thoughts share one pool with observations; positional not temporal decay |
 | `a-mem` | `MemoryNote` with content, tags, context, links, and evolution history | In-process dictionary plus ephemeral Chroma; separate persistent retriever utility | Vector similarity with optional linked-neighbor append | LLM decides links and neighbor metadata mutation before insert | Delete/re-add update; exact delete without incoming-link cleanup | None in core | Direct Python library | Periodic reindex called consolidation | No source provenance or trust state | Small, legible linked-note evolution concept | Neighbor position/identity bug can mutate wrong notes; destructive initialization; no durability |
 
 ## 3. End-to-End Memory Lifecycle Comparison
@@ -327,11 +352,24 @@ calls. `a-mem` asks an LLM to organize a new note and rewrite nearby metadata;
 its `analyze_content()` method has no call site, so ordinary note metadata is
 not extracted as the public mental model suggests.
 
+The research lineage adds two capture disciplines the practical systems mostly lost. `voyager` writes memory **only** when a critic verifies the environment reached the intended state, so a failed attempt produces reasoning input and no durable record — the strongest write gate in the atlas, available because the memory is a procedure. `generative-agents` scores every incoming memory for importance at write time and uses that score to schedule consolidation, rather than capturing indiscriminately and compacting on a timer.
+
 ### Consolidation
 
 `honcho`, `hindsight`, `mastra-observational-memory`, and `verel` have the strongest visible consolidation stories. Honcho derives working representations from event streams. Hindsight creates/updates observations with source IDs and proof counts. Mastra reflects growing observation logs and can prepare the result asynchronously before activation. Verel clusters failures, induces candidate design rules and schemas, then requires promotion gates for verification. `agentmemory` separately consolidates important observations into versioned memories and optional semantic/procedural layers. `tencentdb-agent-memory` compiles L1 records into scene files and changed scenes into a persona.
 
 `mem0` V3 is intentionally more append-oriented; consolidation is mostly dedupe and entity linking in the OSS path. `mempalace` consolidates operationally through dedup, closets, halls, tunnels, graph layers, and repair paths rather than by rewriting memories into summaries. `swafra` has no real consolidation worker or correction policy: ingestion adds cross-source edges, and a `superseded_by` loop exists, but old same-source chunks are removed before that loop can see them. `llm-wiki-memory` has a substantial opt-in, brain-only pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup, optional LLM merge, deterministic staleness flags, optional LLM refresh, orphan archive, archived-body compression, cache pruning, and index rebuild. `rainbox` consolidates through claim supersession, rejection, expiry, profile selection, and eval/feedback loops rather than through background summarization. `letta` separates core and archival memory but does not make consolidation the central visible mechanism in the inspected files. `langmem` provides reflection hooks rather than a fixed consolidation policy. `engram` keeps a pragmatic local model: update topic keys, count duplicates, surface conflicts.
+
+`generative-agents` is the origin of the reflection loop that several systems
+here descend from, and its trigger is still the most elegant: a countdown seeded
+with `importance_trigger_max` is decremented by each new memory's poignancy, so
+reflection fires on accumulated significance rather than on elapsed time, token
+count, or message count. Compare `mastra-observational-memory`, which triggers on
+token thresholds, and `claude-mem`, which triggers on lifecycle hooks — both are
+proxies for "enough has happened" that the original measured directly. Its
+weakness is that the budget is denominated in one-shot LLM importance judgments,
+and its reflections are stored in the same undifferentiated pool as observations,
+so reflections of reflections can drift with no visible boundary.
 
 `redis-agent-memory-server` has the most careful consolidation guard in the
 atlas: hash, ID, and semantic dedupe are separate passes, and the semantic path
@@ -358,7 +396,7 @@ The repeated successful pattern is hybrid retrieval:
 - metadata filters for scope;
 - reranking or rank fusion when quality matters.
 
-`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `cognee` exposes lexical chunks, vectors, graph, triplet, summary, temporal, and hybrid modes, but the result contracts differ enough that each route needs separate evaluation. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `claude-mem` selects Chroma semantic search for ordinary text queries and reserves metadata/semantic intersection for file lookup. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
+`mem0` combines semantic, keyword, entity boost, and optional rerank. `hindsight` runs semantic, BM25, graph, and temporal arms, then uses task-specific fusion and cross-encoder reranking. `graphiti` searches edges, nodes, episodes, and communities with BM25, cosine, and BFS plus configurable RRF/MMR/cross-encoder recipes. `cognee` exposes lexical chunks, vectors, graph, triplet, summary, temporal, and hybrid modes, but the result contracts differ enough that each route needs separate evaluation. `basic-memory` fuses FTS5/tsvector with optional semantic chunks. `memos` can run vector or graph/BM25/reranker/reasoner pipelines depending on the mounted cube. `honcho` blends semantic, recent, and most-derived observations. `engram` uses FTS5 and topic keys. `mempalace` combines direct drawer vector search, BM25, metadata, closet boosts, neighbor expansion, and fallback paths. `swafra` uses compact but uncalibrated hybrid/graph fusion. `llm-wiki-memory` combines frontmatter prefilters, embeddings or lexical hashes, priority, and locality. `rainbox` hard-filters then blends vector, full-text, and entity signals. `verel` adds trust and confidence into ranking. `agentmemory` fuses BM25, vector, and graph arms with weighted RRF and per-session diversity. `tencentdb-agent-memory` fuses FTS and vector results with RRF or uses native Tencent VectorDB hybrid search. `claude-mem` selects Chroma semantic search for ordinary text queries and reserves metadata/semantic intersection for file lookup. `hipporag` is the one system here that does not rank at all in the usual sense: it seeds a personalization vector from query-linked entities plus a weak dense prior, then reads relevance off a Personalized PageRank diffusion across the whole graph. `generative-agents` established the multi-signal shape everything else refines — normalized recency, relevance, and importance combined in a weighted sum — though the specific weights (`gw = [0.5, 3, 2]`, with two earlier settings left commented out) are hand-tuned with no ablation in the repository, and its recency decays by chronological *position* rather than elapsed time. `voyager` retrieves top-5 by vector similarity over generated descriptions and returns executable code, with scores computed and then discarded so there is no relevance threshold. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
 ### Context Injection
 
@@ -479,6 +517,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: `cognee/infrastructure/engine/models/DataPoint.py`, graph edge/triplet models, and relational dataset/data/session models.
 - `claude-mem`: canonical tables and migrations in `src/services/sqlite/SessionStore.ts`; future server model in `src/storage/sqlite/schema.ts`.
 - `a-mem`: `MemoryNote` in `agentic_memory/memory_system.py`.
+- `hipporag`: graph and node construction in `src/hipporag/HippoRAG.py`; config defaults in `utils/config_utils.py`.
+- `voyager`: `skills[name] = {code, description}` in `voyager/agents/skill.py`.
+- `generative-agents`: `ConceptNode` in `persona/memory_structures/associative_memory.py`; weights in `scratch.py`.
 - `holographic`: `_SCHEMA` in `plugins/memory/holographic/store.py`; HRR encoding in `holographic.py`.
 - `hermes-agent`: `MemoryStore` in `tools/memory_tool.py`; provider contract in `agent/memory_provider.py`.
 - `openviking`: `MemoryData` / `MemoryTypeSchema` in `openviking/session/memory/dataclass.py`; level field in `openviking/storage/collection_schemas.py`.
@@ -509,6 +550,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: `cognee/api/v1/remember/remember.py`, `add/add.py`, and `cognify/cognify.py`.
 - `claude-mem`: hook adapters, `SessionMessageBuffer.ts`, and `worker/agents/ResponseProcessor.ts`.
 - `a-mem`: `AgenticMemorySystem.add_note()` and `process_memory()` in `agentic_memory/memory_system.py`.
+- `hipporag`: `index()`, `add_fact_edges()`, `add_passage_edges()`, `add_synonymy_edges()` in `src/hipporag/HippoRAG.py`.
+- `voyager`: `SkillManager.add_new_skill()` in `voyager/agents/skill.py`, gated by `if info["success"]` in `voyager/voyager.py`.
+- `generative-agents`: `add_event()`, `add_thought()`, `add_chat()` in `associative_memory.py`.
 - `holographic`: `add_fact()` and `_rebuild_bank()` in `plugins/memory/holographic/store.py`; `_auto_extract_facts()` in `__init__.py`.
 - `hermes-agent`: `MemoryStore.add/replace/remove` and `_apply_write_gate()` in `tools/memory_tool.py`.
 - `openviking`: `openviking/session/memory/extract_loop.py`, `memory_updater.py`, and `memory_isolation_handler.py`.
@@ -539,6 +583,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: `cognee/api/v1/recall/recall.py`, `modules/search/methods/search.py`, and retrievers under `modules/retrieval/`.
 - `claude-mem`: `worker/search/SearchOrchestrator.ts`, Chroma/SQLite strategies, and `services/sqlite/SessionSearch.ts`.
 - `a-mem`: `search_agentic()` and Chroma wrappers in `agentic_memory/retrievers.py`.
+- `hipporag`: `graph_search_with_fact_entities()` and `run_ppr()` in `src/hipporag/HippoRAG.py`.
+- `voyager`: `retrieve_skills()` in `voyager/agents/skill.py`.
+- `generative-agents`: `new_retrieve()` and the extractors in `persona/cognitive_modules/retrieve.py`.
 - `holographic`: `FactRetriever.search/probe/related/reason/contradict` in `plugins/memory/holographic/retrieval.py`.
 - `hermes-agent`: FTS5 session search in `hermes_state.py`; curated memory needs no retrieval.
 - `openviking`: `openviking/retrieve/hierarchical_retriever.py`, `type_quota_recall.py`, `memory_lifecycle.py`.
@@ -569,6 +616,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: structured output from `recall`; final prompt placement remains integration-owned.
 - `claude-mem`: `src/services/context/ContextBuilder.ts` and `ObservationCompiler.ts`.
 - `a-mem`: caller-owned; no bounded context assembler.
+- `hipporag`: ranked passages returned to the caller; QA assembly in `rag_qa()`.
+- `voyager`: retrieved code plus the unbounded `programs` property injected into the action prompt.
+- `generative-agents`: top-30 node descriptions, no token budget.
 - `holographic`: `prefetch()` in `plugins/memory/holographic/__init__.py` — top-5, unfenced.
 - `hermes-agent`: `format_for_system_prompt()` / `_render_block()` in `tools/memory_tool.py`, rendered once per session.
 - `openviking`: `QueryResult` from the hierarchical retriever; final placement is integration-owned.
@@ -599,6 +649,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: pipeline executor, `memify`, session improvement, cognify rollback, and stale-run recovery.
 - `claude-mem`: durable pending queue, observer providers, Chroma/cloud sync, and backfill/repair.
 - `a-mem`: no worker; “consolidation” is synchronous reindexing.
+- `hipporag`: none; OpenIE is cacheable and resumable but runs inline.
+- `voyager`: none; the rollout loop is synchronous.
+- `generative-agents`: reflection fires inline when the poignancy countdown crosses zero.
 - `holographic`: none; `_rebuild_bank()` runs synchronously on every write.
 - `hermes-agent`: none for curated memory; a mounted provider may run its own.
 - `openviking`: extraction loop, streaming updater, reindex executor, hotness maintenance.
@@ -629,6 +682,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: Python SDK, REST server, CLI, MCP server, and migration/export APIs.
 - `claude-mem`: coding-agent hooks, worker HTTP API, local/server MCP, and UI.
 - `a-mem`: direct Python API only.
+- `hipporag`: Python library, `main.py`, and `examples/`; no MCP or service.
+- `voyager`: none; research rollout loop.
+- `generative-agents`: none; simulation with a Django frontend.
 - `holographic`: `fact_store` and `fact_feedback` tools through the Hermes `MemoryProvider` ABC.
 - `hermes-agent`: the `memory` tool, `agent/memory_provider.py` for third-party backends, and `hermes mcp serve`.
 - `openviking`: Python SDK, REST server, CLI, web studio, npm package, and Hermes/OpenClaw provider adapters.
@@ -659,6 +715,9 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `cognee`: broad unit/integration/backend/permission/recovery tests; committed preliminary BEAM report with a held-out 100K result and exploratory in-sample-routed 10M result.
 - `claude-mem`: 237 TypeScript test files spanning hooks, queues, privacy, migrations, Chroma/cloud sync, and server paths; no committed memory-quality benchmark found.
 - `a-mem`: small CRUD/retriever test suite; paper reproduction and benchmark artifacts live in a separate repository.
+- `hipporag`: thin unit tests (`tests/test_bedrock_mantle.py`, `tests/integration/`) beside a well-developed `reproduce/` benchmark tree; no committed result artifacts.
+- `voyager`: no tests for `SkillManager`; evaluation is the paper's Minecraft tech-tree benchmark, which measures task completion rather than memory quality.
+- `generative-agents`: no memory tests; evaluation is human believability ratings, and the `gw` retrieval weights have no committed ablation.
 - `holographic`: 599 lines across four plugin test files plus 1,662 lines exercising the provider ABC; no retrieval-quality benchmark, and the measured contribution of the HRR arm is unknown.
 - `hermes-agent`: memory-tool, write-approval, provider, and backup suites, with several guards citing the issues that produced them; no committed memory-quality benchmark.
 - `openviking`: 688 test files, plus committed LoCoMo, LongMemEval, tau2, SkillsBench, and vector-DB harnesses with runners for six systems and token accounting — but the published headline numbers live off-repo and no raw result artifacts are committed.
@@ -806,6 +865,51 @@ implementing one contract. It fails at the boundary: neither contract inspected
 here carries a scope parameter or a deletion hook, so host-level erasure cannot
 reach a mounted store, trust state cannot cross, and mirroring host writes into a
 provider creates duplicates with independent lifecycles.
+
+### Skills as procedural memory
+
+Pattern guide: [Skills as procedural memory](../patterns/skills-as-procedural-memory/).
+
+Repos: strongest in `voyager`; present without a verification gate in
+`hermes-agent`, `openviking`, `memos`, and `agentmemory`; the failure-side
+counterpart is `verel`.
+
+Store the executable procedure rather than a description of it, index it by a
+generated summary, and gate the write on verified execution. This works because
+procedural truth is cheap to establish where actions have observable effects —
+"did it run and produce the intended state?" is checkable in a way "is this fact
+true?" is not, which is why Voyager's gate is stronger than any judgment-based
+gate in the atlas. It fails when success in one context is generalized from a
+single run, when retrieval has no score threshold (an irrelevant callable is
+worse than an irrelevant fact), when the library has no utility signal to prune
+by, and — outside a sandbox — because a skill library is agent-authored code
+retrieved by similarity and then executed.
+
+### Diffusion instead of traversal
+
+Repo: `hipporag`; contrast with BFS traversal in `graphiti` and the graph arm in
+`agentmemory`.
+
+Rather than deciding how many hops to walk and in which direction, seed a
+personalization vector with query-relevant graph nodes and run Personalized
+PageRank over the whole graph. Multi-hop association becomes a property of the
+diffusion rather than of a traversal policy, and a weak dense-retrieval prior can
+be mixed into the same vector. HippoRAG adds two refinements worth copying: seed
+weights divided by the entity's chunk count so hubs do not dominate, and low
+damping (0.5) to keep relevance near the query's entities. It fails on cost —
+PPR runs over the entire graph per query — and on attribution, since no single
+signal explains a ranking.
+
+### Non-destructive entity resolution
+
+Repo: `hipporag`; contrast with `graphiti`.
+
+Link similar entities with weighted edges instead of merging them. Graphiti's own
+stated biggest risk is that entity-resolution mistakes reshape a large portion of
+the graph; adding a synonymy edge instead means a wrong decision creates a weak
+spurious path rather than destroying two identities irreversibly. It fails when
+the graph becomes dense enough that diffusion blurs everything together, and it
+does not give you a canonical entity to display or key on.
 
 ### Bounded prompt memory with in-turn consolidation
 
@@ -1307,6 +1411,33 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building a host runtime with swappable memory, or capturing from a channel that wraps messages in scaffolding.
 - Do not copy when: you need hybrid retrieval, per-user scope inside an agent, or deletion that survives auto-capture.
 
+### `hipporag`
+
+- Best idea: Personalized PageRank diffusion replaces hop planning, with IDF-penalized seeding and a weak dense prior.
+- Biggest risk: no scope, trust, provenance, or temporal model, and a wrong extracted edge has graph-wide blast radius.
+- Most reusable component: `graph_search_with_fact_entities()` plus `run_ppr()`, and synonymy-as-edges instead of entity merging.
+- Maturity impression: actively maintained research framework with a strong reproduction tree and thin unit tests.
+- Study when: recall must cross documents associatively, or entity-resolution merges have burned you.
+- Do not copy when: you need agent memory rather than corpus QA — scope, correction, and time all have to be added.
+
+### `voyager`
+
+- Best idea: memory written only after the environment verifies the procedure worked.
+- Biggest risk: a frozen 2023 artifact that generalizes from a single verified run and keeps no failure memory.
+- Most reusable component: the verified write gate, and description-indexed / code-retrieved storage.
+- Maturity impression: a 127-line memory subsystem inside a research agent; unmaintained since July 2023.
+- Study when: your agent's actions have observable outcomes and competence is worth remembering, not just facts.
+- Do not copy when: procedures will be executed outside a sandbox, or success is a matter of judgment rather than observation.
+
+### `generative-agents`
+
+- Best idea: consolidation triggered by accumulated significance rather than by a timer or token count.
+- Biggest risk: its famous retrieval weights are hand-tuned constants, and reflections share one pool with observations.
+- Most reusable component: the reflection trigger, and the three-signal retrieval structure — recalibrated, with time-based recency.
+- Maturity impression: the field's reference architecture, frozen since August 2023 and never engineered for production.
+- Study when: you want to understand where most of this atlas came from, or need a consolidation schedule that tracks salience.
+- Do not copy when: you need any operational property at all — there is no scope, correction, deletion, or index.
+
 ### `a-mem`
 
 - Best idea: small linked notes whose organization can be reconsidered when new memory arrives.
@@ -1432,6 +1563,9 @@ Privacy/deletion:
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/)
 - [`byterover`](../systems/byterover/)
 - [`openclaw`](../systems/openclaw/)
+- [`hipporag`](../systems/hipporag/)
+- [`voyager`](../systems/voyager/)
+- [`generative-agents`](../systems/generative-agents/)
 
 ### Repos Inspected
 
@@ -1461,6 +1595,9 @@ Privacy/deletion:
 - [redis/agent-memory-server](https://github.com/redis/agent-memory-server) at [`886437963dc02289e828872f0ae21fdaa734c337`](https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337)
 - [campfirein/cipher](https://github.com/campfirein/cipher) at [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c)
 - [openclaw/openclaw](https://github.com/openclaw/openclaw) at [`570eab59e7c7ce052f4550af7507e7dd77c73e11`](https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11)
+- [OSU-NLP-Group/HippoRAG](https://github.com/OSU-NLP-Group/HippoRAG) at [`e37fba2af1a951ac340d837a7c02efb9d8c9544a`](https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a)
+- [MineDojo/Voyager](https://github.com/MineDojo/Voyager) at [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89)
+- [joonspk-research/generative_agents](https://github.com/joonspk-research/generative_agents) at [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4)
 
 ### Commands Used
 
@@ -1502,3 +1639,8 @@ No internet sources were used for this report. The analysis is based on the chec
 - ByteRover was reviewed at a commit where the repository is licensed under the Elastic License 2.0 and packaged as `byterover-cli`; descriptions of it as open source are inaccurate as of this commit. No tests were found for its memory or knowledge modules.
 - Redis Agent Memory Server's `V0/` tree is the open reference implementation adjacent to a managed Redis offering; conclusions here apply only to the inspected code, and the managed product may differ.
 - Retrieval quality was not measured for any of the six systems added in this round.
+- Voyager and Generative Agents are frozen research artifacts, last committed in July and August 2023 respectively. Their reports are historical architectural reviews, not assessments of maintained software.
+- HippoRAG's `reproduce/` tree provides benchmark scaffolding, but no raw result artifacts are committed and no published numbers were reproduced here.
+- Voyager's and Generative Agents' published evaluations measure task completion and human believability, not retrieval quality; neither repository contains a memory-quality benchmark.
+- Generative Agents' retrieval gain weights (`gw = [0.5, 3, 2]`) have no committed ablation; the atlas treats them as hand-tuned constants rather than a derived result.
+- No suites were run for the three systems added in this round, and no retrieval quality was independently measured.
