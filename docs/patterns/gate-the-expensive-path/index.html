@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Decide whether the expensive
+memory operation is worth doing before doing it, and fail open so a
+broken gate degrades to the old behaviour rather than to silence.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gate the Expensive
+Path — Agent Memory Atlas">
+    <meta property="og:description" content="Decide whether the
+expensive memory operation is worth doing before doing it, and fail open
+so a broken gate degrades to the old behaviour rather than to silence.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gate the Expensive
+Path — Agent Memory Atlas">
+    <meta name="twitter:description" content="Decide whether the
+expensive memory operation is worth doing before doing it, and fail open
+so a broken gate degrades to the old behaviour rather than to silence.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gate the Expensive Path — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Cost</p>
+          <h1>Gate the Expensive Path</h1>
+          <p class="document-deck">Decide whether the expensive memory
+operation is worth doing before doing it, and fail open so a broken gate
+degrades to the old behaviour rather than to silence.</p>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="intent">Intent</h2>
+<p>Put a cheap decision in front of an expensive one. Before searching
+the store, running a summarizer, or loading a body of text into the
+prompt, spend a little to decide whether the expensive step is worth
+taking at all.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Memory operations are usually written as unconditional. Every turn
+searches. Every message triggers consolidation. Every skill is in the
+prompt because it might be needed. Each of these is defensible alone and
+expensive in aggregate.</p>
+<p>Cost is the obvious objection and the weaker one. The stronger
+objection is <strong>quality</strong>:</p>
+<ul>
+<li>Retrieval that runs every turn returns something every turn, and
+irrelevant memory in the prompt does not sit inertly — it bends the
+answer.</li>
+<li>A summarizer invoked after a single exchange has nothing to
+summarize and emits noise that then becomes durable.</li>
+<li>Context spent on skills or facts that this turn will not use is
+context the turn needed for something else.</li>
+</ul>
+<p>An unconditional pipeline has no way to express "nothing here is
+worth doing."</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Insert a decision cheap enough that running it always is affordable,
+and let it skip the step that is not:</p>
+<pre class="text"><code>turn/message
+   → cheap decision: is the expensive step warranted?
+        no  → skip it entirely
+        yes → run it, ideally using parameters the decision already produced</code></pre>
+<p>Three invariants:</p>
+<ol type="1">
+<li><strong>The gate must be much cheaper than what it guards.</strong>
+A small model, a regex, a token count, a modification timestamp — if the
+gate costs what the operation costs, it is just the operation with extra
+steps.</li>
+<li><strong>The gate must fail open.</strong> A gate exists to skip
+work; a broken gate must degrade to doing the work, not to silently
+skipping it. Failing closed turns an outage into invisible memory
+loss.</li>
+<li><strong>The gate should record its reason.</strong> A skipped
+operation with no trace is indistinguishable from a bug.</li>
+</ol>
+<p>Where possible, have the gate produce the parameters the guarded step
+needs, so one call does two jobs.</p>
+<pre class="mermaid"><code>flowchart LR
+    T[&quot;Turn&quot;] --&gt; G{&quot;cheap gate&quot;}
+    G -- &quot;no · reason logged&quot; --&gt; Skip[&quot;skip: answer without it&quot;]
+    G -- &quot;yes + parameters&quot; --&gt; Work[&quot;expensive operation&quot;]
+    G -- &quot;error&quot; --&gt; Work
+    Work --&gt; Out[&quot;answer&quot;]
+    Skip --&gt; Out</code></pre>
+<h2 id="why-it-works">Why it works</h2>
+<p>It converts a fixed cost into a conditional one, and — more
+importantly — it gives the system a way to say <em>nothing</em>. A
+retrieval layer that must always return its top-k will return five weak
+matches for "what is 2+2". Abstention is a capability, and an
+unconditional pipeline does not have it.</p>
+<p>It also concentrates a judgement that was previously implicit. "Is
+this turn about the user's history?" was always being answered — by the
+ranker, badly, after the search. A gate answers it once, explicitly,
+before spending anything.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li><strong>A false negative is invisible.</strong> A wrongly skipped
+retrieval produces a confident answer missing context nobody knows was
+missing. False positives merely cost a search. The asymmetry means gates
+need measuring, and almost nobody measures them.</li>
+<li><strong>The gate is a new dependency on the critical path.</strong>
+A model-based gate adds latency and a failure mode to every turn in
+order to remove work from some. Whether that trades well depends on the
+ratio of turns that need the operation.</li>
+<li><strong>Gates drift.</strong> A heuristic tuned when the corpus was
+small, or a prompt tuned against one model, silently mis-fires
+later.</li>
+<li><strong>Layered gates compound.</strong> Three gates at 95% each
+admit a fifth of what they should not, or reject more than intended,
+depending on direction.</li>
+<li><strong>A gate is a policy in disguise.</strong> "Does this need
+memory?" encodes a view of what memory is for, in a prompt or a regex
+nobody reviews as policy.</li>
+</ul>
+<p>Do not gate an operation you have not measured. If you cannot say
+what the expensive step costs and how often it helps, a gate is a guess
+with a latency penalty.</p>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><a href="../../systems/waku-agent/">Waku Agent</a> is the clearest
+case, and it gates at three levels. <code>retrieval_gate.py</code> asks
+a small model, per turn, whether memory is needed at all — returning
+<code>{"retrieve", "query", "reason"}</code>, so the same call that
+decides also supplies the search query. Consolidation batches rather
+than running per message, justified on quality as well as cost: batching
+"gives the summarizer enough context to extract facts worth keeping."
+Skills load by progressive disclosure — frontmatter always, body on
+match, referenced files on demand.</p>
+<p>Waku also demonstrates the fail-open invariant and states it in the
+code: "Fails open: if the gate itself errors, we retrieve — a stale
+memory beats a lost one." Its exception path returns
+<code>(True, message, "gate failed open (...)")</code>, and a separate
+branch treats a reply containing no JSON the same way — a defence added
+after reasoning models began emitting a thinking block before their
+answer.</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> gates the same
+class of work one step later: its v2.5 query rewriter is
+heuristic-gated, so the rewrite runs only when a heuristic says it is
+worth the call. Its consolidator is bounded by a stated invariant — at
+most one LLM call per cluster, even when that call must produce both a
+lesson and a procedure.</p>
+<p><a href="../../systems/gini-agent/">Gini</a> shows the cheapest
+possible gate. Its temporal recall channel participates <strong>only
+when the query actually contains a temporal expression</strong>, so a
+channel that cannot contribute never dilutes the fusion. The gate is a
+parser, not a model.</p>
+<p><a href="../../systems/genericagent/">GenericAgent</a> gates what
+occupies permanent context with an explicit cost model —
+<code>ROI = (error probability × cost) / per-turn word cost</code> — and
+its sharpest rule is a gate against redundancy: an entry the model would
+act on unprompted yields zero benefit and costs tokens on every
+turn.</p>
+<p><a href="../../systems/hermes-agent/">Hermes Agent</a> gates by
+budget rather than relevance: a write that would exceed the character
+cap is refused, forcing consolidation in the same turn. <a
+href="../../systems/redis-agent-memory-server/">Redis Agent Memory
+Server</a> gates extraction with a trailing-edge debounce, so a burst of
+messages produces one extraction rather than many. <a
+href="../../systems/metaclaw/">MetaClaw</a> gates in the other direction
+— its policy optimizer short-circuits when volume is low, declining to
+tune weights before there is enough data to tune on.</p>
+<p>Nothing in the atlas measures its gate. Waku's
+<code>should_retrieve</code> accuracy, Atomic Agent's rewriter
+heuristic, and Gini's temporal parser are all unevaluated, so the
+false-negative rate — the one that matters — is unknown everywhere.</p>
+<h2 id="tests-to-require">Tests to require</h2>
+<ul>
+<li>Feed the gate turns that plainly need memory and turns that plainly
+do not, and measure both error rates separately. The false-negative rate
+is the one that matters.</li>
+<li>Break the gate — make it throw, time out, and return malformed
+output — and assert the system does the expensive work anyway in every
+case.</li>
+<li>Assert every skip is logged with a reason a human can read.</li>
+<li>Run a turn that needs memory with the gate forced closed, and
+confirm the resulting answer is detectably worse; if it is not, the
+guarded operation may not be earning its place either.</li>
+<li>Measure the gate's own cost against the work it avoids, in latency
+and tokens, on realistic traffic rather than on a benchmark of
+memory-heavy questions.</li>
+<li>Where several gates compose, test them together — the compound skip
+rate is not the product of the individual ones.</li>
+</ul>
+<h2 id="related-patterns">Related patterns</h2>
+<ul>
+<li><a href="../zero-llm-capture/">Zero-LLM capture</a></li>
+<li><a href="../source-diverse-context/">Source-diverse context</a></li>
+<li><a href="../decay-and-reinforcement/">Decay and
+reinforcement</a></li>
+<li><a href="../skills-as-procedural-memory/">Skills as procedural
+memory</a></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

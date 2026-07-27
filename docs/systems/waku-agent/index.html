@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A compact three-pillar memory
+whose organizing idea is refusing to do expensive work — a model gate
+decides whether to retrieve at all, consolidation batches, and skill
+bodies load only on match.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Waku Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A compact three-pillar
+memory whose organizing idea is refusing to do expensive work — a model
+gate decides whether to retrieve at all, consolidation batches, and
+skill bodies load only on match.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Waku
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A compact three-pillar
+memory whose organizing idea is refusing to do expensive work — a model
+gate decides whether to retrieve at all, consolidation batches, and
+skill bodies load only on match.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Waku Agent — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Gated memory</p>
+          <h1>Waku Agent</h1>
+          <p class="document-deck">A compact three-pillar memory whose
+organizing idea is refusing to do expensive work — a model gate decides
+whether to retrieve at all, consolidation batches, and skill bodies load
+only on match.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ShenSeanChen/waku-agent">
+              <span>Source</span>
+              <strong>ShenSeanChen/waku-agent</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558" title="5f638cfb5de957c14f056027833d8a9df5bbe558">
+              <span>Analyzed revision</span>
+              <code>5f638cfb5de957c14f056027833d8a9df5bbe558</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Waku is a small MIT-licensed personal agent — about 800 lines of
+memory code — organized around three pillars borrowed from cognitive
+science: <code>semantic/</code> (facts), <code>episodic/</code> (what
+happened), and <code>procedural/</code> (how to act). Each has a SQLite
+default and an optional external backend: Supabase for facts, Notion for
+episodes.</p>
+<p>That structure is conventional. What makes Waku worth reading is that
+its design question is not <em>how do we remember more</em> but
+<strong>when should we not do the expensive thing</strong> — and it
+answers that in three different places.</p>
+<p><strong>Don't retrieve unless the turn needs it.</strong>
+<code>retrieval_gate.py</code> sends the user's message to a cheap
+model, which returns
+<code>{"retrieve": bool, "query": str, "reason": str}</code>. The
+docstring states the case plainly:</p>
+<blockquote>
+<p>"Default-on retrieval is (a) slow — an extra search before every
+reply — and (b) worse: irrelevant memories bias the answer
+('over-interpretation'). So before touching any store, a cheap fast
+model answers one question: does THIS message need the user's
+memory?"</p>
+</blockquote>
+<p><strong>Nothing else in the atlas abstains from retrieval.</strong>
+Everything else searches every turn, or gates on a crude heuristic. The
+failure Waku names — irrelevant recall bending the answer — is one the
+atlas circles under context budgets and <a
+href="../../patterns/source-diverse-context/">source diversity</a> but
+never solves by simply not looking.</p>
+<p><strong>Don't consolidate after every message.</strong>
+<code>consolidation.py</code> batches: "only consolidate after N new
+chats. Running a summarizer after every message is wasteful and noisy;
+batching N exchanges gives the summarizer enough context to extract
+facts worth keeping." The second clause is the better argument —
+batching is not only cheaper, it produces better summaries.</p>
+<p><strong>Don't load a skill body until it matches.</strong>
+<code>procedural/loader.py</code> implements progressive disclosure over
+the Anthropic Agent Skills format: every skill's frontmatter is scanned
+(cheap), a body enters the prompt only on match, and files a skill
+references are read only if the model asks.</p>
+<p>The gate's failure direction is also right, and stated: it
+<strong>fails open</strong>. If the gate errors, Waku retrieves anyway,
+because "a stale memory beats a lost one."</p>
+<p>The limits are what you would expect at this size: no correction, no
+supersession, no tombstone, no trust state, and single-user scope.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<pre class="text"><code>semantic/    facts        &quot;Alex prefers morning meetings&quot;      SQLite | Supabase
+episodic/    episodes     &quot;2026-07-10: planned the Acme demo&quot;  SQLite | Notion
+procedural/  SKILL.md     how to act                           filesystem</code></pre>
+<p>Read path — the distinctive one:</p>
+<pre class="text"><code>user message
+  → should_retrieve(small_model, message)
+      {&quot;retrieve&quot;: false} → answer with no memory at all
+      {&quot;retrieve&quot;: true, &quot;query&quot;: ...} → search semantic + episodic with that query
+  → procedural: scan all frontmatter, load only matching skill bodies
+  → answer</code></pre>
+<p>Write path:</p>
+<pre class="text"><code>chats accumulate unconsolidated
+  → after N new chats, a cheap model reads the log and emits
+        facts    → semantic store
+        episode  → episodic store</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>waku/memory/</code> (801 lines):</p>
+<ul>
+<li><code>retrieval_gate.py</code> (55) —
+<code>should_retrieve()</code>.</li>
+<li><code>__init__.py</code> (169) — the <code>Memory</code> facade,
+"the three pillars behind one small interface".</li>
+<li><code>consolidation.py</code> (75) — batched distillation into facts
+and episodes.</li>
+<li><code>semantic/store.py</code> (78),
+<code>semantic/supabase_store.py</code> (58).</li>
+<li><code>episodic/store.py</code> (57),
+<code>episodic/notion_store.py</code> (164).</li>
+<li><code>procedural/loader.py</code> (91),
+<code>procedural/installer.py</code> (54).</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Msg[&quot;User message&quot;] --&gt; Gate{&quot;should_retrieve?&lt;br/&gt;small model&quot;}
+  Gate --&gt;|false| Answer[&quot;answer without memory&quot;]
+  Gate --&gt;|&quot;true + query&quot;| Sem[&quot;semantic store&quot;]
+  Gate --&gt;|&quot;true + query&quot;| Epi[&quot;episodic store&quot;]
+  Sem --&gt; Answer
+  Epi --&gt; Answer
+  Skills[&quot;SKILL.md frontmatter (always scanned)&quot;] --&gt; Match{&quot;matches message?&quot;}
+  Match --&gt;|yes| Body[&quot;load body into prompt&quot;]
+  Body --&gt; Answer
+  Chats[&quot;unconsolidated chats&quot;] --&gt; N{&quot;N new chats?&quot;}
+  N --&gt;|yes| Cons[&quot;cheap model: facts + episode&quot;]
+  Cons --&gt; Sem
+  Cons --&gt; Epi</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-retrieval-gate">The retrieval gate</h3>
+<pre class="python"><code>def should_retrieve(client, small_model, message) -&gt; tuple[bool, str, str]:
+    &quot;&quot;&quot;Returns (retrieve?, search_query, reason). Fails open: if the gate
+    itself errors, we retrieve — a stale memory beats a lost one.&quot;&quot;&quot;</code></pre>
+<p>Three details make this more than a prompt.</p>
+<p><strong>It returns a query, not just a verdict.</strong> The same
+call that decides <em>whether</em> also produces <em>what to search
+for</em>, so the gate doubles as a query rewriter and its cost is
+amortized across two jobs. Compare <a href="../atomic-agent/">Atomic
+Agent</a>, which has a separate heuristic-gated query rewriter as its
+own phase.</p>
+<p><strong>It fails open, deliberately.</strong> A gate that skips work
+must fail toward doing the work: failing closed would silently drop
+memory on every gate error, which is invisible and unrecoverable. Waku
+returns <code>(True, message, "gate failed open (...)")</code> on any
+exception, and the reason string records why.</p>
+<p><strong>It survives reasoning models.</strong> A comment records a
+real incident: <code>max_tokens</code> was raised from 100 to 600
+because "reasoning models (Kimi K3, ...) spend a thinking block BEFORE
+the JSON — 100 tokens was truncating the answer away." A separate branch
+treats a reply containing no <code>{</code> as a truncated or
+reasoning-only response and also fails open.</p>
+<p>The <code>reason</code> field is a small but good affordance: every
+gate decision carries a five-word justification, so the log shows not
+just that memory was skipped but why.</p>
+<h3 id="batched-consolidation">Batched consolidation</h3>
+<p>The stated rationale is worth separating into its two halves. Cost is
+the obvious one. The subtler one is quality: a summarizer invoked after
+every message sees one exchange and produces noise, while batching N
+exchanges "gives the summarizer enough context to extract facts worth
+keeping."</p>
+<p>This is the same instinct as <a href="../cowagent/">CowAgent</a>'s
+daily buckets and <a href="../nanobot/">nanobot</a>'s cursor over an
+append-only archive — give consolidation a unit large enough to be
+meaningful. Waku's unit is a chat count rather than a calendar day or a
+token threshold.</p>
+<h3 id="procedural-memory-as-progressive-disclosure">Procedural memory
+as progressive disclosure</h3>
+<p><code>procedural/loader.py</code> follows the Anthropic Agent Skills
+format — YAML frontmatter with <code>name</code> and
+<code>description</code>, where the description doubles as the trigger.
+A comment notes the project previously used a custom
+<code>triggers:</code> field and dropped it once the spec settled, which
+is a small mark of tracking a standard rather than inventing one.</p>
+<p>The three-stage disclosure — frontmatter always, body on match,
+referenced files on demand — is the same shape <a
+href="../genericagent/">GenericAgent</a> reaches through its "existence
+encoding" ROI rule and <a href="../hermes-agent/">Hermes Agent</a>
+through name-and-description-only skill indexing. Waku gets it from the
+format itself.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Facts and episodes in SQLite, with optional Supabase and Notion
+backends; skills as files. There is no status, confidence, provenance,
+supersession, or tombstone on any of them, and no scope beyond a single
+user.</p>
+<p>That is a reasonable position for an 800-line personal agent, and it
+means Waku answers "what should we retrieve?" carefully while leaving
+"is this still true?" entirely unanswered. A fact consolidated from a
+chat where the user changed their mind will sit alongside the correction
+with nothing distinguishing them.</p>
+<p>The Notion episodic backend is the most operationally interesting
+choice: episodes land somewhere the user already reads and edits, which
+makes correction a manual but real possibility — the <a
+href="../basic-memory/">Basic Memory</a> property of human-owned
+canonical state, arrived at by picking a familiar tool as the store.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Whatever the underlying stores provide, downstream of the gate. The
+gate is the mechanism worth studying; the search itself is
+unremarkable.</p>
+<p>The cost model deserves stating honestly: the gate
+<strong>adds</strong> a small-model call to every turn in order to
+<strong>remove</strong> a search from some of them. Whether that trades
+well depends on the ratio of memory-needing turns to the rest, and on
+the relative latency of the gate model versus the store. Waku asserts
+the trade is favourable; nothing in the repository measures it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Consolidation is the only path into durable memory. There is no
+explicit "remember this" surface in the memory package, and no actor
+model — whatever the summarizer extracts becomes a fact or an
+episode.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI agent with deterministic evals under
+<code>evals/deterministic/</code>, including
+<code>test_working_memory.py</code> and <code>test_cli_memory.py</code>.
+Skills follow the published Agent Skills format, so procedural memory is
+portable to other runtimes that read it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>A gate that decides whether to work at all</strong>, at
+three levels.</li>
+<li><strong>Failing open</strong>, with the reasoning stated in the
+code.</li>
+<li><strong>A recorded reason</strong> on every gate decision.</li>
+<li><strong>Robustness to reasoning-model output</strong>, driven by a
+real incident.</li>
+<li><strong>Batched consolidation</strong> justified on quality as well
+as cost.</li>
+<li><strong>Progressive disclosure</strong> for skills, following a
+published format.</li>
+<li><strong>Deterministic evals</strong> for memory behaviour.</li>
+<li><strong>Pluggable backends</strong> per memory kind, defaulting to
+SQLite.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No correction, supersession, or tombstone.</strong> A
+superseded fact and its replacement coexist.</li>
+<li><strong>No trust state or provenance</strong> on facts and
+episodes.</li>
+<li><strong>Single-user scope.</strong></li>
+<li><strong>The gate's own accuracy is unmeasured</strong> — a false
+negative silently answers without memory that would have helped, and
+nothing detects it.</li>
+<li><strong>The gate adds a call per turn</strong>, and the net cost is
+asserted rather than measured.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>evals/deterministic/test_working_memory.py</code> and
+<code>test_cli_memory.py</code> — deterministic rather than
+model-judged, which is the right shape for behavioural checks. Nothing
+was run for this review.</p>
+<p>The measurement the design most needs and does not have is
+<strong>gate accuracy</strong>: how often does
+<code>should_retrieve</code> return false on a turn that would have
+benefited from memory? False positives merely cost a search; false
+negatives produce a confidently unmemoried answer, and are invisible
+without a labelled set.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Gate the expensive path.</strong> Decide whether to retrieve
+before retrieving, and fail open so a broken gate degrades to the old
+behaviour rather than to silence. See <a
+href="../../patterns/gate-the-expensive-path/">gate the expensive
+path</a>.</li>
+<li><strong>Make the gate produce the query.</strong> One call answers
+"should we?" and "with what?", halving the cost of gating.</li>
+<li><strong>Record the reason.</strong> A five-word justification per
+decision turns a skipped search from a mystery into a log line.</li>
+<li><strong>Batch consolidation for quality, not just cost.</strong> A
+summarizer needs enough material to find something worth keeping.</li>
+<li><strong>Progressive disclosure by default</strong> — index always,
+body on match, references on demand.</li>
+<li><strong>Budget for reasoning-model preambles</strong> when parsing
+structured output from a small model.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>An unmeasured gate.</strong> The whole design rests on the
+gate being right, and nothing checks it.</li>
+<li><strong>Consolidation without correction</strong> — facts
+accumulate, contradictions coexist.</li>
+<li><strong>No provenance</strong>, so a wrong fact cannot be traced to
+the chat that produced it.</li>
+<li><strong>Asserted cost savings.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li><code>should_retrieve()</code> almost verbatim, including the
+fail-open branch and the reason string.</li>
+<li>The batching rationale for consolidation.</li>
+<li>The three-stage skill disclosure.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The data model as a belief store; add correction before it
+matters.</li>
+<li>A gate without an accuracy measurement, if a missed retrieval is
+costly.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How often does the gate wrongly decline? Nothing labels or measures
+it.</li>
+<li>Does the gate call cost less than the searches it avoids, in latency
+and tokens?</li>
+<li>Should a declined retrieval be revisited if the model's answer turns
+out to need memory?</li>
+<li>What happens when consolidation extracts a fact contradicting an
+existing one?</li>
+<li>Could the gate's <code>reason</code> strings be mined to improve the
+prompt over time?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Retrieval gate: <code>waku/memory/retrieval_gate.py</code>
+(<code>should_retrieve</code>, <code>GATE_PROMPT</code>).</li>
+<li>Facade: <code>waku/memory/__init__.py</code>
+(<code>Memory</code>).</li>
+<li>Consolidation: <code>waku/memory/consolidation.py</code>.</li>
+<li>Semantic: <code>waku/memory/semantic/store.py</code>,
+<code>supabase_store.py</code>.</li>
+<li>Episodic: <code>waku/memory/episodic/store.py</code>,
+<code>notion_store.py</code>.</li>
+<li>Procedural: <code>waku/memory/procedural/loader.py</code>,
+<code>installer.py</code>.</li>
+<li>Evals: <code>evals/deterministic/test_working_memory.py</code>,
+<code>test_cli_memory.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

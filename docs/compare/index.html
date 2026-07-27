@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-forty-three agent memory architectures, their retrieval mechanics, trust
+forty-four agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,14 +12,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty-three agent memory architectures, their retrieval mechanics,
+of forty-four agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty-three agent memory architectures, their retrieval mechanics,
+of forty-four agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -53,7 +53,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-forty-three agent memory architectures, their retrieval mechanics, trust
+forty-four agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
@@ -70,7 +70,7 @@ models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Forty-three systems do not fall into forty-three categories. They
+<p>Forty-four systems do not fall into forty-four categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -115,7 +115,7 @@ managed-platform-only.</p>
 <code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
-<code>mateclaw</code></p>
+<code>mateclaw</code>, <code>waku-agent</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -132,7 +132,10 @@ separately, and keeps a subconscious tier below active recall.
 into a design document, records votes as append-only events with derived
 scores, and ships new memory features off by default until an evaluation
 campaign reports. <strong>GenericAgent</strong> governs four file layers
-with written axioms instead of code.</p>
+with written axioms instead of code. <strong>Waku</strong> organizes
+everything around refusing expensive work: a small model decides whether
+to retrieve at all, consolidation batches, and skill bodies load only on
+match.</p>
 <p>Tradeoff: deeper integration buys behavioural control at the cost of
 coupling memory to the framework, prompt assembly, and tool loop.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
@@ -1108,6 +1111,24 @@ descriptions</td>
 <td>Unbounded skill concatenation into prompts; no failure memory;
 frozen since 2023</td>
 </tr>
+<tr>
+<td><code>waku-agent</code></td>
+<td>Fact (semantic), episode (episodic), and SKILL.md (procedural)</td>
+<td>SQLite by default; Supabase for facts, Notion for episodes</td>
+<td>Gated — a small model decides whether to search at all, and supplies
+the query</td>
+<td>Consolidation batched after N new chats, not per message</td>
+<td>None found; no supersession or tombstone</td>
+<td>Single user</td>
+<td>CLI agent; skills in the Anthropic Agent Skills format</td>
+<td>Batched consolidation into facts and episodes</td>
+<td>Gate decisions carry a reason string; no trust state on
+memories</td>
+<td>Refusing expensive work at three levels, and failing open when the
+gate errors</td>
+<td>No correction, scope, or trust model; gate adds a model call per
+turn</td>
+</tr>
 </tbody>
 </table></div>
 <!-- END GENERATED MATRIX -->
@@ -1404,6 +1425,10 @@ and fails silently when a trigger word is missing. <code>nanobot</code>
 likewise has no retrieval: its durable files are small enough to always
 inject. <code>cowagent</code> pairs vector and FTS5 search over chunked
 files while injecting <code>MEMORY.md</code> wholesale.</p>
+<p><code>waku-agent</code> inverts the question everyone else asks.
+Rather than ranking better, it decides per turn whether to retrieve at
+all, and its stated reason is not cost but quality: irrelevant memory in
+the prompt bends the answer. Nothing else in the atlas can abstain.</p>
 <p><code>hipporag</code> is the one system here that does not rank at
 all in the usual sense: it seeds a personalization vector from
 query-linked entities plus a weak dense prior, then reads relevance off
@@ -2403,7 +2428,8 @@ implementation guides in the <a href="../patterns/">memory design
 pattern library</a>. The library covers correction, provenance, trust,
 retrieval, scope, write governance, federation, context assembly,
 recoverable background work, lifecycle decay, zero-LLM capture, audit
-history, and pluggable memory providers.</p>
+history, pluggable memory providers, procedural skills, and gating
+expensive work.</p>
 <h3 id="explicit-memory-mutation-surfaces">Explicit memory mutation
 surfaces</h3>
 <p>Repos: strongest in <code>mem0</code>, <code>langmem</code>,
@@ -2672,6 +2698,30 @@ permanent tax with zero return.</p>
 <p>It fails on enforcement. Prose rules bind only as far as the model
 follows them, nothing audits compliance, and the action-verified axiom
 leaves no record of the tool call that justified a write.</p>
+<h3 id="gate-the-expensive-path">Gate the expensive path</h3>
+<p>Pattern guide: <a href="../patterns/gate-the-expensive-path/">Gate
+the expensive path</a>.</p>
+<p>Repos: strongest in <code>waku-agent</code>; also
+<code>atomic-agent</code>, <code>gini-agent</code>,
+<code>hermes-agent</code>, <code>redis-agent-memory-server</code>,
+<code>metaclaw</code>, <code>genericagent</code>.</p>
+<p>Put a cheap decision in front of an expensive one.
+<code>waku-agent</code> asks a small model, per turn, whether the store
+should be touched at all — because default-on retrieval is not merely
+slow, it is worse: irrelevant memory in the prompt bends the answer. The
+same call returns the search query, so gating costs one call and buys
+two. <code>gini-agent</code> shows the cheapest version, letting its
+temporal channel participate only when the query contains a temporal
+expression, and <code>atomic-agent</code> heuristic-gates its query
+rewriter.</p>
+<p>This works because it gives a memory layer the ability to return
+nothing, which an unconditional pipeline does not have. It fails in one
+specific direction: a wrongly skipped retrieval produces a confident
+answer missing context nobody knows is missing, while a wrongly
+permitted one merely costs a search. Gates must fail open —
+<code>waku-agent</code> states it in the code, "a stale memory beats a
+lost one" — and they must be measured. Nothing in the atlas measures its
+gate.</p>
 <h3 id="verify-memory-against-its-subject">Verify memory against its
 subject</h3>
 <p>Repos: <code>magic-context</code>; the procedural analogue is
@@ -2989,7 +3039,7 @@ even though it cannot make every backend combination atomic.</p>
 invariant 7 in <code>MEMORY_FABRIC_V2.md</code> §13.7", invariant 20 on
 never auto-executing procedures, and invariant 21 bounding distillation
 to one LLM call per cluster. It costs almost nothing and turns an
-implicit constraint into a reviewable one — across forty-three systems,
+implicit constraint into a reviewable one — and across the atlas,
 nothing else does it.</p>
 <p>Ship new memory behaviour off by default until an evaluation says
 otherwise. <code>atomic-agent</code>'s v2.5 features are all
@@ -3706,6 +3756,23 @@ live for different lengths of time.</li>
 <li>Do not copy when: automatic extraction can regenerate what a user
 dismissed.</li>
 </ul>
+<h3 id="waku-agent"><code>waku-agent</code></h3>
+<ul>
+<li>Best idea: a small-model gate that decides whether to retrieve at
+all, returns the query when it says yes, and fails open when it
+errors.</li>
+<li>Biggest risk: the gate's own accuracy is unmeasured, and a false
+negative is invisible.</li>
+<li>Most reusable component: <code>should_retrieve()</code> — the
+fail-open branch and the recorded reason included.</li>
+<li>Maturity impression: small, opinionated, and unusually clear about
+why each expensive step is conditional; deterministic evals for memory
+behaviour.</li>
+<li>Study when: retrieval runs every turn and you suspect it is hurting
+as often as helping.</li>
+<li>Do not copy when: you need correction, scope, or trust — none of the
+three exists here.</li>
+</ul>
 <h3 id="metaclaw"><code>metaclaw</code></h3>
 <ul>
 <li>Best idea: candidate retrieval policies replayed offline and
@@ -4024,6 +4091,7 @@ href="../systems/mercury-agent/"><code>mercury-agent</code></a></li>
 <li><a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a></li>
 <li><a href="../systems/mateclaw/"><code>mateclaw</code></a></li>
+<li><a href="../systems/waku-agent/"><code>waku-agent</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4178,6 +4246,10 @@ href="https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393
 at <a
 href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7"><code>3643aed7564390f57906954286a443d5913b97a7</code></a></li>
 <li><a
+href="https://github.com/ShenSeanChen/waku-agent">ShenSeanChen/waku-agent</a>
+at <a
+href="https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558"><code>5f638cfb5de957c14f056027833d8a9df5bbe558</code></a></li>
+<li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
 href="https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2"><code>2921c1e5bddbd96a503da4acd7538cac45bcd0f2</code></a>
@@ -4311,6 +4383,26 @@ systems added in this round.</li>
 axioms and rules quoted in its report are the reviewer's translations,
 with key terms given in the original. Its cited arXiv technical report
 was not retrieved or assessed.</li>
+<li>Waku Agent's evals were not run, and its retrieval gate's accuracy
+was not measured — the false-negative rate, which is the figure that
+matters, is unknown. No system in the atlas measures its gate.</li>
+<li>Nine repositories examined in the same round have no reports.
+<code>razzant/ouroboros</code> is cited in the append-only-memory-audit
+pattern for its "honest journal" fix rather than given a report.
+<code>truffle-ai/dexto</code> (Elastic License 2.0),
+<code>Arvincreator/project-golem</code> (a custom source-available
+licence), and <code>openyak/openyak</code> (<strong>no licence file at
+all</strong>, so all rights reserved by default) each carry a competent
+but conventional memory subsystem and no mechanism the atlas lacks, so
+none earns a licence exception. <code>OtterMind/youclaw</code> is small.
+<code>SixHq/Overture</code>'s only memory artifacts are
+<code>.claude/agent-memory/*/MEMORY.md</code> — Claude Code's own memory
+used while developing the repo, not a system it ships.
+<code>husu/loom</code> is an AI JSON Schema documentation generator,
+<code>AaronWong1999/hermesclaw</code> a launcher for running Hermes
+Agent, OpenClaw, and OpenCode on one WeChat account, and
+<code>KeyID-AI/agent-kit</code> gives MCP clients an email address; none
+is agent memory.</li>
 <li>Neither Atomic Agent's nor MateClaw's suites were run, and Atomic
 Agent's evaluation campaign was read but not executed; no scored results
 were found committed for it. MateClaw's scoping and retrieval ranking

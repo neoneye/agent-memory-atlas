@@ -1,14 +1,14 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of forty-three agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of forty-four agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
 
 ## 1. High-Level Taxonomy
 
-Forty-three systems do not fall into forty-three categories. They cluster around
+Forty-four systems do not fall into forty-four categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -51,7 +51,7 @@ several documented capabilities are managed-platform-only.
 
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
-`mercury-agent`, `atomic-agent`, `mateclaw`
+`mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -65,7 +65,9 @@ importance, and durability separately, and keeps a subconscious tier below
 active recall. **Atomic Agent** cites numbered invariants from its schema into a
 design document, records votes as append-only events with derived scores, and
 ships new memory features off by default until an evaluation campaign reports. **GenericAgent** governs four file layers with written axioms
-instead of code.
+instead of code. **Waku** organizes everything around refusing expensive work:
+a small model decides whether to retrieve at all, consolidation batches, and
+skill bodies load only on match.
 
 Tradeoff: deeper integration buys behavioural control at the cost of coupling
 memory to the framework, prompt assembly, and tool loop.
@@ -240,6 +242,7 @@ session with an identity you could later correct.
 | `tencentdb-agent-memory` | L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map | JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB | FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context | Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload | Internal merge/delete/cleanup; no first-class correction/forget tool | Session fields and data directories; no general tenant boundary | OpenClaw hooks/tools/context engine; Hermes gateway | Deferred embeddings, scene/persona generation, retention reclamation | Source message IDs and raw evidence; no verification/rejection state | Layered progressive disclosure with raw drill-down | Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims |
 | `verel` | `MemoryRecord` fact/rule/schema/failure/skill | SQLite local plus backend adapters | Rank blends relevance, retrieval strength, confidence, trust; budgeted recall | Candidate extraction, attested/corroborated promotion | Correction chains, rejected tombstones, decay/prune | Scope lattice | Helpers, MCP, hosted/replicated adapters | Consolidation, promotion gate, replication | Explicit candidate/verified/rejected, provenance, confidence | Best correctness model in set | Complex; may be heavy for product MVP |
 | `voyager` | Executable JavaScript skill plus generated description | `skills.json` and flat files, Chroma index over descriptions | Vector similarity over descriptions, top-5, returns code | Written only when a critic verifies environment success | Same-name rewrite; old versions on disk but unreachable | Single agent checkpoint directory | Research rollout loop; prompt injection of retrieved code | None | Verified execution is the provenance | Environment-verified write gate — the strongest in the atlas | Unbounded skill concatenation into prompts; no failure memory; frozen since 2023 |
+| `waku-agent` | Fact (semantic), episode (episodic), and SKILL.md (procedural) | SQLite by default; Supabase for facts, Notion for episodes | Gated — a small model decides whether to search at all, and supplies the query | Consolidation batched after N new chats, not per message | None found; no supersession or tombstone | Single user | CLI agent; skills in the Anthropic Agent Skills format | Batched consolidation into facts and episodes | Gate decisions carry a reason string; no trust state on memories | Refusing expensive work at three levels, and failing open when the gate errors | No correction, scope, or trust model; gate adds a model call per turn |
 <!-- END GENERATED MATRIX -->
 
 ## 3. End-to-End Memory Lifecycle Comparison
@@ -389,6 +392,11 @@ file itself, which is the cheapest retrieval architecture here and fails silentl
 when a trigger word is missing. `nanobot` likewise has no retrieval: its durable
 files are small enough to always inject. `cowagent` pairs vector and FTS5 search
 over chunked files while injecting `MEMORY.md` wholesale.
+
+`waku-agent` inverts the question everyone else asks. Rather than ranking
+better, it decides per turn whether to retrieve at all, and its stated reason is
+not cost but quality: irrelevant memory in the prompt bends the answer. Nothing
+else in the atlas can abstain.
 
 `hipporag` is the one system here that does not rank at all in the usual sense: it seeds a personalization vector from query-linked entities plus a weak dense prior, then reads relevance off a Personalized PageRank diffusion across the whole graph. `generative-agents` established the multi-signal shape everything else refines — normalized recency, relevance, and importance combined in a weighted sum — though the specific weights (`gw = [0.5, 3, 2]`, with two earlier settings left commented out) are hand-tuned with no ablation in the repository, and its recency decays by chronological *position* rather than elapsed time. `voyager` retrieves top-5 by vector similarity over generated descriptions and returns executable code, with scores computed and then discarded so there is no relevance threshold. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
@@ -797,7 +805,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 
 ## 5. Design Patterns That Recur
 
-These recurring moves are also documented as standalone implementation guides in the [memory design pattern library](../patterns/). The library covers correction, provenance, trust, retrieval, scope, write governance, federation, context assembly, recoverable background work, lifecycle decay, zero-LLM capture, audit history, and pluggable memory providers.
+These recurring moves are also documented as standalone implementation guides in the [memory design pattern library](../patterns/). The library covers correction, provenance, trust, retrieval, scope, write governance, federation, context assembly, recoverable background work, lifecycle decay, zero-LLM capture, audit history, pluggable memory providers, procedural skills, and gating expensive work.
 
 ### Explicit memory mutation surfaces
 
@@ -989,6 +997,28 @@ return.
 It fails on enforcement. Prose rules bind only as far as the model follows them,
 nothing audits compliance, and the action-verified axiom leaves no record of the
 tool call that justified a write.
+
+### Gate the expensive path
+
+Pattern guide: [Gate the expensive path](../patterns/gate-the-expensive-path/).
+
+Repos: strongest in `waku-agent`; also `atomic-agent`, `gini-agent`,
+`hermes-agent`, `redis-agent-memory-server`, `metaclaw`, `genericagent`.
+
+Put a cheap decision in front of an expensive one. `waku-agent` asks a small
+model, per turn, whether the store should be touched at all — because default-on
+retrieval is not merely slow, it is worse: irrelevant memory in the prompt bends
+the answer. The same call returns the search query, so gating costs one call and
+buys two. `gini-agent` shows the cheapest version, letting its temporal channel
+participate only when the query contains a temporal expression, and
+`atomic-agent` heuristic-gates its query rewriter.
+
+This works because it gives a memory layer the ability to return nothing, which
+an unconditional pipeline does not have. It fails in one specific direction: a
+wrongly skipped retrieval produces a confident answer missing context nobody
+knows is missing, while a wrongly permitted one merely costs a search. Gates must
+fail open — `waku-agent` states it in the code, "a stale memory beats a lost one"
+— and they must be measured. Nothing in the atlas measures its gate.
 
 ### Verify memory against its subject
 
@@ -1200,8 +1230,8 @@ Number your invariants and cite them from the code. `atomic-agent`'s schema
 comments reference "cross-phase invariant 7 in `MEMORY_FABRIC_V2.md` §13.7",
 invariant 20 on never auto-executing procedures, and invariant 21 bounding
 distillation to one LLM call per cluster. It costs almost nothing and turns an
-implicit constraint into a reviewable one — across forty-three systems, nothing
-else does it.
+implicit constraint into a reviewable one — and across the atlas, nothing else
+does it.
 
 Ship new memory behaviour off by default until an evaluation says otherwise.
 `atomic-agent`'s v2.5 features are all `default: false` while its campaign runs.
@@ -1646,6 +1676,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: building personal memory where different facts should live for different lengths of time.
 - Do not copy when: automatic extraction can regenerate what a user dismissed.
 
+### `waku-agent`
+
+- Best idea: a small-model gate that decides whether to retrieve at all, returns the query when it says yes, and fails open when it errors.
+- Biggest risk: the gate's own accuracy is unmeasured, and a false negative is invisible.
+- Most reusable component: `should_retrieve()` — the fail-open branch and the recorded reason included.
+- Maturity impression: small, opinionated, and unusually clear about why each expensive step is conditional; deterministic evals for memory behaviour.
+- Study when: retrieval runs every turn and you suspect it is hurting as often as helping.
+- Do not copy when: you need correction, scope, or trust — none of the three exists here.
+
 ### `metaclaw`
 
 - Best idea: candidate retrieval policies replayed offline and promoted only on non-regression across eight metrics.
@@ -1868,6 +1907,7 @@ Privacy/deletion:
 - [`llamaindex`](../systems/llamaindex/)
 - [`atomic-agent`](../systems/atomic-agent/)
 - [`mateclaw`](../systems/mateclaw/)
+- [`waku-agent`](../systems/waku-agent/)
 
 ### Repos Inspected
 
@@ -1913,6 +1953,7 @@ Privacy/deletion:
 - [run-llama/llama_index](https://github.com/run-llama/llama_index) at [`199e9b5b130bbde72639358a08935b913e7132c0`](https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0)
 - [AtomicBot-ai/atomic-agent](https://github.com/AtomicBot-ai/atomic-agent) at [`d69332c589733e38ae7393dd81fcbc5a375d02fb`](https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb)
 - [mateaix/mateclaw](https://github.com/mateaix/mateclaw) at [`3643aed7564390f57906954286a443d5913b97a7`](https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7)
+- [ShenSeanChen/waku-agent](https://github.com/ShenSeanChen/waku-agent) at [`5f638cfb5de957c14f056027833d8a9df5bbe558`](https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
@@ -1966,6 +2007,8 @@ No internet sources were used for this report. The analysis is based on the chec
 - MetaClaw's committed benchmark fixtures and memory ablation scripts were inspected but not run, and no published numbers were reproduced. Its replay metrics are lexical-overlap proxies; no evidence linking them to task outcomes was found in the repository.
 - No memory tests or memory-quality benchmarks were located for nanobot, CowAgent, or GenericAgent. Nothing was run for any of the four systems added in this round.
 - GenericAgent's memory documentation is written in Chinese; the axioms and rules quoted in its report are the reviewer's translations, with key terms given in the original. Its cited arXiv technical report was not retrieved or assessed.
+- Waku Agent's evals were not run, and its retrieval gate's accuracy was not measured — the false-negative rate, which is the figure that matters, is unknown. No system in the atlas measures its gate.
+- Nine repositories examined in the same round have no reports. `razzant/ouroboros` is cited in the append-only-memory-audit pattern for its "honest journal" fix rather than given a report. `truffle-ai/dexto` (Elastic License 2.0), `Arvincreator/project-golem` (a custom source-available licence), and `openyak/openyak` (**no licence file at all**, so all rights reserved by default) each carry a competent but conventional memory subsystem and no mechanism the atlas lacks, so none earns a licence exception. `OtterMind/youclaw` is small. `SixHq/Overture`'s only memory artifacts are `.claude/agent-memory/*/MEMORY.md` — Claude Code's own memory used while developing the repo, not a system it ships. `husu/loom` is an AI JSON Schema documentation generator, `AaronWong1999/hermesclaw` a launcher for running Hermes Agent, OpenClaw, and OpenCode on one WeChat account, and `KeyID-AI/agent-kit` gives MCP clients an email address; none is agent memory.
 - Neither Atomic Agent's nor MateClaw's suites were run, and Atomic Agent's evaluation campaign was read but not executed; no scored results were found committed for it. MateClaw's scoping and retrieval ranking were not traced in full.
 - Eight repositories examined in the same round have no reports. `beita6969/ScienceClaw` is an OpenClaw derivative whose memory extensions are OpenClaw's `memory-core` and `memory-lancedb`, already covered — its runtime skill authoring is cited in the skills pattern instead. `litanlitudan/skyagi` states that it "implements the idea of Generative Agents" and has been frozen since August 2023, so the original is the better subject. `xvirobotics/metabot` re-exports a memory client whose backend is not in the repository. `Gitlawb/zero` has context reporting and no memory module. `thClaws/thClaws` has a competent 1,644-line Rust file-entry store that adds little beyond systems already covered, and `skalesapp/skales` (~1,542 lines) is Business Source License 1.1 with no distinctive mechanism found. `wanxingai/LightAgent`'s 196-line shared memory with swappable adapters is cited in the pluggable-provider pattern rather than given a report. `rush86999/atom` has roughly 976 lines of memory-named Python inside a 459 MB repository dominated by deployment scripts; no coherent memory design was established, and that is a weaker conclusion than the others here.
 - LlamaIndex ships two APIs under the name "memory": the newer block-based `Memory` reviewed here, and an older `ChatMemoryBuffer` family that is conversation-window management and out of scope. Its tests were not run and no memory benchmark was found.

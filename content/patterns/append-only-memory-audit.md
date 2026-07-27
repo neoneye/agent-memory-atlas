@@ -71,6 +71,21 @@ an explicit allowlist of durable files — and deliberately exclude
 edit in the audit record." The log reads as a history of what the agent came to
 believe, not of its counters.
 
+One failure is worth naming because a project fixed it in public.
+[ouroboros](https://github.com/razzant/ouroboros) journals every mutation of its
+scratchpad and identity files, and a comment records what went wrong first:
+
+> "An honest journal (P1): a failed write must be journaled as a failure and
+> surfaced to the caller — the old path logged `block_appended` success for a
+> block that was never persisted."
+
+**An audit log that records only successes is not an audit log.** It is a record
+of intentions, and it is worse than no log, because it is trusted. The fix is
+two-part: journal the failure with its own event type, and re-raise so the
+caller cannot proceed believing the write landed. Any append-only memory audit
+needs a test that a failed write produces a failure event and an error, not
+silence.
+
 [RainBox](../../systems/rainbox/) combines claim/evidence state with
 `RetrievalEvent`, feedback, review UI, and eval flows, while explicitly treating
 telemetry as a review signal rather than truth. [Mem0](../../systems/mem0/) keeps

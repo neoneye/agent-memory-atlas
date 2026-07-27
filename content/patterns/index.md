@@ -95,6 +95,12 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Mount swappable memory backends behind one interface without losing deletion and scope.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-gold" href="./gate-the-expensive-path/">
+    <span>Cost</span>
+    <h2>Gate the expensive path</h2>
+    <p>Decide whether the costly memory operation is worth doing before doing it.</p>
+    <b>Read pattern →</b>
+  </a>
   <a class="pattern-index-card tone-rose" href="./skills-as-procedural-memory/">
     <span>Procedure</span>
     <h2>Skills as procedural memory</h2>
@@ -119,6 +125,7 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Old memory overwhelms recall or popular errors self-reinforce: separate [decay and reinforcement](./decay-and-reinforcement/) from truth.
 - Model latency or outages make capture unreliable: add a [zero-LLM capture](./zero-llm-capture/) path.
 - Memory is a swappable backend and "forget me" has nowhere to go: fix the [pluggable memory provider](./pluggable-memory-provider/) contract.
+- Retrieval runs every turn and irrelevant memory bends the answer: [gate the expensive path](./gate-the-expensive-path/).
 - The agent rediscovers how to do things it already solved: store [skills as procedural memory](./skills-as-procedural-memory/) behind a verified-execution gate.
 
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Add the smallest set that closes a demonstrated failure mode.

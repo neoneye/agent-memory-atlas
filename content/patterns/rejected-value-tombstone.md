@@ -55,7 +55,7 @@ Do not use tombstones as the sole conflict model. A new competing value may dese
 
 ## Seen in the atlas
 
-**Across forty-three systems, two have this.** That is the most striking
+**Two systems in the atlas have this.** That is the most striking
 negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
