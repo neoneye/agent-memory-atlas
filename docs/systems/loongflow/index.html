@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Baidu's agent SDK carries two
+memories — a conventional short/medium/long tier stack, and an evolving
+solution population selected by Boltzmann distribution with temperature
+tuned to diversity.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LoongFlow — Agent Memory Atlas">
+    <meta property="og:description" content="Baidu's agent SDK carries
+two memories — a conventional short/medium/long tier stack, and an
+evolving solution population selected by Boltzmann distribution with
+temperature tuned to diversity.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LoongFlow — Agent Memory Atlas">
+    <meta name="twitter:description" content="Baidu's agent SDK carries
+two memories — a conventional short/medium/long tier stack, and an
+evolving solution population selected by Boltzmann distribution with
+temperature tuned to diversity.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LoongFlow — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Stochastic recall</p>
+          <h1>LoongFlow</h1>
+          <p class="document-deck">Baidu's agent SDK carries two
+memories — a conventional short/medium/long tier stack, and an evolving
+solution population selected by Boltzmann distribution with temperature
+tuned to diversity.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/baidu-baige/LoongFlow">
+              <span>Source</span>
+              <strong>baidu-baige/LoongFlow</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7" title="945c78bc1554f8281aac40320b3599bd68d528d7">
+              <span>Analyzed revision</span>
+              <code>945c78bc1554f8281aac40320b3599bd68d528d7</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LoongFlow is Baidu's Apache-2.0 agent SDK. Its
+<code>agentsdk/memory/</code> package is about 4,600 lines and contains
+<strong>two unrelated memory systems</strong>.</p>
+<p><code>grade/</code> is the conventional one: <code>GradeMemory</code>
+"supports stm, mtm, ltm and auto compress" — short, medium, and
+long-term tiers with a <code>Compressor</code> moving material between
+them and a pluggable <code>Storage</code>. The atlas has many variants
+of this.</p>
+<p><code>evolution/</code> is not conventional, and it is why LoongFlow
+is here. It maintains a population of <code>Solution</code> objects —
+each with <code>solution</code> text, a <code>score</code>, and a
+timestamp — persisted through <code>in_memory.py</code> or
+<code>redis_memory.py</code> behind a <code>memory_factory</code>.
+Recall from that population is <strong>Boltzmann selection with adaptive
+temperature</strong>:</p>
+<pre class="python"><code>def select_parents_with_dynamic_temperature(
+    ..., initial_temp, min_temp, max_temp, ...
+):
+    &quot;&quot;&quot;Select parent solution with fully adaptive temperature control&quot;&quot;&quot;
+    temperature = _adaptive_temperature_by_diversity(...)</code></pre>
+<p>and the temperature is driven by a measured property of the
+population itself:</p>
+<pre class="python"><code>def _calculate_diversity(solutions, sample_size=50) -&gt; float:
+    &quot;&quot;&quot;Normalized diversity score between 0 (identical) and 1 (max diversity)&quot;&quot;&quot;</code></pre>
+<p><strong>Every other system in this atlas retrieves
+deterministically.</strong> Rank by some blend of similarity, recency,
+and importance; take the top <em>k</em>. LoongFlow's evolutionary memory
+deliberately returns a <em>worse</em> remembered solution some of the
+time, with the probability governed by a temperature that rises when the
+population has collapsed toward sameness and falls when it is already
+varied.</p>
+<p>That is an explicit exploration/exploitation trade applied to recall,
+and it has no counterpart in the other forty-four systems. It is closest
+in spirit to <a href="../voyager/">Voyager</a>'s skill library and <a
+href="../verel/">Verel</a>'s induced rules — remembered attempts that
+shape future attempts — but where those retrieve greedily, this
+samples.</p>
+<p>The caveat is scope. This is memory for an optimization loop, not
+belief about a user or a project. It answers "what should I try next,
+given what I have tried" rather than "what is true." Read it for the
+mechanism, not as a general memory design.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two stacks, sharing only a package:</p>
+<pre class="text"><code>grade/                                  evolution/
+  ShortTermMemory                         Solution { solution, solution_id,
+  MediumTermMemory                                   score, timestamp }
+  LongTermMemory                          EvolveMemory (ABC)
+  Compressor  ──auto-compress──▶            add_solution(...)
+  Storage                                   in_memory | redis backends
+                                          Boltzmann selection ◀── temperature
+                                                                    ▲
+                                                            population diversity</code></pre>
+<p>Selection lifecycle:</p>
+<pre class="text"><code>population of scored solutions
+  → _calculate_diversity(sample 50 pairs) → 0 (identical) .. 1 (max diversity)
+  → _adaptive_temperature_by_diversity(current, min, max, base)
+       blends 20% of the current temperature for stability
+  → _boltzmann_selection_with_weights(scores, temperature)
+       low temperature  → nearly greedy, picks the best
+       high temperature → flatter, picks broadly
+  → selected parent informs the next attempt
+  → new solution appended with its score</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/loongflow/agentsdk/memory/</code>:</p>
+<ul>
+<li><code>evolution/</code> — <code>boltzmann.py</code> (selection and
+temperature), <code>base_memory.py</code> (<code>Solution</code>,
+<code>EvolveMemory</code> ABC), <code>in_memory.py</code>,
+<code>redis_memory.py</code>, <code>memory_factory.py</code>.</li>
+<li><code>grade/</code> — <code>memory.py</code>
+(<code>GradeMemory</code>), <code>components.py</code>,
+<code>compressor/</code>, <code>storage/</code>.</li>
+<li><code>README.md</code> in the memory package.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  Att[&quot;Attempt&quot;] --&gt; Sol[&quot;Solution {text, score, ts}&quot;]
+  Sol --&gt; Pop[&quot;population (in-memory | redis)&quot;]
+  Pop --&gt; Div[&quot;_calculate_diversity (50 sampled pairs)&quot;]
+  Div --&gt; Temp[&quot;_adaptive_temperature_by_diversity&quot;]
+  Temp --&gt; Sel[&quot;_boltzmann_selection_with_weights&quot;]
+  Pop --&gt; Sel
+  Sel --&gt; Parent[&quot;selected parent&quot;]
+  Parent --&gt; Att
+  Msg[&quot;Messages&quot;] --&gt; STM[&quot;ShortTermMemory&quot;]
+  STM --&gt; Comp[&quot;Compressor&quot;]
+  Comp --&gt; MTM[&quot;MediumTermMemory&quot;]
+  MTM --&gt; Comp
+  Comp --&gt; LTM[&quot;LongTermMemory&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="temperature-from-diversity">Temperature from diversity</h3>
+<p><code>_calculate_diversity</code> samples up to 50 solutions and
+compares them pairwise, returning a normalized score where 0 is a
+population of identical solutions and 1 is maximally varied. The
+sampling is deliberate — the docstring notes it exists "to reduce
+computation", since exhaustive pairwise comparison over a large
+population is quadratic.</p>
+<p><code>_adaptive_temperature_by_diversity</code> maps that score to a
+temperature within <code>[min_temp, max_temp]</code>, and — the detail
+worth noting — <strong>blends 20% of the current temperature into the
+result</strong> for stability. Without that, a noisy diversity estimate
+would make the temperature oscillate, and selection behaviour would
+swing between greedy and random between rounds.</p>
+<p>The feedback loop is the point: a population that has converged gets
+a higher temperature, which makes selection flatter, which admits weaker
+solutions, which restores variety. A varied population gets a lower
+temperature and selection sharpens toward the best.</p>
+<h3 id="boltzmann-selection">Boltzmann selection</h3>
+<p><code>_boltzmann_selection_with_weights(scores, temperature)</code>
+weights each solution by the Boltzmann factor of its score at the
+current temperature. At low temperature this approaches argmax; at high
+temperature it approaches uniform.</p>
+<p>Set against the rest of the atlas, this is the interesting move.
+Deterministic top-<em>k</em> recall has a failure mode nobody here
+names: if the ranking function is even slightly wrong, the same wrong
+memories surface every time, and nothing in the system ever sees the
+alternatives. <a href="../metaclaw/">MetaClaw</a> addresses that by
+testing whole policies offline; LoongFlow addresses it by never fully
+committing to the ranking in the first place.</p>
+<p>The cost is reproducibility. Two identical queries can return
+different memories, which makes debugging harder and makes any
+evaluation of recall quality a distribution rather than a number.</p>
+<h3 id="the-graded-stack">The graded stack</h3>
+<p><code>GradeMemory</code> is documented in one line — "supports stm,
+mtm, ltm and auto compress" — and composes <code>ShortTermMemory</code>,
+<code>MediumTermMemory</code>, <code>LongTermMemory</code>, a
+<code>Compressor</code>, and a <code>Storage</code>. It is the same
+three-tier shape as <a href="../memos/">MemOS</a>'s textual tiers or <a
+href="../mercury-agent/">Mercury</a>'s
+<code>durable | active | subconscious</code>, without the graded scoring
+the latter adds.</p>
+<p>Nothing connects it to <code>evolution/</code>. A solution population
+and a message tier stack sit in one package with no shared abstraction,
+which reads as two teams solving two problems rather than one
+design.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<pre class="python"><code>@dataclass
+class Solution:
+    solution: str = &quot;&quot;
+    solution_id: str = &quot;&quot;
+    score: Optional[float] = 0.0
+    timestamp: ...
+    # required_fields = {&quot;score&quot;, &quot;timestamp&quot;, &quot;solution&quot;}</code></pre>
+<p>That is the whole unit: text, an identifier, a score, and a time. No
+provenance, no status, no supersession, no scope. For an optimization
+population that is defensible — a solution's score <em>is</em> its
+standing, and the selection pressure is the lifecycle.</p>
+<p>For the graded tiers, messages move between levels by compression, so
+"forgetting" is compression loss rather than an explicit deletion or
+tombstone.</p>
+<p>Neither stack has a trust model, correction path, or scope key.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two entirely different answers in one package. The graded tiers
+surface by recency and tier. The population surfaces by Boltzmann
+sampling over scores at a diversity-driven temperature.</p>
+<p><code>EvolveMemory</code> is an ABC with <code>add_solution</code>
+and concrete in-memory and Redis implementations behind a factory, so
+the population can outlive a process — which is what makes this memory
+rather than in-loop optimizer state.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Solutions are appended with a score after an attempt; there is no
+gate, verification, or dedupe visible in the selection module. The
+graded stack ingests messages and compresses upward.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Both are libraries inside the LoongFlow agent SDK rather than a
+service or plugin surface. <code>memory_factory.py</code> selects the
+population backend by configuration.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Stochastic recall with a principled control signal</strong>
+— the only instance in the atlas.</li>
+<li><strong>Temperature smoothing</strong> (20% of current) preventing
+round-to-round oscillation.</li>
+<li><strong>Sampled diversity</strong> keeping the control loop cheap on
+large populations.</li>
+<li><strong>Bounded temperature</strong> with explicit
+<code>min_temp</code> and <code>max_temp</code>.</li>
+<li><strong>Persistable population</strong> via a Redis backend, so it
+survives a process.</li>
+<li><strong>Apache 2.0</strong>, with no reuse obstacle.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>Non-reproducible recall.</strong> The same query can return
+different memories, which complicates debugging and evaluation.</li>
+<li><strong>No trust, provenance, correction, or scope</strong> in
+either stack.</li>
+<li><strong>Two unrelated memory models</strong> in one package with no
+shared abstraction.</li>
+<li><strong>The selection parameters are undefended</strong> —
+<code>sample_size=50</code>, the 20% blend, and the temperature bounds
+are constants with no ablation.</li>
+<li><strong>Score is assumed meaningful</strong>; nothing validates that
+the scoring function ranks solutions usefully, and Boltzmann selection
+over a bad score function samples confidently from noise.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests exist under <code>tests/agentsdk/memory</code>. Nothing was run
+for this review, and no memory-quality benchmark was found.</p>
+<p>The measurement this design invites is whether adaptive temperature
+beats a fixed one — a comparison the code is structured to support,
+since temperature is a parameter, and which nothing in the repository
+appears to have run.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Sample rather than rank, when recall feeds
+exploration.</strong> If remembered items inform <em>what to try
+next</em> rather than <em>what is true</em>, deterministic
+top-<em>k</em> guarantees you never revisit the alternatives. Boltzmann
+selection makes the exploration/exploitation trade explicit and
+tunable.</li>
+<li><strong>Drive the temperature from a measured property of the
+store</strong>, not a schedule. Diversity collapse is the condition that
+should loosen selection, and it is directly measurable.</li>
+<li><strong>Smooth the control signal.</strong> Blending in a fraction
+of the current temperature turns a noisy estimate into stable
+behaviour.</li>
+<li><strong>Sample the diversity estimate</strong> rather than computing
+it exhaustively.</li>
+<li><strong>Bound the control parameter</strong> so no feedback
+excursion makes selection fully random or fully greedy.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Stochastic recall without reproducibility tooling</strong> —
+no seed or replay path is visible, and debugging a non-deterministic
+memory is materially harder.</li>
+<li><strong>Trusting the score function.</strong> Selection quality is
+bounded entirely by whether <code>score</code> means anything.</li>
+<li><strong>Two memory models under one package name</strong>, which
+invites picking the wrong one.</li>
+<li><strong>Undefended constants</strong> governing the whole control
+loop.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The diversity-to-temperature loop, including the smoothing and the
+bounds, wherever memory feeds a search or generate-and-test
+process.</li>
+<li>The idea that recall need not be deterministic when its consumer is
+exploration.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>The <code>Solution</code> shape as a general memory record — it has
+no provenance, status, or scope.</li>
+<li>Stochastic recall for factual memory, where a user asking the same
+question twice should get the same answer.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Does adaptive temperature outperform a fixed one? The code is
+parameterized for the experiment; nothing records it having been
+run.</li>
+<li>Is there a seed or replay path for reproducing a selection during
+debugging?</li>
+<li>Why do the graded and evolutionary stacks share a package but no
+abstraction?</li>
+<li>What validates the <code>score</code> on a solution, given that
+selection quality depends entirely on it?</li>
+<li>Does the Redis-backed population have a retention policy, or does it
+grow without bound?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Selection and temperature:
+<code>src/loongflow/agentsdk/memory/evolution/boltzmann.py</code>
+(<code>_calculate_diversity</code>,
+<code>_adaptive_temperature_by_diversity</code>,
+<code>select_parents_with_dynamic_temperature</code>,
+<code>_boltzmann_selection_with_weights</code>).</li>
+<li>Population model: <code>evolution/base_memory.py</code>
+(<code>Solution</code>, <code>EvolveMemory</code>).</li>
+<li>Backends: <code>evolution/in_memory.py</code>,
+<code>evolution/redis_memory.py</code>,
+<code>evolution/memory_factory.py</code>.</li>
+<li>Graded tiers: <code>grade/memory.py</code>
+(<code>GradeMemory</code>), <code>grade/components.py</code>,
+<code>grade/compressor/</code>, <code>grade/storage/</code>.</li>
+<li>Tests: <code>tests/agentsdk/memory</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

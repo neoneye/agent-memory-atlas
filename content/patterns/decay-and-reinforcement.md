@@ -110,6 +110,21 @@ deletion because reachability and belief were the same number.
 shape: keep votes as append-only events and derive the score, so a reinforcement
 rule can be changed or recomputed rather than baked irreversibly into a column.
 
+[Memora](../../systems/memora/) sits on the correct side of the line and still
+shows the hazard: `calculate_importance(created_at, base_importance,
+access_count)` is a ranking signal rather than a confidence, but retrieval
+increments `access_count`, which raises the score, which makes future retrieval
+more likely — the self-amplifying loop with no counterweight visible.
+
+[LoongFlow](../../systems/loongflow/) is the one system here that answers
+reinforcement collapse structurally rather than by tuning a rate. Its
+evolutionary memory samples from a Boltzmann distribution over scores at a
+temperature raised when the population's measured diversity falls, so a store
+converging on the same few items automatically loosens selection until variety
+returns. It is a narrow instance — recall there feeds a search loop, not belief —
+but it is worth noting that the usual fix for reinforcement runaway is a decay
+constant, and this one is a feedback controller.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

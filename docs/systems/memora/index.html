@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An MCP memory layer whose
+supersession pipeline classifies memory pairs against an explicit
+relation vocabulary — and defaults to a dry run, so a correction pass
+can be previewed before it changes anything.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memora — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP memory layer whose
+supersession pipeline classifies memory pairs against an explicit
+relation vocabulary — and defaults to a dry run, so a correction pass
+can be previewed before it changes anything.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memora — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP memory layer whose
+supersession pipeline classifies memory pairs against an explicit
+relation vocabulary — and defaults to a dry run, so a correction pass
+can be previewed before it changes anything.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memora — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Rehearsable correction</p>
+          <h1>Memora</h1>
+          <p class="document-deck">An MCP memory layer whose
+supersession pipeline classifies memory pairs against an explicit
+relation vocabulary — and defaults to a dry run, so a correction pass
+can be previewed before it changes anything.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/agentic-box/memora">
+              <span>Source</span>
+              <strong>agentic-box/memora</strong>
+              <b aria-hidden="true">↗</b>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155" title="bc64ff745a9b2c0e6245e0137654f041fba0c155">
+              <span>Analyzed revision</span>
+              <code>bc64ff745a9b2c0e6245e0137654f041fba0c155</code>
+              <b aria-hidden="true">↗</b>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-27</strong>
+            </div>
+                      </div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memora is an MIT-licensed MCP memory layer — about 14,900 lines,
+dominated by <code>storage.py</code> (4,881) and <code>server.py</code>
+(3,240), with a <code>graph/</code> package, embeddings, document and
+image ingestion, a dotted-tag hierarchy, and cloud sync to a D1
+backend.</p>
+<p>Most of that is competent and familiar. One part is not, and it
+addresses the failure this atlas has spent forty-four reports circling:
+<strong>correction here can be rehearsed before it is
+committed.</strong></p>
+<p>Memora's supersession pass runs in three phases — candidate pairs by
+embedding similarity, LLM classification of each pair, then edge
+creation — and the signature is:</p>
+<pre class="python"><code>def ..., dry_run: bool = True, ...
+    &quot;&quot;&quot;
+    Phase 1: Find candidate pairs via embedding similarity.
+    Phase 2: Classify each pair with LLM (neutral A/B presentation).
+    Phase 3: Create supersedes edges for confirmed pairs (unless dry_run).
+        dry_run: If True, only report findings without creating edges
+    &quot;&quot;&quot;</code></pre>
+<p><strong>The default is <code>True</code>.</strong> Reporting is the
+default behaviour and mutating memory is opt-in. Every other correction
+mechanism in the atlas acts immediately: <a
+href="../cowagent/">CowAgent</a> overwrites <code>MEMORY.md</code> on a
+nightly schedule, <a href="../magic-context/">Magic Context</a> marks
+memories stale in place, <a href="../atomic-agent/">Atomic Agent</a>
+deprecates rows. None lets an operator ask <em>what would this
+change?</em> first.</p>
+<p>The second good idea is the classification vocabulary. Rather than a
+boolean "is this a duplicate", pairs are sorted into:</p>
+<pre><code>a_supersedes_b | b_supersedes_a | duplicate | related | contradicts | neither</code></pre>
+<p>Each is defined in the prompt — <code>a_supersedes_b</code> means "A
+is a strictly newer version of B covering the same topic with updated
+information, making B fully obsolete." Two properties follow.
+<code>contradicts</code> is a <strong>relation between two identified
+memories</strong>, not a flag on one, so a contradiction names both
+parties — more actionable than <a href="../gini-agent/">Gini</a>'s
+<code>conflicted</code> status or <a href="../mateclaw/">MateClaw</a>'s
+detector. And the pair is presented <strong>neutrally as A and
+B</strong>, with the model deciding direction, rather than being asked
+to confirm a direction the caller already assumed.</p>
+<p>The gap is the familiar one: supersession <em>hides</em> a memory
+from active retrieval, and nothing records the rejected value, so
+re-ingesting the same content creates it again.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Six tables, and the last two matter:</p>
+<pre class="sql"><code>memories             id, content, metadata, tags, created_at, updated_at
+                     + importance, access_count, last_accessed (added by migration)
+memories_fts         FTS5 over content, metadata, tags
+memories_embeddings  vectors
+memories_crossrefs   typed edges: supersedes, superseded_by, extends, references, ...
+memories_events      what happened
+memories_actions     what was done</code></pre>
+<p>Retrieval ranking folds in decay:</p>
+<pre class="python"><code>result[&quot;importance_score&quot;] = calculate_importance(
+    row[&quot;created_at&quot;], base_importance, access_count
+)</code></pre>
+<p>so age and use adjust reachability, in the manner the <a
+href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> pattern asks for — and, as that pattern warns,
+<code>access_count</code> rising on retrieval is a self-reinforcing
+loop.</p>
+<p>Correction lifecycle:</p>
+<pre class="text"><code>embedding similarity → candidate pairs
+  → LLM classifies each pair, A/B presented neutrally
+      a_supersedes_b | b_supersedes_a | duplicate | related | contradicts | neither
+  → dry_run (default) → return findings, change nothing
+  → dry_run=False     → write supersedes edges; superseded rows hidden from retrieval</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>storage.py</code> (4,881) — schema, retrieval, importance, the
+supersession pipeline.</li>
+<li><code>server.py</code> (3,240) — the MCP surface.</li>
+<li><code>graph/</code> — <code>templates.py</code> (1,390),
+<code>server.py</code> (820), <code>data.py</code> (681).</li>
+<li><code>backends.py</code> (1,141) — storage backends including
+D1.</li>
+<li><code>document.py</code> (550), <code>embeddings.py</code> (418),
+<code>image_storage.py</code> (314).</li>
+<li><code>hierarchy.py</code> — builds a tree from dotted tags
+(<code>project.acme.api</code>).</li>
+<li><code>cloud_sync.py</code>, <code>schema.py</code>,
+<code>cli.py</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart LR
+  In[&quot;MCP writes · documents · images&quot;] --&gt; Mem[&quot;memories (+fts, embeddings)&quot;]
+  Mem --&gt; Rank[&quot;retrieval: FTS + vectors&quot;]
+  Rank --&gt; Imp[&quot;importance decay: age + access_count&quot;]
+  Imp --&gt; Out[&quot;results&quot;]
+  Mem --&gt; P1[&quot;Phase 1: similar pairs&quot;]
+  P1 --&gt; P2[&quot;Phase 2: LLM classifies A/B neutrally&quot;]
+  P2 --&gt; Dry{&quot;dry_run (default true)&quot;}
+  Dry --&gt;|yes| Report[&quot;findings only&quot;]
+  Dry --&gt;|no| Edge[&quot;supersedes edge → hidden from retrieval&quot;]
+  Edge --&gt; Cross[&quot;memories_crossrefs&quot;]
+  Mem --&gt; Ev[&quot;memories_events · memories_actions&quot;]</code></pre>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="a-correction-pass-you-can-preview">A correction pass you can
+preview</h3>
+<p>Splitting candidate discovery from classification from mutation is
+ordinary pipeline hygiene. Defaulting the mutating phase off is the
+choice worth copying.</p>
+<p>It changes what an operator can do. A supersession sweep over a large
+store is exactly the kind of operation whose blast radius is unknowable
+in advance — an over-eager classifier can hide dozens of memories that
+were merely similar. With reporting as the default, the sweep becomes
+something you run, read, and then decide about, rather than something
+you discover the effects of afterwards.</p>
+<p>The atlas asks for this indirectly in several places — <a
+href="../../patterns/governed-write-gateway/">governed write gateway</a>
+wants mutation concentrated and reviewable, and <a
+href="../hermes-agent/">Hermes Agent</a> stages memory writes for human
+approval. Memora is the first to make <em>preview</em> the default
+posture for automated correction.</p>
+<h3 id="neutral-ab-classification">Neutral A/B classification</h3>
+<p>"Phase 2: Classify each pair with LLM (neutral A/B presentation)" —
+the model is not told which memory is newer or which the caller suspects
+is obsolete; it returns the direction as part of its answer
+(<code>a_supersedes_b</code> versus <code>b_supersedes_a</code>).</p>
+<p>That matters because the alternative anchors the model. Asking "is B
+obsolete?" invites yes; asking "what is the relation between A and B?"
+does not presuppose one. For a classifier whose output silently hides
+memories, removing that anchor is worth the small extra prompt
+complexity.</p>
+<h3 id="contradicts-as-an-edge"><code>contradicts</code> as an edge</h3>
+<p>Most systems that model contradiction attach a status to a single row
+— Gini's <code>conflicted</code>, or a detector that emits a list.
+Memora writes the relation into <code>memories_crossrefs</code> between
+two identified memories, so "what does this contradict?" is a graph
+query rather than a scan.</p>
+<p>The vocabulary also distinguishes <code>duplicate</code> from
+<code>related</code> from <code>neither</code>, which keeps the pipeline
+from collapsing every similarity into a supersession decision.</p>
+<h3 id="importance-with-decay">Importance with decay</h3>
+<p><code>calculate_importance(created_at, base_importance, access_count)</code>
+blends a base importance, age, and access count into a score used at
+retrieval. <code>last_accessed</code> is tracked alongside.</p>
+<p>This sits on the correct side of the atlas's truth/reachability line
+— it is a ranking signal, not a confidence — but it inherits the
+reinforcement hazard: retrieval increments <code>access_count</code>,
+which raises <code>importance_score</code>, which makes future retrieval
+more likely.</p>
+<h3 id="migration-tolerant-schema">Migration-tolerant schema</h3>
+<p><code>_ensure_importance_columns</code>,
+<code>_ensure_updated_at_column</code>,
+<code>_ensure_embeddings_table</code>,
+<code>_ensure_crossrefs_table</code>, <code>_ensure_events_table</code>,
+<code>_ensure_actions_table</code> are each applied idempotently at
+open, so an older database gains columns and tables without a separate
+migration step. A comment notes that <code>memory_absorb</code> stores
+source and confidence in metadata rather than columns — an honest record
+of where the schema was extended sideways.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The base row is deliberately thin — content, tags, metadata,
+timestamps — with importance and access tracking added by migration, and
+everything structural pushed into <code>memories_crossrefs</code>.</p>
+<p>What is absent:</p>
+<ul>
+<li><strong>No trust or verification state.</strong> A memory is present
+or superseded; nothing marks it candidate, verified, or rejected.</li>
+<li><strong>No rejected-value tombstone.</strong> Supersession hides a
+row from active retrieval; re-ingesting the same content produces a new
+row that nothing blocks. In a system with document and image ingestion,
+re-ingestion is a realistic path.</li>
+<li><strong>No explicit scope</strong> surfaced in the schema; the
+dotted-tag hierarchy organizes but does not isolate.</li>
+<li><strong>Provenance lives in metadata</strong>, not in typed columns,
+so source and confidence are unindexed.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 over content, metadata, and tags, plus embeddings, with
+importance decay folded into ranking. The dotted-tag hierarchy
+(<code>hierarchy.py</code> builds a tree from <code>a.b.c</code> tags)
+gives a browsable structure over the same rows, and the
+<code>graph/</code> package provides a separate relational view.</p>
+<p>Superseded memories are hidden from active retrieval rather than
+deleted, so the correction is reversible by removing the edge — a
+genuinely nice property that pairs well with the dry-run default.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>MCP tools for text, with <code>document.py</code> and
+<code>image_storage.py</code> handling richer ingestion.
+<code>memories_events</code> and <code>memories_actions</code> give an
+append-only record alongside the rows themselves, which is the <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> shape.</p>
+<p>No write gate, actor model, or verification tier appears — the
+sophistication is concentrated in what happens to memories
+<em>after</em> they are written.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server plus a CLI and a separate graph server, with cloud sync
+to a D1 backend for cross-device use. Positioned as a drop-in memory
+layer for MCP-speaking agents.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Correction defaults to reporting</strong>, not
+mutating.</li>
+<li><strong>A defined relation vocabulary</strong> rather than a
+similarity threshold.</li>
+<li><strong>Neutral A/B classification</strong> that does not anchor the
+model on a direction.</li>
+<li><strong><code>contradicts</code> as an edge</strong> between two
+named memories.</li>
+<li><strong>Supersession hides rather than deletes</strong>, so the
+decision is reversible.</li>
+<li><strong>Event and action logs</strong> alongside the rows.</li>
+<li><strong>Idempotent schema upgrades</strong> applied at open.</li>
+<li><strong>Decay kept in ranking</strong>, not in a confidence
+field.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No tombstone</strong>, so a superseded value can return
+through re-ingestion.</li>
+<li><strong>No trust state or verification.</strong></li>
+<li><strong>Reinforcement loop</strong> via
+<code>access_count</code>.</li>
+<li><strong>Provenance in untyped metadata.</strong></li>
+<li><strong>No scope isolation</strong> — tags organize but do not
+separate.</li>
+<li><strong>A very large <code>storage.py</code></strong> carrying
+schema, retrieval, importance, and correction together.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was run for this review, and no memory-quality benchmark was
+found.</p>
+<p>For a system whose distinctive feature is a classifier that hides
+memories, the measurement that matters is <strong>classification
+precision</strong> — how often <code>a_supersedes_b</code> is wrong, and
+what fraction of a sweep's proposals a human would reject. The dry-run
+mode makes exactly that measurable, since a run produces a reviewable
+list without side effects. Nothing indicates it has been done.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<ul>
+<li><strong>Default automated correction to a dry run.</strong>
+Reporting should be the default and mutation opt-in, for any pass that
+can hide or delete memory in bulk. This is the most transferable idea
+here and costs a keyword argument.</li>
+<li><strong>Classify pairs into a defined vocabulary</strong>, including
+<code>neither</code>, instead of thresholding similarity.</li>
+<li><strong>Present the pair neutrally</strong> and let the model choose
+the direction, so the question does not anchor the answer.</li>
+<li><strong>Make contradiction an edge</strong>, so both parties are
+named and queryable.</li>
+<li><strong>Hide rather than delete on supersession</strong>, keeping
+the correction reversible.</li>
+<li><strong>Apply schema upgrades idempotently at open</strong> rather
+than in a separate migration step.</li>
+</ul>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Supersession without a tombstone</strong>, in a system that
+ingests documents and images and can therefore re-ingest.</li>
+<li><strong>Access-driven reinforcement</strong> in the ranking
+signal.</li>
+<li><strong>Untyped provenance</strong> in metadata.</li>
+<li><strong>One module holding schema, ranking, and
+correction.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow:</p>
+<ul>
+<li>The <code>dry_run: bool = True</code> posture for any bulk
+correction pass.</li>
+<li>The six-way relation vocabulary and the neutral A/B framing.</li>
+<li>Hiding rather than deleting superseded rows.</li>
+</ul>
+<p>Do not copy:</p>
+<ul>
+<li>Supersession as the whole correction story; add a value-level
+tombstone if content can be re-ingested.</li>
+<li><code>access_count</code> feeding ranking without a
+counterweight.</li>
+</ul>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>How precise is the pair classifier? The dry-run output is exactly
+the artifact needed to find out.</li>
+<li>What stops a superseded memory returning when the same document is
+ingested again?</li>
+<li>Does anything surface <code>contradicts</code> edges to an operator,
+or do they only sit in the graph?</li>
+<li>Is there a scope boundary beneath the tag hierarchy for multi-user
+use?</li>
+<li>Does the D1 cloud sync propagate supersession edges, or only
+rows?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and tables: <code>memora/schema.py</code>
+(<code>memories</code>, <code>memories_fts</code>,
+<code>memories_embeddings</code>, <code>memories_crossrefs</code>,
+<code>memories_events</code>, <code>memories_actions</code>).</li>
+<li>Storage, ranking, importance, supersession pipeline:
+<code>memora/storage.py</code>.</li>
+<li>MCP surface: <code>memora/server.py</code>; graph surface:
+<code>memora/graph/server.py</code>, <code>data.py</code>,
+<code>templates.py</code>.</li>
+<li>Backends and cloud: <code>memora/backends.py</code>,
+<code>cloud_sync.py</code>.</li>
+<li>Ingestion: <code>memora/document.py</code>,
+<code>memora/image_storage.py</code>,
+<code>memora/embeddings.py</code>.</li>
+<li>Tag hierarchy: <code>memora/hierarchy.py</code>.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

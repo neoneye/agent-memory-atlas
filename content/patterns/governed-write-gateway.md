@@ -86,6 +86,14 @@ approval — but the gate **fails open** if its module cannot be imported, which
 documented in the code and worth noticing: a gateway's failure mode is part of
 its design.
 
+[Memora](../../systems/memora/) applies the idea to a bulk mutation rather than a
+single write: its supersession sweep takes `dry_run: bool = True`, so the pass
+that would hide superseded memories reports its proposals by default and mutates
+only when explicitly asked. A gateway concentrates writes so they can be
+governed; a dry-run default lets them be *reviewed* first, which is the one
+control this pattern otherwise lacks for operations whose blast radius is
+unknowable in advance.
+
 [Verel](../../systems/verel/) gates promotion rather than writing;
 [engram](../../systems/engram/) surfaces conflict candidates for judgment.
 

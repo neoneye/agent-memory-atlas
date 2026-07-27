@@ -1,14 +1,14 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of forty-four agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of forty-six agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
 
 ## 1. High-Level Taxonomy
 
-Forty-four systems do not fall into forty-four categories. They cluster around
+Forty-six systems do not fall into forty-six categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -51,7 +51,7 @@ several documented capabilities are managed-platform-only.
 
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
-`mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`
+`mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`, `loongflow`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -67,7 +67,10 @@ design document, records votes as append-only events with derived scores, and
 ships new memory features off by default until an evaluation campaign reports. **GenericAgent** governs four file layers with written axioms
 instead of code. **Waku** organizes everything around refusing expensive work:
 a small model decides whether to retrieve at all, consolidation batches, and
-skill bodies load only on match.
+skill bodies load only on match. **LoongFlow** carries two unrelated memories in
+one package — a conventional short/medium/long tier stack, and a population of
+scored solutions recalled by Boltzmann sampling whose temperature is driven by
+the population's measured diversity.
 
 Tradeoff: deeper integration buys behavioural control at the cost of coupling
 memory to the framework, prompt assembly, and tool loop.
@@ -96,7 +99,7 @@ contract of four carries scope; none carries deletion. See
 ### Local coding-agent memory
 
 `engram`, `mempalace`, `llm-wiki-memory`, `basic-memory`, `moltis`,
-`open-cowork`, `byterover`, `magic-context`, `swafra`
+`open-cowork`, `byterover`, `magic-context`, `swafra`, `memora`
 
 Durable local state for a developer workflow: hooks, MCP, project scopes, exact
 search. **Engram** is the small no-extraction baseline over SQLite and FTS.
@@ -107,6 +110,9 @@ implementation, indexing a Markdown corpus that sanitized session transcripts
 are exported into. **open-cowork** separates core from experience memory and
 ships the atlas's most complete memory benchmark. **Swafra** shows how little
 code a local graph-RAG sidecar needs, and why flat JSON is not a database.
+**Memora** is the only system here whose automated correction pass defaults to a
+dry run: the sweep that would hide superseded memories reports its findings
+unless mutation is explicitly requested.
 
 Tradeoff: operationally simple and inspectable; no answer to hosted ranking,
 multi-tenancy, or rich user modelling.
@@ -221,10 +227,12 @@ session with an identity you could later correct.
 | `letta` | Core memory block, archival passage, message | ORM database; passages with embeddings; optional git memory | Archival search, conversation search, compiled core prompt | Agent tools mutate core/archival memory | Append/replace/patch, passage insert, block update | Agent, block labels, files/sources | Deep runtime tool executor integration | Prompt rebuilds, manager services | Block tags/metadata, message timestamps; limited truth model | Clear core/archive/recall separation | Agent can rewrite important memory without strong verification |
 | `llamaindex` | Block-owned content; no memory record | Application-chosen; vector store via the framework's abstractions | Per-block: vector retrieval, extracted facts, static text — composed, not fused | Short-term history overflow flushes `token_flush_size` into blocks | Condensation rewrites the fact list wholesale; no tombstone | None; application-owned | LlamaIndex agents and workflows; custom blocks via `BaseMemoryBlock` | None; extraction runs on flush | None — extracted facts record no source | Self-truncating blocks and one explicit budget split | No provenance, correction, or scope; capture depends on conversation length |
 | `llm-wiki-memory` | Typed Markdown atom, plan/investigation, daily capture, or full document | Filesystem wiki, per-category embedding caches, private git history | Metadata prefilter, local embedding/chunk cosine, priority bands, federated locality boost; lexical vector fallback | MCP/CLI writes, transcript and plan hooks, daily compile, full-document absorb | Upsert/relocate, archive/re-enable, exact delete, supersedes, opt-in dedup/refresh consolidation | Private brain plus explicit repository wiki levels; workspace/area/task/subject facets | MCP, CLI, Claude Code lifecycle hooks, shared instructions | Detached flush, daily compile, opt-in consolidation, cron healing, git/cache maintenance | Body hash, capture audit, git history, user-gated lessons; no candidate/verified/rejected state | Recoverable capture, explicit targets, deterministic layout/topology, excellent operational tests | LLM atoms become active without verification; vector-only primary retrieval; linear scans; git is not erasure |
+| `loongflow` | Message in graded tiers; `Solution` with score and timestamp in the evolving population | In-memory or Redis for the population; pluggable storage for graded tiers | Graded tiers by recency; population by Boltzmann selection with adaptive temperature | Messages flow through stm to mtm to ltm via a compressor; solutions appended with a score | Compression across tiers; population turnover by selection pressure | Not traced | LoongFlow agent SDK | Auto-compression between tiers | Score on each solution; no trust state on messages | The only stochastic recall in the atlas, with temperature driven by measured diversity | Two unrelated memory models under one package; the graded stack is conventional |
 | `magic-context` | Memory with separate lifecycle and verification state, plus compartments, facts, primers | SQLite (70 migrations) with FTS5, embeddings keyed by `(memory_id, model_id)`, git commits indexed | Hybrid semantic + BM25 with source boosts and `matchType`, over memories and raw history | Agent, user, historian, or dreamer writes; synchronous promotion, async embedding | Supersession and merge lineage; archived, not tombstoned | `project` / `ecosystem` / `universe` lattice plus a `shareable` flag | Pi `ExtensionAPI` and an OpenCode adapter sharing one store | Dreamer: verify, map, classify, promote, retrospective, at commit boundaries | Four-actor `sourceType`, mutation logs, per-memory `verified_at` | Memories re-verified against the files they describe when git says those files changed | Verdict is an LLM call; no rejected-value tombstone; very large surface |
 | `mastra-observational-memory` | Raw message, dated observation group, reflected observation context | Mastra `MemoryStorage` adapters | Sequential active observations + recent raw tail; optional observation-vector retrieval | Processor observes at token thresholds; reflector compacts observations | Range replacement, buffered activation, clear/clone records | Thread or resource | Deep Mastra input/output processor integration | Early async observation/reflection buffers with activation | Exact covered ranges and markers; summary has no truth state | Non-blocking context compaction for long sessions | Distributed locking and progressive summary drift |
 | `mateclaw` | Fact, recall record, workspace file, and dream report | Relational repositories under Spring, with fact projections | Provider `prefetch`, fact projection, and search package | Turn lifecycle events drive `syncTurn` across registered providers | Contradiction detection over facts; archive package; no tombstone found | `MemoryScope` string column with TEAM and GLOBAL shared; `MemoryOwnerResolver` | `MemoryProvider` SPI with decorators; tool beans; Vue memory UI | Scheduler, dream reports, nudge service | Contradiction detector; owner key carried through the provider contract | A provider contract that carries scope, and retry/metrics as decorators | No deletion hook on the SPI; contradiction handling is detection only |
 | `mem0` | Text fact in vector payload | Vector store plus SQLite history/messages | Semantic, optional keyword/BM25, entity boost, optional rerank | LLM additive extraction, hash dedupe, entity linking | Explicit update/delete APIs; V3 default append-oriented | `user_id`, `agent_id`, `run_id`, filters | Python SDK, tool/API style | Extraction and linking on write | Attribution metadata, history; weak epistemic trust | Practical SDK, pluggable stores, hybrid search | LLM facts can become durable claims without verification |
+| `memora` | Memory row with content, tags, metadata, importance, and access count | SQLite with FTS5, embeddings, crossrefs, events, actions; D1 cloud backend | FTS5 plus embeddings, ranked with age-and-access importance decay | MCP tools; documents and images ingested alongside text | Pairwise relation classification into supersession edges; superseded rows hidden from retrieval | Not traced; tags form a dotted hierarchy | MCP server, CLI, graph server | Supersession sweeps, embedding backfill, cloud sync | `memories_events` and `memories_actions` logs; `contradicts` as a relation between memories | Correction that can be rehearsed — dry_run defaults to True | No tombstone; supersession hides rather than blocks re-entry |
 | `memos` | Textual item, graph tier, preference/skill, KV cache, LoRA | Configurable vector/graph stores, dumps, cache/model artifacts | Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories | Reader extraction into a memory cube; scheduler transformations | Module-specific update/delete/soft-delete/dump semantics | User plus registered memory cube | MOS chat/runtime, APIs, CLI | Scheduler and activation-memory refresh | Source metadata varies by module; no uniform trust state | Treats memory as heterogeneous mountable resources | Umbrella API hides uneven guarantees and maturity |
 | `mempalace` | Verbatim drawer chunks, closets, KG triples | Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG | Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback | Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text | Delete/update drawers, delete by source, dedup, repair; limited epistemic correction | Palace, wing, room, source file, parent drawer, backend namespace | MCP, CLI, hooks, skills, wake-up stack | Mining, closet/hallway/tunnel computation, repair/sync/backup | Strong source provenance; weak candidate/verified/rejected trust state | Evidence-preserving raw baseline, hybrid retrieval, operational hardening | Raw stores get large/noisy; contradiction resolution mostly outside core recall |
 | `mercury-agent` | `UserMemoryRecord` graded on confidence, importance, and durability | Second-brain DB, with people and relation records | Retrieval records `lastUsedAt` and `lastUsedQuery` | Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration | `dismissed` boolean and `supersededBy`; no tombstone | `durable`, `active`, `subconscious` tiers; single user | Internal, with a `brain/Memory.tsx` review page | Not traced | Four-way `evidenceKind`, corroboration counts, free-text provenance | Durability separated from importance; a subconscious tier; a learning-pause switch | Scores estimated once at write time; dismissal is not durable |
@@ -398,6 +406,17 @@ better, it decides per turn whether to retrieve at all, and its stated reason is
 not cost but quality: irrelevant memory in the prompt bends the answer. Nothing
 else in the atlas can abstain.
 
+`loongflow` breaks a different assumption: every other system here ranks
+deterministically and takes the top *k*. Its evolutionary memory selects a
+remembered solution by **Boltzmann sampling over scores**, at a temperature set
+by `_adaptive_temperature_by_diversity` from a sampled measure of how varied the
+stored population currently is — blending in 20% of the previous temperature so
+the control signal does not oscillate. A converged population gets a higher
+temperature and flatter selection, which readmits weaker solutions and restores
+variety. This is only defensible because recall there feeds exploration rather
+than belief; asked the same question twice it may answer differently, which is
+the correct trade for a search loop and the wrong one for facts about a user.
+
 `hipporag` is the one system here that does not rank at all in the usual sense: it seeds a personalization vector from query-linked entities plus a weak dense prior, then reads relevance off a Personalized PageRank diffusion across the whole graph. `generative-agents` established the multi-signal shape everything else refines — normalized recency, relevance, and importance combined in a weighted sum — though the specific weights (`gw = [0.5, 3, 2]`, with two earlier settings left commented out) are hand-tuned with no ablation in the repository, and its recency decays by chronological *position* rather than elapsed time. `voyager` retrieves top-5 by vector similarity over generated descriptions and returns executable code, with scores computed and then discarded so there is no relevance threshold. `openviking` runs directory-recursive dense plus sparse retrieval with level filters, per-type quotas, optional reranking, and a hotness blend. `redis-agent-memory-server` pairs vector search with a recency reranker using separate half-lives for last access and creation. `holographic` fuses FTS5, Jaccard, and HRR cosine, then multiplies by trust — and silently reweights to lexical-only when NumPy is absent while still reporting itself as available. `openclaw`'s reference backend is vector-only, which sits awkwardly with a category set dominated by preferences, entities, and decisions. `a-mem` is vector-only despite hybrid wording. `mastra-observational-memory` is the deliberate exception: its primary path is sequential observations plus a recent raw tail, with semantic observation retrieval optional.
 
 ### Context Injection
@@ -446,11 +465,37 @@ its `contradict` action surfaces contradictions as an ordinary query, but only
 reports them, with no supersession or review workflow attached, and its docstring
 claim that "no other memory system does this" is not accurate within this atlas.
 
+`memora` contributes the one procedural idea this section has been missing. Its
+supersession pass runs in three phases — candidate pairs by embedding
+similarity, LLM classification, then edge creation — and the mutating phase is
+governed by `dry_run: bool = True`. **Reporting is the default; changing memory
+is opt-in.** Every other correction mechanism here acts immediately, so an
+operator learns the blast radius of a sweep only afterwards. Memora also
+classifies each pair against a defined vocabulary — `a_supersedes_b`,
+`b_supersedes_a`, `duplicate`, `related`, `contradicts`, `neither` — rather than
+thresholding similarity, presents the pair neutrally as A and B so the model
+chooses the direction rather than confirming an assumed one, and writes
+`contradicts` as an **edge between two named memories** instead of a flag on one
+row, which makes it queryable in a way Gini's `conflicted` status is not. The
+gap is the usual one: supersession hides a memory from retrieval without
+recording the rejected value, and this is a system that ingests documents and
+images, so re-ingestion is a realistic path back.
+
 Cognee can forget and rebuild derived projections from retained source, but its
 ontology-valid, source-attributed graph facts still lack candidate/rejected
 epistemic state. Claude-Mem offers exact deletion and feedback but no durable
 rejection mechanism preventing an observation from being regenerated. A-MEM
 mutates neighboring note metadata directly and has no correction chain.
+
+The gap is visible from outside this atlas too. TeleAI's
+[Awesome-Agent-Memory](https://github.com/TeleAI-UAGI/Awesome-Agent-Memory)
+survey runs to about 1,500 lines across seventy sections and covers mem0, Letta,
+Zep, Graphiti, Cognee, MemOS, and HippoRAG — every widely-cited system, and all
+of them reviewed here. It does not list `verel` or `rainbox`, the only two
+systems in this atlas that carry a rejected-value tombstone. That is not a
+criticism of the survey; those two are small and obscure. It does mean
+correction-focused memory is under-surveyed as well as under-built: a reader
+working from the standard reading list would not encounter the mechanism at all.
 
 ### Forgetting
 
@@ -1096,6 +1141,36 @@ document curation but not its own LLM memory merge.
 Repos: strongest in `mastra-observational-memory`; related consolidation in `hindsight` and `honcho`.
 
 Prepare derived context before the hard prompt threshold, persist the exact source range it covers, and activate it atomically when needed. This removes LLM compression from the critical path. It fails without durable markers, range-aware replacement, recovery, and distributed coordination.
+
+### Rehearse the correction before committing it
+
+Repos: `memora`; related staging in `hermes-agent`.
+
+Any pass that can hide or delete memory in bulk should default to reporting what
+it would do. Memora's supersession pipeline takes `dry_run: bool = True`, so a
+sweep produces a reviewable list of proposed edges and changes nothing until
+mutation is explicitly requested. This costs a keyword argument and turns an
+operation with an unknowable blast radius into one an operator can read first.
+It also makes the classifier measurable: the dry-run output is exactly the
+artifact needed to count how often the pass would have been wrong. It fails if
+the preview and the mutating path diverge, or if nobody actually reads the
+report — a default that is always overridden is not a safeguard.
+
+### Sample instead of rank, when recall feeds exploration
+
+Repos: `loongflow`; adjacent in `voyager` and `verel`.
+
+Deterministic top-*k* recall has a failure mode nobody else here names: if the
+ranking function is slightly wrong, the same wrong memories surface every time
+and the alternatives are never seen. LoongFlow's evolutionary memory samples a
+remembered solution from a Boltzmann distribution over scores, with the
+temperature driven by measured population diversity and bounded on both sides,
+so a store that has collapsed toward sameness loosens selection until variety
+returns. This is right only where remembered items inform *what to try next*
+rather than *what is true* — the same mechanism applied to facts about a user
+means the same question can get different answers. It also gives up
+reproducibility, and nothing in LoongFlow provides a seed or replay path for
+debugging a selection.
 
 ## 6. Antipatterns and Failure Modes
 
@@ -1775,6 +1850,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: researching adaptive linked-note organization.
 - Do not copy as a production core without stable IDs, canonical durability, scope, provenance, transactions, and trust state.
 
+### `memora`
+
+- Best idea: automated supersession that defaults to a dry run, so a correction sweep is previewed before it hides anything.
+- Biggest risk: supersession without a tombstone, in a system that ingests documents and images and can therefore re-ingest what it hid.
+- Most reusable component: the six-way relation vocabulary with neutral A/B presentation, and `dry_run: bool = True` as the default posture.
+- Maturity impression: substantial for its age, with the sophistication concentrated in what happens to memories after they are written.
+- Study when: you are about to run an automatic dedupe or supersession pass over a store you cannot afford to damage.
+- Do not copy when: you need trust state, scope isolation, or a correction that survives re-ingestion.
+
+### `loongflow`
+
+- Best idea: recall by Boltzmann sampling at a temperature driven by the store's measured diversity — the only stochastic retrieval in the atlas.
+- Biggest risk: selection quality is bounded entirely by a `score` nothing validates, and the same query can return different memories with no seed or replay path.
+- Most reusable component: the diversity-to-temperature loop, including the 20% smoothing and the explicit min/max bounds.
+- Maturity impression: two unrelated memory models in one package — a conventional tier stack and a genuinely novel selection mechanism — with the control constants undefended.
+- Study when: memory feeds a search or generate-and-test loop and deterministic top-*k* keeps returning the same dead end.
+- Do not copy when: recall must be reproducible, or the memories are facts rather than attempts.
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -1908,6 +2001,8 @@ Privacy/deletion:
 - [`atomic-agent`](../systems/atomic-agent/)
 - [`mateclaw`](../systems/mateclaw/)
 - [`waku-agent`](../systems/waku-agent/)
+- [`memora`](../systems/memora/)
+- [`loongflow`](../systems/loongflow/)
 
 ### Repos Inspected
 
@@ -1954,6 +2049,8 @@ Privacy/deletion:
 - [AtomicBot-ai/atomic-agent](https://github.com/AtomicBot-ai/atomic-agent) at [`d69332c589733e38ae7393dd81fcbc5a375d02fb`](https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb)
 - [mateaix/mateclaw](https://github.com/mateaix/mateclaw) at [`3643aed7564390f57906954286a443d5913b97a7`](https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7)
 - [ShenSeanChen/waku-agent](https://github.com/ShenSeanChen/waku-agent) at [`5f638cfb5de957c14f056027833d8a9df5bbe558`](https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558)
+- [agentic-box/memora](https://github.com/agentic-box/memora) at [`bc64ff745a9b2c0e6245e0137654f041fba0c155`](https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155)
+- [baidu-baige/LoongFlow](https://github.com/baidu-baige/LoongFlow) at [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
@@ -2017,4 +2114,6 @@ No internet sources were used for this report. The analysis is based on the chec
 - Moltis's session sanitization was identified from its module documentation; exactly what it strips was not traced, which matters because transcripts can carry secrets, tool output, and previously injected memory blocks.
 - Five further repositories examined in this round have no reports: `he-yufeng/CoreCoder` (1,166 lines whose `context.py` is conversation-window compaction with nothing persisted), `chrysb/alphaclaw` (an OpenClaw deployment harness whose only "memory" reference is host RAM), `Intelligent-Internet/ii-agent` (a SaaS agent platform with chat context and caches but no durable memory), `neomjs/neo` (39 AgentOS documents describing a "Memory Core" that does not appear in `src/` — documentation without a reviewable implementation), and `AgentsMesh/AgentsMesh` (a real pgvector-backed block memory with a `memory.retrieve` MCP tool, set aside for now because it is licensed under Business Source License 1.1 rather than an open-source licence).
 - Three repositories examined in the same round were judged out of scope and have no reports: `KnockOutEZ/wigolo` (a web crawl, search, and extraction MCP server whose cache holds external content rather than agent belief), `siyuan-note/siyuan` (a note application whose agent kernel contains no memory concept — only conversation compaction — and whose MCP surface is note CRUD), and `netease-youdao/LobsterAI` (which operates OpenClaw's memory rather than having its own, and is covered inside the OpenClaw report).
+- Nothing was run for memora or LoongFlow. Memora's pair classifier is the component that matters — its precision determines which memories get hidden — and no measurement of it was found; the dry-run mode makes exactly that measurable, and nothing indicates it has been done. LoongFlow's tests exist under `tests/agentsdk/memory` but were not run, and no comparison of adaptive against fixed temperature was found, though the code is parameterized for it.
+- Six repositories examined in the same round have no reports. `TeleAI-UAGI/Awesome-Agent-Memory` is a survey, cited in the correction discussion rather than reviewed as a system. `webbrain-one/webbrain` (368 lines) and `AmeNetwork/aser` (29 lines) are too small to carry a mechanism. `AgentTeam-TaichuAI/ScienceClaw` is 78 lines with no licence file, and is a different repository from the OpenClaw-derived `beita6969/ScienceClaw` noted above. `ArtificialAnalysis/Stirrup` and `howl-anderson/agentsilex` have no memory subsystem.
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.

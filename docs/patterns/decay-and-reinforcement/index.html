@@ -166,6 +166,22 @@ the separation itself. <a href="../../systems/atomic-agent/">Atomic
 Agent</a> suggests the safest implementation shape: keep votes as
 append-only events and derive the score, so a reinforcement rule can be
 changed or recomputed rather than baked irreversibly into a column.</p>
+<p><a href="../../systems/memora/">Memora</a> sits on the correct side
+of the line and still shows the hazard:
+<code>calculate_importance(created_at, base_importance, access_count)</code>
+is a ranking signal rather than a confidence, but retrieval increments
+<code>access_count</code>, which raises the score, which makes future
+retrieval more likely — the self-amplifying loop with no counterweight
+visible.</p>
+<p><a href="../../systems/loongflow/">LoongFlow</a> is the one system
+here that answers reinforcement collapse structurally rather than by
+tuning a rate. Its evolutionary memory samples from a Boltzmann
+distribution over scores at a temperature raised when the population's
+measured diversity falls, so a store converging on the same few items
+automatically loosens selection until variety returns. It is a narrow
+instance — recall there feeds a search loop, not belief — but it is
+worth noting that the usual fix for reinforcement runaway is a decay
+constant, and this one is a feedback controller.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

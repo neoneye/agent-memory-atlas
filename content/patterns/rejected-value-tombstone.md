@@ -91,6 +91,14 @@ statement about the present that the next background pass is free to undo.
 operational supersession can archive an old leaf but cannot prevent the same
 rejected content from being distilled again.
 
+[Memora](../../systems/memora/) comes closest to the shape without arriving at
+it. Its supersession pass classifies memory pairs into a defined vocabulary —
+including `contradicts` as an edge between two named memories — and hides rather
+than deletes the superseded row, so the decision is reversible. But the edge is
+between two *ids*, not keyed on the rejected *value*, and Memora ingests
+documents and images: re-ingesting the same source produces a new row that
+nothing blocks. Rich relation modelling is not a substitute for negative memory.
+
 ## Tests to require
 
 - Reject a value, rerun extraction, and prove it stays inactive.

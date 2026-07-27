@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A code-grounded comparison of
-forty-four agent memory architectures, their retrieval mechanics, trust
+forty-six agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -12,14 +12,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of forty-four agent memory architectures, their retrieval mechanics,
+of forty-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of forty-four agent memory architectures, their retrieval mechanics,
+of forty-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -53,7 +53,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-forty-four agent memory architectures, their retrieval mechanics, trust
+forty-six agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                   </div>
         <div class="hero-contours" aria-hidden="true">
@@ -70,11 +70,11 @@ models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Forty-four systems do not fall into forty-four categories. They
-cluster around eight architectural commitments, and most systems belong
-to more than one — a coding-agent memory can also be verification-first,
-and a host runtime's plugin can also be a hosted service. The families
-below are lenses, not bins.</p>
+<p>Forty-six systems do not fall into forty-six categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -115,7 +115,8 @@ managed-platform-only.</p>
 <code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
-<code>mateclaw</code>, <code>waku-agent</code></p>
+<code>mateclaw</code>, <code>waku-agent</code>,
+<code>loongflow</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -135,7 +136,10 @@ campaign reports. <strong>GenericAgent</strong> governs four file layers
 with written axioms instead of code. <strong>Waku</strong> organizes
 everything around refusing expensive work: a small model decides whether
 to retrieve at all, consolidation batches, and skill bodies load only on
-match.</p>
+match. <strong>LoongFlow</strong> carries two unrelated memories in one
+package — a conventional short/medium/long tier stack, and a population
+of scored solutions recalled by Boltzmann sampling whose temperature is
+driven by the population's measured diversity.</p>
 <p>Tradeoff: deeper integration buys behavioural control at the cost of
 coupling memory to the framework, prompt assembly, and tool loop.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
@@ -165,7 +169,7 @@ memory provider</a>.</p>
 <p><code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>basic-memory</code>,
 <code>moltis</code>, <code>open-cowork</code>, <code>byterover</code>,
-<code>magic-context</code>, <code>swafra</code></p>
+<code>magic-context</code>, <code>swafra</code>, <code>memora</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -177,7 +181,10 @@ sanitized session transcripts are exported into.
 <strong>open-cowork</strong> separates core from experience memory and
 ships the atlas's most complete memory benchmark.
 <strong>Swafra</strong> shows how little code a local graph-RAG sidecar
-needs, and why flat JSON is not a database.</p>
+needs, and why flat JSON is not a database. <strong>Memora</strong> is
+the only system here whose automated correction pass defaults to a dry
+run: the sweep that would hide superseded memories reports its findings
+unless mutation is explicitly requested.</p>
 <p>Tradeoff: operationally simple and inspectable; no answer to hosted
 ranking, multi-tenancy, or rich user modelling.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
@@ -702,6 +709,27 @@ layout/topology, excellent operational tests</td>
 retrieval; linear scans; git is not erasure</td>
 </tr>
 <tr>
+<td><code>loongflow</code></td>
+<td>Message in graded tiers; <code>Solution</code> with score and
+timestamp in the evolving population</td>
+<td>In-memory or Redis for the population; pluggable storage for graded
+tiers</td>
+<td>Graded tiers by recency; population by Boltzmann selection with
+adaptive temperature</td>
+<td>Messages flow through stm to mtm to ltm via a compressor; solutions
+appended with a score</td>
+<td>Compression across tiers; population turnover by selection
+pressure</td>
+<td>Not traced</td>
+<td>LoongFlow agent SDK</td>
+<td>Auto-compression between tiers</td>
+<td>Score on each solution; no trust state on messages</td>
+<td>The only stochastic recall in the atlas, with temperature driven by
+measured diversity</td>
+<td>Two unrelated memory models under one package; the graded stack is
+conventional</td>
+</tr>
+<tr>
 <td><code>magic-context</code></td>
 <td>Memory with separate lifecycle and verification state, plus
 compartments, facts, primers</td>
@@ -778,6 +806,25 @@ filters</td>
 <td>Attribution metadata, history; weak epistemic trust</td>
 <td>Practical SDK, pluggable stores, hybrid search</td>
 <td>LLM facts can become durable claims without verification</td>
+</tr>
+<tr>
+<td><code>memora</code></td>
+<td>Memory row with content, tags, metadata, importance, and access
+count</td>
+<td>SQLite with FTS5, embeddings, crossrefs, events, actions; D1 cloud
+backend</td>
+<td>FTS5 plus embeddings, ranked with age-and-access importance
+decay</td>
+<td>MCP tools; documents and images ingested alongside text</td>
+<td>Pairwise relation classification into supersession edges; superseded
+rows hidden from retrieval</td>
+<td>Not traced; tags form a dotted hierarchy</td>
+<td>MCP server, CLI, graph server</td>
+<td>Supersession sweeps, embedding backfill, cloud sync</td>
+<td><code>memories_events</code> and <code>memories_actions</code> logs;
+<code>contradicts</code> as a relation between memories</td>
+<td>Correction that can be rehearsed — dry_run defaults to True</td>
+<td>No tombstone; supersession hides rather than blocks re-entry</td>
 </tr>
 <tr>
 <td><code>memos</code></td>
@@ -1429,6 +1476,19 @@ files while injecting <code>MEMORY.md</code> wholesale.</p>
 Rather than ranking better, it decides per turn whether to retrieve at
 all, and its stated reason is not cost but quality: irrelevant memory in
 the prompt bends the answer. Nothing else in the atlas can abstain.</p>
+<p><code>loongflow</code> breaks a different assumption: every other
+system here ranks deterministically and takes the top <em>k</em>. Its
+evolutionary memory selects a remembered solution by <strong>Boltzmann
+sampling over scores</strong>, at a temperature set by
+<code>_adaptive_temperature_by_diversity</code> from a sampled measure
+of how varied the stored population currently is — blending in 20% of
+the previous temperature so the control signal does not oscillate. A
+converged population gets a higher temperature and flatter selection,
+which readmits weaker solutions and restores variety. This is only
+defensible because recall there feeds exploration rather than belief;
+asked the same question twice it may answer differently, which is the
+correct trade for a search loop and the wrong one for facts about a
+user.</p>
 <p><code>hipporag</code> is the one system here that does not rank at
 all in the usual sense: it seeds a personalization vector from
 query-linked entities plus a weak dense prior, then reads relevance off
@@ -1549,12 +1609,42 @@ in. <code>holographic</code> inverts the usual failure: its
 query, but only reports them, with no supersession or review workflow
 attached, and its docstring claim that "no other memory system does
 this" is not accurate within this atlas.</p>
+<p><code>memora</code> contributes the one procedural idea this section
+has been missing. Its supersession pass runs in three phases — candidate
+pairs by embedding similarity, LLM classification, then edge creation —
+and the mutating phase is governed by <code>dry_run: bool = True</code>.
+<strong>Reporting is the default; changing memory is opt-in.</strong>
+Every other correction mechanism here acts immediately, so an operator
+learns the blast radius of a sweep only afterwards. Memora also
+classifies each pair against a defined vocabulary —
+<code>a_supersedes_b</code>, <code>b_supersedes_a</code>,
+<code>duplicate</code>, <code>related</code>, <code>contradicts</code>,
+<code>neither</code> — rather than thresholding similarity, presents the
+pair neutrally as A and B so the model chooses the direction rather than
+confirming an assumed one, and writes <code>contradicts</code> as an
+<strong>edge between two named memories</strong> instead of a flag on
+one row, which makes it queryable in a way Gini's
+<code>conflicted</code> status is not. The gap is the usual one:
+supersession hides a memory from retrieval without recording the
+rejected value, and this is a system that ingests documents and images,
+so re-ingestion is a realistic path back.</p>
 <p>Cognee can forget and rebuild derived projections from retained
 source, but its ontology-valid, source-attributed graph facts still lack
 candidate/rejected epistemic state. Claude-Mem offers exact deletion and
 feedback but no durable rejection mechanism preventing an observation
 from being regenerated. A-MEM mutates neighboring note metadata directly
 and has no correction chain.</p>
+<p>The gap is visible from outside this atlas too. TeleAI's <a
+href="https://github.com/TeleAI-UAGI/Awesome-Agent-Memory">Awesome-Agent-Memory</a>
+survey runs to about 1,500 lines across seventy sections and covers
+mem0, Letta, Zep, Graphiti, Cognee, MemOS, and HippoRAG — every
+widely-cited system, and all of them reviewed here. It does not list
+<code>verel</code> or <code>rainbox</code>, the only two systems in this
+atlas that carry a rejected-value tombstone. That is not a criticism of
+the survey; those two are small and obscure. It does mean
+correction-focused memory is under-surveyed as well as under-built: a
+reader working from the standard reading list would not encounter the
+mechanism at all.</p>
 <h3 id="forgetting">Forgetting</h3>
 <p>Visible deletion varies from hard API deletion to lifecycle
 state:</p>
@@ -2800,6 +2890,37 @@ exact source range it covers, and activate it atomically when needed.
 This removes LLM compression from the critical path. It fails without
 durable markers, range-aware replacement, recovery, and distributed
 coordination.</p>
+<h3 id="rehearse-the-correction-before-committing-it">Rehearse the
+correction before committing it</h3>
+<p>Repos: <code>memora</code>; related staging in
+<code>hermes-agent</code>.</p>
+<p>Any pass that can hide or delete memory in bulk should default to
+reporting what it would do. Memora's supersession pipeline takes
+<code>dry_run: bool = True</code>, so a sweep produces a reviewable list
+of proposed edges and changes nothing until mutation is explicitly
+requested. This costs a keyword argument and turns an operation with an
+unknowable blast radius into one an operator can read first. It also
+makes the classifier measurable: the dry-run output is exactly the
+artifact needed to count how often the pass would have been wrong. It
+fails if the preview and the mutating path diverge, or if nobody
+actually reads the report — a default that is always overridden is not a
+safeguard.</p>
+<h3 id="sample-instead-of-rank-when-recall-feeds-exploration">Sample
+instead of rank, when recall feeds exploration</h3>
+<p>Repos: <code>loongflow</code>; adjacent in <code>voyager</code> and
+<code>verel</code>.</p>
+<p>Deterministic top-<em>k</em> recall has a failure mode nobody else
+here names: if the ranking function is slightly wrong, the same wrong
+memories surface every time and the alternatives are never seen.
+LoongFlow's evolutionary memory samples a remembered solution from a
+Boltzmann distribution over scores, with the temperature driven by
+measured population diversity and bounded on both sides, so a store that
+has collapsed toward sameness loosens selection until variety returns.
+This is right only where remembered items inform <em>what to try
+next</em> rather than <em>what is true</em> — the same mechanism applied
+to facts about a user means the same question can get different answers.
+It also gives up reproducibility, and nothing in LoongFlow provides a
+seed or replay path for debugging a selection.</p>
 <h2 id="6-antipatterns-and-failure-modes">6. Antipatterns and Failure
 Modes</h2>
 <h3 id="treating-llm-extracted-facts-as-truth">Treating LLM-extracted
@@ -3933,6 +4054,42 @@ the most consequential behavior and benchmarks live elsewhere.</li>
 <li>Do not copy as a production core without stable IDs, canonical
 durability, scope, provenance, transactions, and trust state.</li>
 </ul>
+<h3 id="memora"><code>memora</code></h3>
+<ul>
+<li>Best idea: automated supersession that defaults to a dry run, so a
+correction sweep is previewed before it hides anything.</li>
+<li>Biggest risk: supersession without a tombstone, in a system that
+ingests documents and images and can therefore re-ingest what it
+hid.</li>
+<li>Most reusable component: the six-way relation vocabulary with
+neutral A/B presentation, and <code>dry_run: bool = True</code> as the
+default posture.</li>
+<li>Maturity impression: substantial for its age, with the
+sophistication concentrated in what happens to memories after they are
+written.</li>
+<li>Study when: you are about to run an automatic dedupe or supersession
+pass over a store you cannot afford to damage.</li>
+<li>Do not copy when: you need trust state, scope isolation, or a
+correction that survives re-ingestion.</li>
+</ul>
+<h3 id="loongflow"><code>loongflow</code></h3>
+<ul>
+<li>Best idea: recall by Boltzmann sampling at a temperature driven by
+the store's measured diversity — the only stochastic retrieval in the
+atlas.</li>
+<li>Biggest risk: selection quality is bounded entirely by a
+<code>score</code> nothing validates, and the same query can return
+different memories with no seed or replay path.</li>
+<li>Most reusable component: the diversity-to-temperature loop,
+including the 20% smoothing and the explicit min/max bounds.</li>
+<li>Maturity impression: two unrelated memory models in one package — a
+conventional tier stack and a genuinely novel selection mechanism — with
+the control constants undefended.</li>
+<li>Study when: memory feeds a search or generate-and-test loop and
+deterministic top-<em>k</em> keeps returning the same dead end.</li>
+<li>Do not copy when: recall must be reproducible, or the memories are
+facts rather than attempts.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -4092,6 +4249,8 @@ href="../systems/mercury-agent/"><code>mercury-agent</code></a></li>
 href="../systems/atomic-agent/"><code>atomic-agent</code></a></li>
 <li><a href="../systems/mateclaw/"><code>mateclaw</code></a></li>
 <li><a href="../systems/waku-agent/"><code>waku-agent</code></a></li>
+<li><a href="../systems/memora/"><code>memora</code></a></li>
+<li><a href="../systems/loongflow/"><code>loongflow</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -4249,6 +4408,14 @@ href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d
 href="https://github.com/ShenSeanChen/waku-agent">ShenSeanChen/waku-agent</a>
 at <a
 href="https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558"><code>5f638cfb5de957c14f056027833d8a9df5bbe558</code></a></li>
+<li><a
+href="https://github.com/agentic-box/memora">agentic-box/memora</a> at
+<a
+href="https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155"><code>bc64ff745a9b2c0e6245e0137654f041fba0c155</code></a></li>
+<li><a
+href="https://github.com/baidu-baige/LoongFlow">baidu-baige/LoongFlow</a>
+at <a
+href="https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7"><code>945c78bc1554f8281aac40320b3599bd68d528d7</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
@@ -4465,6 +4632,23 @@ conversation compaction — and whose MCP surface is note CRUD), and
 <code>netease-youdao/LobsterAI</code> (which operates OpenClaw's memory
 rather than having its own, and is covered inside the OpenClaw
 report).</li>
+<li>Nothing was run for memora or LoongFlow. Memora's pair classifier is
+the component that matters — its precision determines which memories get
+hidden — and no measurement of it was found; the dry-run mode makes
+exactly that measurable, and nothing indicates it has been done.
+LoongFlow's tests exist under <code>tests/agentsdk/memory</code> but
+were not run, and no comparison of adaptive against fixed temperature
+was found, though the code is parameterized for it.</li>
+<li>Six repositories examined in the same round have no reports.
+<code>TeleAI-UAGI/Awesome-Agent-Memory</code> is a survey, cited in the
+correction discussion rather than reviewed as a system.
+<code>webbrain-one/webbrain</code> (368 lines) and
+<code>AmeNetwork/aser</code> (29 lines) are too small to carry a
+mechanism. <code>AgentTeam-TaichuAI/ScienceClaw</code> is 78 lines with
+no licence file, and is a different repository from the OpenClaw-derived
+<code>beita6969/ScienceClaw</code> noted above.
+<code>ArtificialAnalysis/Stirrup</code> and
+<code>howl-anderson/agentsilex</code> have no memory subsystem.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>
