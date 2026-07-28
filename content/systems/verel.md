@@ -6,14 +6,14 @@ root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
-revision: 5aa050fea33c
-revision_url: https://github.com/amitpatole/verel/commit/5aa050fea33c
+revision: 5aa050fea33ce07138ddf644a58df1f0a60b7aa7
+revision_url: https://github.com/amitpatole/verel/commit/5aa050fea33ce07138ddf644a58df1f0a60b7aa7
 analyzed_at: 2026-07-28
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "`MemoryRecord` fact/rule/schema/failure/skill"
   storage: "SQLite local plus backend adapters"
-  retrieval: "Rank blends relevance, retrieval strength, confidence, trust; budgeted recall"
+  retrieval: "FTS5/BM25 default, cosine with embedder; rank adds strength, confidence, trust"
   write: "Candidate extraction, attested/corroborated promotion"
   update_delete: "Correction chains, rejected tombstones, decay/prune"
   scoping: "Scope lattice"
@@ -86,17 +86,17 @@ The key design principle is that retrieval and truth are orthogonal.
 
 Core files:
 
-- `verel/src/verel/memory/view.py`: protocol, record model, trust/ranking/decay.
-- `verel/src/verel/memory/local.py`: SQLite `LocalMemory`.
-- `verel/src/verel/memory/remember.py`: conversation extraction trust gate.
-- `verel/src/verel/memory/recall.py`: token-budgeted, untrusted-data-fenced recall.
-- `verel/src/verel/memory/consolidate.py`: failures -> design rules -> schemas.
-- `verel/src/verel/memory/promotion.py`: held-out eval promotion gate.
-- `verel/src/verel/memory/lattice.py`: scope hierarchy recall and graduation.
-- `verel/src/verel/memory/hosted.py`: hosted memory server/client.
-- `verel/src/verel/memory/replicated.py`: leader/follower replicated memory.
-- `verel/src/verel/memory/mem0_backend.py`, `pg_backend.py`, `redis_backend.py`, `lance_backend.py`: backend adapters.
-- `verel/src/verel/mcp_server.py`: MCP integration.
+- `src/verel/memory/view.py`: protocol, record model, trust/ranking/decay.
+- `src/verel/memory/local.py`: SQLite `LocalMemory`.
+- `src/verel/memory/remember.py`: conversation extraction trust gate.
+- `src/verel/memory/recall.py`: token-budgeted, untrusted-data-fenced recall.
+- `src/verel/memory/consolidate.py`: failures -> design rules -> schemas.
+- `src/verel/memory/promotion.py`: held-out eval promotion gate.
+- `src/verel/memory/lattice.py`: scope hierarchy recall and graduation.
+- `src/verel/memory/hosted.py`: hosted memory server/client.
+- `src/verel/memory/replicated.py`: leader/follower replicated memory.
+- `src/verel/memory/mem0_backend.py`, `pg_backend.py`, `redis_backend.py`, `lance_backend.py`: backend adapters.
+- `src/verel/mcp_server.py`: MCP integration.
 
 Architecture:
 
@@ -137,10 +137,21 @@ Write path:
 
 Recall:
 
-- `LocalMemory.recall()` ranks by semantic cosine if embedder configured, otherwise lexical overlap.
+- `LocalMemory.recall()` has three relevance paths, and the default is the one worth knowing:
+  SQLite **FTS5 with BM25** scoring when no embedder is configured and the SQLite build has FTS5.
+  That path filters scope, kind, and rejected records in SQL, over-fetches, and re-ranks the
+  candidates through the trust-aware `rank()`. A configured embedder switches to cosine over a full
+  scan; token overlap is the last resort, used only when FTS5 is unavailable
+  ([`local.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/local.py#L249)).
 - Excludes rejected records.
 - Recall reinforces only `retrieval_strength`, never confidence.
-- `recall_budgeted()` in `recall.py` greedily packs ranked memories under a token budget and fences them as untrusted data.
+- `recall_budgeted()` in `recall.py` greedily packs ranked memories under a token budget.
+- **The fence is on one accessor, not on recall generally.** Neutralization and the
+  `<recalled_memory>` fence happen in `BudgetedRecall.text`, the rendered prompt block. Raw
+  `recall()` and `recall_as_of()` return `MemoryRecord` objects with unfenced `text`, and so does
+  `recall_budgeted(...).records`. `recall_as_of` says so in its own docstring: a caller that drops
+  as-of results into a prompt "must fence them as untrusted DATA exactly as it would `recall`"
+  ([`recall.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/recall.py)).
 
 Remember/extraction gate:
 
@@ -172,30 +183,49 @@ Scope lattice:
 
 Tests:
 
-- `verel/tests/test_memory.py`
-- `verel/tests/test_memory_remember.py`
-- `verel/tests/test_memory_recall_budget.py`
-- `verel/tests/test_memory_lifecycle.py`
-- `verel/tests/test_consolidation.py`
-- `verel/tests/test_promotion.py`
-- `verel/tests/test_lattice.py`
-- `verel/tests/test_replicated.py`
-- `verel/tests/test_hosted_memory.py`
+- `tests/test_memory.py`
+- `tests/test_memory_remember.py`
+- `tests/test_memory_recall_budget.py`
+- `tests/test_memory_lifecycle.py`
+- `tests/test_consolidation.py`
+- `tests/test_promotion.py`
+- `tests/test_lattice.py`
+- `tests/test_replicated.py`
+- `tests/test_hosted_memory.py`
 
 ### A hash-chained mutation audit
 
-`memory/audit.py` names the gap it closes: "correction chains preserve WHAT a
-record used to say, but not WHO/WHAT changed it." `MemoryAudit` records every
-mutation as `{seq, ts, actor, action, record_id, before, after}`, hash-chained so
-each entry commits to its predecessor by SHA-256 and in-place tampering is
-detectable.
+[`memory/audit.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/audit.py)
+names the gap it closes: "correction chains preserve WHAT a record used to say,
+but not WHO/WHAT changed it." `MemoryAudit` records mutations as
+`{seq, ts, actor, action, record_id, before, after}`, hash-chained so each entry
+commits to its predecessor by SHA-256 and in-place tampering is detectable.
 
-Two details make it more than a log. `AuditedMemory` wraps *any* backend "at the
+Three details are worth stating precisely, because each one is a boundary the
+module draws deliberately.
+
+It is **opt-in**. `AuditedMemory` is a wrapper you construct around a backend,
+not behaviour a backend has by default; an unwrapped `LocalMemory` writes no
+audit trail. What it buys for that is reach: it wraps *any* backend "at the
 Protocol seam, so no backend needs changes and every backend gets the same
-audit" — the audit is a decorator over the interface rather than a feature each
-of the six backends reimplements. And the module bounds its own claim: this "is
-NOT a signed log", unlike the receipt store elsewhere in the project. Tamper-
-*evident*, not tamper-proof, said out loud.
+audit", a decorator over the interface rather than a feature each backend
+reimplements.
+
+It logs **belief mutations, not access**. The audited set is `write`,
+`apply_replica`, `corroborate`, `contradict`, `promote`, `demote`, `annotate`,
+`set_flags`, `pin`, `unpin`, `decay` — "everything that moves belief, trust, or
+lifecycle". Recall's retrieval-strength reinforcement is excluded on purpose:
+"that is reachability bookkeeping (the testing effect), not a belief mutation —
+logging every recall would flood the log and let a hostile query stream inflate
+it." So the log answers *who changed this belief*, not *who read it*.
+
+And it bounds its own tamper-evidence rather than claiming integrity in general.
+This "is NOT a signed log", unlike the receipt store elsewhere in the project.
+`verify()` catches in-place edits and middle deletions; it does *not* catch tail
+truncation or a full re-forge, because there is no external signed head to anchor
+against. The module's own framing is that an attacker who can write to the log
+already has write access to the store, so this is defence in depth rather than a
+trust boundary.
 
 ### Review that cannot launder
 
@@ -254,17 +284,24 @@ rank = W_REL * relevance
      + W_TRUST * trust_tier
 ```
 
-Verified memories get a retrieval-strength floor so a trusted fact does not decay below a fresh candidate at equal relevance. Rejected memories are excluded from normal recall.
+The `relevance` term is BM25 over SQLite FTS5 by default, cosine when an embedder is configured, and
+token overlap only where FTS5 is missing from the SQLite build. Everything after it is Verel's own:
+verified memories get a retrieval-strength floor so a trusted fact does not decay below a fresh
+candidate at equal relevance, and rejected memories are excluded from normal recall.
 
 `recall_budgeted()` adds:
 
 - Token budget.
 - Highest-ranked memory always included if any relevant memory exists.
 - Dropped count.
-- Untrusted-data fence.
-- Canonical text neutralization to prevent recalled content from forging prompt structure.
+- An untrusted-data fence and canonical-text neutralization, so recalled content cannot forge prompt
+  structure — **on the `.text` accessor**. The `.records` on the same result, and everything returned
+  by `recall()` and `recall_as_of()`, are raw records whose text the caller must fence itself.
 
-This is one of the cleanest retrieval safety designs in the workspace.
+This is one of the cleanest retrieval safety designs in the workspace, with the caveat that it is
+safe *by construction* only through one accessor. A caller that iterates records and formats its own
+context block gets the ranking and the trust filtering but none of the neutralization — which is the
+common way a design like this is lost in integration.
 
 ## 7. Write Mechanics
 
@@ -279,14 +316,52 @@ This is one of the cleanest retrieval safety designs in the workspace.
 
 This solves a common memory bug: silently overwriting old values loses history; blindly appending creates contradictions. Verel keeps the current value plus bounded correction history.
 
+**The ledger's reach is one identity, and that is the thing to understand before
+copying it.** `make_key(subject, predicate, scope)` decides which record a
+rejection attaches to, and the `rejected_values` list lives in that record's
+detail. So a value rejected for `(deploy-target, region, repo:acme)` is durably
+blocked for that triple across every later supersession — but the same string
+written under a different subject, a different predicate, or a different scope
+lands on a different record with its own, empty ledger. That is a deliberate
+consequence of scoping rejections rather than globally banning strings: a fact
+judged wrong for one project should not be unwritable for another. It does mean
+the guarantee is "un-launderable *for this key*", not "un-writable anywhere", and
+that a normalization or scoping mistake at the boundary is where the mechanism
+leaks rather than in the ledger itself.
+
 ## 8. Agent Integration
 
 Surfaces:
 
 - Python API through `verel.memory`.
-- MCP through `verel/src/verel/mcp_server.py`.
+- MCP through `src/verel/mcp_server.py`.
 - CLI/framework integration through the broader Verel runtime.
-- Backends selected through registry/env.
+- Backends selected through the registry, by name, from `VEREL_MEMORY_BACKEND`.
+
+The registry's `_BUILTINS` map holds **five** selectable names — `local`, `remote`, `postgres`,
+`lancedb`, `redis` — each resolved to a class exposing `from_env()`, with a `verel.memory_backends`
+entry-point group consulted only for names that are *not* built in, "so a malicious installed package
+CANNOT shadow a built-in backend name". **mem0 is the exception and is not in that map**: `Mem0Memory`
+and `make_ollama_mem0` are exported for code to construct directly, so mem0 cannot be reached by
+setting `VEREL_MEMORY_BACKEND`. Six backends exist; five are operator-selectable.
+
+### Operational shape
+
+Nothing here is queued, which matters for anyone sizing this:
+
+- **Local writes are synchronous and immediately retrievable.** `write()` returns after the row is
+  upserted; there is no ingestion queue between writing a fact and recalling it.
+- **Durable mode fsyncs before returning.** A file-backed `LocalMemory` defaults to `durable=True`,
+  which sets `journal_mode=WAL` and `synchronous=FULL`, so "a write that returned is durable BEFORE
+  its replica is acked — it survives a leader crash". `durable=False` trades that fsync for speed,
+  and `:memory:` skips both.
+- **Replicated writes contact peers in-line.** `ReplicatedMemory.write()` applies locally, then
+  replicates to each peer and counts acks before returning, raising `ReplicationError` below
+  `write_quorum` (default 1, leader-durable). An unreachable follower does not fail the write; it
+  falls behind and catches up.
+- **The background passes are full scans.** `decay()` and `prune()` both `SELECT` the whole `memory`
+  table, and a follower's `sync_from()` pulls every record from the leader. Fine at the scale this
+  design targets, and the first thing to measure if a store gets large.
 
 The memory system is designed to sit behind agent-run CI and verdict loops: only verified work compounds. That is a different use case from personal preference memory, though it can represent facts too.
 
@@ -297,13 +372,13 @@ Strengths:
 - Explicit candidate/verified/rejected trust state.
 - Confidence separate from retrieval strength.
 - Rejected-value anti-laundering, with a review path that cannot bypass it.
-- A hash-chained mutation audit over every backend, honest about being
-  tamper-evident rather than signed.
+- An opt-in hash-chained mutation audit that works over every backend, honest
+  about being tamper-evident rather than signed.
 - Bi-temporal validity with `recall_as_of` and `value_as_of`.
 - Consolidation that can retract a falsified generalization.
 - Authenticated principals, because a free-string author is forgeable.
 - Canonicalization shared by renderer and trust gate.
-- Prompt-injection neutralization in recall.
+- Prompt-injection neutralization in the rendered recall block.
 - Held-out promotion gate with attestation.
 - Scope lattice for shared memory without direct trust inheritance.
 - SQLite crash-safety options.
@@ -313,7 +388,8 @@ Risks:
 
 - Considerably more complex than most teams need initially.
 - Some LLM consolidation paths are ambitious and may be brittle.
-- Lexical recall is the zero-dependency default unless embedder configured.
+- Recall is lexical by default. BM25 is a real ranking function rather than the token-overlap
+  fallback, but it is still keyword matching: a paraphrased query needs the optional embedder.
 - Correctness of attestation/authenticator depends on external integration.
 - The many security-oriented mechanisms require discipline to preserve when extending.
 
@@ -368,7 +444,8 @@ assertions in this atlas.
 - Candidate/verified/rejected trust state.
 - Correction chains instead of silent overwrites.
 - Rejected-value tombstones to prevent laundering.
-- Recall fenced as untrusted data.
+- Recall fenced as untrusted data — and, borrowing the caveat with the pattern, be explicit about
+  which accessor carries the fence, since the raw-record path bypasses it.
 - Token-budgeted recall that reports dropped memories.
 - Scope lattice with graduate-up as candidate, not verified.
 - Held-out promotion gates for learned rules.
@@ -409,12 +486,12 @@ Add consolidation/promotion/replication later.
 
 ## Appendix: File Index
 
-- Protocol/model/ranking: `verel/src/verel/memory/view.py`.
-- Local store: `verel/src/verel/memory/local.py`.
-- Conversation memory gate: `verel/src/verel/memory/remember.py`.
-- Recall: `verel/src/verel/memory/recall.py`.
-- Consolidation: `verel/src/verel/memory/consolidate.py`.
-- Promotion: `verel/src/verel/memory/promotion.py`.
-- Scope lattice: `verel/src/verel/memory/lattice.py`.
-- Backends: `verel/src/verel/memory/*_backend.py`, `hosted.py`, `replicated.py`.
-- Tests: `verel/tests/test_memory*.py`, `verel/tests/test_consolidation.py`, `verel/tests/test_promotion.py`, `verel/tests/test_lattice.py`.
+- Protocol/model/ranking: `src/verel/memory/view.py`.
+- Local store: `src/verel/memory/local.py`.
+- Conversation memory gate: `src/verel/memory/remember.py`.
+- Recall: `src/verel/memory/recall.py`.
+- Consolidation: `src/verel/memory/consolidate.py`.
+- Promotion: `src/verel/memory/promotion.py`.
+- Scope lattice: `src/verel/memory/lattice.py`.
+- Backends: `src/verel/memory/*_backend.py`, `hosted.py`, `replicated.py`.
+- Tests: `tests/test_memory*.py`, `tests/test_consolidation.py`, `tests/test_promotion.py`, `tests/test_lattice.py`.
