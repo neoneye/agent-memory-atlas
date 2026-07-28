@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-fifty-two agent memory architectures, their retrieval mechanics, trust
+fifty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of fifty-two agent memory architectures, their retrieval mechanics,
+of fifty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of fifty-two agent memory architectures, their retrieval mechanics,
+of fifty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -56,7 +56,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-fifty-two agent memory architectures, their retrieval mechanics, trust
+fifty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -122,11 +122,11 @@ are three different products with three different failure modes.</li>
 readers need. The <a href="#capability-index">capability index</a> is
 the fastest way in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Fifty-two systems do not fall into fifty-two categories. They cluster
-around eight architectural commitments, and most systems belong to more
-than one — a coding-agent memory can also be verification-first, and a
-host runtime's plugin can also be a hosted service. The families below
-are lenses, not bins.</p>
+<p>Fifty-three systems do not fall into fifty-three categories. They
+cluster around eight architectural commitments, and most systems belong
+to more than one — a coding-agent memory can also be verification-first,
+and a host runtime's plugin can also be a hosted service. The families
+below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -265,7 +265,8 @@ ranking, multi-tenancy, or rich user modelling.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h3>
 <p><code>graphiti</code>, <code>cognee</code>, <code>hipporag</code>,
-<code>holographic</code>, <code>gini-agent</code></p>
+<code>holographic</code>, <code>gini-agent</code>,
+<code>memvid</code></p>
 <p>Structure is the retrieval mechanism. <strong>Graphiti</strong>
 tracks transaction time and real-world validity separately, invalidating
 facts by closing an interval rather than erasing history.
@@ -276,7 +277,10 @@ links similar entities rather than merging them.
 vectors so entities can be bound and unbound algebraically, with no
 embedding model to version. <strong>Gini</strong> reimplements the
 Hindsight model locally with bi-temporal columns and four RRF-fused
-channels.</p>
+channels. <strong>Memvid</strong> gets time travel from its storage
+format rather than its schema: an append-only file of immutable frames,
+so a memory card keyed <code>entity:slot</code> can be read as of any
+past instant and a whole session can be replayed.</p>
 <p>Tradeoff: structure answers questions flat stores cannot, but
 extraction and resolution mistakes have a blast radius proportional to
 how connected the graph is.</p>
@@ -1092,6 +1096,29 @@ hardening</td>
 core recall</td>
 </tr>
 <tr>
+<td><code>memvid</code></td>
+<td>Immutable frame; structured memory card keyed
+<code>entity:slot</code> with a cardinality</td>
+<td>One <code>.mv2</code> file — payload, internal WAL, TOC, footer,
+lexical/vector/time indexes, no sidecars</td>
+<td>Lexical, vector and graph search over frames;
+<code>get_current</code> and <code>get_at_time</code> per
+entity:slot</td>
+<td>Append-only frames through a WAL; supersede links; enrichment
+recorded per engine and version</td>
+<td><code>Active | Superseded | Deleted</code>; supersedes/superseded_by
+chains; a <code>Tombstone</code> WAL op</td>
+<td>ACL module over a single file; no multi-tenant model traced</td>
+<td>Rust library and CLI over a portable file</td>
+<td>Enrichment workers, maintenance, doctor</td>
+<td>Checksums per frame, an audit module, enrichment provenance by
+engine and version</td>
+<td>Immutable frames plus as-of reads and session replay — the memory
+can be rewound</td>
+<td>Headline benchmark numbers with no committed result artifacts found;
+correction is frame-keyed</td>
+</tr>
+<tr>
 <td><code>mercury-agent</code></td>
 <td><code>UserMemoryRecord</code> graded on confidence, importance, and
 durability</td>
@@ -1486,13 +1513,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 52:</em> <a
+<p><em>2 of 53:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 52:</em> <a
+<p><em>5 of 53:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1500,16 +1527,17 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>5 of 52:</em> <a
+<p><em>6 of 53:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
-href="../systems/memory-engine/"><code>memory-engine</code></a></p>
+href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
+href="../systems/memvid/"><code>memvid</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>31 of 52:</em> <a
+<p><em>31 of 53:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1545,14 +1573,15 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>4 of 52:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>5 of 53:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
+href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>8 of 52:</em> <a
+<p><em>8 of 53:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -1564,7 +1593,7 @@ href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 52:</em> <a
+<p><em>1 of 53:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -4660,6 +4689,24 @@ not asked whether you need one.</li>
 <li>Do not copy when: you need to fix a mistake — OptMem can always tell
 you what was written and can never repair it.</li>
 </ul>
+<h3 id="memvid"><code>memvid</code></h3>
+<ul>
+<li>Best idea: immutability as the correction mechanism — a supersession
+is a link, not an overwrite, so <code>get_at_time</code> and session
+replay come from the format rather than a bi-temporal schema.</li>
+<li>Biggest risk: the loudest quality claims in the atlas ("+35% SOTA on
+LoCoMo") with no committed raw artifacts found at this commit.</li>
+<li>Most reusable component: <code>entity:slot</code> cards with a
+declared cardinality, which turns contradiction detection into a lookup
+and tells you whether a second value is a conflict or an addition.</li>
+<li>Maturity impression: a serious file format with WAL, footer
+recovery, a 1,687-line doctor, and a deployment story of one binary and
+one file.</li>
+<li>Study when: you need to answer "what did the agent believe when it
+did that", which nothing else here can.</li>
+<li>Do not copy when: you need multi-tenant scope or epistemic status —
+the ACL is thin and there is no trust state.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -4828,6 +4875,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></li>
 <li><a href="../systems/ai-memory/"><code>ai-memory</code></a></li>
 <li><a href="../systems/ctx/"><code>ctx</code></a></li>
 <li><a href="../systems/optmem/"><code>optmem</code></a></li>
+<li><a href="../systems/memvid/"><code>memvid</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -5017,6 +5065,8 @@ href="https://github.com/VictorTaelin/OptMem">VictorTaelin/OptMem</a> at
 <a
 href="https://github.com/VictorTaelin/OptMem/commit/e36da5581595"><code>e36da5581595</code></a>
 — <strong>no licence file</strong></li>
+<li><a href="https://github.com/memvid/memvid">memvid/memvid</a> at <a
+href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38"><code>e6bd9f7b9c38</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
