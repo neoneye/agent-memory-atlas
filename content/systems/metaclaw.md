@@ -120,19 +120,19 @@ write_replay_report()  -> auditable record of the decision
 Plus `openclaw-metaclaw-memory/` — the OpenClaw plugin with its own sidecar manager (~5,000 lines), a plugin spec, and a plan document.
 
 ```mermaid
-flowchart LR
-  Conv["Conversations"] --> Store["MemoryStore (units, scopes)"]
-  Store --> Retr["retriever (under live policy)"]
-  Retr --> Inject["injected context"]
-  Store --> Tele["telemetry + metrics"]
+flowchart TD
+  Conv["Conversations"] --> Store["MemoryStore (units,<br/>scopes)"]
+  Store --> Retr["retriever (under<br/>live policy)"]
+  Retr --> Inject["injected<br/>context"]
+  Store --> Tele["telemetry +<br/>metrics"]
   Hist["past sessions"] --> Samples["load_replay_samples"]
   Live["live MemoryPolicyState"] --> Cand["generate_policy_candidates"]
-  Tele --> Opt["policy_optimizer (bounded tuner)"]
+  Tele --> Opt["policy_optimizer<br/>(bounded tuner)"]
   Opt --> Cand
   Cand --> Replay["run_policy_candidate_replay"]
   Samples --> Replay
-  Replay --> Gate["should_promote (8 deltas, n>=10)"]
-  Gate -->|pass| Promote["new live policy"]
+  Replay --> Gate["should_promote (8<br/>deltas, n>=10)"]
+  Gate -->|pass| Promote["new live<br/>policy"]
   Gate -->|fail| Keep["keep incumbent"]
   Gate --> Report["write_replay_report"]
 ```

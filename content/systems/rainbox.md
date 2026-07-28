@@ -159,7 +159,7 @@ Core files:
 Architecture:
 
 ```mermaid
-flowchart LR
+flowchart TD
   UI["Chat / Assistant / Memory UI"] --> Ops["memory.ops / assistant actions / memory_api"]
   Ops --> RecordBelief["record_belief / correct_belief"]
   RecordBelief --> Claims["MemoryClaim"]

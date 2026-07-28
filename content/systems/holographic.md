@@ -115,20 +115,20 @@ Core files, all under `plugins/memory/holographic/`:
 - `__init__.py` (465 lines): the `HolographicMemoryProvider` implementation of Hermes's `MemoryProvider` ABC, tool schemas, and end-of-session regex extraction.
 
 ```mermaid
-flowchart LR
-  Tools["fact_store / fact_feedback tools"] --> Provider["HolographicMemoryProvider"]
-  Hooks["on_memory_write / on_session_end"] --> Provider
-  Provider --> Store["MemoryStore (SQLite)"]
-  Store --> Facts["facts + FTS5"]
+flowchart TD
+  Tools["fact_store / fact_feedback<br/>tools"] --> Provider["HolographicMemoryProvider"]
+  Hooks["on_memory_write /<br/>on_session_end"] --> Provider
+  Provider --> Store["MemoryStore<br/>(SQLite)"]
+  Store --> Facts["facts +<br/>FTS5"]
   Store --> Ents["entities / fact_entities"]
-  Store --> HRR["holographic.py encode_fact"]
+  Store --> HRR["holographic.py<br/>encode_fact"]
   HRR --> Vec["facts.hrr_vector"]
-  HRR --> Bank["memory_banks (per category)"]
+  HRR --> Bank["memory_banks (per<br/>category)"]
   Provider --> Retr["FactRetriever"]
   Facts --> Retr
   Vec --> Retr
   Bank --> Retr
-  Retr --> Prompt["prefetch() -> system prompt"]
+  Retr --> Prompt["prefetch() -><br/>system prompt"]
 ```
 
 ## 4. Essential Implementation Paths

@@ -110,7 +110,7 @@ External dependencies:
 If FastEmbed cannot load, `_local_vector()` creates deterministic signed hash vectors over words and character trigrams. If Leiden dependencies are unavailable, ingestion uses conversation/paragraph chunking.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Client["MCP client"] --> PyMCP["Python FastMCP server"]
   Client --> NodeMCP["Node MCP server"]
   NodeMCP --> RPC["JSON-line subprocess bridge"]

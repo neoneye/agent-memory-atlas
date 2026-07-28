@@ -93,18 +93,18 @@ The dense retrieval arm is deliberately weak — passage nodes are seeded at 0.0
 - `reproduce/` — benchmark reproduction harness and dataset scaffolding.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Docs["Documents"] --> Chunk["Chunking"]
-  Chunk --> OpenIE["OpenIE triple extraction (LLM)"]
-  OpenIE --> Graph["igraph: entity + passage nodes"]
-  OpenIE --> Syn["add_synonymy_edges (KNN, threshold)"]
+  Chunk --> OpenIE["OpenIE triple<br/>extraction<br/>(LLM)"]
+  OpenIE --> Graph["igraph: entity +<br/>passage nodes"]
+  OpenIE --> Syn["add_synonymy_edges<br/>(KNN, threshold)"]
   Syn --> Graph
-  Query["Query"] --> Facts["get_fact_scores -> rerank_facts"]
-  Facts --> Seed["phrase weights / |chunks per entity|"]
-  Query --> DPR["dense_passage_retrieval x 0.05"]
+  Query["Query"] --> Facts["get_fact_scores -><br/>rerank_facts"]
+  Facts --> Seed["phrase weights /<br/>|chunks per<br/>entity|"]
+  Query --> DPR["dense_passage_retrieval<br/>x 0.05"]
   Seed --> Vec["personalization vector"]
   DPR --> Vec
-  Vec --> PPR["run_ppr (damping 0.5, undirected)"]
+  Vec --> PPR["run_ppr (damping<br/>0.5, undirected)"]
   Graph --> PPR
   PPR --> Ranked["ranked passages"]
 ```

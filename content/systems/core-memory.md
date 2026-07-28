@@ -127,15 +127,15 @@ Subpackage sizes, in lines of Python:
   `management/` (1,451), `write_pipeline/` (666).
 
 ```mermaid
-flowchart LR
-  Turn["turn / connector ingest"] --> WP["write pipeline"]
-  WP --> G{"grounding\nby type or connector"}
-  G --> Bead["bead: class floored by grounding"]
-  Bead --> Store["session JSONL (authority)"]
-  Store --> Proj["index projection (rebuildable)"]
-  Bead --> Claims["claim extraction: subject/slot/value"]
-  Claims --> CU["claim updates: reaffirm / supersede / retract"]
-  Proj --> Ret["typed retrieval: lexical · semantic · entity · causal"]
+flowchart TD
+  Turn["turn / connector<br/>ingest"] --> WP["write pipeline"]
+  WP --> G{"grounding\nby<br/>type or connector"}
+  G --> Bead["bead: class<br/>floored by<br/>grounding"]
+  Bead --> Store["session JSONL<br/>(authority)"]
+  Store --> Proj["index projection<br/>(rebuildable)"]
+  Bead --> Claims["claim extraction:<br/>subject/slot/value"]
+  Claims --> CU["claim updates:<br/>reaffirm / supersede /<br/>retract"]
+  Proj --> Ret["typed retrieval: lexical ·<br/>semantic · entity ·<br/>causal"]
   Ret --> Answer["answer"]
   Ret -. "recall raises class, never past the ceiling" .-> Bead
   Dream["dreamer"] --> Cand["candidates"]
@@ -143,7 +143,7 @@ flowchart LR
   Human --> Bead
   Bead --> Appr{"approval_status"}
   Appr -->|approved| A["class A · authority=user_confirmed"]
-  Appr -->|rejected| Excl["excluded from truth, retained for audit"]
+  Appr -->|rejected| Excl["excluded from<br/>truth, retained<br/>for audit"]
 ```
 
 ## 4. Essential Implementation Paths

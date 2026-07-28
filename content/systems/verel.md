@@ -101,16 +101,16 @@ Core files:
 Architecture:
 
 ```mermaid
-flowchart LR
-  Agent["Agent loop / MCP"] --> MemoryAPI["Memory helpers"]
-  MemoryAPI --> View["MemoryView protocol"]
-  View --> Local["LocalMemory SQLite"]
+flowchart TD
+  Agent["Agent loop /<br/>MCP"] --> MemoryAPI["Memory<br/>helpers"]
+  MemoryAPI --> View["MemoryView<br/>protocol"]
+  View --> Local["LocalMemory<br/>SQLite"]
   View --> Remote["Remote/mem0/PG/Redis/Lance"]
-  MemoryAPI --> Recall["Budgeted recall"]
-  MemoryAPI --> Remember["Trust-gated remember"]
+  MemoryAPI --> Recall["Budgeted<br/>recall"]
+  MemoryAPI --> Remember["Trust-gated<br/>remember"]
   MemoryAPI --> Consolidate["Consolidation"]
-  Consolidate --> Promotion["Held-out promotion gate"]
-  Promotion --> Verdict["Verdict bus attestation"]
+  Consolidate --> Promotion["Held-out promotion<br/>gate"]
+  Promotion --> Verdict["Verdict bus<br/>attestation"]
 ```
 
 ## 4. Essential Implementation Paths

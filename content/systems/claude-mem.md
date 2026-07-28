@@ -76,19 +76,19 @@ boundaries.
 ## 3. Architecture
 
 ```mermaid
-flowchart LR
-  Agent["Claude, Codex, Cursor, etc."] --> Hooks["Lifecycle hooks / transcript adapters"]
-  Hooks --> Worker["Bun worker daemon"]
+flowchart TD
+  Agent["Claude, Codex,<br/>Cursor, etc."] --> Hooks["Lifecycle hooks / transcript<br/>adapters"]
+  Hooks --> Worker["Bun worker<br/>daemon"]
   Worker --> Queue["SQLite pending_messages"]
-  Queue --> Observer["Claude / Gemini / OpenRouter observer"]
-  Observer --> Parser["XML parser + validation"]
-  Parser --> SQLite["SQLite observations, summaries, prompts"]
-  SQLite --> Context["Timeline context builder"]
+  Queue --> Observer["Claude / Gemini / OpenRouter<br/>observer"]
+  Observer --> Parser["XML parser +<br/>validation"]
+  Parser --> SQLite["SQLite observations,<br/>summaries, prompts"]
+  SQLite --> Context["Timeline context<br/>builder"]
   SQLite --> FTS["FTS5 search"]
-  SQLite --> Chroma["Best-effort Chroma projection"]
-  Chroma --> Search["Semantic search"]
+  SQLite --> Chroma["Best-effort Chroma<br/>projection"]
+  Chroma --> Search["Semantic<br/>search"]
   Context --> Agent
-  Search --> MCP["HTTP / MCP / UI"]
+  Search --> MCP["HTTP / MCP /<br/>UI"]
 ```
 
 The worker owns local session lifecycle, capture, generation, storage, search,

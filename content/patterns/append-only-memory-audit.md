@@ -29,13 +29,13 @@ retrieval_event:
 Each event records memory ID, scope, actor, timestamp, request or conversation ID, reason, and relevant version identifiers. Derive counters and dashboards from events. Retention and privacy policies still apply; append-only means application code does not casually rewrite history, not that data can never be erased.
 
 ```mermaid
-flowchart LR
-    W["write / correct / reject"] --> S["canonical memory state"]
-    W --> M["memory_mutation events"]
+flowchart TD
+    W["write / correct /<br/>reject"] --> S["canonical memory<br/>state"]
+    W --> M["memory_mutation<br/>events"]
     R["retrieval"] --> S
-    R --> RE["retrieval_event log"]
+    R --> RE["retrieval_event<br/>log"]
     S --> A["answer"]
-    M --> D["counters · dashboards · investigations"]
+    M --> D["counters · dashboards ·<br/>investigations"]
     RE --> D
     D -. "never read back as truth" .-x S
 ```

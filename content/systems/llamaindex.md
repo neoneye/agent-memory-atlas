@@ -87,17 +87,17 @@ Returning `Optional[T]` from `atruncate` matters: a block may decline to shrink 
 The legacy modules are the conversation-window family the atlas excludes from scope; the newer `Memory` plus blocks is what makes LlamaIndex reviewable here. Both ship, which is worth knowing when reading the docs — "memory" in LlamaIndex means two quite different things depending on which API you land on.
 
 ```mermaid
-flowchart LR
-  Msgs["Chat messages"] --> Hist["short-term history (0.7 of budget)"]
+flowchart TD
+  Msgs["Chat messages"] --> Hist["short-term history<br/>(0.7 of budget)"]
   Hist -->|overflow: token_flush_size| Flush["flush"]
   Flush --> Static["StaticMemoryBlock"]
   Flush --> Vec["VectorMemoryBlock"]
   Flush --> Fact["FactExtractionMemoryBlock"]
-  Static --> Assemble["aget + atruncate to budget"]
+  Static --> Assemble["aget + atruncate<br/>to budget"]
   Vec --> Assemble
   Fact --> Assemble
   Hist --> Assemble
-  Assemble --> Prompt["prompt (insert_method: SYSTEM | USER)"]
+  Assemble --> Prompt["prompt (insert_method:<br/>SYSTEM | USER)"]
 ```
 
 ## 4. Essential Implementation Paths

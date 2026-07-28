@@ -57,20 +57,20 @@ Control is hybrid. Agents explicitly call memory tools; Claude Code hooks automa
 
 ```mermaid
 flowchart TD
-    Host["Agent host: Claude Code, Codex, Cursor, MCP client"]
+    Host["Agent host: Claude<br/>Code, Codex, Cursor,<br/>MCP client"]
     Hooks["Lifecycle hooks"]
-    MCP["Local stdio MCP server"]
-    CLI["CLI and hourly scheduler"]
-    Flush["Chunked transcript distillation"]
-    Compile["Daily atom promotion"]
+    MCP["Local stdio<br/>MCP server"]
+    CLI["CLI and<br/>hourly scheduler"]
+    Flush["Chunked transcript<br/>distillation"]
+    Compile["Daily atom<br/>promotion"]
     Consolidate["Opt-in consolidation"]
-    Store["Wiki-store mutation and lifecycle"]
-    Search["Metadata filter, local embeddings, chunk scoring"]
-    Context["Federated scope resolver"]
-    Wiki["Markdown leaves in private or repository wiki"]
-    Index["skill-llm-wiki index and validation CLI"]
-    Cache["Per-category embedding cache"]
-    Git["Private wiki git history"]
+    Store["Wiki-store<br/>mutation and<br/>lifecycle"]
+    Search["Metadata filter,<br/>local embeddings,<br/>chunk scoring"]
+    Context["Federated<br/>scope resolver"]
+    Wiki["Markdown leaves<br/>in private or repository<br/>wiki"]
+    Index["skill-llm-wiki<br/>index and validation<br/>CLI"]
+    Cache["Per-category<br/>embedding<br/>cache"]
+    Git["Private<br/>wiki git<br/>history"]
 
     Host --> MCP
     Host --> Hooks

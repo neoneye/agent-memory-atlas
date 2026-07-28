@@ -246,18 +246,18 @@ patterns, shared with the context-file scanner.</li>
 <code>tools/skill_provenance.py</code>, <code>agent/skill_*.py</code>:
 skills as procedural memory.</li>
 </ul>
-<pre class="mermaid"><code>flowchart LR
-  Model[&quot;Model&quot;] --&gt; Tool[&quot;memory tool (add/replace/remove)&quot;]
+<pre class="mermaid"><code>flowchart TD
+  Model[&quot;Model&quot;] --&gt; Tool[&quot;memory tool&lt;br/&gt;(add/replace/remove)&quot;]
   Tool --&gt; Gate[&quot;write_approval gate&quot;]
-  Gate --&gt;|stage| Human[&quot;Human approval queue&quot;]
-  Gate --&gt;|allow| Scan[&quot;threat_patterns strict scan&quot;]
-  Scan --&gt; Lock[&quot;file lock + re-read + drift check&quot;]
-  Lock --&gt; Budget{&quot;within char limit?&quot;}
-  Budget --&gt;|no| Consolidate[&quot;refuse: consolidate in-turn&quot;]
-  Budget --&gt;|yes| Disk[&quot;atomic_replace MEMORY.md / USER.md&quot;]
-  Disk -.-&gt;|next session start| Snapshot[&quot;frozen system-prompt block&quot;]
-  Sessions[&quot;state.db + FTS5&quot;] --&gt; Search[&quot;session search&quot;]
-  Provider[&quot;one external MemoryProvider&quot;] --&gt; Prefetch[&quot;prefetch() block&quot;]</code></pre>
+  Gate --&gt;|stage| Human[&quot;Human approval&lt;br/&gt;queue&quot;]
+  Gate --&gt;|allow| Scan[&quot;threat_patterns&lt;br/&gt;strict scan&quot;]
+  Scan --&gt; Lock[&quot;file lock +&lt;br/&gt;re-read + drift&lt;br/&gt;check&quot;]
+  Lock --&gt; Budget{&quot;within&lt;br/&gt;char limit?&quot;}
+  Budget --&gt;|no| Consolidate[&quot;refuse: consolidate&lt;br/&gt;in-turn&quot;]
+  Budget --&gt;|yes| Disk[&quot;atomic_replace&lt;br/&gt;MEMORY.md /&lt;br/&gt;USER.md&quot;]
+  Disk -.-&gt;|next session start| Snapshot[&quot;frozen system-prompt&lt;br/&gt;block&quot;]
+  Sessions[&quot;state.db +&lt;br/&gt;FTS5&quot;] --&gt; Search[&quot;session search&quot;]
+  Provider[&quot;one external&lt;br/&gt;MemoryProvider&quot;] --&gt; Prefetch[&quot;prefetch() block&quot;]</code></pre>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-frozen-snapshot">The frozen snapshot</h3>

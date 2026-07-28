@@ -73,7 +73,7 @@ Feature flags gate real cost: `local-embeddings` pulls in llama-cpp-2 with an ex
 Design plans are committed alongside: `plans/postgres-pgvector-memory-backend.md` and `plans/core-memory-lifecycle-unification.md`.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Notes["Markdown corpus"] --> Chunk["chunker.rs"]
   Sess["Chat session"] --> San["session_export.rs (sanitize)"]
   San --> Notes

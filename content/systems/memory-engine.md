@@ -107,17 +107,17 @@ Packages, in lines of TypeScript excluding tests:
 - `queries/` — seventeen numbered psql benchmark files plus tuned variants.
 
 ```mermaid
-flowchart LR
-  Cred["OAuth · api key · cookie"] --> MW["middleware resolves principal"]
+flowchart TD
+  Cred["OAuth ·<br/>api key ·<br/>cookie"] --> MW["middleware<br/>resolves principal"]
   MW --> BTA["core.build_tree_access(principal, space)"]
-  BTA --> TA["_tree_access jsonb: paths + levels"]
-  TA --> SQL["search_memory(...) in SQL"]
+  BTA --> TA["_tree_access<br/>jsonb: paths +<br/>levels"]
+  TA --> SQL["search_memory(...)<br/>in SQL"]
   Mem["me_slug.memory"] --> SQL
-  SQL --> RRF["BM25 + semantic, fused by RRF"]
-  RRF --> Out["visible, ranked results"]
-  Agent["agent principal"] --> Clamp["agent_tree_access = least(agent, owner)"]
+  SQL --> RRF["BM25 + semantic,<br/>fused by RRF"]
+  RRF --> Out["visible,<br/>ranked results"]
+  Agent["agent principal"] --> Clamp["agent_tree_access<br/>= least(agent,<br/>owner)"]
   Clamp --> TA
-  W["memory.create — tree required"] --> Mem
+  W["memory.create —<br/>tree required"] --> Mem
 ```
 
 ## 4. Essential Implementation Paths

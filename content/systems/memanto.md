@@ -108,19 +108,19 @@ was wrong. Those deserve different dispositions, and most systems collapse them.
   `MOORCHEH_ONPREM_URL`.
 
 ```mermaid
-flowchart LR
-  W["store · batch · extract"] --> M["memories (Moorcheh)"]
-  M --> S["search · as_of_date · confidence"]
-  Sched["scheduled daily analysis"] --> Sum["AI summary"]
-  Sched --> CP["conflict pass (LLM)"]
+flowchart TD
+  W["store · batch ·<br/>extract"] --> M["memories (Moorcheh)"]
+  M --> S["search · as_of_date ·<br/>confidence"]
+  Sched["scheduled daily<br/>analysis"] --> Sum["AI summary"]
+  Sched --> CP["conflict pass<br/>(LLM)"]
   M --> CP
-  CP --> R["dated JSON report"]
-  R --> UI["CLI · web UI"]
+  CP --> R["dated JSON<br/>report"]
+  R --> UI["CLI ·<br/>web UI"]
   UI --> D{"human decides"}
   D -->|keep_old / keep_new| M
   D -->|keep_both| M
   D -->|remove_both| Del["both deleted"]
-  D -->|manual + content| New["human-authored replacement"]
+  D -->|manual + content| New["human-authored<br/>replacement"]
   New --> M
 ```
 

@@ -100,18 +100,18 @@ session → consolidator clusters related material
 - `notes-renderer.ts`, `profile-renderer.ts`, `memory-context-provider.ts`.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Sess["Session"] --> Cons["consolidator: cluster"]
   Cons -->|"1 LLM call (inv. 21)"| Lesson["lesson"]
-  Cons -->|same call| Proc["procedure (advisory, inv. 20)"]
+  Cons -->|same call| Proc["procedure<br/>(advisory,<br/>inv. 20)"]
   Cons --> Mem["memories"]
-  Mem --> Links["memory_links (typed, surfaced-id allowlist)"]
+  Mem --> Links["memory_links (typed,<br/>surfaced-id allowlist)"]
   Mem --> Evolve["neighbor-evolver"]
-  Q["Query"] --> Rewrite["heuristic-gated query rewriter (v2.5, opt-in)"]
+  Q["Query"] --> Rewrite["heuristic-gated<br/>query rewriter<br/>(v2.5, opt-in)"]
   Rewrite --> Retr["retrieve"]
   Links --> Retr
   Retr --> Ctx["memory-context-provider"]
-  Ctx --> Refl["vote-aware reflection (separate slot, KV cache untouched)"]
+  Ctx --> Refl["vote-aware reflection<br/>(separate slot, KV<br/>cache untouched)"]
   Refl --> VE["vote_events (append-only)"]
   VE --> Score["derived vote_score"]
   Score --> Retr

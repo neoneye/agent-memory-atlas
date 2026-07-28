@@ -112,19 +112,19 @@ The interesting logic is concentrated in the small packages: `dream`,
 `disclosure`, `drift`, `journal`, `entity`.
 
 ```mermaid
-flowchart LR
+flowchart TD
   E["entries"] --> Stage["staging"]
-  Theme["AddTheme: name a theme first"] --> Root["root doc ## Themes"]
-  Stage --> Dig["digest into region"]
+  Theme["AddTheme:<br/>name a theme<br/>first"] --> Root["root doc<br/>## Themes"]
+  Stage --> Dig["digest<br/>into region"]
   Dig --> Root
   Scan["dream scan"] --> Prop["proposals"]
-  Prop --> Gate{"schema gate\nprovenance required"}
+  Prop --> Gate{"schema gate\nprovenance<br/>required"}
   Gate -->|invalid| Rej["rejected"]
   Gate -->|valid| WS{"write-scope guard"}
   WS -->|dreams/ ideas/| Apply["apply"]
   WS -->|specs/ on promote| Apply
-  WS -->|elsewhere| Ref["refused with a reason"]
-  Apply --> Led["ledger — resumable"]
+  WS -->|elsewhere| Ref["refused<br/>with a<br/>reason"]
+  Apply --> Led["ledger —<br/>resumable"]
 ```
 
 ## 4. Essential Implementation Paths

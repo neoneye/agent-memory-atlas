@@ -94,13 +94,13 @@ Selected modules under `openviking/`:
 - `benchmark/`: LoCoMo, LongMemEval, tau2, SkillsBench, RAG, cuVS, and vector-DB performance harnesses.
 
 ```mermaid
-flowchart LR
-  Sessions["Session messages"] --> Extract["extract_loop / memory_updater"]
-  Extract --> Isolation["MemoryIsolationHandler (user_space, peers)"]
-  Isolation --> Files["Memory files (L0/L1/L2 + links)"]
-  Files --> Index["Vector + sparse index, level-tagged"]
+flowchart TD
+  Sessions["Session messages"] --> Extract["extract_loop /<br/>memory_updater"]
+  Extract --> Isolation["MemoryIsolationHandler<br/>(user_space, peers)"]
+  Isolation --> Files["Memory files<br/>(L0/L1/L2 +<br/>links)"]
+  Files --> Index["Vector + sparse<br/>index, level-tagged"]
   Files --> Graph["graph_view links/backlinks"]
-  Query["TypedQuery + RequestContext"] --> HR["HierarchicalRetriever"]
+  Query["TypedQuery +<br/>RequestContext"] --> HR["HierarchicalRetriever"]
   Index --> HR
   HR --> Quota["type_quota_recall"]
   Quota --> Hot["hotness_score blend"]

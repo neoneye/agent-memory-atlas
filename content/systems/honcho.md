@@ -81,7 +81,7 @@ Core files:
 Architecture:
 
 ```mermaid
-flowchart LR
+flowchart TD
   API["FastAPI routers"] --> CRUD["CRUD layer"]
   CRUD --> PG["Postgres + pgvector"]
   CRUD --> Queue["queue table"]

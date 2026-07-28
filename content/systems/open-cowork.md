@@ -89,7 +89,7 @@ MemoryEvalCase { sessionTitle, messages[{role, text, timestamp}], queries[] }
 `src/main/memory/` — about 4,100 lines across eighteen modules, plus tests under `src/tests/memory` and `docs/memory-live-smoke-checklist.md`.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Sess["Session messages"] --> Queue["memory-ingestion-queue"]
   Queue --> CoreX["core-memory-extractor"]
   Queue --> ExpX["experience-memory-extractor"]

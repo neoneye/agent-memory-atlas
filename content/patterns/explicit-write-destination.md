@@ -28,14 +28,14 @@ Reads may fan out according to access policy and merge with locality or preceden
 Agent tools should make the target visible in their arguments. Defaults are acceptable only when they are safe, obvious, and surfaced to the user; shared writes often deserve confirmation.
 
 ```mermaid
-flowchart LR
-    Q["read"] --> RS["read_scopes: private + project + org"]
-    RS --> Merge["merge by locality / precedence"]
-    Merge --> Out["results, each labelled with its scope"]
-    W["write"] --> T{"write_target resolved?"}
-    T -- "no" --> Rej["reject: ambiguous destination"]
-    T -- "yes, private" --> P["private store"]
-    T -- "yes, shared" --> Conf["confirm, then shared store"]
+flowchart TD
+    Q["read"] --> RS["read_scopes:<br/>private + project<br/>+ org"]
+    RS --> Merge["merge by locality<br/>/ precedence"]
+    Merge --> Out["results, each<br/>labelled with<br/>its scope"]
+    W["write"] --> T{"write_target<br/>resolved?"}
+    T -- "no" --> Rej["reject:<br/>ambiguous<br/>destination"]
+    T -- "yes, private" --> P["private<br/>store"]
+    T -- "yes, shared" --> Conf["confirm, then<br/>shared store"]
 ```
 
 Reads fan out; writes converge on exactly one named destination, and an

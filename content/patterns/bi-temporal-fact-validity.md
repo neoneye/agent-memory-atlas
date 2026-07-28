@@ -40,13 +40,13 @@ When a new fact supersedes an old one:
 Do not silently hard-delete the older edge merely because it is no longer current.
 
 ```mermaid
-flowchart LR
-    Ev["source event"] --> F1["fact: lives in Berlin"]
-    Ev2["later source event"] --> F2["fact: lives in Lisbon"]
-    F2 --> C["close F1.invalid_at at the event boundary"]
+flowchart TD
+    Ev["source event"] --> F1["fact: lives<br/>in Berlin"]
+    Ev2["later<br/>source<br/>event"] --> F2["fact: lives<br/>in Lisbon"]
+    F2 --> C["close F1.invalid_at<br/>at the event boundary"]
     C --> F1
-    Q1["as of last March"] --> F1
-    Q2["as of now"] --> F2
+    Q1["as of<br/>last March"] --> F1
+    Q2["as<br/>of<br/>now"] --> F2
     F1 -. "retained, not deleted" .- H["history"]
 ```
 

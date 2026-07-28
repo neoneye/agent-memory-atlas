@@ -57,7 +57,7 @@ Where possible, have the gate produce the parameters the guarded step needs, so
 one call does two jobs.
 
 ```mermaid
-flowchart LR
+flowchart TD
     T["Turn"] --> G{"cheap gate"}
     G -- "no · reason logged" --> Skip["skip: answer without it"]
     G -- "yes + parameters" --> Work["expensive operation"]

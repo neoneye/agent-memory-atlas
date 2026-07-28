@@ -84,18 +84,18 @@ chats accumulate unconsolidated
 - `procedural/loader.py` (91), `procedural/installer.py` (54).
 
 ```mermaid
-flowchart LR
+flowchart TD
   Msg["User message"] --> Gate{"should_retrieve?<br/>small model"}
-  Gate -->|false| Answer["answer without memory"]
+  Gate -->|false| Answer["answer<br/>without<br/>memory"]
   Gate -->|"true + query"| Sem["semantic store"]
   Gate -->|"true + query"| Epi["episodic store"]
   Sem --> Answer
   Epi --> Answer
-  Skills["SKILL.md frontmatter (always scanned)"] --> Match{"matches message?"}
-  Match -->|yes| Body["load body into prompt"]
+  Skills["SKILL.md frontmatter<br/>(always scanned)"] --> Match{"matches message?"}
+  Match -->|yes| Body["load body<br/>into prompt"]
   Body --> Answer
-  Chats["unconsolidated chats"] --> N{"N new chats?"}
-  N -->|yes| Cons["cheap model: facts + episode"]
+  Chats["unconsolidated chats"] --> N{"N new<br/>chats?"}
+  N -->|yes| Cons["cheap model:<br/>facts + episode"]
   Cons --> Sem
   Cons --> Epi
 ```

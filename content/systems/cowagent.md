@@ -100,7 +100,7 @@ Stage 3 — injection
 - `docs/memory/` — `index.mdx`, `context.mdx`, `deep-dream.mdx`, `self-evolution.mdx`.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Conv["Conversation"] --> Trim["context trimming / 23:55 cron / overflow"]
   Trim --> Daily["memory/YYYY-MM-DD.md"]
   Daily --> Dream["Deep Dream distillation"]

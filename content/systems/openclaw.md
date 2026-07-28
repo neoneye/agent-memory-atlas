@@ -96,19 +96,19 @@ Memory-relevant code lives entirely in extensions:
 - `extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts` — embedding providers.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Msg["Platform message (envelope-wrapped)"] --> Extract["extractLatestUserText"]
   Extract --> Sanitize["sanitizeForMemoryCapture"]
   Sanitize --> Sludge{"looksLikeEnvelopeSludge?"}
   Sludge -->|yes| Drop["discard"]
   Sludge -->|no| Cap["truncate to captureMaxChars"]
-  Cap --> Embed["embedding adapter"]
+  Cap --> Embed["embedding<br/>adapter"]
   Embed --> Store["LanceDB (agentId-scoped)"]
-  Query["normalizeRecallQuery"] --> Search["vector search + scopedPredicate"]
+  Query["normalizeRecallQuery"] --> Search["vector search +<br/>scopedPredicate"]
   Store --> Search
-  Search --> Ctx["auto-recall into context"]
-  Core["memory-core plugin contract"] --> Store
-  Core --> Doctor["doctor-contract-api health checks"]
+  Search --> Ctx["auto-recall<br/>into context"]
+  Core["memory-core plugin<br/>contract"] --> Store
+  Core --> Doctor["doctor-contract-api<br/>health checks"]
 ```
 
 ## 4. Essential Implementation Paths

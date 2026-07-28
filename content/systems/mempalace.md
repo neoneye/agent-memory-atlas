@@ -93,17 +93,17 @@ Core files:
 Architecture:
 
 ```mermaid
-flowchart LR
-  Sources["Files / JSONL / conversations / MCP writes"] --> Miner["Miner / MCP add_drawer"]
+flowchart TD
+  Sources["Files / JSONL /<br/>conversations /<br/>MCP writes"] --> Miner["Miner /<br/>MCP add_drawer"]
   Miner --> Drawers["mempalace_drawers"]
-  Miner --> Closets["closets pointer index"]
-  Drawers --> Backend["Backend: Chroma / SQLite / Qdrant / pgvector"]
+  Miner --> Closets["closets<br/>pointer<br/>index"]
+  Drawers --> Backend["Backend: Chroma /<br/>SQLite / Qdrant /<br/>pgvector"]
   Closets --> Backend
   Backend --> Search["search_memories"]
-  Search --> Rank["Vector + BM25 + closet boost + metadata filters"]
-  Search --> MCP["MCP / CLI / hooks"]
-  Drawers --> KG["Knowledge graph / fact checker"]
-  Drawers --> Stack["L0-L3 memory stack"]
+  Search --> Rank["Vector + BM25 +<br/>closet boost + metadata<br/>filters"]
+  Search --> MCP["MCP /<br/>CLI /<br/>hooks"]
+  Drawers --> KG["Knowledge<br/>graph / fact<br/>checker"]
+  Drawers --> Stack["L0-L3<br/>memory<br/>stack"]
 ```
 
 The backend abstraction is unusually explicit. `BaseCollection` and `BaseBackend` define typed result shapes, error classes, health status, maintenance hooks, embedder identity, and isolation contracts.

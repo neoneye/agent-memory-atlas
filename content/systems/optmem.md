@@ -117,18 +117,18 @@ One file. The parts worth naming:
 - `repair`, `parse`, `records` — tolerance for partial writes.
 
 ```mermaid
-flowchart LR
+flowchart TD
   N["note '...'"] --> L["LOG.txt append"]
-  L --> P{"is a block due?"}
-  P -->|yes| Req["print compression request"]
-  Req --> A["agent answers: memo nap lo-hi '<line>'"]
+  L --> P{"is a<br/>block<br/>due?"}
+  P -->|yes| Req["print compression<br/>request"]
+  Req --> A["agent answers:<br/>memo nap lo-hi<br/>'<line>'"]
   A --> T["TREE/<size> record"]
   P -->|no| Done["done"]
   W["wake"] --> C["cover(T, budget)"]
   L --> C
   T --> C
-  C --> Out["budgeted context: verbatim recent, collapsed ancient"]
-  F["forget lo-hi"] --> Drop["blank the summary"]
+  C --> Out["budgeted context:<br/>verbatim recent, collapsed<br/>ancient"]
+  F["forget lo-hi"] --> Drop["blank<br/>the summary"]
   Drop --> A
 ```
 

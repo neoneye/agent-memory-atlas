@@ -81,20 +81,20 @@ and records.
 ## 3. Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   OpenClaw["OpenClaw hooks"] --> Capture["Auto capture"]
   Hermes["Hermes gateway"] --> Capture
-  Capture --> L0["L0 conversation JSONL"]
-  L0 --> Extract["L1 extractor + dedup judge"]
+  Capture --> L0["L0 conversation<br/>JSONL"]
+  L0 --> Extract["L1 extractor +<br/>dedup judge"]
   Extract --> JSONL["L1 JSONL"]
-  Extract --> Store["SQLite or Tencent VectorDB"]
+  Extract --> Store["SQLite or<br/>Tencent VectorDB"]
   Store --> Recall["FTS/vector/hybrid recall"]
-  JSONL --> Scene["L2 scene Markdown"]
-  Scene --> Persona["L3 persona Markdown"]
-  Recall --> Prompt["Dynamic prompt context"]
+  JSONL --> Scene["L2 scene<br/>Markdown"]
+  Scene --> Persona["L3 persona<br/>Markdown"]
+  Recall --> Prompt["Dynamic<br/>prompt context"]
   Scene --> Prompt
   Persona --> Prompt
-  Tools["Large tool output"] --> Offload["refs + summaries + Mermaid maps"]
+  Tools["Large<br/>tool output"] --> Offload["refs + summaries +<br/>Mermaid maps"]
   Offload --> Prompt
 ```
 

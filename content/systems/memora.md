@@ -99,18 +99,18 @@ embedding similarity → candidate pairs
 - `cloud_sync.py`, `schema.py`, `cli.py`.
 
 ```mermaid
-flowchart LR
-  In["MCP writes · documents · images"] --> Mem["memories (+fts, embeddings)"]
-  Mem --> Rank["retrieval: FTS + vectors"]
-  Rank --> Imp["importance decay: age + access_count"]
+flowchart TD
+  In["MCP writes · documents ·<br/>images"] --> Mem["memories (+fts,<br/>embeddings)"]
+  Mem --> Rank["retrieval: FTS +<br/>vectors"]
+  Rank --> Imp["importance decay:<br/>age + access_count"]
   Imp --> Out["results"]
-  Mem --> P1["Phase 1: similar pairs"]
-  P1 --> P2["Phase 2: LLM classifies A/B neutrally"]
-  P2 --> Dry{"dry_run (default true)"}
-  Dry -->|yes| Report["findings only"]
-  Dry -->|no| Edge["supersedes edge → hidden from retrieval"]
+  Mem --> P1["Phase 1: similar<br/>pairs"]
+  P1 --> P2["Phase 2: LLM classifies<br/>A/B neutrally"]
+  P2 --> Dry{"dry_run (default<br/>true)"}
+  Dry -->|yes| Report["findings<br/>only"]
+  Dry -->|no| Edge["supersedes edge → hidden<br/>from retrieval"]
   Edge --> Cross["memories_crossrefs"]
-  Mem --> Ev["memories_events · memories_actions"]
+  Mem --> Ev["memories_events ·<br/>memories_actions"]
 ```
 
 ## 4. Essential Implementation Paths

@@ -95,11 +95,11 @@ scheduler          → dream reports, nudges
 - `mateclaw-server/src/main/resources/prompts/memory/` — externalized prompts.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Turn["TurnStartedEvent"] --> Med["MemoryLifecycleMediator"]
   Med --> Mgr["MemoryManager"]
-  Mgr --> Dec["decorators: Metrics, Retryable"]
-  Dec --> P1["provider A"]
+  Mgr --> Dec["decorators: Metrics,<br/>Retryable"]
+  Dec --> P1["provider<br/>A"]
   Dec --> P2["provider B (AbstractExternalProvider)"]
   P1 --> Ctx["TurnContext"]
   P2 --> Ctx
@@ -109,7 +109,7 @@ flowchart LR
   Facts --> Proj["fact/projection"]
   Sched["scheduler"] --> Dream["DreamReportEntity"]
   Sched --> Nudge["MemoryNudgeService"]
-  Proj --> UI["Vue Memory views"]
+  Proj --> UI["Vue Memory<br/>views"]
 ```
 
 ## 4. Essential Implementation Paths

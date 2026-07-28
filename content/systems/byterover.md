@@ -122,15 +122,15 @@ Memory-relevant modules are small and easy to trace:
 - `src/server/core/domain/knowledge/markdown-writer.ts` — the `ContextData` / `Narrative` / `RawConcept` shapes.
 
 ```mermaid
-flowchart LR
-  Agent["Coding agent"] --> Drafts["DraftMemory[]"]
-  Drafts --> Dedup["MemoryDeduplicator (LLM)"]
+flowchart TD
+  Agent["Coding<br/>agent"] --> Drafts["DraftMemory[]"]
+  Drafts --> Dedup["MemoryDeduplicator<br/>(LLM)"]
   Dedup -->|CREATE / MERGE / SKIP| Store[".byterover/cipher/memories"]
-  Agent --> Curate["curate: proposed ContextData"]
-  Existing["Existing knowledge file"] --> Detect["detectStructuralLoss"]
+  Agent --> Curate["curate: proposed<br/>ContextData"]
+  Existing["Existing knowledge<br/>file"] --> Detect["detectStructuralLoss"]
   Curate --> Detect
   Detect --> Impact["deriveImpactFromLoss"]
-  Detect --> Resolve["resolveStructuralLoss (union merge)"]
+  Detect --> Resolve["resolveStructuralLoss<br/>(union merge)"]
   Resolve --> Write["markdown-writer"]
 ```
 

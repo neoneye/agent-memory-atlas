@@ -108,16 +108,16 @@ conversation
 - `ui/src/pages/brain/Memory.tsx` — the operator review page.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Conv["Conversation"] --> Cand["UserMemoryCandidate"]
   Cand --> Store["UserMemoryStore"]
   Store --> DB["second-brain-db"]
-  Store --> People["UserPersonRecord / UserRelationMention"]
+  Store --> People["UserPersonRecord /<br/>UserRelationMention"]
   Q["Query"] --> Retr["retrieval"]
   DB --> Retr
-  Retr --> Used["record lastUsedAt + lastUsedQuery"]
-  DB --> UI["brain/Memory.tsx review page"]
-  UI --> Dismiss["dismissed / supersededBy"]
+  Retr --> Used["record lastUsedAt +<br/>lastUsedQuery"]
+  DB --> UI["brain/Memory.tsx<br/>review page"]
+  UI --> Dismiss["dismissed /<br/>supersededBy"]
   Pause["learningPaused"] -.blocks.-> Cand
 ```
 

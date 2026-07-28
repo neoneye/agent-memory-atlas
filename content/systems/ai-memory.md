@@ -118,17 +118,17 @@ Crates, in lines of Rust:
   `sanitize.rs`.
 
 ```mermaid
-flowchart LR
-  H["harness hooks (8 agents)"] --> Obs["observations"]
+flowchart TD
+  H["harness hooks<br/>(8 agents)"] --> Obs["observations"]
   Obs --> Cons["opt-in consolidation"]
-  Cons --> Pages["Markdown pages in git"]
-  Pages --> Idx["SQLite index"]
-  Idx --> Search["authority + tier ranked search"]
-  Idx --> Ret["retention_score(age, last access)"]
-  Sess1["session A · Claude Code"] --> HO["handoff: summary, open_questions,\nnext_steps, files_touched"]
+  Cons --> Pages["Markdown pages<br/>in git"]
+  Pages --> Idx["SQLite<br/>index"]
+  Idx --> Search["authority + tier<br/>ranked search"]
+  Idx --> Ret["retention_score(age,<br/>last access)"]
+  Sess1["session A ·<br/>Claude Code"] --> HO["handoff: summary, open_questions,\nnext_steps,<br/>files_touched"]
   HO --> St{"state"}
-  St -->|accepted| Sess2["session B · Codex"]
-  St -->|expired| Gone["decays out"]
+  St -->|accepted| Sess2["session B ·<br/>Codex"]
+  St -->|expired| Gone["decays<br/>out"]
 ```
 
 ## 4. Essential Implementation Paths

@@ -218,19 +218,19 @@ replay reports.</li>
 <p>Plus <code>openclaw-metaclaw-memory/</code> — the OpenClaw plugin
 with its own sidecar manager (~5,000 lines), a plugin spec, and a plan
 document.</p>
-<pre class="mermaid"><code>flowchart LR
-  Conv[&quot;Conversations&quot;] --&gt; Store[&quot;MemoryStore (units, scopes)&quot;]
-  Store --&gt; Retr[&quot;retriever (under live policy)&quot;]
-  Retr --&gt; Inject[&quot;injected context&quot;]
-  Store --&gt; Tele[&quot;telemetry + metrics&quot;]
+<pre class="mermaid"><code>flowchart TD
+  Conv[&quot;Conversations&quot;] --&gt; Store[&quot;MemoryStore (units,&lt;br/&gt;scopes)&quot;]
+  Store --&gt; Retr[&quot;retriever (under&lt;br/&gt;live policy)&quot;]
+  Retr --&gt; Inject[&quot;injected&lt;br/&gt;context&quot;]
+  Store --&gt; Tele[&quot;telemetry +&lt;br/&gt;metrics&quot;]
   Hist[&quot;past sessions&quot;] --&gt; Samples[&quot;load_replay_samples&quot;]
   Live[&quot;live MemoryPolicyState&quot;] --&gt; Cand[&quot;generate_policy_candidates&quot;]
-  Tele --&gt; Opt[&quot;policy_optimizer (bounded tuner)&quot;]
+  Tele --&gt; Opt[&quot;policy_optimizer&lt;br/&gt;(bounded tuner)&quot;]
   Opt --&gt; Cand
   Cand --&gt; Replay[&quot;run_policy_candidate_replay&quot;]
   Samples --&gt; Replay
-  Replay --&gt; Gate[&quot;should_promote (8 deltas, n&gt;=10)&quot;]
-  Gate --&gt;|pass| Promote[&quot;new live policy&quot;]
+  Replay --&gt; Gate[&quot;should_promote (8&lt;br/&gt;deltas, n&gt;=10)&quot;]
+  Gate --&gt;|pass| Promote[&quot;new live&lt;br/&gt;policy&quot;]
   Gate --&gt;|fail| Keep[&quot;keep incumbent&quot;]
   Gate --&gt; Report[&quot;write_replay_report&quot;]</code></pre>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation

@@ -99,20 +99,20 @@ Core modules, grouped by concern:
 - **Git**: `git-commits/`, with commits indexed into `git_commits`, embedded into `git_commit_embeddings`, and searchable via `git_commits_fts`.
 
 ```mermaid
-flowchart LR
-  Sess["Pi / OpenCode session"] --> Ctx["context-handler (tag, inject)"]
+flowchart TD
+  Sess["Pi / OpenCode<br/>session"] --> Ctx["context-handler<br/>(tag, inject)"]
   Ctx --> Store["SQLite: context.db"]
-  Store --> Mem["memories + embeddings + FTS"]
-  Git["git commits + working tree"] --> GC["git_commits (+ embeddings, FTS)"]
+  Store --> Mem["memories +<br/>embeddings +<br/>FTS"]
+  Git["git commits +<br/>working tree"] --> GC["git_commits<br/>(+ embeddings,<br/>FTS)"]
   GC --> Gate["partitionVerifyScope"]
   Mem --> Gate
-  Gate --> Verify["dreamer verify task"]
+  Gate --> Verify["dreamer<br/>verify<br/>task"]
   Verify --> Mem
-  Sched["task-scheduler / cron / gates / lease"] --> Verify
-  Sched --> Other["map-memories, classify, primers, retrospective"]
-  Mem --> Search["hybrid search: semantic + FTS"]
-  Search --> Inject["session-history + primers into prompt"]
-  OC["OpenCode native DB (read-only)"] --> Retro["retrospective scanner"]
+  Sched["task-scheduler /<br/>cron / gates /<br/>lease"] --> Verify
+  Sched --> Other["map-memories, classify,<br/>primers, retrospective"]
+  Mem --> Search["hybrid search:<br/>semantic +<br/>FTS"]
+  Search --> Inject["session-history +<br/>primers into<br/>prompt"]
+  OC["OpenCode native<br/>DB (read-only)"] --> Retro["retrospective scanner"]
 ```
 
 ## 4. Essential Implementation Paths

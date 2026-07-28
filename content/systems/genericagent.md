@@ -78,18 +78,18 @@ The four core axioms, in the SOP's own priority order:
 - `agent_loop.py`, `llmcore.py` — the ~100-line loop and model layer.
 
 ```mermaid
-flowchart LR
-  Tools["Tool calls (shell, file_read, code run)"] --> Gate{"succeeded?"}
+flowchart TD
+  Tools["Tool calls (shell,<br/>file_read, code<br/>run)"] --> Gate{"succeeded?"}
   Gate -->|no| Drop["not memory"]
-  Gate -->|yes| Write["may be written"]
+  Gate -->|yes| Write["may be<br/>written"]
   Write --> L2["L2 global_mem.txt"]
-  Write --> L3["L3 memory/*.md, *.py"]
-  Sessions["Sessions"] --> Cron["scheduler: L4 archive cron, every 12h"]
+  Write --> L3["L3 memory/*.md,<br/>*.py"]
+  Sessions["Sessions"] --> Cron["scheduler: L4<br/>archive cron,<br/>every 12h"]
   Cron --> L4["L4_raw_sessions (compress_session.py)"]
-  L2 --> L1["L1 global_mem_insight.txt (<=30 lines)"]
+  L2 --> L1["L1 global_mem_insight.txt<br/>(<=30 lines)"]
   L3 --> L1
   L1 --> Prompt["always-injected context"]
-  SOP["memory_management_sop / memory_cleanup_sop"] -.governs.-> Write
+  SOP["memory_management_sop /<br/>memory_cleanup_sop"] -.governs.-> Write
   SOP -.governs.-> L1
 ```
 

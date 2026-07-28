@@ -91,16 +91,16 @@ Largest modules under `V0/agent_memory_server/`:
 - `migrations.py`, `docket_tasks.py`, `tasks.py` — schema migration and background task execution.
 
 ```mermaid
-flowchart LR
-  Client["REST / MCP / SDK client"] --> WM["Working memory (Redis + TTL)"]
-  WM --> Debounce["extraction debounce + trailing schedule"]
+flowchart TD
+  Client["REST / MCP /<br/>SDK client"] --> WM["Working memory<br/>(Redis + TTL)"]
+  WM --> Debounce["extraction debounce +<br/>trailing schedule"]
   Debounce --> Strategy["MemoryStrategy (discrete/summary/preferences/custom)"]
-  Strategy --> Dedup["hash -> id -> semantic dedupe"]
-  Dedup --> LTM["Long-term memory index"]
-  LTM --> Search["search + recency rerank"]
+  Strategy --> Dedup["hash -> id -><br/>semantic dedupe"]
+  Dedup --> LTM["Long-term<br/>memory index"]
+  LTM --> Search["search +<br/>recency<br/>rerank"]
   Search --> Access["update_last_accessed"]
   LTM --> Compact["compact_long_term_memories"]
-  LTM --> Forget["select_ids_for_forgetting -> delete"]
+  LTM --> Forget["select_ids_for_forgetting -><br/>delete"]
 ```
 
 ## 4. Essential Implementation Paths

@@ -92,10 +92,10 @@ population of scored solutions
 - `README.md` in the memory package.
 
 ```mermaid
-flowchart LR
-  Att["Attempt"] --> Sol["Solution {text, score, ts}"]
-  Sol --> Pop["population (in-memory | redis)"]
-  Pop --> Div["_calculate_diversity (50 sampled pairs)"]
+flowchart TD
+  Att["Attempt"] --> Sol["Solution<br/>{text, score,<br/>ts}"]
+  Sol --> Pop["population<br/>(in-memory<br/>| redis)"]
+  Pop --> Div["_calculate_diversity<br/>(50 sampled pairs)"]
   Div --> Temp["_adaptive_temperature_by_diversity"]
   Temp --> Sel["_boltzmann_selection_with_weights"]
   Pop --> Sel

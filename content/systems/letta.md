@@ -76,17 +76,17 @@ Core files:
 Runtime shape:
 
 ```mermaid
-flowchart LR
-  Agent["Agent loop"] --> Tools["Core memory tools"]
+flowchart TD
+  Agent["Agent<br/>loop"] --> Tools["Core memory<br/>tools"]
   Tools --> Executor["LettaCoreToolExecutor"]
   Executor --> AgentState["AgentState.memory"]
   Executor --> BlockMgr["BlockManager"]
   Executor --> PassageMgr["PassageManager"]
   Executor --> MsgMgr["MessageManager"]
   BlockMgr --> DB["DB blocks"]
-  PassageMgr --> Passages["Archival/source passages + embeddings"]
-  MsgMgr --> Messages["Conversation messages"]
-  BlockMgr --> Prompt["Rebuilt system prompt"]
+  PassageMgr --> Passages["Archival/source passages +<br/>embeddings"]
+  MsgMgr --> Messages["Conversation<br/>messages"]
+  BlockMgr --> Prompt["Rebuilt system<br/>prompt"]
 ```
 
 ## 4. Essential Implementation Paths

@@ -86,20 +86,20 @@ The documentation is explicit that `history.jsonl` "is not the final memory. It 
 - Workspace `prompts/dream.md` — user-editable instructions steering Dream's behaviour.
 
 ```mermaid
-flowchart LR
-  Conv["session.messages"] --> Cons["Consolidator (on context pressure)"]
-  Cons --> Hist["history.jsonl (append-only)"]
+flowchart TD
+  Conv["session.messages"] --> Cons["Consolidator (on<br/>context pressure)"]
+  Cons --> Hist["history.jsonl<br/>(append-only)"]
   Cons --> C1[".cursor"]
-  Hist --> Dream["Dream (cron or manual)"]
+  Hist --> Dream["Dream (cron<br/>or manual)"]
   C2[".dream_cursor"] --> Dream
   Soul["SOUL.md"] --> Dream
   User["USER.md"] --> Dream
   Mem["memory/MEMORY.md"] --> Dream
   Prompt["prompts/dream.md"] --> Dream
-  Dream --> Edit["surgical edits to durable files"]
-  Edit --> Git["GitStore commit (delta-grounded message)"]
+  Dream --> Edit["surgical edits to<br/>durable files"]
+  Edit --> Git["GitStore commit (delta-grounded<br/>message)"]
   Dream --> Guard{"tool errors?"}
-  Guard -->|yes| Hold["do not advance .dream_cursor"]
+  Guard -->|yes| Hold["do not advance<br/>.dream_cursor"]
   Guard -->|no| Adv["advance .dream_cursor"]
 ```
 

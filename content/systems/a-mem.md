@@ -74,7 +74,7 @@ learning, factual verification, decay, or model-weight adaptation.
 ## 3. Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   Caller["Python caller"] --> AMS["AgenticMemorySystem"]
   AMS --> Dict["In-process MemoryNote dictionary"]
   AMS --> Chroma["Chroma collection + sentence-transformer"]

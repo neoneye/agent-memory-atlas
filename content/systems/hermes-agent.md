@@ -94,18 +94,18 @@ memory(action=add|replace|remove, target=memory|user, ...)
 - `tools/skill_manager_tool.py`, `tools/skill_provenance.py`, `agent/skill_*.py`: skills as procedural memory.
 
 ```mermaid
-flowchart LR
-  Model["Model"] --> Tool["memory tool (add/replace/remove)"]
+flowchart TD
+  Model["Model"] --> Tool["memory tool<br/>(add/replace/remove)"]
   Tool --> Gate["write_approval gate"]
-  Gate -->|stage| Human["Human approval queue"]
-  Gate -->|allow| Scan["threat_patterns strict scan"]
-  Scan --> Lock["file lock + re-read + drift check"]
-  Lock --> Budget{"within char limit?"}
-  Budget -->|no| Consolidate["refuse: consolidate in-turn"]
-  Budget -->|yes| Disk["atomic_replace MEMORY.md / USER.md"]
-  Disk -.->|next session start| Snapshot["frozen system-prompt block"]
-  Sessions["state.db + FTS5"] --> Search["session search"]
-  Provider["one external MemoryProvider"] --> Prefetch["prefetch() block"]
+  Gate -->|stage| Human["Human approval<br/>queue"]
+  Gate -->|allow| Scan["threat_patterns<br/>strict scan"]
+  Scan --> Lock["file lock +<br/>re-read + drift<br/>check"]
+  Lock --> Budget{"within<br/>char limit?"}
+  Budget -->|no| Consolidate["refuse: consolidate<br/>in-turn"]
+  Budget -->|yes| Disk["atomic_replace<br/>MEMORY.md /<br/>USER.md"]
+  Disk -.->|next session start| Snapshot["frozen system-prompt<br/>block"]
+  Sessions["state.db +<br/>FTS5"] --> Search["session search"]
+  Provider["one external<br/>MemoryProvider"] --> Prefetch["prefetch() block"]
 ```
 
 ## 4. Essential Implementation Paths

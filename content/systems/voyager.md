@@ -101,7 +101,7 @@ Voyager is small — about 1,459 lines across five agent modules — and the mem
 - `voyager/control_primitives/` — hand-written base functions always available.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Curr["Curriculum agent"] --> Task["Next task"]
   Task --> Retr["retrieve_skills(context)"]
   Skills["Chroma: descriptions"] --> Retr

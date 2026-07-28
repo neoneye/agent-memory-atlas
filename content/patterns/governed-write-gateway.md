@@ -24,7 +24,7 @@ flowchart TD
     B["Agent tool"] --> G
     C["Review UI"] --> G
     D["Background<br/>extractor"] --> G
-    G --> P["Actor + scope<br/>+ trust policy"]
+    G --> P["Actor + scope +<br/>trust policy"]
     P --> K["Dedupe, conflict,<br/>tombstone checks"]
     K --> T["Atomic claim, evidence,<br/>relation, audit write"]
 ```

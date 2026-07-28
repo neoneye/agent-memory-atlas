@@ -77,12 +77,12 @@ Visible code areas:
 Runtime shape from visible code:
 
 ```mermaid
-flowchart LR
-  Agent["Agent / AI SDK / MCP"] --> Tools["Supermemory wrappers"]
-  Tools --> API["Hosted Supermemory API"]
-  API --> Private["Private ingestion/search engine"]
-  Tools --> Prompt["Prompt/profile injection"]
-  API --> Graph["Documents + memories graph"]
+flowchart TD
+  Agent["Agent / AI<br/>SDK / MCP"] --> Tools["Supermemory<br/>wrappers"]
+  Tools --> API["Hosted Supermemory<br/>API"]
+  API --> Private["Private ingestion/search<br/>engine"]
+  Tools --> Prompt["Prompt/profile<br/>injection"]
+  API --> Graph["Documents + memories<br/>graph"]
 ```
 
 ## 4. Essential Implementation Paths

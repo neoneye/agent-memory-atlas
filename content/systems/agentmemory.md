@@ -85,7 +85,7 @@ adapts its state functions into a scoped key-value interface; higher-level
 modules build retrieval and lifecycle behavior on top.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Hooks["Agent hooks"] --> Observe["mem::observe"]
   Tools["MCP / API / CLI"] --> Functions["Registered memory functions"]
   Observe --> State["iii StateModule / SQLite"]

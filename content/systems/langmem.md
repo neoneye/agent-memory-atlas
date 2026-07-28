@@ -65,11 +65,11 @@ Memory is agent-controlled in the tool path and LLM-managed in the background ma
 Runtime shape:
 
 ```mermaid
-flowchart LR
-  Agent["LangGraph agent"] --> Tools["LangMem tools"]
-  Tools --> Store["LangGraph BaseStore"]
+flowchart TD
+  Agent["LangGraph<br/>agent"] --> Tools["LangMem<br/>tools"]
+  Tools --> Store["LangGraph<br/>BaseStore"]
   Conversation["Conversation"] --> Manager["MemoryManager"]
-  Manager --> Trustcall["trustcall extractor"]
+  Manager --> Trustcall["trustcall<br/>extractor"]
   Manager --> Store
   App["App thread"] --> Reflection["ReflectionExecutor"]
   Reflection --> Manager

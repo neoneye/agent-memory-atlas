@@ -81,14 +81,14 @@ Core files:
 Architecture:
 
 ```mermaid
-flowchart LR
+flowchart TD
   Agent["MCP agent"] --> MCP["internal/mcp"]
   CLI["CLI/TUI"] --> Store["internal/store"]
   HTTP["HTTP server"] --> Store
   MCP --> Store
-  Store --> SQLite["SQLite WAL + FTS5"]
-  Store --> Sync["sync_mutations journal"]
-  Sync --> Cloud["optional cloud/git sync"]
+  Store --> SQLite["SQLite WAL +<br/>FTS5"]
+  Store --> Sync["sync_mutations<br/>journal"]
+  Sync --> Cloud["optional cloud/git<br/>sync"]
 ```
 
 ## 4. Essential Implementation Paths

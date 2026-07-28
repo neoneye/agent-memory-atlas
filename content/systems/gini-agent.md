@@ -94,16 +94,16 @@ query
 - `docs/memory.md` and an extensive `docs/adr/` corpus.
 
 ```mermaid
-flowchart LR
-  Task["Task / session"] --> Retain["retain.ts"]
-  Retain --> Units["memory_units (banks, agent_id)"]
-  Units --> Ent["entities / entity_mentions / memory_links"]
+flowchart TD
+  Task["Task /<br/>session"] --> Retain["retain.ts"]
+  Retain --> Units["memory_units<br/>(banks, agent_id)"]
+  Units --> Ent["entities / entity_mentions /<br/>memory_links"]
   Q["Query"] --> Recall["recall.ts"]
   Units --> Sem["semantic"]
   Units --> BM["bm25 (FTS5)"]
-  Ent --> Graph["graph: spreading activation δ=0.5"]
-  Units --> Temp["temporal (parsed range)"]
-  Sem --> RRF["reciprocal rank fusion"]
+  Ent --> Graph["graph: spreading<br/>activation<br/>δ=0.5"]
+  Units --> Temp["temporal<br/>(parsed<br/>range)"]
+  Sem --> RRF["reciprocal<br/>rank fusion"]
   BM --> RRF
   Graph --> RRF
   Temp --> RRF

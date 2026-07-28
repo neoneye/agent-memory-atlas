@@ -212,18 +212,18 @@ only.</li>
 <li><code>agent_loop.py</code>, <code>llmcore.py</code> — the ~100-line
 loop and model layer.</li>
 </ul>
-<pre class="mermaid"><code>flowchart LR
-  Tools[&quot;Tool calls (shell, file_read, code run)&quot;] --&gt; Gate{&quot;succeeded?&quot;}
+<pre class="mermaid"><code>flowchart TD
+  Tools[&quot;Tool calls (shell,&lt;br/&gt;file_read, code&lt;br/&gt;run)&quot;] --&gt; Gate{&quot;succeeded?&quot;}
   Gate --&gt;|no| Drop[&quot;not memory&quot;]
-  Gate --&gt;|yes| Write[&quot;may be written&quot;]
+  Gate --&gt;|yes| Write[&quot;may be&lt;br/&gt;written&quot;]
   Write --&gt; L2[&quot;L2 global_mem.txt&quot;]
-  Write --&gt; L3[&quot;L3 memory/*.md, *.py&quot;]
-  Sessions[&quot;Sessions&quot;] --&gt; Cron[&quot;scheduler: L4 archive cron, every 12h&quot;]
+  Write --&gt; L3[&quot;L3 memory/*.md,&lt;br/&gt;*.py&quot;]
+  Sessions[&quot;Sessions&quot;] --&gt; Cron[&quot;scheduler: L4&lt;br/&gt;archive cron,&lt;br/&gt;every 12h&quot;]
   Cron --&gt; L4[&quot;L4_raw_sessions (compress_session.py)&quot;]
-  L2 --&gt; L1[&quot;L1 global_mem_insight.txt (&lt;=30 lines)&quot;]
+  L2 --&gt; L1[&quot;L1 global_mem_insight.txt&lt;br/&gt;(&lt;=30 lines)&quot;]
   L3 --&gt; L1
   L1 --&gt; Prompt[&quot;always-injected context&quot;]
-  SOP[&quot;memory_management_sop / memory_cleanup_sop&quot;] -.governs.-&gt; Write
+  SOP[&quot;memory_management_sop /&lt;br/&gt;memory_cleanup_sop&quot;] -.governs.-&gt; Write
   SOP -.governs.-&gt; L1</code></pre>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>

@@ -80,20 +80,20 @@ pipelines.
 ## 3. Architecture
 
 ```mermaid
-flowchart LR
-  Sources["Text, files, URLs, tables, media"] --> Add["add / remember"]
-  Add --> Raw["Relational records + source files"]
-  Raw --> Cognify["cognify task pipeline"]
-  Cognify --> Graph["Graph store"]
-  Cognify --> Vector["Vector store"]
-  Cognify --> Summary["Chunks + summaries"]
-  Session["Session cache"] --> Recall["recall"]
-  Session --> Improve["background improve / memify"]
+flowchart TD
+  Sources["Text, files, URLs,<br/>tables, media"] --> Add["add / remember"]
+  Add --> Raw["Relational records +<br/>source files"]
+  Raw --> Cognify["cognify task<br/>pipeline"]
+  Cognify --> Graph["Graph<br/>store"]
+  Cognify --> Vector["Vector<br/>store"]
+  Cognify --> Summary["Chunks +<br/>summaries"]
+  Session["Session<br/>cache"] --> Recall["recall"]
+  Session --> Improve["background improve /<br/>memify"]
   Improve --> Graph
-  Graph --> Search["search / recall retrievers"]
+  Graph --> Search["search / recall<br/>retrievers"]
   Vector --> Search
   Summary --> Search
-  Search --> Agent["SDK, API, CLI, MCP"]
+  Search --> Agent["SDK, API,<br/>CLI, MCP"]
 ```
 
 Local development can run embedded with SQLite plus local graph and vector
