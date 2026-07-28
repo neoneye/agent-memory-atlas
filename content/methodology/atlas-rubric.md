@@ -160,6 +160,18 @@ The marks are declared in each report's `capabilities:` frontmatter, and the
 build fails if a report omits the key entirely, so "nobody looked" and "assessed,
 carries none" are distinguishable states rather than the same blank.
 
+## Staleness
+
+A mark is a claim about code at a pinned commit, which makes it auditable and
+makes it age. `scripts/check_freshness.py` compares every pinned revision
+against its repository's current default branch, and a weekly job reports the
+drift, so "which reports have fallen behind" is a list rather than a worry.
+
+It reports and never fails. A drifted pin does not make a report wrong — the
+report was true of that commit and still is — it makes the report less useful as
+a description of the project today, and re-reading a system is the expensive part
+that no amount of automation removes.
+
 ## Known limits
 
 - **Marks are assigned by one reviewer** reading code, not by running it.

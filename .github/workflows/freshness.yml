@@ -1,0 +1,29 @@
+name: Freshness
+
+# Commit pinning makes every claim auditable and makes the atlas go quietly
+# stale. This does not fail: a drifted pin is a work list, not a build error.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-revisions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare each pinned revision against its default branch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/check_freshness.py | tee freshness.txt
+          {
+            echo "## Pinned revision drift"
+            echo
+            echo '```'
+            cat freshness.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
