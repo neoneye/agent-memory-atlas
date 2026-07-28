@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
-revision: 5aa050fea33ce07138ddf644a58df1f0a60b7aa7
-revision_url: https://github.com/amitpatole/verel/commit/5aa050fea33ce07138ddf644a58df1f0a60b7aa7
+revision: df44e76c6c6a919977806feed9549bc6a892932d
+revision_url: https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d
 analyzed_at: 2026-07-28
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
@@ -142,7 +142,7 @@ Recall:
   That path filters scope, kind, and rejected records in SQL, over-fetches, and re-ranks the
   candidates through the trust-aware `rank()`. A configured embedder switches to cosine over a full
   scan; token overlap is the last resort, used only when FTS5 is unavailable
-  ([`local.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/local.py#L249)).
+  ([`local.py`](https://github.com/amitpatole/verel/blob/df44e76c6c6a919977806feed9549bc6a892932d/src/verel/memory/local.py#L249)).
 - Excludes rejected records.
 - Recall reinforces only `retrieval_strength`, never confidence.
 - `recall_budgeted()` in `recall.py` greedily packs ranked memories under a token budget.
@@ -151,7 +151,7 @@ Recall:
   `recall()` and `recall_as_of()` return `MemoryRecord` objects with unfenced `text`, and so does
   `recall_budgeted(...).records`. `recall_as_of` says so in its own docstring: a caller that drops
   as-of results into a prompt "must fence them as untrusted DATA exactly as it would `recall`"
-  ([`recall.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/recall.py)).
+  ([`recall.py`](https://github.com/amitpatole/verel/blob/df44e76c6c6a919977806feed9549bc6a892932d/src/verel/memory/recall.py)).
 
 Remember/extraction gate:
 
@@ -166,6 +166,13 @@ Consolidation:
 - `consolidate_failures()` clusters `FAILURE` records and asks an LLM to induce `DESIGN_RULE` candidates.
 - `induce_schemas()` and `induce_hierarchy()` create higher-order `SCHEMA` candidates.
 - These are never auto-verified.
+- `ConsolidationStats` counts why a pass produced what it did, which is rarer than it sounds. The
+  module names the problem it solves: consolidation "SILENTLY drops clusters that are too small or
+  whose LLM reply won't parse — so an operator otherwise can't tell '5 failures, 0 rules' from 'the
+  LLM returned junk 5 times'." The counters carry a stated invariant,
+  `written = clusters_found − too_small − parse_failures`, so a run reconciles rather than merely
+  reporting. Elsewhere in the atlas an LLM induction pass that yields nothing is indistinguishable
+  from one that was never given enough to work with.
 
 Promotion:
 
@@ -195,7 +202,7 @@ Tests:
 
 ### A hash-chained mutation audit
 
-[`memory/audit.py`](https://github.com/amitpatole/verel/blob/5aa050fea33ce07138ddf644a58df1f0a60b7aa7/src/verel/memory/audit.py)
+[`memory/audit.py`](https://github.com/amitpatole/verel/blob/df44e76c6c6a919977806feed9549bc6a892932d/src/verel/memory/audit.py)
 names the gap it closes: "correction chains preserve WHAT a record used to say,
 but not WHO/WHAT changed it." `MemoryAudit` records mutations as
 `{seq, ts, actor, action, record_id, before, after}`, hash-chained so each entry
@@ -255,6 +262,48 @@ and contradicts it.
 Every other consolidation pass in this atlas adds. This one can retract a
 generalization when the evidence turns, which is belief *contraction* rather than
 supersession of a single value.
+
+### Capability claims as live probes
+
+`memory/rubric.py` is the newest module and the one that needs the most careful
+handling here, because it assesses Verel against *this atlas's* seven
+capabilities. **The marks in the strip at the top of this page are the atlas's
+own reading of the code and owe nothing to it.** What follows is a description of
+a mechanism Verel ships, judged the same way any other mechanism would be.
+
+The technically interesting part is that each of the seven is a **live
+behavioural probe**, not a claim and not a has-this-function check. The tombstone
+probe writes a fact, contradicts it six times, supersedes it with a different
+value, re-asserts the original, and then checks `is_launder_blocked` — it walks
+the laundering attack and reports what happened. The scope probe writes to two
+scopes and asserts the read path returns one. Each result carries the criterion,
+the file implementing it, and a `proof` string stating what the probe actually
+demonstrated. A regression flips a mark to a dash.
+
+That is the right shape for a capability claim, and it is worth separating from
+whether the claim is *true*: a system can ship an honest probe and still be wrong
+about itself, and a probe is only as good as the behaviour it exercises.
+
+**Run from an installed wheel it scores 6/7, not the 7/7 the release claims.**
+Verel v1.9.2 is titled "fix verel memory rubric to be install-independent (7/7
+from a wheel)", but `rubric.py` is byte-identical to v1.9.1 and the wheel ships
+no `tests/`. I installed the package at this pin and ran it:
+
+```text
+score: 6/7 (binary marks; NOT a maturity score)
+...
+[ -- ] Negative Retrieval Assertion
+        proof: rejected value absent from budgeted recall=True; committed cases:
+               (negative-eval suite not found next to the package — running from a wheel?)
+```
+
+From a source checkout at the same commit it does score 7/7. The gap is not a
+capability gap and the probe is not lying — the behavioural half passes either
+way, and the atlas's criterion asks for *committed* cases, which genuinely cannot
+be seen from a wheel that excludes them. It is a release note that overstates a
+packaging change that did not land. Worth recording precisely because the module
+is an argument for demonstrated over asserted behaviour, and the assertion that
+slipped was the one about the tool itself.
 
 ## 5. Memory Data Model
 
@@ -375,7 +424,8 @@ Strengths:
 - An opt-in hash-chained mutation audit that works over every backend, honest
   about being tamper-evident rather than signed.
 - Bi-temporal validity with `recall_as_of` and `value_as_of`.
-- Consolidation that can retract a falsified generalization.
+- Consolidation that can retract a falsified generalization, and counts why a
+  pass produced what it did instead of dropping clusters silently.
 - Authenticated principals, because a free-string author is forgeable.
 - Canonicalization shared by renderer and trust gate.
 - Prompt-injection neutralization in the rendered recall block.
@@ -387,7 +437,12 @@ Strengths:
 Risks:
 
 - Considerably more complex than most teams need initially.
-- Some LLM consolidation paths are ambitious and may be brittle.
+- Some LLM consolidation paths are ambitious and may be brittle. `ConsolidationStats`
+  makes a weak pass visible rather than reliable — you now learn that four clusters
+  went unparsed, which is the necessary first step and not a fix.
+- Release notes have run ahead of the code at least once: v1.9.2 claims a rubric
+  fix that is not in that commit. The mechanisms hold up under checking; the
+  announcements need the same checking.
 - Recall is lexical by default. BM25 is a real ranking function rather than the token-overlap
   fallback, but it is still keyword matching: a paraphrased query needs the optional embedder.
 - Correctness of attestation/authenticator depends on external integration.
@@ -407,7 +462,10 @@ Verel has strong memory-specific tests:
 - Hosted and replicated backends.
 - MCP memory.
 
-I did not run them. The test file coverage is unusually aligned with the design claims.
+I did not run the test suite. The test file coverage is unusually aligned with the
+design claims. I did run `verel.memory.rubric`, from a wheel and from a source
+checkout at this pin — see [capability claims as live probes](#capability-claims-as-live-probes)
+— which is the only Verel code the atlas has executed rather than read.
 
 ### Negative evals
 
@@ -439,6 +497,13 @@ assertions in this atlas.
   generalize something false and never take it back.
 - **Turn the attack into the regression test.** The red-team finding that forced
   the mechanism is the best fixture you will ever have for it.
+- **Count why a background pass produced nothing.** "Zero rules" and "the model
+  returned junk five times" look identical from the outside, and an induction
+  pass that silently drops its inputs will be trusted long past the point it
+  stopped working. Counters with an invariant that reconciles beat a log line.
+- **Make a capability claim executable.** A probe that writes, corrupts, and reads
+  back is worth more than a checklist, because it fails when the behaviour
+  regresses rather than when someone remembers to update a document.
 
 - Separate truth confidence from retrieval strength.
 - Candidate/verified/rejected trust state.

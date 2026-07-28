@@ -17,6 +17,17 @@ A capability is marked present **only when the mechanism was found in code at
 the pinned commit**. Not in a README, not in a roadmap, not in a design document
 describing intent, and not inferred from a plausible-sounding module name.
 
+**And not from a system's own assessment of itself, however well built.** One
+system — [Verel](../../systems/verel/) — now ships a module that runs a live
+behavioural probe per capability and prints a score against this rubric. It is a
+good mechanism and the report says so. It earns no marks. A self-assessment is a
+claim about code, and this page exists because the atlas reads code instead of
+claims; a self-assessment that happens to be *correct* changes nothing, because
+the atlas would have no way to tell the correct ones from the rest without doing
+the reading anyway. When I checked that module I found its release notes claimed
+a score its own probe does not produce from an installed wheel — which is the
+argument in miniature.
+
 A dash means **not found**. It does not mean impossible, planned-and-missing, or
 badly built. Several systems here carry a dash on a capability their design
 deliberately does not need — [OptMem](../../systems/optmem/) has no scope key
@@ -180,3 +191,11 @@ that no amount of automation removes.
 - **The scope mark is the shallowest**, for the reason given above.
 - **Seven axes cannot describe a memory system.** They describe the failures this
   atlas has found to be common, expensive, and silent. The reports carry the rest.
+- **The rubric can now be aimed at.** At least one system has implemented these
+  capabilities with the atlas in view and named commits after the marks. That is
+  a reasonable thing for a maintainer to do and the mechanisms are real ones. It
+  also means a count of marks is, from here on, partly a measure of who has read
+  this page — so the marks describe shape, and the prose has to carry whether a
+  mechanism was reached by need or by checklist. Where the atlas can date that,
+  it says so: the [tombstone's provenance](../../patterns/rejected-value-tombstone/)
+  is traced to a red-team finding rather than a rubric, and it predates this page.

@@ -20,6 +20,27 @@ detail to implement:
 Both live as fenced code in a Markdown page. Neither has been run against
 anything.
 
+**Update, 28 July 2026: somebody else did it first, from the other side.** Verel
+ships `memory/rubric.py`, which runs a live behavioural probe per atlas
+capability against an in-memory store and prints the criterion, the implementing
+file, and what the probe demonstrated. It is not this proposal — it is a system
+grading *itself*, where this proposes an adapter the atlas runs against *many*
+systems — but it settles the feasibility question that this note treats as open.
+The probes are small, dependency-free, and take an entire capability from "we
+have a function for that" to "here is the laundering sequence walked end to end".
+
+Two things worth stealing from it, whenever this suite gets built:
+
+- **The `proof` string.** Each result carries not just pass/fail but a sentence
+  stating what actually happened — "rejected value keyed in ledger=True;
+  re-assert after supersede stays un-promotable=True". A boolean tells you the
+  suite ran; that sentence tells you the suite tested the right thing.
+- **Probe the packaging, not just the code.** Running Verel's rubric from an
+  installed wheel scores 6/7, from a source checkout 7/7, because one criterion
+  needs committed test files that the wheel excludes. Any adapter this atlas
+  writes will hit the same class of problem, and "how was it installed" belongs
+  in the harness rather than in a footnote.
+
 ## The proposal, corrected
 
 **Do:** move the harness into the repository as real code with a reference

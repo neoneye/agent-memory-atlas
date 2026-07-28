@@ -97,3 +97,35 @@ guide both state the convention; the freshness tool now quantifies the exposure.
 The uncomfortable case is the two tombstone systems: if a third system added one
 tomorrow, the atlas's most-quoted number would be wrong and nothing would notice
 until someone re-read it.
+
+## 7. The rubric became a target
+
+**Live, first observed 28 July 2026.** Verel now implements all seven capabilities
+and ships `memory/rubric.py`, a module that probes itself against this atlas's
+rubric and prints a score. Release commits are titled with the marks — "atlas
+7/7". The mechanisms are real and the probes are behavioural rather than
+declarative, so this is not gaming in any dishonest sense. It is still Goodhart:
+the measure has become an objective for at least one measured system.
+
+Consequences to hold onto:
+
+- **A count of marks is now partly a measure of who has read the rubric page.**
+  Seven marks meant something different in June, when nothing was aimed at it.
+- **Self-assessment cannot be evidence.** Recorded on the rubric page. Verel's
+  probe is well built and I still had to read the code, because there is no way
+  to distinguish a correct self-assessment from a confident one without doing so.
+  The check paid immediately: running the module from a wheel scored 6/7 against
+  a release note claiming 7/7, and `rubric.py` was unchanged in the commit that
+  claimed to fix it.
+- **Provenance is the defence.** Where the atlas can date a mechanism to a cause
+  — Verel's tombstone to a red-team round in June, before this page existed — the
+  reader can tell need from checklist. Where it cannot, the prose should say so
+  rather than let the mark imply it.
+
+**Not a reason to stop.** A rubric nobody builds toward is a rubric nobody uses.
+The cost is that the atlas can no longer treat mark counts as an independent
+survey of the field, and should stop describing them that way as adoption grows.
+
+**Watch for:** a second system implementing to the rubric; any system whose seven
+mechanisms all postdate the atlas; and the atlas quietly beginning to cite its own
+influence as evidence of anything.
