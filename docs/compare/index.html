@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-fifty-five agent memory architectures, their retrieval mechanics, trust
+fifty-six agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of fifty-five agent memory architectures, their retrieval mechanics,
+of fifty-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of fifty-five agent memory architectures, their retrieval mechanics,
+of fifty-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -56,7 +56,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-fifty-five agent memory architectures, their retrieval mechanics, trust
+fifty-six agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -122,11 +122,11 @@ are three different products with three different failure modes.</li>
 readers need. The <a href="#capability-index">capability index</a> is
 the fastest way in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Fifty-five systems do not fall into fifty-five categories. They
-cluster around eight architectural commitments, and most systems belong
-to more than one — a coding-agent memory can also be verification-first,
-and a host runtime's plugin can also be a hosted service. The families
-below are lenses, not bins.</p>
+<p>Fifty-six systems do not fall into fifty-six categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -234,7 +234,8 @@ memory provider</a>.</p>
 <code>llm-wiki-memory</code>, <code>basic-memory</code>,
 <code>moltis</code>, <code>open-cowork</code>, <code>byterover</code>,
 <code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
-<code>ai-memory</code>, <code>ctx</code>, <code>optmem</code></p>
+<code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
+<code>openworker</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -247,6 +248,10 @@ substrate as curated ones. <strong>open-cowork</strong> separates core
 from experience memory and ships the atlas's most complete memory
 benchmark. <strong>Swafra</strong> shows how little code a local
 graph-RAG sidecar needs, and why flat JSON is not a database.
+<strong>OpenWorker</strong> carries a 260-line memory whose real
+artifact is the paragraph governing it, and a comment recording why it
+exists: without when-to-remember rules, "models either never call
+<code>remember</code> or save noise the repo already records".
 <strong>OptMem</strong> is the limit case in the other direction: 860
 lines, an append-only log the code never edits, a binary merge tree
 whose resolution decays with age by geometry rather than policy, and
@@ -385,6 +390,32 @@ as BeeAI's <code>SummarizeMemory</code>, several orders of
 sophistication up. That the best learned context compression in the
 field lands outside this atlas is the clearest argument that the
 boundary is drawn in the right place.</p>
+<p>A second boundary is worth naming because it is where this atlas most
+often declines something interesting: <strong>a durable store an agent
+operates is not memory.</strong> <a
+href="https://github.com/gastownhall/beads">beads</a> (MIT, at <a
+href="https://github.com/gastownhall/beads/commit/dbbf3a9618aa"><code>dbbf3a9618aa</code></a>)
+is a distributed graph issue tracker for AI agents, Dolt-backed, and it
+passes the literal test — issues persist across sessions, carry
+identity, and can be corrected. So would Jira. The distinction that
+keeps the atlas from swallowing every agent-adjacent database is whether
+the store exists to hold what the agent <em>believes</em> or what the
+agent <em>operates on</em>: a task database is the second. It is noted
+here rather than dropped because <a href="../systems/core-memory/">Core
+Memory</a> borrows the "bead" vocabulary, and a reader meeting both
+could reasonably assume a relationship.</p>
+<p>The nearby case is a corpus index.
+<code>VectorSpaceLab/general-agentic-memory</code> (GAM) builds an
+LLM-generated directory tree over long documents, video, or agent
+trajectories, with a Memory and TLDR summary per chunk and an agent that
+navigates the taxonomy to answer questions. That is a hierarchical index
+with exploratory QA over it — the shape <a
+href="../systems/openviking/">OpenViking</a> already covers with its
+L0/L1/L2 granularities, and one this atlas would need a reason to add
+again. It also carries <strong>no licence file</strong>. The OptMem
+exception was granted for mechanisms found nowhere else; an
+auto-generated taxonomy over a document tree is not that, so GAM gets a
+note rather than a report.</p>
 <p>Compaction appears in this atlas only as a component of systems that
 also persist — <code>mastra-observational-memory</code> with exact
 covered ranges and buffered activation, <code>hermes-agent</code> with a
@@ -1307,6 +1338,28 @@ confidence</td>
 AGPL-3.0</td>
 </tr>
 <tr>
+<td><code>openworker</code></td>
+<td>Row with scope, optional key, content, workspace, session,
+created_at</td>
+<td>SQLite (<code>coworker.db</code>) alongside sessions and
+workspaces</td>
+<td>Listing filtered by scope and workspace; no ranking or search</td>
+<td>Three agent tools — <code>remember</code>,
+<code>memory_update</code>, <code>memory_forget</code></td>
+<td>Update by id, hard delete by id; no supersession or tombstone</td>
+<td><code>Scope</code> of global, workspace, or session, applied on
+read</td>
+<td>Tools wired into the agent loop with guidance injected only when a
+store exists</td>
+<td>None for memory</td>
+<td>Timestamps only; the prompt tells the model to re-verify what a
+memory names</td>
+<td>The write policy is explicit, and it addresses a stated failure of
+models without one</td>
+<td>No ranking, no correction record, and the whole discipline lives in
+a prompt</td>
+</tr>
+<tr>
 <td><code>optmem</code></td>
 <td>One line of at most 280 characters, fixed width,
 position-addressed</td>
@@ -1564,13 +1617,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 55:</em> <a
+<p><em>2 of 56:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 55:</em> <a
+<p><em>5 of 56:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1578,7 +1631,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>6 of 55:</em> <a
+<p><em>6 of 56:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1588,7 +1641,7 @@ href="../systems/memvid/"><code>memvid</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>31 of 55:</em> <a
+<p><em>32 of 56:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1616,6 +1669,7 @@ href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/openviking/"><code>openviking</code></a>, <a
+href="../systems/openworker/"><code>openworker</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
 <a href="../systems/supermemory/"><code>supermemory</code></a>, <a
@@ -1624,7 +1678,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>5 of 55:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>5 of 56:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -1632,7 +1686,7 @@ href="../systems/optmem/"><code>optmem</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>8 of 55:</em> <a
+<p><em>8 of 56:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -1644,7 +1698,7 @@ href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 55:</em> <a
+<p><em>1 of 56:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -4795,6 +4849,25 @@ read path that is cheap, predictable and model-free.</li>
 <li>Do not copy when: memory has to be trusted, corrected, or separated
 between users.</li>
 </ul>
+<h3 id="openworker"><code>openworker</code></h3>
+<ul>
+<li>Best idea: an explicit when-to-remember policy, written because
+models without one fail bimodally — they either never save or save what
+the repository already records.</li>
+<li>Biggest risk: none of it is enforced or observable, so the first
+sign the model stopped following the policy is memory quality nobody can
+explain.</li>
+<li>Most reusable component: the guidance paragraph itself, especially
+"use absolute dates, never yesterday" and "don't save what the repo
+already records".</li>
+<li>Maturity impression: a large, carefully built agent with
+permissions, audit and unattended operation, and a memory subsystem of
+260 lines that touches none of it.</li>
+<li>Study when: deciding whether to spend the next day on a pipeline or
+on the prompt that governs one.</li>
+<li>Do not copy when: you need ranking, a correction record, or any
+guarantee the policy was followed.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -4966,6 +5039,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></li>
 <li><a href="../systems/memvid/"><code>memvid</code></a></li>
 <li><a href="../systems/memoryos/"><code>memoryos</code></a></li>
 <li><a href="../systems/memu/"><code>memu</code></a></li>
+<li><a href="../systems/openworker/"><code>openworker</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -5163,6 +5237,10 @@ href="https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7a"><code>587ed7755c7
 <li><a href="https://github.com/NevaMind-AI/memU">NevaMind-AI/memU</a>
 at <a
 href="https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4"><code>3a5a05ea7fa4</code></a></li>
+<li><a
+href="https://github.com/andrewyng/openworker">andrewyng/openworker</a>
+at <a
+href="https://github.com/andrewyng/openworker/commit/d3863966c9de"><code>d3863966c9de</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
@@ -5432,6 +5510,23 @@ whose substantive counterpart, LangMem, is already reviewed here.</li>
 precision, Memory Engine's agent clamp, ai-memory's cross-harness
 continuity claim, ctx's disclosure reachability, and OptMem's cover loss
 are all directly testable and none was measured here.</li>
+<li>Nothing was run for the four systems added in this round.
+<code>gastownhall/beads</code> and
+<code>VectorSpaceLab/general-agentic-memory</code> were examined and
+have no reports, for the reasons given in the scope section; GAM
+additionally has no licence file. <code>langchain-ai/memory-agent</code>
+and <code>akitaonrails/ai-memory</code> were re-submitted in this round
+and were already handled — the first rejected as a 235-line template,
+the second reviewed.</li>
+<li>Memvid's headline figures ("+35% SOTA on LoCoMo", "+76% multi-hop",
+"+56% temporal") could not be traced to committed raw artifacts at the
+inspected commit and are recorded as claims. MemoryOS commits the LoCoMo
+dataset beside its harness but no scored results were found. Neither was
+run here.</li>
+<li>OpenWorker's stated finding — that models without when-to-remember
+guidance "either never call <code>remember</code> or save noise" — is
+quoted from a source comment. Whether it was measured, and by how much
+guidance moves behaviour, is not established in the repository.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>
