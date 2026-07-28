@@ -142,4 +142,18 @@ if grep -Rqs 'href="/' "$site_dir" --include='*.html'; then
   exit 1
 fi
 
+# Generated files that are one `git add -A` away from being committed: Python
+# bytecode from the scripts importing each other, and scratch pages written into
+# the built site so a local server can reach them. A .pyc reached main twice
+# before .gitignore covered it, so the ignore rule alone is not the guard.
+if git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+  tracked_junk="$(git -C "$project_dir" ls-files | grep -E '(^|/)__pycache__/|\.pyc$|^docs/_' || true)"
+  if [[ -n "$tracked_junk" ]]; then
+    echo "Build artifacts are tracked in git:" >&2
+    echo "$tracked_junk" >&2
+    echo "Run 'git rm --cached <path>' — .gitignore does not untrack what is already committed." >&2
+    exit 1
+  fi
+fi
+
 echo "Validated $system_count reports, $pattern_count design patterns, revision metadata, analyzed-on dates, and project-relative navigation."
