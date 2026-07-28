@@ -77,11 +77,36 @@ where `S` is a `strength` counter that retrieval bumps; and offline pruning
 inside reflection for memories that have decayed, are old enough, are not a
 protected type, and are not high-importance.
 
+**And unusually, the memory subsystem has been ablated against a fair
+baseline.** The accompanying paper reports ARC-AGI-3 under a two-hour fleet cap,
+scored by RHAE — "the competition's action-efficiency score against per-level
+human baselines":
+
+| Configuration (GPT-5.5 unless noted) | Fleet-mean RHAE |
+| --- | --- |
+| world-model skill **+ memory** | **50.2%** (118 levels) |
+| hypothesis-driven baseline skill + memory | 41.7% |
+| world-model skill **with markdown files in place of memory** | 38.4% |
+| world-model + memory on GPT-5.6-sol | 85.1% (170 levels), under $20 per game |
+| raw GPT-5.6-sol, ARC Prize eval | 13.3% |
+
+The paper states the comparison as "**+11.8 RHAE points over the identical agent
+with file-based notes in place of memory**".
+
+That baseline is the point. This atlas's standing complaint is that memory
+systems measure themselves against *no memory*, which flatters everything; the
+honest comparison is against the cheapest thing that also persists, and a
+markdown file is exactly that. Appendix D names the reproduction runs
+(`20260714_201702_competition_md` is the markdown ablation), and the paper marks
+its per-run correlations as "associations" given "n = 25 and 16 outcomes
+right-censored by the operator kill". It is the most carefully bounded memory
+result in this atlas.
+
 Reservations. Archival is a boolean on the record, so a decayed memory can be
 re-created by the next authoring pass with nothing to consult. The access log is
 a capped ring, so the observability that makes this system distinctive is
-bounded by design. And this is a labs repository — the surrounding project is an
-agent framework, not a memory product.
+bounded by design. And the paper's own operational statistics undercut two of
+the design's more distinctive parts — see §10.
 
 ## 2. Mental Model
 
@@ -185,6 +210,15 @@ pattern asks for: recall bumps `strength`, which slows forgetting, and leaves
 `confidence` alone. Being read a lot makes a memory *stick*; it does not make it
 *true*. Several systems in this atlas collapse exactly that distinction.
 
+The paper adds a refinement the code reading did not surface, and it closes the
+loop this pattern warns about: "**Injected memories are not reinforced, so what
+the harness surfaces does not distort the usage signal.**" Spontaneous injection
+runs at a fixed cadence of roughly one per turn, and those injections do *not*
+bump strength — only deliberate reads do. So the system cannot reinforce a memory
+merely by having chosen to show it, which is precisely the self-amplifying
+feedback the pattern says nobody dampens. It is the cleanest answer to that
+hazard in the atlas.
+
 `importance` is named "poignancy" in the comment, which is
 [Generative Agents](../generative-agents/)' term — the lineage is acknowledged
 rather than quietly reused.
@@ -254,6 +288,15 @@ Authoring through the memory skill, with reflection distilling episodes into
 `reflection`-type gists. `references.py` attaches `MemoryRef`s — kind, key,
 preview, capture time — pointing at external artifacts rather than copying them.
 
+The paper describes what that pointer does at read time, and it is stronger than
+the schema suggests: "references are resolved against **live agent state at
+recall time** — extending pass by reference into persistence, so recall does not
+answer from stale copies". A memory that holds a reference rather than a snapshot
+cannot go stale about the thing it points at, which is a different and narrower
+guarantee than correctness but a real one. Owner scoping "governs reads **and
+writes** when several agents share one store", so the enforcement covers both
+paths rather than only retrieval.
+
 ### Operational cost
 
 Retrieval is local: embeddings plus arithmetic, no model call, and the
@@ -307,15 +350,45 @@ Twenty-three test modules covering retrieval, forgetting, reflection and its
 interrupt path, owner roles, contract, embeddings and their integration,
 observability, monitoring, references, todo, schema, store and a v2 store,
 routes, skill, authoring, generative, vector backends, and background reflect
-plus hygiene.
+plus hygiene. Nothing was run for this review.
 
-Nothing was run for this review, and no retrieval-quality benchmark was found.
+The end-to-end ablation is in §1. What makes the accompanying paper worth reading
+against the code is that its Appendix D reports operational statistics from the
+evaluation fleet — and **two of them cut against the design**.
 
-The evaluation this design uniquely enables is the ablation its own equations
-invite: the components are computed, weighted, normalized and *stored*, so the
-contribution of `rel`, `rec`, `imp` and `spread` to any past retrieval is already
-recorded. Almost every other system in this atlas would have to be instrumented
-first.
+**Consolidation output is almost never read.** "Reflection records are 22% of rows
+yet ~1% of both read channels (importance 3.9), and 45% of all records ended
+archived by decay-based forgetting." A fifth of the store is distilled insight
+that retrieval essentially does not surface. This atlas has asked repeatedly
+whether consolidation earns its cost and never had a number; here is one, from
+the authors, and it is unflattering. The paper does not hide it — and it adds the
+mechanism behind it from internal pilots: "reflection helped when retrieval was
+the bottleneck and **hurt pinpoint lookup (abstraction blurs the exact fact)**,
+which is why consolidation is configurable per store."
+
+**The prospective types went unused.** "The `intent` and `scratch` types went
+unused; `todo` appeared in 18 records." The category this report calls novel and
+absent from every other system was, in the one measured deployment, dormant. That
+does not make it a bad idea — an unused type may simply need a skill that uses it
+— but it does mean the atlas should credit the *modelling* and not assume the
+behaviour.
+
+Other reported figures: per-game store sizes of 23 / 129 / 255
+(min / median / max), and memory engagement tracking performance — winning games
+"check memory 1.63 times and write 1.87 memories per decision (medians, vs. 1.21
+and 1.46 for the remaining games)", at Spearman ρ = +0.52 for reads per decision
+and +0.36 for writes. The paper labels these associations rather than effects,
+noting the sample and the censoring.
+
+Retrieval observability also goes further than the schema showed: "a retrieval
+call can be replayed with `explain()`", and "memory events bridge to OpenTelemetry
+spans with trace ↔ record cross-links".
+
+The evaluation the design still invites is the *internal* one: the components are
+computed, weighted, normalized and stored, so the contribution of `rel`, `rec`,
+`imp` and `spread` to any past retrieval is already recorded, and no ablation of
+those weights was found. The subsystem has been measured as a whole; its scorer
+has not been measured against itself.
 
 ## 11. For Your Own Build
 
@@ -341,6 +414,15 @@ first.
   `status` here raises if a non-todo carries one.
 - **Run the deterministic consolidation steps by default** and make the LLM ones
   opt-in.
+- **Do not reinforce what the harness chose to show.** If injection bumps the
+  same counter as a deliberate read, the system is measuring its own decisions
+  and calling it usage.
+- **Ablate against the cheapest thing that also persists.** "With memory versus
+  without" flatters every memory system; "versus the identical agent with
+  markdown files" is the comparison that means something.
+- **Publish the unflattering operational statistics.** Reflection output being
+  22% of rows and 1% of reads is the most useful number in this paper precisely
+  because it does not support the design.
 
 ### Avoid
 
@@ -365,13 +447,28 @@ nothing about whether it was ever right.
 
 - How large is the access-log ring, and what happens to the explanation of an
   old, heavily-used memory once its formative accesses roll off?
-- Have the six scoring constants been ablated? The stored components make it
-  cheap.
+- Have the six scoring constants been ablated? The subsystem has been measured
+  end to end; the scorer has not been measured against itself, and the stored
+  components make it cheap.
 - Does `owner` gate the graph spread, or can activation flow through a memory the
   reader cannot see?
 - What prevents an archived memory being re-authored identically?
 - Is `intent` acted on by a scheduler, or does it only surface when retrieval
-  happens to reach it?
+  happens to reach it? The paper reports the type unused in evaluation, so the
+  question is now what would have to exist for it to be used.
+- If reflection output is 22% of rows and ~1% of reads, what is consolidation
+  buying, and would the store be better without it in this workload?
+
+## Appendix: Sources Beyond the Code
+
+- Paper: *NVIDIA-labs OO Agents: Native Python Object-Oriented Agents*,
+  [arXiv:2607.20709](https://arxiv.org/abs/2607.20709) — memory architecture in
+  §3 and Appendix C, the ARC-AGI-3 ablation in §4.4 and Figure 7, operational
+  statistics and reproduction run ids in Appendix D.
+- Blog: [Six agent harness capabilities for higher model performance](https://developer.nvidia.com/blog/six-agent-harness-capabilities-for-higher-model-performance/).
+
+Claims taken from these are attributed in the text. The RHAE figures and the
+operational statistics are reported, not reproduced here.
 
 ## Appendix: File Index
 

@@ -140,11 +140,23 @@ returns. It is a narrow instance — recall there feeds a search loop, not belie
 but it is worth noting that the usual fix for reinforcement runaway is a decay
 constant, and this one is a feedback controller.
 
+[NOOA Memory](../../systems/nooa-memory/) is the only system here that closes the
+reinforcement loop rather than noting it. Retrieval bumps a `strength` counter
+that slows Ebbinghaus decay and leaves `confidence` untouched — rehearsal is not
+belief — and its paper adds the part that matters: "**injected memories are not
+reinforced, so what the harness surfaces does not distort the usage signal**".
+Spontaneous injection runs at a fixed cadence of about one per turn and does not
+count as use. A system whose ranker reinforces whatever the ranker chose to show
+is measuring its own decisions and calling it usage; separating deliberate reads
+from injections is the cheap fix, and it is a one-line distinction at the call
+site.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
 - Assign decay policy by memory kind, scope, and validity, not one global rate.
 - Record the reason and actor for every reinforcement.
+- Do not reinforce a memory the system itself chose to inject.
 - Bound reinforcement and prevent one retrieval loop from self-amplifying.
 - Protect rejected-value tombstones and correction history from decay.
 - Mark stale before deleting when reversibility matters.

@@ -219,12 +219,25 @@ automatically loosens selection until variety returns. It is a narrow
 instance — recall there feeds a search loop, not belief — but it is
 worth noting that the usual fix for reinforcement runaway is a decay
 constant, and this one is a feedback controller.</p>
+<p><a href="../../systems/nooa-memory/">NOOA Memory</a> is the only
+system here that closes the reinforcement loop rather than noting it.
+Retrieval bumps a <code>strength</code> counter that slows Ebbinghaus
+decay and leaves <code>confidence</code> untouched — rehearsal is not
+belief — and its paper adds the part that matters: "<strong>injected
+memories are not reinforced, so what the harness surfaces does not
+distort the usage signal</strong>". Spontaneous injection runs at a
+fixed cadence of about one per turn and does not count as use. A system
+whose ranker reinforces whatever the ranker chose to show is measuring
+its own decisions and calling it usage; separating deliberate reads from
+injections is the cheap fix, and it is a one-line distinction at the
+call site.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>
 <li>Assign decay policy by memory kind, scope, and validity, not one
 global rate.</li>
 <li>Record the reason and actor for every reinforcement.</li>
+<li>Do not reinforce a memory the system itself chose to inject.</li>
 <li>Bound reinforcement and prevent one retrieval loop from
 self-amplifying.</li>
 <li>Protect rejected-value tombstones and correction history from

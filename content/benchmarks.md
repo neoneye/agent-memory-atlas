@@ -175,6 +175,24 @@ benchmark result this atlas has examined. Without it, a reported 82% could be an
 82% model and an inert memory layer, and nothing in the artifact distinguishes
 the two.
 
+### The baseline is usually too weak
+
+Almost every memory result compares a system against *no memory*, which flatters
+every memory system ever built. The comparison that means something is against
+the cheapest thing that also persists.
+
+[NOOA Memory](../systems/nooa-memory/) is the one instance in this atlas that
+runs it. Its paper reports ARC-AGI-3 fleet-mean RHAE of 50.2% for the world-model
+skill with memory against **38.4% for the identical skill "with markdown files in
+place of memory"** — stated as "+11.8 RHAE points over the identical agent with
+file-based notes". A third arm, a different skill *with* memory, scores 41.7%,
+which separates the contribution of the memory from that of the skill. Appendix D
+names the reproduction runs, and the paper marks its per-run correlations as
+associations given the sample size and right-censoring.
+
+Design the ablation so a null result is possible. If the baseline cannot in
+principle win, the experiment cannot tell you anything.
+
 ### The system may not be optimizing that axis at all
 
 This is the important one. The systems in this atlas with the strongest
@@ -297,6 +315,14 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 ### On LLM usage
 
 Two costs, and they behave differently.
+
+One system has published the figure that makes this concrete, and it is
+unflattering to its own design. NOOA Memory's paper reports that "reflection
+records are 22% of rows yet ~1% of both read channels" — a fifth of the store is
+consolidated insight that retrieval essentially never surfaces — and that in
+internal pilots reflection "hurt pinpoint lookup (abstraction blurs the exact
+fact)". Consolidation is not free and is not obviously earning its cost, and that
+is the first measurement of it in this atlas.
 
 **Ingest cost** is one-off per unit of material: extraction, embedding,
 consolidation, deduplication. It scales with volume written, and can be
