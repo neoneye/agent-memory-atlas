@@ -34,12 +34,12 @@ retrieval: embed the task -> search descriptions -> return procedures
 ```
 
 ```mermaid
-flowchart LR
+flowchart TD
     T["Task"] --> Gen["Agent writes procedure"]
     Lib["Skill library"] --> Gen
     Gen --> Exec["Execute"]
     Exec --> Ver{"Verified by outcome?"}
-    Ver -- "no" --> Crit["Critique -> retry<br/>(nothing stored)"]
+    Ver -- "no" --> Crit["Critique -> retry (nothing stored)"]
     Crit --> Gen
     Ver -- "yes" --> Desc["Generate description"]
     Desc --> Lib

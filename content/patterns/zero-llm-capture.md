@@ -27,13 +27,13 @@ not require one to preserve the event.”
 Write a deterministic event envelope first:
 
 ```mermaid
-flowchart LR
-    A["Hook, message, tool result"] --> B["Validate + redact"]
+flowchart TD
+    A["Hook, message,<br/>tool result"] --> B["Validate + redact"]
     B --> C["Durable scoped event"]
-    C --> D["Lexical / metadata index"]
-    C --> E["Optional async extraction"]
-    E --> F["Summary, fact, graph, embedding"]
-    C --> G["Raw fallback recall"]
+    C --> D["Lexical /<br/>metadata index"]
+    C --> E["Optional async<br/>extraction"]
+    E --> F["Summary, fact,<br/>graph, embedding"]
+    C --> G["Raw fallback<br/>recall"]
     F --> H["Derived recall"]
     D --> H
     G --> H

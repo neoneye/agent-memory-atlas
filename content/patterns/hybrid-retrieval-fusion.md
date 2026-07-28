@@ -19,16 +19,16 @@ Vector search is good at paraphrase and topical similarity but weak on exact nam
 Apply hard filters first, retrieve candidates through independent channels, normalize or rank their outputs, then fuse and cap the final context:
 
 ```mermaid
-flowchart LR
-    Q["Query"] --> F["Hard scope, lifecycle, sensitivity filters"]
-    F --> V["Vector candidates"]
-    F --> L["BM25 / FTS candidates"]
-    F --> E["Entity or exact-key candidates"]
+flowchart TD
+    Q["Query"] --> F["Hard scope, lifecycle,<br/>sensitivity filters"]
+    F --> V["Vector<br/>candidates"]
+    F --> L["BM25 / FTS<br/>candidates"]
+    F --> E["Entity or<br/>exact-key candidates"]
     V --> R["Rank fusion"]
     L --> R
     E --> R
     R --> X["Optional reranker"]
-    X --> B["Diversity + token budget"]
+    X --> B["Diversity +<br/>token budget"]
 ```
 
 Reciprocal-rank fusion is a useful baseline because it combines rankings without pretending incomparable scores share a calibrated scale. Weighted score fusion can work when every component has measured, bounded behavior.

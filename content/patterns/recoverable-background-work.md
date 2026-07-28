@@ -19,7 +19,7 @@ Automatic memory capture is often asynchronous. The interactive request succeeds
 Persist work before acknowledging it:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Capture input"] --> B["Durable inbox / event"]
     B --> C["Idempotent job"]
     C --> D{"Processing succeeds?"}

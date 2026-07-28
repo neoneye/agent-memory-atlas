@@ -137,13 +137,13 @@ Write        sync_turn(user, assistant, scope)
 Governance   forget(scope | id) -&gt; result               # &lt;-- usually missing
              scope on EVERY call                        # &lt;-- usually missing
              capabilities() -&gt; what this provider actually supports</code></pre>
-<pre class="mermaid"><code>flowchart LR
-    Host[&quot;Host runtime&quot;] --&gt; Built[&quot;Built-in memory&quot;]
-    Host --&gt; Iface[&quot;MemoryProvider interface&quot;]
+<pre class="mermaid"><code>flowchart TD
+    User[&quot;User: forget me&quot;] --&gt; Host[&quot;Host runtime&quot;]
+    Host --&gt; Built[&quot;Built-in memory&quot;]
+    Host --&gt; Iface[&quot;MemoryProvider&lt;br/&gt;interface&quot;]
     Iface --&gt; P1[&quot;Local plugin&quot;]
     Iface --&gt; P2[&quot;Hosted service&quot;]
     Iface --&gt; P3[&quot;Graph backend&quot;]
-    User[&quot;User: forget me&quot;] --&gt; Host
     Host -.-&gt;|&quot;no delete hook&lt;br/&gt;= request stops here&quot;| Iface
     Built -.-&gt;|&quot;mirrored write,&lt;br/&gt;no reconciliation&quot;| P1</code></pre>
 <p>The dotted edges are where real implementations break.</p>

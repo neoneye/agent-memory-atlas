@@ -19,7 +19,7 @@ Extraction is lossy. A short claim can omit qualifiers, invert who said what, fl
 Write evidence first, then derive memory:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Message, file, tool result"] --> B["Durable event"]
     B --> C["Evidence chunks + source spans"]
     C --> D["Candidate facts, profile, summary"]

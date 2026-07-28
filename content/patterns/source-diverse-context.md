@@ -47,12 +47,12 @@ tuning constant, and every returned item keeps its source label so the agent can
 tell independent evidence from one document repeated.
 
 ```mermaid
-flowchart LR
+flowchart TD
     C["ranked candidates"] --> P1["pass 1: best chunk per source"]
     P1 --> P2["pass 2: fill remaining budget, capped per source"]
     P2 --> Cap["enforce result and token caps"]
     Cap --> Out["context, each item labelled with its source"]
-    C -. "without this, 5 adjacent chunks of one file" .-> Crowd["crowding"]
+    C -. "without this, 5 adjacent<br/>chunks of one file" .-> Crowd["crowding"]
 ```
 
 ## Why it works

@@ -48,6 +48,17 @@ tier boundary
    └─ a record of why this one promoted, queryable later
 ```
 
+```mermaid
+flowchart TD
+    Rec["record in the lower tier"] --> Rule["written rule, computed from stored fields"]
+    In["separable inputs:<br/>frequency · recency · importance · corroboration"] --> Rule
+    Rule --> Cap{"does provenance justify the climb?"}
+    Cap -- "no" --> Stay["stays — capped by its source,<br/>however often it is used"]
+    Cap -- "yes" --> Up["promoted to the upper tier"]
+    Up --> Why["decision recorded: inputs, rule, actor"]
+    In -. "blended into one score" .-> Opaque["cannot attribute<br/>the promotion"]
+```
+
 Four requirements:
 
 1. **Write the rule down**, as something a program computes rather than a

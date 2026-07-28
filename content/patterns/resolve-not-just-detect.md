@@ -66,16 +66,16 @@ Keep the detector's *recommendation* vocabulary narrower than the resolver's
 options.
 
 ```mermaid
-flowchart LR
-    D["detector"] --> F["typed finding: old id, new id, description"]
-    F --> Q["queue — pending stays retrievable"]
+flowchart TD
+    D["detector"] --> F["typed finding:<br/>old id, new id,<br/>description"]
+    F --> Q["queue — pending<br/>stays retrievable"]
     Q --> R{"disposition"}
-    R -->|keep_old / keep_new| S["supersede, chain retained"]
-    R -->|keep_both| B["both remain; not a contradiction"]
-    R -->|remove_both| T["remove + tombstone the value"]
-    R -->|manual| H["human writes the replacement"]
-    T --> W["write path consults on next extraction"]
-    S --> W
+    R --> S["keep_old/new:<br/>supersede"]
+    R --> B["keep_both:<br/>both stay"]
+    R --> T["remove_both:<br/>tombstone"]
+    R --> H["manual:<br/>human writes"]
+    S --> W["write path consults<br/>on next extraction"]
+    T --> W
 ```
 
 ## Why it works

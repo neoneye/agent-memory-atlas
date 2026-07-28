@@ -19,14 +19,14 @@ Memory systems often grow several write paths. One creates evidence, another che
 Expose narrow adapters but converge on one governed command:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["User command"] --> G["Governed write gateway"]
     B["Agent tool"] --> G
     C["Review UI"] --> G
-    D["Background extractor"] --> G
-    G --> P["Actor + scope + trust policy"]
-    P --> K["Dedupe, conflict, tombstone checks"]
-    K --> T["Atomic claim, evidence, relation, audit write"]
+    D["Background<br/>extractor"] --> G
+    G --> P["Actor + scope<br/>+ trust policy"]
+    P --> K["Dedupe, conflict,<br/>tombstone checks"]
+    K --> T["Atomic claim, evidence,<br/>relation, audit write"]
 ```
 
 The gateway accepts an explicit actor, scope, candidate value, evidence, source, and intent. Inside one transaction it:

@@ -44,13 +44,13 @@ Governance   forget(scope | id) -> result               # <-- usually missing
 ```
 
 ```mermaid
-flowchart LR
-    Host["Host runtime"] --> Built["Built-in memory"]
-    Host --> Iface["MemoryProvider interface"]
+flowchart TD
+    User["User: forget me"] --> Host["Host runtime"]
+    Host --> Built["Built-in memory"]
+    Host --> Iface["MemoryProvider<br/>interface"]
     Iface --> P1["Local plugin"]
     Iface --> P2["Hosted service"]
     Iface --> P3["Graph backend"]
-    User["User: forget me"] --> Host
     Host -.->|"no delete hook<br/>= request stops here"| Iface
     Built -.->|"mirrored write,<br/>no reconciliation"| P1
 ```
