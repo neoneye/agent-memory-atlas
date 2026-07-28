@@ -64,6 +64,29 @@ if ! python3 "$project_dir/scripts/check_homepage.py" "$project_dir"; then
   exit 1
 fi
 
+# build_site.sh wraps every <table> in .table-wrap. A hand-authored wrapper in
+# content/ nests them, and each wrapper grows its own "expand to full width"
+# toggle — which is how the capability grid ended up with two.
+nested_wraps="$(python3 - "$site_dir" <<'PYWRAP'
+import glob, os, sys
+
+site = sys.argv[1]
+bad = []
+for page in glob.glob(os.path.join(site, "**", "index.html"), recursive=True):
+    html = open(page, encoding="utf-8").read()
+    wraps = html.count('class="table-wrap')
+    tables = html.count("<table")
+    if wraps > tables:
+        bad.append(f"{os.path.relpath(page, site)}: {wraps} table-wrap for {tables} tables")
+print("\n".join(bad))
+PYWRAP
+)"
+if [[ -n "$nested_wraps" ]]; then
+  echo "Nested .table-wrap (each one adds another expand toggle):" >&2
+  echo "$nested_wraps" >&2
+  exit 1
+fi
+
 # Heading ids are generated from heading text, so a numbered section changes its
 # anchor whenever sections are renumbered. Catch fragment links that no longer land.
 broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"

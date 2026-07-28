@@ -215,12 +215,13 @@ def build_capability_grid() -> str:
             f'<th scope="row"><a href="../systems/{path.stem}/">{html_escape(read_title(path))}</a></th>'
             f"{cells}<td class=\"cap-count\">{len(carried)}</td></tr>"
         )
+    # No wrapper here: build_site.sh wraps every <table> in .table-wrap, and a
+    # second wrapper produced two "expand to full width" toggles.
     return (
-        '<div class="table-wrap capability-grid-wrap">'
         '<table class="capability-grid">'
         f'<thead><tr><th scope="col">System</th>{head}<th scope="col">of 7</th></tr></thead>'
         f'<tbody>{"".join(rows)}</tbody>'
-        "</table></div>"
+        "</table>"
     )
 
 
