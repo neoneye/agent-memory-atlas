@@ -1156,6 +1156,9 @@ Repos: `letta`, `rainbox`, `honcho`, `supermemory`, `mempalace`, `llm-wiki-memor
 
 Hot memory is small and prompt-ready. Archival/document memory is large and retrieved on demand. This works because prompt space is scarce and long-term stores are noisy. It fails when there is no promotion/demotion policy between the layers.
 
+Promotion is the part most systems leave unstated; it is now a pattern in its
+own right — see [promotion between tiers](../patterns/promotion-between-tiers/).
+
 ### Evidence first, derived memory second
 
 Pattern guide: [Evidence before belief](../patterns/evidence-before-belief/).

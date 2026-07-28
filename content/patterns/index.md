@@ -101,6 +101,12 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Decide whether the costly memory operation is worth doing before doing it.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-amber" href="./promotion-between-tiers/">
+    <span>Lifecycle</span>
+    <h2>Promotion between tiers</h2>
+    <p>Everything has tiers; far fewer can say what moves a memory up one.</p>
+    <b>Read pattern →</b>
+  </a>
   <a class="pattern-index-card tone-red" href="./resolve-not-just-detect/">
     <span>Conflict</span>
     <h2>Resolve, don't just detect</h2>
@@ -134,6 +140,7 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Retrieval runs every turn and irrelevant memory bends the answer: [gate the expensive path](./gate-the-expensive-path/).
 - The agent rediscovers how to do things it already solved: store [skills as procedural memory](./skills-as-procedural-memory/) behind a verified-execution gate.
 - Contradictions are detected and nothing clears them: [resolve, don't just detect](./resolve-not-just-detect/).
+- Memory has tiers and nobody can say what promotes between them: [promotion between tiers](./promotion-between-tiers/).
 
 ## How established is any of this?
 
@@ -170,7 +177,8 @@ chain.
 So this library is doing two different jobs at once, and it is worth knowing
 which one you are reading:
 
-- **Reporting.** [Hybrid retrieval fusion](./hybrid-retrieval-fusion/),
+- **Reporting.** [Promotion between tiers](./promotion-between-tiers/),
+  [hybrid retrieval fusion](./hybrid-retrieval-fusion/),
   [scope as a first-class key](./scope-as-a-first-class-key/),
   [evidence before belief](./evidence-before-belief/),
   [zero-LLM capture](./zero-llm-capture/) and

@@ -31,6 +31,9 @@ when the work happens.
   belief revision, truth maintenance and BDI belief bases are absent from the
   atlas's lineage, and whether that is an omission or a real discontinuity is
   unresolved.
+- [2026-07-28-pattern-gap-analysis.md](2026-07-28-pattern-gap-analysis.md) —
+  an external 20-pattern list checked against the library; the real gap is that
+  the comparative report names 29 recurring patterns and only 17 became pages.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
