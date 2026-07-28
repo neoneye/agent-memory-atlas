@@ -36,17 +36,34 @@ extractable — `background` is already a matrix column, `tombstone` a capabilit
 flag. If the correlation is *positive* instead, the atlas's framing is wrong in
 an interesting way and should say so.
 
-## 3. Are the two tombstone systems independent?
+## 3. Are the two tombstone systems independent? — **ANSWERED: no**
 
-[Verel](../content/systems/verel.md) and [RainBox](../content/systems/rainbox.md)
-are the only two. Whether they arrived at the mechanism independently or share a
-lineage changes what the count means: two independent inventions suggest the
-idea is discoverable, while one influencing the other means the field has
-produced it once.
+Resolved 2026-07-28 from RainBox's git history. They are not independent.
 
-This matters because "two of fifty-eight" is the atlas's most-quoted number and
-its interpretation depends on the answer. RainBox is the author's own system,
-which makes the question awkward and worth asking anyway.
+The chain, with timestamps from `git log`:
+
+| Time (29 Jun 2026) | Commit | What |
+| --- | --- | --- |
+| 15:07 | `58793dd` | "comparison of memory systems" — nine repo reports, an overview, and the two report-format templates that became this atlas's methodology pages. **Zero prior mentions of "tombstone" anywhere in the RainBox repository.** |
+| 15:07 | (same commit) | The survey's Verel report credits it with "rejected-value tombstones to prevent laundering". The survey's *RainBox* report says "it does not implement Verel-style rejected-value tombstones". The overview's recommendations list `rejected_value` and "keep rejected tombstones". |
+| 15:25 – 15:59 | `edbc7e4` → `c315632` | Design spec plus three rounds of review. |
+| 16:06 | `e0a0082` | Implementation plan, 14 TDD tasks. |
+| 16:08 | `af9ce12` | `tombstone table + trust columns on memory_claim`. |
+
+Sixty-one minutes from survey to schema. The mechanism is **Verel's**; RainBox
+adopted it because the survey that became this atlas flagged its absence.
+
+**What this does to the headline number.** "Two of fifty-eight" reads as two
+teams independently reaching a hard idea. The truth is one invention and one
+adoption, by the person running the survey — so the field has produced this
+mechanism *once*. That strengthens the negative finding and weakens any reading
+of it as convergent discovery. Recorded on the
+[pattern page](../content/patterns/rejected-value-tombstone.md) and disclosed in
+the [RainBox report](../content/systems/rainbox.md).
+
+**Method note worth keeping:** this took four `git log -S` queries against a
+repository that was already on disk. Provenance questions about the corpus are
+usually this cheap and almost never asked.
 
 ## 4. Does capability count track anything?
 
