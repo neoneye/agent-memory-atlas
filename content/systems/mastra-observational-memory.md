@@ -145,7 +145,9 @@ The package has unusually dense unit coverage for thresholds, long sessions, mid
 
 The tests strongly support lifecycle correctness. They do not, by themselves, establish that observer or reflector prose preserves all facts. Summary quality remains model-, prompt-, language-, and conversation-dependent.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Treat compaction as a first-class agent lifecycle, not an ad hoc summary call.
 - Run compression early, persist it inactive, then activate without blocking.
@@ -156,7 +158,7 @@ The tests strongly support lifecycle correctness. They do not, by themselves, es
 - Force activation after idle time or provider change.
 - Fail fast when storage cannot provide the required memory semantics.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - In-process locks do not protect horizontally scaled workers.
 - Static buffering maps add lifecycle and memory-leak risk despite cleanup paths.
@@ -166,13 +168,13 @@ The tests strongly support lifecycle correctness. They do not, by themselves, es
 - Many threshold and buffering options increase configuration burden.
 - It solves context length better than durable evidence retrieval.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Mastra's observation/reflection loop when the problem is long-running conversations that exceed model context. The most reusable piece is buffered activation with explicit coverage ranges—not the particular model prompts.
 
 Do not substitute observational summaries for an auditable long-term store when exact evidence, deletion, or contradiction matters. A strong design can pair Mastra-style active context compaction with a separate source-preserving retrieval system.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What distributed lock or compare-and-swap contract should storage adapters provide?
 - How is summary faithfulness measured across repeated reflection generations?

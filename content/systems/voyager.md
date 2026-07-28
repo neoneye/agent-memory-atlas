@@ -231,7 +231,9 @@ No test suite for `SkillManager` was found in this checkout. The project's evalu
 
 The repository has been unchanged since July 2023, so this report describes an artifact, not a maintained project.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Verify against the world before writing.** Where a memory is a procedure, correctness is testable — run it and check the resulting state. This is the strongest write gate available, and it generalizes to any agent whose actions have observable effects.
 - **Separate the retrieval key from the payload.** Embed a generated description; return the artifact.
@@ -239,7 +241,7 @@ The repository has been unchanged since July 2023, so this report describes an a
 - **Compose memory into capability.** Retrieved skills become primitives for new ones.
 - **Assert cross-store consistency** with an error message that states the fix.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Unbounded prompt growth** from concatenating the entire library.
 - **Top-k with no score threshold** for artifacts that will be executed.
@@ -248,7 +250,7 @@ The repository has been unchanged since July 2023, so this report describes an a
 - **A hardcoded exclusion** in place of a memory-worthiness policy.
 - **Generalizing from a single verified execution.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -263,7 +265,7 @@ Do not copy:
 - The unbounded `programs` property.
 - Anything at all without a sandbox, if stored code will be executed in a setting where inputs are not trusted.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Should failed attempts be stored as negative procedural memory, so dead ends are not rediscovered?
 - How should a skill's *generality* be verified, given that success once is not evidence it transfers?

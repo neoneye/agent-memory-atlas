@@ -213,7 +213,9 @@ The suite is substantial — roughly 27,000 lines across `V0/tests/`, including 
 
 The suites were not run for this review. Coverage is unusually well aligned with the risky logic — forgetting, extraction, strategies, and contextual grounding all have dedicated files, which is exactly where a memory service accumulates silent bugs. No committed end-to-end recall-quality benchmark result was found; the `benchmarks` directory provides harness scaffolding rather than published numbers.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **TTL-native working memory.** Letting the store expire session state is simpler and more reliable than any cleanup worker, provided TTL is preserved correctly across updates — and the Lua script here shows how.
 - **Trailing-edge debounced extraction**, decoupling durable capture from expensive derivation.
@@ -225,7 +227,7 @@ The suites were not run for this review. Coverage is unusually well aligned with
 - **Validating operator-supplied prompts** as an injection surface.
 - **Per-message extraction flags** for idempotency.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Deletion without tombstones**, allowing re-extraction of forgotten content.
 - **No verification tier** between extraction and durable memory.
@@ -234,7 +236,7 @@ The suites were not run for this review. Coverage is unusually well aligned with
 - **Cognitive type taxonomy standing in for a trust model.**
 - **Open reference implementation adjacent to a managed product**, where the visible code may not describe the hosted behaviour.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -250,7 +252,7 @@ Do not copy:
 - Cognitive memory types as a substitute for trust state.
 - Semantic dedupe without the cohesion gate.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What stops a policy-deleted memory from being re-extracted on the next pass over retained working memory?
 - Should `pinned` be joined by an explicit rejected state, so a user correction is durable rather than merely a deletion?

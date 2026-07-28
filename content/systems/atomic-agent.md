@@ -205,7 +205,9 @@ Test files sit beside nearly every module (`memory-store-v2`, `memory-store-arch
 
 Nothing was run for this review. The campaign structure — a plan document, acceptance criteria in the design doc, numbered experiments, a runner script — is the most developed evaluation *process* in the atlas. What is absent is the output: no scored artifacts were found committed, which is the same gap the atlas records for [OpenViking](../openviking/) and [open-cowork](../open-cowork/). A campaign that has run and reported would be a first here.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Number your invariants and cite them from the code.** A schema comment pointing at "§13.7 invariant 7" turns an implicit rule into a reviewable one, and is nearly free.
 - **Votes as append-only events, scores as derived columns.** Keeps the raw signal, permits recomputation, and leaves every downstream policy choice open.
@@ -215,14 +217,14 @@ Nothing was run for this review. The campaign structure — a plan document, acc
 - **Constrain evolution to surfaced ids**, and count the rejections.
 - **Ship new memory behaviour default-off** until an evaluation says otherwise.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Deprecation without a value tombstone** in a system that re-distils from clusters.
 - **A large optional surface**, where the configuration matrix determines behaviour.
 - **Evaluation machinery without published results.**
 - **Unestablished scope** in a memory system this elaborate.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -236,7 +238,7 @@ Do not copy:
 - The full fabric unless you need it; the practices transfer better than the surface.
 - Deprecation as the only correction mechanism.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What did the E9–E12 experiments conclude? The machinery exists; the answers are not committed.
 - Can `vote_score` influence anything beyond ranking? If it can reach confidence, the Holographic failure is reachable from here.

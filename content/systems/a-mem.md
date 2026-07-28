@@ -232,7 +232,9 @@ neither the paper benchmark harness nor committed result artifacts, so those
 claims cannot be verified from the inspected repository.
 
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Model memory as small linkable notes rather than one growing summary.
 - Reconsider local organization when new evidence arrives.
@@ -244,7 +246,7 @@ The invariant to add before stealing the design is simple: every neighbor and
 link must use a stable memory ID end to end.
 
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Using a ranking position as a persistent object identity.
 - Letting an LLM mutate active neighboring memories without provenance or
@@ -256,7 +258,7 @@ link must use a stable memory ID end to end.
 - Citing results whose runnable evaluation lives outside the analyzed package.
 
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow the concept, not the current core. A production implementation would
 need stable IDs, durable canonical storage, a rebuildable vector projection,
@@ -272,7 +274,7 @@ into a change set. Validate referenced IDs, record the source neighborhood and
 model, then atomically accept or reject the proposal.
 
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Should evolution create proposals instead of mutating active notes?
 - How should contradictory notes be linked without rewriting one into the

@@ -192,20 +192,22 @@ Pi carries an `evals` package and substantial test infrastructure including `pac
 
 There is no memory benchmark, because there is no memory. Compaction quality — how much a compacted branch loses — is the closest analogue and no committed measurement of it was found.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Deterministic manifests attached to generated summaries.** Where part of a summary is derivable from structured events, derive it. Never ask a model to recall what your tool-call log already knows.
 - **Typed session entries.** Distinguishing compaction entries and branch summaries from ordinary messages means later consumers can find and re-derive them instead of pattern-matching prose.
 - **Extension events with result types**, letting a handler modify or veto rather than merely observe.
 - **A session tree with explicit fork points**, which is a better substrate for exploratory agent work than a linear log — provided someone works out what it means for memory.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **A rich lifecycle API with no memory contract** — the strongest instance in the atlas of the pluggable-provider gap, since here there is not even a partial contract to extend.
 - **Every plugin reimplements history indexing**, with no shared abstraction and no way for two memory plugins to coexist coherently.
 - **Branching without memory semantics**, which will produce contradictions across branches that nothing is positioned to reconcile.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -217,7 +219,7 @@ Do not copy:
 
 - The absence of a memory contract, if you expect third-party memory. Define scope and deletion in the interface before plugins exist, because retrofitting them across independently-shipped backends is much harder than specifying them once.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What should a forked session inherit from its parent's memory, and should memory written on a branch be visible on siblings?
 - Should Pi define a minimal memory contract — scope in, forget out — given that a serious memory ecosystem is already forming around it?

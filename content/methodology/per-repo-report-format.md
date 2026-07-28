@@ -35,15 +35,27 @@ Keep this section concise. It should let a senior engineer decide whether to kee
 
 ## 2. Mental Model
 
+**This section is about epistemics, not infrastructure.** Answer how a thing
+becomes a belief and how it stops being one. Keep storage engines, servers and
+job runners out of it — they belong in section 3, and letting the two sections
+drift into the same pipeline diagram at two zoom levels is the most common way
+this format wastes a reader's time.
+
 Explain:
 
 - What the system considers a "memory".
 - Whether memories are raw messages, extracted facts, summaries, profiles, rules, documents, embeddings, graph nodes, verified beliefs, or something else.
-- Memory lifecycle: capture -> extraction -> storage -> retrieval -> injection -> update/delete/decay.
+- The state machine: what states a memory can hold, what moves it between them, who or what is allowed to move it, and how it dies — superseded, rejected, expired, decayed, deleted, or never.
 - Whether memory is agent-controlled, background-managed, user-controlled, or hybrid.
 - Whether the system treats memory as ground truth, candidate evidence, inferred state, or verified state.
 
+A text or ASCII sketch of the state machine usually says more here than a
+component diagram.
+
 ## 3. Architecture
+
+**This section is about infrastructure, not epistemics.** Where the bytes live,
+what processes run, what the operator has to stand up.
 
 Document:
 
@@ -56,6 +68,20 @@ Document:
 - Deployment assumptions.
 
 Include a Mermaid diagram when it clarifies the system.
+
+### Deployment and ergonomics
+
+State what adopting this actually costs an operator, because a design that is
+excellent on paper and needs four services is a different proposition from a
+single binary:
+
+- What has to be running: nothing, a local file, SQLite, Postgres, a vector
+  service, a queue, a graph database, a hosted API, a GPU.
+- Whether it can run fully local and offline, and what degrades if it does.
+- Whether an API key is required to store anything at all.
+- Install and first-run path — one command, a Docker compose file, or a build.
+- Whether the store is human-readable and repairable by hand when something
+  goes wrong.
 
 ## 4. Essential Implementation Paths
 
@@ -118,6 +144,23 @@ Analyze:
 - How agent-generated facts are handled.
 - How noisy or malicious inputs are filtered, if at all.
 
+### Operational cost
+
+Memory sits on the critical path of every turn, so say what it costs:
+
+- Is the write path **synchronous** — does the agent block on an LLM extraction
+  before it can continue — or is it deferred?
+- If deferred, what is the lag before a new memory is retrievable? State it even
+  approximately; nothing in this atlas measures it and the gap is worth naming.
+- Does any background pass re-read or rewrite the whole store, and how often?
+  A nightly map-reduce over everything has a token bill that scales with the
+  corpus rather than with the day's activity.
+- On the read path: how much is injected per turn, is it bounded, and does the
+  injection sit where it will invalidate a provider's prompt-prefix cache?
+
+See [benchmarking agent memory](../../benchmarks/) for why these matter and how
+rarely anyone reports them.
+
 ## 8. Agent Integration
 
 Analyze:
@@ -157,38 +200,31 @@ Document:
 
 Be explicit when a claim appears only in docs and is not backed by code or tests.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
 
-List concrete implementation ideas useful for building a serious agent memory system.
+One section, three subheads with genuinely different jobs. Do not restate what
+section 9 already assessed — that section says what *this system* is like, this
+one says what *you* should do about it.
 
-Prefer specific patterns, for example:
+### Steal
 
-- A schema trick.
-- A retrieval fusion strategy.
-- A scoping model.
-- An MCP tool design.
-- A compaction survival mechanism.
-- A background consolidation workflow.
-- A test/eval pattern.
+Transferable mechanisms, phrased as advice a builder could act on without
+adopting the system. Name the mechanism, not the product.
 
-## 12. Antipatterns / Risks
+### Avoid
 
-List specific design or implementation choices that look fragile, overcomplicated, under-specified, hard to operate, or likely to degrade memory quality.
+Transferable mistakes. A gap in section 9 belongs here only if it generalizes —
+if the failure is specific to this codebase, it stays in section 9.
 
-Ground each item in code, docs, or missing coverage.
+### Fit
 
-## 13. Build-vs-Borrow Takeaways
+Whether this whole design suits a reader, which is the one judgement the two
+lists above cannot express: the maintenance budget it assumes, the scale it
+targets, the deployment it needs, and who should walk away from it entirely.
+Resist re-listing the mechanisms; if this subhead reads as a summary of Steal
+and Avoid, delete it and write the judgement instead.
 
-Answer:
-
-- What should be reused conceptually?
-- What should be avoided?
-- When is this design appropriate?
-- When is it the wrong shape?
-- Which parts could be copied or reimplemented cleanly?
-- Which parts are too coupled to the repo's product or framework?
-
-## 14. Open Questions
+## 12. Open Questions
 
 List things unclear from code/docs that would require:
 

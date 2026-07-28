@@ -229,7 +229,9 @@ Missing tests I would want before relying on it:
 - Expiration and delete consistency.
 - Regression tests proving assistant-generated facts do not pollute user memories.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Single-call additive extraction with nearby existing memories as dedupe/linking context.
 - Separate entity collection with `linked_memory_ids`.
@@ -238,7 +240,7 @@ Missing tests I would want before relying on it:
 - Recent-message side channel for reference resolution without stuffing full chat history into memory.
 - Graceful degradation when keyword search or entity linking is unavailable.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Extracted facts are stored too confidently.
 - Add-only is operationally simple but punts contradiction resolution to retrieval or explicit APIs.
@@ -246,7 +248,7 @@ Missing tests I would want before relying on it:
 - One main class owns too many responsibilities.
 - Entity linking is best-effort but retrieval quality may depend on it.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -264,7 +266,7 @@ Avoid copying:
 
 This design is appropriate for product personalization and high-throughput memory APIs. It is less appropriate when memory correctness, adversarial inputs, or auditability matter more than recall volume.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How much of the README's temporal reasoning exists only in the hosted platform?
 - How are memory contradictions handled operationally after the V3 add-only shift?

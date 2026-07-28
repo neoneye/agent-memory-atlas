@@ -275,7 +275,9 @@ Verel has strong memory-specific tests:
 
 I did not run them. The test file coverage is unusually aligned with the design claims.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Separate truth confidence from retrieval strength.
 - Candidate/verified/rejected trust state.
@@ -286,14 +288,14 @@ I did not run them. The test file coverage is unusually aligned with the design 
 - Scope lattice with graduate-up as candidate, not verified.
 - Held-out promotion gates for learned rules.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - The design may be overbuilt for simple personalization.
 - Too much security logic in comments can become stale if tests do not enforce every invariant.
 - LLM-induced design rules require careful held-out evals to avoid false generalization.
 - Single-table local model is elegant but may need indexing work for large memory corpora.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow aggressively for correctness-sensitive agent memory:
 
@@ -312,7 +314,7 @@ Do not start here if you need a quick MVP. The minimal viable subset would be:
 
 Add consolidation/promotion/replication later.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How well does the trust machinery perform with real noisy agent transcripts?
 - What is the operational UX for resolving candidates/rejections?

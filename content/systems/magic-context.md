@@ -224,7 +224,9 @@ Coverage is concentrated where it matters — migrations have per-version tests 
 
 The suites were not run for this review. No committed memory-quality or retrieval benchmark was found: there is `search-measurement.ts` for observing retrieval in production, but nothing that scores recall against a fixture set. For a system whose central claim is that memories stay accurate, the absent measurement is **verification precision** — how often the verify task correctly marks a stale memory stale, and how often it wrongly confirms one.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Verify memory against its subject.** Map each memory to the artifacts it describes, and let a change in those artifacts — not a timer — put it back in verification scope. Where memory describes something inspectable, this converts trust from judgment into observation.
 - **Per-item verification watermarks.** The rework from a global commit watermark to per-memory `verified_at` is the reusable lesson: global watermarks make partial progress worthless and create cold-start traps.
@@ -236,7 +238,7 @@ The suites were not run for this review. No committed memory-quality or retrieva
 - **Identity merge with a rekey map** for when a project moves.
 - **Fail closed** when persistence is unavailable.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Supersession without tombstones**, in a system with automatic re-derivation from retained history.
 - **A `flagged` state with no visible resolution workflow.**
@@ -244,7 +246,7 @@ The suites were not run for this review. No committed memory-quality or retrieva
 - **Surface area** that is large enough to be its own operational risk.
 - **Mining another harness's private database**, which is done carefully here but is a pattern that deserves an explicit user-consent story.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -260,7 +262,7 @@ Do not copy:
 - The absence of tombstones — pair supersession with a rejected-value record before enabling automatic re-derivation.
 - Reading a foreign tool's database without an explicit user-facing consent story.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How precise is verification? Nothing measures how often the verify task correctly identifies stale memories, which is the system's core claim.
 - What happens to a memory that is archived and then re-derived from the same session history? Without a tombstone, apparently nothing stops it.

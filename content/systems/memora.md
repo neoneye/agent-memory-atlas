@@ -200,7 +200,9 @@ Nothing was run for this review, and no memory-quality benchmark was found.
 
 For a system whose distinctive feature is a classifier that hides memories, the measurement that matters is **classification precision** — how often `a_supersedes_b` is wrong, and what fraction of a sweep's proposals a human would reject. The dry-run mode makes exactly that measurable, since a run produces a reviewable list without side effects. Nothing indicates it has been done.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Default automated correction to a dry run.** Reporting should be the default and mutation opt-in, for any pass that can hide or delete memory in bulk. This is the most transferable idea here and costs a keyword argument.
 - **Classify pairs into a defined vocabulary**, including `neither`, instead of thresholding similarity.
@@ -209,14 +211,14 @@ For a system whose distinctive feature is a classifier that hides memories, the 
 - **Hide rather than delete on supersession**, keeping the correction reversible.
 - **Apply schema upgrades idempotently at open** rather than in a separate migration step.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Supersession without a tombstone**, in a system that ingests documents and images and can therefore re-ingest.
 - **Access-driven reinforcement** in the ranking signal.
 - **Untyped provenance** in metadata.
 - **One module holding schema, ranking, and correction.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -229,7 +231,7 @@ Do not copy:
 - Supersession as the whole correction story; add a value-level tombstone if content can be re-ingested.
 - `access_count` feeding ranking without a counterweight.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How precise is the pair classifier? The dry-run output is exactly the artifact needed to find out.
 - What stops a superseded memory returning when the same document is ingested again?

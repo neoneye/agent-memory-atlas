@@ -300,7 +300,9 @@ handoff in a *different* harness actually avoid re-explaining the architecture?
 That is testable with a fixed task and a scripted interruption, and no such
 evaluation was located.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Model the handoff, do not retrieve it.** What an interrupted task leaves
   behind is open questions and next steps, and those are the worst possible
@@ -321,7 +323,7 @@ evaluation was located.
 - **Require both sides to opt in** before recording model output into a store the
   user reads.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Supersession undone by re-capture**, in a system whose hooks fire every
   session.
@@ -330,7 +332,7 @@ evaluation was located.
   appear to.
 - **Time-based expiry** as the only signal for handoff relevance.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -346,7 +348,7 @@ Do not copy:
 - The assumption that a `do_not_answer_from` tag does anything unless the read
   path enforces it.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Does any read path filter `do_not_answer_from`, or is it only a fixture tag?
 - What expires a handoff, and can an accepted-then-abandoned handoff be

@@ -24,10 +24,8 @@ SECTION_TITLES = (
     "8. Agent Integration",
     "9. Reliability, Safety, and Trust",
     "10. Tests, Evals, and Benchmarks",
-    "11. Patterns Worth Stealing",
-    "12. Antipatterns / Risks",
-    "13. Build-vs-Borrow Takeaways",
-    "14. Open Questions",
+    "11. For Your Own Build",
+    "12. Open Questions",
     "Appendix: File Index",
 )
 

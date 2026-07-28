@@ -242,7 +242,9 @@ The evidence posture is better than most in the atlas. The repository commits a 
 
 Neither the suites nor the benchmarks were run for this review, and no published headline numbers were reproduced. The measurement the design most needs and does not obviously have is a link from its replay proxies to real task outcomes — evidence that improving `avg_response_overlap` improves what the agent actually does.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Treat the retrieval policy as a versioned object that must earn promotion.** Generate bounded candidates, replay them against real history, and require non-regression on several measures before one goes live. Nothing else in this atlas can answer "are our fusion weights right?" — this can.
 - **Offline counterfactual replay.** Evaluating candidate policies on past turns needs no live traffic split and exposes no users.
@@ -251,7 +253,7 @@ Neither the suites nor the benchmarks were run for this review, and no published
 - **Tune reachability, never belief.** Usage data may change how memory is found; it must not change whether memory is true. This is the principled resolution of the atlas's telemetry-versus-truth tension.
 - **Write a report for every policy decision**, so an automated change remains auditable.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Optimizing a proxy.** Overlap metrics are a stand-in for usefulness, and any closed loop optimizes what it measures.
 - **Meta-parameters that are themselves unmeasured constants.**
@@ -259,7 +261,7 @@ Neither the suites nor the benchmarks were run for this review, and no published
 - **Supersession without tombstones** in a system that consolidates automatically.
 - **Confidence recorded without a verification path.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -273,7 +275,7 @@ Do not copy:
 - The proxy metrics as-is; wire the gate to whatever outcome you can actually observe.
 - The memory model as a trust store — it has no rejected state and no verification.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Do the replay proxies correlate with task success? Without that link the loop is optimizing a shadow.
 - Who tunes the tuner? `MemoryPromotionCriteria`'s defaults govern every future change and are not themselves evaluated.

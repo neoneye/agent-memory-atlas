@@ -505,7 +505,9 @@ Relevant tests include:
 
 The final clean full-suite run yielded 1259 passed / 10 skipped / 1 failed (pre-existing unrelated webapp test) across all of `db/`, `memory/`, `agents/`, and `webapp/`.
 
-## 11. Fit for Agent Memory
+## 11. For Your Own Build
+
+### Steal
 
 Best fit:
 
@@ -523,7 +525,7 @@ Less ideal:
 
 RainBox is closest to Letta in being an application/runtime memory integration, closest to Honcho in treating memory as observable product behavior, and closest to Verel in having lifecycle states, tombstones, trust-actor separation, and fenced retrieval. Its distinctive contribution is the governed write path, conflict-resolution workflow, and the review/telemetry/eval loop around claims.
 
-## 12. Patterns and Antipatterns
+### Avoid
 
 Patterns worth borrowing:
 
@@ -563,7 +565,7 @@ Remaining risks:
 - No automatic candidate extraction from chat or journal.
 - Sensitivity still manually assigned.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -586,7 +588,7 @@ Do not copy blindly:
 
 RainBox is worth studying if you want memory to be an inspectable, governed operator workflow with structural trust enforcement — not just a retrieval function.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How are model-inferred candidate memories created in normal operation? Currently they are written only when the assistant's `memory_remember` action fires; no background extraction pipeline exists.
 - How often does the operator review and confirm candidate memories? The review UI exists, but adoption depends on operational habit.

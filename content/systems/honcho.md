@@ -264,7 +264,9 @@ Honcho has the richest test/eval footprint among these repos:
 
 I did not run these tests. The code structure suggests a serious test culture.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Raw event log plus derived representation documents.
 - Observer/observed collections for multi-peer memory.
@@ -274,14 +276,14 @@ I did not run these tests. The code structure suggests a serious test culture.
 - Vector reconciliation path for external vector stores.
 - Deduplicated message search snippets with context windows.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Derived observations are persuasive but not necessarily verified.
 - Complex peer observation config can create surprising memory visibility.
 - Eventual consistency must be surfaced clearly to users.
 - A large service footprint may be too heavy for local coding-agent memory.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -292,7 +294,7 @@ Borrow:
 
 Avoid if your goal is a small local memory layer. Honcho is closer to memory infrastructure for products and teams.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How exactly does `create_documents(..., deduplicate=...)` decide duplicates?
 - What is the production meaning of `times_derived`?

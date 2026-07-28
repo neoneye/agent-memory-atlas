@@ -187,7 +187,9 @@ Tests exist under `src/test/java/vip/mate/memory/`, including an `archive` packa
 
 The measurement this design invites is provider-level: with metrics already decorating every provider, per-provider recall quality and latency are collectable, and comparing two mounted backends on the same traffic would be straightforward. Nothing indicates that has been done.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Put scope on the provider contract.** Paired overloads are a pragmatic way to add it to an existing interface without breaking implementations.
 - **Decorate the provider interface** for retry, metrics, and any other cross-cutting concern, so every backend inherits them.
@@ -197,14 +199,14 @@ The measurement this design invites is provider-level: with metrics already deco
 - **Externalize memory prompts** to resources.
 - **Track what has been proactively shown** (`MorningCardSeenEntity`) so a nudge is not repeated.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **A provider contract with scope but no deletion** — half a governance story.
 - **Optional scope**, since an unscoped overload will eventually be called.
 - **Contradiction detection with no resolution path.**
 - **String scope without database validation.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -217,7 +219,7 @@ Do not copy:
 - The contract as complete; add `forget(scope|id)` before third parties mount backends.
 - Detection without resolution.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How does a deletion request reach a mounted provider? Nothing on the SPI expresses it.
 - What resolves a detected contradiction?

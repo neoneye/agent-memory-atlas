@@ -200,7 +200,9 @@ Gaps:
 
 The measurement this design invites is whether its three scores are independently predictive — whether `durability` estimated at write time actually predicts how long a memory stays useful. That is answerable from `lastUsedAt` history, and the data to answer it is already being recorded.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Separate durability from importance.** How much a memory matters and how long it should last are different questions, and one field cannot answer both. This is the schema-level fix for the atlas's warning against a single global half-life.
 - **A subconscious tier.** Demotion is a better default than deletion for memory that has merely stopped being relevant, and it gives you an honest way to describe the store's size.
@@ -209,14 +211,14 @@ The measurement this design invites is whether its three scores are independentl
 - **Give the user a pause switch** for learning.
 - **Count corroborations on the record** instead of writing duplicates.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Dismissal without a tombstone**, in a system that extracts automatically.
 - **Scores assigned once at extraction** with no path to revision.
 - **Free-text provenance** that cannot be followed programmatically.
 - **No conflict representation.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -231,7 +233,7 @@ Do not copy:
 - `dismissed` as a boolean if automatic extraction can regenerate the memory.
 - Write-time score estimates as if they were earned confidence.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Are the three scores used independently, or does ranking collapse them?
 - What promotes or demotes a memory between `active` and `subconscious`, and is it reversible on use?

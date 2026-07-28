@@ -38,6 +38,11 @@ render_document() {
   analyzed_at="${analyzed_at#\"}"
   analyzed_at="${analyzed_at%\"}"
 
+  local capability_strip=""
+  if [[ "$input" == *"/content/systems/"* ]]; then
+    capability_strip="$(python3 "$project_dir/scripts/capability_strip.py" "$input")"
+  fi
+
   mkdir -p "$(dirname "$destination")"
   pandoc "$input" \
     --from=gfm \
@@ -48,6 +53,7 @@ render_document() {
     --variable="source_href:$source_href" \
     --variable="revision_href:$revision_href" \
     --variable="analyzed_at_text:$analyzed_at" \
+    --variable="capability_strip:$capability_strip" \
     --output="$destination"
 }
 

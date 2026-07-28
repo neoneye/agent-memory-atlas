@@ -155,7 +155,9 @@ The project targets full unit/integration coverage across SQLite and PostgreSQL,
 
 A separate benchmark harness runs reproducible retrieval comparisons with LoCoMo data, common query/top-k settings, explicit skipped-provider records, checksums, and manifests containing repository SHAs and runtime metadata. That provenance policy is exemplary, though benchmark outcomes should still be interpreted as retrieval—not total memory quality.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Make human-readable content canonical and indexes disposable.
 - Model every database/search structure as a projection with a reconciliation path.
@@ -166,7 +168,7 @@ A separate benchmark harness runs reproducible retrieval comparisons with LoCoMo
 - Treat create, replace, edit, move, and delete as distinct lifecycle operations.
 - Record exact benchmark provenance and explicit provider skips.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Source-of-truth synchronization creates substantial code and race surfaces.
 - Markdown conventions can be malformed by arbitrary editors.
@@ -177,13 +179,13 @@ A separate benchmark harness runs reproducible retrieval comparisons with LoCoMo
 - Supporting local/cloud and SQLite/PostgreSQL multiplies integration paths.
 - File watchers need careful lifecycle ownership and platform testing.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Basic Memory's canonical-file/projection boundary when humans must own and edit memory directly. It is particularly good for research notes, project knowledge, and agent collaboration where portability matters more than invisible automatic fact extraction.
 
 Do not choose it merely because Markdown feels simple. Bidirectional sync is not simple. If humans never edit memory, a transactional database with an export view may be easier. If agents can write canonical notes, add review or trust states for high-impact claims.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What prevents an agent from turning prompt injection into canonical Markdown?
 - How are conflicting simultaneous human and agent edits surfaced to users?

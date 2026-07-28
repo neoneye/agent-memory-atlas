@@ -223,7 +223,9 @@ No test files specific to the memory or knowledge domain modules were located in
 
 For a system whose most valuable idea is a correctness guard — structural-loss detection — the absence of visible tests around `detectStructuralLoss` and `resolveStructuralLoss` is the most significant evidence gap in this report. The functions are pure and deterministic, so they are unusually easy to test; that they appear untested here means the guard's behaviour on edge cases (empty proposals, reordered arrays, case-variant duplicates) is unverified.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Structural-loss guard on LLM rewrites.** Parse before and after, count only what would be deleted, treat deletion as high impact, and merge the loss back automatically. This is the single most transferable idea in the repository and belongs in any system that lets a model rewrite stored knowledge.
 - **Asymmetric diffing** — flag removals, ignore additions — as the way to make such a guard usable.
@@ -231,7 +233,7 @@ For a system whose most valuable idea is a correctness guard — structural-loss
 - **An immutable memory category** for decisions and other event-shaped records.
 - **Short-circuiting the LLM** when there is nothing to compare against.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Actor recorded but not enforced.**
 - **LLM merge without a loss guard**, in the same codebase that implements one for documents.
@@ -240,7 +242,7 @@ For a system whose most valuable idea is a correctness guard — structural-loss
 - **Unspecified eviction** behind a raw `maxMemories` cap.
 - **"Open source" positioning** that does not match the ELv2 licence in the repository.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow (as ideas — check the licence before borrowing code):
 
@@ -254,7 +256,7 @@ Do not copy:
 - LLM-driven merge without the structural guard.
 - Any of the code itself into a hosted service, which ELv2 prohibits.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Why is the structural-loss guard applied to knowledge curation but not to `MemoryDeduplicator`'s `MERGE` path?
 - What is evicted when `maxMemories` is reached?

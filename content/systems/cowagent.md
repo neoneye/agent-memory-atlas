@@ -196,7 +196,9 @@ Gaps:
 
 No memory-specific test suite was located in this checkout and no memory-quality benchmark was found; nothing was run for this review. For a design whose correctness rests on repeated LLM distillation, the missing measurement is retention — what fraction of durable facts survive a month of daily distillation passes.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **A dated intermediate layer.** Bucketing evidence by day gives consolidation a naturally bounded unit and gives humans an obvious place to look. Cruder than a cursor, far easier to inspect.
 - **Written distillation rules.** Stating merge/extract/conflict/clean/dedupe as policy makes an LLM consolidation pass reviewable and testable.
@@ -205,7 +207,7 @@ No memory-specific test suite was located in this checkout and no memory-quality
 - **Self-healing index state**, with a probe for feature availability and a reset path for crash-damaged triggers.
 - **Line-addressable chunks with hashes**, keeping evidence locatable and re-chunking cheap.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Shared-by-default scope.**
 - **Newer-always-wins correction**, which cannot distinguish a change of mind from a misreading.
@@ -213,7 +215,7 @@ No memory-specific test suite was located in this checkout and no memory-quality
 - **Wholesale overwrite** of the durable file.
 - **Budgets as instructions** rather than enforcement.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -228,7 +230,7 @@ Do not copy:
 - Recency-wins conflict resolution without a review path or a tombstone.
 - Whole-file distillation without a structural-loss check.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What is retained after thirty consecutive distillation passes? Nothing measures it.
 - Should conflicts be surfaced rather than resolved by recency?

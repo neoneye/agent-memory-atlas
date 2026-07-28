@@ -378,7 +378,9 @@ harness is not a reproduced result. The distinctive claim — that grounding
 prevents speculative memory from becoming canonical — is testable directly and
 cheaply, and no evidence of it having been measured was found.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Let epistemic grounding cap the trust ladder.** Reinforcement raising a
   record's standing is fine; reinforcement raising it *past what its source
@@ -405,7 +407,7 @@ cheaply, and no evidence of it having been measured was found.
 - **Store the road not taken.** `what_was_rejected`, `what_almost_happened` and
   `assumption` retain context every other system in this atlas discards.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Supersession without a value-level tombstone**, in a system with connector
   ingest and re-extraction.
@@ -415,7 +417,7 @@ cheaply, and no evidence of it having been measured was found.
   superseded plans.
 - **Recall feeding the trust class**, even bounded.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -431,7 +433,7 @@ Do not copy:
 - The whole surface, unless you have a comparable maintenance budget.
 - Record-keyed correction as the complete story if extraction can re-derive.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Does anything verify a connector's `grounding` claim, or is the ceiling
   advisory once a source asserts `observed`?

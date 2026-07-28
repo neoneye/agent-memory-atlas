@@ -265,7 +265,9 @@ a `61.38%` token reduction. This repository does not include the corresponding
 evaluation harness, raw outputs, or reproducible result artifacts. Treat those
 numbers as project claims, not independently inspectable evidence.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Preserve raw evidence below every synthesized layer.
 - Separate dynamic retrieval from stable scene/persona context.
@@ -276,7 +278,7 @@ numbers as project claims, not independently inspectable evidence.
 - Keep context assembly bounded by time and token budgets.
 - Make generated scene and persona files human-readable and editable.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Calling both JSONL and a vector store authoritative in different paths.
 - Delete-old then best-effort insert-new across non-transactional stores.
@@ -287,7 +289,7 @@ numbers as project claims, not independently inspectable evidence.
 - Treating successful turns as the only source of durable lessons.
 - Providing internal deletion primitives without a clear user correction path.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow the layered context design when the host is OpenClaw or Hermes and the
 goal is to compress long, tool-heavy work while retaining drill-down evidence.
@@ -300,7 +302,7 @@ review state for generated persona and instruction memories. A production
 adoption should also add tests for extraction, hybrid retrieval, cross-store
 failure, and recovery.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Is JSONL or the configured memory store authoritative after divergence?
 - How is a failed update repaired after old vector rows are deleted?

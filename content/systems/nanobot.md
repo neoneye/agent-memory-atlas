@@ -199,7 +199,9 @@ Gaps:
 
 Memory-specific tests were not located in this checkout, and no memory-quality benchmark was found; the suites were not run. Given how much of the design's value sits in the cursor and failure-gate logic — exactly the code that is hard to get right and easy to regress — that is the most significant evidence gap here.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Two cursors, one queue.** Separate the write position from the consume position when a fast producer feeds a slow consumer, and the whole class of "consolidation fell behind" bugs disappears.
 - **Do not advance a cursor after a failed run.** Cheaper and more robust than a retry queue: if derivation was unsafe, simply do not record it as done.
@@ -209,14 +211,14 @@ Memory-specific tests were not located in this checkout, and no memory-quality b
 - **A separate identity file.** `SOUL.md` keeps "who I am" apart from "what I know", which are corrected on different schedules for different reasons.
 - **Memory policy as an editable prompt file** the operator can read and change.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Durable claims without provenance to their evidence.**
 - **No rejection state** in a system that automatically re-derives from a retained archive.
 - **Size maintained by instruction** rather than enforcement.
 - **Single-workspace scope** presented alongside project switching in the UI, which invites the assumption that memory is per-project when it is not.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -231,7 +233,7 @@ Do not copy:
 - Instruction-based size discipline where prompt cost matters; use a hard budget.
 - Single-workspace scope for multi-project use.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Should durable claims cite the `history.jsonl` cursors that produced them, making correction traceable?
 - What stops Dream from re-deriving a claim a user explicitly removed?

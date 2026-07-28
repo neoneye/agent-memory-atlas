@@ -440,7 +440,9 @@ Before trusting retrieval quality, add:
 
 The smoke review for this report used the hash embedder on a temporary directory. It confirmed that current `get_context(k=3)` returns three results for 20 sources at the default 15% rule, and that adding two different texts under the same title creates two source records.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Combine BM25, vector, and cheap domain heuristics before adding an LLM reranker.
 - Return source-diverse results when sessions/documents, rather than chunks, are the evaluation and context unit.
@@ -450,7 +452,7 @@ The smoke review for this report used the hash embedder on a temporary directory
 - Make heavy embedding and graph dependencies optional for a local tool.
 - Keep engine logs on stderr when a subprocess uses stdout as a protocol.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Calling a metric `@k` while evaluating more than `k` results.
 - Rewriting several JSON files without locks or atomic replace.
@@ -466,7 +468,7 @@ The smoke review for this report used the hash embedder on a temporary directory
 - Duplicating the full engine across package layouts and letting Python/Node/docs versions drift.
 - Full corpus scans, in-memory BM25 rebuilds, all-pairs Leiden similarity, and linear edge scans with no corpus limit.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Reuse conceptually:
 
@@ -497,7 +499,7 @@ Add before production:
 
 This design is appropriate for a small, trusted, single-user MCP prototype where install simplicity matters more than durability and corpus scale. It is the wrong shape for shared memory, high-stakes personalization, large document collections, concurrent agents, or any system that presents memory as verified truth.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What exact engine revision and configuration produced each published score?
 - Why do committed `k=10` results contain 28–46 returned sessions?

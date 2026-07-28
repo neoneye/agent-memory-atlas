@@ -232,7 +232,9 @@ The suites were not run for this review. The distribution is telling: the heavie
 
 No committed retrieval-quality benchmark was found in the repository. Third-party comparative results exist — notably [OpenViking](../openviking/)'s LoCoMo harness, which reports OpenClaw's native memory at 24.20% versus 82.08% with OpenViking mounted — but those are vendor-run comparisons whose raw artifacts are not committed, and the native-memory baseline configuration is not independently verifiable. They should not be read as a measured property of this code.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Sanitize the harness envelope before capture.** If your runtime wraps messages in markers, timestamps, reply headers, or attachment notes, that scaffolding will become memory unless something removes it. Pair the stripping pipeline with an acceptance gate that rejects text which is still mostly wrapper.
 - **Compose scope into the predicate**, so an unscoped query is not expressible, and scope deletes as well as reads.
@@ -241,7 +243,7 @@ No committed retrieval-quality benchmark was found in the repository. Third-part
 - **Bounded regex quantifiers** on any pattern that touches untrusted text.
 - **Independent auto-capture and auto-recall switches.**
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Vector-only retrieval** for content dominated by names and identifiers.
 - **Category standing in for trust state.**
@@ -250,7 +252,7 @@ No committed retrieval-quality benchmark was found in the repository. Third-part
 - **Hard truncation** of captured content at 500 characters.
 - **Single-axis scope** in a multi-participant messaging context.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -265,7 +267,7 @@ Do not copy:
 - `agentId`-only scoping for group deployments.
 - Auto-capture without a durable correction story, since re-capture will undo deletions.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What keeps the sanitization patterns synchronized with the envelope formats they mirror? A test asserting round-trip removal against the actual renderer would close the gap.
 - Should `agentId` be joined by room and participant scope, given the messaging-first design?

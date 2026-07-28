@@ -183,7 +183,9 @@ No memory tests were located and no memory benchmark was found in this checkout;
 
 For a design whose correctness depends entirely on prompt adherence, the missing measurement is compliance: how often does material that never came from a successful tool call end up in memory anyway?
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **"No Execution, No Memory."** Require durable claims to originate from a successful tool call, and name the excluded categories explicitly — inherent knowledge, guesses, unexecuted plans, unverified assumptions. Then, unlike here, record which call justified each write so the rule can be audited.
 - **The ROI test for always-injected context.** `(error probability × cost) / per-turn word cost` is the missing justification behind every prompt budget in this atlas.
@@ -193,7 +195,7 @@ For a design whose correctness depends entirely on prompt adherence, the missing
 - **Exclude volatile state by rule**: timestamps, PIDs, session IDs, absolute paths.
 - **"If you cannot modify it properly, better not to modify at all"** as a consolidation default.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Policy without enforcement or audit** — the central risk, and it applies to every axiom.
 - **Verified-once treated as verified-forever.**
@@ -201,7 +203,7 @@ For a design whose correctness depends entirely on prompt adherence, the missing
 - **Silent unreachability** when an index trigger is missing.
 - **Single global scope.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -216,7 +218,7 @@ Do not copy:
 - Verified-once semantics without a re-verification path.
 - A thirty-line index as the only retrieval mechanism past a modest corpus.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Should each written memory record the tool call that justified it? The axiom implies the record; the system does not keep it.
 - How is verified-once-verified-forever handled when the underlying reality changes?

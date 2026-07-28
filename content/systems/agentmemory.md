@@ -272,7 +272,9 @@ synthetic sessions and 15 queries. Its perfect R@5 result is useful as a smoke
 test, not broad evidence of production recall quality. `ROADMAP.md` still lists
 benchmark-harness CI as future work.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Zero-LLM capture in the synchronous hook path.
 - Compact search results with explicit expansion by ID.
@@ -283,7 +285,7 @@ benchmark-harness CI as future work.
 - Fail-closed identity behavior in isolated scope.
 - Audited structural deletion and rebuildable projections.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Treating fuzzy content similarity as authority to supersede a memory.
 - Shipping a very large tool surface without a correspondingly small default
@@ -293,7 +295,7 @@ benchmark-harness CI as future work.
 - Accumulating many derived stores without explicit consistency contracts.
 - Encoding confidence without a first-class verification or rejection state.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow it when the integration target is a coding agent, local event capture is
 important, and a team is prepared to operate the iii runtime and choose among
@@ -307,7 +309,7 @@ Add an explicit review state before using remembered claims for consequential
 automation. In multi-agent deployments, turn isolated scope on deliberately
 rather than relying on the shared default.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Should supersession require contradiction/equivalence judgment instead of a
   Jaccard threshold?

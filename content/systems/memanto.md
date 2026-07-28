@@ -289,7 +289,9 @@ contradictions it never surfaced. The dated JSON reports plus the recorded
 resolutions are exactly the artifact needed to compute the first number, and it
 does not appear to have been computed.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **End the conflict pipeline in a decision, not a flag.** Detection without a
   resolution surface produces a status field nobody clears. The action set is the
@@ -308,14 +310,14 @@ does not appear to have been computed.
 - **Write the queue to dated files** outside the memory store, so it stays
   inspectable and survives the store.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Resolution without a tombstone**, in a system with scheduled extraction.
 - **An unmeasured detector** deciding what humans are asked to adjudicate.
 - **A default confidence** applied uniformly, which makes the field decorative.
 - **Ranking behind a vendor boundary**, even with an on-prem option.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -329,7 +331,7 @@ Do not copy:
   tombstone or the next extraction undoes the resolution.
 - Uniform default confidence.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What fraction of reported conflicts does a human keep? The dated reports and
   recorded resolutions make this computable.

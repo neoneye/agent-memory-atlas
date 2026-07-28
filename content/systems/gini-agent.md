@@ -188,7 +188,9 @@ Per-module tests (`recall.test.ts`, `retain.test.ts`, `reflect.test.ts`, `embedd
 
 No memory-quality benchmark was found. Given that the recall implementation cites specific equations from a published model, the natural evaluation — does this implementation reproduce the source model's reported behaviour? — is absent, and would be unusually easy to justify here.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Write down memory decisions as ADRs.** Status, date, decision, context, consequences — and crucially the failure that motivated it. Forty systems into this atlas, Gini is the clearest example of a project that can explain itself.
 - **`conflicted` as a first-class status.** Most systems either resolve conflicts silently or surface them outside the data model; making it a state means a conflicted unit can be found, counted, and worked through.
@@ -198,14 +200,14 @@ No memory-quality benchmark was found. Given that the recall implementation cite
 - **Conditional temporal channel** — only fuse a time arm when the query has a time expression.
 - **"Configuration is copied at creation; content is not."**
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Modelled states without workflows** — `conflicted` and `rejected` need somewhere for a human to act.
 - **Rejection without a value tombstone.**
 - **Fusion weights as undefended defaults.**
 - **Reinforcement of unclear reach.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -218,7 +220,7 @@ Do not copy:
 - The trust states without building the workflow that resolves them.
 - Fusion defaults without measuring them.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What resolves a `conflicted` unit, and who sees it?
 - Does `reinforce` touch `confidence`, or only ranking? The schema allows both; only one is safe.

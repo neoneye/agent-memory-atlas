@@ -221,7 +221,9 @@ The suites were not run for this review. Coverage is clearly failure-path-orient
 
 No committed memory-quality benchmark was found. There is no evaluation of whether the 2,200/1,375-character budgets are well chosen, and no measurement of what in-turn consolidation discards over long-running use — which is the single most important open empirical question about this design.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Frozen prompt snapshot.** Decoupling durable writes from prompt mutation to preserve the cache is a genuinely useful move for any always-on memory block, and no other system in this atlas does it explicitly.
 - **Hard budget with in-turn consolidation.** Refusing the write and handing back current entries makes the compaction decision explicit and immediate instead of deferring it to a background job that may never run.
@@ -231,7 +233,7 @@ No committed memory-quality benchmark was found. There is no evaluation of wheth
 - **A staged write-approval gate** shared across tools, giving humans a checkpoint on durable memory mutations.
 - **Skills as separate procedural memory**, indexed by name and loaded on demand.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Model writes are immediately authoritative** — no candidate tier, no corroboration, no tombstones.
 - **Substring-as-identity** for mutation targets.
@@ -241,7 +243,7 @@ No committed memory-quality benchmark was found. There is no evaluation of wheth
 - **Layer duplication** with no precedence rule between curated, provider, and session memory.
 - **Provider interface with no deletion contract**, making "forget me" unenforceable across a mounted backend.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -258,7 +260,7 @@ Do not copy:
 - The provider ABC as-is if you need deletion, scope, or multi-tenancy — it has none.
 - Unrecorded, model-driven eviction if you ever need to explain why something was forgotten.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What is actually lost over months of in-turn consolidation? Nothing measures or logs evictions.
 - Should removals write a tombstone so a re-derived entry can be recognized and refused?

@@ -52,7 +52,7 @@ format applied consistently to each memory system.">
           <h1>Per-Repository Review Method</h1>
           <p class="document-deck">The code-grounded review format
 applied consistently to each memory system.</p>
-                  </div>
+                            </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
         </div>
@@ -87,20 +87,32 @@ and call flows over product claims.</p>
 <p>Keep this section concise. It should let a senior engineer decide
 whether to keep reading.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>This section is about epistemics, not
+infrastructure.</strong> Answer how a thing becomes a belief and how it
+stops being one. Keep storage engines, servers and job runners out of it
+— they belong in section 3, and letting the two sections drift into the
+same pipeline diagram at two zoom levels is the most common way this
+format wastes a reader's time.</p>
 <p>Explain:</p>
 <ul>
 <li>What the system considers a "memory".</li>
 <li>Whether memories are raw messages, extracted facts, summaries,
 profiles, rules, documents, embeddings, graph nodes, verified beliefs,
 or something else.</li>
-<li>Memory lifecycle: capture -&gt; extraction -&gt; storage -&gt;
-retrieval -&gt; injection -&gt; update/delete/decay.</li>
+<li>The state machine: what states a memory can hold, what moves it
+between them, who or what is allowed to move it, and how it dies —
+superseded, rejected, expired, decayed, deleted, or never.</li>
 <li>Whether memory is agent-controlled, background-managed,
 user-controlled, or hybrid.</li>
 <li>Whether the system treats memory as ground truth, candidate
 evidence, inferred state, or verified state.</li>
 </ul>
+<p>A text or ASCII sketch of the state machine usually says more here
+than a component diagram.</p>
 <h2 id="3-architecture">3. Architecture</h2>
+<p><strong>This section is about infrastructure, not
+epistemics.</strong> Where the bytes live, what processes run, what the
+operator has to stand up.</p>
 <p>Document:</p>
 <ul>
 <li>Main components and boundaries.</li>
@@ -113,6 +125,21 @@ service, local DB, worker, SDK, framework plugin.</li>
 <li>Deployment assumptions.</li>
 </ul>
 <p>Include a Mermaid diagram when it clarifies the system.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>State what adopting this actually costs an operator, because a design
+that is excellent on paper and needs four services is a different
+proposition from a single binary:</p>
+<ul>
+<li>What has to be running: nothing, a local file, SQLite, Postgres, a
+vector service, a queue, a graph database, a hosted API, a GPU.</li>
+<li>Whether it can run fully local and offline, and what degrades if it
+does.</li>
+<li>Whether an API key is required to store anything at all.</li>
+<li>Install and first-run path — one command, a Docker compose file, or
+a build.</li>
+<li>Whether the store is human-readable and repairable by hand when
+something goes wrong.</li>
+</ul>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p>This is the most important section. Map the core behavior to concrete
@@ -182,6 +209,25 @@ tools.</li>
 <li>How agent-generated facts are handled.</li>
 <li>How noisy or malicious inputs are filtered, if at all.</li>
 </ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Memory sits on the critical path of every turn, so say what it
+costs:</p>
+<ul>
+<li>Is the write path <strong>synchronous</strong> — does the agent
+block on an LLM extraction before it can continue — or is it
+deferred?</li>
+<li>If deferred, what is the lag before a new memory is retrievable?
+State it even approximately; nothing in this atlas measures it and the
+gap is worth naming.</li>
+<li>Does any background pass re-read or rewrite the whole store, and how
+often? A nightly map-reduce over everything has a token bill that scales
+with the corpus rather than with the day's activity.</li>
+<li>On the read path: how much is injected per turn, is it bounded, and
+does the injection sit where it will invalidate a provider's
+prompt-prefix cache?</li>
+</ul>
+<p>See <a href="../../benchmarks/">benchmarking agent memory</a> for why
+these matter and how rarely anyone reports them.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Analyze:</p>
 <ul>
@@ -221,35 +267,26 @@ Benchmarks</h2>
 </ul>
 <p>Be explicit when a claim appears only in docs and is not backed by
 code or tests.</p>
-<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
-<p>List concrete implementation ideas useful for building a serious
-agent memory system.</p>
-<p>Prefer specific patterns, for example:</p>
-<ul>
-<li>A schema trick.</li>
-<li>A retrieval fusion strategy.</li>
-<li>A scoping model.</li>
-<li>An MCP tool design.</li>
-<li>A compaction survival mechanism.</li>
-<li>A background consolidation workflow.</li>
-<li>A test/eval pattern.</li>
-</ul>
-<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
-<p>List specific design or implementation choices that look fragile,
-overcomplicated, under-specified, hard to operate, or likely to degrade
-memory quality.</p>
-<p>Ground each item in code, docs, or missing coverage.</p>
-<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
-<p>Answer:</p>
-<ul>
-<li>What should be reused conceptually?</li>
-<li>What should be avoided?</li>
-<li>When is this design appropriate?</li>
-<li>When is it the wrong shape?</li>
-<li>Which parts could be copied or reimplemented cleanly?</li>
-<li>Which parts are too coupled to the repo's product or framework?</li>
-</ul>
-<h2 id="14-open-questions">14. Open Questions</h2>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>One section, three subheads with genuinely different jobs. Do not
+restate what section 9 already assessed — that section says what
+<em>this system</em> is like, this one says what <em>you</em> should do
+about it.</p>
+<h3 id="steal">Steal</h3>
+<p>Transferable mechanisms, phrased as advice a builder could act on
+without adopting the system. Name the mechanism, not the product.</p>
+<h3 id="avoid">Avoid</h3>
+<p>Transferable mistakes. A gap in section 9 belongs here only if it
+generalizes — if the failure is specific to this codebase, it stays in
+section 9.</p>
+<h3 id="fit">Fit</h3>
+<p>Whether this whole design suits a reader, which is the one judgement
+the two lists above cannot express: the maintenance budget it assumes,
+the scale it targets, the deployment it needs, and who should walk away
+from it entirely. Resist re-listing the mechanisms; if this subhead
+reads as a summary of Steal and Avoid, delete it and write the judgement
+instead.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
 <p>List things unclear from code/docs that would require:</p>
 <ul>
 <li>Running the system.</li>

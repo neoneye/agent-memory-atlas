@@ -170,7 +170,9 @@ Gaps:
 
 For a corpus-and-index system, the measurement that matters is retrieval quality over a realistic corpus, and the natural fixture — an exported session plus queries about it — is something `session_export.rs` already produces.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Make "no embeddings" a constructor, not a failure mode.** `keyword_only()` plus `has_embeddings()` turns degradation into a supported, inspectable configuration.
 - **Sanitize transcripts before they become corpus.** Now the fourth independent instance in this atlas of a system needing to strip its own output before capture.
@@ -179,14 +181,14 @@ For a corpus-and-index system, the measurement that matters is retrieval quality
 - **One reindex entry point** for every write path.
 - **Feature-gate expensive backends** so deployments only compile what they use.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Session transcripts and curated notes at equal authority** in one undifferentiated index.
 - **Correction without a record.**
 - **Corpus-wide scope** as the only boundary.
 - **Undocumented sanitization** in a module whose safety depends on it.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -200,7 +202,7 @@ Do not copy:
 - Exporting sessions into the same index as curated notes without a source distinction and a rank consequence.
 - Corpus-only scope for multi-project or multi-user use.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What exactly does session sanitization remove? Secrets, tool output, and previously-injected memory blocks are the three that matter.
 - Should exported transcripts carry a lower prior than authored notes?

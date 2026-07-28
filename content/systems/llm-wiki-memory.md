@@ -290,7 +290,9 @@ What is not proven:
 
 `PERFORMANCE.md` reports measured latency and scaling, including roughly linear warm search and expensive per-ancestor index subprocesses. Those numbers were not independently rerun for this report. The README's test badge and prose report different test totals, and both lag the current static declarations, so test-count documentation is stale even though the suite itself is broad.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **One seam between meaning and structure:** keep leaf semantics/search in the memory layer and generated navigation in a domain-agnostic wiki engine.
 - **Recoverable capture:** chunk, map/reduce, preserve failed chunks, write a raw fenced fallback, and provide a redistill path.
@@ -304,7 +306,7 @@ What is not proven:
 - **Per-entity cron healing:** distinguish transient run failure from repeatedly failing leaves/providers and escalate only persistent episodes.
 - **Glance-first retrieval:** return frontmatter summaries without bodies when an agent only needs to choose what to read.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Active by extraction:** compile promotes LLM output directly into active memory, with no candidate/verified state or human review for project facts.
 - **Priority can be mistaken for truth:** P0/P1/P2 controls application strength, but users and models may interpret it as confidence.
@@ -319,7 +321,7 @@ What is not proven:
 - **Stale quality evidence:** the README carries inconsistent test totals, and there is no relevance benchmark to justify default model/threshold claims.
 - **LLM refresh cannot inspect current code by itself:** the stale-leaf prompt sees related memory, not necessarily repository truth, so it may consolidate old assumptions into a fresher-looking note.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Reuse conceptually:
 
@@ -339,7 +341,7 @@ This shape is appropriate for a single developer or team that wants local, cross
 
 The storage/search modules can be reimplemented cleanly, but the full experience is coupled to the layout protocol, companion wiki CLI, distributed templates/rules, and Claude Code hooks. Borrow the contracts and failure-recovery patterns before borrowing the entire installation surface.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How does retrieval quality compare with BM25/FTS and hybrid rank fusion on real coding-memory queries?
 - How large can a wiki become before filesystem parsing and lazy cache maintenance are visibly disruptive?

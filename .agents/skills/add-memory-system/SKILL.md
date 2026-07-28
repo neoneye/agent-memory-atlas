@@ -89,6 +89,17 @@ Before integration, verify:
 
 - No placeholder text remains.
 - The frontmatter matches nearby reports.
+- Sections 2 and 3 do not tell the same story twice: section 2 is the epistemic
+  state machine (how a thing becomes a belief and how it stops being one),
+  section 3 is infrastructure (what has to be running, and what it costs an
+  operator to stand up).
+- Section 11 is one section with `### Steal`, `### Avoid`, `### Fit`. `Fit` is a
+  judgement about whether the whole design suits a reader — maintenance budget,
+  scale, deployment, who should walk away. If it reads as a summary of Steal and
+  Avoid, it has failed and should be rewritten, not padded.
+- The write section states whether writes block the agent, what the lag is
+  before a memory is retrievable, and whether any background pass rewrites the
+  whole store.
 - The full commit ID appears in `revision`.
 - The commit URL appears in `revision_url`.
 - `analyzed_at` reflects the date the analysis was actually performed.

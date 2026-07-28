@@ -260,7 +260,9 @@ Engram has broad unit and integration tests:
 
 I did not run them during this report generation.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Local SQLite + FTS5 as a serious baseline.
 - Agent-facing `mem_save` schema with What/Why/Where/Learned.
@@ -271,14 +273,14 @@ I did not run them during this report generation.
 - Project detection plus similar-project warnings.
 - Sync journal separate from cloud authority.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Memory quality depends on agent compliance.
 - No embedding/semantic default may frustrate natural-language recall.
 - Large MCP tool surface can overwhelm weaker agents despite deferred loading.
 - Local-first sync semantics are more complex than a purely local tool if cloud is enabled.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow heavily if building coding-agent memory:
 
@@ -291,7 +293,7 @@ Borrow heavily if building coding-agent memory:
 
 Avoid copying if your target is consumer chat personalization or multi-tenant hosted memory; Engram is optimized for developer workflows.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How well do agents comply with proactive save instructions in practice?
 - What is the best semantic-search extension while keeping local-first simplicity?

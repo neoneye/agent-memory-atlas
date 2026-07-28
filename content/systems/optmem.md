@@ -325,7 +325,9 @@ the log is retained, that is directly answerable — compare an agent given
 `wake`'s output against one given the raw log, on questions about old material —
 and it does not appear to have been done.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Consider having no background work.** If consolidation can be requested
   inline in the output of the write command, the queue, the worker, the lag, the
@@ -347,7 +349,7 @@ and it does not appear to have been done.
 - **Publish footprint and latency at scale.** Two numbers, and almost nobody has
   them.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **No licence**, which forecloses reuse regardless of quality.
 - **An append-only log with no correction path** — auditability bought at the
@@ -355,7 +357,7 @@ and it does not appear to have been done.
 - **A design that depends entirely on prompt compliance** for its write and
   consolidation discipline.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow the *ideas*, not the code, and not without asking: the no-background
 posture, the geometric cover, the reading-budget/storage-budget split, and the
@@ -365,7 +367,7 @@ scope, trust and correction.
 Do not copy the data model into anything that needs to fix a mistake. OptMem is
 a memory you can always trust to be what was written, and can never repair.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How much is lost by the cover, relative to the raw log, on questions about old
   material?

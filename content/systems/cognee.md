@@ -262,7 +262,9 @@ The report includes configs and per-run artifacts for the evaluation layer;
 this atlas inspected those artifacts but did not rerun the benchmark.
 
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Preserve source records before creating graph/vector projections.
 - Make a pipeline run and its provenance the unit of rollback.
@@ -275,7 +277,7 @@ this atlas inspected those artifacts but did not rerun the benchmark.
 - Estimate expensive extraction before starting it.
 
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Confusing ontology conformance or provenance with factual verification.
 - Treating every search mode as if it had equivalent top-k semantics.
@@ -287,7 +289,7 @@ this atlas inspected those artifacts but did not rerun the benchmark.
   plus retrieval.
 
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Cognee when graph structure, ontology grounding, multimodal ingestion,
 storage adapters, and dataset-level access control are central requirements.
@@ -304,7 +306,7 @@ graph. The platform records where a claim came from; the application must still
 decide whether to trust it.
 
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What consistency guarantees are supported for each graph/vector/relational
   backend combination?

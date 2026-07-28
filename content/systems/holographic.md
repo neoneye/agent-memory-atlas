@@ -263,7 +263,9 @@ The suites were not run for this review. Coverage is oriented toward CRUD, retri
 
 The README documents configuration and the nine `fact_store` actions but no decay, forgetting, or capacity guidance. Two open issues in the tracker ([#4781](https://github.com/NousResearch/hermes-agent/issues/4781), [#31263](https://github.com/NousResearch/hermes-agent/issues/31263)) report that the plugin registers but its tools or context injection do not fire; those threads were not read for this review, and the titles alone do not establish a reproducible defect in the code inspected here.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Deterministic hash-derived representations.** `encode_atom` removes the entire class of embedder-drift problems: no model to pin, no dimension to negotiate, identical vectors on every machine. Worth copying for any system where reproducibility matters more than semantic nuance.
 - **Algebraic multi-entity query.** `reason`'s min-similarity-across-entities gives true AND semantics over structure, which is awkward to express in a plain vector store.
@@ -272,7 +274,7 @@ The README documents configuration and the nine `fact_store` actions but no deca
 - **Refcounted shared SQLite connections.** The registry in `store.py` is a reusable answer to multi-writer WAL contention when subagents share a process.
 - **Rebuildable vector projections.** `rebuild_all_vectors()` treats text as canonical and vectors as derived.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Telemetry as truth, with deletion as a side effect.** The clearest instance in the atlas: a rating tool directly mutates the score that gates retrieval, and enough ratings remove the memory from recall entirely.
 - **One score for confidence and reachability.**
@@ -284,7 +286,7 @@ The README documents configuration and the nine `fact_store` actions but no deca
 - **Unfenced injection** of stored prose into the system prompt.
 - **Entity extraction that misses single-word entities**, silently limiting every algebraic action.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -300,7 +302,7 @@ Do not copy:
 - Scope-free storage, unless the deployment really is single-user forever.
 - `prefetch` as written; fence recalled content before it enters a prompt.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Does HRR similarity measurably improve retrieval over FTS5 + Jaccard alone? Nothing in the repository answers this, and the 0.3 weight makes it easy to overestimate.
 - What is the intended behaviour when a category bank saturates past SNR 2.0 — should `probe` fall back to per-fact scoring, or should banks shard?

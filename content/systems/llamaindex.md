@@ -180,7 +180,9 @@ Gaps:
 
 Tests accompany the core memory modules; nothing was run for this review, and no memory-quality benchmark was found. For a framework this widely deployed, the absent measurement is whether the default `chat_history_token_ratio` of 0.7 is a good split — it silently determines how much of every prompt is recent conversation versus durable memory, and no evidence for it appears in the repository.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Self-truncating components.** Ask each contributor to give back N tokens and let it choose how, instead of cutting the assembled string. Allowing a component to decline and be dropped is the right escape hatch.
 - **One budget with an explicit split**, rather than independent caps per subsystem that can jointly overflow.
@@ -189,7 +191,7 @@ Tests accompany the core memory modules; nothing was run for this review, and no
 - **Expose insert placement**, since system-prompt versus user-message placement is a real cache-versus-freshness decision.
 - **A three-method block interface** as an extension point — get, put, truncate is close to the minimum viable memory component contract.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Extraction with no provenance**, when the source messages were available at extraction time.
 - **No tombstone** under automatic re-extraction.
@@ -197,7 +199,7 @@ Tests accompany the core memory modules; nothing was run for this review, and no
 - **Wholesale condensation** without a loss check.
 - **Two APIs sharing the word "memory"** with very different guarantees.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -211,7 +213,7 @@ Do not copy:
 - Overflow-triggered capture as the only write path.
 - Condensation without a structural-loss guard, if facts matter.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Is `chat_history_token_ratio = 0.7` right? It shapes every prompt and is undefended.
 - Should facts carry the message ids they were extracted from? The information is present at extraction and discarded.

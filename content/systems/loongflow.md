@@ -189,7 +189,9 @@ Tests exist under `tests/agentsdk/memory`. Nothing was run for this review, and 
 
 The measurement this design invites is whether adaptive temperature beats a fixed one — a comparison the code is structured to support, since temperature is a parameter, and which nothing in the repository appears to have run.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Sample rather than rank, when recall feeds exploration.** If remembered items inform *what to try next* rather than *what is true*, deterministic top-*k* guarantees you never revisit the alternatives. Boltzmann selection makes the exploration/exploitation trade explicit and tunable.
 - **Drive the temperature from a measured property of the store**, not a schedule. Diversity collapse is the condition that should loosen selection, and it is directly measurable.
@@ -197,14 +199,14 @@ The measurement this design invites is whether adaptive temperature beats a fixe
 - **Sample the diversity estimate** rather than computing it exhaustively.
 - **Bound the control parameter** so no feedback excursion makes selection fully random or fully greedy.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Stochastic recall without reproducibility tooling** — no seed or replay path is visible, and debugging a non-deterministic memory is materially harder.
 - **Trusting the score function.** Selection quality is bounded entirely by whether `score` means anything.
 - **Two memory models under one package name**, which invites picking the wrong one.
 - **Undefended constants** governing the whole control loop.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -216,7 +218,7 @@ Do not copy:
 - The `Solution` shape as a general memory record — it has no provenance, status, or scope.
 - Stochastic recall for factual memory, where a user asking the same question twice should get the same answer.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Does adaptive temperature outperform a fixed one? The code is parameterized for the experiment; nothing records it having been run.
 - Is there a seed or replay path for reproducing a selection during debugging?

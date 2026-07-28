@@ -217,7 +217,9 @@ The suites were not run for this review, and no numbers were reproduced. The pub
 
 For a system whose ranking is a diffusion process, the most valuable missing tests are the ones nobody has written: what happens to ranking when a single synonymy edge is wrong, and how much does the `damping` and `passage_node_weight` pair move results?
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Diffusion instead of traversal.** Seeding a personalization vector and running PPR removes the hop-depth and direction decisions that make BFS-based graph memory hard to tune.
 - **Inverse-frequency seed weighting.** Dividing a seed weight by the entity's chunk count is a one-line defence against hub domination.
@@ -226,7 +228,7 @@ For a system whose ranking is a diffusion process, the most valuable missing tes
 - **Low damping for query-locality.** 0.5 keeps relevance near the seeds; it is a tunable that directly expresses "how associative should recall be?"
 - **Cacheable extraction.** Separating `pre_openie` from `index` makes the expensive LLM stage resumable.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Hard assertion on an empty seed vector**, where a fallback to dense retrieval is the obvious behaviour.
 - **Direction discarded** without documentation.
@@ -235,7 +237,7 @@ For a system whose ranking is a diffusion process, the most valuable missing tes
 - **Corpus-global scope** with no isolation of any kind.
 - **Whole-graph computation per query**, which is a scaling cliff rather than a gradient.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -250,7 +252,7 @@ Do not copy:
 - Undirected diffusion if your predicates carry meaning.
 - The data model as agent memory — it has no scope, trust, provenance, or time, and all four would have to be added before it could carry a user's memory.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How sensitive is ranking to `damping` and `passage_node_weight`? Both are defaults with no published ablation in the repository.
 - What is the right behaviour when a query's phrases miss the graph entirely?

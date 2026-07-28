@@ -206,7 +206,9 @@ No test suite for the memory modules. The paper's evaluation is human believabil
 
 Unchanged since August 2023.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Trigger consolidation on accumulated significance**, not on a timer or a token count. Still the most elegant scheduling signal in the atlas.
 - **Multi-signal retrieval** combining semantic relevance with non-semantic priors — the shape is right even though these particular weights are not.
@@ -214,7 +216,7 @@ Unchanged since August 2023.
 - **Keep a separate structured memory for spatial or relational world state** rather than forcing everything into one text stream.
 - **Store derived insights as first-class memories** so they can compound — provided you also mark them as derived.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Magic constants inherited as doctrine.** `gw = [0.5, 3, 2]` has been reimplemented far more often than it has been re-derived.
 - **Positional recency decay** misread as time decay.
@@ -223,7 +225,7 @@ Unchanged since August 2023.
 - **Provenance recorded but unused.**
 - **Unbounded, unindexed retrieval.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -238,7 +240,7 @@ Do not copy:
 - A single pool for evidence and inference.
 - Anything operational; this is a simulation frozen in 2023, and every production concern — scope, correction, deletion, indexing — is absent by design.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Where did `gw = [0.5, 3, 2]` come from, and how much does it matter? Nothing in the repository answers this, and it is the most-copied number in agent memory.
 - Should importance be revisable — raised when a memory proves useful, lowered when it never is?

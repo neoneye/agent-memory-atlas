@@ -252,7 +252,9 @@ Missing tests I would want:
 - Conflict handling when user facts change.
 - Core memory token pressure and summarization interactions.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Separate always-on core memory from searchable archival memory.
 - Use labeled blocks with descriptions, limits, and read-only flags.
@@ -261,14 +263,14 @@ Missing tests I would want:
 - Conversation search filters that avoid recursive tool-output pollution.
 - Git-backed memory projection for developers comfortable with file semantics.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Letting the agent directly rewrite its own identity/user model without verification.
 - Core memory as unstructured text blocks can become a junk drawer.
 - Multiple memory tool generations create conceptual complexity.
 - Exact string replacement is safe but brittle for long evolving blocks.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -285,7 +287,7 @@ Avoid copying:
 
 Letta is worth studying if you are building a full agent runtime. It is heavier than needed for a standalone memory service.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How does Letta decide when to compact/summarize versus preserve raw conversation history?
 - How are wrong core memories corrected in practice?

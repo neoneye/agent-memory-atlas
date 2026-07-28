@@ -270,7 +270,9 @@ The test breadth supports an operational-maturity claim. It does not validate
 the observer's facts, the ideal context mix, or general retrieval quality.
 
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Durable hook capture before LLM work.
 - Canonical relational rows plus rebuildable semantic projections.
@@ -282,7 +284,7 @@ the observer's facts, the ideal context mix, or general retrieval quality.
 - Refuse a local delete that cannot be replicated safely.
 
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Calling semantic-or-lexical fallback “hybrid” when ranks are not fused.
 - Automatically activating generated observations as trusted instructions.
@@ -294,7 +296,7 @@ the observer's facts, the ideal context mix, or general retrieval quality.
 - Treating compression savings as evidence of memory quality.
 
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Claude-Mem when the product is a coding agent and reliable lifecycle
 capture matters more than a general-purpose knowledge model. Its queue,
@@ -312,7 +314,7 @@ Chroma is unavailable if availability is more important than ranking
 consistency.
 
 
-## 14. Open Questions
+## 12. Open Questions
 
 - When will `memory_items` replace legacy observations, and how will the switch
   avoid dual-write divergence?

@@ -181,7 +181,9 @@ Gaps:
 
 The measurement the design most needs and does not have is **gate accuracy**: how often does `should_retrieve` return false on a turn that would have benefited from memory? False positives merely cost a search; false negatives produce a confidently unmemoried answer, and are invisible without a labelled set.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Gate the expensive path.** Decide whether to retrieve before retrieving, and fail open so a broken gate degrades to the old behaviour rather than to silence. See [gate the expensive path](../../patterns/gate-the-expensive-path/).
 - **Make the gate produce the query.** One call answers "should we?" and "with what?", halving the cost of gating.
@@ -190,14 +192,14 @@ The measurement the design most needs and does not have is **gate accuracy**: ho
 - **Progressive disclosure by default** — index always, body on match, references on demand.
 - **Budget for reasoning-model preambles** when parsing structured output from a small model.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **An unmeasured gate.** The whole design rests on the gate being right, and nothing checks it.
 - **Consolidation without correction** — facts accumulate, contradictions coexist.
 - **No provenance**, so a wrong fact cannot be traced to the chat that produced it.
 - **Asserted cost savings.**
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -210,7 +212,7 @@ Do not copy:
 - The data model as a belief store; add correction before it matters.
 - A gate without an accuracy measurement, if a missed retrieval is costly.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How often does the gate wrongly decline? Nothing labels or measures it.
 - Does the gate call cost less than the searches it avoids, in latency and tokens?

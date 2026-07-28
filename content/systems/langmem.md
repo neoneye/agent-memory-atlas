@@ -220,7 +220,9 @@ Missing tests I would want:
 - Store persistence behavior across different BaseStore implementations.
 - Prompt injection in extracted memory content.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Keep memory tools as thin wrappers over a generic store.
 - Use namespace templates to avoid hard-coding user/project scope.
@@ -228,14 +230,14 @@ Missing tests I would want:
 - Let users provide structured memory schemas.
 - Use background task cancellation keyed by thread ID to avoid stale reflection runs.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Delegating retrieval entirely to the store means memory quality is invisible at the LangMem layer.
 - Direct update/delete tool semantics can let an agent overwrite memory without provenance.
 - Background memory manager instructions are ambitious relative to the enforcement in code.
 - No trust distinction between extracted, inferred, corrected, or verified memory.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -254,7 +256,7 @@ Do not borrow as-is if you need:
 
 LangMem is best when you are already building on LangGraph and want memory primitives, not a full memory platform.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How retrieval quality varies across LangGraph store implementations.
 - Whether LangGraph Platform deployments add production-grade memory processing beyond this package.

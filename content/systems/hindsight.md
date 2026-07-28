@@ -146,7 +146,9 @@ The test surface is broad: retain/recall/reflect integration, temporal ranges, g
 
 The repository also ships LongMemEval and LoCoMo scripts plus performance and consolidation benchmarks. That is better evidence than a demo-only test suite, although published quality still depends on model/provider configuration and benchmark settings.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Preserve documents and chunks before extracting compact facts.
 - Separate raw facts, consolidated observations, curated reflections, and hard directives.
@@ -157,7 +159,7 @@ The repository also ships LongMemEval and LoCoMo scripts plus performance and co
 - Make queued consolidation retryable and deduplicated per scope.
 - Put sensitive-data screening before durable persistence.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - The orchestration core is extremely large.
 - LLM-extracted facts become durable without a universal verification gate.
@@ -166,13 +168,13 @@ The repository also ships LongMemEval and LoCoMo scripts plus performance and co
 - Four retrieval arms, reranking, consolidation, and multiple backends create tuning and operational cost.
 - Historical terminology around mental models/observations/reflections can confuse integrators.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Hindsight when you need a service-grade memory pipeline rather than a thin vector wrapper. Its clearest reusable ideas are evidence/derived-state separation, task-specific rank fusion, temporal recall, and recoverable consolidation.
 
 Do not copy the full architecture for a small local agent. Start with two retrieval arms and explicit source records. Add graph, temporal analysis, consolidation, and cross-encoder reranking only when evaluations show they solve real misses. If correctness matters, add a trust state beyond Hindsight's proof and provenance fields.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How often do consolidated observations improve recall versus introducing synthesis errors?
 - What operator workflow corrects a wrong observation and prevents it from being recreated?

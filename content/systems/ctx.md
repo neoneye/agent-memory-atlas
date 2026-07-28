@@ -293,7 +293,9 @@ would matter here is whether progressive disclosure actually gets read: how ofte
 a relevant region exists and the agent never opens it. Nothing measures that,
 and it is the same unmeasured false-negative the atlas notes for GenericAgent.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Give the background consolidator a write scope**, enforced by path, with
   refusals carrying a registered reason. A nightly LLM pass that can write
@@ -315,14 +317,14 @@ and it is the same unmeasured false-negative the atlas notes for GenericAgent.
   are JSON payloads is readable by a person and parseable by a program, which is
   why it might actually get read.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Structural correction without a tombstone**, in a system whose dream pass
   re-reads staged material.
 - **No ranker and no measurement of whether disclosure is reached.**
 - **Surface area** far exceeding the mechanisms that make it distinctive.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -338,7 +340,7 @@ Do not copy:
   small and curated.
 - Region folding as the correction story if a background pass can re-propose.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What stops a dream re-proposing something a human folded away?
 - Is the write-scope guard applied to every write path, or only to dream apply?

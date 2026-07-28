@@ -220,7 +220,9 @@ Against it, the headline numbers in the README — LoCoMo accuracy of 82.08% for
 
 These are also vendor-run comparisons of "competitor's native memory" against "competitor plus our product", evaluated with an LLM judge. That framing is not illegitimate, but it is not neutral, and the native-memory baselines deserve independent scrutiny before the deltas are taken at face value.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Three-granularity records.** Storing abstract/overview/content on one item, indexing the level, and letting callers choose resolution is a cleaner progressive-disclosure mechanism than deriving separate summary entities.
 - **Hotness separate from truth**, with frequency and recency combined into an explicitly reachability-only score.
@@ -230,7 +232,7 @@ These are also vendor-run comparisons of "competitor's native memory" against "c
 - **Memory types as data**, with generated schemas and filename templates.
 - **Benchmark harnesses that record token volume**, not just accuracy.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Extraction without an epistemic gate** — no candidate/verified/rejected state, no tombstones.
 - **Uniform decay half-life** across memory kinds.
@@ -240,7 +242,7 @@ These are also vendor-run comparisons of "competitor's native memory" against "c
 - **Vendor-framed comparative benchmarks** using an LLM judge.
 - **Large surface area**: consistency and quality depend on which of many backends and models are configured.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -257,7 +259,7 @@ Do not copy:
 - A single global decay half-life.
 - Anything at all, without first checking whether AGPL-3.0 is compatible with your distribution plans.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - What prevents a corrected memory from being re-extracted? No tombstone mechanism was found.
 - Should the decay half-life vary by memory type, given that types are already first-class?

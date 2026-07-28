@@ -197,7 +197,9 @@ Tests live under `src/tests/memory` and alongside the modules, including `memory
 
 The headline is the harness itself. Its shape — cases with expected and forbidden hits, prefix scoring, dual deterministic/judge scoring, artifact-producing reports — is close to what the atlas's own "tests to require" sections have been describing across fifteen pattern pages. The gap between shipping a harness and publishing results is the same one [OpenViking](../openviking/) has: no scored artifacts were found at this commit, so the system's measured memory quality is unknown even though the means to measure it is present.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Forbidden hits.** Every memory eval should assert what recall must *not* surface, not only what it must. This single field turns scope leakage, rejected values, and sensitivity filtering into testable properties.
 - **Score the prompt prefix.** Measure what reached the model, not what the retriever returned.
@@ -207,14 +209,14 @@ The headline is the harness itself. Its shape — cases with expected and forbid
 - **Queue capture ahead of extraction.**
 - **Keep a manual smoke checklist** for what the harness cannot cover.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **Extraction into memory with no trust state.**
 - **Substring scoring** rewarding verbatim overlap.
 - **Prompt optimization without a held-out gate.**
 - **A harness with no committed results**, which reads as measured but is not.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -227,7 +229,7 @@ Do not copy:
 - Extraction without a verification tier, if wrong memory is costly.
 - Deterministic scoring alone as your quality signal.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Have the evals been run, and what did they score? The harness exists; results do not appear to be committed.
 - Should the deterministic scorer use normalized semantic matching rather than substring containment?

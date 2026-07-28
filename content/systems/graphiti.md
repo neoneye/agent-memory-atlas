@@ -147,7 +147,9 @@ The repository has unit and integration coverage for graph operations, entity/ed
 
 There are benchmark and evaluation utilities, but measured quality depends on the LLM, embedder, graph backend, ontology, and dataset. The source gives strong evidence for mechanics; it does not make temporal extraction or entity resolution objectively correct.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Store episodes as evidence before graph-derived facts.
 - Distinguish transaction time from real-world validity time.
@@ -158,7 +160,7 @@ There are benchmark and evaluation utilities, but measured quality depends on th
 - Validate LLM-extracted relationships against resolved entity identities.
 - Maintain both wall-clock and event-time watermarks for backfilled summaries.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - LLM errors can mutate graph topology, not just one text record.
 - A mistaken entity merge has wide blast radius.
@@ -168,13 +170,13 @@ There are benchmark and evaluation utilities, but measured quality depends on th
 - No built-in candidate/verified/rejected trust state.
 - Prompt assembly and authorization are outside the core library.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow Graphiti when time and relationships are central to the domain: changing employment, ownership, preferences, plans, incidents, or other facts that have valid intervals. The bi-temporal edge model and evidence links are more valuable than copying the whole ingestion pipeline.
 
 For simpler personal memory, a graph may be needless complexity. Preserve source events and add validity fields to ordinary records first. Adopt entity resolution and graph traversal only when cross-entity questions measurably require them.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How often does automatic edge invalidation close the wrong historical fact?
 - What recovery path splits entities after an incorrect deduplication?

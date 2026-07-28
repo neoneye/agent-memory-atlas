@@ -345,7 +345,9 @@ query plans and access correctness rather than at whether the right memory comes
 back, which is the mirror image of most systems in this atlas and leaves the same
 kind of hole in the other wall.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - **Make the agent a principal.** If an agent has memory, "which memories may
   this agent read" should be answerable from the schema rather than from the
@@ -370,7 +372,7 @@ kind of hole in the other wall.
   not only the happy-path ones.
 - **Write down the negative results**, with the benchmark that produced them.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - **A governed store mistaken for a memory model.** Excellent authorization does
   not make extracted facts true, and nothing here tracks whether they are.
@@ -378,7 +380,7 @@ kind of hole in the other wall.
 - **Retrieval quality unmeasured**, in a system that measures almost everything
   else.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow:
 
@@ -393,7 +395,7 @@ Do not copy:
 - The assumption that access control is the hard part of memory. It is the part
   this repository solved.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How stale can a materialized `_tree_access` be relative to a concurrent grant
   change?

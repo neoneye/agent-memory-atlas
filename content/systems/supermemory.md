@@ -236,7 +236,9 @@ Visible tests:
 
 These mostly test wrappers, UI graph behavior, and integration surfaces. They do not prove backend memory extraction or retrieval quality.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Explicit schema for memory versions and relations: `updates`, `extends`, `derives`.
 - Separate `Document`, `Chunk`, and `MemoryEntry` domains.
@@ -246,7 +248,7 @@ These mostly test wrappers, UI graph behavior, and integration surfaces. They do
 - Integration packages that inject memory into multiple agent frameworks.
 - Memory graph UI as an inspection/debugging surface.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - Public repo does not expose the most essential backend logic.
 - Hosted API dependency means local reproducibility is limited.
@@ -254,7 +256,7 @@ These mostly test wrappers, UI graph behavior, and integration surfaces. They do
 - Semantic forget can be dangerous without confirmation UX.
 - Schema richness can hide uncertain implementation semantics.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow conceptually:
 
@@ -271,7 +273,7 @@ Do not borrow blindly:
 
 Study Supermemory for product/API surface design and memory graph UX more than for open backend implementation.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How are memory entries extracted from documents/conversations?
 - How are contradictions handled?

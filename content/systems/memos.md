@@ -141,7 +141,9 @@ The repository contains unit, integration, and benchmark areas spanning cubes, t
 
 The important evaluation lesson is configuration provenance: results must name the exact text-memory implementation, LLM, embedder, graph/vector backend, reranker, search mode, and enabled auxiliary memories. An aggregate “MemOS” score can conceal materially different pipelines.
 
-## 11. Patterns Worth Stealing
+## 11. For Your Own Build
+
+### Steal
 
 - Package multiple memory forms into a mountable memory cube.
 - Give users explicit cube registration rather than implicit global storage.
@@ -151,7 +153,7 @@ The important evaluation lesson is configuration provenance: results must name t
 - Make search modes and auxiliary preference/skill channels explicit.
 - Keep dump/load at the cube boundary for portability.
 
-## 12. Antipatterns / Risks
+### Avoid
 
 - One umbrella API hides very different consistency and durability guarantees.
 - Factory/configuration breadth makes reproducibility harder.
@@ -162,13 +164,13 @@ The important evaluation lesson is configuration provenance: results must name t
 - Some concrete methods and backends appear incomplete.
 - Complex search modes can become difficult to benchmark fairly.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow the cube abstraction if your application truly needs several physical forms of memory or deployable memory bundles. Activation memory is especially promising for repeated long contexts where prompt reprocessing dominates latency.
 
 For ordinary agent memory, choose and validate one text implementation first. Do not adopt the full operating-system vocabulary until you need mounting, scheduling, sharing, or transformation across memory types. A clean text/evidence store is easier to trust than a broad abstraction with unclear guarantees.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - Which cube operations are transactional across text, preference, activation, and parametric stores?
 - How are KV caches invalidated when model weights, tokenizer, or prompt prefix changes?

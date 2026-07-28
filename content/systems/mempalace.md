@@ -326,7 +326,9 @@ The repo has broad test coverage:
 
 The benchmark docs make strong claims, but also include caveats about metric comparability and overfitting. The most important internal result for design purposes is not the headline score; it is the empirical argument that verbatim storage plus good retrieval is a strong baseline before adding LLM extraction.
 
-## 11. Fit for Agent Memory
+## 11. For Your Own Build
+
+### Steal
 
 Best fit:
 
@@ -346,7 +348,7 @@ Less ideal:
 
 MemPalace is closest to `engram` in local-first spirit, but much broader and more retrieval/benchmark heavy. It is closest to `verel` in caring about correctness, but chooses preservation of evidence over explicit trust-state promotion.
 
-## 12. Patterns and Antipatterns
+### Avoid
 
 Patterns worth borrowing:
 
@@ -375,7 +377,7 @@ Remaining risks:
 - Context assembly may still inject raw text as if it were safe instruction unless callers fence it.
 - Deletion must chase drawers, closets, KG triples, backups, and remote backends.
 
-## 13. Build-vs-Borrow Takeaways
+### Fit
 
 Borrow aggressively:
 
@@ -397,7 +399,7 @@ Do not copy blindly:
 
 For your own memory system, MemPalace is the strongest reminder that extraction is not always the right first step. A serious system should first prove that raw evidence plus hybrid retrieval is insufficient before adding lossy LLM memory synthesis.
 
-## 14. Open Questions
+## 12. Open Questions
 
 - How well does the raw-drawer approach behave at very large personal-memory scale?
 - What is the best UX for resolving contradictory drawers?
