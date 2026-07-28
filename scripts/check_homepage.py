@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 
 CARD = re.compile(r'href="\./systems/([^/"]+)/"')
+ARTICLE = re.compile(r'<article class="system-card[^"]*"[^>]*>.*?</article>', re.S)
+CAPS_ATTR = re.compile(r'data-capabilities="([^"]*)"')
 TRACED = re.compile(r"<strong>(\d+)</strong><span>repositories traced</span>")
 PATTERNS = re.compile(r"<strong>(\d+)</strong><span>reusable design patterns</span>")
 SOURCE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
@@ -46,6 +48,27 @@ def main() -> int:
             f'homepage says {traced.group(1)} repositories traced; '
             f"{len(sources)} distinct source_url values across {len(reports)} reports"
         )
+
+    # The capability filter reads data-capabilities off each card, so a card
+    # whose attribute drifts from its report silently filters wrong.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from generate_matrix import read_capabilities  # type: ignore[attr-defined]
+
+    for card in ARTICLE.findall(homepage):
+        slug_match = CARD.search(card)
+        attr = CAPS_ATTR.search(card)
+        if slug_match is None:
+            continue
+        slug = slug_match.group(1)
+        declared = read_capabilities(root / "content" / "systems" / f"{slug}.md")
+        if declared is None:
+            continue
+        stamped = set(attr.group(1).split()) if attr else set()
+        if stamped != declared:
+            problems.append(
+                f"{slug}: card data-capabilities {sorted(stamped)} "
+                f"does not match report {sorted(declared)}"
+            )
 
     expected_patterns = len(
         [p for p in (root / "content" / "patterns").glob("*.md") if p.stem != "index"]

@@ -12,9 +12,15 @@
 
   const search = document.querySelector("#system-search");
   const cards = [...document.querySelectorAll(".system-card")];
-  const filters = [...document.querySelectorAll(".filter-chip")];
+  const filters = [...document.querySelectorAll(".filter-chip[data-filter]")];
+  const capFilters = [...document.querySelectorAll(".filter-chip[data-capability]")];
   const empty = document.querySelector("#empty-state");
+  const count = document.querySelector("#result-count");
   let activeFilter = "all";
+  // Capabilities combine with AND: "show me the systems that have a tombstone
+  // *and* enforce scope" is the question worth asking, and it is the one a
+  // per-column OR filter cannot answer.
+  const activeCaps = new Set();
 
   const applyFilters = () => {
     const query = (search?.value || "").trim().toLowerCase();
@@ -22,15 +28,21 @@
 
     cards.forEach((card) => {
       const categories = card.dataset.category || "";
+      const caps = (card.dataset.capabilities || "").split(" ").filter(Boolean);
       const haystack = `${card.dataset.search || ""} ${card.textContent || ""}`.toLowerCase();
       const categoryMatch = activeFilter === "all" || categories.split(" ").includes(activeFilter);
       const searchMatch = !query || haystack.includes(query);
-      const show = categoryMatch && searchMatch;
+      const capMatch = [...activeCaps].every((flag) => caps.includes(flag));
+      const show = categoryMatch && searchMatch && capMatch;
       card.hidden = !show;
       if (show) visible += 1;
     });
 
     if (empty) empty.hidden = visible !== 0;
+    if (count) {
+      const filtered = activeCaps.size > 0 || activeFilter !== "all" || query;
+      count.textContent = filtered ? `${visible} of ${cards.length} systems` : "";
+    }
   };
 
   search?.addEventListener("input", applyFilters);
@@ -38,6 +50,17 @@
     filter.addEventListener("click", () => {
       activeFilter = filter.dataset.filter || "all";
       filters.forEach((item) => item.classList.toggle("is-active", item === filter));
+      applyFilters();
+    });
+  });
+  capFilters.forEach((filter) => {
+    filter.addEventListener("click", () => {
+      const flag = filter.dataset.capability;
+      const on = !activeCaps.has(flag);
+      if (on) activeCaps.add(flag);
+      else activeCaps.delete(flag);
+      filter.classList.toggle("is-active", on);
+      filter.setAttribute("aria-pressed", String(on));
       applyFilters();
     });
   });
