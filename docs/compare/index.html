@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-fifty-eight agent memory architectures, their retrieval mechanics, trust
+fifty-nine agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of fifty-eight agent memory architectures, their retrieval mechanics,
+of fifty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of fifty-eight agent memory architectures, their retrieval mechanics,
+of fifty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-fifty-eight agent memory architectures, their retrieval mechanics, trust
+fifty-nine agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Fifty-eight systems do not fall into fifty-eight categories. They
+<p>Fifty-nine systems do not fall into fifty-nine categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -351,7 +351,8 @@ guarantee is structural rather than procedural.</p>
 the failures simpler systems discover in production.</p>
 <h3 id="research-lineage">Research lineage</h3>
 <p><code>generative-agents</code>, <code>voyager</code>,
-<code>hipporag</code>, <code>a-mem</code>, <code>memoryos</code></p>
+<code>hipporag</code>, <code>a-mem</code>, <code>memoryos</code>,
+<code>nooa-memory</code></p>
 <p>Artifacts the practical systems are largely responses to.
 <strong>Generative Agents</strong> established the
 observation/reflection/planning stream and the
@@ -359,9 +360,13 @@ importance-recency-relevance score — whose weights, read at the source,
 are hand-tuned constants with two abandoned settings left in comments.
 <strong>Voyager</strong> established procedural skill memory with an
 execution-verified write gate. <strong>HippoRAG</strong> established
-diffusion-based associative retrieval. <strong>MemoryOS</strong> is the
-tiered short/mid/long architecture in its most legible form, with the
-promotion rule written down as
+diffusion-based associative retrieval. <strong>NOOA Memory</strong>
+implements the cognitive models the others approximate — ACT-R
+base-level activation with spreading activation for retrieval, the
+Ebbinghaus curve for forgetting — and stores the score components of
+every retrieval on the memory that was retrieved.
+<strong>MemoryOS</strong> is the tiered short/mid/long architecture in
+its most legible form, with the promotion rule written down as
 <code>alpha * N_visit + beta * L_interaction + gamma * R_recency</code>
 — and the coefficients left at 1, 1 and 1 with no ablation, so verbosity
 scores like importance.</p>
@@ -369,6 +374,21 @@ scores like importance.</p>
 concern obscures them, and none of these has scope, correction,
 deletion, or a trust model. Voyager and Generative Agents have been
 frozen since 2023; read them for design, not adoption.</p>
+<h3 id="a-category-nothing-else-models-prospective-memory">A category
+nothing else models: prospective memory</h3>
+<p><a href="../systems/nooa-memory/">NOOA Memory</a> carries two memory
+types no other system in this atlas has: <code>intent</code> —
+"prospective: trigger-based reminder (when X…)" — and <code>todo</code>,
+"prospective: durable commitment with an open/done" lifecycle. Every
+other system here remembers what <em>was</em>; these remember what the
+agent has undertaken to do.</p>
+<p>The nearest neighbour is <a
+href="../systems/ai-memory/">ai-memory</a>'s handoff with its
+<code>next_steps</code> list, and that is a record of an interrupted
+task rather than a trigger. Whether prospective memory belongs in a
+memory layer or in a scheduler is a real question — but it is being
+answered by omission everywhere except here, and an agent that cannot
+remember its own commitments will keep rediscovering them.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
 <p>Most agent frameworks ship something called "memory" that is a
@@ -1311,6 +1331,30 @@ errors</td>
 <td>No provenance from claim to evidence; single workspace scope</td>
 </tr>
 <tr>
+<td><code>nooa-memory</code></td>
+<td><code>Memory</code> typed info, skill, episode, intent, todo,
+reflection or scratch, with typed edges</td>
+<td>SQLite with owner/status columns and pluggable vector backends</td>
+<td>ACT-R activation — relevance, base-level recency, importance, plus
+graph spreading over k hops</td>
+<td>Authoring via a memory skill; reflection distils episodes into
+gists</td>
+<td>Retention decay archives below threshold; <code>archived</code>
+flag, record-keyed</td>
+<td><code>owner</code> column, indexed, applied on the retrieval
+path</td>
+<td>Exposed as a memory skill inside the Object-Oriented Agents
+framework; tracing bridge</td>
+<td>Reflection: dedup/merge, edge formation, re-scoring, prune —
+deterministic steps need no LLM</td>
+<td>Separate importance, salience and confidence; per-access score
+components retained</td>
+<td>Every retrieval leaves behind why it ranked where it did, on the
+record itself</td>
+<td>Archival is record-keyed, and the access log is capped, so both
+history and correction are bounded</td>
+</tr>
+<tr>
 <td><code>open-cowork</code></td>
 <td>Core memory and experience memory as separately extracted kinds</td>
 <td>Per-kind stores plus SQLite FTS, with an ingestion queue</td>
@@ -1701,13 +1745,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 58:</em> <a
+<p><em>2 of 59:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 58:</em> <a
+<p><em>5 of 59:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1715,7 +1759,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>6 of 58:</em> <a
+<p><em>6 of 59:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1725,7 +1769,7 @@ href="../systems/memvid/"><code>memvid</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>33 of 58:</em> <a
+<p><em>34 of 59:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1751,6 +1795,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memos/"><code>memos</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
+href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
 href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/openviking/"><code>openviking</code></a>, <a
 href="../systems/openworker/"><code>openworker</code></a>, <a
@@ -1763,7 +1808,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>5 of 58:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>5 of 59:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -1771,7 +1816,7 @@ href="../systems/optmem/"><code>optmem</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>9 of 58:</em> <a
+<p><em>9 of 59:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -1784,7 +1829,7 @@ href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 58:</em> <a
+<p><em>1 of 59:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -4992,6 +5037,27 @@ enough without a domain contract.</li>
 <li>Do not copy when: you want the host to enforce scope or deletion —
 there is nothing here to enforce them with.</li>
 </ul>
+<h3 id="nooa-memory"><code>nooa-memory</code></h3>
+<ul>
+<li>Best idea: every access records the score components that produced
+it — <code>{rel, rec, imp, spread}</code>, the rank, the query and the
+reader — so "why was this retrieved" is a lookup rather than a
+reconstruction.</li>
+<li>Biggest risk: the access log is a capped ring on the record, so the
+formative accesses that explain how a memory became established are the
+first to be lost.</li>
+<li>Most reusable component: keeping rehearsal separate from belief —
+retrieval bumps a <code>strength</code> counter that slows forgetting
+and leaves <code>confidence</code> untouched.</li>
+<li>Maturity impression: 4,200 lines with 23 test modules, ACT-R and
+Ebbinghaus implemented literally rather than gesturally, inside an
+NVIDIA labs framework.</li>
+<li>Study when: you need memory whose ranking is explainable after the
+fact, or you want prospective memory — <code>intent</code> and
+<code>todo</code> are types nothing else here has.</li>
+<li>Do not copy when: you need correction — archival is a record flag,
+and a decayed memory can be re-authored with nothing to consult.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -5166,6 +5232,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></li>
 <li><a href="../systems/openworker/"><code>openworker</code></a></li>
 <li><a href="../systems/qwen-code/"><code>qwen-code</code></a></li>
 <li><a href="../systems/opencode/"><code>opencode</code></a></li>
+<li><a href="../systems/nooa-memory/"><code>nooa-memory</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -5374,6 +5441,10 @@ href="https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce"><code>6a432ad2ebc
 href="https://github.com/anomalyco/opencode">anomalyco/opencode</a> at
 <a
 href="https://github.com/anomalyco/opencode/commit/3cc70160deb0"><code>3cc70160deb0</code></a></li>
+<li><a
+href="https://github.com/NVIDIA-NeMo/labs-OO-Agents">NVIDIA-NeMo/labs-OO-Agents</a>
+at <a
+href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8"><code>f22805b52ea8</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a

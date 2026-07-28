@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="NVIDIA's agent memory implements
+ACT-R activation and the Ebbinghaus retention curve directly, and stores
+the score components of every retrieval on the memory that was
+retrieved.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NOOA
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="NVIDIA's agent memory
+implements ACT-R activation and the Ebbinghaus retention curve directly,
+and stores the score components of every retrieval on the memory that
+was retrieved.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NOOA
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="NVIDIA's agent memory
+implements ACT-R activation and the Ebbinghaus retention curve directly,
+and stores the score components of every retrieval on the memory that
+was retrieved.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NOOA Memory — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Cognitive-model recall</p>
+          <h1>NOOA Memory</h1>
+          <p class="document-deck">NVIDIA's agent memory implements
+ACT-R activation and the Ebbinghaus retention curve directly, and stores
+the score components of every retrieval on the memory that was
+retrieved.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents">
+              <span>Source</span>
+              <strong>NVIDIA-NeMo/labs-OO-Agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8" title="f22805b52ea8">
+              <span>Analyzed revision</span>
+              <code>f22805b52ea8</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>1 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>nooa-memory</code> is a dedicated package inside NVIDIA's
+Apache-2.0 Object-Oriented Agents labs repository — about 4,200 lines
+with a test file for nearly every module. It is the most direct
+implementation of <em>cognitive-psychology models</em> in this atlas,
+and it does one thing nothing else here does.</p>
+<p><strong>Every retrieval records why it ranked where it did, on the
+memory that was retrieved.</strong></p>
+<pre class="python"><code>class AccessRecord(BaseModel):
+    &quot;&quot;&quot;One structured access to a memory — self-contained observability.&quot;&quot;&quot;
+    ts: float
+    channel: str = &quot;recalled&quot;
+    reader_owner: str = &quot;&quot;          # who fetched (cross-owner analysis)
+    trace_ref: str | None = None
+    query: str | None = None        # truncated; None for reinforced/created
+    score: float | None = None
+    rank: int | None = None
+    components: dict | None = None  # {rel, rec, imp, spread} at fetch time</code></pre>
+<p>The atlas lists recall observability — "why they outranked others" —
+as a dimension it does not cover, because almost nothing carries it.
+Here the score <em>decomposition</em> is persisted per access, alongside
+the rank, the truncated query, the reader, and a <code>trace_ref</code>
+that "deep-links to the exact trace moment". Asking "why did the agent
+surface that" is a lookup rather than a reconstruction.</p>
+<p>The scoring being decomposed at all is the second thing. Retrieval is
+ACT-R, stated as equations in the module docstring:</p>
+<pre class="text"><code>rel(m,q) = lambda*cos + (1-lambda)*ctxOverlap        (encoding specificity)
+rec(m)   = sigmoid( ln sum_k (t_now - access_k)^-d )  (ACT-R base-level)
+imp(m)   = importance / 10
+S_base   = a_rel*rel^ + a_rec*rec^ + a_imp*imp^
+Act(n)   = S_base(n) + spread over k hops (decayed per hop)</code></pre>
+<p>That is Anderson's base-level activation with spreading activation
+over a typed graph. <a href="../generative-agents/">Generative
+Agents</a> established the recency-relevance-importance sum with
+hand-tuned constants; <a href="../hipporag/">HippoRAG</a> replaced
+ranking with PageRank diffusion. This is the model both are
+approximations of, implemented as such — a decayed power-law sum over
+<em>every</em> past access rather than a single recency term.</p>
+<p>Forgetting is equally literal, and "first-class, on two timescales":
+online retention as the Ebbinghaus curve <code>R = exp(-Δt / S)</code>
+evaluated lazily on read, where <code>S</code> is a
+<code>strength</code> counter that retrieval bumps; and offline pruning
+inside reflection for memories that have decayed, are old enough, are
+not a protected type, and are not high-importance.</p>
+<p>Reservations. Archival is a boolean on the record, so a decayed
+memory can be re-created by the next authoring pass with nothing to
+consult. The access log is a capped ring, so the observability that
+makes this system distinctive is bounded by design. And this is a labs
+repository — the surrounding project is an agent framework, not a memory
+product.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Seven memory types, and two of them are a category nothing else in
+this atlas has:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Kind</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>info</code></td>
+<td>semantic</td>
+<td>facts, preferences, domain rules</td>
+</tr>
+<tr>
+<td><code>skill</code></td>
+<td>procedural</td>
+<td>reusable verified procedures</td>
+</tr>
+<tr>
+<td><code>episode</code></td>
+<td>episodic</td>
+<td>a specific task run</td>
+</tr>
+<tr>
+<td><strong><code>intent</code></strong></td>
+<td><strong>prospective</strong></td>
+<td>trigger-based reminder — "when X happens…"</td>
+</tr>
+<tr>
+<td><strong><code>todo</code></strong></td>
+<td><strong>prospective</strong></td>
+<td>durable commitment with an open/done lifecycle</td>
+</tr>
+<tr>
+<td><code>reflection</code></td>
+<td>schema / gist</td>
+<td>insight distilled from episodes</td>
+</tr>
+<tr>
+<td><code>scratch</code></td>
+<td>working</td>
+<td>transient, never durably consolidated</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Prospective memory — remembering to do something later — is
+absent from every other system here.</strong> The nearest neighbour is
+<a href="../ai-memory/">ai-memory</a>'s handoff with its
+<code>next_steps</code> list, and that is a record of an interrupted
+task rather than a trigger the agent will act on.</p>
+<p><code>status</code> is deliberately narrow: "TODO lifecycle: todos
+always carry a status; no other type may", enforced in
+<code>model_post_init</code>, which raises if a non-todo carries one. A
+lifecycle field that applies to exactly one type, and refuses to be
+borrowed by the others, is a small piece of schema discipline worth
+noting.</p>
+<p>Edges are typed and split causal from associative:</p>
+<pre class="text"><code>derived_from · created_by   CAUSAL provenance
+supports · contradicts       evidential
+refines                      this updates a prior memory
+causes · precedes            domain causality, temporal order
+related · part_of            associative, compositional</code></pre>
+<p><code>contradicts</code> as an edge between two memories puts this
+with <a href="../memora/">Memora</a> rather than with the systems that
+flag one row.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>packages/nooa-memory/src/nooa_memory/</code> —
+<code>manager.py</code> (933), <code>store.py</code> (487),
+<code>schema.py</code> (372), <code>retrieval.py</code> (369),
+<code>reflection.py</code> (348), <code>vector_backends.py</code> (225),
+<code>generative.py</code> (205), <code>config.py</code> (202),
+<code>observability.py</code> (174), <code>references.py</code> (163),
+<code>embeddings.py</code> (145), <code>monitoring.py</code> (120),
+<code>forgetting.py</code> (98), <code>tracing_bridge.py</code> (90),
+<code>memory_skill/</code>, <code>descriptors.py</code>.</p>
+<p>Storage is SQLite with <code>owner</code> and <code>status</code>
+columns added by migration (<code>ALTER TABLE</code> guarded by a column
+check), indexes on both plus <code>archived</code>, and pluggable vector
+backends.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A Python package with SQLite; the vector backend is pluggable and the
+deterministic half of reflection needs no model at all. Nothing to stand
+up.</p>
+<p>The memory is exposed to the agent as a <em>skill</em>
+(<code>memory_skill/</code>), which fits the surrounding framework's
+conventions rather than introducing a separate protocol.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="observability-that-travels-with-the-record">Observability that
+travels with the record</h3>
+<p>The docstring is explicit about the design choice and its
+consequence:</p>
+<blockquote>
+<p>"Lives ON the record (capped ring in <code>Memory.access_log</code>):
+copy or export one row and its usage story travels with it."</p>
+</blockquote>
+<p>Most systems that log retrieval put it in a separate events table,
+which is better for aggregate queries and worse for the question an
+operator actually asks, which is about <em>one memory</em>. Putting the
+log on the record means exporting a memory exports its history — and it
+means the log must be capped, or records grow without bound.</p>
+<p>That is a real trade and the code takes the side almost nobody takes.
+The atlas's <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> pattern assumes a separate event stream; this is the other
+arrangement, with its own failure mode written into the design (a ring
+buffer forgets the early accesses, which are the ones that explain how a
+memory got established).</p>
+<p><code>reader_owner</code> is stored "for cross-owner analysis" — so
+the log answers not just when a memory was read but <em>by whom</em>,
+which is the question a multi-agent deployment needs and which no other
+access log here records.</p>
+<h3 id="four-scores-that-mean-different-things">Four scores that mean
+different things</h3>
+<pre class="python"><code>importance: float   # 0-10, LLM &quot;poignancy&quot; 1-10
+salience: float     # 0-1, outcome/surprise/novelty tag
+confidence: float   # 0-1, belief certainty
+strength: int       # spaced-repetition counter (+1 on recall)</code></pre>
+<p>Most systems in this atlas have one number and overload it. Here
+<em>how much this matters</em>, <em>how surprising it was</em>, <em>how
+sure we are</em>, and <em>how well-rehearsed it is</em> are separate
+fields, and only the last is moved by retrieval.</p>
+<p>That last point is the one the <a
+href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> pattern asks for: recall bumps <code>strength</code>,
+which slows forgetting, and leaves <code>confidence</code> alone. Being
+read a lot makes a memory <em>stick</em>; it does not make it
+<em>true</em>. Several systems in this atlas collapse exactly that
+distinction.</p>
+<p><code>importance</code> is named "poignancy" in the comment, which is
+<a href="../generative-agents/">Generative Agents</a>' term — the
+lineage is acknowledged rather than quietly reused.</p>
+<h3 id="forgetting-as-a-curve-evaluated-lazily">Forgetting as a curve,
+evaluated lazily</h3>
+<p><code>R = exp(-Δt / S)</code> computed on read rather than by a
+sweep. A memory's retention is therefore always current without any job
+having run, and the offline pass only handles the consequence —
+archiving what has fallen below threshold.</p>
+<p>The guards on that pass are worth listing because they are the ones
+most decay implementations omit: old enough, not a protected type, and
+<strong>not high-importance</strong>. A pure recency-decay sweep will
+eventually delete the most important thing in the store simply because
+nobody asked for it recently.</p>
+<h3 id="reflection-in-a-stated-order">Reflection in a stated order</h3>
+<blockquote>
+<p>"A pure-Python orchestrator running ordered ops that mirror the
+biological sequence (clean → abstract → renormalise → forget). The
+deterministic steps need no LLM and run by default:</p>
+<ol type="1">
+<li>dedup / merge — fold near-identical memories into a canonical
+record</li>
+<li>edge formation — link memories whose embeddings are close</li>
+<li>re-score importance — bump salient/frequently-recalled memories</li>
+<li>prune / forget — archive memories that have decayed"</li>
+</ol>
+</blockquote>
+<p>Two things. The order is argued rather than incidental — clean before
+abstract, abstract before forget — and dedup running first means the
+later steps operate on canonical records rather than on near-duplicates,
+which is the sequencing bug that makes consolidation passes reinforce
+whatever was said most often.</p>
+<p>And <strong>the deterministic steps run by default while the LLM
+steps do not</strong>. A consolidation pass that improves the store
+without a model call is a different operational proposition from one
+that costs tokens proportional to corpus size.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> carries id, type, title, content, owner, size in
+characters, tokens and sentences, the four scores, mood,
+<code>reinforcement_count</code>, timestamps, typed <code>Edge</code>s,
+<code>MemoryRef</code>s to external artifacts, and the capped
+<code>access_log</code>.</p>
+<p>What is absent:</p>
+<ul>
+<li><strong>No value-level tombstone.</strong> <code>archived</code> is
+a boolean on the record. A memory that decayed away can be re-authored,
+and nothing consults its absence.</li>
+<li><strong>No trust state.</strong> <code>confidence</code> is a float;
+<code>status</code> exists but is reserved for todo lifecycle by an
+explicit validator.</li>
+<li><strong>No bi-temporal validity.</strong> <code>created_at</code>
+and <code>last_accessed_at</code> are record times; nothing tracks when
+a fact was true.</li>
+<li><strong>The access log is capped</strong>, so the observability is a
+recent window rather than a history.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid candidate recall, then ACT-R activation, then associative
+spread over the typed graph for <code>k</code> hops with per-hop decay,
+with <code>owner</code> applied as a filter. Components are normalized
+before weighting, and the per-memory breakdown is returned alongside the
+result and written into the access log.</p>
+<p>Because <code>rec</code> is a sum over <em>all</em> retained access
+times rather than a single <code>last_accessed</code>, a memory read
+many times long ago and a memory read once recently are distinguishable
+— which a single-timestamp recency term cannot do, and which is the
+entire point of the base-level equation.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Authoring through the memory skill, with reflection distilling
+episodes into <code>reflection</code>-type gists.
+<code>references.py</code> attaches <code>MemoryRef</code>s — kind, key,
+preview, capture time — pointing at external artifacts rather than
+copying them.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Retrieval is local: embeddings plus arithmetic, no model call, and
+the <code>rec</code> term needs only the retained access timestamps.
+Forgetting is lazy, so it costs nothing until a record is read. The
+deterministic reflection ops run without an LLM; the generative ones are
+opt-in.</p>
+<p>The recurring cost is storage rather than tokens: every access
+appends to a ring on the record, and every memory carries its own edge
+list and reference list. No footprint figures were found.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Exposed as a skill inside the Object-Oriented Agents framework, with
+<code>observability.py</code>, <code>monitoring.py</code> and
+<code>tracing_bridge.py</code> connecting it to the surrounding tracing
+so <code>trace_ref</code> on an access record resolves to a real
+span.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Score components persisted per access</strong>, making "why
+was this retrieved" answerable after the fact.</li>
+<li><strong><code>reader_owner</code> on every access</strong>, so
+cross-owner reads are visible.</li>
+<li><strong>ACT-R base-level recency</strong> over all access times, not
+one timestamp.</li>
+<li><strong>Four distinct scores</strong>, with retrieval moving only
+the rehearsal counter.</li>
+<li><strong>Ebbinghaus retention evaluated lazily</strong>, so no sweep
+is needed to be current.</li>
+<li><strong>Prune guards</strong> for protected types and high
+importance.</li>
+<li><strong>Prospective memory</strong> as first-class types.</li>
+<li><strong>Typed edges</strong> separating causal from associative,
+with <code>contradicts</code> as an edge.</li>
+<li><strong><code>status</code> restricted to one memory type</strong>
+by a validator.</li>
+<li><strong>Deterministic reflection by default</strong>, LLM steps
+opt-in.</li>
+<li><strong>A test file per module</strong>, including owner roles,
+contract, and hygiene.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No value-level tombstone</strong>; archival is a record
+flag.</li>
+<li><strong>No trust state</strong> and no bi-temporal validity.</li>
+<li><strong>A capped access log</strong>, so the distinctive
+observability is bounded and the earliest accesses — the ones explaining
+how a memory became established — are the first to go.</li>
+<li><strong>Many tunable constants</strong> (<code>lambda</code>,
+<code>d</code>, the three <code>a_*</code> weights,
+<code>spread_gamma</code>, hop count, thresholds); no ablation was
+found.</li>
+<li><strong>A labs repository</strong>, so the stability commitment is
+whatever the surrounding framework offers.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twenty-three test modules covering retrieval, forgetting, reflection
+and its interrupt path, owner roles, contract, embeddings and their
+integration, observability, monitoring, references, todo, schema, store
+and a v2 store, routes, skill, authoring, generative, vector backends,
+and background reflect plus hygiene.</p>
+<p>Nothing was run for this review, and no retrieval-quality benchmark
+was found.</p>
+<p>The evaluation this design uniquely enables is the ablation its own
+equations invite: the components are computed, weighted, normalized and
+<em>stored</em>, so the contribution of <code>rel</code>,
+<code>rec</code>, <code>imp</code> and <code>spread</code> to any past
+retrieval is already recorded. Almost every other system in this atlas
+would have to be instrumented first.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Persist the score components with each access.</strong> It
+converts "why did the agent say that" from an investigation into a
+query, and it is a dict on a row.</li>
+<li><strong>Record who read a memory</strong>, not just when. In any
+multi-agent deployment the interesting question is cross-owner reads,
+and no other access log here captures it.</li>
+<li><strong>Keep rehearsal separate from belief.</strong> Retrieval
+should move a strength counter and leave confidence alone — being read
+often makes a memory stick, not true.</li>
+<li><strong>Compute recency over all access times</strong>, not the last
+one, if you want a frequently-consulted old memory to outrank a
+once-read recent one.</li>
+<li><strong>Evaluate decay lazily on read</strong> so retention is
+always current without a sweep.</li>
+<li><strong>Guard the prune</strong> with protected types and an
+importance floor, or recency decay will eventually delete the most
+important thing you have.</li>
+<li><strong>Model prospective memory.</strong> "Remind me when X" and
+"this commitment is still open" are memories, and nothing else in this
+atlas stores them.</li>
+<li><strong>Restrict a lifecycle field to the type that owns
+it</strong>, and validate it — <code>status</code> here raises if a
+non-todo carries one.</li>
+<li><strong>Run the deterministic consolidation steps by
+default</strong> and make the LLM ones opt-in.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An access log on the record as your only history.</strong>
+Portability is a real benefit and the cap is the price; if you need the
+full story, keep a stream too.</li>
+<li><strong>Archival as correction.</strong> A decayed memory that can
+be re-authored has not been forgotten.</li>
+<li><strong>Six coupled constants with no ablation</strong>, in a scorer
+whose components you are already storing — the data to tune it is being
+collected and not used.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right if you want a memory whose behaviour is explainable after the
+fact and grounded in a model you can read the equations for, and if the
+cognitive framing is a feature rather than an affectation — the ACT-R
+and Ebbinghaus implementations here are literal, not gestural. Wrong if
+you need correction semantics: this system knows a great deal about how
+a memory became reachable and nothing about whether it was ever
+right.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How large is the access-log ring, and what happens to the
+explanation of an old, heavily-used memory once its formative accesses
+roll off?</li>
+<li>Have the six scoring constants been ablated? The stored components
+make it cheap.</li>
+<li>Does <code>owner</code> gate the graph spread, or can activation
+flow through a memory the reader cannot see?</li>
+<li>What prevents an archived memory being re-authored identically?</li>
+<li>Is <code>intent</code> acted on by a scheduler, or does it only
+surface when retrieval happens to reach it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>packages/nooa-memory/src/nooa_memory/schema.py</code>
+(<code>MemoryType</code>, <code>EdgeType</code>, <code>Edge</code>,
+<code>MemoryRef</code>, <code>AccessRecord</code>, <code>Memory</code>,
+<code>TODO_STATUSES</code>).</li>
+<li>Retrieval: <code>retrieval.py</code> (ACT-R equations,
+<code>_spread</code>, component breakdown).</li>
+<li>Forgetting: <code>forgetting.py</code>
+(<code>R = exp(-Δt / S)</code>, prune guards).</li>
+<li>Reflection: <code>reflection.py</code> (ordered ops),
+<code>generative.py</code>.</li>
+<li>Store: <code>store.py</code> (owner/status migration, indexes).</li>
+<li>Observability: <code>observability.py</code>,
+<code>monitoring.py</code>, <code>tracing_bridge.py</code>.</li>
+<li>Skill surface: <code>memory_skill/</code>.</li>
+<li>Tests: <code>packages/nooa-memory/tests/memory/</code> (23
+modules).</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

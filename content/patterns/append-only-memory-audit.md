@@ -123,6 +123,18 @@ SQLite history around memory changes. [llm-wiki-memory](../../systems/llm-wiki-m
 uses git history for inspectable mutation groups — and demonstrates why audit
 history is not privacy erasure.
 
+[NOOA Memory](../../systems/nooa-memory/) takes the opposite arrangement to
+everything else here and states why: the access log "lives ON the record (capped
+ring in `Memory.access_log`): copy or export one row and its usage story travels
+with it." Each entry carries the score components that produced the retrieval —
+`{rel, rec, imp, spread}` — plus the rank, the truncated query, the reader's
+owner, and a trace span id. That answers "why was this surfaced" in a way a
+separate event stream makes harder, since the interesting question is almost
+always about one memory. The price is written into the design: a ring buffer
+drops the earliest accesses, which are the ones explaining how a memory became
+established. Both arrangements are defensible; only one of them is usually
+chosen deliberately.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.
