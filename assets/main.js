@@ -1,4 +1,73 @@
 (() => {
+  // ---------------------------------------------------------------- consent
+  // The head sets every Consent Mode signal to denied before gtag configures,
+  // so no analytics cookie exists until someone chooses here. Declining is a
+  // stored choice, not an absence of one, so the banner does not reappear.
+  const CONSENT_KEY = "ama-consent";
+  const readConsent = () => {
+    try {
+      return localStorage.getItem(CONSENT_KEY);
+    } catch {
+      return null; // private mode, or storage disabled — treat as undecided
+    }
+  };
+  const writeConsent = (value) => {
+    try {
+      localStorage.setItem(CONSENT_KEY, value);
+    } catch {
+      /* a reader who blocks storage has already expressed a preference */
+    }
+  };
+
+  const applyConsent = (granted) => {
+    if (typeof window.gtag !== "function") return;
+    window.gtag("consent", "update", {
+      analytics_storage: granted ? "granted" : "denied",
+    });
+  };
+
+  let banner = null;
+
+  const closeBanner = () => {
+    banner?.remove();
+    banner = null;
+  };
+
+  const showBanner = () => {
+    if (banner) return;
+    banner = document.createElement("div");
+    banner.className = "consent-banner";
+    banner.setAttribute("role", "region");
+    banner.setAttribute("aria-label", "Analytics cookie choice");
+    banner.innerHTML = `
+      <p>This site uses Google Analytics to count visits. Nothing is collected
+      until you choose, and declining is remembered.</p>
+      <div class="consent-actions">
+        <button type="button" data-consent="declined">Decline</button>
+        <button type="button" class="is-primary" data-consent="granted">Allow</button>
+      </div>`;
+    banner.addEventListener("click", (event) => {
+      const choice = event.target.closest("[data-consent]")?.dataset.consent;
+      if (!choice) return;
+      writeConsent(choice);
+      applyConsent(choice === "granted");
+      closeBanner();
+    });
+    document.body.appendChild(banner);
+    banner.querySelector("[data-consent='granted']")?.focus();
+  };
+
+  const stored = readConsent();
+  if (stored) applyConsent(stored === "granted");
+  else showBanner();
+
+  document.querySelectorAll("[data-consent-reopen]").forEach((control) => {
+    control.addEventListener("click", () => {
+      closeBanner();
+      showBanner();
+    });
+  });
+
   const menuButton = document.querySelector(".menu-toggle");
   const nav = document.querySelector(".site-nav");
 
