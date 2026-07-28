@@ -27,6 +27,10 @@ when the work happens.
 - [2026-07-28-methodology-hazards.md](2026-07-28-methodology-hazards.md) —
   how this review process fails, including the two that already published wrong
   claims.
+- [2026-07-28-symbolic-prior-art.md](2026-07-28-symbolic-prior-art.md) —
+  belief revision, truth maintenance and BDI belief bases are absent from the
+  atlas's lineage, and whether that is an omission or a real discontinuity is
+  unresolved.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
