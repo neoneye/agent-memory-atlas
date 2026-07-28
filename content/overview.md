@@ -34,8 +34,9 @@ reports say so at that point rather than hedging every sentence.
 else:
 
 1. **Whether correction is possible at all.** Almost everything can overwrite
-   or supersede. Two systems of forty-six can record that a *value* was
-   rejected so extraction cannot bring it back. This is the single widest gap in
+   or supersede. Two systems in this entire atlas can record that a *value* was
+   rejected so extraction cannot bring it back — see the
+   [capability index](#capability-index) for the live count. This is the single widest gap in
    the field, and it is invisible on every benchmark.
 2. **Whether evidence outlives its derivations.** Systems that keep the raw
    event and treat summaries, profiles, and graphs as rebuildable projections

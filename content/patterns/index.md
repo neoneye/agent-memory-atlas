@@ -135,6 +135,50 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - The agent rediscovers how to do things it already solved: store [skills as procedural memory](./skills-as-procedural-memory/) behind a verified-execution gate.
 - Contradictions are detected and nothing clears them: [resolve, don't just detect](./resolve-not-just-detect/).
 
+## The smallest serious stack
+
+Patterns are usually read one at a time, which hides the thing that actually
+breaks systems: **they fail at the intersections.** A rejected-value tombstone is
+decorative if three ungoverned write paths bypass the check. Hybrid retrieval is
+actively dangerous without scope as a key, because better recall means a wider
+blast radius when the boundary is missing. An audit log is unreadable if the
+evidence it references was discarded.
+
+So there is a minimum coherent set. Four patterns close the three failure modes
+this atlas argues are the real ones, and each of the four exists to make one of
+the others enforceable:
+
+| Pattern | Closes | Depends on |
+| --- | --- | --- |
+| [Scope as a first-class key](./scope-as-a-first-class-key/) | Memories crossing user, project, or agent boundaries | nothing — build this first |
+| [Evidence before belief](./evidence-before-belief/) | Extraction errors becoming permanent | scope, so evidence is scoped too |
+| [Governed write gateway](./governed-write-gateway/) | Rules that some write path quietly ignores | scope, to know what a write may touch |
+| [Rejected-value tombstone](./rejected-value-tombstone/) | Corrections undone by the next extraction | the gateway, or the check is bypassable |
+
+Build them in that order. Each one is cheap on its own and expensive to
+retrofit — scope in particular, because it has to reach the schema, the indexes,
+the cache keys, and every background job, and adding it to a store that already
+has data is the hardest migration in this list.
+
+**What you can defer.** [Bi-temporal validity](./bi-temporal-fact-validity/),
+[hybrid retrieval fusion](./hybrid-retrieval-fusion/),
+[decay and reinforcement](./decay-and-reinforcement/) and
+[source-diverse context](./source-diverse-context/) are all improvements to
+memory that already works. None of them prevents a silent failure; they make a
+functioning system better, which is a different and less urgent job.
+
+**What the four do not give you.** They make memory correct and correctable.
+They do not make it *good*: nothing above decides what is worth remembering, and
+that judgement — see [gate the expensive path](./gate-the-expensive-path/) and
+the [trust-state machine](./trust-state-machine/) — is where the quality
+actually comes from. Correct memory full of trivia is still a bad product.
+
+No system in the atlas has all four. Filter the
+[homepage](../#systems) by tombstone and scope to see how quickly the corpus
+thins out.
+
+## Composing them
+
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Every page now states that cost explicitly under **Cost to adopt** — what you must build, what it forces on the rest of the system, what it costs to keep running, and when to skip it. Add the smallest set that closes a demonstrated failure mode.
 
 To check which systems already implement a given mechanism, see the [capability index](../compare/#capability-index) in the comparative report.

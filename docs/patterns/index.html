@@ -42,6 +42,7 @@ governed, and trusted.">
         <a href="../patterns/">Patterns</a>
         <a href="../compare/">Compare</a>
         <a href="../benchmarks/">Benchmarks</a>
+        <a href="../methodology/atlas-rubric/">Rubric</a>
         <a href="../methodology/per-repo-report-format/">Method</a>
         <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
       </nav>
@@ -224,6 +225,73 @@ behind a verified-execution gate.</li>
 <li>Contradictions are detected and nothing clears them: <a
 href="./resolve-not-just-detect/">resolve, don't just detect</a>.</li>
 </ul>
+<h2 id="the-smallest-serious-stack">The smallest serious stack</h2>
+<p>Patterns are usually read one at a time, which hides the thing that
+actually breaks systems: <strong>they fail at the
+intersections.</strong> A rejected-value tombstone is decorative if
+three ungoverned write paths bypass the check. Hybrid retrieval is
+actively dangerous without scope as a key, because better recall means a
+wider blast radius when the boundary is missing. An audit log is
+unreadable if the evidence it references was discarded.</p>
+<p>So there is a minimum coherent set. Four patterns close the three
+failure modes this atlas argues are the real ones, and each of the four
+exists to make one of the others enforceable:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Closes</th>
+<th>Depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./scope-as-a-first-class-key/">Scope as a first-class
+key</a></td>
+<td>Memories crossing user, project, or agent boundaries</td>
+<td>nothing — build this first</td>
+</tr>
+<tr>
+<td><a href="./evidence-before-belief/">Evidence before belief</a></td>
+<td>Extraction errors becoming permanent</td>
+<td>scope, so evidence is scoped too</td>
+</tr>
+<tr>
+<td><a href="./governed-write-gateway/">Governed write gateway</a></td>
+<td>Rules that some write path quietly ignores</td>
+<td>scope, to know what a write may touch</td>
+</tr>
+<tr>
+<td><a href="./rejected-value-tombstone/">Rejected-value
+tombstone</a></td>
+<td>Corrections undone by the next extraction</td>
+<td>the gateway, or the check is bypassable</td>
+</tr>
+</tbody>
+</table></div>
+<p>Build them in that order. Each one is cheap on its own and expensive
+to retrofit — scope in particular, because it has to reach the schema,
+the indexes, the cache keys, and every background job, and adding it to
+a store that already has data is the hardest migration in this list.</p>
+<p><strong>What you can defer.</strong> <a
+href="./bi-temporal-fact-validity/">Bi-temporal validity</a>, <a
+href="./hybrid-retrieval-fusion/">hybrid retrieval fusion</a>, <a
+href="./decay-and-reinforcement/">decay and reinforcement</a> and <a
+href="./source-diverse-context/">source-diverse context</a> are all
+improvements to memory that already works. None of them prevents a
+silent failure; they make a functioning system better, which is a
+different and less urgent job.</p>
+<p><strong>What the four do not give you.</strong> They make memory
+correct and correctable. They do not make it <em>good</em>: nothing
+above decides what is worth remembering, and that judgement — see <a
+href="./gate-the-expensive-path/">gate the expensive path</a> and the <a
+href="./trust-state-machine/">trust-state machine</a> — is where the
+quality actually comes from. Correct memory full of trivia is still a
+bad product.</p>
+<p>No system in the atlas has all four. Filter the <a
+href="../#systems">homepage</a> by tombstone and scope to see how
+quickly the corpus thins out.</p>
+<h2 id="composing-them">Composing them</h2>
 <p>The patterns compose. A serious memory layer normally needs several,
 but each additional mechanism has operational and cognitive cost. Every
 page now states that cost explicitly under <strong>Cost to
