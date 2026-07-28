@@ -36,7 +36,7 @@ else:
 1. **Whether correction is possible at all.** Almost everything can overwrite
    or supersede. Two systems in this entire atlas can record that a *value* was
    rejected so extraction cannot bring it back — see the
-   [capability index](#capability-index) for the live count. This is the single widest gap in
+   [capability index](../capabilities/) for the live count. This is the single widest gap in
    the field, and it is invisible on every benchmark.
 2. **Whether evidence outlives its derivations.** Systems that keep the raw
    event and treat summaries, profiles, and graphs as rebuildable projections
@@ -51,7 +51,8 @@ else:
    three different failure modes.
 
 Everything below is evidence for those five, in more detail than most readers
-need. The [capability index](#capability-index) is the fastest way in.
+need. The [capability index](../capabilities/) — every system against all seven
+marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
@@ -410,6 +411,10 @@ The matrix above says what each system does. This index answers the other
 question — *which systems actually have X* — for the mechanisms that most often
 decide whether a memory layer is usable. It is generated from the same
 frontmatter as the matrix, so it cannot drift from the reports.
+
+For the same data as a filterable table of every system against all seven marks,
+see the [capability index](../capabilities/); this listing is the narrative
+version, kept here because the counts are the argument.
 
 Definitions are strict, and a flag is present only where the mechanism was found
 in code. Near-misses do not count, and the near-misses are frequently the

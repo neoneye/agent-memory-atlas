@@ -134,6 +134,44 @@
     });
   });
 
+  // ------------------------------------------------- capability grid page
+  const grid = document.querySelector(".capability-grid");
+  const gridFilters = [...document.querySelectorAll("#capability-filters [data-capability]")];
+  if (grid && gridFilters.length) {
+    const rows = [...grid.querySelectorAll("tbody tr")];
+    const gridCount = document.querySelector("#capability-count");
+    const active = new Set();
+
+    const applyGrid = () => {
+      let visible = 0;
+      rows.forEach((row) => {
+        const caps = (row.dataset.capabilities || "").split(" ").filter(Boolean);
+        const show = [...active].every((flag) => caps.includes(flag));
+        row.hidden = !show;
+        if (show) visible += 1;
+      });
+      if (gridCount) {
+        gridCount.textContent = active.size
+          ? `${visible} of ${rows.length} systems have ${[...active].length === 1 ? "this" : "all of these"}`
+          : `${rows.length} systems`;
+      }
+    };
+
+    gridFilters.forEach((filter) => {
+      filter.addEventListener("click", () => {
+        const flag = filter.dataset.capability;
+        const on = !active.has(flag);
+        if (on) active.add(flag);
+        else active.delete(flag);
+        filter.classList.toggle("is-active", on);
+        filter.setAttribute("aria-pressed", String(on));
+        applyGrid();
+      });
+    });
+
+    applyGrid();
+  }
+
   const article = document.querySelector("#article");
   const toc = document.querySelector("#table-of-contents");
 

@@ -733,7 +733,7 @@ finding:
   a validity interval rather than erasing,
   [MemPalace](../systems/mempalace/) keeps verbatim drawers authoritative.
 - The **retraction** row should fail almost everywhere, because it needs
-  negative memory, and [the capability index](../compare/#capability-index) shows how
+  negative memory, and [the capability index](../capabilities/) shows how
   few systems have it.
 
 If those predictions are right, the test separates the field on the second

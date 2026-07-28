@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import sys
+from html import escape as html_escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,6 +23,9 @@ BEGIN = "<!-- BEGIN GENERATED MATRIX -->"
 END = "<!-- END GENERATED MATRIX -->"
 CAP_BEGIN = "<!-- BEGIN GENERATED CAPABILITIES -->"
 CAP_END = "<!-- END GENERATED CAPABILITIES -->"
+GRID_BEGIN = "<!-- BEGIN GENERATED CAPABILITY GRID -->"
+GRID_END = "<!-- END GENERATED CAPABILITY GRID -->"
+CAPABILITIES_PAGE = ROOT / "content" / "capabilities.md"
 
 # The free-text matrix answers "what does this system do". It does not answer
 # "which systems actually have X", which is the question a reader arrives with.
@@ -166,6 +170,60 @@ def build_capabilities() -> str:
     return "\n\n".join(blocks)
 
 
+SHORT_LABELS = {
+    "tombstone": "Tombstone",
+    "trust_state": "Trust state",
+    "bitemporal": "Bi-temporal",
+    "scope_enforced": "Scope",
+    "audit_log": "Audit",
+    "human_review": "Review",
+    "negative_eval": "Neg. evals",
+}
+
+
+def read_title(path: Path) -> str:
+    """The display title from a report's frontmatter."""
+    match = re.search(r'^title:\s*"?(.+?)"?\s*$', path.read_text(encoding="utf-8"), re.M)
+    return match.group(1) if match else path.stem
+
+
+def build_capability_grid() -> str:
+    """A filterable systems x capabilities table for the standalone page.
+
+    Emitted as HTML rather than a Markdown table because each row carries the
+    capability set as a data attribute, which is what the filter reads. Pandoc
+    passes raw HTML through untouched.
+    """
+    paths = sorted(SYSTEMS.glob("*.md"))
+    head = "".join(
+        f'<th scope="col" title="{html_escape(definition)}">{SHORT_LABELS[flag]}</th>'
+        for flag, _, definition in CAPABILITIES
+    )
+    rows = []
+    for path in paths:
+        carried = read_capabilities(path) or set()
+        cells = "".join(
+            (
+                '<td class="cap-yes" aria-label="yes">&#10003;</td>'
+                if flag in carried
+                else '<td class="cap-no" aria-label="no">&mdash;</td>'
+            )
+            for flag, _, _ in CAPABILITIES
+        )
+        rows.append(
+            f'<tr data-capabilities="{" ".join(sorted(carried))}" data-name="{html_escape(read_title(path).lower())}">'
+            f'<th scope="row"><a href="../systems/{path.stem}/">{html_escape(read_title(path))}</a></th>'
+            f"{cells}<td class=\"cap-count\">{len(carried)}</td></tr>"
+        )
+    return (
+        '<div class="table-wrap capability-grid-wrap">'
+        '<table class="capability-grid">'
+        f'<thead><tr><th scope="col">System</th>{head}<th scope="col">of 7</th></tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody>'
+        "</table></div>"
+    )
+
+
 def escape_cell(value: str) -> str:
     return value.replace("|", "\\|")
 
@@ -236,8 +294,11 @@ def main() -> int:
     updated = splice(text, BEGIN, END, table, "matrix")
     updated = splice(updated, CAP_BEGIN, CAP_END, capabilities, "capabilities")
 
-    if updated == text:
-        print("Matrix and capability index already up to date.")
+    grid_text = CAPABILITIES_PAGE.read_text(encoding="utf-8")
+    grid_updated = splice(grid_text, GRID_BEGIN, GRID_END, build_capability_grid(), "grid")
+
+    if updated == text and grid_updated == grid_text:
+        print("Matrix, capability index and grid already up to date.")
         return 0
 
     if "--check" in sys.argv:
@@ -248,7 +309,11 @@ def main() -> int:
         return 1
 
     OVERVIEW.write_text(updated, encoding="utf-8")
-    print(f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems) and capability index.")
+    CAPABILITIES_PAGE.write_text(grid_updated, encoding="utf-8")
+    print(
+        f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems), "
+        "capability index and capability grid."
+    )
     return 0
 
 

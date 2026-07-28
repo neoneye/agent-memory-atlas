@@ -7,7 +7,7 @@ page_kind: methodology
 ---
 
 Every system report opens with a row of seven marks. Those marks drive the
-[capability index](../../compare/#capability-index) and the filters on the
+[capability index](../../capabilities/) and the filters on the
 homepage, so they need to mean something precise and the same thing everywhere.
 This page is that definition.
 

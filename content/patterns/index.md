@@ -181,4 +181,4 @@ thins out.
 
 The patterns compose. A serious memory layer normally needs several, but each additional mechanism has operational and cognitive cost. Every page now states that cost explicitly under **Cost to adopt** — what you must build, what it forces on the rest of the system, what it costs to keep running, and when to skip it. Add the smallest set that closes a demonstrated failure mode.
 
-To check which systems already implement a given mechanism, see the [capability index](../compare/#capability-index) in the comparative report.
+To check which systems already implement a given mechanism, see the [capability index](../capabilities/) in the comparative report.
