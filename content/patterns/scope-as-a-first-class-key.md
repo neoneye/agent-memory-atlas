@@ -51,15 +51,15 @@ never `hash(body)` — or two tenants share a vector and a deletion in one leaks
 into the other.
 
 ```mermaid
-flowchart LR
+flowchart TD
     Req["request"] --> Res["resolve current scope"]
     Res --> Auth{"scope authorized?"}
-    Auth -- "no" --> Deny["deny — before ranking, not after"]
+    Auth -- "no" --> Deny["deny — before ranking,<br/>not after"]
     Auth -- "yes" --> Filter["filter by scope key"]
     Filter --> Rank["rank within scope"]
     Rank --> Out["results"]
-    Res --> BG["background jobs inherit the same scope"]
-    BG -. "consolidation that spans scopes has crossed the boundary" .-> Warn["leak"]
+    Res --> BG["background jobs inherit<br/>the same scope"]
+    BG -. "consolidation that spans scopes<br/>has crossed the boundary" .-> Warn["leak"]
 ```
 
 ## Why it works
