@@ -6,6 +6,13 @@ root: ../..
 page_kind: pattern
 ---
 
+> **This is not an established best practice.** Two systems of fifty-eight carry
+> it, one invented it under adversarial pressure, and the other adopted it from
+> the first. There is no consensus behind this page, no library that provides
+> the mechanism, and no shared vocabulary for it. Everything below is an
+> argument, and the provenance is traced under *Seen in the atlas* so you can
+> weigh it as one.
+
 ## Intent
 
 Remember not only what the system currently believes, but also which values were deliberately rejected. Use that negative knowledge during future writes.

@@ -96,7 +96,9 @@ trusted.</p>
 <p>Memory systems repeatedly solve the same hard problems under
 different names. This library extracts those solutions from the
 repositories in the atlas and presents them as implementation patterns
-rather than product features.</p>
+rather than product features. <strong>Not all of them are settled
+practice</strong> — a few rest on one or two implementations, and the
+section below says which.</p>
 <p>Each pattern explains the problem it addresses, its architectural
 shape, why it works, where it fails, examples from the analyzed systems,
 and the tests needed before relying on it.</p>
@@ -247,6 +249,91 @@ behind a verified-execution gate.</li>
 <li>Contradictions are detected and nothing clears them: <a
 href="./resolve-not-just-detect/">resolve, don't just detect</a>.</li>
 </ul>
+<h2 id="how-established-is-any-of-this">How established is any of
+this?</h2>
+<p>A pattern library implies settled practice. For several of these,
+that would be false, and the difference matters when you are deciding
+what to build.</p>
+<p>Where the atlas has an exact count — the seven mechanisms on <a
+href="../methodology/atlas-rubric/">the rubric</a> — the spread is
+wide:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Systems carrying it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope enforced in retrieval</td>
+<td>33 of 58</td>
+</tr>
+<tr>
+<td>Human review surface</td>
+<td>9 of 58</td>
+</tr>
+<tr>
+<td>Bi-temporal validity</td>
+<td>6 of 58</td>
+</tr>
+<tr>
+<td>Explicit trust state</td>
+<td>5 of 58</td>
+</tr>
+<tr>
+<td>Append-only mutation audit</td>
+<td>5 of 58</td>
+</tr>
+<tr>
+<td><strong>Rejected-value tombstone</strong></td>
+<td><strong>2 of 58</strong></td>
+</tr>
+<tr>
+<td><strong>Negative retrieval assertion</strong></td>
+<td><strong>1 of 58</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Read the bottom two rows as what they are. A mechanism present in one
+or two systems out of fifty-eight is <strong>not a best
+practice</strong>. There is no consensus behind it, no library that
+gives it to you, no shared vocabulary, and nobody to ask when your
+implementation has a hole. Adopting it means building it.</p>
+<p>And in the tombstone's case the provenance is narrower still. It was
+not designed by anyone: a red team walked a rejected value back to
+verified in three steps, and Verel's fix became the mechanism. The only
+other system carrying it adopted it after the survey that became this
+atlas flagged its absence — so the field has produced this idea
+<strong>once</strong>, and it spread <strong>once</strong>, by someone
+reading another project's source. The <a
+href="./rejected-value-tombstone/">rejected-value tombstone</a> page
+traces the whole chain.</p>
+<p>So this library is doing two different jobs at once, and it is worth
+knowing which one you are reading:</p>
+<ul>
+<li><strong>Reporting.</strong> <a
+href="./hybrid-retrieval-fusion/">Hybrid retrieval fusion</a>, <a
+href="./scope-as-a-first-class-key/">scope as a first-class key</a>, <a
+href="./evidence-before-belief/">evidence before belief</a>, <a
+href="./zero-llm-capture/">zero-LLM capture</a> and <a
+href="./recoverable-background-work/">recoverable background work</a>
+describe things many systems already do. The pattern refines a practice
+that exists.</li>
+<li><strong>Advocacy.</strong> <a
+href="./rejected-value-tombstone/">Rejected-value tombstone</a>, <a
+href="./resolve-not-just-detect/">resolve, don't just detect</a> and the
+negative-eval discipline inside <a
+href="./source-diverse-context/">source-diverse context</a> rest on one
+or two instances. The atlas is arguing for them, not reporting
+them.</li>
+</ul>
+<p>The advocacy patterns are the ones this atlas thinks matter most,
+which is exactly why they need the disclosure rather than the benefit of
+the doubt. A reader who assumed they were industry practice — as their
+author did until tracing the history — would be adopting them on the
+strength of an argument, not a consensus. That may still be the right
+call. It is a different decision.</p>
 <h2 id="the-smallest-serious-stack">The smallest serious stack</h2>
 <p>Patterns are usually read one at a time, which hides the thing that
 actually breaks systems: <strong>they fail at the

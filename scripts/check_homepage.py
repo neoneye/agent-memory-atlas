@@ -22,6 +22,45 @@ PATTERNS = re.compile(r"<strong>(\d+)</strong><span>reusable design patterns</sp
 SOURCE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 
 
+WORDS = {
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
+    "forty-five": 45, "forty-six": 46, "forty-seven": 47, "forty-eight": 48,
+    "forty-nine": 49, "fifty": 50, "fifty-one": 51, "fifty-two": 52,
+    "fifty-three": 53, "fifty-four": 54, "fifty-five": 55, "fifty-six": 56,
+    "fifty-seven": 57, "fifty-eight": 58, "fifty-nine": 59, "sixty": 60,
+}
+
+
+def stale_number_words(root: Path, live: set[int]) -> list[str]:
+    """Spelled-out counts of atlas nouns that no longer match anything live.
+
+    These have drifted three times, each caught by a reader rather than the
+    build, and twice because a manual sweep was case-sensitive.
+
+    Only number-words immediately qualifying a thing the atlas counts are
+    checked. A first attempt flagged every number-word in prose and was useless:
+    "twenty-plus lifecycle events" and "sixty iterations" are not counts of
+    anything, and a bare \b also matched "fifty" inside "fifty-eight".
+    """
+    nouns = r"(?:memory )?(?:systems|reports|repositories|patterns|design patterns)"
+    pattern = re.compile(
+        rf"\b({'|'.join(WORDS)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I
+    )
+    found: list[str] = []
+    for source in [root / "site" / "index.html"] + sorted((root / "content").rglob("*.md")):
+        text = source.read_text(encoding="utf-8")
+        for match in pattern.finditer(text):
+            value = WORDS[match.group(1).lower()]
+            if value in live:
+                continue
+            line = text[: match.start()].count("\n") + 1
+            found.append(
+                f"{source.relative_to(root)}:{line}: '{match.group(0).strip()}' "
+                f"is a stale count (live: {sorted(live)})"
+            )
+    return found
+
+
 def main() -> int:
     root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
     homepage = (root / "site" / "index.html").read_text(encoding="utf-8")
@@ -72,6 +111,10 @@ def main() -> int:
 
     expected_patterns = len(
         [p for p in (root / "content" / "patterns").glob("*.md") if p.stem != "index"]
+    )
+
+    problems.extend(
+        stale_number_words(root, {len(reports), expected_patterns, len(sources)})
     )
     stated = PATTERNS.search(homepage)
     if stated is None:

@@ -6,7 +6,7 @@ root: ..
 page_kind: pattern-index
 ---
 
-Memory systems repeatedly solve the same hard problems under different names. This library extracts those solutions from the repositories in the atlas and presents them as implementation patterns rather than product features.
+Memory systems repeatedly solve the same hard problems under different names. This library extracts those solutions from the repositories in the atlas and presents them as implementation patterns rather than product features. **Not all of them are settled practice** — a few rest on one or two implementations, and the section below says which.
 
 Each pattern explains the problem it addresses, its architectural shape, why it works, where it fails, examples from the analyzed systems, and the tests needed before relying on it.
 
@@ -134,6 +134,58 @@ Patterns are not a checklist. Start with the failure you need to prevent:
 - Retrieval runs every turn and irrelevant memory bends the answer: [gate the expensive path](./gate-the-expensive-path/).
 - The agent rediscovers how to do things it already solved: store [skills as procedural memory](./skills-as-procedural-memory/) behind a verified-execution gate.
 - Contradictions are detected and nothing clears them: [resolve, don't just detect](./resolve-not-just-detect/).
+
+## How established is any of this?
+
+A pattern library implies settled practice. For several of these, that would be
+false, and the difference matters when you are deciding what to build.
+
+Where the atlas has an exact count — the seven mechanisms on
+[the rubric](../methodology/atlas-rubric/) — the spread is wide:
+
+| Mechanism | Systems carrying it |
+| --- | --- |
+| Scope enforced in retrieval | 33 of 58 |
+| Human review surface | 9 of 58 |
+| Bi-temporal validity | 6 of 58 |
+| Explicit trust state | 5 of 58 |
+| Append-only mutation audit | 5 of 58 |
+| **Rejected-value tombstone** | **2 of 58** |
+| **Negative retrieval assertion** | **1 of 58** |
+
+Read the bottom two rows as what they are. A mechanism present in one or two
+systems out of fifty-eight is **not a best practice**. There is no consensus
+behind it, no library that gives it to you, no shared vocabulary, and nobody to
+ask when your implementation has a hole. Adopting it means building it.
+
+And in the tombstone's case the provenance is narrower still. It was not
+designed by anyone: a red team walked a rejected value back to verified in three
+steps, and Verel's fix became the mechanism. The only other system carrying it
+adopted it after the survey that became this atlas flagged its absence — so the
+field has produced this idea **once**, and it spread **once**, by someone reading
+another project's source. The
+[rejected-value tombstone](./rejected-value-tombstone/) page traces the whole
+chain.
+
+So this library is doing two different jobs at once, and it is worth knowing
+which one you are reading:
+
+- **Reporting.** [Hybrid retrieval fusion](./hybrid-retrieval-fusion/),
+  [scope as a first-class key](./scope-as-a-first-class-key/),
+  [evidence before belief](./evidence-before-belief/),
+  [zero-LLM capture](./zero-llm-capture/) and
+  [recoverable background work](./recoverable-background-work/) describe things
+  many systems already do. The pattern refines a practice that exists.
+- **Advocacy.** [Rejected-value tombstone](./rejected-value-tombstone/),
+  [resolve, don't just detect](./resolve-not-just-detect/) and the negative-eval
+  discipline inside [source-diverse context](./source-diverse-context/) rest on
+  one or two instances. The atlas is arguing for them, not reporting them.
+
+The advocacy patterns are the ones this atlas thinks matter most, which is
+exactly why they need the disclosure rather than the benefit of the doubt. A
+reader who assumed they were industry practice — as their author did until
+tracing the history — would be adopting them on the strength of an argument, not
+a consensus. That may still be the right call. It is a different decision.
 
 ## The smallest serious stack
 
