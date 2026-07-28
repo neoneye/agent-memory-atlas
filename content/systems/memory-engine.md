@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: timescale/memory-engine
 source_url: https://github.com/timescale/memory-engine
-revision: 54e4d7d201b5
-revision_url: https://github.com/timescale/memory-engine/commit/54e4d7d201b5
+revision: 54e4d7d201b5c7ba3aed618ea343d9f4d3f40927
+revision_url: https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927
 analyzed_at: 2026-07-28
 capabilities: "bitemporal, scope_enforced"
 matrix:

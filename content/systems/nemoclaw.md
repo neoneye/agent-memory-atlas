@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: NVIDIA/NemoClaw
 source_url: https://github.com/NVIDIA/NemoClaw
-revision: 02b59e5dc1c9
-revision_url: https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c9
+revision: 02b59e5dc1c995cd47574af5eafb23395959ea03
+revision_url: https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03
 analyzed_at: 2026-07-28
 capabilities: ""
 matrix:

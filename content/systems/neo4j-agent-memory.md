@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: neo4j-labs/agent-memory
 source_url: https://github.com/neo4j-labs/agent-memory
-revision: b017db4449d5
-revision_url: https://github.com/neo4j-labs/agent-memory/commit/b017db4449d5
+revision: b017db4449d592a982944986c2e3c18652bb36ad
+revision_url: https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad
 analyzed_at: 2026-07-28
 capabilities: "bitemporal, scope_enforced"
 matrix:

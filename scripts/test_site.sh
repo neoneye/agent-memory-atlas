@@ -45,9 +45,15 @@ if [[ "$revision_count" != "$expected_systems" ]]; then
   exit 1
 fi
 
-if ! python3 "$project_dir/scripts/generate_matrix.py" --check >/dev/null 2>&1; then
-  echo "Comparative matrix is out of sync with content/systems frontmatter." >&2
-  echo "Run 'npm run build' to regenerate it." >&2
+# --check does more than compare the generated tables: it also validates matrix
+# values, capability flags, and revision pins. Discarding its stderr and printing
+# one hardcoded message reported every one of those as a stale matrix and told
+# the reader to run a build that would not fix it. Show what the script actually
+# said, and only then suggest the regenerate.
+if ! check_output="$(python3 "$project_dir/scripts/generate_matrix.py" --check 2>&1)"; then
+  echo "$check_output" >&2
+  echo "If the above is a drift between the generated tables and the frontmatter," >&2
+  echo "run 'npm run build' to regenerate them." >&2
   exit 1
 fi
 

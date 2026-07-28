@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: NevaMind-AI/memU
 source_url: https://github.com/NevaMind-AI/memU
-revision: 3a5a05ea7fa4
-revision_url: https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4
+revision: 3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e
+revision_url: https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e
 analyzed_at: 2026-07-28
 capabilities: ""
 matrix:

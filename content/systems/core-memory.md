@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: JohnnyFiv3r/Core-Memory
 source_url: https://github.com/JohnnyFiv3r/Core-Memory
-revision: dfe306cda350
-revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda350
+revision: dfe306cda3505389904435132599153596417de2
+revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda3505389904435132599153596417de2
 analyzed_at: 2026-07-28
 capabilities: "trust_state, bitemporal, scope_enforced, human_review"
 matrix:

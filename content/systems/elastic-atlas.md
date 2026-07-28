@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: noamschwartz/atlas-memory-demo
 source_url: https://github.com/noamschwartz/atlas-memory-demo
-revision: 0bd36a7b177a
-revision_url: https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a
+revision: 0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
+revision_url: https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced"
 matrix:

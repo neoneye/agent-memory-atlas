@@ -293,7 +293,7 @@ and the naming collision misleads people evaluating options.
 
 IBM's [BeeAI framework](https://github.com/i-am-bee/beeai-framework) is the
 cleanest example. At commit
-[`21284d7`](https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b)
+[`21284d7f53d5a50e546350f371c69747bd6a176b`](https://github.com/i-am-bee/beeai-framework/commit/21284d7f53d5a50e546350f371c69747bd6a176b)
 its entire memory subsystem is about 1,300 lines across both the Python and
 TypeScript implementations, and consists of four strategies for deciding which
 messages stay in context: `UnconstrainedMemory`, `SlidingMemory`, `TokenMemory`,
@@ -316,7 +316,7 @@ The most sophisticated instance of the category is worth naming, because it
 shows the boundary is about *architecture* rather than about effort. ByteDance
 and Tsinghua's [MemAgent](https://github.com/BytedTsinghua-SIA/MemAgent)
 (Apache 2.0, at
-[`ef4219b23499`](https://github.com/BytedTsinghua-SIA/MemAgent/commit/ef4219b23499))
+[`ef4219b23499a069cb00e5daff4c426d4c600851`](https://github.com/BytedTsinghua-SIA/MemAgent/commit/ef4219b23499a069cb00e5daff4c426d4c600851))
 processes arbitrarily long input in fixed context by walking it chunk by chunk,
 and at each step the model is handed the problem, the previous memory, and the
 next chunk, and asked to emit an **updated memory** that overwrites the old one.
@@ -340,7 +340,7 @@ argument that the boundary is drawn in the right place.
 A second boundary is worth naming because it is where this atlas most often
 declines something interesting: **a durable store an agent operates is not
 memory.** [beads](https://github.com/gastownhall/beads) (MIT, at
-[`dbbf3a9618aa`](https://github.com/gastownhall/beads/commit/dbbf3a9618aa)) is a
+[`dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba`](https://github.com/gastownhall/beads/commit/dbbf3a9618aacaab20427f7bc1f7b35b6edab3ba)) is a
 distributed graph issue tracker for AI agents, Dolt-backed, and it passes the
 literal test — issues persist across sessions, carry identity, and can be
 corrected. So would Jira. The distinction that keeps the atlas from swallowing
@@ -2530,22 +2530,22 @@ Privacy/deletion:
 - [ShenSeanChen/waku-agent](https://github.com/ShenSeanChen/waku-agent) at [`5f638cfb5de957c14f056027833d8a9df5bbe558`](https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558)
 - [agentic-box/memora](https://github.com/agentic-box/memora) at [`bc64ff745a9b2c0e6245e0137654f041fba0c155`](https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155)
 - [baidu-baige/LoongFlow](https://github.com/baidu-baige/LoongFlow) at [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7)
-- [JohnnyFiv3r/Core-Memory](https://github.com/JohnnyFiv3r/Core-Memory) at [`dfe306cda350`](https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda350)
-- [moorcheh-ai/memanto](https://github.com/moorcheh-ai/memanto) at [`d19024193213`](https://github.com/moorcheh-ai/memanto/commit/d19024193213)
-- [timescale/memory-engine](https://github.com/timescale/memory-engine) at [`54e4d7d201b5`](https://github.com/timescale/memory-engine/commit/54e4d7d201b5)
-- [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) at [`5d3c08344cf4`](https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf4)
-- [ActiveMemory/ctx](https://github.com/ActiveMemory/ctx) at [`ce5a832885d6`](https://github.com/ActiveMemory/ctx/commit/ce5a832885d6)
-- [VictorTaelin/OptMem](https://github.com/VictorTaelin/OptMem) at [`e36da5581595`](https://github.com/VictorTaelin/OptMem/commit/e36da5581595) — **no licence file**
-- [memvid/memvid](https://github.com/memvid/memvid) at [`e6bd9f7b9c38`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38)
-- [BAI-LAB/MemoryOS](https://github.com/BAI-LAB/MemoryOS) at [`587ed7755c7a`](https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7a)
-- [NevaMind-AI/memU](https://github.com/NevaMind-AI/memU) at [`3a5a05ea7fa4`](https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4)
-- [andrewyng/openworker](https://github.com/andrewyng/openworker) at [`d3863966c9de`](https://github.com/andrewyng/openworker/commit/d3863966c9de)
-- [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) at [`6a432ad2ebce`](https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce)
-- [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`3cc70160deb0`](https://github.com/anomalyco/opencode/commit/3cc70160deb0)
-- [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`f22805b52ea8`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8)
-- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`b017db4449d5`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d5)
-- [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a)
-- [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c9`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c9)
+- [JohnnyFiv3r/Core-Memory](https://github.com/JohnnyFiv3r/Core-Memory) at [`dfe306cda3505389904435132599153596417de2`](https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda3505389904435132599153596417de2)
+- [moorcheh-ai/memanto](https://github.com/moorcheh-ai/memanto) at [`d1902419321352f0108c499bd8ed4ebd129fe138`](https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138)
+- [timescale/memory-engine](https://github.com/timescale/memory-engine) at [`54e4d7d201b5c7ba3aed618ea343d9f4d3f40927`](https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927)
+- [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) at [`5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3`](https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3)
+- [ActiveMemory/ctx](https://github.com/ActiveMemory/ctx) at [`ce5a832885d66ba3608e02d2db85e5e90a455559`](https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559)
+- [VictorTaelin/OptMem](https://github.com/VictorTaelin/OptMem) at [`e36da55815951d50d103d7242d92cf9a71ceee96`](https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96) — **no licence file**
+- [memvid/memvid](https://github.com/memvid/memvid) at [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813)
+- [BAI-LAB/MemoryOS](https://github.com/BAI-LAB/MemoryOS) at [`587ed7755c7aed179965792830ff1b5ad9a6fa92`](https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92)
+- [NevaMind-AI/memU](https://github.com/NevaMind-AI/memU) at [`3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e`](https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e)
+- [andrewyng/openworker](https://github.com/andrewyng/openworker) at [`d3863966c9de39140e7a28cffdc71ae96614774b`](https://github.com/andrewyng/openworker/commit/d3863966c9de39140e7a28cffdc71ae96614774b)
+- [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) at [`6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe`](https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe)
+- [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`3cc70160deb0eda7f67fbf5b0c0780000f5c342d`](https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d)
+- [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`f22805b52ea8a073dabc018cefe3db1ccf609a29`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29)
+- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`b017db4449d592a982944986c2e3c18652bb36ad`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad)
+- [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d)
+- [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used

@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: moorcheh-ai/memanto
 source_url: https://github.com/moorcheh-ai/memanto
-revision: d19024193213
-revision_url: https://github.com/moorcheh-ai/memanto/commit/d19024193213
+revision: d1902419321352f0108c499bd8ed4ebd129fe138
+revision_url: https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced, human_review"
 matrix:

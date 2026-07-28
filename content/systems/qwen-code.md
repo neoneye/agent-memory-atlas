@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: QwenLM/qwen-code
 source_url: https://github.com/QwenLM/qwen-code
-revision: 6a432ad2ebce
-revision_url: https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce
+revision: 6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe
+revision_url: https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced, human_review"
 matrix:

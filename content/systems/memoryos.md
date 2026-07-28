@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: BAI-LAB/MemoryOS
 source_url: https://github.com/BAI-LAB/MemoryOS
-revision: 587ed7755c7a
-revision_url: https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7a
+revision: 587ed7755c7aed179965792830ff1b5ad9a6fa92
+revision_url: https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92
 analyzed_at: 2026-07-28
 capabilities: ""
 matrix:

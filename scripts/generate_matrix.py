@@ -16,7 +16,8 @@ from html import escape as html_escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SYSTEMS = ROOT / "content" / "systems"
+CONTENT = ROOT / "content"
+SYSTEMS = CONTENT / "systems"
 OVERVIEW = ROOT / "content" / "overview.md"
 
 BEGIN = "<!-- BEGIN GENERATED MATRIX -->"
@@ -124,6 +125,79 @@ def read_capabilities(path: Path) -> set[str] | None:
         if match:
             return {flag.strip() for flag in match.group(1).split(",") if flag.strip()}
     return None
+
+
+_REVISION = re.compile(r"^revision:\s*\"?([^\"\s]+)\"?\s*$", re.M)
+_REVISION_URL = re.compile(r"^revision_url:\s*\"?(\S+?)\"?\s*$", re.M)
+_FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def check_revisions() -> list[str]:
+    """Every pin must be a full 40-character commit id, in both places.
+
+    Abbreviated SHAs read fine and resolve fine, right up until they don't: git's
+    short form is only unique until the repository grows into the collision, and
+    a 12-character pin in a report is a claim about a repository we do not
+    control the future of. Sixteen reports had drifted to short form before this
+    check existed, and the drift was invisible because both forms render and both
+    resolve on GitHub today.
+
+    The URL is checked against the same value because they are written by hand as
+    a pair, so one can be updated without the other.
+    """
+    problems: list[str] = []
+    for path in sorted(SYSTEMS.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        revision = _REVISION.search(text)
+        url = _REVISION_URL.search(text)
+        if revision is None:
+            problems.append(f"{path.stem}: no revision in frontmatter")
+            continue
+        if not _FULL_SHA.match(revision.group(1)):
+            problems.append(
+                f"{path.stem}: revision '{revision.group(1)}' is not a full 40-character "
+                "commit id"
+            )
+        if url is None:
+            problems.append(f"{path.stem}: no revision_url in frontmatter")
+        elif not url.group(1).endswith(revision.group(1)):
+            problems.append(
+                f"{path.stem}: revision_url does not end in the pinned revision "
+                f"({url.group(1)})"
+            )
+    return problems
+
+
+_SHORT_COMMIT_URL = re.compile(
+    r"https://github\.com/[^/\s)]+/[^/\s)]+/commit/([0-9a-f]{6,39})\b"
+)
+_SHORT_COMMIT_SPAN = re.compile(r"\[`([0-9a-f]{6,39})`\]")
+
+
+def check_commit_links() -> list[str]:
+    """Prose commit references must be full ids too, not just the frontmatter pin.
+
+    The provenance list on the overview cites fifty-odd commits, and those were
+    written abbreviated in both the link text and the href. Rendering truncates
+    them for readability, so the short form buys nothing a reader can see and
+    costs the same uniqueness the frontmatter check exists to protect.
+    """
+    problems: list[str] = []
+    for path in sorted(CONTENT.rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        for match in _SHORT_COMMIT_URL.finditer(text):
+            line = text[: match.start()].count("\n") + 1
+            problems.append(
+                f"{path.relative_to(CONTENT)}:{line}: abbreviated commit url "
+                f"'{match.group(1)}' — use the full 40-character id"
+            )
+        for match in _SHORT_COMMIT_SPAN.finditer(text):
+            line = text[: match.start()].count("\n") + 1
+            problems.append(
+                f"{path.relative_to(CONTENT)}:{line}: abbreviated commit link text "
+                f"'{match.group(1)}' — use the full id; the build truncates it for display"
+            )
+    return problems
 
 
 PLACEHOLDER_BODY = "<!-- Replace with code-grounded analysis. -->"
@@ -286,6 +360,12 @@ def main() -> int:
                 "Finish the report or keep the draft outside content/systems/.",
                 file=sys.stderr,
             )
+        return 1
+
+    pins = check_revisions() + check_commit_links()
+    if pins:
+        for problem in pins:
+            print(f"error: {problem}", file=sys.stderr)
         return 1
 
     table = build_table()

@@ -189,7 +189,7 @@ As with Hermes, the host contract is where the interesting governance question l
 
 ### What a downstream integrator has to do
 
-NetEase Youdao's [LobsterAI](https://github.com/netease-youdao/LobsterAI) — an MIT-licensed desktop app wrapping OpenClaw, reviewed at [`2921c1e`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — is a useful natural experiment in what this contract does not provide. It has no memory system of its own; it operates OpenClaw's. To do that it ships:
+NetEase Youdao's [LobsterAI](https://github.com/netease-youdao/LobsterAI) — an MIT-licensed desktop app wrapping OpenClaw, reviewed at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — is a useful natural experiment in what this contract does not provide. It has no memory system of its own; it operates OpenClaw's. To do that it ships:
 
 - `src/main/libs/openclawMemoryFile.ts` (689 lines), which **reimplements OpenClaw's memory file format** — `parseMemoryMd`, `serializeMemoryMd`, `readMemoryEntries`, `addMemoryEntry`, `updateMemoryEntry`, `deleteMemoryEntry` — because building a GUI over the host's memory required a parser the host does not expose.
 - `src/main/libs/openclawMemoryIndexMigration.ts` (409 lines) for index migration.

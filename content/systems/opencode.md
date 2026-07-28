@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: anomalyco/opencode
 source_url: https://github.com/anomalyco/opencode
-revision: 3cc70160deb0
-revision_url: https://github.com/anomalyco/opencode/commit/3cc70160deb0
+revision: 3cc70160deb0eda7f67fbf5b0c0780000f5c342d
+revision_url: https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d
 analyzed_at: 2026-07-28
 capabilities: ""
 matrix:

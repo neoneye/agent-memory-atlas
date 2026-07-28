@@ -26,11 +26,21 @@ render_document() {
   local destination="$2"
   local source_href
   local revision_href
+  local revision_short
   local analyzed_at
 
   source_href="$(sed -n 's/^source_url:[[:space:]]*//p' "$input" | head -n 1)"
   revision_href="$(sed -n 's/^revision_url:[[:space:]]*//p' "$input" | head -n 1)"
   analyzed_at="$(sed -n 's/^analyzed_at:[[:space:]]*//p' "$input" | head -n 1)"
+  # Reports pin a full 40-character commit id, because a short one is only
+  # unique until the repository grows into the collision. Forty characters of
+  # hex in a header pill is noise, so the pill shows the first eight and the
+  # full id stays in the link and the tooltip.
+  revision_short="$(sed -n 's/^revision:[[:space:]]*//p' "$input" | head -n 1)"
+  revision_short="${revision_short//\"/}"
+  if [[ ${#revision_short} -gt 8 ]]; then
+    revision_short="${revision_short:0:8}…"
+  fi
   source_href="${source_href#\"}"
   source_href="${source_href%\"}"
   revision_href="${revision_href#\"}"
@@ -52,6 +62,7 @@ render_document() {
     --template="$template" \
     --variable="source_href:$source_href" \
     --variable="revision_href:$revision_href" \
+    --variable="revision_short:$revision_short" \
     --variable="analyzed_at_text:$analyzed_at" \
     --variable="capability_strip:$capability_strip" \
     --output="$destination"
@@ -82,8 +93,17 @@ done
 
 # Tables are intentionally wide. Wrap them so small screens scroll within the
 # table instead of forcing the entire page wider than the viewport.
+#
+# Commit ids are written out in full in the markdown, because a pin is only
+# unambiguous at forty characters. Forty characters of hex is unreadable on a
+# page, and the provenance list on the overview stacks fifty of them, so the
+# rendered text is cut to eight with the full id kept in the link and a tooltip.
+# Done here rather than by hand in the markdown: the source stays honest, and a
+# report added later cannot reintroduce the noise.
 while IFS= read -r -d '' page; do
   perl -0pi -e 's{(<table\b.*?</table>)}{<div class="table-wrap">$1</div>}gs' "$page"
+  perl -0pi -e 's{<code>([0-9a-f]{40})</code>}
+                 {"<code class=\"commit-id\" title=\"$1\">".substr($1,0,8)."\xe2\x80\xa6</code>"}gex' "$page"
 done < <(find "$output_dir" -name "index.html" -print0)
 
 echo "Built Agent Memory Atlas into $output_dir"

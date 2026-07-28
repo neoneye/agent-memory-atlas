@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
-revision: f22805b52ea8
-revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8
+revision: f22805b52ea8a073dabc018cefe3db1ccf609a29
+revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced"
 matrix:
