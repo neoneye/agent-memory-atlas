@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A host-adapter memory whose
+ranking unit and return unit differ by design, whose local and remote
+backends are required to order identically, and whose schema comments
+cite the ADR that produced them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memU — Agent Memory Atlas">
+    <meta property="og:description" content="A host-adapter memory whose
+ranking unit and return unit differ by design, whose local and remote
+backends are required to order identically, and whose schema comments
+cite the ADR that produced them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memU — Agent Memory Atlas">
+    <meta name="twitter:description" content="A host-adapter memory
+whose ranking unit and return unit differ by design, whose local and
+remote backends are required to order identically, and whose schema
+comments cite the ADR that produced them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memU — Agent Memory Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Documented decisions</p>
+          <h1>memU</h1>
+          <p class="document-deck">A host-adapter memory whose ranking
+unit and return unit differ by design, whose local and remote backends
+are required to order identically, and whose schema comments cite the
+ADR that produced them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NevaMind-AI/memU">
+              <span>Source</span>
+              <strong>NevaMind-AI/memU</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4" title="3a5a05ea7fa4">
+              <span>Analyzed revision</span>
+              <code>3a5a05ea7fa4</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-28</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>0 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memU is an Apache-2.0 Python system of roughly 10,000 lines,
+positioned as a memory layer that plugs into existing coding agents — it
+ships host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes,
+Cola and WorkBuddy, plus a generic one.</p>
+<p>The memory model is deliberately small: a <code>RecallFile</code>
+with a <code>track</code> of <code>"memory"</code> or
+<code>"skill"</code>, sliced into <code>RecallFileSegment</code> rows,
+alongside <code>Resource</code> records. What makes it worth reading is
+not the model but the <strong>discipline around it</strong>, and three
+decisions in particular.</p>
+<p><strong>The ranking unit and the return unit are different,
+deliberately.</strong></p>
+<blockquote>
+<p>"<code>segments</code>: <code>RecallFileSegment</code> slices ranked
+by embedding, <code>file.top_k</code> of them. <code>files</code>: the
+<code>RecallFile</code>s pointed to by those segments — <strong>not a
+ranked search, just a roll-up</strong>. Each file's score is the max
+score of the segments that point to it."</p>
+</blockquote>
+<p>Most systems in this atlas embed and rank the thing they intend to
+return, which forces one unit to be both a good search target and a good
+context payload. Those are different jobs: a paragraph embeds well and
+reads badly out of context; a file reads well and embeds into mush. memU
+ranks the small thing and returns the big one, with max-of-segments as
+the file's score.</p>
+<p><strong>Local and remote backends must order
+identically.</strong></p>
+<blockquote>
+<p>"Both backends order identically, so the two execution paths stay
+byte-for-byte the same."</p>
+</blockquote>
+<p>A memory layer with a local mode and a hosted mode usually means two
+ranking implementations that drift, and users who cannot reproduce a
+result across them. Naming byte-for-byte parity as an invariant makes
+that a testable property rather than an aspiration.</p>
+<p><strong>The schema comments cite the decision records that produced
+them.</strong> <code>RecallFileSegment</code> is "a searchable slice (L2
+item) of a <code>RecallFile</code> <strong>(ADR 0007)</strong>"; the
+paging contract is "<strong>ADR 0014</strong>"; the choice not to force
+a track filter is "<strong>ADR 0006</strong>". <a
+href="../atomic-agent/">Atomic Agent</a> cites numbered invariants from
+its schema into a design document; memU does the same for decisions,
+which means a reader asking "why is it like this" has a document to open
+rather than a maintainer to find.</p>
+<p>Reservations: this is a well-engineered retrieval and sync layer with
+<strong>no epistemic model at all</strong> — no trust state, no
+provenance, no supersession, no tombstone, and no scope beyond
+<code>where</code> filters. It knows how to find and move memories, and
+nothing about whether they are true or whose they are.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes retrievable and stops being retrievable, and that is
+the whole state machine:</p>
+<pre class="text"><code>commit_results ──▶ RecallFile (track: memory | skill)
+                   Resource   (track: workspace)
+                        │ sliced
+                        ▼
+                   RecallFileSegment ×n   ← the embed/search unit
+                        │
+progressive_retrieve ──▶ rank segments by vector, take file.top_k
+                        │ roll up
+                        ▼
+                   files, scored by max(segment score)
+                   + workspace resources ranked separately</code></pre>
+<p>There is no supersession, no rejection and no expiry. Re-slicing a
+file drops and recreates its segments; the file itself is updated in
+place. Nothing records that a memory was wrong, and nothing can express
+that it was.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/memu/</code> — <code>agentic_backend.py</code> (the
+protocol), <code>app/</code> (service, agentic, client pool, settings),
+<code>database/</code> (factory, interfaces, models, repositories, and
+<code>sqlite</code>/<code>postgres</code>/<code>inmemory</code>
+implementations), <code>embedding/</code>, <code>vector.py</code>,
+<code>hosts/</code> (per-agent adapters plus <code>bridging</code>,
+<code>retrieval</code>, <code>scheduling</code>,
+<code>templates</code>), <code>cli.py</code>, <code>cloud.py</code>.</p>
+<p>The protocol is three methods:</p>
+<pre class="python"><code>class AgenticMemoryBackend(Protocol):
+    &quot;&quot;&quot;The three memory capabilities consumed by CLIs and host adapters.&quot;&quot;&quot;
+    async def list_all_recall_files(...) -&gt; dict     # keyset page, opaque cursor
+    async def progressive_retrieve(query, where) -&gt; dict
+    async def commit_results(recall_files, resource, user) -&gt; dict</code></pre>
+<p>with the note that <code>MemoryService</code> "satisfies this
+protocol structurally for local execution" and that "remote
+implementations can provide the same surface without adding transport
+concerns to the local service composition root".</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Runs against SQLite with no other service, or Postgres when you want
+one; an in-memory backend exists for tests. Host adapters install into
+the agent you already use, so adoption is per-agent configuration rather
+than a new runtime. Embeddings need a provider.</p>
+<p>The three-method protocol is the ergonomic centre: a host integration
+has three things to implement or call, which is a much smaller contract
+than most systems here expose.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="rank-the-slice-return-the-file">Rank the slice, return the
+file</h3>
+<p>Splitting the search unit from the return unit is the transferable
+idea. The roll-up rule — a file scores as the <strong>max</strong> of
+its segments, not the sum or the mean — is the right default and worth
+stating: sum rewards long files for having more chances to match, and
+mean punishes a file that contains one excellent paragraph among many
+irrelevant ones. Max asks "does this file contain the best answer",
+which is the question.</p>
+<p>The segments are also explicitly <strong>not ordered</strong>:</p>
+<blockquote>
+<p>"Segments carry no ordinal: how a file is sliced is track-specific
+and not necessarily sequential, so position would not be
+informative."</p>
+</blockquote>
+<p>Declining to store a field because it would be misleading, and
+writing down why, is the kind of decision most schemas leave as an
+accident.</p>
+<h3 id="a-denormalization-with-its-invariant-written-down">A
+denormalization with its invariant written down</h3>
+<p><code>track</code> is stored on the segment as well as the file, and
+the comment explains both the reason and the safety argument:</p>
+<blockquote>
+<p>"denormalized here so retrieval can filter segments by track with a
+plain column predicate instead of a join. It is immutable for a
+segment's lifetime (segments are drop-and-recreated when a file is
+re-sliced), <strong>so it never drifts from the file</strong>."</p>
+</blockquote>
+<p>Denormalized columns rot when nobody records what keeps them
+consistent. Here the invariant — segments are never mutated, only
+replaced — is what makes the copy safe, and it is stated next to the
+copy.</p>
+<h3 id="keyset-pagination-on-domain-identity">Keyset pagination on
+domain identity</h3>
+<p><code>list_all_recall_files</code> pages by
+<code>(track, name, id)</code> with an opaque <code>next_cursor</code>,
+and the docstring explains the choice:</p>
+<blockquote>
+<p>"ordering on the domain identity <code>(track, name)</code> (unique
+within a scope, immutable under commit) is what makes that walk skip-
+and duplicate-free."</p>
+</blockquote>
+<p>Offset pagination over a table that is being written to skips and
+repeats rows. Keyset pagination on a stable, immutable key does not. For
+a memory store being walked by an agent while a background process
+writes to it, that is a correctness property rather than a performance
+one — and it is the sort of thing that is invisible until a sync
+silently misses records.</p>
+<h3 id="retrieval-that-is-explicitly-not-clever">Retrieval that is
+explicitly not clever</h3>
+<blockquote>
+<p>"Single-shot, LLM-free retrieval… <strong>no intention routing,
+sufficiency checks, or summarization</strong>."</p>
+</blockquote>
+<p>Stating what a retrieval path deliberately does <em>not</em> do is
+unusual and useful. It sets an expectation that reads as a design
+position rather than a missing feature, and it means the latency and
+cost of a recall are predictable: one embedding call, two ranked scans,
+no model in the loop.</p>
+<p>The contrast with <a href="../waku-agent/">Waku Agent</a> is
+instructive — Waku puts a small model in front of retrieval to decide
+whether to retrieve at all; memU removes models from the read path
+entirely. Both are defensible; neither is the unexamined default of
+calling an LLM because it is there.</p>
+<h3 id="skills-as-a-track-not-a-subsystem">Skills as a track, not a
+subsystem</h3>
+<p>A <code>RecallFile</code> is on the <code>"memory"</code> track or
+the <code>"skill"</code> track, and <code>list_all_recall_files</code>
+deliberately does not force a track filter (ADR 0006), so skills come
+back alongside memories.</p>
+<p>Compare <a href="../openviking/">OpenViking</a>, which unifies
+memory, resources and skills in one hierarchy, and the <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> pattern. memU's version is the cheapest: one column, one
+shared retrieval path, no second subsystem. What it gives up is the
+verified-execution gate that pattern asks for — a skill here is a file,
+and nothing establishes that it works.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>BaseRecord</code> gives every row <code>id</code>,
+<code>created_at</code>, <code>updated_at</code>.
+<code>RecallFile</code> adds <code>name</code>, <code>track</code>,
+<code>description</code>, <code>content</code>, <code>embedding</code>.
+<code>RecallFileSegment</code> adds <code>recall_file_id</code>,
+<code>track</code>, <code>text</code>, <code>embedding</code>.
+<code>Resource</code> adds <code>url</code>, <code>local_path</code>,
+<code>caption</code>, <code>embedding</code>, <code>track</code>.</p>
+<p>What is absent is the whole rubric: no trust state, no provenance
+beyond timestamps, no supersession or tombstone, no audit, no human
+review surface, no scope key. The <code>where</code> filter is a query
+facility, not a boundary — nothing in the model establishes who a record
+belongs to.</p>
+<p>For a layer that installs into seven different coding agents, the
+absent scope model is the notable one: memories from every host land in
+the same store, and the separation between them is whatever the caller
+passes in <code>where</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One embedding of the query, segments ranked by vector similarity to
+<code>file.top_k</code>, files rolled up by max segment score, workspace
+resources ranked separately to <code>resource.top_k</code>. No lexical
+arm, no rerank, no fusion.</p>
+<p>Vector-only retrieval carries the failure the <a
+href="../../patterns/hybrid-retrieval-fusion/">hybrid retrieval
+fusion</a> pattern describes — exact identifiers and rare tokens are
+exactly what embeddings miss — and for a memory serving coding agents,
+identifiers are a large fraction of what gets asked about.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>commit_results</code> takes recall files, resources and user
+state together and writes them in one call, which keeps a host adapter's
+write path to a single operation. Re-slicing drops and recreates
+segments.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The read path costs one embedding call and two scans — no LLM, so
+recall latency is predictable and does not depend on a provider's queue.
+The write path is a database write; whatever produced the memory content
+ran in the host, so the model cost sits outside this layer.</p>
+<p>There is no background rewrite of the store, so token burn does not
+scale with corpus size — a consequence of having no consolidation, which
+is also why nothing here improves memory over time.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola and
+WorkBuddy, plus <code>generic</code>, with <code>bridging</code>,
+<code>scheduling</code>, <code>templates</code> and
+<code>host_cli.py</code> shared between them. This is among the broadest
+host coverage in the atlas, alongside <a
+href="../ai-memory/">ai-memory</a>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Search unit separated from return unit</strong>, with
+max-of-segments as the roll-up.</li>
+<li><strong>Local and remote ordering parity</strong> stated as an
+invariant.</li>
+<li><strong>Decision records cited from the schema</strong>, so "why is
+it like this" is answerable.</li>
+<li><strong>A denormalization with its safety argument</strong> written
+beside it.</li>
+<li><strong>Keyset pagination on immutable domain identity</strong>, so
+a walk under concurrent writes neither skips nor repeats.</li>
+<li><strong>A three-method protocol</strong>, small enough to implement
+remotely.</li>
+<li><strong>Explicitly LLM-free retrieval</strong>, so recall cost and
+latency are predictable.</li>
+<li><strong>Skills as a track</strong>, not a parallel subsystem.</li>
+<li><strong>Three storage backends</strong> behind one repository
+interface.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No trust state, provenance, supersession, tombstone, or
+audit.</strong></li>
+<li><strong>No scope model</strong>, in a layer that serves seven hosts
+from one store.</li>
+<li><strong>Vector-only retrieval</strong>, in a domain full of exact
+identifiers.</li>
+<li><strong>No consolidation</strong>, so memory does not improve and
+duplicates are not merged.</li>
+<li><strong>Skills are unverified files</strong>, with no execution
+gate.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A <code>tests/</code> tree exists and the in-memory backend is built
+for it. Nothing was run for this review, and no retrieval-quality
+benchmark was found.</p>
+<p>The invariant the design most invites testing is its own: that the
+local and remote paths order identically. That is deterministic, needs
+no judge, and is the kind of property that silently breaks the first
+time one backend gains a tiebreak the other lacks.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Rank the slice, return the file.</strong> Embedding and
+reading want different unit sizes, and forcing one unit to do both jobs
+makes retrieval worse at one of them.</li>
+<li><strong>Score a container by the max of its parts</strong>, not the
+sum or mean — sum rewards length, mean punishes a good paragraph in a
+long document.</li>
+<li><strong>Page on immutable domain identity</strong>, not offsets,
+when something walks the store while it is being written.</li>
+<li><strong>Write the invariant next to the denormalization.</strong> A
+copied column is safe only because of a rule, and that rule should not
+live in someone's memory.</li>
+<li><strong>Say what your retrieval deliberately does not do.</strong>
+"No intention routing, sufficiency checks, or summarization" sets an
+expectation and prevents a feature request from being read as a bug
+report.</li>
+<li><strong>Decline to store a field that would mislead</strong>, and
+record why.</li>
+<li><strong>Cite the decision record from the schema
+comment.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Serving many hosts from one store with no scope
+key.</strong> <code>where</code> filters are a query facility, not a
+boundary, and the difference matters the first time two projects share a
+store.</li>
+<li><strong>Vector-only retrieval for coding agents</strong>, where
+identifiers are a large share of queries.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right when you want one memory layer across several coding agents and
+you want the read path cheap, predictable and model-free — the
+three-method protocol makes that a small integration, and the
+engineering discipline is above the atlas average. Wrong when memory has
+to be trusted, corrected, or separated: there is no epistemic model here
+at all, and adding one later means adding a schema this one deliberately
+does not have. Read it as a retrieval and sync layer that is honest
+about being exactly that.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the local/remote ordering parity tested, or only asserted in a
+docstring?</li>
+<li>What separates two hosts' memories in one store beyond a
+caller-supplied <code>where</code>?</li>
+<li>Does anything merge duplicate recall files, or does the store
+accumulate them?</li>
+<li>What establishes that a skill-track file works, given there is no
+execution gate?</li>
+<li>How are <code>file.top_k</code> and <code>resource.top_k</code>
+chosen?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Protocol: <code>src/memu/agentic_backend.py</code>
+(<code>AgenticMemoryBackend</code>, <code>list_all_recall_files</code>,
+<code>progressive_retrieve</code>, <code>commit_results</code>).</li>
+<li>Retrieval: <code>src/memu/app/agentic.py</code>
+(<code>progressive_retrieve</code>, <code>_recall_segments</code>,
+<code>_collect_files</code>, <code>_recall_resources</code>).</li>
+<li>Model: <code>src/memu/database/models.py</code>
+(<code>BaseRecord</code>, <code>Resource</code>,
+<code>RecallFile</code>, <code>RecallFileSegment</code>).</li>
+<li>Repositories and backends:
+<code>src/memu/database/repositories/</code>, <code>sqlite/</code>,
+<code>postgres/</code>, <code>inmemory/</code>.</li>
+<li>Host adapters: <code>src/memu/hosts/</code>
+(<code>claude_code</code>, <code>codex</code>, <code>cursor</code>,
+<code>openclaw</code>, <code>hermes</code>, <code>cola</code>,
+<code>workbuddy</code>, <code>generic</code>,
+<code>bridging</code>).</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
