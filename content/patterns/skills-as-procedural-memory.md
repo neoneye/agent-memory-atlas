@@ -99,6 +99,15 @@ ScienceClaw, an [OpenClaw](../../systems/openclaw/) derivative, demonstrates the
 
 [Verel](../../systems/verel/) approaches the same territory from the opposite direction: it clusters *failures* into induced candidate rules and requires promotion gates before they become trusted. Read together with Voyager, the two halves of the missing system are visible — Voyager verifies successes and discards failures; Verel mines failures and gates promotion.
 
+[Neo4j Agent Memory](../../systems/neo4j-agent-memory/) supplies the half this
+pattern's gate leaves out. Its reasoning tier records traces through a context
+manager, so on a raised exception the error becomes the trace's outcome — meaning
+**failures are stored by default**, where a verified-execution gate by
+construction stores only successes. An agent that has failed the same approach
+four times has learned nothing if nothing wrote the failures down. Outcomes carry
+an indexable error kind, and a retrieved step arrives with its parent trace's
+outcome attached, so a step from a failed attempt cannot be read as precedent.
+
 ## Tests to require
 
 - Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.

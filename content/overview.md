@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of fifty-nine agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of sixty-one agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -56,7 +56,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Fifty-nine systems do not fall into fifty-nine categories. They cluster around
+Sixty-one systems do not fall into sixty-one categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -82,7 +82,7 @@ calls the right tool, verifies a fact, or uses recall safely.
 ### Hosted and service memory
 
 `honcho`, `supermemory`, `hindsight`, `redis-agent-memory-server`, `openviking`,
-`memanto`, `memory-engine`, `memu`
+`memanto`, `memory-engine`, `memu`, `elastic-atlas`
 
 Multi-user, API-first, with background derivation. **Honcho** models workspaces,
 peers, sessions, and derived representations rather than flat facts.
@@ -201,7 +201,8 @@ multi-tenancy, or rich user modelling.
 
 ### Graph, temporal, and symbolic memory
 
-`graphiti`, `cognee`, `hipporag`, `holographic`, `gini-agent`, `memvid`
+`graphiti`, `cognee`, `hipporag`, `holographic`, `gini-agent`, `memvid`,
+`neo4j-agent-memory`
 
 Structure is the retrieval mechanism. **Graphiti** tracks transaction time and
 real-world validity separately, invalidating facts by closing an interval
@@ -210,7 +211,11 @@ lets Personalized PageRank diffuse relevance instead of planning hops, and
 links similar entities rather than merging them. **Holographic** encodes facts
 as SHA-256-derived phase vectors so entities can be bound and unbound
 algebraically, with no embedding model to version. **Gini** reimplements the
-Hindsight model locally with bi-temporal columns and four RRF-fused channels. **Memvid** gets time travel from its storage format rather than its
+Hindsight model locally with bi-temporal columns and four RRF-fused channels. **Neo4j Agent Memory** adds a third tier beside short and long term —
+reasoning memory, recording traces and tool calls through a context manager, so a
+raised exception becomes the outcome and **failures are stored by default** where
+almost everything else here records only successes. **Memvid** gets time travel
+from its storage format rather than its
 schema: an append-only file of immutable frames, so a memory card keyed
 `entity:slot` can be read as of any past instant and a whole session can be
 replayed.
@@ -374,6 +379,7 @@ session with an identity you could later correct.
 | `core-memory` | Bead (typed record) plus Claim (subject/slot/value) with claim updates | Session JSONL as live authority, rebuildable index projection; Qdrant, Kuzu, Neo4j, SQLite backends | Typed pipeline over archive/graph/projection; lexical, semantic, entity, causal; myelinated edges | Turn capture into beads; claim extraction; connector ingest with per-source grounding | Supersession chains, `retracted`, tombstone_bead, reject; every governance action requires a reason | `scope` on every bead; session/project surfaces with a documented truth hierarchy | Python API, HTTP server, MCP, PydanticAI tools, OpenClaw bridge, CrewAI, Spring AI | Dreamer proposes candidates for human decision; association passes; promotion; compaction | `grounding` gates `confidence_class` C/B/A; `authority`; approval workflow with rejecter and reason | Grounding caps the trust ladder, so a speculative memory cannot be promoted by use | Very large surface; supersession is record-keyed, so re-derivation is not blocked |
 | `cowagent` | Markdown files, chunked into an indexed `chunks` table | SQLite with embeddings and self-healing FTS5 | Vector plus keyword over chunks; `MEMORY.md` injected in full | Summarize into dated daily files, then distil | Recency-wins conflict update; whole-file overwrite | `user_id` and `scope`, defaulting to `shared` | Agent memory tools | Deep Dream after the daily summary, 23:55 cron | Line-addressable chunks with hashes; dream diary | Dated intermediate layer and written distillation rules | Shared-by-default scope; chained lossy summarization |
 | `ctx` | Markdown entry staged, then digested into a themed region of a root document | Files in the project tree; a dream ledger and journal alongside | Progressive disclosure — roots, themes, regions read by any tool that can read files | Staged entries; `dream` proposes, a schema gate validates, apply writes within a guarded scope | Proposal dispositions including promote; region folding; no value-level tombstone | Write scope enforced by path — dreams/ and ideas/, with specs/ only on promote | CLI, MCP, VS Code extension, skills; any tool that can read files | `dream` scan, propose, validate, apply, with a ledger and resume | Provenance required on proposals; invalid proposals rejected rather than admitted | A write-scope guard on consolidation, and a corruption regression corpus from the literature | Correction is region folding; nothing records that a digested claim was wrong |
+| `elastic-atlas` | Document in one of three indices: episodic event, semantic fact, procedural playbook | Elasticsearch — `atlas_memory_episodic`, `atlas_memory_semantic`, `atlas_memory_procedural` | RRF retriever fusing BM25 with a semantic query over auto-embedded fields | Agent writes on every turn; auto-embedding via `semantic_text` inference, no client-side calls | Consolidation dedupes episodic into semantic and updates playbooks; no tombstone | `user_id` per persona, applied on recall | Backend service plus an MCP server for Claude Code, Claude Desktop, Cursor | Consolidation — one model pass distils episodic events into semantic facts and playbooks | Provenance by index and source event; no trust state on a fact | A committed recall eval computing Recall@k and MRR, plus a stress test | A research demo by its own description; consolidation is a single model pass with no gate |
 | `engram` | Observation and prompt records | Local SQLite WAL, FTS5 | FTS5, topic-key lookup, context assembly | MCP `mem_save`, conflict candidate flow, dedupe/update rules | Topic-key updates, duplicate counts, soft delete/sync mutation | Project, scope, session, topic key | MCP tools for coding agents | Sync queue, local conflict workflows | Source/session/project metadata, explicit judgment path | Simple durable local design, inspectable code | Lexical retrieval limits; conflict UX depends on agent behavior |
 | `generative-agents` | `ConceptNode` typed event, thought, or chat with poignancy | Per-persona JSON plus in-memory embedding dict | Normalized recency + relevance + importance, hand-tuned `gw = [0.5, 3, 2]` | Perception, conversation, and reflection all write ungated | None; observations are never deleted or overwritten | One persona directory | Simulation only; tightly coupled to `Persona` | Reflection fired by accumulated poignancy | Reflections cite supporting nodes, but citations are never used | Consolidation triggered by significance rather than a timer | Derived thoughts share one pool with observations; positional not temporal decay |
 | `genericagent` | Text and Markdown across four layers | `global_mem_insight.txt`, `global_mem.txt`, `memory/`, `L4_raw_sessions/` | Agent reads a ≤30-line index and opens files by pointer | Only successful tool-call results may be written (by policy) | Layer migration and patching; "better not to modify at all" | One global tree | Internal to the framework | 12-hour L4 archive cron | Verification is a stated precondition, but no record is kept | "No Execution, No Memory" plus an ROI test for permanent context | Every axiom is prose with no enforcement or audit |
@@ -405,6 +411,7 @@ session with an identity you could later correct.
 | `metaclaw` | `MemoryUnit` with type, status, importance, confidence, access count, reinforcement score | Store with embeddings, per-scope policies | Under a live `MemoryPolicyState`: mode, unit cap, token budget, weights | Conversation writes plus consolidation; no actor gate | `superseded_by` lineage, `expires_at`; no rejected state | `scope_id` throughout store, retriever, policy, metrics | OpenClaw plugin with a written spec and a sidecar manager | Self-upgrade worker: candidate → replay → gate → promote | Source session and turn range; reinforcement kept apart from confidence | Retrieval policy replayed offline and promoted only on non-regression across eight metrics | Optimizes overlap proxies; gate thresholds are themselves defaults |
 | `moltis` | Chunk of a Markdown file | SQLite with vectors; pluggable local, OpenAI, batch, and fallback embeddings | Hybrid keyword plus vector, optional LLM rerank, citation modes | Corpus files plus sanitized session transcripts, one `sync()` chokepoint | Edit or delete the file and reindex | Indexed directory only | In-process library inside the host workspace | File watcher and scheduled memory work | Citations to path and chunk; content-hash addressing | `keyword_only()` makes a no-embeddings mode constructible and inspectable | Transcripts and curated notes rank identically; no trust state |
 | `nanobot` | Markdown durable files plus JSONL summary lines | `SOUL.md`, `USER.md`, `memory/MEMORY.md`, `history.jsonl`, git | None; durable files are always in context | Consolidator appends evidence; Dream is the sole durable writer | Surgical edits under git; no tombstone | One workspace | Internal, with WebUI and cron | Dream on cron, gated on tool-error-free runs | Git history over an explicit durable-file allowlist | Dual cursors, and a cursor that refuses to advance after tool errors | No provenance from claim to evidence; single workspace scope |
+| `neo4j-agent-memory` | Conversation turn, extracted entity, preference, and reasoning trace with tool calls | Neo4j — one graph shared across agents rather than per-agent silos | Graph queries over entities and relationships; embeddings; reasoning steps with parent context | Conversation capture, GLiNER extraction pipeline, traces recorded via a context manager | `supersede_preference`, idempotent, with `valid_from` / `valid_until` bounds | Multi-tenant mode that raises when a user identifier is missing | MCP server, CLI, AWS Strands tools, OpenAI Agents SDK examples | Consolidation; extraction pipeline | Trace outcomes with success, error kind and metrics; no trust state on a fact | A reasoning tier that captures failures automatically, and fail-closed multi-tenancy | No value-level tombstone; supersession covers preferences rather than every memory kind |
 | `nooa-memory` | `Memory` typed info, skill, episode, intent, todo, reflection or scratch, with typed edges | SQLite with owner/status columns and pluggable vector backends | ACT-R activation — relevance, base-level recency, importance, plus graph spreading over k hops | Authoring via a memory skill; reflection distils episodes into gists | Retention decay archives below threshold; `archived` flag, record-keyed | `owner` column, indexed, applied on the retrieval path | Exposed as a memory skill inside the Object-Oriented Agents framework; tracing bridge | Reflection: dedup/merge, edge formation, re-scoring, prune — deterministic steps need no LLM | Separate importance, salience and confidence; per-access score components retained | Every retrieval leaves behind why it ranked where it did, on the record itself | Archival is record-keyed, and the access log is capped, so both history and correction are bounded |
 | `open-cowork` | Core memory and experience memory as separately extracted kinds | Per-kind stores plus SQLite FTS, with an ingestion queue | Retriever then navigator assembles the prompt prefix; tested FTS-absent path | Queue, then per-kind extractors with independently optimized prompts | No visible trust state or tombstone | Workspace field on eval queries; scope model not traced | Memory tools plus an extension entry point | Ingestion queue and prompt optimization | Not traced; no verification modules found | A committed eval harness with `forbiddenHits` — negative retrieval assertions | Harness present, results absent; substring scoring favours extractive memory |
 | `openclaw` | Categorized entry (preference/fact/decision/entity/other) with embedding | LanceDB via `memory-lancedb` extension; swappable embedding adapters | Vector search with mandatory agent-scoped predicate; no lexical arm | Optional auto-capture after envelope sanitization; 500-char truncation | Exact scoped delete; no tombstones, and auto-capture can restore content | `agentId`, composed inseparably into every predicate | Plugin contract via `memory-core`; tools, CLI, doctor checks | Auto-capture cursor with fingerprint drift detection | `createdAt` and category only | Envelope sanitization before capture; scope that cannot be dropped | Vector-only reference backend; sanitization is a denylist tied to envelope formats |
@@ -470,31 +477,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*2 of 59:* [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*2 of 61:* [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*5 of 59:* [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*5 of 61:* [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*6 of 59:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/)
+*7 of 61:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
 
-*34 of 59:* [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`basic-memory`](../systems/basic-memory/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`verel`](../systems/verel/)
+*36 of 61:* [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`basic-memory`](../systems/basic-memory/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*5 of 59:* [`ctx`](../systems/ctx/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`optmem`](../systems/optmem/)
+*5 of 61:* [`ctx`](../systems/ctx/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`optmem`](../systems/optmem/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*9 of 59:* [`core-memory`](../systems/core-memory/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/)
+*9 of 61:* [`core-memory`](../systems/core-memory/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*1 of 59:* [`open-cowork`](../systems/open-cowork/)
+*1 of 61:* [`open-cowork`](../systems/open-cowork/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -2286,6 +2293,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you need memory whose ranking is explainable after the fact, or you want prospective memory — `intent` and `todo` are types nothing else here has.
 - Do not copy when: you need correction — archival is a record flag, and a decayed memory can be re-authored with nothing to consult.
 
+### `neo4j-agent-memory`
+
+- Best idea: reasoning traces recorded via a context manager, so a raised exception becomes the outcome — failure memory proportional to coverage rather than to caller discipline, with an indexable error kind on top.
+- Biggest risk: bi-temporality and supersession cover preferences only, and nothing is keyed on a rejected value.
+- Most reusable component: the trace context manager plus `ReasoningStepWithContext`, which never returns a step without its parent's outcome.
+- Maturity impression: a Neo4j Labs package with MCP, CLI, Strands and OpenAI Agents integrations, a benchmarks tree, and local NER extraction keeping the frequent write path off the token budget.
+- Study when: several agents should share one view of the world, and operational history is the thing worth pooling.
+- Do not copy when: corrections must survive re-extraction.
+
+### `elastic-atlas`
+
+- Best idea: a committed retrieval eval matched on document id rather than judged by a model, so Recall@k and MRR are arithmetic and reproducible — shipped beside a stress test.
+- Biggest risk: a research demo by its own description, with synthetic personas and an ungated single-pass consolidation that writes both facts and playbooks.
+- Most reusable component: the eval and stress-test scripts, which are more transferable than the memory layer.
+- Maturity impression: a demo that measures itself more than most production systems in this atlas do.
+- Study when: you want the clearest small example of the episodic/semantic/procedural split, or an eval design you can actually rerun.
+- Do not copy when: you need correction, trust state, or an audit trail — none is present.
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -2434,6 +2459,8 @@ Privacy/deletion:
 - [`qwen-code`](../systems/qwen-code/)
 - [`opencode`](../systems/opencode/)
 - [`nooa-memory`](../systems/nooa-memory/)
+- [`neo4j-agent-memory`](../systems/neo4j-agent-memory/)
+- [`elastic-atlas`](../systems/elastic-atlas/)
 
 ### Repos Inspected
 
@@ -2495,6 +2522,8 @@ Privacy/deletion:
 - [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) at [`6a432ad2ebce`](https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce)
 - [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`3cc70160deb0`](https://github.com/anomalyco/opencode/commit/3cc70160deb0)
 - [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`f22805b52ea8`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8)
+- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`b017db4449d5`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d5)
+- [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used
@@ -2584,4 +2613,5 @@ No internet sources were used for this report. The analysis is based on the chec
 - OpenWorker's stated finding — that models without when-to-remember guidance "either never call `remember` or save noise" — is quoted from a source comment. Whether it was measured, and by how much guidance moves behaviour, is not established in the repository.
 - `OpenHands/OpenHands` was examined and has no report. At the inspected commit that repository is **Agent Canvas**, an Electron desktop application: four Python files, and the only "memory" references are a `MemoryIcon`, a React `MemoryRouter`, and runtime RAM status. The OpenHands agent platform is a different repository and was not reviewed here.
 - `aindilis/autonomous-ai-agent` and `aindilis/free-life-planner` were examined and have no reports. Both are components of FRDCSA, a long-running symbolic-AI project. The first is AgentSpeak(L) BDI agents over SWI-Prolog with **no licence file**, where the three occurrences of "memory" all refer to RAM and compute allocation. The second is a GPL-3.0 Prolog life-management and planning system — calendaring, fluent calculus, a software ontology — whose only belief-related identifier is `hasBeliefSystems/2` in a list of dynamic predicate declarations. Neither contains a memory subsystem: no capture, retrieval, consolidation, or lifecycle. Both are also **not self-contained**, carrying 50 and 352 distinct absolute paths respectively into a `/var/lib/myfrdcsa/` installation that is not in either repository, so neither can be evaluated as it stands.
+- Oracle's `oracleagentmemory` was suggested for review and has **no public source repository** — a GitHub search returns only third-party demos consuming the SDK. It cannot be reviewed on this atlas's terms, which require inspectable code at a pinned commit, and is recorded here rather than silently omitted.
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.
