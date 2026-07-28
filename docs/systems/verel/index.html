@@ -131,22 +131,6 @@ refer to audit rounds and attack fixes. It is more of a
 research/verification design than a minimal production memory
 service.</p>
 <blockquote>
-<p><strong>Re-reviewed 2026-07-28 at v1.9.0, and the previous review was
-badly out of date.</strong> It was pinned to <code>df80efe8</code> — a
-commit that GitHub still serves but which is <strong>not reachable from
-any branch</strong>, so the atlas was describing a state that is not in
-the project's history. Verel's author raised it; he was right, and the
-freshness tool had it flagged as the top re-analysis priority without
-anyone acting on it.</p>
-<p>The correction is not small. The old report credited three of the
-atlas's seven capabilities. <strong>The current code carries all
-seven</strong> — the first system in the atlas to do so — with
-bi-temporal validity, a hash-chained mutation audit, an operator review
-workflow and a committed negative-eval suite all added since. What
-follows describes v1.9.0; the <a href="#what-changed">diff from the old
-reading</a> is in §11.</p>
-</blockquote>
-<blockquote>
 <p><strong>Provenance of the tombstone.</strong> Verel's git history
 dates <code>rejected_values</code> to 28 June 2026, as the fix for a
 red-team finding — "rejection wasn't durable across
@@ -314,6 +298,48 @@ parent scope as candidates.</li>
 <li><code>verel/tests/test_replicated.py</code></li>
 <li><code>verel/tests/test_hosted_memory.py</code></li>
 </ul>
+<h3 id="a-hash-chained-mutation-audit">A hash-chained mutation
+audit</h3>
+<p><code>memory/audit.py</code> names the gap it closes: "correction
+chains preserve WHAT a record used to say, but not WHO/WHAT changed it."
+<code>MemoryAudit</code> records every mutation as
+<code>{seq, ts, actor, action, record_id, before, after}</code>,
+hash-chained so each entry commits to its predecessor by SHA-256 and
+in-place tampering is detectable.</p>
+<p>Two details make it more than a log. <code>AuditedMemory</code> wraps
+<em>any</em> backend "at the Protocol seam, so no backend needs changes
+and every backend gets the same audit" — the audit is a decorator over
+the interface rather than a feature each of the six backends
+reimplements. And the module bounds its own claim: this "is NOT a signed
+log", unlike the receipt store elsewhere in the project. Tamper-
+<em>evident</em>, not tamper-proof, said out loud.</p>
+<h3 id="review-that-cannot-launder">Review that cannot launder</h3>
+<p><code>memory/review.py</code> adds the third path into VERIFIED — a
+human adjudicating CANDIDATE facts, alongside the attested promotion
+gate and multi-principal corroboration. Its two security positions are
+the interesting part.</p>
+<p>It is "<strong>CLI-only by design</strong> — an agent must never be
+able to approve its own candidate facts", so the MCP surface stays
+read/write of candidates only. And "<strong>approve never
+launders</strong>": <code>approve()</code> refuses a REJECTED record,
+because "the rejected-value ledger exists precisely so a once-rejected
+value can't come back; a human wanting to resurrect one must write it as
+a NEW fact and let the gate see the ledger."</p>
+<p>That second rule is the one most systems carrying both a review
+surface and a tombstone would get wrong. A review workflow is an
+authority; without this, it is an authority that can be pointed at the
+tombstone.</p>
+<h3 id="consolidation-that-can-be-wrong">Consolidation that can be
+wrong</h3>
+<p><code>memory/revise.py</code> is contradiction-driven schema
+revision, on a premise worth quoting: "Consolidation only ever GREW… But
+a generalization can be falsified… <strong>a memory that only grows is a
+memory that lies.</strong> This is the contraction half." A
+counterexample landing in a rule's domain is recorded against the rule
+and contradicts it.</p>
+<p>Every other consolidation pass in this atlas adds. This one can
+retract a generalization when the evidence turns, which is belief
+<em>contraction</em> rather than supersession of a single value.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The data model is explicit and compact:</p>
 <ul>
@@ -383,7 +409,15 @@ Trust</h2>
 <ul>
 <li>Explicit candidate/verified/rejected trust state.</li>
 <li>Confidence separate from retrieval strength.</li>
-<li>Rejected-value anti-laundering.</li>
+<li>Rejected-value anti-laundering, with a review path that cannot
+bypass it.</li>
+<li>A hash-chained mutation audit over every backend, honest about being
+tamper-evident rather than signed.</li>
+<li>Bi-temporal validity with <code>recall_as_of</code> and
+<code>value_as_of</code>.</li>
+<li>Consolidation that can retract a falsified generalization.</li>
+<li>Authenticated principals, because a free-string author is
+forgeable.</li>
 <li>Canonicalization shared by renderer and trust gate.</li>
 <li>Prompt-injection neutralization in recall.</li>
 <li>Held-out promotion gate with attestation.</li>
@@ -419,74 +453,46 @@ Benchmarks</h2>
 </ul>
 <p>I did not run them. The test file coverage is unusually aligned with
 the design claims.</p>
-<p><a id="what-changed"></a></p>
-<h2 id="10b-what-changed-since-the-previous-reading">10b. What Changed
-Since the Previous Reading</h2>
-<p>The earlier review was pinned to an unreachable commit. Re-reading at
-v1.9.0, the four capabilities it recorded as absent are all present, and
-three of them close gaps this atlas names elsewhere.</p>
-<p><strong>Bi-temporal validity.</strong> <code>valid_from</code> /
-<code>valid_to</code> are columns in the backend schemas, with
-<code>recall_as_of</code> and <code>value_as_of</code> on the public
-surface and tolerant reads for pre-migration rows that lack the
-fields.</p>
-<p><strong>A hash-chained mutation audit.</strong>
-<code>memory/audit.py</code> describes itself as closing exactly the gap
-the atlas measured: "correction chains preserve WHAT a record used to
-say, but not WHO/WHAT changed it. <code>MemoryAudit</code> records every
-mutation as
-<code>{seq, ts, actor, action, record_id, before, after}</code>,
-hash-chained (each entry commits to its predecessor via SHA-256) so
-in-place tampering is detectable." <code>AuditedMemory</code> wraps
-<em>any</em> backend "at the Protocol seam, so no backend needs changes
-and every backend gets the same audit" — and the module states its own
-limit, that this "is NOT a signed log". It is stronger than this atlas's
-definition asks for.</p>
-<p><strong>An operator review workflow</strong>,
-<code>memory/review.py</code>, with two security positions worth
-quoting. It is "<strong>CLI-only by design</strong> — an agent must
-never be able to approve its own candidate facts". And "<strong>approve
-never launders</strong>": <code>approve()</code> refuses a REJECTED
-record, "the rejected-value ledger exists precisely so a once-rejected
-value can't come back; a human wanting to resurrect one must write it as
-a NEW fact and let the gate see the ledger." A review surface that
-cannot be used to bypass the tombstone is a detail most systems with
-both would get wrong.</p>
-<p><strong>A committed negative-eval suite.</strong>
-<code>tests/test_memory_negative_eval.py</code> is "a regression suite
-asserting what memory must NOT surface or allow… a REJECTED fact is
-invisible to EVERY recall path, un-resurrectable by re-assertion,
+<h3 id="negative-evals">Negative evals</h3>
+<p><code>tests/test_memory_negative_eval.py</code> is "a regression
+suite asserting what memory must NOT surface or allow… a REJECTED fact
+is invisible to EVERY recall path, un-resurrectable by re-assertion,
 un-launderable". It asserts rejected content is absent from budgeted
 recall's <em>rendered text</em>, invisible to an exact verbatim query at
-k=100, and excluded without a scope filter.</p>
+<code>k=100</code>, and excluded even without a scope filter.</p>
 <p>The fixture is "paris office" — the same example as the round-7
 red-team finding that produced the tombstone. <strong>The attack became
 a permanent regression test</strong>, which is the strongest form the <a
 href="../../patterns/rejected-value-tombstone/">rejected-value
-tombstone</a> pattern's tests-to-require could take.</p>
-<p>Also new since the previous reading: <code>memory/revise.py</code>,
-"contradiction-driven schema revision — consolidation that can be WRONG,
-and recovers", on the premise that "a memory that only grows is a memory
-that lies"; and <code>memory/principal.py</code>, authenticating authors
-because a free-string author "is forgeable — and
-<code>AuthorTrust</code>, the very thing meant to stop one bad actor
-poisoning the swarm, can itself be forged".</p>
-<p><code>revise.py</code> is the belief-<em>contraction</em> half that
-the atlas's <a
-href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-symbolic-prior-art.md">symbolic
-prior-art note</a> argues the field has not reached. It is reached
-here.</p>
+tombstone</a> pattern's tests-to-require can take, and one of two
+instances of negative retrieval assertions in this atlas.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
-<li>Separate truth confidence from retrieval strength.</li>
-<li>Candidate/verified/rejected trust state.</li>
-<li>Correction chains instead of silent overwrites.</li>
-<li>Rejected-value tombstones to prevent laundering.</li>
-<li>Recall fenced as untrusted data.</li>
-<li>Token-budgeted recall that reports dropped memories.</li>
-<li>Scope lattice with graduate-up as candidate, not verified.</li>
-<li>Held-out promotion gates for learned rules.</li>
+<li><p><strong>Make review incapable of laundering.</strong> If a human
+can approve, they can approve something the tombstone already rejected —
+unless approval refuses rejected records and forces a new fact through
+the gate.</p></li>
+<li><p><strong>Wrap the audit around the interface, not inside each
+backend.</strong> One decorator at the Protocol seam gives six backends
+the same guarantee.</p></li>
+<li><p><strong>Say what your audit is not.</strong> "Tamper-evident, not
+signed" is more useful than an unqualified claim.</p></li>
+<li><p><strong>Let consolidation contract.</strong> A pass that only
+generalizes will eventually generalize something false and never take it
+back.</p></li>
+<li><p><strong>Turn the attack into the regression test.</strong> The
+red-team finding that forced the mechanism is the best fixture you will
+ever have for it.</p></li>
+<li><p>Separate truth confidence from retrieval strength.</p></li>
+<li><p>Candidate/verified/rejected trust state.</p></li>
+<li><p>Correction chains instead of silent overwrites.</p></li>
+<li><p>Rejected-value tombstones to prevent laundering.</p></li>
+<li><p>Recall fenced as untrusted data.</p></li>
+<li><p>Token-budgeted recall that reports dropped memories.</p></li>
+<li><p>Scope lattice with graduate-up as candidate, not
+verified.</p></li>
+<li><p>Held-out promotion gates for learned rules.</p></li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
