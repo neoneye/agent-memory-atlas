@@ -82,12 +82,11 @@ mechanism and protects rejected states from ordinary pruning.
 are rejected or superseded, and model writes check them before asserting.
 
 **The two are not independent inventions, and the count should be read
-accordingly.** RainBox's git history dates its tombstone to 29 June 2026, in a
-sequence that begins with the comparative survey that later became this atlas:
-the survey's RainBox report stated plainly that "it does not implement
-Verel-style rejected-value tombstones", its recommendations listed "keep rejected
-tombstones", and the schema landed sixty-one minutes after the survey was
-committed. So the field has produced this mechanism **once**, in Verel, and
+accordingly.** RainBox's git history dates its tombstone to 29 June 2026, the
+same day as the comparative survey that later became this atlas — a survey whose
+RainBox report stated plainly that "it does not implement Verel-style
+rejected-value tombstones", and whose recommendations listed "keep rejected
+tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
 That makes the negative result stronger rather than weaker. Two of fifty-eight

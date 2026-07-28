@@ -36,7 +36,7 @@ The core memory design is explicit and mature:
 - Every belief write goes through a single governed atomic path (`record_belief`) protected by a Postgres advisory lock.
 - A five-actor trust model structurally separates human writes (go active) from model writes (go candidate).
 - Rejected values are tombstoned in `MemoryRejectedValue`, preventing silent re-entry of bad beliefs via model writes.
-  **Disclosure:** this mechanism was adopted, not invented here. It entered RainBox on 29 June 2026, sixty-one minutes after the comparative survey that became this atlas was committed — a survey whose own RainBox report said the system lacked "Verel-style rejected-value tombstones". The idea is [Verel](../verel/)'s.
+  **Disclosure:** this mechanism was adopted, not invented here. It entered RainBox on 29 June 2026, the same day as the comparative survey that became this atlas — a survey whose own RainBox report said the system lacked "Verel-style rejected-value tombstones". The idea is [Verel](../verel/)'s.
 - Write-time conflict detection is lattice-aware across the scope hierarchy (room → agent → global), with auto-supersession for unambiguous human updates and candidate-for-review for everything else.
 - Governed correction (`correct_belief`) is atomic: old claim superseded and tombstoned, replacement derived from new text, all in one transaction.
 - Recalled memory is wrapped in a `<recalled_memory …>` fence at the prompt-assembly boundary, fail-closed, with angle-bracket neutralization.
