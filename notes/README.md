@@ -19,6 +19,14 @@ when the work happens.
 - [2026-07-28-editorial-backlog.md](2026-07-28-editorial-backlog.md) —
   prose de-duplication, the measured/claimed axis, and re-analysis priority from
   the first freshness run.
+- [2026-07-28-refusal-as-a-lens.md](2026-07-28-refusal-as-a-lens.md) —
+  systems converge on architecture and diverge on what they refuse to do; ten
+  grounded cases and what to do with the observation.
+- [2026-07-28-research-questions.md](2026-07-28-research-questions.md) —
+  six questions the committed corpus can answer with no new reviews.
+- [2026-07-28-methodology-hazards.md](2026-07-28-methodology-hazards.md) —
+  how this review process fails, including the two that already published wrong
+  claims.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
