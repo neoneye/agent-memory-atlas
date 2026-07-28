@@ -36,7 +36,7 @@ extractable — `background` is already a matrix column, `tombstone` a capabilit
 flag. If the correlation is *positive* instead, the atlas's framing is wrong in
 an interesting way and should say so.
 
-## 3. Are the two tombstone systems independent? — **ANSWERED: no**
+## 3. Where did the tombstone come from? — **ANSWERED**
 
 Resolved 2026-07-28 from RainBox's git history. They are not independent.
 
@@ -61,9 +61,38 @@ of it as convergent discovery. Recorded on the
 [pattern page](../content/patterns/rejected-value-tombstone.md) and disclosed in
 the [RainBox report](../content/systems/rainbox.md).
 
-**Method note worth keeping:** this took four `git log -S` queries against a
-repository that was already on disk. Provenance questions about the corpus are
-usually this cheap and almost never asked.
+### And where Verel got it
+
+Traced the same day, from a full clone of `amitpatole/verel`. It was not designed
+either — it was forced by adversarial testing, in one evening on 28 June 2026:
+
+| Round | Finding | Result |
+| --- | --- | --- |
+| 7 | "rejection wasn't durable across supersede-then-restate: reject *paris* → supersede with *london* (rebuilds CANDIDATE, erasing the verdict) → restate *paris* + attest → VERIFIED" | `rejected_values` introduced; the gate refuses any value ever rejected for that key |
+| 8 | TTL pruning deleted the tombstone, "reopened the supersede-then-restate launder after ~90 idle days" | `REJECTED` made prune-exempt |
+| 9 | NFKC divergence — the gate compared `fact.text.strip().lower()` | NFKC-canonical rejection |
+| 12 | key collisions, unbounded ledger | injective `make_key`, bounded ledger |
+
+The repository shows at least twelve numbered red-team rounds overall, most run
+with multiple adversaries and described as empirical.
+
+**Two consequences for the atlas.** First, rounds 8 and 9 are empirical
+confirmation of two tradeoffs the pattern page had listed as reasoning — a
+tombstone that expires is not a tombstone, and normalization is where the real
+work is. Both were found by attacking the mechanism, not by thinking about it.
+Second, the full chain is now: an adversary forced the mechanism into Verel; the
+survey that became this atlas found it there and flagged its absence in RainBox;
+RainBox adopted it the same day. **Nobody in this corpus arrived at negative
+memory by designing for it.**
+
+That suggests a hypothesis worth more than the co-occurrence questions above:
+the mechanisms this atlas finds missing may be missing because they are only
+discoverable by attack, and almost nobody red-teams a memory layer.
+
+**Method note worth keeping:** the RainBox half took four `git log -S` queries
+against a repository already on disk; the Verel half took a full clone and four
+more. Provenance questions about this corpus are usually this cheap and almost
+never asked.
 
 ## 4. Does capability count track anything?
 

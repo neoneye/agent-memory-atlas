@@ -38,6 +38,15 @@ It also has correction chains, rejected-value tombstones, volatile/TTL/pinned li
 
 The code is unusually explicit about adversarial cases. Many comments refer to audit rounds and attack fixes. It is more of a research/verification design than a minimal production memory service.
 
+> **Provenance of the tombstone.** Verel's git history dates `rejected_values`
+> to 28 June 2026, as the fix for a red-team finding — "rejection wasn't durable
+> across supersede-then-restate" — and shows it hardened across three further
+> rounds that each defeated the previous fix: TTL pruning erased it, NFKC
+> look-alikes evaded its key, and the ledger needed bounding. The atlas's most
+> quoted negative result rests on a mechanism that adversarial testing forced
+> into existence in a single evening. See the
+> [rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern.
+
 ## 2. Mental Model
 
 Primary memory unit:

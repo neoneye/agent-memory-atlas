@@ -81,7 +81,34 @@ mechanism and protects rejected states from ordinary pruning.
 [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims
 are rejected or superseded, and model writes check them before asserting.
 
-**The two are not independent inventions, and the count should be read
+**Where it came from: an adversary, not a designer.** Verel's git history dates
+the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
+commit that introduces it describes the attack it closes:
+
+> "rejection wasn't durable across supersede-then-restate: reject *paris* →
+> supersede with *london* (rebuilds CANDIDATE, erasing the verdict) → restate
+> *paris* + attest → VERIFIED. `write()` now carries a durable `rejected_values`
+> set forward across supersessions, and the gate refuses to promote any value
+> that was ever rejected for that key."
+
+Nobody set out to build negative memory. A red team walked a rejected value back
+to verified in three steps, and the tombstone is what the fix turned into.
+
+The next three rounds are the more useful part, because each one defeated the
+previous fix — and they map onto the tradeoffs listed above:
+
+| Round | What got past the tombstone | The fix |
+| --- | --- | --- |
+| 8 | TTL pruning deleted the tombstone, "reopened the supersede-then-restate launder after ~90 idle days" | `REJECTED` made prune-exempt, like `VERIFIED` |
+| 9 | NFKC divergence — the gate compared `fact.text.strip().lower()`, so unicode look-alikes slipped through | NFKC-canonical rejection |
+| 12 | key collisions and an unbounded ledger | injective `make_key`, bounded rejection ledger |
+
+Round 9 is empirical confirmation of the first tradeoff on this page.
+Normalization really is where the work is, and it was found by attacking the
+mechanism rather than by reasoning about it. Round 8 is the same for the fourth:
+a tombstone that expires is not a tombstone.
+
+**The two systems are not independent inventions, and the count should be read
 accordingly.** RainBox's git history dates its tombstone to 29 June 2026, the
 same day as the comparative survey that later became this atlas — a survey whose
 RainBox report stated plainly that "it does not implement Verel-style
@@ -141,6 +168,14 @@ nothing blocks. Rich relation modelling is not a substitute for negative memory.
 
 ## Tests to require
 
+- **Run the laundering sequence**: reject a value, supersede the claim with a
+  different value, then restate the original and corroborate it. Verel's round-7
+  finding is that this walks a rejected value back to verified in three steps,
+  and it is the concrete attack this pattern exists to stop.
+- Age the store past every TTL and prune you have, then run the laundering
+  sequence again. Verel's round 8 was exactly this, at ninety idle days.
+- Attack the key normalization with unicode look-alikes and case and whitespace
+  variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.

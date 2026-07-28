@@ -165,14 +165,67 @@ as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
 superseded, and model writes check them before asserting.</p>
-<p><strong>The two are not independent inventions, and the count should
-be read accordingly.</strong> RainBox's git history dates its tombstone
-to 29 June 2026, the same day as the comparative survey that later
-became this atlas — a survey whose RainBox report stated plainly that
-"it does not implement Verel-style rejected-value tombstones", and whose
-recommendations listed "keep rejected tombstones". So the field has
-produced this mechanism <strong>once</strong>, in Verel, and copied it
-once — into the system belonging to the person who ran the survey.</p>
+<p><strong>Where it came from: an adversary, not a designer.</strong>
+Verel's git history dates the mechanism to 28 June 2026, inside a
+numbered red-team sequence, and the commit that introduces it describes
+the attack it closes:</p>
+<blockquote>
+<p>"rejection wasn't durable across supersede-then-restate: reject
+<em>paris</em> → supersede with <em>london</em> (rebuilds CANDIDATE,
+erasing the verdict) → restate <em>paris</em> + attest → VERIFIED.
+<code>write()</code> now carries a durable <code>rejected_values</code>
+set forward across supersessions, and the gate refuses to promote any
+value that was ever rejected for that key."</p>
+</blockquote>
+<p>Nobody set out to build negative memory. A red team walked a rejected
+value back to verified in three steps, and the tombstone is what the fix
+turned into.</p>
+<p>The next three rounds are the more useful part, because each one
+defeated the previous fix — and they map onto the tradeoffs listed
+above:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Round</th>
+<th>What got past the tombstone</th>
+<th>The fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8</td>
+<td>TTL pruning deleted the tombstone, "reopened the
+supersede-then-restate launder after ~90 idle days"</td>
+<td><code>REJECTED</code> made prune-exempt, like
+<code>VERIFIED</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>NFKC divergence — the gate compared
+<code>fact.text.strip().lower()</code>, so unicode look-alikes slipped
+through</td>
+<td>NFKC-canonical rejection</td>
+</tr>
+<tr>
+<td>12</td>
+<td>key collisions and an unbounded ledger</td>
+<td>injective <code>make_key</code>, bounded rejection ledger</td>
+</tr>
+</tbody>
+</table></div>
+<p>Round 9 is empirical confirmation of the first tradeoff on this page.
+Normalization really is where the work is, and it was found by attacking
+the mechanism rather than by reasoning about it. Round 8 is the same for
+the fourth: a tombstone that expires is not a tombstone.</p>
+<p><strong>The two systems are not independent inventions, and the count
+should be read accordingly.</strong> RainBox's git history dates its
+tombstone to 29 June 2026, the same day as the comparative survey that
+later became this atlas — a survey whose RainBox report stated plainly
+that "it does not implement Verel-style rejected-value tombstones", and
+whose recommendations listed "keep rejected tombstones". So the field
+has produced this mechanism <strong>once</strong>, in Verel, and copied
+it once — into the system belonging to the person who ran the
+survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
 fifty-eight would suggest a hard idea that a few teams reach
 independently. One of fifty-eight, plus one adoption by a reader who
@@ -235,6 +288,17 @@ new row that nothing blocks. Rich relation modelling is not a substitute
 for negative memory.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
+<li><strong>Run the laundering sequence</strong>: reject a value,
+supersede the claim with a different value, then restate the original
+and corroborate it. Verel's round-7 finding is that this walks a
+rejected value back to verified in three steps, and it is the concrete
+attack this pattern exists to stop.</li>
+<li>Age the store past every TTL and prune you have, then run the
+laundering sequence again. Verel's round 8 was exactly this, at ninety
+idle days.</li>
+<li>Attack the key normalization with unicode look-alikes and case and
+whitespace variants. Verel's round 9 was an NFKC bypass of
+<code>strip().lower()</code>.</li>
 <li>Reject a value, rerun extraction, and prove it stays inactive.</li>
 <li>Correct A to B, then try to reintroduce A through a different
 source.</li>
