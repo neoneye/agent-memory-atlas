@@ -103,6 +103,16 @@ previous fix — and they map onto the tradeoffs listed above:
 | 9 | NFKC divergence — the gate compared `fact.text.strip().lower()`, so unicode look-alikes slipped through | NFKC-canonical rejection |
 | 12 | key collisions and an unbounded ledger | injective `make_key`, bounded rejection ledger |
 
+One detail about how it reached this atlas is worth keeping, because it is the
+clearest argument for reading code rather than documentation. When the survey
+that became this atlas read Verel, the mechanism was about half a day old and
+**the README did not mention it once** — that file advertised "trust +
+provenance, consolidation, and a held-out, attested promotion gate". The survey
+found the tombstone in the source, along with `make_key()`, and
+`canonical_text()` "shared by recall rendering and rejection comparison" — the
+normalization seam round 9 had hardened hours earlier. A README-based survey
+would have missed the atlas's most-quoted finding entirely.
+
 Round 9 is empirical confirmation of the first tradeoff on this page.
 Normalization really is where the work is, and it was found by attacking the
 mechanism rather than by reasoning about it. Round 8 is the same for the fourth:
