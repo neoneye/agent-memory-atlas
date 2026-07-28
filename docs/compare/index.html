@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-one agent memory architectures, their retrieval mechanics, trust
+sixty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-one agent memory architectures, their retrieval mechanics,
+of sixty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-one agent memory architectures, their retrieval mechanics,
+of sixty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-sixty-one agent memory architectures, their retrieval mechanics, trust
+sixty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-one systems do not fall into sixty-one categories. They cluster
+<p>Sixty-two systems do not fall into sixty-two categories. They cluster
 around eight architectural commitments, and most systems belong to more
 than one — a coding-agent memory can also be verification-first, and a
 host runtime's plugin can also be a hosted service. The families below
@@ -233,10 +233,11 @@ coupling memory to the framework, prompt assembly, and tool loop.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
 pluggable memory</h3>
 <p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
-<code>pi</code>, <code>mateclaw</code>, <code>opencode</code> Plugins
-mounted on them: <code>holographic</code>, <code>magic-context</code>,
-<code>metaclaw</code>, <code>byterover</code>,
-<code>tencentdb-agent-memory</code>, plus hosted providers</p>
+<code>pi</code>, <code>mateclaw</code>, <code>opencode</code>,
+<code>nemoclaw</code> Plugins mounted on them: <code>holographic</code>,
+<code>magic-context</code>, <code>metaclaw</code>,
+<code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
+providers</p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
@@ -250,7 +251,12 @@ transform and a compaction hook — marks both experimental, and offers no
 memory contract, so the plugin this atlas reviews from the other side
 reads its SQLite session tables directly. A host that offers seams
 without a contract does not avoid the design work; it relocates it into
-every plugin, in incompatible forms.</p>
+every plugin, in incompatible forms. <strong>NemoClaw</strong> sits a
+layer lower again: it sandboxes Hermes and OpenClaw and declares, per
+agent, which state directories exist and how each is snapshotted,
+restored and destroyed. Credentials are sanitized field by field on
+backup; memory is a directory, copied whole — so the most careful
+deletion above is undone by an ordinary restore below.</p>
 <p>Tradeoff: users choose a backend that fits their privacy and scale
 needs, but trust state, scope, and above all deletion must cross the
 host/provider boundary. <strong>MateClaw</strong> is the partial
@@ -1361,6 +1367,28 @@ errors</td>
 <td>No provenance from claim to evidence; single workspace scope</td>
 </tr>
 <tr>
+<td><code>nemoclaw</code></td>
+<td>None of its own — a declared state directory belonging to a wrapped
+agent</td>
+<td>Durable volume per agent; snapshots taken by
+<code>nemoclaw backup-all</code></td>
+<td>None; the wrapped agent retrieves from its own store</td>
+<td>None; NemoClaw governs the container, not the contents</td>
+<td><code>destroy</code> wipes declared state dirs; restore reinstates
+snapshotted ones verbatim</td>
+<td>Per-agent state directories under one config dir, with locks and
+permission repair</td>
+<td>Sandboxes Hermes, OpenClaw and LangChain Deep Agents in
+OpenShell</td>
+<td>State-dir guard, config locks, permission repair, audit</td>
+<td>Credential sanitization on backup; audit surface; nothing
+epistemic</td>
+<td>The only explicit, inspectable backup-and-destroy contract over
+agent memory in the atlas</td>
+<td>Memory is snapshotted and restored verbatim, so a restore can
+reinstate deleted memories</td>
+</tr>
+<tr>
 <td><code>neo4j-agent-memory</code></td>
 <td>Conversation turn, extracted entity, preference, and reasoning trace
 with tool calls</td>
@@ -1797,13 +1825,13 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 61:</em> <a
+<p><em>2 of 62:</em> <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 61:</em> <a
+<p><em>5 of 62:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
@@ -1811,7 +1839,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>7 of 61:</em> <a
+<p><em>7 of 62:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1822,7 +1850,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>36 of 61:</em> <a
+<p><em>36 of 62:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1863,7 +1891,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>5 of 61:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>5 of 62:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -1871,7 +1899,7 @@ href="../systems/optmem/"><code>optmem</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>9 of 61:</em> <a
+<p><em>9 of 62:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -1884,7 +1912,7 @@ href="../systems/rainbox/"><code>rainbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>1 of 61:</em> <a
+<p><em>1 of 62:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -5153,6 +5181,25 @@ rerun.</li>
 <li>Do not copy when: you need correction, trust state, or an audit
 trail — none is present.</li>
 </ul>
+<h3 id="nemoclaw"><code>nemoclaw</code></h3>
+<ul>
+<li>Best idea: a per-agent state contract that says which directories
+are snapshotted, which are wiped, which are regenerated and which the
+user owns — written down rather than left to whoever wrote the backup
+script.</li>
+<li>Biggest risk: memory is snapshotted and restored verbatim, so a
+restore reinstates deleted memories and nothing above is told.</li>
+<li>Most reusable component: excluding state that is cheaper to
+regenerate than to restore, with the failure it prevents named — an
+argument that may apply to derived memory too.</li>
+<li>Maturity impression: infrastructure with guards that validate their
+own helpers, and issue numbers cited in the comments for the two
+decisions that would otherwise look arbitrary.</li>
+<li>Study when: you operate agents rather than build memory for them,
+and want to know what memory looks like from underneath.</li>
+<li>Do not copy when: you want a memory system — it has none, and its
+product page correctly credits memory to the agents it wraps.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -5332,6 +5379,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></li>
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a></li>
 <li><a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
+<li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -5552,6 +5600,9 @@ href="https://github.com/neo4j-labs/agent-memory/commit/b017db4449d5"><code>b017
 href="https://github.com/noamschwartz/atlas-memory-demo">noamschwartz/atlas-memory-demo</a>
 at <a
 href="https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a"><code>0bd36a7b177a</code></a></li>
+<li><a href="https://github.com/NVIDIA/NemoClaw">NVIDIA/NemoClaw</a> at
+<a
+href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c9"><code>02b59e5dc1c9</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a

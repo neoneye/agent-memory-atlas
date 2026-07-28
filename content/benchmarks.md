@@ -486,6 +486,16 @@ flowchart LR
     Bak -. "restore" .-> Raw
 ```
 
+[NemoClaw](../systems/nemoclaw/) makes the backup arm of this concrete rather
+than hypothetical. It sandboxes Hermes and OpenClaw and declares each agent's
+durable state per directory, sanitizing credentials on backup **by field** and
+excluding machine-local auth state from snapshots entirely because a restored
+copy would be corrupt. Memory gets neither treatment: it is an ordinary state
+directory, snapshotted whole and restored whole. At that layer a memory is a
+file, so the contract cannot express *do not restore this one* — which means an
+ordinary restore silently undoes the most carefully reasoned deletion the layer
+above ever made.
+
 The deletion succeeded and the value is still reachable through five other
 paths. Worse, the backup path closes the loop: a restore can put the deleted row
 back, and nothing marks it as previously deleted. This is why a deletion API is
