@@ -43,15 +43,36 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     anything, and a bare \b also matched "fifty" inside "fifty-eight".
     """
     nouns = r"(?:memory )?(?:systems|reports|repositories|patterns|design patterns)"
-    pattern = re.compile(
-        rf"\b({'|'.join(WORDS)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I
-    )
+    patterns = [
+        # "fifty-eight systems" — the number qualifies the noun.
+        re.compile(rf"\b({'|'.join(WORDS)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I),
+        # "two systems of fifty-eight" — the number is the DENOMINATOR, and sits
+        # after the noun. The first version of this check only looked forward, so
+        # it read straight past three of these and an outside reviewer quoted the
+        # stale figure back at the atlas.
+        re.compile(rf"\bof\s+({'|'.join(WORDS)})\b(?!-)", re.I),
+    ]
+    # "1 of 58" in digits. Bounded to denominators of forty or more because the
+    # only atlas count that large is the system total, which keeps this away from
+    # ordinary prose like "two of five backends".
+    digits = re.compile(r"\b\d+\s+of\s+(\d{2,3})\b")
+
     found: list[str] = []
     for source in [root / "site" / "index.html"] + sorted((root / "content").rglob("*.md")):
         text = source.read_text(encoding="utf-8")
-        for match in pattern.finditer(text):
-            value = WORDS[match.group(1).lower()]
-            if value in live:
+        for pattern in patterns:
+            for match in pattern.finditer(text):
+                value = WORDS[match.group(1).lower()]
+                if value in live:
+                    continue
+                line = text[: match.start()].count("\n") + 1
+                found.append(
+                    f"{source.relative_to(root)}:{line}: '{match.group(0).strip()}' "
+                    f"is a stale count (live: {sorted(live)})"
+                )
+        for match in digits.finditer(text):
+            value = int(match.group(1))
+            if value < 40 or value in live:
                 continue
             line = text[: match.start()].count("\n") + 1
             found.append(

@@ -27,6 +27,9 @@ CAP_END = "<!-- END GENERATED CAPABILITIES -->"
 GRID_BEGIN = "<!-- BEGIN GENERATED CAPABILITY GRID -->"
 GRID_END = "<!-- END GENERATED CAPABILITY GRID -->"
 CAPABILITIES_PAGE = ROOT / "content" / "capabilities.md"
+PATTERNS_PAGE = ROOT / "content" / "patterns" / "index.md"
+SPREAD_BEGIN = "<!-- BEGIN GENERATED SPREAD -->"
+SPREAD_END = "<!-- END GENERATED SPREAD -->"
 
 # The free-text matrix answers "what does this system do". It does not answer
 # "which systems actually have X", which is the question a reader arrives with.
@@ -261,6 +264,31 @@ def read_title(path: Path) -> str:
     return match.group(1) if match else path.stem
 
 
+def build_spread() -> str:
+    """The "how established is any of this" table on the patterns index.
+
+    Hand-maintained until an outside reviewer quoted "1 of 58" back at the atlas
+    from a page that had drifted two systems and four capability counts behind
+    the frontmatter. Every row here is now derived, and the denominator with it,
+    because a stale denominator makes every rare mechanism look rarer than it is.
+    """
+    paths = sorted(SYSTEMS.glob("*.md"))
+    total = len(paths)
+    counts = {flag: 0 for flag, _, _ in CAPABILITIES}
+    for path in paths:
+        for flag in read_capabilities(path) or set():
+            counts[flag] += 1
+    ranked = sorted(CAPABILITIES, key=lambda c: -counts[c[0]])
+    rows = ["| Mechanism | Systems carrying it |", "| --- | --- |"]
+    for flag, label, _ in ranked:
+        n = counts[flag]
+        # The rare ones are the argument of the section, so they carry the weight.
+        cell = f"**{n} of {total}**" if n <= 2 else f"{n} of {total}"
+        name = f"**{label}**" if n <= 2 else label
+        rows.append(f"| {name} | {cell} |")
+    return "\n".join(rows)
+
+
 def build_capability_grid() -> str:
     """A filterable systems x capabilities table for the standalone page.
 
@@ -378,8 +406,11 @@ def main() -> int:
     grid_text = CAPABILITIES_PAGE.read_text(encoding="utf-8")
     grid_updated = splice(grid_text, GRID_BEGIN, GRID_END, build_capability_grid(), "grid")
 
-    if updated == text and grid_updated == grid_text:
-        print("Matrix, capability index and grid already up to date.")
+    spread_text = PATTERNS_PAGE.read_text(encoding="utf-8")
+    spread_updated = splice(spread_text, SPREAD_BEGIN, SPREAD_END, build_spread(), "spread")
+
+    if updated == text and grid_updated == grid_text and spread_updated == spread_text:
+        print("Matrix, capability index, grid and pattern spread already up to date.")
         return 0
 
     if "--check" in sys.argv:
@@ -391,9 +422,10 @@ def main() -> int:
 
     OVERVIEW.write_text(updated, encoding="utf-8")
     CAPABILITIES_PAGE.write_text(grid_updated, encoding="utf-8")
+    PATTERNS_PAGE.write_text(spread_updated, encoding="utf-8")
     print(
         f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems), "
-        "capability index and capability grid."
+        "capability index, capability grid and pattern spread."
     )
     return 0
 

@@ -265,6 +265,8 @@ what to build.</p>
 <p>Where the atlas has an exact count — the seven mechanisms on <a
 href="../methodology/atlas-rubric/">the rubric</a> — the spread is
 wide:</p>
+<!-- BEGIN GENERATED SPREAD -->
+
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -275,39 +277,41 @@ wide:</p>
 <tbody>
 <tr>
 <td>Scope enforced in retrieval</td>
-<td>33 of 58</td>
+<td>36 of 62</td>
 </tr>
 <tr>
 <td>Human review surface</td>
-<td>9 of 58</td>
+<td>10 of 62</td>
 </tr>
 <tr>
 <td>Bi-temporal validity</td>
-<td>6 of 58</td>
-</tr>
-<tr>
-<td>Explicit trust state</td>
-<td>5 of 58</td>
+<td>8 of 62</td>
 </tr>
 <tr>
 <td>Append-only mutation audit</td>
-<td>5 of 58</td>
+<td>6 of 62</td>
+</tr>
+<tr>
+<td>Explicit trust state</td>
+<td>5 of 62</td>
 </tr>
 <tr>
 <td><strong>Rejected-value tombstone</strong></td>
-<td><strong>2 of 58</strong></td>
+<td><strong>2 of 62</strong></td>
 </tr>
 <tr>
 <td><strong>Negative retrieval assertion</strong></td>
-<td><strong>1 of 58</strong></td>
+<td><strong>2 of 62</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p>Read the bottom two rows as what they are. A mechanism present in one
-or two systems out of fifty-eight is <strong>not a best
-practice</strong>. There is no consensus behind it, no library that
-gives it to you, no shared vocabulary, and nobody to ask when your
-implementation has a hole. Adopting it means building it.</p>
+<!-- END GENERATED SPREAD -->
+
+<p>Read the bottom two rows as what they are. A mechanism present in two
+systems out of sixty-two is <strong>not a best practice</strong>. There
+is no consensus behind it, no library that gives it to you, no shared
+vocabulary, and nobody to ask when your implementation has a hole.
+Adopting it means building it.</p>
 <p>And in the tombstone's case the provenance is narrower still. It was
 not designed by anyone: a red team walked a rejected value back to
 verified in three steps, and Verel's fix became the mechanism. The only
@@ -409,6 +413,35 @@ bad product.</p>
 <p>No system in the atlas has all four. Filter the <a
 href="../#systems">homepage</a> by tombstone and scope to see how
 quickly the corpus thins out.</p>
+<p><strong>What the four cost together.</strong> Each page states its
+own cost; the compounded bill is what nobody budgets for, and it lands
+in two places.</p>
+<p><em>Storage stops being bounded by what you believe.</em> Evidence
+before belief keeps the raw event that a claim was derived from,
+tombstones keep values you decided were wrong, and bi-temporal validity
+keeps superseded versions rather than overwriting them. Together they
+mean the store grows with everything that ever happened, not with what
+is currently true, and the three retention policies are separate
+decisions — evidence, tombstones and history age out on different
+clocks, or should. A system that adopts all three and writes one TTL has
+not thought about it.</p>
+<p><em>Writes get a hop they did not have.</em> A governed write gateway
+means no path writes directly: every one proposes, gets checked against
+scope, dedupe, conflict and the tombstone ledger, and only then commits.
+That is a latency cost on the write path and a complexity cost on every
+integration, which is exactly why it has to be the <em>only</em> path —
+a fast bypass reintroduces the failure the gateway exists to prevent,
+and does it silently.</p>
+<p><strong>What it does not cost is context.</strong> A reasonable
+misreading of the tombstone pattern is that the agent must be told what
+<em>not</em> to believe, spending prompt budget on negative facts. It
+does not: a tombstone is consulted on the <strong>write</strong> path,
+before a value is allowed to become active, and is suppressed from
+recall entirely. If rejected values are reaching your prompt, the
+mechanism is misplaced. The one measured warning in this atlas about
+context cost points the other way — see <a
+href="./gate-the-expensive-path/">gate the expensive path</a>, where the
+expense is retrieving memory at all, not retrieving negative memory.</p>
 <h2 id="composing-them">Composing them</h2>
 <p>The patterns compose. A serious memory layer normally needs several,
 but each additional mechanism has operational and cognitive cost. Every

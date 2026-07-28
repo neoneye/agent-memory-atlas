@@ -83,3 +83,42 @@ judged against strict definitions.
 
 **Would change if** a dimension were added the same way the seven were: one
 definition, applied deliberately per system, drift-checked by the build.
+
+## Plain-language analogies for each pattern (hotel keycard, detective's notebook)
+
+Proposed 28 July 2026 as a way in for junior developers: scope as a hotel
+keycard, evidence-before-belief as a detective's raw notes versus the final
+report, tombstones as a "do not call" list, trust states as Wikipedia's
+draft/published/disputed.
+
+They are decent analogies — the Wikipedia one is close to exact. Declined anyway,
+because the accessible entry already exists and is better: **the failure-first
+list** at the top of the patterns index maps a symptom you are experiencing to
+the pattern that closes it. A reader who does not know what bi-temporal validity
+means does not need a metaphor for it; they need "changing facts overwrite useful
+history", which is what that list says.
+
+The risk is specific rather than stylistic. An analogy that is 90% right imports
+its own 10%: a keycard is checked at a door once, whereas scope has to hold in
+the schema, the indexes, the cache keys and every background job, and the reader
+who has internalised the door will not go looking for the background job. The
+same review that proposed these also concluded from the pattern pages that
+tombstones consume context window — which they do not, since they are consulted
+on the write path — and that is what a plausible mental model does when it is
+slightly off.
+
+**Adopted instead:** the compounded cost of the four-pattern stack, and an
+explicit correction of the tombstones-in-context misreading, both on the patterns
+index.
+
+## A separate antipatterns page
+
+Same review. Proposed "garbage dump vector store", "amnesia by overwrite",
+"omniscient agent" as named failures.
+
+Declined as duplication. Each pattern page already opens with **The problem**,
+stated concretely, and the failure-first list is an antipattern index in
+everything but name — all three proposed antipatterns map onto rows already
+there. A separate page would restate the same material in a second vocabulary,
+and the atlas would then have two names for each failure and no rule for which to
+use.

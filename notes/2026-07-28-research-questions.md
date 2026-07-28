@@ -121,6 +121,33 @@ may be drawing the line in the wrong place — a definition that many systems
 narrowly miss is either measuring the right rare thing or measuring badly, and
 which one should be established rather than assumed.
 
+## 7. Is there a pattern for memory between agents?
+
+**Open, and a genuine gap in the library.** Raised by an outside review, checked
+against the eighteen pattern pages: every one of them models *one* agent and
+*one* store. Scope as a first-class key separates agents so they cannot see each
+other's memory; nothing describes what happens when they should.
+
+The concrete case: agent A records a fact, agent B's execution produces a
+failure that contradicts it. Today that is either invisible (separate scopes) or
+a plain contradiction inside one scope, resolved with no notion that two
+different actors with different evidence disagree. The scope lattice in
+[Verel](../content/systems/verel.md) comes closest — `graduate()` promotes a
+verified belief to a parent scope as a *candidate*, deliberately not as verified,
+which is a real answer to "whose belief is this now" — but it is promotion, not
+negotiation.
+
+**Before writing a pattern page, check the corpus.** The atlas's standard is that
+a pattern is reported from code, and the tombstone page exists as a cautionary
+example of how thin two instances look. Search the multi-agent systems already
+reviewed for any conflict handling that is actor-aware rather than value-aware.
+If the answer is nothing, that is a finding to state plainly, not a page to write.
+
+**Not to be confused with** decay, which a reviewer also proposed as a future
+direction. That one already exists — [decay and reinforcement](../content/patterns/decay-and-reinforcement.md),
+including the separation of reachability from truth that the proposal was
+reaching for.
+
 ## Method note
 
 All six are computable from `content/systems/*.md` plus the freshness data. None

@@ -150,18 +150,20 @@ false, and the difference matters when you are deciding what to build.
 Where the atlas has an exact count — the seven mechanisms on
 [the rubric](../methodology/atlas-rubric/) — the spread is wide:
 
+<!-- BEGIN GENERATED SPREAD -->
 | Mechanism | Systems carrying it |
 | --- | --- |
-| Scope enforced in retrieval | 33 of 58 |
-| Human review surface | 9 of 58 |
-| Bi-temporal validity | 6 of 58 |
-| Explicit trust state | 5 of 58 |
-| Append-only mutation audit | 5 of 58 |
-| **Rejected-value tombstone** | **2 of 58** |
-| **Negative retrieval assertion** | **1 of 58** |
+| Scope enforced in retrieval | 36 of 62 |
+| Human review surface | 10 of 62 |
+| Bi-temporal validity | 8 of 62 |
+| Append-only mutation audit | 6 of 62 |
+| Explicit trust state | 5 of 62 |
+| **Rejected-value tombstone** | **2 of 62** |
+| **Negative retrieval assertion** | **2 of 62** |
+<!-- END GENERATED SPREAD -->
 
-Read the bottom two rows as what they are. A mechanism present in one or two
-systems out of fifty-eight is **not a best practice**. There is no consensus
+Read the bottom two rows as what they are. A mechanism present in two systems
+out of sixty-two is **not a best practice**. There is no consensus
 behind it, no library that gives it to you, no shared vocabulary, and nobody to
 ask when your implementation has a hole. Adopting it means building it.
 
@@ -236,6 +238,34 @@ actually comes from. Correct memory full of trivia is still a bad product.
 No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
+
+**What the four cost together.** Each page states its own cost; the compounded
+bill is what nobody budgets for, and it lands in two places.
+
+*Storage stops being bounded by what you believe.* Evidence before belief keeps
+the raw event that a claim was derived from, tombstones keep values you decided
+were wrong, and bi-temporal validity keeps superseded versions rather than
+overwriting them. Together they mean the store grows with everything that ever
+happened, not with what is currently true, and the three retention policies are
+separate decisions — evidence, tombstones and history age out on different
+clocks, or should. A system that adopts all three and writes one TTL has not
+thought about it.
+
+*Writes get a hop they did not have.* A governed write gateway means no path
+writes directly: every one proposes, gets checked against scope, dedupe, conflict
+and the tombstone ledger, and only then commits. That is a latency cost on the
+write path and a complexity cost on every integration, which is exactly why it
+has to be the *only* path — a fast bypass reintroduces the failure the gateway
+exists to prevent, and does it silently.
+
+**What it does not cost is context.** A reasonable misreading of the tombstone
+pattern is that the agent must be told what *not* to believe, spending prompt
+budget on negative facts. It does not: a tombstone is consulted on the **write**
+path, before a value is allowed to become active, and is suppressed from recall
+entirely. If rejected values are reaching your prompt, the mechanism is
+misplaced. The one measured warning in this atlas about context cost points the
+other way — see [gate the expensive path](./gate-the-expensive-path/), where the
+expense is retrieving memory at all, not retrieving negative memory.
 
 ## Composing them
 
