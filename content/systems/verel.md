@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
-revision: df80efe8207a99585a2ebce36fc6e32ba5077e2e
-revision_url: https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e
-analyzed_at: 2026-07-26
-capabilities: "tombstone, trust_state, scope_enforced"
+revision: 5aa050fea33c
+revision_url: https://github.com/amitpatole/verel/commit/5aa050fea33c
+analyzed_at: 2026-07-28
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "`MemoryRecord` fact/rule/schema/failure/skill"
   storage: "SQLite local plus backend adapters"
@@ -37,6 +37,20 @@ Core idea: extracted facts and learned rules should not automatically become tru
 It also has correction chains, rejected-value tombstones, volatile/TTL/pinned lifecycle flags, token-budgeted recall, held-out promotion gates, scope lattices, hosted/replicated memory, and pluggable backends.
 
 The code is unusually explicit about adversarial cases. Many comments refer to audit rounds and attack fixes. It is more of a research/verification design than a minimal production memory service.
+
+> **Re-reviewed 2026-07-28 at v1.9.0, and the previous review was badly out of
+> date.** It was pinned to `df80efe8` — a commit that GitHub still serves but
+> which is **not reachable from any branch**, so the atlas was describing a state
+> that is not in the project's history. Verel's author raised it; he was right,
+> and the freshness tool had it flagged as the top re-analysis priority without
+> anyone acting on it.
+>
+> The correction is not small. The old report credited three of the atlas's seven
+> capabilities. **The current code carries all seven** — the first system in the
+> atlas to do so — with bi-temporal validity, a hash-chained mutation audit, an
+> operator review workflow and a committed negative-eval suite all added since.
+> What follows describes v1.9.0; the [diff from the old reading](#what-changed)
+> is in §11.
 
 > **Provenance of the tombstone.** Verel's git history dates `rejected_values`
 > to 28 June 2026, as the fix for a red-team finding — "rejection wasn't durable
@@ -283,6 +297,60 @@ Verel has strong memory-specific tests:
 - MCP memory.
 
 I did not run them. The test file coverage is unusually aligned with the design claims.
+
+<a id="what-changed"></a>
+
+## 10b. What Changed Since the Previous Reading
+
+The earlier review was pinned to an unreachable commit. Re-reading at v1.9.0, the
+four capabilities it recorded as absent are all present, and three of them close
+gaps this atlas names elsewhere.
+
+**Bi-temporal validity.** `valid_from` / `valid_to` are columns in the backend
+schemas, with `recall_as_of` and `value_as_of` on the public surface and
+tolerant reads for pre-migration rows that lack the fields.
+
+**A hash-chained mutation audit.** `memory/audit.py` describes itself as closing
+exactly the gap the atlas measured: "correction chains preserve WHAT a record
+used to say, but not WHO/WHAT changed it. `MemoryAudit` records every mutation as
+`{seq, ts, actor, action, record_id, before, after}`, hash-chained (each entry
+commits to its predecessor via SHA-256) so in-place tampering is detectable."
+`AuditedMemory` wraps *any* backend "at the Protocol seam, so no backend needs
+changes and every backend gets the same audit" — and the module states its own
+limit, that this "is NOT a signed log". It is stronger than this atlas's
+definition asks for.
+
+**An operator review workflow**, `memory/review.py`, with two security
+positions worth quoting. It is "**CLI-only by design** — an agent must never be
+able to approve its own candidate facts". And "**approve never launders**":
+`approve()` refuses a REJECTED record, "the rejected-value ledger exists
+precisely so a once-rejected value can't come back; a human wanting to resurrect
+one must write it as a NEW fact and let the gate see the ledger." A review
+surface that cannot be used to bypass the tombstone is a detail most systems with
+both would get wrong.
+
+**A committed negative-eval suite.** `tests/test_memory_negative_eval.py` is "a
+regression suite asserting what memory must NOT surface or allow… a REJECTED
+fact is invisible to EVERY recall path, un-resurrectable by re-assertion,
+un-launderable". It asserts rejected content is absent from budgeted recall's
+*rendered text*, invisible to an exact verbatim query at k=100, and excluded
+without a scope filter.
+
+The fixture is "paris office" — the same example as the round-7 red-team finding
+that produced the tombstone. **The attack became a permanent regression test**,
+which is the strongest form the [rejected-value tombstone](../../patterns/rejected-value-tombstone/)
+pattern's tests-to-require could take.
+
+Also new since the previous reading: `memory/revise.py`, "contradiction-driven
+schema revision — consolidation that can be WRONG, and recovers", on the premise
+that "a memory that only grows is a memory that lies"; and `memory/principal.py`,
+authenticating authors because a free-string author "is forgeable — and
+`AuthorTrust`, the very thing meant to stop one bad actor poisoning the swarm,
+can itself be forged".
+
+`revise.py` is the belief-*contraction* half that the atlas's
+[symbolic prior-art note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-symbolic-prior-art.md)
+argues the field has not reached. It is reached here.
 
 ## 11. For Your Own Build
 

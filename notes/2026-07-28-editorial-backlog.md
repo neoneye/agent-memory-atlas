@@ -51,7 +51,7 @@ report is** multiplied by drift:
 
 | System | Commits since pin | Why it matters |
 | --- | --- | --- |
-| `verel` | ~324 | One of only two systems carrying a rejected-value tombstone. The atlas's central claim rests on this report being right. |
+| ~~`verel`~~ | — | **Done 2026-07-28**, after its author pointed out the report was out of date. The pin turned out to be *orphaned*, not merely old, and the re-read moved Verel from three of seven capabilities to all seven — the first system in the atlas to carry them all. Two atlas-wide counts changed as a result. |
 | `rainbox` | ~163 | The author's own system, and the other tombstone holder. Same load-bearing problem, plus the self-assessment framing makes staleness worse. |
 | `openclaw` | ~409 | Largest drift in the atlas; a host runtime several other reports reference. |
 | `hermes-agent` / `holographic` | ~234 each | Two reports over one repository, so one re-read updates both. |
@@ -62,6 +62,12 @@ The rest — supermemory (66), mastra (39), engram (38), honcho (36),
 basic-memory (27), hindsight (16), graphiti (14), openviking (9), langmem (8),
 memory-engine (7), memos (4), nanobot (2), pi (2), letta (1), waku-agent (1) —
 are ordinary drift and can wait.
+
+**A pin can be worse than stale.** Verel's was unreachable from any branch —
+GitHub still served it by SHA, so the freshness tool reported it as 324 commits
+behind rather than as describing a state absent from the project's history.
+`check_freshness.py` now distinguishes the two, because only one of them means
+"the report may be describing something that never shipped".
 
 **Note the asymmetry:** a drifted pin does not make a report wrong. The report was
 true of that commit and still is. It makes the report less useful as a

@@ -84,6 +84,21 @@ def main() -> int:
             rows.append({"slug": path.stem, "status": (meta or {}).get("_error", "error")})
             continue
         branch = meta.get("default_branch", "main")
+        # A pin can be *unreachable* rather than merely old: force-pushes and
+        # rebases orphan commits that GitHub still serves by SHA. That is worse
+        # than staleness — the report describes a state that is not in the
+        # project's history at all — and it is invisible in a commit count, so
+        # it is checked separately. (Found the hard way: the Verel pin was
+        # orphaned and the tool happily reported it as 324 commits behind.)
+        reachable = request(
+            COMPARE_API.format(owner=owner, repo=repo, base=branch, head=revision)
+        )
+        if reachable is None or "_error" in reachable:
+            rows.append({"slug": path.stem, "status": "unreachable", "repo": f"{owner}/{repo}"})
+            continue
+        if reachable.get("status") == "diverged":
+            rows.append({"slug": path.stem, "status": "orphaned", "repo": f"{owner}/{repo}"})
+            continue
         data = request(
             COMPARE_API.format(owner=owner, repo=repo, base=revision, head=branch)
         )
@@ -109,7 +124,12 @@ def main() -> int:
 
     stale = [r for r in rows if r.get("status") == "stale"]
     current = [r for r in rows if r.get("status") == "current"]
-    errors = [r for r in rows if r.get("status") not in {"stale", "current"}]
+    broken = [r for r in rows if r.get("status") in {"unreachable", "orphaned"}]
+    errors = [r for r in rows if r.get("status") not in {"stale", "current", "unreachable", "orphaned"}]
+
+    for row in broken:
+        print(f"{row['status'].upper():>12}  {row['slug']:<28} {row.get('repo','')}"
+              "  <- pin not in the project's history; re-review needed")
 
     for row in sorted(stale, key=lambda r: -r.get("commits_since", 0)):
         print(f"{row['commits_since']:>6} commits since pin  {row['slug']:<28} {row['repo']}")
@@ -119,8 +139,8 @@ def main() -> int:
         print(f"{row['status']:>6}                      {row['slug']}")
 
     print(
-        f"\n{len(current)} current, {len(stale)} stale, {len(errors)} unresolved "
-        f"of {len(rows)} pinned reports."
+        f"\n{len(current)} current, {len(stale)} stale, {len(broken)} unreachable, "
+        f"{len(errors)} unresolved of {len(rows)} pinned reports."
     )
     return 0
 

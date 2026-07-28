@@ -83,17 +83,17 @@ and defensive recall.</p>
               <strong>amitpatole/verel</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e" title="df80efe8207a99585a2ebce36fc6e32ba5077e2e">
+            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/5aa050fea33c" title="5aa050fea33c">
               <span>Analyzed revision</span>
-              <code>df80efe8207a99585a2ebce36fc6e32ba5077e2e</code>
+              <code>5aa050fea33c</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-07-28</strong>
             </div>
                       </div>
-                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>3 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>7 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -130,6 +130,22 @@ backends.</p>
 refer to audit rounds and attack fixes. It is more of a
 research/verification design than a minimal production memory
 service.</p>
+<blockquote>
+<p><strong>Re-reviewed 2026-07-28 at v1.9.0, and the previous review was
+badly out of date.</strong> It was pinned to <code>df80efe8</code> — a
+commit that GitHub still serves but which is <strong>not reachable from
+any branch</strong>, so the atlas was describing a state that is not in
+the project's history. Verel's author raised it; he was right, and the
+freshness tool had it flagged as the top re-analysis priority without
+anyone acting on it.</p>
+<p>The correction is not small. The old report credited three of the
+atlas's seven capabilities. <strong>The current code carries all
+seven</strong> — the first system in the atlas to do so — with
+bi-temporal validity, a hash-chained mutation audit, an operator review
+workflow and a committed negative-eval suite all added since. What
+follows describes v1.9.0; the <a href="#what-changed">diff from the old
+reading</a> is in §11.</p>
+</blockquote>
 <blockquote>
 <p><strong>Provenance of the tombstone.</strong> Verel's git history
 dates <code>rejected_values</code> to 28 June 2026, as the fix for a
@@ -403,6 +419,63 @@ Benchmarks</h2>
 </ul>
 <p>I did not run them. The test file coverage is unusually aligned with
 the design claims.</p>
+<p><a id="what-changed"></a></p>
+<h2 id="10b-what-changed-since-the-previous-reading">10b. What Changed
+Since the Previous Reading</h2>
+<p>The earlier review was pinned to an unreachable commit. Re-reading at
+v1.9.0, the four capabilities it recorded as absent are all present, and
+three of them close gaps this atlas names elsewhere.</p>
+<p><strong>Bi-temporal validity.</strong> <code>valid_from</code> /
+<code>valid_to</code> are columns in the backend schemas, with
+<code>recall_as_of</code> and <code>value_as_of</code> on the public
+surface and tolerant reads for pre-migration rows that lack the
+fields.</p>
+<p><strong>A hash-chained mutation audit.</strong>
+<code>memory/audit.py</code> describes itself as closing exactly the gap
+the atlas measured: "correction chains preserve WHAT a record used to
+say, but not WHO/WHAT changed it. <code>MemoryAudit</code> records every
+mutation as
+<code>{seq, ts, actor, action, record_id, before, after}</code>,
+hash-chained (each entry commits to its predecessor via SHA-256) so
+in-place tampering is detectable." <code>AuditedMemory</code> wraps
+<em>any</em> backend "at the Protocol seam, so no backend needs changes
+and every backend gets the same audit" — and the module states its own
+limit, that this "is NOT a signed log". It is stronger than this atlas's
+definition asks for.</p>
+<p><strong>An operator review workflow</strong>,
+<code>memory/review.py</code>, with two security positions worth
+quoting. It is "<strong>CLI-only by design</strong> — an agent must
+never be able to approve its own candidate facts". And "<strong>approve
+never launders</strong>": <code>approve()</code> refuses a REJECTED
+record, "the rejected-value ledger exists precisely so a once-rejected
+value can't come back; a human wanting to resurrect one must write it as
+a NEW fact and let the gate see the ledger." A review surface that
+cannot be used to bypass the tombstone is a detail most systems with
+both would get wrong.</p>
+<p><strong>A committed negative-eval suite.</strong>
+<code>tests/test_memory_negative_eval.py</code> is "a regression suite
+asserting what memory must NOT surface or allow… a REJECTED fact is
+invisible to EVERY recall path, un-resurrectable by re-assertion,
+un-launderable". It asserts rejected content is absent from budgeted
+recall's <em>rendered text</em>, invisible to an exact verbatim query at
+k=100, and excluded without a scope filter.</p>
+<p>The fixture is "paris office" — the same example as the round-7
+red-team finding that produced the tombstone. <strong>The attack became
+a permanent regression test</strong>, which is the strongest form the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> pattern's tests-to-require could take.</p>
+<p>Also new since the previous reading: <code>memory/revise.py</code>,
+"contradiction-driven schema revision — consolidation that can be WRONG,
+and recovers", on the premise that "a memory that only grows is a memory
+that lies"; and <code>memory/principal.py</code>, authenticating authors
+because a free-string author "is forgeable — and
+<code>AuthorTrust</code>, the very thing meant to stop one bad actor
+poisoning the swarm, can itself be forged".</p>
+<p><code>revise.py</code> is the belief-<em>contraction</em> half that
+the atlas's <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-symbolic-prior-art.md">symbolic
+prior-art note</a> argues the field has not reached. It is reached
+here.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
