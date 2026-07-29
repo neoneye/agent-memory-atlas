@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-five agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+seventy-six agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-five agent memory architectures, their retrieval mechanics,
+of seventy-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-five agent memory architectures, their retrieval mechanics,
+of seventy-six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-five agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.</p>
+seventy-six agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into seventy-five categories. They
+<p>Seventy-three systems do not fall into seventy-six categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -330,7 +330,7 @@ memory provider</a>.</p>
 <code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
-<code>reme</code>, <code>acontext</code></p>
+<code>reme</code>, <code>acontext</code>, <code>logseq</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -382,6 +382,26 @@ session boundary — one checkpoint written when a session ends, one
 skimmable briefing injected when the next begins — and spends its
 complexity budget on checking the extraction rather than on retrieving
 from it.</p>
+<p><strong>Logseq is the odd member and the only one here that is not
+developer-shaped</strong> — a twelve-year-old outliner that grew an MCP
+server, filed beside Basic Memory and llm-wiki-memory because it is the
+same bargain: a store a human authors, which an agent may now write
+into. It contributes the one thing no other system here has, which is a
+<strong>user-defined schema</strong>: properties carry a declared type
+and a cardinality, tags are classes that extend other tags and declare
+the properties their instances hold, and
+<code>listTags</code>/<code>listProperties</code> let a model discover
+that ontology before writing inside it. Everywhere else the memory model
+is the vendor's; here it is the user's. Its retrieval is also the most
+carefully gated in the atlas — exact title, FTS5 over a trigram
+tokenizer, a <code>LIKE</code> arm for two-character queries, fuzzy, and
+a local 384-dimension vector arm fused by reciprocal rank, with the
+expensive arms skipped when the cheap ones already filled the limit. And
+it is fully offline, embeddings included. The failure is at the seam:
+agent writes land live and <strong>unmarked</strong> — the schema
+defines a <code>created-by-ref</code> property that the MCP write path
+never sets — so the store cannot answer "what did the agent change?",
+and the agent has no delete verb with which to correct itself.</p>
 <p>Tradeoff: operationally simple and inspectable; no answer to hosted
 ranking, multi-tenancy, or rich user modelling.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
@@ -1321,6 +1341,34 @@ candidate/verified/rejected state</td>
 layout/topology, excellent operational tests</td>
 <td>LLM atoms become active without verification; vector-only primary
 retrieval; linear scans; git is not erasure</td>
+</tr>
+<tr>
+<td><code>logseq</code></td>
+<td>An outliner block or page in a DataScript graph, typed by
+user-defined tags (classes) and properties with declared types and
+cardinality</td>
+<td>DataScript over SQLite, local-first; FTS5 trigram index and a
+384-dimension vector index alongside; optional multi-device sync</td>
+<td>Four lexical arms — exact title, FTS5 match, LIKE, fuzzy — plus
+optional local vector search, fused by RRF with early exit when cheap
+arms suffice</td>
+<td>Synchronous and literal. A human types, or an agent calls
+upsertNodes with add/edit operations; no extraction, no LLM in the write
+path</td>
+<td><code>:db/retractEntity</code> hard retraction with orphaned-page
+cleanup; agents cannot delete at all — no delete tool exists</td>
+<td>A graph is a separate database; there is no principal, tenant or
+agent key inside one</td>
+<td>MCP server over the desktop API with six tools, an HTTP API server,
+and the editor itself</td>
+<td>Embedding upserts in batches of 1024 and index maintenance; nothing
+derives or consolidates memory</td>
+<td>None. A <code>created-by-ref</code> property exists in the schema
+and the agent write path never sets it</td>
+<td>A schema the user defines and the agent must obey; genuinely local
+hybrid retrieval; the best editing surface in the atlas</td>
+<td>Agent writes land live, unmarked and indistinguishable from the
+user's own; hard retraction with no history</td>
 </tr>
 <tr>
 <td><code>loongflow</code></td>
@@ -2389,14 +2437,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 75:</em> <a
+<p><em>3 of 76:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 75:</em> <a
+<p><em>7 of 76:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2406,7 +2454,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 75:</em> <a
+<p><em>8 of 76:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2418,7 +2466,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>45 of 75:</em> <a
+<p><em>45 of 76:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
@@ -2468,7 +2516,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 75:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 76:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2478,7 +2526,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 75:</em> <a
+<p><em>14 of 76:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2496,7 +2544,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 75:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 76:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2517,7 +2565,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-five assert that particular material must
+repositories of seventy-six assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6481,6 +6529,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 <li><a href="../systems/memmachine/"><code>memmachine</code></a></li>
 <li><a href="../systems/buzz/"><code>buzz</code></a></li>
+<li><a href="../systems/logseq/"><code>logseq</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -6749,6 +6798,8 @@ at <a
 href="https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997"><code class="commit-id" title="a681abf9623299bba8ad931e5d9af02fb6ef0997">a681abf9…</code></a></li>
 <li><a href="https://github.com/block/buzz">block/buzz</a> at <a
 href="https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb"><code class="commit-id" title="24d90d1280a9325c6cbcf8eea30ac54db5afd2cb">24d90d12…</code></a></li>
+<li><a href="https://github.com/logseq/logseq">logseq/logseq</a> at <a
+href="https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38"><code class="commit-id" title="9a11243d50b23afeb10bda5a2ca6cc77357eea38">9a11243d…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
