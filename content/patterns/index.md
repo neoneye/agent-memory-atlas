@@ -153,17 +153,17 @@ Where the atlas has an exact count — the seven mechanisms on
 <!-- BEGIN GENERATED SPREAD -->
 | Mechanism | Systems carrying it |
 | --- | --- |
-| Scope enforced in retrieval | 46 of 77 |
-| Human review surface | 14 of 77 |
-| Bi-temporal validity | 8 of 77 |
-| Explicit trust state | 7 of 77 |
-| Append-only mutation audit | 7 of 77 |
-| Rejected-value tombstone | 3 of 77 |
-| Negative retrieval assertion | 3 of 77 |
+| Scope enforced in retrieval | 47 of 78 |
+| Human review surface | 14 of 78 |
+| Bi-temporal validity | 8 of 78 |
+| Explicit trust state | 7 of 78 |
+| Append-only mutation audit | 7 of 78 |
+| Rejected-value tombstone | 3 of 78 |
+| Negative retrieval assertion | 3 of 78 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in two or three
-systems out of seventy-seven is **not a best practice**. There is no consensus
+systems out of seventy-eight is **not a best practice**. There is no consensus
 behind it, no library that gives it to you, no shared vocabulary, and nobody to
 ask when your implementation has a hole. Adopting it means building it.
 

@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of seventy-seven agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of seventy-eight agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -56,7 +56,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Seventy-three systems do not fall into seventy-seven categories. They cluster around
+Seventy-three systems do not fall into seventy-eight categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -194,7 +194,7 @@ memory to the framework, prompt assembly, and tool loop.
 ### Host runtimes with pluggable memory
 
 Hosts: `hermes-agent`, `openclaw`, `pi`, `mateclaw`, `opencode`, `nemoclaw`,
-`tigrimosr`
+`tigrimosr`, `adk-python`
 Plugins mounted on them: `holographic`, `magic-context`, `metaclaw`,
 `byterover`, `tencentdb-agent-memory`, plus hosted providers
 
@@ -225,8 +225,19 @@ Tradeoff: users choose a backend that fits their privacy and scale needs, but
 trust state, scope, and above all deletion must cross the host/provider
 boundary. **MateClaw** is the partial counterexample: its provider SPI carries an
 owner key on `prefetch` and `syncTurn`, and wraps every provider in retry and
-metrics decorators — but like the other three, it has no deletion hook. One
-contract of four carries scope; none carries deletion. See
+metrics decorators — but like the other three, it has no deletion hook.
+
+**Google's ADK is the largest instance of the same finding, and it inverts the
+first half.** `BaseMemoryService` makes `app_name` and `user_id` *required
+keyword arguments* on every write and on `search_memory`, so a provider in that
+framework cannot forget which user it serves without discarding arguments it was
+handed — the strongest scope enforcement in the atlas, and enforced by a
+signature rather than a query. Then it declares `add_session_to_memory`,
+`add_events_to_memory`, `add_memory` and `search_memory`, and **no removal method
+of any kind**, while the sibling `BaseSessionService` does declare
+`delete_session`. Content promoted out of a deletable session into memory becomes
+unremovable through the framework. Two contracts of five now carry scope; none
+carries deletion. See
 [pluggable memory provider](../patterns/pluggable-memory-provider/).
 
 ### Local coding-agent memory
@@ -616,6 +627,7 @@ session with an identity you could later correct.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `a-mem` | `MemoryNote` with content, tags, context, links, and evolution history | In-process dictionary plus ephemeral Chroma; separate persistent retriever utility | Vector similarity with optional linked-neighbor append | LLM decides links and neighbor metadata mutation before insert | Delete/re-add update; exact delete without incoming-link cleanup | None in core | Direct Python library | Periodic reindex called consolidation | No source provenance or trust state | Small, legible linked-note evolution concept | Neighbor position/identity bug can mutate wrong notes; destructive initialization; no durability |
 | `acontext` | An agent skill — a directory of Markdown files with a SKILL.md the user defines the schema for | Postgres for skills, tasks, sessions and messages; a disk abstraction for the files themselves | None automatic — the agent calls list_skills, get_skill and get_skill_file and decides | A task reaching success or failed triggers distillation, then a skill agent routes and writes | The skill agent rewrites files; the dashboard can delete a whole skill; no rejected-value record | project_id on the skill read path, with disk, user and project foreign keys cascading | Python, TypeScript and CLI clients, plus Claude Code and OpenClaw packages and a sandbox | A message queue driving distillation and the skill agent, with session status through the pipeline | Task outcome is the only signal, and it gates the write rather than labelling the memory | The outcome gate the skills pattern asks for, tested; no embeddings, so memory is greppable and portable | Retrieval depends entirely on the agent choosing to look; a wrong skill file has no tombstone |
+| `adk-python` | `MemoryEntry` — a `types.Content` plus optional id, author, timestamp and custom metadata; the unit written is usually a whole session's events | Interface only. Ships an in-process dict, a Vertex AI Memory Bank client and a Vertex AI RAG client; sessions additionally have SQLite and database backends | `search_memory(app_name, user_id, query)` — keyword set-intersection in the default implementation, hosted similarity search in Memory Bank | `add_session_to_memory`, `add_events_to_memory`, `add_memory`; Memory Bank generates memories from events server-side | None. The contract has no delete, no update and no expiry, and no implementation adds one | `app_name` and `user_id` are required keyword arguments on every write and on search, and travel to Memory Bank as a `scope` dict | `LoadMemoryTool` for the agent, `Runner` wiring, and a plugin surface; the memory service is chosen by the app author | Memory Bank does generation and ingestion server-side; the local implementations do none | Author and timestamp on an entry; no provenance chain, trust state or confidence anywhere | Scope keys mandatory in the signature; session and memory cleanly separated; 61 memory tests | Deletion exists on the session service and not on the memory service, so the durable half of a user's data has no removal path |
 | `agentmemory` | Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records | iii StateModule backed by local SQLite plus persisted search projections | BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity | Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation | Delete/TTL; similarity-based version supersession; rebuildable indexes | Project, session, working directory; shared or isolated agent mode | Hooks, MCP, HTTP, CLI, iii functions | Optional compression, graph extraction, consolidation, decay, repair | Source observation IDs, versions, audit; no candidate/verified/rejected state | Cheap synchronous capture and compact-first hybrid search | Very broad surface; shared scope default; fuzzy supersession can hide conflicts |
 | `ai-memory` | Markdown page in git, plus observation, handoff, and workstream records | Markdown in git as the human source of truth; SQLite as derived index and state | Authority- and tier-ranked search over pages, with a retention score | Harness lifecycle hooks capture observations; opt-in LLM consolidation into pages | Versioned supersession; generation-based supersession of pending work | Workspace and project ids with per-project UUID isolation; capability-gated actors | MCP plus lifecycle hooks for Claude Code, Codex, Cursor, Gemini, opencode, Devin, Grok, Kimi | Consolidation workers, retention/decay scoring, wiki migrations | Actor capabilities and auth levels; no candidate/verified state on a memory | A handoff with a lifecycle, carrying open questions and next steps across harnesses | No trust state or tombstone; supersession is page-keyed and re-capture is unguarded |
 | `atomic-agent` | Memory, lesson, profile fact, and procedure, linked by typed edges | SQLite with versioned migrations; bi-temporal profile facts | Heuristic-gated query rewriting, links, and vote-aware ranking | Consolidator clusters; lessons and procedures from one LLM call per cluster | `supersedes`/`superseded_by` chains; deprecation retains the row | Not traced | Agent runtime with a separate reflection slot | Consolidator, reflection, neighbour evolution, vote runner | Append-only `vote_events` with derived `vote_score`; surfaced-id allowlist | Numbered invariants cited from code, and features default-off until evaluated | Large opt-in surface; evaluation campaign results not committed |
@@ -746,31 +758,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*3 of 77:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*3 of 78:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*7 of 77:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*7 of 78:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*8 of 77:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
+*8 of 78:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
 
-*46 of 77:* [`acontext`](../systems/acontext/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*47 of 78:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*7 of 77:* [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`optmem`](../systems/optmem/), [`verel`](../systems/verel/)
+*7 of 78:* [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`optmem`](../systems/optmem/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*14 of 77:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*14 of 78:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*3 of 77:* [`mirix`](../systems/mirix/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
+*3 of 78:* [`mirix`](../systems/mirix/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -789,7 +801,7 @@ nothing here measures that.
 "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Three repositories of seventy-seven
+**Negative evidence is almost never tested.** Three repositories of seventy-eight
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests on. Two reached
 it from memory work: [open-cowork](../systems/open-cowork/) through `forbiddenHits`
@@ -3091,6 +3103,7 @@ Privacy/deletion:
 - [`buzz`](../systems/buzz/)
 - [`logseq`](../systems/logseq/)
 - [`openhuman`](../systems/openhuman/)
+- [`adk-python`](../systems/adk-python/)
 
 ### Repos Inspected
 
@@ -3170,6 +3183,7 @@ Privacy/deletion:
 - [block/buzz](https://github.com/block/buzz) at [`24d90d1280a9325c6cbcf8eea30ac54db5afd2cb`](https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb)
 - [logseq/logseq](https://github.com/logseq/logseq) at [`9a11243d50b23afeb10bda5a2ca6cc77357eea38`](https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38)
 - [tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman) at [`e213bc5fc4000e9ad599c977a560113cc018c554`](https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554)
+- [google/adk-python](https://github.com/google/adk-python) at [`6bab08fc803d26853417c4d6e71704b1a72e035e`](https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 
 ### Commands Used

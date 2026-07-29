@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-seven agent memory architectures, their retrieval mechanics,
+seventy-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-seven agent memory architectures, their retrieval mechanics,
+of seventy-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-seven agent memory architectures, their retrieval mechanics,
+of seventy-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-seven agent memory architectures, their retrieval mechanics,
+seventy-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into seventy-seven categories. They
+<p>Seventy-three systems do not fall into seventy-eight categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -300,10 +300,11 @@ coupling memory to the framework, prompt assembly, and tool loop.</p>
 pluggable memory</h3>
 <p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
 <code>pi</code>, <code>mateclaw</code>, <code>opencode</code>,
-<code>nemoclaw</code>, <code>tigrimosr</code> Plugins mounted on them:
-<code>holographic</code>, <code>magic-context</code>,
-<code>metaclaw</code>, <code>byterover</code>,
-<code>tencentdb-agent-memory</code>, plus hosted providers</p>
+<code>nemoclaw</code>, <code>tigrimosr</code>, <code>adk-python</code>
+Plugins mounted on them: <code>holographic</code>,
+<code>magic-context</code>, <code>metaclaw</code>,
+<code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
+providers</p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
@@ -336,9 +337,23 @@ host/provider boundary. <strong>MateClaw</strong> is the partial
 counterexample: its provider SPI carries an owner key on
 <code>prefetch</code> and <code>syncTurn</code>, and wraps every
 provider in retry and metrics decorators — but like the other three, it
-has no deletion hook. One contract of four carries scope; none carries
-deletion. See <a href="../patterns/pluggable-memory-provider/">pluggable
-memory provider</a>.</p>
+has no deletion hook.</p>
+<p><strong>Google's ADK is the largest instance of the same finding, and
+it inverts the first half.</strong> <code>BaseMemoryService</code> makes
+<code>app_name</code> and <code>user_id</code> <em>required keyword
+arguments</em> on every write and on <code>search_memory</code>, so a
+provider in that framework cannot forget which user it serves without
+discarding arguments it was handed — the strongest scope enforcement in
+the atlas, and enforced by a signature rather than a query. Then it
+declares <code>add_session_to_memory</code>,
+<code>add_events_to_memory</code>, <code>add_memory</code> and
+<code>search_memory</code>, and <strong>no removal method of any
+kind</strong>, while the sibling <code>BaseSessionService</code> does
+declare <code>delete_session</code>. Content promoted out of a deletable
+session into memory becomes unremovable through the framework. Two
+contracts of five now carry scope; none carries deletion. See <a
+href="../patterns/pluggable-memory-provider/">pluggable memory
+provider</a>.</p>
 <h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
 <p><code>engram</code>, <code>mempalace</code>,
 <code>llm-wiki-memory</code>, <code>basic-memory</code>,
@@ -871,6 +886,37 @@ labelling the memory</td>
 so memory is greppable and portable</td>
 <td>Retrieval depends entirely on the agent choosing to look; a wrong
 skill file has no tombstone</td>
+</tr>
+<tr>
+<td><code>adk-python</code></td>
+<td><code>MemoryEntry</code> — a <code>types.Content</code> plus
+optional id, author, timestamp and custom metadata; the unit written is
+usually a whole session's events</td>
+<td>Interface only. Ships an in-process dict, a Vertex AI Memory Bank
+client and a Vertex AI RAG client; sessions additionally have SQLite and
+database backends</td>
+<td><code>search_memory(app_name, user_id, query)</code> — keyword
+set-intersection in the default implementation, hosted similarity search
+in Memory Bank</td>
+<td><code>add_session_to_memory</code>,
+<code>add_events_to_memory</code>, <code>add_memory</code>; Memory Bank
+generates memories from events server-side</td>
+<td>None. The contract has no delete, no update and no expiry, and no
+implementation adds one</td>
+<td><code>app_name</code> and <code>user_id</code> are required keyword
+arguments on every write and on search, and travel to Memory Bank as a
+<code>scope</code> dict</td>
+<td><code>LoadMemoryTool</code> for the agent, <code>Runner</code>
+wiring, and a plugin surface; the memory service is chosen by the app
+author</td>
+<td>Memory Bank does generation and ingestion server-side; the local
+implementations do none</td>
+<td>Author and timestamp on an entry; no provenance chain, trust state
+or confidence anywhere</td>
+<td>Scope keys mandatory in the signature; session and memory cleanly
+separated; 61 memory tests</td>
+<td>Deletion exists on the session service and not on the memory
+service, so the durable half of a user's data has no removal path</td>
 </tr>
 <tr>
 <td><code>agentmemory</code></td>
@@ -2555,14 +2601,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 77:</em> <a
+<p><em>3 of 78:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 77:</em> <a
+<p><em>7 of 78:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2572,7 +2618,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 77:</em> <a
+<p><em>8 of 78:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2584,8 +2630,9 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>46 of 77:</em> <a
+<p><em>47 of 78:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
+href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -2635,7 +2682,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 77:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 78:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2645,7 +2692,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 77:</em> <a
+<p><em>14 of 78:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2663,7 +2710,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 77:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 78:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2684,7 +2731,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-seven assert that particular material must
+repositories of seventy-eight assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6651,6 +6698,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/buzz/"><code>buzz</code></a></li>
 <li><a href="../systems/logseq/"><code>logseq</code></a></li>
 <li><a href="../systems/openhuman/"><code>openhuman</code></a></li>
+<li><a href="../systems/adk-python/"><code>adk-python</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -6925,6 +6973,9 @@ href="https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc7735
 href="https://github.com/tinyhumansai/openhuman">tinyhumansai/openhuman</a>
 at <a
 href="https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554"><code class="commit-id" title="e213bc5fc4000e9ad599c977a560113cc018c554">e213bc5f…</code></a></li>
+<li><a href="https://github.com/google/adk-python">google/adk-python</a>
+at <a
+href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e"><code class="commit-id" title="6bab08fc803d26853417c4d6e71704b1a72e035e">6bab08fc…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a

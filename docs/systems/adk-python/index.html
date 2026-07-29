@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Google's Agent Development Kit
+ships the memory interface an ecosystem builds against, and it has three
+ways to write and none to remove.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Google ADK — Agent Memory Atlas">
+    <meta property="og:description" content="Google's Agent Development
+Kit ships the memory interface an ecosystem builds against, and it has
+three ways to write and none to remove.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Google
+ADK — Agent Memory Atlas">
+    <meta name="twitter:description" content="Google's Agent Development
+Kit ships the memory interface an ecosystem builds against, and it has
+three ways to write and none to remove.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Google ADK — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A contract with no delete</p>
+          <h1>Google ADK</h1>
+          <p class="document-deck">Google's Agent Development Kit ships
+the memory interface an ecosystem builds against, and it has three ways
+to write and none to remove.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/google/adk-python">
+              <span>Source</span>
+              <strong>google/adk-python</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e" title="6bab08fc803d26853417c4d6e71704b1a72e035e">
+              <span>Analyzed revision</span>
+              <code>6bab08fc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>1 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ADK is Google's agent framework, and its memory layer is a
+<strong>contract</strong> rather than a store:
+<code>BaseMemoryService</code>, three shipped implementations, and an
+ecosystem of applications that will only ever be able to do what that
+interface permits. That makes it the most consequential entry in this
+atlas's <a href="../../patterns/pluggable-memory-provider/">pluggable
+memory provider</a> family — not because the code is the most
+interesting, but because it is the interface the most agents are written
+against.</p>
+<p>Two things it gets right, and they are the two most commonly got
+wrong here. <strong>Scope is not optional.</strong>
+<code>app_name</code> and <code>user_id</code> are required keyword
+arguments on every write path and on <code>search_memory</code>, and the
+Memory Bank client forwards them as a <code>scope</code> dict on
+retrieval — so a memory service in this framework cannot quietly forget
+which user it is serving. And <strong>session and memory are cleanly
+separated</strong>: <code>BaseSessionService</code> owns the live
+conversation, <code>BaseMemoryService</code> owns what outlives it, and
+<code>add_session_to_memory</code> is the explicit hand-off between
+them.</p>
+<p>The finding is what the contract omits.
+<code>BaseMemoryService</code> declares
+<code>add_session_to_memory</code>, <code>add_events_to_memory</code>,
+<code>add_memory</code> and <code>search_memory</code>. <strong>There is
+no delete, no update and no expiry</strong> — not as an abstract method,
+not as an optional one that raises, and not in any of the three
+implementations. Meanwhile <code>BaseSessionService</code> <em>does</em>
+declare <code>delete_session</code>. So the transient half of a user's
+data has a removal path and the durable half does not, and
+<code>add_session_to_memory</code> is a one-way door: content promoted
+out of a deletable session into memory becomes unremovable through the
+framework.</p>
+<p>For a framework carrying Google's name into regulated deployments,
+that is the gap worth naming. Everything else — the keyword-matching
+default, the thin <code>MemoryEntry</code>, the absent provenance — is
+ordinary and forgivable in an interface meant to be replaced. An
+interface that cannot express deletion is not replaceable by an
+implementation that supports it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>ADK distinguishes two things most systems in this atlas conflate.</p>
+<p>A <strong>session</strong> is the live conversation: an ordered list
+of <code>Event</code>s plus a <code>State</code> dict, owned by
+<code>BaseSessionService</code>, created and deleted explicitly.</p>
+<p>A <strong>memory</strong> is what an application decided should
+outlive that session. Its unit is <code>MemoryEntry</code>: a
+<code>types.Content</code>, plus optional <code>id</code>,
+<code>author</code>, <code>timestamp</code> and
+<code>custom_metadata</code>. That is the whole schema.</p>
+<pre class="text"><code>   session (events + state)  ── delete_session() ──►  gone
+        │
+        │  add_session_to_memory(session)
+        │  add_events_to_memory(app_name, user_id, events, session_id)
+        │  add_memory(app_name, user_id, memories)
+        ▼
+   memory ──────────────────────────────────────────►  no removal path exists
+        │
+        └── search_memory(app_name, user_id, query) ──► SearchMemoryResponse</code></pre>
+<p>There is no state machine beyond that. Nothing is a candidate,
+nothing is verified, nothing is superseded, nothing expires. A memory is
+present or was never written, and the only transition the framework
+models is session → memory, in one direction.</p>
+<p>Control is <strong>application-controlled</strong> — neither
+agent-controlled nor automatic. The framework does not decide what to
+remember: an app author calls <code>add_session_to_memory</code> at
+whatever boundary they choose, and the agent calls
+<code>load_memory</code> to read. The one place ADK exercises judgement
+on the user's behalf is Vertex AI Memory Bank, which <em>generates</em>
+memories from events server-side — and that generation is the vendor's,
+not visible here.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Python, Apache 2.0, a large framework of which memory is a small and
+deliberately replaceable part. The relevant modules are
+<code>memory/</code> (seven files, ~1,720 lines) and
+<code>sessions/</code>, with <code>tools/load_memory_tool.py</code> as
+the agent-facing surface.</p>
+<pre class="mermaid"><code>flowchart TB
+    A[Agent] --&gt;|load_memory tool| R[Runner]
+    APP[App author] --&gt;|add_session_to_memory| R
+    R --&gt; BMS[BaseMemoryService]
+    BMS --&gt; IM[InMemoryMemoryService&lt;br/&gt;dict + keyword match]
+    BMS --&gt; MB[VertexAiMemoryBankService&lt;br/&gt;hosted, generates memories]
+    BMS --&gt; RAG[VertexAiRagMemoryService]
+    R --&gt; BSS[BaseSessionService]
+    BSS --&gt; S1[InMemory]
+    BSS --&gt; S2[SQLite / database]
+    BSS --&gt; S3[VertexAiSessionService]
+    BSS -.-&gt;|delete_session exists| X[removal here]
+    BMS -.-&gt;|no delete method| Y[and not here]</code></pre>
+<p>Three memory implementations ship:</p>
+<ul>
+<li><strong><code>InMemoryMemoryService</code></strong> — a
+<code>dict</code> keyed <code>"{app_name}/{user_id}"</code>, then by
+session id. Search is <code>_extract_words_lower</code> on both sides
+and a set intersection. Its own docstring says "for prototyping purpose
+only" and "Uses keyword matching instead of semantic search". Honest,
+and nothing survives the process.</li>
+<li><strong><code>VertexAiMemoryBankService</code></strong> (~1,000
+lines) — the real one. Calls <code>agent_engines.memories</code> on a
+Vertex AI reasoning engine, with <code>generate_memories</code>, direct
+<code>create</code>, an ingest path, similarity search and a
+<code>retrieve_profiles</code> surface. Behaviour lives behind the
+API.</li>
+<li><strong><code>VertexAiRagMemoryService</code></strong> — a RAG
+corpus as the memory backend.</li>
+</ul>
+<p>The session side is better provisioned than the memory side:
+in-memory, SQLite, a general database service with migrations, and
+Vertex.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> nothing, for the default — but the
+default stores memory in a process dict, so "memory" in a stock ADK app
+does not survive a restart. Durable memory means a Vertex AI agent
+engine, which means a Google Cloud project, credentials and a billed
+hosted service.</li>
+<li><strong>Local and offline:</strong> the framework runs; durable
+memory does not. There is no shipped local persistent memory backend —
+no SQLite memory service to match the SQLite <em>session</em>
+service.</li>
+<li><strong>An API key is required to durably store anything</strong>,
+which is unusual in this atlas and follows directly from the previous
+point.</li>
+<li><strong>Hand-repairable:</strong> the local store is a dict; the
+hosted store is someone else's database. Neither is a file you fix.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The contract.</strong>
+<code>src/google/adk/memory/base_memory_service.py</code> — four
+methods, of which two are <code>@abstractmethod</code>
+(<code>add_session_to_memory</code>, <code>search_memory</code>), one is
+concrete with a default (<code>add_events_to_memory</code>), and one
+raises <code>NotImplementedError</code> by default
+(<code>add_memory</code>, line 97, with a message pointing the caller at
+the event-based paths).</p>
+<p><strong>The schema.</strong> <code>memory/memory_entry.py</code>, 45
+lines including licence header. <code>content</code>,
+<code>custom_metadata</code>, <code>id</code>, <code>author</code>,
+<code>timestamp</code> — the last documented as "when the original
+content of this memory happened" and noted as forwarded to the
+model.</p>
+<p><strong>Default write and read.</strong>
+<code>memory/in_memory_memory_service.py</code> —
+<code>_user_key(app_name, user_id)</code> builds
+<code>"{app_name}/{user_id}"</code>; events without
+<code>content.parts</code> are dropped; search lowercases and intersects
+word sets; a <code>threading.Lock</code> guards the dict.</p>
+<p><strong>Hosted write.</strong>
+<code>memory/vertex_ai_memory_bank_service.py</code> —
+<code>_add_events_to_memory_from_events</code> (line 314),
+<code>_add_events_to_memory_via_ingest</code> (367),
+<code>_add_memories_via_create</code> (456),
+<code>_add_memories_via_generate_direct_memories_source</code> (490).
+Feature-detection helpers (<code>_should_use_generate_memories</code>,
+<code>_supports_create_memory_metadata</code>,
+<code>_get_create_memory_config_keys</code>) negotiate which server-side
+path is available.</p>
+<p><strong>Hosted read.</strong> <code>search_memory</code> (line 524)
+calls <code>agent_engines.memories.retrieve</code> with
+<code>scope={'app_name': ..., 'user_id': ...}</code> and
+<code>similarity_search_params={'search_query': query}</code>.
+<code>retrieve_profiles</code> (line 575) is a second read surface
+carrying the same scope dict.</p>
+<p><strong>Agent surface.</strong>
+<code>tools/load_memory_tool.py</code> — <code>load_memory</code> as a
+<code>FunctionTool</code> with a generated declaration, plus
+<code>process_llm_request</code> to wire it into a turn.</p>
+<p><strong>Session lifecycle, for contrast.</strong>
+<code>sessions/base_session_service.py</code> —
+<code>create_session</code>, <code>get_session</code>,
+<code>list_sessions</code>,
+<strong><code>delete_session</code></strong>,
+<code>get_user_state</code>, <code>append_event</code>,
+<code>flush</code>.</p>
+<p><strong>Tests.</strong> <code>tests/unittests/memory/</code> — 61
+test functions across the three services, plus
+<code>tests/unittests/tools/test_load_memory_tool.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryEntry</code> is the entire durable schema: four optional
+fields on a content blob. What that means in practice:</p>
+<ul>
+<li><strong>No source link.</strong> <code>author</code> is a string;
+there is no session id, event id or span pointing back at what produced
+the memory. Once <code>add_session_to_memory</code> has run, an entry
+cannot be traced to its turn.</li>
+<li><strong>One timestamp</strong>, describing when the content
+happened, with no counterpart — so nothing here is bi-temporal.</li>
+<li><strong><code>custom_metadata</code> is the escape hatch</strong>,
+and the contract states its keys are "implementation-defined by each
+memory service". Anything an application puts there is therefore not
+portable across the providers the interface exists to make
+interchangeable.</li>
+<li><strong>No confidence, no state, no expiry, no
+version.</strong></li>
+</ul>
+<p><strong>Scoping is the strong part and it is structural.</strong>
+<code>app_name</code> and <code>user_id</code> are keyword-only
+<em>required</em> arguments on <code>add_events_to_memory</code>,
+<code>add_memory</code> and <code>search_memory</code>; the in-memory
+service composes them into its dict key; the Memory Bank service
+forwards them as a <code>scope</code> dict on both write and retrieve. A
+memory service in this framework cannot be written that ignores the user
+boundary without deliberately discarding arguments it was handed. That
+earns <code>scope_enforced</code>, and it is the cleanest instance of
+the mark in the atlas precisely because it is enforced by a signature
+rather than by a query.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One method, one query string, no options:
+<code>search_memory(app_name, user_id, query) -&gt; SearchMemoryResponse</code>.
+No <code>k</code>, no filters, no time range, no metadata predicate, no
+ranking hints, and no scores on the way back —
+<code>SearchMemoryResponse</code> is a bare
+<code>list[MemoryEntry]</code>.</p>
+<p>The default implementation is a word-set intersection, honestly
+labelled. The Memory Bank implementation delegates to hosted similarity
+search whose ranking, thresholds and chunking are not visible in this
+repository.</p>
+<p>The consequence for an application author is that retrieval quality
+is entirely the provider's, and the interface offers no vocabulary in
+which to ask for anything different. A team wanting hybrid retrieval,
+recency weighting or a narrowed scope implements
+<code>BaseMemoryService</code> themselves and ignores the query
+signature's limits — at which point the portability the interface
+promises is gone.</p>
+<p><code>retrieve_profiles</code> is a second, unabstracted read path:
+it exists on the Vertex implementation and not on the base, so an
+application using it is bound to Vertex.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Three entry points, deliberately layered:</p>
+<ul>
+<li><code>add_session_to_memory(session)</code> — the coarse one. Hands
+the whole session over and lets the service decide.</li>
+<li><code>add_events_to_memory(app_name, user_id, events, session_id, custom_metadata)</code>
+— the same thing with explicit scope, for callers not holding a
+<code>Session</code>.</li>
+<li><code>add_memory(app_name, user_id, memories, custom_metadata)</code>
+— direct writes, optional, raising a helpful
+<code>NotImplementedError</code> on services that do not support
+them.</li>
+</ul>
+<p>Writes are <strong>application-triggered and synchronous at the call
+site</strong>; no hook captures automatically at a turn or compaction
+boundary. What Memory Bank does afterwards —
+<code>generate_memories</code> runs an extraction server-side — is
+asynchronous and opaque, and <code>_log_ingest_task_error</code> exists
+because the ingest path fires tasks whose failures have to be caught
+somewhere.</p>
+<p><strong>There is no deduplication, no conflict detection and no
+consolidation</strong> in anything shipped locally. Calling
+<code>add_session_to_memory</code> twice on one session is explicitly
+anticipated — the docstring says "A session may be added multiple times
+during its lifetime" — and nothing in the local implementation prevents
+the second call producing duplicate content.</p>
+<p>Nothing filters input. An event whose text is a prompt injection is
+stored and returned by <code>load_memory</code> like any other.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Local writes are cheap and non-durable.</strong> A dict
+insert under a lock.</li>
+<li><strong>Hosted writes are a network call</strong>, and with
+<code>generate_memories</code> a model runs on Google's side per ingest
+— a cost that is real and not visible here.</li>
+<li><strong>Lag before a memory is retrievable</strong> is unstated.
+Zero for the in-memory service. For Memory Bank, generation and indexing
+are server-side, and <code>_add_events_to_memory_via_ingest</code> fires
+a task and logs errors from a callback, so the write is not acknowledged
+as retrievable.</li>
+<li><strong>No background pass exists in this repository.</strong>
+Whatever Memory Bank runs on a schedule is not here.</li>
+<li><strong>On the read path</strong> nothing is bounded: no
+<code>k</code>, no token budget. The agent gets whatever the service
+returns, and the <code>load_memory</code> tool puts it in the
+prompt.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>LoadMemoryTool</code> is a <code>FunctionTool</code> the agent
+calls explicitly, with a <code>process_llm_request</code> that injects
+it into a turn. So the model decides <em>when</em> to consult memory and
+never decides what to store — writes belong to the application. That
+asymmetry is the mirror of <a href="../logseq/">Logseq</a>'s (create and
+edit, never delete) and of <a href="../memmachine/">MemMachine</a>'s
+(delete, never author), and of the three it is the most conservative:
+the agent can only read.</p>
+<p>The <code>Runner</code> wires a memory service into an app, and the
+plugin and <code>apps</code> surfaces let an author swap it. Adapting a
+third-party memory system to ADK means implementing two abstract methods
+— genuinely low friction, and the reason the contract's omissions
+propagate.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No trust model exists</strong>, and for an interface that is
+defensible up to the point where it prevents an implementation from
+having one. <code>MemoryEntry</code> has no field in which a provider
+could return a confidence, a verification state or a provenance chain,
+so a memory service that tracks those internally must flatten them into
+<code>custom_metadata</code>, whose keys the contract declares
+implementation-defined and therefore non-portable. The interface does
+not merely lack a trust model; it makes a portable one impossible to
+express.</p>
+<p><strong>The deletion gap is the finding, and it is asymmetric in the
+worst direction.</strong> <code>BaseSessionService</code> declares
+<code>delete_session</code>. <code>BaseMemoryService</code> declares no
+removal method of any kind. <code>add_session_to_memory</code> moves
+content from the layer that can be deleted to the layer that cannot. An
+application honouring a deletion request by calling
+<code>delete_session</code> removes the conversation and leaves every
+memory derived from it in place, with no framework-level way to find or
+remove them. Reaching them means dropping to the provider's own API —
+Vertex's <code>agent_engines.memories</code> — which is exactly the
+vendor coupling the abstraction exists to prevent.</p>
+<p>This atlas's <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> page records that of the provider contracts reviewed, one
+carries scope and none carries deletion. ADK is the largest instance of
+that finding: it carries scope better than any of them, and still no
+deletion.</p>
+<p><strong>Multi-tenancy</strong> is otherwise handled well — see §5.
+<strong>Concurrency</strong>: the in-memory service takes a
+<code>threading.Lock</code>; the hosted service inherits whatever Vertex
+provides. <strong>Data loss</strong>: the default service loses
+everything on restart, which is documented rather than hidden.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>61 memory test functions</strong> across
+<code>test_in_memory_memory_service.py</code>,
+<code>test_vertex_ai_memory_bank_service.py</code> and
+<code>test_vertex_ai_rag_memory_service.py</code>, plus a tool test. For
+an interface package that is proportionate: the tests exercise scope-key
+composition, event filtering, the feature-detection helpers that choose
+a Memory Bank path, and error handling.</p>
+<p>No memory benchmarks, and none would mean much — there is no
+retrieval pipeline here to score, only a delegation.</p>
+<p>No test asserts that particular material must <em>not</em> be
+retrieved, so <code>negative_eval</code> is withheld. Given how strong
+the scope story is, that is the cheap missing test: the composition of
+<code>_user_key</code> is covered, the isolation it produces is not, and
+a case proving user A's search cannot surface user B's memory would
+convert a signature-level guarantee into a checked one.</p>
+<p><strong>What I would want before trusting it in a regulated
+deployment:</strong> a deletion method on the contract, and a test that
+it cascades.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put scope in the signature, not the query.</strong> Required
+keyword arguments for <code>app_name</code> and <code>user_id</code> on
+every read and write make a scope bug a <code>TypeError</code> rather
+than a leak. This is the cheapest correct thing in the system, and most
+of this atlas does it with a <code>WHERE</code> clause instead.</li>
+<li><strong>Separate the session service from the memory
+service.</strong> Two interfaces and one explicit hand-off means "what
+is live" and "what persists" cannot quietly become the same object — a
+confusion several systems here never escape.</li>
+<li><strong>Give the optional method a helpful failure.</strong>
+<code>add_memory</code> raising <code>NotImplementedError</code> with a
+message naming the two alternatives is better ergonomics than omitting
+it and better honesty than faking it.</li>
+<li><strong>Say "prototyping purpose only" in the docstring</strong> of
+the implementation that is a dict. ADK's default memory service is
+upfront that it is not durable memory, which is more than several
+products here manage.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping a memory contract without a removal
+method.</strong> Every application written against it inherits the gap,
+and it cannot be fixed by a better provider — only by changing the
+interface and breaking them. If you publish an abstraction, deletion
+belongs in v1 even if the first implementation raises
+<code>NotImplementedError</code>.</li>
+<li><strong>Deletion on the transient layer only.</strong> If content is
+promoted from a deletable store into a durable one, the durable one
+needs the stronger removal guarantee. The direction of the promotion is
+the direction the guarantees must run.</li>
+<li><strong>A metadata escape hatch whose keys are
+implementation-defined.</strong> It looks like extensibility and
+functions as an anti-portability clause: anything important enough to
+put there is important enough to be in the schema.</li>
+<li><strong>A retrieval signature with no parameters.</strong>
+<code>query</code> alone gives an application no way to ask for recency,
+a limit or a filter, so the first serious user forks the interface.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>If you are already building on ADK, use the memory service — the
+scope discipline is real and the session separation is right. Then write
+down, on day one, how you will honour a deletion request, because the
+framework will not help you and the answer will be provider-specific
+code that outlives your abstraction.</p>
+<p>If you are choosing a framework and deletion is a compliance
+requirement rather than a nicety, this is the wrong layer to inherit it
+from at this commit. That is not an argument against ADK — it is an
+argument for treating its memory interface as a read-and-write
+convenience and owning the lifecycle yourself.</p>
+<p>If you are designing your own provider interface, this is the one to
+read first and the one to diff against: copy the scope handling
+verbatim, and add the two methods it is missing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does Vertex AI Memory Bank support deletion at the API
+level?</strong> Almost certainly, being a managed store — but no client
+method here exposes it, so the question is whether the omission is an
+interface decision or a gap in this client.</li>
+<li><strong>What does <code>generate_memories</code> actually
+extract</strong>, and against what prompt? It is the one place ADK forms
+beliefs rather than storing them, and it is entirely server-side.</li>
+<li><strong>What is the retrieval latency contract for a freshly
+ingested event?</strong> The ingest path fires a task and logs failures
+from a callback; nothing states when the write becomes searchable.</li>
+<li><strong>Is <code>retrieve_profiles</code> intended to reach the base
+contract?</strong> It exists only on the Vertex implementation, so any
+application using it is no longer portable.</li>
+<li><strong>Do any two shipped services agree on any
+<code>custom_metadata</code> key?</strong> The contract says
+implementation-defined; this was not determined.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Contract and schema</strong></p>
+<ul>
+<li><code>src/google/adk/memory/base_memory_service.py</code> — the four
+methods</li>
+<li><code>src/google/adk/memory/memory_entry.py</code> —
+<code>MemoryEntry</code></li>
+<li><code>src/google/adk/memory/__init__.py</code>,
+<code>_utils.py</code></li>
+</ul>
+<p><strong>Implementations</strong></p>
+<ul>
+<li><code>src/google/adk/memory/in_memory_memory_service.py</code> —
+dict + keyword match</li>
+<li><code>src/google/adk/memory/vertex_ai_memory_bank_service.py</code>
+— hosted, ~1,000 lines</li>
+<li><code>src/google/adk/memory/vertex_ai_rag_memory_service.py</code></li>
+</ul>
+<p><strong>Session layer, for contrast</strong></p>
+<ul>
+<li><code>src/google/adk/sessions/base_session_service.py</code> —
+including <code>delete_session</code></li>
+<li><code>src/google/adk/sessions/sqlite_session_service.py</code>,
+<code>database_session_service.py</code>,
+<code>vertex_ai_session_service.py</code></li>
+</ul>
+<p><strong>Agent surface</strong></p>
+<ul>
+<li><code>src/google/adk/tools/load_memory_tool.py</code></li>
+<li><code>src/google/adk/runners.py</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/unittests/memory/test_in_memory_memory_service.py</code></li>
+<li><code>tests/unittests/memory/test_vertex_ai_memory_bank_service.py</code></li>
+<li><code>tests/unittests/memory/test_vertex_ai_rag_memory_service.py</code></li>
+<li><code>tests/unittests/tools/test_load_memory_tool.py</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
