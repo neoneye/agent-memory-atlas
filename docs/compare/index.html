@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy agent memory architectures, their retrieval mechanics, trust
+seventy-one agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,15 +13,15 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+of seventy-one agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+of seventy-one agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -77,9 +77,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of seventy
-agent memory architectures, their retrieval mechanics, trust models, and
-operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of
+seventy-one agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,11 +145,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy systems do not fall into seventy categories. They cluster
-around eight architectural commitments, and most systems belong to more
-than one — a coding-agent memory can also be verification-first, and a
-host runtime's plugin can also be a hosted service. The families below
-are lenses, not bins.</p>
+<p>Seventy-one systems do not fall into seventy-one categories. They
+cluster around eight architectural commitments, and most systems belong
+to more than one — a coding-agent memory can also be verification-first,
+and a host runtime's plugin can also be a hosted service. The families
+below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -296,7 +296,7 @@ memory provider</a>.</p>
 <code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
-<code>reme</code></p>
+<code>reme</code>, <code>acontext</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -312,9 +312,14 @@ benchmark. <strong>ReMe</strong> is the one that publishes its
 BEAM tables committed to the repository, its worst score among them —
 and carries the atlas's only validated correction vocabulary outside
 Memanto: <code>CREATE | CORROBORATE | REFINE | CORRECT</code>, with an
-additive-only update rule that nothing checks. <strong>Swafra</strong>
-shows how little code a local graph-RAG sidecar needs, and why flat JSON
-is not a database. <strong>Qwen Code</strong> has three memory tiers and
+additive-only update rule that nothing checks. <strong>Acontext</strong>
+is the one that finally implements the gate this atlas has been asking
+for: a task's <code>status</code> is constrained to
+<code>success | failed | running | pending</code> by a database CHECK,
+only the two terminal values enqueue learning, and three committed tests
+assert that the other cases write nothing. <strong>Swafra</strong> shows
+how little code a local graph-RAG sidecar needs, and why flat JSON is
+not a database. <strong>Qwen Code</strong> has three memory tiers and
 commits the third to the repository, so shared memory is distributed by
 <code>git pull</code> — and a write to that tier containing a detected
 secret is refused <em>unconditionally</em>, even when the tier is
@@ -629,6 +634,31 @@ cleanup</td>
 <td>Small, legible linked-note evolution concept</td>
 <td>Neighbor position/identity bug can mutate wrong notes; destructive
 initialization; no durability</td>
+</tr>
+<tr>
+<td><code>acontext</code></td>
+<td>An agent skill — a directory of Markdown files with a SKILL.md the
+user defines the schema for</td>
+<td>Postgres for skills, tasks, sessions and messages; a disk
+abstraction for the files themselves</td>
+<td>None automatic — the agent calls list_skills, get_skill and
+get_skill_file and decides</td>
+<td>A task reaching success or failed triggers distillation, then a
+skill agent routes and writes</td>
+<td>The skill agent rewrites files; the dashboard can delete a whole
+skill; no rejected-value record</td>
+<td>project_id on the skill read path, with disk, user and project
+foreign keys cascading</td>
+<td>Python, TypeScript and CLI clients, plus Claude Code and OpenClaw
+packages and a sandbox</td>
+<td>A message queue driving distillation and the skill agent, with
+session status through the pipeline</td>
+<td>Task outcome is the only signal, and it gates the write rather than
+labelling the memory</td>
+<td>The outcome gate the skills pattern asks for, tested; no embeddings,
+so memory is greppable and portable</td>
+<td>Retrieval depends entirely on the agent choosing to look; a wrong
+skill file has no tombstone</td>
 </tr>
 <tr>
 <td><code>agentmemory</code></td>
@@ -2135,14 +2165,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 70:</em> <a
+<p><em>3 of 71:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 70:</em> <a
+<p><em>6 of 71:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2151,7 +2181,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 70:</em> <a
+<p><em>8 of 71:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2163,7 +2193,8 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>41 of 70:</em> <a
+<p><em>42 of 71:</em> <a
+href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -2209,7 +2240,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 70:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 71:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2219,7 +2250,8 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>11 of 70:</em> <a
+<p><em>12 of 71:</em> <a
+href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -2234,7 +2266,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 70:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 71:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2255,7 +2287,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy assert that particular material must
+repositories of seventy-one assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6092,6 +6124,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/reme/"><code>reme</code></a></li>
 <li><a href="../systems/powermem/"><code>powermem</code></a></li>
 <li><a href="../systems/minecontext/"><code>minecontext</code></a></li>
+<li><a href="../systems/acontext/"><code>acontext</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6345,6 +6378,10 @@ href="https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81
 href="https://github.com/volcengine/MineContext">volcengine/MineContext</a>
 at <a
 href="https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65"><code class="commit-id" title="171c7a9ea8091e326ddcf0f10718aa1b58c83c65">171c7a9e…</code></a></li>
+<li><a
+href="https://github.com/memodb-io/Acontext">memodb-io/Acontext</a> at
+<a
+href="https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6"><code class="commit-id" title="259d73bfdebeed35ec2d4211ddc060a2d4126bc6">259d73bf…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
