@@ -169,18 +169,17 @@ in its own right, so a bad extraction into <code>semantic_memory</code>
 does not destroy the material it came from. Little else in the
 typed-memory family keeps this.</p>
 <p>The state machine is short, which is the point:</p>
-<pre class="text"><code>   (message)
-       │
-       ▼
-  accumulator ──► meta agent ──► specialist agent ──► row exists
-                                                          │
-                             ┌────────────────────────────┤
-                             ▼                            ▼
-                    *_update / *_replace              auto_dream
-                    (hard delete + insert)         (merge, rewrite,
-                             │                      hard delete)
-                             ▼                            │
-                          gone ◄──────────────────────────┘</code></pre>
+<pre class="mermaid"><code>stateDiagram-v2
+    direction TB
+    [*] --&gt; Exists: message → accumulator → meta agent&lt;br/&gt;→ specialist agent → typed row
+    Exists --&gt; Gone: per-type update / replace&lt;br/&gt;(&lt;code&gt;semantic_memory_update&lt;/code&gt;,&lt;br/&gt;&lt;code&gt;episodic_memory_replace&lt;/code&gt;, …)&lt;br/&gt;hard delete + insert
+    Exists --&gt; Gone: &lt;code&gt;auto_dream&lt;/code&gt;&lt;br/&gt;merge, rewrite, hard delete
+    Gone --&gt; [*]
+    note right of Exists
+        Two states, and no vocabulary for a third.
+        Not candidate, not disputed, not rejected,
+        not superseded — none of these exist in the schema.
+    end note</code></pre>
 <p>There is no state between "exists" and "gone". A row is never a
 candidate, never disputed, never rejected, never superseded — the
 vocabulary does not exist in the schema. Memory is

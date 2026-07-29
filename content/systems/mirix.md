@@ -83,19 +83,18 @@ the typed-memory family keeps this.
 
 The state machine is short, which is the point:
 
-```text
-   (message)
-       │
-       ▼
-  accumulator ──► meta agent ──► specialist agent ──► row exists
-                                                          │
-                             ┌────────────────────────────┤
-                             ▼                            ▼
-                    *_update / *_replace              auto_dream
-                    (hard delete + insert)         (merge, rewrite,
-                             │                      hard delete)
-                             ▼                            │
-                          gone ◄──────────────────────────┘
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> Exists: message → accumulator → meta agent<br/>→ specialist agent → typed row
+    Exists --> Gone: per-type update / replace<br/>(<code>semantic_memory_update</code>,<br/><code>episodic_memory_replace</code>, …)<br/>hard delete + insert
+    Exists --> Gone: <code>auto_dream</code><br/>merge, rewrite, hard delete
+    Gone --> [*]
+    note right of Exists
+        Two states, and no vocabulary for a third.
+        Not candidate, not disputed, not rejected,
+        not superseded — none of these exist in the schema.
+    end note
 ```
 
 There is no state between "exists" and "gone". A row is never a candidate, never
