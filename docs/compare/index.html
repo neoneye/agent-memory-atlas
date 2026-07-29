@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-nine agent memory architectures, their retrieval mechanics, trust
+seventy agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,15 +13,15 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of seventy agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of seventy agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -77,9 +77,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of
-sixty-nine agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of seventy
+agent memory architectures, their retrieval mechanics, trust models, and
+operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,11 +145,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-nine systems do not fall into sixty-nine categories. They
-cluster around eight architectural commitments, and most systems belong
-to more than one — a coding-agent memory can also be verification-first,
-and a host runtime's plugin can also be a hosted service. The families
-below are lenses, not bins.</p>
+<p>Seventy systems do not fall into seventy categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -432,20 +432,46 @@ scores like importance.</p>
 concern obscures them, and none of these has scope, correction,
 deletion, or a trust model. Voyager and Generative Agents have been
 frozen since 2023; read them for design, not adoption.</p>
-<h3 id="a-category-nothing-else-models-prospective-memory">A category
-nothing else models: prospective memory</h3>
+<h3 id="the-category-almost-nothing-models-prospective-memory">The
+category almost nothing models: prospective memory</h3>
 <p><a href="../systems/nooa-memory/">NOOA Memory</a> carries two memory
-types no other system in this atlas has: <code>intent</code> —
+types almost no other system in this atlas has: <code>intent</code> —
 "prospective: trigger-based reminder (when X…)" — and <code>todo</code>,
-"prospective: durable commitment with an open/done" lifecycle. Every
-other system here remembers what <em>was</em>; these remember what the
-agent has undertaken to do.</p>
-<p>The nearest neighbour is <a
+"prospective: durable commitment with an open/done" lifecycle. Nearly
+everything else here remembers what <em>was</em>; these remember what
+the agent has undertaken to do.</p>
+<p><strong>A second system has since turned up, and the way it differs
+is the interesting part.</strong> <a
+href="../systems/minecontext/">MineContext</a> has a <code>todo</code>
+table — <code>content</code>, <code>start_time</code>,
+<code>end_time</code> as a deadline, <code>urgency</code>,
+<code>assignee</code>, <code>reason</code>, and a <code>status</code>
+integer with exactly two values, stamped with an <code>end_time</code>
+on completion by <code>update_todo_status</code>. It also has an
+<code>INTENT_CONTEXT</code> type for "future plans, goal setting, and
+action intentions", and its <code>ContextProperties</code> model
+documents <code>event_time</code> as "event occurrence time, <strong>can
+be future</strong>" — which is the cheapest route to prospective memory
+anyone here has found, since a system that already separates event time
+from record time is most of the way there.</p>
+<p>But NOOA's commitments are <em>declared</em> and MineContext's are
+<em>inferred</em>. Its <code>SmartTodoManager</code> reads recent
+activity, pulls the relevant contexts, checks which historical todos
+were completed, and asks a model to extract tasks with due dates and
+priorities from what it watched the user do. It remembers commitments
+the user never made — and, per its report, offers no surface on which to
+reject one.</p>
+<p>So the category is no longer empty, and the two occupants bracket the
+design question rather than settling it. A declared commitment is a
+memory; an inferred commitment is a claim about someone's intentions,
+which is a stronger claim than any preference in this atlas and the one
+most costly to get wrong.</p>
+<p>The nearest other neighbour is <a
 href="../systems/ai-memory/">ai-memory</a>'s handoff with its
 <code>next_steps</code> list, and that is a record of an interrupted
 task rather than a trigger. Whether prospective memory belongs in a
 memory layer or in a scheduler is a real question — but it is being
-answered by omission everywhere except here, and an agent that cannot
+answered by omission nearly everywhere, and an agent that cannot
 remember its own commitments will keep rediscovering them.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
@@ -1507,6 +1533,31 @@ non-regression across eight metrics</td>
 defaults</td>
 </tr>
 <tr>
+<td><code>minecontext</code></td>
+<td>A typed context with an event time, a confidence and an importance
+score, keeping its raw properties beneath it — plus todo rows with an
+open/done lifecycle</td>
+<td>SQLite for structured rows, with ChromaDB or Qdrant for vectors</td>
+<td>Vector search per context type, plus tool-shaped retrieval for
+todos, activity and entities</td>
+<td>Passive capture from screenshots, folders, vault documents and web
+links, then LLM extraction and typed merge</td>
+<td>Update and delete exist on the API; no UI is wired to them and no
+rejected-value record is kept</td>
+<td>None on contexts or todos; user_id appears only on the chat
+conversations table</td>
+<td>An Electron desktop app over a FastAPI server, with generated daily
+and weekly reports</td>
+<td>Continuous capture, typed merging, and a SmartTodoManager that
+generates commitments from observed activity</td>
+<td>Integer confidence and importance scores on extracted data; no
+status and no provenance chain to the screenshot</td>
+<td>Event time separate from record time and allowed to be future; raw
+properties retained under every extracted context</td>
+<td>No tests in the Python package; commitments are inferred from screen
+capture and nothing reviews them</td>
+</tr>
+<tr>
 <td><code>mirix</code></td>
 <td>Six typed rows — episodic event, semantic concept, procedural step,
 resource, knowledge-vault secret, core block — plus a raw_memory
@@ -2084,14 +2135,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 69:</em> <a
+<p><em>3 of 70:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 69:</em> <a
+<p><em>6 of 70:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2100,7 +2151,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 69:</em> <a
+<p><em>8 of 70:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2112,7 +2163,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>41 of 69:</em> <a
+<p><em>41 of 70:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -2158,7 +2209,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 69:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 70:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2168,7 +2219,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>11 of 69:</em> <a
+<p><em>11 of 70:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -2183,7 +2234,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 69:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 70:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2204,7 +2255,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of sixty-nine assert that particular material must
+repositories of seventy assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6040,6 +6091,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/memori/"><code>memori</code></a></li>
 <li><a href="../systems/reme/"><code>reme</code></a></li>
 <li><a href="../systems/powermem/"><code>powermem</code></a></li>
+<li><a href="../systems/minecontext/"><code>minecontext</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6289,6 +6341,10 @@ href="https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827
 href="https://github.com/oceanbase/powermem">oceanbase/powermem</a> at
 <a
 href="https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851"><code class="commit-id" title="9d1b48449345b1ec7af1144aa1b81bb776478851">9d1b4844…</code></a></li>
+<li><a
+href="https://github.com/volcengine/MineContext">volcengine/MineContext</a>
+at <a
+href="https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65"><code class="commit-id" title="171c7a9ea8091e326ddcf0f10718aa1b58c83c65">171c7a9e…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
