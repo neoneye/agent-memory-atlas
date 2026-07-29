@@ -104,6 +104,20 @@ GenericAgent's action-verified axiom leaves no record of the tool call that
 justified a write. Evidence retained but unlinked supports recomputation and not
 explanation.
 
+[MemMachine](../../systems/memmachine/) is the plainest demonstration that the
+link is cheap. Every derived `SemanticFeature` carries
+`metadata.citations: Sequence[EpisodeIdT]`, written by `_apply_commands` on each
+ADD, and the episodes are retained, so the citation resolves to text rather than
+to a dangling id. One array column converts a store that can recompute into one
+that can explain. Two cautions come with it, both visible in the code. Retrieval
+takes a `load_citations` flag that defaults off, so provenance is available and
+not automatic — a caller who never sets it gets the same unlinked experience as
+the systems above. And every consolidation pass unions the citations of the
+features it merges, so a long-lived feature ends up citing dozens of episodes:
+the link never breaks, it just stops being a pointer and becomes a bibliography.
+If you adopt this, keep the pre-merge rows or record which input contributed
+which clause.
+
 [Daimon](../../systems/daimon/) is the atlas's counter-example to that failure,
 and it gets there without storing the evidence at all. It keeps no copy of the
 transcript: a checkpoint carries a hash of the source bytes, and each verbatim
