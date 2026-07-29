@@ -40,6 +40,10 @@ when the work happens.
   contain the atlas's central mechanism, and all eleven of its unreviewed
   framework candidates were then triaged — nine became reports and four corrected
   claims the atlas had published.
+- [2026-07-29-selective-forgetting-that-is-not.md](2026-07-29-selective-forgetting-that-is-not.md) —
+  two surveys call MemoryAgentBench's fourth competency *selective forgetting*;
+  the repository calls it conflict resolution, and its dataset keeps both values
+  and hands the recency rule to the model in the prompt.
 - [2026-07-29-the-other-agent-memory-atlas.md](2026-07-29-the-other-agent-memory-atlas.md) —
   a different public project with the same name; a link check of its 122 sources
   and what a confidence score determined entirely by one other column is worth.

@@ -246,6 +246,72 @@ the rest of this page.</p>
 <p><strong>open-cowork's harness</strong> is described below and is the
 most interesting evaluation shape in the atlas, precisely because it is
 not a public benchmark.</p>
+<h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
+commit</h3>
+<p>Two benchmarks were checked out and read rather than described from
+their papers, because the literature makes a specific claim about the
+first of them that the code does not support.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>Commit read</th>
+<th>What the code does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MemoryAgentBench</strong> (<a
+href="https://github.com/HUST-AI-HYZ/MemoryAgentBench">HUST-AI-HYZ/MemoryAgentBench</a>)</td>
+<td><a
+href="https://github.com/HUST-AI-HYZ/MemoryAgentBench/commit/455306dcabc3842526eb83cd4e225e5d486c5c5d"><code class="commit-id" title="455306dcabc3842526eb83cd4e225e5d486c5c5d">455306dc…</code></a>,
+21 May 2026</td>
+<td>Four competencies over incremental multi-turn interaction. The
+fourth is <strong>not selective forgetting</strong> — see below</td>
+</tr>
+<tr>
+<td><strong>MemoryArena</strong> (<a
+href="https://github.com/ZexueHe/MemoryArena">ZexueHe/MemoryArena</a>)</td>
+<td><a
+href="https://github.com/ZexueHe/MemoryArena/commit/6cd9de14b71915e39ac742a20dc33785e14b6aab"><code class="commit-id" title="6cd9de14b71915e39ac742a20dc33785e14b6aab">6cd9de14…</code></a>,
+31 May 2026</td>
+<td>Memory-agent-environment loop over four task environments; adapters
+for MIRIX, Mem0, Letta, A-MEM, GraphRAG, MemoRAG and long context. No
+deletion or correction path anywhere in it</td>
+</tr>
+</tbody>
+</table></div>
+<p>MemoryArena is the more interesting <em>design</em> — it scores
+whether a later session can be completed at all given what an earlier
+one stored, which is closer to what memory is for than conversational QA
+is. It is orthogonal to this page's concern: nothing in it deletes.</p>
+<p>MemoryAgentBench is the one worth being precise about. Two surveys
+describe its fourth competency as <strong>selective forgetting</strong>,
+and at least one secondary source calls it the gold standard for
+agent-level forgetting evaluation. In the repository that competency is
+named <code>Conflict_Resolution</code>, and its dataset is
+<code>FactConsolidation</code>. Reading what it actually asks:</p>
+<ul>
+<li>The context is a flat numbered list of facts — 455 of them in the 6K
+multi-hop split, of which 123 subjects carry a second, contradicting
+entry at a higher index.
+<code>0. Thomas Kyd was born in the city of London</code> is still there
+when <code>306. Thomas Kyd was born in the city of Leeds</code>
+arrives.</li>
+<li>The query prompt in <code>utils/templates.py</code> hands the
+resolution rule to the model: <em>"the newer fact has larger serial
+number ... solve the conflicts of facts in the knowledge pool by finding
+the newest fact with larger serial number."</em></li>
+<li>Scoring is <code>substring_exact_match</code> against the newer
+value.</li>
+</ul>
+<p>So nothing is deleted, both values remain in the store, the recency
+rule is supplied rather than inferred, and the score is answer-time
+preference. That is the same shape as LongMemEval's knowledge-update
+category, at greater length. The competency is named accurately in the
+code and inaccurately in the literature that cites it, and the
+difference matters exactly here: a reader looking for a forgetting
+benchmark will be sent to this one and will not find one.</p>
 <h3 id="named-benchmarks-outside-these-repositories">Named benchmarks
 outside these repositories</h3>
 <p>The atlas's convention is to separate what was read in code from what
@@ -286,7 +352,8 @@ from adjacent evaluation. It is the right place to start, and none of it
 was inspected here. The entries closest to this page's concerns, by the
 survey's own one-line descriptions: <strong>HaluMem</strong> (memory
 hallucinations), <strong>MemoryAgentBench</strong> and
-<strong>Evo-Memory</strong> (test-time and multi-episode learning),
+<strong>Evo-Memory</strong> (test-time and multi-episode learning —
+MemoryAgentBench has since been read directly, above),
 <strong>PersonaMem</strong> and <strong>PrefEval</strong> (dynamic user
 profiles and stated preferences), <strong>LifelongAgentBench</strong>
 and <strong>StreamBench</strong> (continual and online learning),
@@ -694,6 +761,16 @@ entries are MemoryBank ("user memory updating") and HaluMem (memory
 hallucinations), and neither asks the question. This is the clearest gap
 in the field's measurement practice, and it is worth being precise about
 what exists and what does not.</p>
+<p><strong>The one apparent counterexample was checked and is not
+one.</strong> Two surveys name MemoryAgentBench's fourth competency as
+<em>selective forgetting</em> — the strongest public claim that a
+forgetting benchmark exists. <a
+href="#read-directly-at-a-pinned-commit">Section 2</a> records what its
+code does instead: superseded and current values coexist in the store,
+the recency rule is given in the prompt, and the score is answer-time
+preference. It is a supersession benchmark under another name. The gap
+is not that nobody has looked; it is that the thing found when looking
+gets relabelled on the way into the citation graph.</p>
 <h3 id="what-exists">What exists</h3>
 <ul>
 <li><strong>LongMemEval's knowledge-update category</strong> scores
