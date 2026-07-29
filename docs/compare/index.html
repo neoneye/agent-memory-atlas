@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-eight agent memory architectures, their retrieval mechanics, trust
+sixty-nine agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-eight agent memory architectures, their retrieval mechanics,
+of sixty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-eight agent memory architectures, their retrieval mechanics,
+of sixty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-sixty-eight agent memory architectures, their retrieval mechanics, trust
+sixty-nine agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-eight systems do not fall into sixty-eight categories. They
+<p>Sixty-nine systems do not fall into sixty-nine categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -177,8 +177,8 @@ safely.</p>
 <code>hindsight</code>, <code>redis-agent-memory-server</code>,
 <code>openviking</code>, <code>memanto</code>,
 <code>memory-engine</code>, <code>memu</code>,
-<code>elastic-atlas</code>, <code>mirix</code>,
-<code>memobase</code></p>
+<code>elastic-atlas</code>, <code>mirix</code>, <code>memobase</code>,
+<code>powermem</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -212,7 +212,10 @@ subtopics per topic, and deletes the source transcript after extraction
 by default; MIRIX ingests screen captures continuously and runs a
 periodic pass that can rewrite the whole store. One is the smallest
 useful description of a user, the other is the largest, and neither can
-say that a value was rejected.</p>
+say that a value was rejected. <strong>PowerMem</strong> answers the
+same question a third way, with an Ebbinghaus retention curve that
+decides reachability — the atlas's most complete forgetting model, and a
+reminder that a well-tuned curve is still not a trust state.</p>
 <p>Tradeoff: the API surface is usually easier to study than the
 decision machinery. In <code>supermemory</code> the hosted core is not
 visible at all; in <code>mem0</code> several documented capabilities are
@@ -1778,6 +1781,31 @@ branchable sessions</td>
 live</td>
 </tr>
 <tr>
+<td><code>powermem</code></td>
+<td>An LLM-extracted memory row with retention metadata, plus distilled
+Experience and Skill records above it</td>
+<td>SQLite, pgvector or OceanBase for memory; the skill and source
+stores are OceanBase only</td>
+<td>Vector, FTS and graph fused by RRF, with recency and retention
+scores applied</td>
+<td>LLM extraction with a simple and an intelligent path, plus
+background workers</td>
+<td>Update and delete APIs; forgetting is a retention score falling
+below a threshold</td>
+<td>user_id, agent_id and run_id built into effective filters and
+carried into the store</td>
+<td>Python SDK, HTTP server, MCP, CLI, VS Code extension and a Claude
+Code plugin</td>
+<td>Decay, promotion and archival evaluated during search, with some
+updates dispatched to a thread pool</td>
+<td>None; retention and importance are scores, and no memory carries a
+status</td>
+<td>The atlas's most complete forgetting-curve implementation, with
+promotion, archival and reinforcement as separate decisions</td>
+<td>The history table has no callers anywhere in the repository; search
+writes to the store</td>
+</tr>
+<tr>
 <td><code>qwen-code</code></td>
 <td>Auto-memory entry typed
 <code>user | feedback | project | reference</code>, with source
@@ -2056,14 +2084,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 68:</em> <a
+<p><em>3 of 69:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 68:</em> <a
+<p><em>6 of 69:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2072,7 +2100,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 68:</em> <a
+<p><em>8 of 69:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2084,7 +2112,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>40 of 68:</em> <a
+<p><em>41 of 69:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -2120,6 +2148,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/openviking/"><code>openviking</code></a>, <a
 href="../systems/openworker/"><code>openworker</code></a>, <a
+href="../systems/powermem/"><code>powermem</code></a>, <a
 href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
@@ -2129,7 +2158,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 68:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 69:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2139,7 +2168,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>11 of 68:</em> <a
+<p><em>11 of 69:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -2154,7 +2183,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 68:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 69:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2175,7 +2204,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of sixty-eight assert that particular material must
+repositories of sixty-nine assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6010,6 +6039,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/memary/"><code>memary</code></a></li>
 <li><a href="../systems/memori/"><code>memori</code></a></li>
 <li><a href="../systems/reme/"><code>reme</code></a></li>
+<li><a href="../systems/powermem/"><code>powermem</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6255,6 +6285,10 @@ href="https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8
 href="https://github.com/agentscope-ai/ReMe">agentscope-ai/ReMe</a> at
 <a
 href="https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc"><code class="commit-id" title="550317c3bfb755d985a0401194827eaa9676a5bc">550317c3…</code></a></li>
+<li><a
+href="https://github.com/oceanbase/powermem">oceanbase/powermem</a> at
+<a
+href="https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851"><code class="commit-id" title="9d1b48449345b1ec7af1144aa1b81bb776478851">9d1b4844…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a

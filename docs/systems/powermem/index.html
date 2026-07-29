@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Ebbinghaus retention that
+reinforces and forgets during search, four scope keys carried to the
+storage layer, and a mutation-history table that nothing has ever
+written to.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="PowerMem — Agent Memory Atlas">
+    <meta property="og:description" content="Ebbinghaus retention that
+reinforces and forgets during search, four scope keys carried to the
+storage layer, and a mutation-history table that nothing has ever
+written to.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PowerMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="Ebbinghaus retention that
+reinforces and forgets during search, four scope keys carried to the
+storage layer, and a mutation-history table that nothing has ever
+written to.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>PowerMem — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Decay on the read path</p>
+          <h1>PowerMem</h1>
+          <p class="document-deck">Ebbinghaus retention that reinforces
+and forgets during search, four scope keys carried to the storage layer,
+and a mutation-history table that nothing has ever written to.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/oceanbase/powermem">
+              <span>Source</span>
+              <strong>oceanbase/powermem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851" title="9d1b48449345b1ec7af1144aa1b81bb776478851">
+              <span>Analyzed revision</span>
+              <code>9d1b4844…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>1 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>PowerMem is OceanBase's memory layer: LLM extraction into a vector
+store, hybrid vector/full-text/graph retrieval fused by reciprocal rank,
+an Ebbinghaus forgetting curve governing what stays reachable, and a
+two-layer "Experience + Skill" distillation above the fact layer. It
+ships a Python SDK, an HTTP server, an MCP server, a CLI, a VS Code
+extension and a Claude Code plugin, with 128 test files behind them.</p>
+<p><strong>The best thing here is the retention model.</strong>
+<code>EbbinghausAlgorithm</code> is the most complete implementation of
+<a href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> in the atlas, and it is complete in the way that
+matters: <code>should_promote</code>, <code>should_forget</code>,
+<code>should_archive</code> and <code>reinforce</code> are four separate
+decisions with four separate thresholds, and the decay rate varies by
+memory type. Most systems here have one number that goes down.</p>
+<p><strong>Two findings should shape how you read the rest.</strong></p>
+<p>The first is a fact about this repository that took one search to
+establish and is worth more than any architectural summary: the
+<code>history</code> table — <code>memory_id</code>,
+<code>old_memory</code>, <code>new_memory</code>, <code>event</code>,
+<code>actor_id</code> — is created by a migration that carefully
+upgrades an older schema version, and <strong><code>add_history</code>
+and <code>get_history</code> have zero callers anywhere in the
+repository</strong>. Not in <code>src/</code>, not in the tests, not in
+the benchmark server. PowerMem has a mutation audit table it has never
+written a row to. Section 9 works through what that means.</p>
+<p>The second is that retrieval mutates the store. <code>search()</code>
+evaluates decay, reinforcement and forgetting against the rows it
+retrieves and calls <code>storage.update_memory(...)</code> on some of
+them — sometimes inline, sometimes on a background executor. Reading
+memory changes memory.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>extracted assertion with a retention
+score</strong>. Above it sit two distilled layers:</p>
+<pre class="text"><code>memory      LLM-extracted text + embedding + retention metadata
+  ▲
+experience  distilled from interactions
+  ▲
+skill       a reusable workflow           ← OceanBase-only store</code></pre>
+<p>The state machine is entirely quantitative, and this is the design's
+defining choice:</p>
+<pre class="text"><code>                     reinforce()            should_promote()
+   memory ──retrieved──► retention ↑ ──────────► promoted
+      │                     │
+      │  time passes        │ should_archive()
+      ▼                     ▼
+  R = e^(-t/S)          archived
+      │
+      │ should_forget()
+      ▼
+   unreachable</code></pre>
+<p><code>calculate_decay</code> implements <code>R = e^(-t/S)</code>
+directly —
+<code>decay_factor = math.exp(-hours_elapsed / (24 * rate))</code> —
+with <code>_get_decay_rate_for_type</code> giving different memory types
+different half-lives and <code>_apply_reinforcement</code> raising the
+rate for memories that keep being used.</p>
+<p>What the model has no vocabulary for is <strong>truth</strong>. A
+memory is reachable or not, promoted or not, archived or not. It is
+never candidate, verified, disputed, superseded or rejected. So "the
+user corrected me" and "the user has not mentioned this in a while"
+reach the store through the same channel — a change in a score — and
+afterwards nothing can distinguish them. That is the failure <a
+href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> warns about, and PowerMem is its most sophisticated
+instance: the more carefully tuned the curve, the more convincingly it
+stands in for a trust model it is not.</p>
+<p>Memory is background-managed. There is no human review surface and no
+tool by which the model marks something wrong.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<pre class="mermaid"><code>flowchart LR
+    SDK[&quot;SDK / MCP / CLI / HTTP&quot;] --&gt; M[&quot;Memory / AsyncMemory&quot;]
+    M --&gt; IA[&quot;_intelligent_add&lt;br/&gt;LLM extraction&quot;]
+    M --&gt; SA[&quot;_simple_add&quot;]
+    IA --&gt; AD[&quot;storage adapter&lt;br/&gt;_build_db_filters + routing&quot;]
+    SA --&gt; AD
+    AD --&gt; V[(&quot;SQLite / pgvector /&lt;br/&gt;OceanBase&quot;)]
+    AD --&gt; G[(&quot;graph store&quot;)]
+    M --&gt; S[&quot;search&lt;br/&gt;vector + FTS + graph, RRF&quot;]
+    S --&gt; V
+    S --&gt; EB[&quot;EbbinghausAlgorithm&quot;]
+    EB --&gt;|update_memory| V
+    SK[&quot;skill_manager&quot;] --&gt; SKS[(&quot;skill_store&lt;br/&gt;OceanBase only&quot;)]</code></pre>
+<ul>
+<li><strong>Storage</strong> is pluggable —
+<code>storage/sqlite/</code>, <code>storage/pgvector/</code>,
+<code>storage/oceanbase/</code> — behind <code>adapter.py</code> and
+<code>factory.py</code>, with a <code>migration_manager.py</code>.
+SQLite gets FTS5 hybrid search with RRF fusion, which makes the free
+tier genuinely usable.</li>
+<li><strong>Sub-store routing</strong> is real:
+<code>_route_to_store(routing_filters)</code> picks a store from the
+scope keys, and <code>_get_embedding_service(filters)</code> can select
+a different embedding model per sub-store. That is more configurability
+than most of this atlas offers and is how the Experience/Skill split is
+deployed.</li>
+<li><strong>Intelligence</strong> lives in <code>intelligence/</code>:
+<code>ebbinghaus_algorithm.py</code>,
+<code>importance_evaluator.py</code>,
+<code>intelligent_memory_manager.py</code>,
+<code>memory_optimizer.py</code>, <code>skill_manager.py</code>, plus a
+<code>plugin.py</code>.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Start-up is easy: <code>pip install powermem</code>, point it at
+SQLite, and hybrid search works locally. An LLM key is needed for
+extraction — <code>_simple_add</code> exists and stores messages without
+extraction, so there is a degraded path, which is more than most
+offer.</p>
+<p>The vendor gradient is worth naming.
+<code>storage/skill_store/</code> and <code>storage/source_store/</code>
+each contain exactly <code>base.py</code> and <code>oceanbase.py</code>.
+Skill distillation is a headline feature of the project and it has one
+backend, which happens to be the product of the organization that
+publishes the library. Nothing about that is hidden — the base classes
+are there and a second implementation is clearly anticipated — but a
+reader evaluating PowerMem on SQLite should know that the two-layer
+story is not available to them at this commit.</p>
+<p>The store is SQL and inspectable; the retention metadata lives in the
+payload JSON, so repairing a decayed memory by hand means editing JSON
+inside a row.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — <code>core/memory.py:1170</code>, branching
+between <code>_simple_add(...)</code> and
+<code>_intelligent_add(...)</code> on the same argument list
+<code>(messages, user_id, agent_id, run_id, metadata, filters, scope, memory_type, prompt)</code>.
+<code>_add_to_graph(messages, filters, user_id, agent_id, run_id)</code>
+runs alongside for the graph projection.</p>
+<p><strong>Scope construction</strong> —
+<code>storage/adapter.py:378</code>. <code>routing_filters</code> is
+built from <code>user_id</code>, <code>agent_id</code> and
+<code>run_id</code>, used to pick a target store via
+<code>_route_to_store</code>, and then
+<code>_build_db_filters(user_id, agent_id, run_id, filters)</code>
+produces the <code>effective_filters</code> the query runs with. The
+same triple reaches <code>search_memories(...)</code> and
+<code>search_memories_async(...)</code> in the storage base class.</p>
+<p><strong>Retrieval</strong> — <code>core/memory.py:1718</code>,
+<code>search()</code>. Parameters are unusually explicit:
+<code>retrieval_mode</code>, <code>fusion="rrf"</code>,
+<code>vector_weight</code>, <code>fts_weight</code>,
+<code>rrf_k=60</code>, <code>candidate_limit</code>,
+<code>threshold</code>. The SQLite vector store implements the FTS5 half
+(<code>sqlite_vector_store.py</code>) with payload JSON extraction
+(<code>json_extract(payload, '$.user_id')</code>).</p>
+<p><strong>Retention</strong> —
+<code>intelligence/ebbinghaus_algorithm.py</code>.
+<code>calculate_decay</code> (134), <code>calculate_relevance</code>
+(181), <code>should_promote</code> (213), <code>should_forget</code>
+(252), <code>should_archive</code> (271), <code>reinforce</code> (305),
+<code>calculate_current_retention</code> (340),
+<code>get_review_schedule</code> (365), and
+<code>_resolve_decay_rate</code> / <code>_get_decay_rate_for_type</code>
+for per-type curves.</p>
+<p><strong>The write-during-read</strong> — inside
+<code>search()</code>, roughly <code>core/memory.py:1795</code> onward:
+<code>self.storage.update_memory(mem_id, {**upd}, user_id, agent_id)</code>
+for reinforcement, <code>forget_updates</code> for decay, and
+<code>_BACKGROUND_EXECUTOR.submit(self.storage.update_memory, ...)</code>
+for the deferred variant.</p>
+<p><strong>Audit</strong> — <code>core/audit.py</code>,
+<code>AuditLogger</code> with <code>log_event</code>,
+<code>log_event_async</code>, <code>log_access</code>,
+<code>log_data_change</code>, <code>log_security_event</code>,
+instantiated at <code>core/memory.py:753</code> and
+<code>core/async_memory.py:197</code>.</p>
+<p><strong>History</strong> — <code>storage/sqlite/sqlite.py:106</code>
+creates the table, <code>:126</code> <code>add_history</code> inserts,
+<code>:169</code> <code>get_history</code> reads. Neither is called.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Scoping is the strongest structural property and it is applied
+properly. Three keys — <code>user_id</code>, <code>agent_id</code>,
+<code>run_id</code> — are accepted at the API, assembled into
+<code>effective_filters</code> in the adapter, and passed into the
+store's own query rather than filtered afterwards. The
+<code>run_id</code> level is a genuine third boundary that many systems
+here lack: a single agent serving a single user can still keep one run's
+memories out of another's.</p>
+<p>Payload-based storage means the schema is thin and the metadata is
+JSON — retention scores, importance, memory type, timestamps. That buys
+flexibility and costs queryability; a question like "how many memories
+are within a week of being forgotten" is a JSON scan.</p>
+<p>The <code>history</code> table is the interesting absence. Its
+columns are exactly right for an append-only mutation record —
+<code>old_memory</code>, <code>new_memory</code>, <code>event</code>,
+<code>actor_id</code>, <code>role</code>, <code>created_at</code> — and
+<code>add_history</code> is insert-only, so had it been wired up it
+would plausibly have carried this atlas's <code>audit_log</code> mark.
+Instead:</p>
+<pre class="text"><code>$ grep -rn &quot;add_history&quot; .        # one hit: the definition
+$ grep -rn &quot;get_history&quot; .        # one hit: the definition</code></pre>
+<p>The migration path around it is not vestigial either —
+<code>sqlite.py:55</code> logs "Migrating history table to new schema
+(no convo columns)" and rewrites a <code>history_old</code> table. The
+code maintains a schema for data that has never existed. This is a
+mem0-lineage artifact carried through a rewrite, and it is the cleanest
+example in the atlas of why the review method is static-with-callers
+rather than schema-reading: a capability matrix built from migrations
+would have marked PowerMem as having a mutation audit trail.</p>
+<p>No trust state, no validity interval, no supersession pointer, no
+rejected-value record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three arms — vector, FTS and graph — fused by RRF with tunable
+weights, an explicit <code>rrf_k</code>, a candidate limit, a score
+threshold, and an <code>auto</code> retrieval mode that picks. This is a
+well-specified hybrid retriever and the parameters are exposed rather
+than buried, which is the right call for a library.</p>
+<p>On top of similarity, retention enters the ranking:
+<code>calculate_relevance</code> combines the query match with the
+memory's current retention, so an old unused memory is both less
+reachable and less highly ranked.</p>
+<p>Then it writes. This is the part to think about before adopting:</p>
+<ul>
+<li><strong>Cost.</strong> A search is no longer a read. Under
+concurrency, two searches touching the same popular memory both
+reinforce it, and the <code>_BACKGROUND_EXECUTOR</code> path makes the
+ordering of those writes non-deterministic.</li>
+<li><strong>Semantics.</strong> Retrieval reinforces whatever the
+retriever surfaced, which is the self-reinforcement loop the decay
+pattern page names: a memory that ranks well gets reinforced, which
+makes it rank better. Popularity compounds, and nothing in the loop
+consults correctness.</li>
+<li><strong>Operations.</strong> A read-only replica cannot serve
+search.</li>
+</ul>
+<p>The design is coherent — this is genuinely how a forgetting curve
+wants to work, since retrieval <em>is</em> the rehearsal event — and the
+consequences are still real.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two paths. <code>_simple_add</code> stores messages directly;
+<code>_intelligent_add</code> runs LLM extraction, merge and update.
+Having both is a real strength: an outage or a cost ceiling degrades to
+storage rather than to failure, which is the <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> property
+most extraction-first systems lack.</p>
+<p>Correction is <code>update_memory</code> plus the retention
+machinery. There is no supersession chain and no rejected-value record,
+so "forget this" resolves to either a delete or a score below
+<code>should_forget</code>'s threshold. The second is reversible by any
+subsequent reinforcement, and the first leaves nothing behind — so an
+extraction pass that re-encounters the same statement will store it
+again.</p>
+<p>The Experience and Skill layers are distilled by
+<code>skill_manager</code> and <code>intelligent_memory_manager</code>
+from interaction history, which is the <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> shape. What the atlas looks for there — a verified-execution
+gate before a procedure is written — was not found; distillation is LLM
+judgement over past interactions.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous?</strong> <code>_intelligent_add</code> blocks
+on extraction; <code>_simple_add</code> does not.</li>
+<li><strong>Lag?</strong> None for <code>_simple_add</code>. For the
+intelligent path, one extraction round trip.</li>
+<li><strong>Whole-store passes?</strong> No scheduled global pass —
+decay is evaluated lazily on the rows a search touches, which is a
+genuinely cheaper design than a nightly sweep and is why the
+write-during-read exists.</li>
+<li><strong>Read path?</strong> Bounded by <code>limit</code> (default
+30) and <code>candidate_limit</code>, with a threshold. The hidden cost
+is the writes, not the tokens.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The widest integration surface of anything reviewed in this round:
+Python SDK, HTTP server (<code>benchmark/server/main.py</code> and the
+packaged server), MCP (<code>src/powermem/mcp/</code>), CLI, a VS Code
+extension and a Claude Code plugin under <code>apps/</code>.</p>
+<p>Model agency is moderate. Through MCP the agent can add, search,
+update and delete memories; it cannot mark one wrong, and there is no
+vocabulary for it to express that a memory should never come back.</p>
+<p>The MCP surface plus three scope keys makes this straightforward to
+mount under another host, and the sub-store routing means one deployment
+can serve several agents with different embedding models — a feature the
+<a href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> pattern would like more systems to have.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The audit story is the thing to be precise about, because
+there are two mechanisms and neither is what it looks like.</strong></p>
+<p><code>AuditLogger</code> is real and is called — it is constructed in
+both <code>Memory</code> and <code>AsyncMemory</code> — and it writes
+<code>log_event</code>, <code>log_access</code>,
+<code>log_data_change</code> and <code>log_security_event</code>
+records. But it writes them to a <strong>rotating file</strong>:
+<code>CompressingRotatingFileHandler</code> with <code>maxBytes</code>
+from a <code>log_rotation_size</code> default of 100MB,
+<code>backupCount=5</code>, and a <code>retention_days</code> default of
+90. An audit log that rotates is an audit log with a horizon; after five
+rollovers the earliest records are gone. It is also outside the memory
+store, so it cannot be joined to the rows it describes, and the atlas's
+definition asks for a record in the system's own store for exactly that
+reason.</p>
+<p>The <code>history</code> table would have been that record and is not
+written. So the capability is withheld twice over: once because the log
+rotates and lives elsewhere, once because the in-store table is
+unwired.</p>
+<p>Trust is unrepresented. Uncertainty is expressible only as a lower
+retention or importance score, which conflates "I am unsure this is
+true" with "this has not been useful lately".</p>
+<p>Prompt injection has the usual route through extraction, with a
+specific amplifier: injected content that is subsequently retrieved gets
+<em>reinforced</em> by the read path, so a successful injection becomes
+more durable each time it surfaces.</p>
+<p>Multi-tenancy is sound at the query layer. The graph tests note that
+"legacy unscoped graph tables are recreated for user isolation", which
+indicates the boundary was retrofitted into the graph store and that the
+retrofit is at least tested for schema shape.</p>
+<p>Concurrency is the open operational risk, per section 6.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>128 test files, covering storage backends, FTS, MCP, the CLI plugin
+installer, graph isolation and the intelligence modules. The suite is
+broad and mostly unit- level.</p>
+<p>No test asserts that particular material must not be retrieved. The
+isolation tests that come closest —
+<code>test_oceanbase_graph.py:122</code> and <code>:131</code> — assert
+that the <em>schema</em> includes user isolation and that legacy
+unscoped tables are recreated. That is a claim about DDL, not about what
+a query returns, so <code>negative_eval</code> is withheld. (Compare <a
+href="./mirix/">MIRIX</a>, which creates a row under one scope, queries
+under another, and asserts the id is absent.)</p>
+<p><code>benchmark/locomo/</code> commits a full harness —
+<code>run_experiments.py</code>, <code>evals.py</code>,
+<code>generate_scores.py</code>, <code>methods/add.py</code>,
+<code>methods/search.py</code>, <code>metrics/llm_judge.py</code>, the
+<code>locomo10.json</code> dataset and a <code>run.sh</code>. That is
+more than most systems ship and it is genuinely reusable.</p>
+<p><strong>No scored results are committed.</strong> The README's
+headline table — LOCOMO accuracy 87.79% against a 52.9% "Baseline" for a
+"+65.9%" improvement, p95 latency 1.44s against 17.12s, tokens ~0.9k
+against 26k — has no committed artifact behind it at this commit, and
+the baseline is identified only as "Baseline". So the numbers are
+claims: the atlas's <a
+href="../../compare/#published-benchmark-numbers-without-committed-artifacts">published
+benchmark numbers without committed artifacts</a> note applies, and so
+does the caution about <a
+href="../../benchmarks/#vendor-run-comparisons-compare-them-with-them-plus-us">vendor-run
+comparisons</a>, since a 65.9% <em>relative</em> improvement over an
+unnamed baseline is the shape that section is about. The harness is
+committed, so this is fixable by running it and committing the output —
+which <a href="./reme/">ReMe</a> does.</p>
+<p>The test I would want: add a memory, search until
+<code>should_forget</code> fires, then re-run the extraction that
+produced it and assert what happens. Nothing of that shape exists, and
+from reading the code the answer is that it comes back.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Split forgetting into four decisions.</strong>
+<code>should_promote</code>, <code>should_forget</code>,
+<code>should_archive</code> and <code>reinforce</code> as separate
+predicates with separate thresholds is much more useful than one score
+crossing one line, and it lets archival be a different thing from
+forgetting.</li>
+<li><strong>Vary the decay rate by memory type.</strong> A preference
+and a transient task status should not age at the same speed, and
+<code>_get_decay_rate_for_type</code> is a small amount of code for a
+large amount of realism.</li>
+<li><strong>Keep a no-LLM write path beside the extraction
+path.</strong> <code>_simple_add</code> next to
+<code>_intelligent_add</code> means a provider outage costs you
+structure, not data.</li>
+<li><strong>Carry the scope keys into the store's own query.</strong>
+<code>_build_db_filters</code> producing <code>effective_filters</code>
+that the backend applies — rather than filtering results afterwards — is
+the difference between a boundary and a convention.</li>
+<li><strong>Expose the fusion parameters.</strong> <code>rrf_k</code>,
+per-arm weights and a candidate limit as arguments make a hybrid
+retriever tunable by the person who can measure it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a schema imply a capability the code does not
+have.</strong> A <code>history</code> table with
+<code>old_memory</code>, <code>new_memory</code> and
+<code>actor_id</code>, maintained by migrations and written by nothing,
+will be read as an audit trail by every reviewer who looks at the schema
+— including any capability matrix built from migrations. If a table is
+not wired, delete it or say so in a comment.</li>
+<li><strong>Do not let a rotating file be your audit log.</strong>
+<code>backupCount=5</code> means the record has a horizon, and "what
+happened to this memory in March" is exactly the question an audit log
+exists to answer.</li>
+<li><strong>Think hard before writing on the read path.</strong> It is
+the correct semantics for a rehearsal-based retention model, and it
+costs you read replicas, deterministic ordering, and a clean answer to
+"why did this row change".</li>
+<li><strong>Do not let a decay score do a trust model's job.</strong>
+Making a wrong memory less reachable is not the same as recording that
+it was wrong, and a well-tuned curve makes the substitution harder to
+notice rather than less consequential.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>PowerMem suits a team building a long-running multi-agent product
+that wants retention to be a real, tunable model rather than a TTL, and
+that is comfortable on the OceanBase gradient — SQLite for development,
+the vendor's database for the Experience and Skill layers. The
+integration surface is broad enough that adopting it is unlikely to be
+the hard part.</p>
+<p>It does not suit a system that must justify itself. There is no trust
+state, the in-store mutation record is unwired, and the file-based audit
+trail rotates away, so the honest answer to "why does the agent believe
+this, and what happened to the thing I corrected last quarter" is that
+PowerMem cannot tell you. For a consumer assistant that is often
+acceptable. For anything where a memory is evidence, it is not.</p>
+<p>Walk away if you need read replicas or deterministic reads: search
+mutates the store by design, and that is not a flag you can turn off
+without disabling the retention model that is the main reason to choose
+this.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was the <code>history</code> table meant to be
+wired?</strong> It carries a migration from an older schema, which
+implies it once held data in an ancestor of this codebase. Issue and PR
+history was not read.</li>
+<li><strong>Does the hosted or enterprise product write it?</strong>
+Only this repository was inspected.</li>
+<li><strong>Do the README's LOCOMO figures come from the committed
+harness?</strong> The harness is present and the numbers are not;
+neither was run here.</li>
+<li><strong>What is the "Baseline" in the benchmark table?</strong> It
+is unnamed in the README.</li>
+<li><strong>Will <code>skill_store</code> and <code>source_store</code>
+get non-OceanBase backends?</strong> Both carry a <code>base.py</code>
+that anticipates one, and neither ships a second implementation at this
+commit.</li>
+<li><strong>How do concurrent searches interact through the
+reinforcement writes?</strong> The background executor path suggests
+fire-and-forget; the isolation and ordering guarantees were not
+traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage/schema</strong> —
+<code>src/powermem/storage/adapter.py</code>, <code>factory.py</code>,
+<code>base.py</code>, <code>migration_manager.py</code>,
+<code>storage/sqlite/sqlite.py</code>,
+<code>storage/sqlite/sqlite_vector_store.py</code>,
+<code>storage/pgvector/</code>, <code>storage/oceanbase/</code>,
+<code>storage/skill_store/</code>,
+<code>storage/source_store/</code></p>
+<p><strong>Write path</strong> —
+<code>src/powermem/core/memory.py</code> (<code>_simple_add</code>,
+<code>_intelligent_add</code>, <code>_add_to_graph</code>),
+<code>core/async_memory.py</code></p>
+<p><strong>Retrieval</strong> — <code>src/powermem/core/memory.py</code>
+(<code>search</code>, <code>search_skills</code>),
+<code>storage/sqlite/sqlite_vector_store.py</code></p>
+<p><strong>Retention</strong> —
+<code>src/powermem/intelligence/ebbinghaus_algorithm.py</code>,
+<code>importance_evaluator.py</code>,
+<code>intelligent_memory_manager.py</code>,
+<code>memory_optimizer.py</code>, <code>skill_manager.py</code></p>
+<p><strong>Audit (such as it is)</strong> —
+<code>src/powermem/core/audit.py</code>,
+<code>src/powermem/logging_config.py</code>,
+<code>storage/sqlite/sqlite.py</code> (<code>add_history</code>,
+<code>get_history</code> — no callers)</p>
+<p><strong>Integration</strong> — <code>src/powermem/mcp/</code>,
+<code>src/powermem/cli/</code>, <code>src/powermem/integrations/</code>,
+<code>apps/claude-code-plugin/</code>,
+<code>apps/vscode-extension/</code>, <code>apps/mcp-client/</code></p>
+<p><strong>Tests/benchmarks</strong> —
+<code>tests/unit/test_oceanbase_graph.py</code>,
+<code>tests/unit/test_sqlite_fts.py</code>,
+<code>benchmark/locomo/</code>,
+<code>benchmark/server/main.py</code></p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
