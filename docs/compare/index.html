@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-eight agent memory architectures, their retrieval mechanics,
+seventy-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-eight agent memory architectures, their retrieval mechanics,
+of seventy-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-eight agent memory architectures, their retrieval mechanics,
+of seventy-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-eight agent memory architectures, their retrieval mechanics,
+seventy-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into seventy-eight categories. They
+<p>Seventy-three systems do not fall into seventy-nine categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -242,7 +242,8 @@ managed-platform-only.</p>
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
 <code>mateclaw</code>, <code>waku-agent</code>, <code>loongflow</code>,
-<code>buzz</code>, <code>openhuman</code></p>
+<code>buzz</code>, <code>openhuman</code>,
+<code>aukora-kernel</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -983,6 +984,34 @@ deprecation retains the row</td>
 <td>Numbered invariants cited from code, and features default-off until
 evaluated</td>
 <td>Large opt-in surface; evaluation campaign results not committed</td>
+</tr>
+<tr>
+<td><code>aukora-kernel</code></td>
+<td>A hash-chained entry — payload (actor, chainKey, seq, operation,
+tier, contentHash) plus plaintext that a forget erases</td>
+<td>Two paths: a local JSONL store with an independent JSONL receipts
+log, and a Convex <code>aukora_memory</code> table behind a
+delegation-manifest pipeline</td>
+<td><code>recall</code> returns active entries for a chainKey in seq
+order, banner-marked advisory; the Convex path requires a reader
+proof-of-possession</td>
+<td>Authority-gated through the same gate as every tool — locked session
+pauses, an apparent secret denies — then chained, receipted,
+fsynced</td>
+<td><code>forget</code> erases the plaintext, tombstones the row, keeps
+the hash link and appends a forget receipt; nothing blocks re-asserting
+the same content</td>
+<td><code>chainKey</code> filters every read; the Convex path binds
+owner, subject and resource scope and severs a revoked subject</td>
+<td>A CLI, an IDE agent (Auma), and the Convex kernel pipeline of grant,
+intent, decision token and receipt</td>
+<td>None on the memory path</td>
+<td>Receipts, hash chain and per-entry actor; recall is advisory and can
+never authorize an effect</td>
+<td>Receipt-coupled fail-closed writes; RTBF that erases plaintext
+without breaking the chain; limits documented inline</td>
+<td>Forget records a rejection it never consults, so the same content
+can be written again; tiers are declared and never applied</td>
 </tr>
 <tr>
 <td><code>basic-memory</code></td>
@@ -2601,14 +2630,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 78:</em> <a
+<p><em>3 of 79:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 78:</em> <a
+<p><em>7 of 79:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2618,7 +2647,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 78:</em> <a
+<p><em>8 of 79:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2630,11 +2659,12 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>47 of 78:</em> <a
+<p><em>48 of 79:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
+href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
 href="../systems/buzz/"><code>buzz</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
@@ -2682,7 +2712,9 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 78:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>8 of 79:</em> <a
+href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
+href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2692,7 +2724,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 78:</em> <a
+<p><em>14 of 79:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2710,8 +2742,10 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 78:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
-<a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
+<p><em>4 of 79:</em> <a
+href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
+href="../systems/mirix/"><code>mirix</code></a>, <a
+href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -2730,8 +2764,8 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-eight assert that particular material must
+<p><strong>Negative evidence is almost never tested.</strong> Four
+repositories of seventy-nine assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -2742,17 +2776,24 @@ href="../systems/mirix/">MIRIX</a>, arrived from somewhere else entirely
 — its <code>test_filter_tags_db.py</code> creates a memory under one
 scope, searches under another, and asserts the id is absent, which is
 multi-tenant access-control testing rather than anything about memory.
-That is worth knowing: the assertion shape is reachable from ordinary
-engineering practice. It is also narrower, because every negative case
-MIRIX makes is about a boundary and none is about a value that was
-corrected. <a href="../systems/daimon/">Daimon</a> is the near-miss that
-shows how narrow the bar is: 1,920 tests, a committed LongMemEval
-harness, unit tests asserting that a resolved item is withheld and that
-an id-bearing item is never fuzzy-matched into suppression — and still
-no case that forgets a value, re-extracts it, and asserts it stayed
-gone. The tombstone is the mechanism most in need of a negative test and
-the one least likely to get one, because nothing fails visibly when it
-silently stops working.</p>
+The fourth, <a href="../systems/aukora-kernel/">Aukora Kernel</a>,
+arrives the same way and does it better: an unrelated principal reads
+<code>ok: false</code>, a subject whose delegation manifest was revoked
+reads <code>ok: false</code>, and the owner reads
+<code>"the secret"</code> in the same assertion block — so the denial is
+proved <em>targeted</em> rather than a blanket failure, which is the
+control the other three negative suites omit.</p>
+<p>That two of the four arrived from access control is worth knowing:
+the assertion shape is reachable from ordinary engineering practice. It
+is also the limit — both are about a boundary, and neither is about a
+value that was corrected. <a href="../systems/daimon/">Daimon</a> is the
+near-miss that shows how narrow the bar is: 1,920 tests, a committed
+LongMemEval harness, unit tests asserting that a resolved item is
+withheld and that an id-bearing item is never fuzzy-matched into
+suppression — and still no case that forgets a value, re-extracts it,
+and asserts it stayed gone. The tombstone is the mechanism most in need
+of a negative test and the one least likely to get one, because nothing
+fails visibly when it silently stops working.</p>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
@@ -6699,6 +6740,8 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/logseq/"><code>logseq</code></a></li>
 <li><a href="../systems/openhuman/"><code>openhuman</code></a></li>
 <li><a href="../systems/adk-python/"><code>adk-python</code></a></li>
+<li><a
+href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -6976,6 +7019,10 @@ href="https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a
 <li><a href="https://github.com/google/adk-python">google/adk-python</a>
 at <a
 href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e"><code class="commit-id" title="6bab08fc803d26853417c4d6e71704b1a72e035e">6bab08fc…</code></a></li>
+<li><a
+href="https://github.com/aumara-xyz/aukora-kernel">aumara-xyz/aukora-kernel</a>
+at <a
+href="https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe"><code class="commit-id" title="b441edc4d17de778d30ae955f46408edae39bffe">b441edc4…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
