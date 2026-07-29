@@ -93,6 +93,14 @@ if [[ -n "$nested_wraps" ]]; then
   exit 1
 fi
 
+# The homepage and the generated pages carry separate hand-maintained <head>
+# blocks whose comments say they must be kept in step. Consent Mode lives in
+# there, so drift means some pages honour the reader's cookie choice and others
+# do not — invisible on every page either way.
+if ! python3 "$project_dir/scripts/check_heads.py" "$project_dir"; then
+  exit 1
+fi
+
 # A mermaid diagram that fails to parse renders as "Syntax error in text" on the
 # published page and is invisible to every other check here — the markdown is
 # valid, the HTML is valid, and only the browser knows. Reported from the live
