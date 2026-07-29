@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of eighty-seven agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of eighty-eight agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -56,7 +56,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Eighty-seven systems do not fall into eighty-seven categories. They cluster around
+Eighty-eight systems do not fall into eighty-eight categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -154,7 +154,7 @@ several documented capabilities are managed-platform-only.
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
 `mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`, `loongflow`, `buzz`,
-`openhuman`, `aukora-kernel`, `neko`, `sillytavern`, `risuai`
+`openhuman`, `aukora-kernel`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -770,6 +770,7 @@ session with an identity you could later correct.
 | `second-me` | Three layers — a document with its raw content, a versioned biography and shades derived from it, and the model weights trained on both | SQLite for documents, chunks and the versioned L1 tables; ChromaDB for embeddings; GGUF files for the model | Embedding search over documents and chunks, plus whatever the fine-tuned model recalls without retrieval | Upload documents, generate L1 as a numbered version, then synthesize training data and run LoRA SFT and DPO | Document deletion cascades through chunks and both Chroma collections, and touches neither L1 nor the weights | None — the design is one person, one machine, one model | A local web app over a Flask kernel, with GGUF export and a decentralized network for connecting AI selves | Training pipelines run as scripted jobs rather than as a scheduler | Pipeline statuses only; no memory carries an epistemic state | L1 is a numbered generation over retained L0, so the derived layer is rebuildable and comparable across versions | Forgetting stops at the vector store; the trained model keeps what a deleted document taught it |
 | `sillytavern` | A World Info entry: human-authored content plus primary and secondary keys, a logic mode, insertion position, order, depth and timed-effect settings | JSON lorebook files per world under the user's `worlds/` directory, plus a rolling summary in chat metadata | Keyword scan over a depth-bounded window, four logic modes, bounded recursive activation, token budget with a cap | A person types it. The optional summarize extension writes one rolling LLM summary into chat metadata | Edit or delete the entry in the editor; `@@dont_activate` suppresses an entry without removing it | Per-world lorebooks, character-bound or global, with an insertion strategy deciding precedence | The chat UI itself; entries are injected into the prompt at author-chosen positions and depths | None for lorebooks; the summarize extension runs on a message-count or token trigger | None. An entry is as true as whoever wrote it, and no field records who or when | Sticky, cooldown and delay as first-class activation state; negative key logic; a budget with a cap | Imported lorebooks carry no author field; recursion plus keyword triggers make activation hard to predict |
 | `skales` | An `ExtractedMemory` — id, category, content, source conversation id, extraction time, relevance keywords — plus tiered memory files and a soul profile of known facts | JSON files under `.skales-data/`: one per extracted memory, plus short-term, long-term and episodic files and the soul object | Synchronous keyword scoring — overlap 0.70, recency 0.20, category boost 0.10 — top five, no LLM, behind a 30-second cache | Regex extraction over conversations since the last scan, run every 90 minutes; no model in the write path | Extracted memories and tiered files delete cleanly; known facts have no delete path in code at all | None. A single-user local application with no user, project or tenant key | An Electron desktop app with a Next.js web surface, chat, cron tasks and a dedicated memory page | A 90-minute scan driven by a cron job, watermarked by `lastScanTimestamp` | A source conversation id on every extracted memory; no confidence, no state, no verification | Zero-LLM capture and retrieval, both cheap and legible; a real memory management page; provenance on every extracted row | The documented deletion path for facts is a chat phrase nothing implements, and that phrase is bound to capture and retrieval instead |
+| `soul-of-waifu` | Four kinds of Markdown file — a psychological state index, a user profile, per-subject topic files, and a dated append-only diary | Plain files under `.soul/<character>/chats/<chat>/memory/`, with a rolling five-deep backup directory | The index and profile are injected whole; topic files are ranked by MiniLM cosine similarity above a file-count threshold | A Router sub-agent returns JSON that the code renders into a fixed Markdown skeleton; an Archivist writes topic files; a Diary appends | The index and profile are overwritten wholesale, backed up first; topic files are overwritten; nothing is ever deleted | Per character and per chat, as a filesystem path; no principal or tenant key | The companion app's own prompt builder; no API and no tool interface | The pipeline runs every four messages, with the diary generated as a concurrent task | None. The `trust_level` field is the character's feeling about the user, not confidence in a memory | Short-output writes are rejected rather than stored; contradiction resolutions are logged; every index rewrite is backed up first | The backup, restore and inspection API has no caller anywhere in the application |
 | `supermemory` | Document, chunk, memory entry, space | Hosted backend; visible schemas/client only | Hosted search/profile API; SDK uses hybrid settings | API/MCP add memory/document | Version chains, relations, forget API | Space, container tags, org/user/project | SDK, AI SDK tools, MCP | Hosted processing not visible | Rich schema fields and relations; implementation not visible | Product/API surface, document-memory graph | Backend black box; semantic forget needs care |
 | `swafra` | Verbatim or synthetic chunk plus directed chunk edges, and a (subject, relation, value) fact carrying a validity end | Adaptive: three JSON files by default, auto-migrating to SQLite with WAL only past 5,000 chunks | BM25 + vector + entity/date/preference heuristics + char n-gram; graph walk; best chunk per title; optional LLM rerank | MCP add; Leiden or exchange/paragraph chunks; synchronous full-file rewrite; optional LLM dedup and entity extraction | Intra-source chunk supersession; transition-only fact supersession that a new session re-asserts; delete strands cross-session edges | Source ID/title only; no user/project/tenant scope | Python FastMCP, Node MCP over subprocess, Python and JS SDKs, a native CLI, a Claude Code skill | None | Fact confidence score and a validity end; no actor, span-quality provenance, trust state, or injection fence | Compact local hybrid graph-RAG; a real correction path reaching the ranker; optional dependencies; source diversity | Default JSON writes unlocked and non-atomic; dangling edges on both backends; benchmark invalid and its harness broken |
 | `tencentdb-agent-memory` | L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map | JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB | FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context | Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload | Internal merge/delete/cleanup; no first-class correction/forget tool | Session fields and data directories; no general tenant boundary | OpenClaw hooks/tools/context engine; Hermes gateway | Deferred embeddings, scene/persona generation, retention reclamation | Source message IDs and raw evidence; no verification/rejection state | Layered progressive disclosure with raw drill-down | Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims |
@@ -832,31 +833,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*3 of 87:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*3 of 88:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*7 of 87:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*7 of 88:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*8 of 87:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
+*8 of 88:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
 
-*51 of 87:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*51 of 88:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*9 of 87:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`verel`](../systems/verel/)
+*10 of 88:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*15 of 87:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*15 of 88:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*6 of 87:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
+*6 of 88:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -875,7 +876,7 @@ nothing here measures that.
 "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Six repositories of eighty-seven
+**Negative evidence is almost never tested.** Six repositories of eighty-eight
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests on. Two reached
 it from memory work: [open-cowork](../systems/open-cowork/) through `forbiddenHits`
@@ -3221,6 +3222,7 @@ Privacy/deletion:
 - [`neko`](../systems/neko/)
 - [`sillytavern`](../systems/sillytavern/)
 - [`risuai`](../systems/risuai/)
+- [`soul-of-waifu`](../systems/soul-of-waifu/)
 
 ### Repos Inspected
 
@@ -3312,6 +3314,7 @@ Privacy/deletion:
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 - [SillyTavern/SillyTavern](https://github.com/SillyTavern/SillyTavern) at [`8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8`](https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8)
 - [kwaroran/RisuAI](https://github.com/kwaroran/RisuAI) at [`316e430bedbe68c80060ce74c5a1fff88f3bdf97`](https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97)
+- [jofizcd/Soul-of-Waifu](https://github.com/jofizcd/Soul-of-Waifu) at [`3d032badc07335012ae6917e29ea16b8203252f5`](https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5)
 
 ### Commands Used
 
