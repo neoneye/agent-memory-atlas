@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-eighty-eight agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+eighty-nine agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of eighty-eight agent memory architectures, their retrieval mechanics,
+of eighty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of eighty-eight agent memory architectures, their retrieval mechanics,
+of eighty-nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-eighty-eight agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.</p>
+eighty-nine agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Eighty-eight systems do not fall into eighty-eight categories. They
+<p>Eighty-nine systems do not fall into eighty-nine categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -259,7 +259,7 @@ managed-platform-only.</p>
 <code>mateclaw</code>, <code>waku-agent</code>, <code>loongflow</code>,
 <code>buzz</code>, <code>openhuman</code>, <code>aukora-kernel</code>,
 <code>neko</code>, <code>sillytavern</code>, <code>risuai</code>,
-<code>soul-of-waifu</code></p>
+<code>soul-of-waifu</code>, <code>z-waif</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -2906,6 +2906,31 @@ gate errors</td>
 <td>No correction, scope, or trust model; gate adds a model call per
 turn</td>
 </tr>
+<tr>
+<td><code>z-waif</code></td>
+<td>A message pair — one user turn and one character turn — reduced to a
+list of word ids with the common words pruned out</td>
+<td>Three JSON files under <code>RAG_Database/</code>: a word table with
+counts and values, per-pair word ids and scores, and the raw text</td>
+<td>Six highest-value query words scored against every stored pair by
+shared-word count, with a length penalty; the best pair and its two
+neighbours are injected</td>
+<td>Every message pair is tokenised into the word table after it is
+sent; no model is involved at any point</td>
+<td>An undo pops the word-id rows and documents that it does not uncount
+the words; a manual recalculate rebuilds everything</td>
+<td>None. One global corpus per installation</td>
+<td>The companion app's own prompt builder; the result is injected as a
+<code>[System M]</code> block</td>
+<td>A thread recomputes word values every 120 seconds, plus a roughly
+one-in-three chance of recomputing on any given turn</td>
+<td>None. Every stored pair is equally eligible and nothing records
+where it came from</td>
+<td>Inverse document frequency, length normalisation and a cap on the
+character's own words steering retrieval — all derived from scratch</td>
+<td>A three-message window score is computed and never used; the licence
+is not open source</td>
+</tr>
 </tbody>
 </table></div>
 <!-- END GENERATED MATRIX -->
@@ -2978,14 +3003,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 88:</em> <a
+<p><em>3 of 89:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 88:</em> <a
+<p><em>7 of 89:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2995,7 +3020,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 88:</em> <a
+<p><em>8 of 89:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3007,7 +3032,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>51 of 88:</em> <a
+<p><em>51 of 89:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -3063,7 +3088,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>10 of 88:</em> <a
+<p><em>10 of 89:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3077,7 +3102,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>15 of 88:</em> <a
+<p><em>15 of 89:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3096,7 +3121,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>6 of 88:</em> <a
+<p><em>6 of 89:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
@@ -3121,7 +3146,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Six
-repositories of eighty-eight assert that particular material must
+repositories of eighty-nine assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -7138,6 +7163,7 @@ href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
 <li><a href="../systems/risuai/"><code>risuai</code></a></li>
 <li><a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a></li>
+<li><a href="../systems/z-waif/"><code>z-waif</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -7460,6 +7486,10 @@ href="https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff8
 href="https://github.com/jofizcd/Soul-of-Waifu">jofizcd/Soul-of-Waifu</a>
 at <a
 href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5"><code class="commit-id" title="3d032badc07335012ae6917e29ea16b8203252f5">3d032bad…</code></a></li>
+<li><a
+href="https://github.com/SugarcaneDefender/z-waif">SugarcaneDefender/z-waif</a>
+at <a
+href="https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f"><code class="commit-id" title="aaf905c12efcbd2a709a3b2285f55e554d47484f">aaf905c1…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
