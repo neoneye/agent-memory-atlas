@@ -602,15 +602,20 @@ atlas because it is a *system* that fine-tunes on a user's documents and then
 has to answer "delete my data" — the deletion request is what pulls weights into
 scope, not the fact of learning.
 
-Four more candidates were read on 2026-07-29 and declined, three of them quickly
-and one reluctantly. They are recorded because each looks like a memory system
-from its description:
+Eight more candidates were read on 2026-07-29 and declined. They are recorded
+because each looks like a memory system from its description, and because two
+recurring shapes account for most of them — resource accounting that uses the
+word *memory*, and durable state an agent operates rather than believes:
 
 | Candidate | Why not |
 | --- | --- |
 | [kvcache-ai/AgentENV](https://github.com/kvcache-ai/AgentENV) | An orchestrator for Firecracker microVM sandboxes. Every one of its 176 files matching "memory" means guest RAM, memory ballooning or a memory snapshot; `InMemoryMetadataStore` holds sandbox metadata. Adjacent by name only |
 | [deftai/subspace](https://github.com/deftai/subspace) | ACP, A2A and MCP transport plumbing — framer, codec, wire. Its single "memory" match is a test fixture named `memory-message-a` |
 | [code-yeongyu/oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) | An agent harness whose durable state is `.omo/boulder.json`, a work ledger the prompt calls "the source of truth", plus a team mailbox with leases and an ack ledger. Its rules engine loads *human-authored* files into context and writes nothing back. This is the `beads` exclusion — a task database and a queue, not a belief store |
+| [endomorphosis/ipfs_accelerate_py](https://github.com/endomorphosis/ipfs_accelerate_py) | A model-inference and hardware-routing framework. Its ~4,500 "memory" matches are `memory_mb`, `memory_bytes`, `memory_gb`, WebGPU memory optimisation and resource schedulers — the AgentENV shape again, RAM rather than recall |
+| [endomorphosis/swissknife](https://github.com/endomorphosis/swissknife) | A browser-based collaborative virtual desktop that vendors the previous entry's JS port; same `memory` vocabulary, same exclusion. It also ships **no licence file** |
+| [endomorphosis/lift_coding](https://github.com/endomorphosis/lift_coding) | A voice-first GitHub workflow assistant. No memory subsystem — the matches are in audio fetching, auth, metrics and a GitHub provider |
+| [JesseBrown1980/asolaria-behcs-256](https://github.com/JesseBrown1980/asolaria-behcs-256) | Its `behcs-memory-bridge.js` indexes markdown memory files into addressable "cubes", which sounds in scope until the constant: `const MEMORY_DIR = 'C:/Users/acer/.claude/projects/E--/memory'`. It is a personal index over *another tool's* memory store, at a path that exists on one machine. The 927-line `memoryStore.js` beside it sits under `packages-legacy-import/` and is vendored, so it is not the project's own design either |
 | [xD4O/memento](https://github.com/xD4O/memento) | **The reluctant one.** A voice and video journal that is genuinely memory-shaped: `profile_facts`, `threads` and `pins` tables all soft-deleted through partial indexes, and a `deliver_on` column implementing *time capsules* — an entry sealed at record time whose `unseal_due_capsules` worker moves it to `uploaded` on its delivery date, so it enters indexing and retrieval only then. Memory deliberately unreachable until a future moment is a variant of prospective memory nothing else here has. It carries **no licence file**, which excluded GAM and MemEngine before it, and the OptMem exception was granted for mechanisms found nowhere else — a `deliver_on` date gating a status transition is a nice detail, not an architecture. Recorded so the decision can be revisited if a licence appears |
 
 Compaction appears in this atlas only as a component of systems that also
