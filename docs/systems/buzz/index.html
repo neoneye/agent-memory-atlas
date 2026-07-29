@@ -165,24 +165,14 @@ not reachable from <code>core</code>) and <strong>dangling refs</strong>
 written).</p>
 <p>The state machine is short, and there is no epistemic content in
 it:</p>
-<pre class="text"><code>   agent decides something is worth keeping
-        │
-        ▼
-   buzz mem set / patch  ──►  encrypt, sign, publish
-        │                          │
-        │                     relay replaces the head for this d-tag
-        │                     (the previous version is discarded)
-        ▼
-   engram is live ── reachable if some body references it, else an orphan
-        │
-        ├── mem patch --base-hash  ──► refused if the value moved underneath
-        │
-        └── mem rm ──► publish {value: null}
-                            │
-                            ▼
-                   head is a tombstone; listings skip it;
-                   refs to it become dangling.
-                   What it used to say is gone from the relay.</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[agent decides something is worth keeping] --&gt; S[&quot;buzz mem set / patch&quot;]
+    S --&gt; P[&quot;encrypt, sign, publish&quot;]
+    P --&gt; RP[&quot;relay replaces the head for this d-tag —&lt;br/&gt;the previous version is discarded&quot;]
+    RP --&gt; LIVE[&quot;engram is live: reachable if some body&lt;br/&gt;references it, else an orphan&quot;]
+    LIVE --&gt;|&quot;mem patch --base-hash&quot;| REF[&quot;refused if the value moved underneath&quot;]
+    LIVE --&gt;|mem rm| TS[&quot;publish value: null&quot;]
+    TS --&gt; DONE[&quot;head is a tombstone; listings skip it; refs to it&lt;br/&gt;become dangling. What it used to say is gone from the relay&quot;]</code></pre>
 <p>Memory is <strong>agent-controlled</strong>, and unusually so:
 nothing derives, extracts, summarizes, or scores. An engram exists
 because the agent wrote it, and says what the agent wrote. The owner is

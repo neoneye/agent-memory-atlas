@@ -83,25 +83,15 @@ refs** (a `[[slug]]` pointing at something tombstoned or never written).
 
 The state machine is short, and there is no epistemic content in it:
 
-```text
-   agent decides something is worth keeping
-        │
-        ▼
-   buzz mem set / patch  ──►  encrypt, sign, publish
-        │                          │
-        │                     relay replaces the head for this d-tag
-        │                     (the previous version is discarded)
-        ▼
-   engram is live ── reachable if some body references it, else an orphan
-        │
-        ├── mem patch --base-hash  ──► refused if the value moved underneath
-        │
-        └── mem rm ──► publish {value: null}
-                            │
-                            ▼
-                   head is a tombstone; listings skip it;
-                   refs to it become dangling.
-                   What it used to say is gone from the relay.
+```mermaid
+flowchart TB
+    A[agent decides something is worth keeping] --> S["buzz mem set / patch"]
+    S --> P["encrypt, sign, publish"]
+    P --> RP["relay replaces the head for this d-tag —<br/>the previous version is discarded"]
+    RP --> LIVE["engram is live: reachable if some body<br/>references it, else an orphan"]
+    LIVE -->|"mem patch --base-hash"| REF["refused if the value moved underneath"]
+    LIVE -->|mem rm| TS["publish value: null"]
+    TS --> DONE["head is a tombstone; listings skip it; refs to it<br/>become dangling. What it used to say is gone from the relay"]
 ```
 
 Memory is **agent-controlled**, and unusually so: nothing derives, extracts,

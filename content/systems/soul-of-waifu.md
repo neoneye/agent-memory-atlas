@@ -73,25 +73,17 @@ lifecycles — which is the design's best idea:
 | `topics/*.md` | Archivist | overwritten per subject, no backup |
 | `diary_*.md` | Diary | **append-only**, never rewritten |
 
-```text
-   every BATCH_SIZE (4) messages:
-
-     delta = last MAX_DELTA_MSGS (14) messages,
-             overlapping the previous batch by MSG_OVERLAP (2)
-          │
-          ▼
-     Router sees: MEMORY.md + USER.md + RAG-selected topics + delta + world lore
-          │
-          ├─► JSON { character_memory, user_memory, topic_plan, healing_log }
-          │        │
-          │        ├─ rendered into a fixed skeleton, defaults for missing fields
-          │        ├─ too short? ──► write REJECTED, old memory kept
-          │        └─ else ──► backup, then atomic replace
-          │
-          ├─► topic_plan actions ──► Archivist writes each topic file
-          │        └─ filename in _BAD_TOPIC_NAMES, or starts "diary_"? ──► skipped
-          │
-          └─► Diary agent (concurrent task) ──► appends to today's diary
+```mermaid
+flowchart TB
+    B["every BATCH_SIZE (4) messages"] --> D["delta = last MAX_DELTA_MSGS (14) messages,<br/>overlapping the previous batch by MSG_OVERLAP (2)"]
+    D --> R["Router sees: MEMORY.md + USER.md +<br/>RAG-selected topics + delta + world lore"]
+    R --> J["JSON: character_memory, user_memory,<br/>topic_plan, healing_log"]
+    J --> REN["rendered into a fixed skeleton,<br/>defaults for missing fields"]
+    REN -->|too short| REJ["write REJECTED, old memory kept"]
+    REN -->|else| BK["backup, then atomic replace"]
+    R --> TP["topic_plan actions —<br/>Archivist writes each topic file"]
+    TP -->|"filename in _BAD_TOPIC_NAMES,<br/>or starts diary_"| SKIP[skipped]
+    R --> DIA["Diary agent (concurrent task) —<br/>appends to today's diary"]
 ```
 
 The state machine is short because there is only one transition: **a memory is

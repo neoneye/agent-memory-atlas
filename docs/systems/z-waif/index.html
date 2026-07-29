@@ -158,26 +158,20 @@ open-source, is <strong>not open source</strong> — see section 9.</p>
 character turn — stored twice: as raw text in
 <code>history_database</code>, and as a pruned list of word ids in
 <code>histories_word_id_database</code>.</p>
-<pre class="text"><code>   after every exchange:
-     tokenise both halves into the word table (counts += 1)
-     prune_common(latest): drop word ids above 0.000937 corpus share
-          │
-          ▼
-   at retrieval time:
-     query words = user&#39;s message + character&#39;s previous reply
-          │  character&#39;s words × 0.97, and at most 2 of the final 6
-          │  words present in the lorebook boosted to (score + 1) / 2
-          ▼
-     take the 6 highest-value distinct words
-          │
-          ▼
-     score every stored pair: shared-word count − len(pair) / 115, floor −1
-          │
-          ▼
-     best pair, excluding the last `history_demarc` (20) pairs
-          │  (they are already in the context window)
-          ▼
-     inject that pair and its two neighbours as [System M]</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    subgraph W[&quot;after every exchange&quot;]
+        TK[&quot;tokenise both halves into the word table (counts += 1)&quot;]
+        TK --&gt; PC[&quot;prune_common: drop word ids above 0.000937 corpus share&quot;]
+    end
+    subgraph R[&quot;at retrieval time&quot;]
+        RT[&quot;query words = user&#39;s message&lt;br/&gt;+ character&#39;s previous reply&quot;]
+        RT --&gt; ADJ[&quot;character&#39;s words × 0.97, at most 2 of the final 6;&lt;br/&gt;lorebook words boosted to (score + 1) / 2&quot;]
+        ADJ --&gt; W6[&quot;take the 6 highest-value distinct words&quot;]
+        W6 --&gt; SC[&quot;score every stored pair:&lt;br/&gt;shared-word count − len(pair) / 115, floor −1&quot;]
+        SC --&gt; BEST[&quot;best pair, excluding the last history_demarc (20) pairs —&lt;br/&gt;they are already in the context window&quot;]
+        BEST --&gt; INJ[&quot;inject that pair and its two neighbours as [System M]&quot;]
+    end
+    PC -.-&gt;|&quot;the corpus every query scores against&quot;| SC</code></pre>
 <p>There is no state a memory can be in. It is stored, it is scored, it
 is retrieved or it is not. Nothing expires, nothing is superseded,
 nothing is verified, and — apart from an undo of the most recent turn —

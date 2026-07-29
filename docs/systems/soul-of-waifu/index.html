@@ -191,24 +191,16 @@ different lifecycles — which is the design's best idea:</p>
 </tr>
 </tbody>
 </table></div>
-<pre class="text"><code>   every BATCH_SIZE (4) messages:
-
-     delta = last MAX_DELTA_MSGS (14) messages,
-             overlapping the previous batch by MSG_OVERLAP (2)
-          │
-          ▼
-     Router sees: MEMORY.md + USER.md + RAG-selected topics + delta + world lore
-          │
-          ├─► JSON { character_memory, user_memory, topic_plan, healing_log }
-          │        │
-          │        ├─ rendered into a fixed skeleton, defaults for missing fields
-          │        ├─ too short? ──► write REJECTED, old memory kept
-          │        └─ else ──► backup, then atomic replace
-          │
-          ├─► topic_plan actions ──► Archivist writes each topic file
-          │        └─ filename in _BAD_TOPIC_NAMES, or starts &quot;diary_&quot;? ──► skipped
-          │
-          └─► Diary agent (concurrent task) ──► appends to today&#39;s diary</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    B[&quot;every BATCH_SIZE (4) messages&quot;] --&gt; D[&quot;delta = last MAX_DELTA_MSGS (14) messages,&lt;br/&gt;overlapping the previous batch by MSG_OVERLAP (2)&quot;]
+    D --&gt; R[&quot;Router sees: MEMORY.md + USER.md +&lt;br/&gt;RAG-selected topics + delta + world lore&quot;]
+    R --&gt; J[&quot;JSON: character_memory, user_memory,&lt;br/&gt;topic_plan, healing_log&quot;]
+    J --&gt; REN[&quot;rendered into a fixed skeleton,&lt;br/&gt;defaults for missing fields&quot;]
+    REN --&gt;|too short| REJ[&quot;write REJECTED, old memory kept&quot;]
+    REN --&gt;|else| BK[&quot;backup, then atomic replace&quot;]
+    R --&gt; TP[&quot;topic_plan actions —&lt;br/&gt;Archivist writes each topic file&quot;]
+    TP --&gt;|&quot;filename in _BAD_TOPIC_NAMES,&lt;br/&gt;or starts diary_&quot;| SKIP[skipped]
+    R --&gt; DIA[&quot;Diary agent (concurrent task) —&lt;br/&gt;appends to today&#39;s diary&quot;]</code></pre>
 <p>The state machine is short because there is only one transition:
 <strong>a memory is rewritten, or it is not.</strong> There is no
 supersession, no expiry, no decay of a record, and <strong>no deletion

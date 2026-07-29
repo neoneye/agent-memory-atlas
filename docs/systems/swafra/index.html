@@ -210,18 +210,11 @@ triple carrying <code>chunk_id</code>, <code>source_id</code>,
 <code>created_at</code>, <code>confidence</code>, <code>evidence</code>
 (the original text span), <code>valid_until</code>, and
 <code>superseded_by</code>. Its states are exactly two:</p>
-<pre class="text"><code>   extract_facts()  ── regex patterns over chunk text ──►  fact (valid_until = None)
-                                                              │
-   a later *transition* fact (&quot;I switched to X&quot;,               │
-   &quot;changed to&quot;, &quot;stopped&quot;, &quot;replaced&quot;) arrives                │
-   with the same subject, a different value, and               │
-   slot similarity ≥ 0.65                                      │
-                                                              ▼
-                                          valid_until = now, superseded_by = new id
-                                          (the row is kept, never deleted)
-                                                              │
-                                                              ▼
-                        chunks whose facts are superseded get score × (1 − penalty × 0.85)</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    EX[&quot;extract_facts()&lt;br/&gt;regex patterns over chunk text&quot;] --&gt; ACTIVE[&quot;active fact&lt;br/&gt;valid_until = None&quot;]
+    TR[&quot;a later &lt;i&gt;transition&lt;/i&gt; fact arrives —&lt;br/&gt;&amp;quot;I switched to X&amp;quot;, &amp;quot;changed to&amp;quot;, &amp;quot;stopped&amp;quot;, &amp;quot;replaced&amp;quot; —&lt;br/&gt;same subject, different value, slot similarity ≥ 0.65&quot;] --&gt; SUP
+    ACTIVE --&gt; SUP[&quot;superseded fact&lt;br/&gt;valid_until = now, superseded_by = new id&lt;br/&gt;the row is kept, never deleted&quot;]
+    SUP --&gt; PEN[&quot;chunks whose facts are superseded&lt;br/&gt;get score × (1 − penalty × 0.85)&quot;]</code></pre>
 <p>Two deliberate limits are worth stating because they are documented
 choices rather than oversights. Only <strong>transition</strong> facts
 supersede — a plain "I use X" does not invalidate a prior state, on the

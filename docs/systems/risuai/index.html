@@ -159,23 +159,17 @@ messages</strong>:</p>
 }</code></pre>
 <p>The state machine is short, and the interesting transitions are the
 ones that kill a memory:</p>
-<pre class="text"><code>   context overflows
-        │
-        ▼
-   a run of messages is summarized ──► Summary { text, chatMemos }
-        │
-        ├── user pins it        ──► isImportant: always selected first
-        ├── user edits / rerolls──► text replaced in place, no history kept
-        ├── user deletes        ──► gone
-        ├── user merges two     ──► one summary, union of chatMemos
-        │
-        ├── a source message is deleted from the chat
-        │        └──► isSubset(chatMemos, currentMemos) fails
-        │             └──► the summary is dropped  ◄── deletion propagates
-        │
-        └── budget pressure
-                 └──► re-summarization: summaries of summaries
-                      (chatMemos preserved through the merge)</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    OV[context overflows] --&gt; RUN[a run of messages is summarized]
+    RUN --&gt; S[&quot;Summary — text + chatMemos&quot;]
+    S --&gt;|user pins it| PIN[&quot;isImportant: always selected first&quot;]
+    S --&gt;|user edits or re-rolls| ED[&quot;text replaced in place, no history kept&quot;]
+    S --&gt;|user deletes| DEL[gone]
+    S --&gt;|user merges two| MG[&quot;one summary, union of chatMemos&quot;]
+    SRC[a source message is deleted from the chat] --&gt; SUB[&quot;isSubset(chatMemos, currentMemos) fails&quot;]
+    S --&gt; SUB
+    SUB --&gt; DROP[&quot;the summary is dropped —&lt;br/&gt;&lt;b&gt;deletion propagates&lt;/b&gt;&quot;]
+    S --&gt;|budget pressure| RES[&quot;re-summarization: summaries of summaries&lt;br/&gt;chatMemos preserved through the merge&quot;]</code></pre>
 <p>Memory is <strong>hybrid</strong>: an LLM writes it, the token budget
 decides when, and a person can overrule any of it through the review
 modal. Nothing is treated as verified — <code>isImportant</code> records

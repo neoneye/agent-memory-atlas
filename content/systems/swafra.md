@@ -85,19 +85,12 @@ Stored chunk text is undifferentiated evidence — no distinction between user s
 
 A **fact** is a `(subject, relation, value)` triple carrying `chunk_id`, `source_id`, `created_at`, `confidence`, `evidence` (the original text span), `valid_until`, and `superseded_by`. Its states are exactly two:
 
-```text
-   extract_facts()  ── regex patterns over chunk text ──►  fact (valid_until = None)
-                                                              │
-   a later *transition* fact ("I switched to X",               │
-   "changed to", "stopped", "replaced") arrives                │
-   with the same subject, a different value, and               │
-   slot similarity ≥ 0.65                                      │
-                                                              ▼
-                                          valid_until = now, superseded_by = new id
-                                          (the row is kept, never deleted)
-                                                              │
-                                                              ▼
-                        chunks whose facts are superseded get score × (1 − penalty × 0.85)
+```mermaid
+flowchart TB
+    EX["extract_facts()<br/>regex patterns over chunk text"] --> ACTIVE["active fact<br/>valid_until = None"]
+    TR["a later <i>transition</i> fact arrives —<br/>&quot;I switched to X&quot;, &quot;changed to&quot;, &quot;stopped&quot;, &quot;replaced&quot; —<br/>same subject, different value, slot similarity ≥ 0.65"] --> SUP
+    ACTIVE --> SUP["superseded fact<br/>valid_until = now, superseded_by = new id<br/>the row is kept, never deleted"]
+    SUP --> PEN["chunks whose facts are superseded<br/>get score × (1 − penalty × 0.85)"]
 ```
 
 Two deliberate limits are worth stating because they are documented choices rather than oversights. Only **transition** facts supersede — a plain "I use X" does not invalidate a prior state, on the stated grounds that a user may use several things at once. And supersession is a *penalty*, not an exclusion: a fully superseded chunk keeps 15% of its score and can still be returned.

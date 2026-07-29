@@ -69,27 +69,21 @@ A memory is a **message pair** — one user turn, one character turn — stored 
 as raw text in `history_database`, and as a pruned list of word ids in
 `histories_word_id_database`.
 
-```text
-   after every exchange:
-     tokenise both halves into the word table (counts += 1)
-     prune_common(latest): drop word ids above 0.000937 corpus share
-          │
-          ▼
-   at retrieval time:
-     query words = user's message + character's previous reply
-          │  character's words × 0.97, and at most 2 of the final 6
-          │  words present in the lorebook boosted to (score + 1) / 2
-          ▼
-     take the 6 highest-value distinct words
-          │
-          ▼
-     score every stored pair: shared-word count − len(pair) / 115, floor −1
-          │
-          ▼
-     best pair, excluding the last `history_demarc` (20) pairs
-          │  (they are already in the context window)
-          ▼
-     inject that pair and its two neighbours as [System M]
+```mermaid
+flowchart TB
+    subgraph W["after every exchange"]
+        TK["tokenise both halves into the word table (counts += 1)"]
+        TK --> PC["prune_common: drop word ids above 0.000937 corpus share"]
+    end
+    subgraph R["at retrieval time"]
+        RT["query words = user's message<br/>+ character's previous reply"]
+        RT --> ADJ["character's words × 0.97, at most 2 of the final 6;<br/>lorebook words boosted to (score + 1) / 2"]
+        ADJ --> W6["take the 6 highest-value distinct words"]
+        W6 --> SC["score every stored pair:<br/>shared-word count − len(pair) / 115, floor −1"]
+        SC --> BEST["best pair, excluding the last history_demarc (20) pairs —<br/>they are already in the context window"]
+        BEST --> INJ["inject that pair and its two neighbours as [System M]"]
+    end
+    PC -.->|"the corpus every query scores against"| SC
 ```
 
 There is no state a memory can be in. It is stored, it is scored, it is

@@ -80,24 +80,18 @@ interface Summary {
 The state machine is short, and the interesting transitions are the ones that
 kill a memory:
 
-```text
-   context overflows
-        │
-        ▼
-   a run of messages is summarized ──► Summary { text, chatMemos }
-        │
-        ├── user pins it        ──► isImportant: always selected first
-        ├── user edits / rerolls──► text replaced in place, no history kept
-        ├── user deletes        ──► gone
-        ├── user merges two     ──► one summary, union of chatMemos
-        │
-        ├── a source message is deleted from the chat
-        │        └──► isSubset(chatMemos, currentMemos) fails
-        │             └──► the summary is dropped  ◄── deletion propagates
-        │
-        └── budget pressure
-                 └──► re-summarization: summaries of summaries
-                      (chatMemos preserved through the merge)
+```mermaid
+flowchart TB
+    OV[context overflows] --> RUN[a run of messages is summarized]
+    RUN --> S["Summary — text + chatMemos"]
+    S -->|user pins it| PIN["isImportant: always selected first"]
+    S -->|user edits or re-rolls| ED["text replaced in place, no history kept"]
+    S -->|user deletes| DEL[gone]
+    S -->|user merges two| MG["one summary, union of chatMemos"]
+    SRC[a source message is deleted from the chat] --> SUB["isSubset(chatMemos, currentMemos) fails"]
+    S --> SUB
+    SUB --> DROP["the summary is dropped —<br/><b>deletion propagates</b>"]
+    S -->|budget pressure| RES["re-summarization: summaries of summaries<br/>chatMemos preserved through the merge"]
 ```
 
 Memory is **hybrid**: an LLM writes it, the token budget decides when, and a

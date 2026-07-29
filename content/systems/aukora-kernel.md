@@ -77,33 +77,16 @@ ceiling: episodic facts do not auto-promote to belief (that is an operator-gated
 step, not done here)."* The tier is a caller-supplied argument defaulting to
 `episodic`, and — see §5 — `recall` never reads it.
 
-```text
-   remember(content, tier)
-        │
-        ▼
-   aukoraGovernAsk({permission:'memory', metadata:{diff: content}})
-        │
-        ├── session LOCKED ──────────────► PAUSE, no write
-        ├── apparent secret in content ──► DENY, no write
-        └── allow
-             │
-             ▼
-        append RECEIPT (contentHash only, never plaintext), fsync
-             │                    ← if this throws, no row is written
-             ▼
-        append ROW to the chain (hash covers contentHash), fsync
-             │
-             ▼
-   recall(chainKey)  ── ADVISORY banner ──► entries where status=active
-             │
-   forget(hash | contentHash)
-             │
-             ▼
-        append forget RECEIPT, then: content = null,
-        status = 'tombstoned', push a tier:'tombstone' entry with covers
-             │
-             ▼
-        the rejection is now durable, auditable, and never read again
+```mermaid
+flowchart TB
+    R["remember(content, tier)"] --> G["aukoraGovernAsk<br/>permission: memory, diff: content"]
+    G -->|session LOCKED| PAUSE["PAUSE — no write"]
+    G -->|apparent secret in content| DENY["DENY — no write"]
+    G -->|allow| REC["append RECEIPT, fsync<br/>contentHash only, never plaintext<br/>if this throws, no row is written"]
+    REC --> ROW["append ROW to the chain, fsync<br/>hash covers contentHash"]
+    RC["recall(chainKey)"] -->|ADVISORY banner| ACT["entries where status = active"]
+    F["forget(hash or contentHash)"] --> FR["append forget RECEIPT, then:<br/>content = null, status = tombstoned,<br/>push a tier:tombstone entry with covers"]
+    FR --> DUR["the rejection is now durable, auditable —<br/>and never read again"]
 ```
 
 The epistemic stance is stated rather than implied, and it is unusual: **memory

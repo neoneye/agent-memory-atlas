@@ -71,26 +71,14 @@ four-part tuple — `category`, `tag`, `feature_name`, `value` — plus
 
 The state machine is shallow, and the shallowness is the finding:
 
-```text
-   message arrives
-        │
-        ▼
-   Episode (is_ingested=false) ──────────────► retained forever
-        │
-        │  background loop, every 2s, 5 per set
-        ▼
-   LLM emits SemanticCommand{ADD | DELETE}
-        │
-        ├── ADD ────► SemanticFeature + citations
-        │                   │
-        │                   │  once a tag group reaches 20 features
-        │                   ▼
-        │             consolidation: LLM merges, citations unioned
-        │                   │
-        └── DELETE ──► row gone. no record that it was ever asserted,
-                       no record that it was rejected
-        │
-   Episode marked is_ingested=true — never reconsidered
+```mermaid
+flowchart TB
+    M[message arrives] --> E["Episode (is_ingested = false)<br/>retained forever"]
+    E -->|background loop, every 2s, 5 per set| L["LLM emits SemanticCommand: ADD or DELETE"]
+    L -->|ADD| SF["SemanticFeature + citations"]
+    SF -->|once a tag group reaches 20 features| CON["consolidation: LLM merges,<br/>citations unioned"]
+    L -->|DELETE| GONE["row gone — no record that it was ever asserted,<br/>no record that it was rejected"]
+    L --> ING["Episode marked is_ingested = true —<br/>never reconsidered"]
 ```
 
 `SemanticCommandType` has exactly two members, `ADD` and `DELETE`. There is no

@@ -169,32 +169,15 @@ explicit that the promotion between the first two is not implemented:
 (that is an operator-gated step, not done here)."</em> The tier is a
 caller-supplied argument defaulting to <code>episodic</code>, and — see
 §5 — <code>recall</code> never reads it.</p>
-<pre class="text"><code>   remember(content, tier)
-        │
-        ▼
-   aukoraGovernAsk({permission:&#39;memory&#39;, metadata:{diff: content}})
-        │
-        ├── session LOCKED ──────────────► PAUSE, no write
-        ├── apparent secret in content ──► DENY, no write
-        └── allow
-             │
-             ▼
-        append RECEIPT (contentHash only, never plaintext), fsync
-             │                    ← if this throws, no row is written
-             ▼
-        append ROW to the chain (hash covers contentHash), fsync
-             │
-             ▼
-   recall(chainKey)  ── ADVISORY banner ──► entries where status=active
-             │
-   forget(hash | contentHash)
-             │
-             ▼
-        append forget RECEIPT, then: content = null,
-        status = &#39;tombstoned&#39;, push a tier:&#39;tombstone&#39; entry with covers
-             │
-             ▼
-        the rejection is now durable, auditable, and never read again</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    R[&quot;remember(content, tier)&quot;] --&gt; G[&quot;aukoraGovernAsk&lt;br/&gt;permission: memory, diff: content&quot;]
+    G --&gt;|session LOCKED| PAUSE[&quot;PAUSE — no write&quot;]
+    G --&gt;|apparent secret in content| DENY[&quot;DENY — no write&quot;]
+    G --&gt;|allow| REC[&quot;append RECEIPT, fsync&lt;br/&gt;contentHash only, never plaintext&lt;br/&gt;if this throws, no row is written&quot;]
+    REC --&gt; ROW[&quot;append ROW to the chain, fsync&lt;br/&gt;hash covers contentHash&quot;]
+    RC[&quot;recall(chainKey)&quot;] --&gt;|ADVISORY banner| ACT[&quot;entries where status = active&quot;]
+    F[&quot;forget(hash or contentHash)&quot;] --&gt; FR[&quot;append forget RECEIPT, then:&lt;br/&gt;content = null, status = tombstoned,&lt;br/&gt;push a tier:tombstone entry with covers&quot;]
+    FR --&gt; DUR[&quot;the rejection is now durable, auditable —&lt;br/&gt;and never read again&quot;]</code></pre>
 <p>The epistemic stance is stated rather than implied, and it is
 unusual: <strong>memory navigates, it does not authorize.</strong>
 <code>recall</code> returns a banner saying so on every call —
