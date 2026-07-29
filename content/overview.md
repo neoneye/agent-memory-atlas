@@ -462,6 +462,53 @@ research library. It is a reason to be careful with framework lists: the word
 covers both a store you would run in production and a benchmark rig for comparing
 algorithms, and only one of them can answer "forget what I told you last week".
 
+A fourth shape is the most frustrating one to decline, because it is closer to
+this atlas's concerns than most of what it does review: **a guard is not a
+store.** [OWASP Agent Memory Guard](https://github.com/OWASP/www-project-agent-memory-guard)
+(Apache 2.0, at
+[`78b9227f5d832cfe83b1d3f01dbcb6f51235dc39`](https://github.com/OWASP/www-project-agent-memory-guard/commit/78b9227f5d832cfe83b1d3f01dbcb6f51235dc39))
+is the reference implementation cited by the security survey above, and it is
+the closest public code to that survey's Verifiable Memory Governance. Its
+`MemoryGuard` screens every read and write through a detector suite, and it
+carries mechanisms the atlas counts and rarely finds:
+
+- A **classification graph** with typed transitions —
+  `ephemeral → user_preference_candidate → verified_preference`, where that last
+  edge sets `requires_verification=True` and `promote()` refuses without an
+  explicit `verified=True`. That is a trust state machine with a human opt-in on
+  the promoting edge, and it is enforced rather than advisory: writing with a
+  different class raises rather than silently reclassifying.
+- **Snapshots and rollback**, including a pre-snapshot before every blocked
+  write and before every `retire_if` sweep — Rollbackability, which the survey
+  calls "largely absent".
+- A **self-reinforcement detector** aimed squarely at the failure this atlas
+  keeps naming: an agent reading its own prior claim, elaborating it, and
+  writing it back until a hallucination hardens into a fact. It fires only on
+  `AGENT_AUTHORED` writes and resets when independent evidence arrives.
+
+It gets no report because **nothing survives the process.** The only shipped
+`MemoryStore` implementation is `InMemoryStore`, a dict; `SnapshotStore` is a
+50-entry `OrderedDict` ring buffer; the event log is a Python list; and the HTTP
+and MCP servers both construct `MemoryGuard(policy=...)` with no store. The
+`MemoryStore` Protocol is the extension point, and the durable half is the
+reader's to supply. So the same rule that excluded MemEngine applies, for a
+different reason: MemEngine had no store because it is a workbench, and this has
+no store because it is a layer.
+
+Two observations survive the exclusion, and they are why it is recorded at
+length rather than dropped. First, the self-reinforcement detector guards a
+60-second window over a similarity ratio, keyed by memory key and held in a
+deque of eight — it catches a tight write-read-elaborate loop, which is a real
+attack, and not the atlas's actual failure mode, where a *nightly* extraction
+pass re-asserts what a user corrected last week. Second, its quarantine is the
+clearest near-miss on a tombstone in this atlas: a blocked write's value is
+stored in `self._quarantine[key]`, exposed as a read-only property, exported to
+metrics — and consulted by nothing. Write the same rejected value again and, if
+no detector independently matches it a second time, it commits. The one project
+in the field built specifically to secure agent memory implements four of the
+survey's five primitives, and the one it does not implement is Verified
+Forgetting.
+
 Compaction appears in this atlas only as a component of systems that also
 persist — `mastra-observational-memory` with exact covered ranges and buffered
 activation, `hermes-agent` with a hard budget forcing in-turn consolidation,
@@ -1057,6 +1104,42 @@ Read that as corroboration rather than as a scoop. The comparison in full,
 including where the survey covers ground the atlas does not — parametric and
 latent memory, RL-learned memory management, multimodal — is in
 [the working note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-memory-survey-forms-functions-dynamics.md).
+
+**The clearest external statement of the gap comes from security research rather
+than from memory research.** *A Survey on Long-Term Memory Security in LLM
+Agents* ([arXiv:2604.16548](https://arxiv.org/abs/2604.16548), v2, 11 June 2026,
+by the MemOS group at MemTensor with SJTU) reaches this atlas's conclusions from
+an entirely different starting point: what an attacker can do to a writable
+store. Its §5 proposes **Verifiable Memory Governance**, five primitives it
+argues a long-term-memory system must provide. Four of them are this atlas's
+capability columns under other names:
+
+| VMG primitive | The atlas's name for it |
+| --- | --- |
+| Write Authorization — every entry attributable to an authenticated source, passing an explicit check before consolidation | the [governed write gateway](../patterns/governed-write-gateway/) pattern |
+| Provenance Visibility — every entry carrying queryable, lineage-complete provenance through summarization and merging | `audit_log`, and the provenance chain the [evidence-before-belief](../patterns/evidence-before-belief/) pattern needs |
+| Principal-Scoped Retrieval — retrieval returns only entries whose scope includes the querying principal | `scope_enforced`, almost word for word |
+| Rollbackability — versioned snapshots sufficient to restore a known-safe prior state | no column; the [append-only memory audit](../patterns/append-only-memory-audit/) pattern is the nearest |
+| **Verified Forgetting** — after a deletion, the system can demonstrate by post-deletion membership tests that the content is unrecoverable "from any substrate — including raw logs, compressed summaries, vector indices, and propagated copies" | the question this atlas asks of every system, and the one its [benchmarks page](../benchmarks/) says nothing measures |
+
+Verified Forgetting is given a formal definition — a bound ε on the probability
+that any adversarial probing query re-exposes deleted content — and the paper's
+own dependency diagram marks its deployment status as **"no existing
+literature"**, the only one of the five so marked. Rollbackability is "largely
+absent"; Principal-Scoped Retrieval "early-stage".
+
+That is the sharpest form the atlas's central finding has taken. A survey
+written by the authors of a system reviewed here, working from threat models
+rather than from repositories, independently derives the capability the atlas
+counts, defines it more precisely than this atlas does, and reports that nobody
+has published it. Meanwhile three repositories here implement a value-level
+tombstone — the mechanism Verified Forgetting requires — and none of the three
+has a paper. The literature and the code have each found half of it.
+
+And the vocabulary gap survives even here: over this survey's text, `provenance`
+appears 25 times, `rollback` 24, `forget*` 25, `audit*` 13, `unlearn` 9 — and
+`tombstone`, `rejected`, `negative` and `tenant` **zero** times each, exactly as
+in the 107-page survey. The property is now named. The mechanism still is not.
 
 ### Forgetting
 
