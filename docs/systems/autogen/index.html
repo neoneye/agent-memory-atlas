@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Microsoft's agent framework ships
+a memory protocol whose content has no id, so the only deletion it can
+express is wiping the store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AutoGen — Agent Memory Atlas">
+    <meta property="og:description" content="Microsoft's agent framework
+ships a memory protocol whose content has no id, so the only deletion it
+can express is wiping the store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoGen — Agent Memory Atlas">
+    <meta name="twitter:description" content="Microsoft's agent
+framework ships a memory protocol whose content has no id, so the only
+deletion it can express is wiping the store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AutoGen — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory without identity</p>
+          <h1>AutoGen</h1>
+          <p class="document-deck">Microsoft's agent framework ships a
+memory protocol whose content has no id, so the only deletion it can
+express is wiping the store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/microsoft/autogen">
+              <span>Source</span>
+              <strong>microsoft/autogen</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14" title="027ecf0a379bcc1d09956d46d12d44a3ad9cee14">
+              <span>Analyzed revision</span>
+              <code>027ecf0a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (75%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AutoGen is Microsoft's multi-agent framework, and like <a
+href="../adk-python/">Google ADK</a> its memory is a
+<strong>protocol</strong> rather than a store: a five-method
+<code>Memory</code> ABC in <code>autogen-core</code>, with a list,
+ChromaDB, Redis, Mem0 and text-canvas implementations in
+<code>autogen-ext</code>. It belongs in this atlas for the same reason
+ADK does — what the interface omits is what an ecosystem of agents
+cannot do.</p>
+<p>The interesting design choice is <code>update_context</code>. Rather
+than being a store the agent queries through a tool, an AutoGen memory
+is handed the model context and edits it: memory pulls itself into the
+prompt. That is a cleaner injection point than most frameworks offer and
+it makes memory composable with the rest of the component system.</p>
+<p>The finding is one field. <code>MemoryContent</code> carries
+<code>content</code>, <code>mime_type</code> and <code>metadata</code> —
+<strong>and no identifier</strong>. A memory in this framework has no
+name, no key, no id. The consequence follows immediately and is visible
+in the protocol: the only removal operation is <code>clear()</code>,
+which empties the whole store, and no shipped adapter adds a targeted
+delete because there is nothing to address one by. This is a step below
+ADK, which at least gives <code>MemoryEntry</code> an optional
+<code>id</code> and then declines to use it.</p>
+<p>Scope is the second gap and has the same shape. The protocol has no
+scope parameter at all. Exactly one adapter — Mem0 — carries a
+<code>user_id</code>, it is <code>Optional</code>, and when omitted the
+constructor does
+<code>self._user_id = user_id or str(uuid.uuid4())</code>. So a caller
+who forgets the user does not get an error; they get a fresh random
+identity, and a memory store that silently becomes unreachable on the
+next construction.</p>
+<p>Read alongside ADK, the pair makes the atlas's provider-contract
+finding sharper than either does alone: ADK requires scope in the
+signature and cannot delete; AutoGen cannot delete <em>because</em> it
+cannot address, and treats scope as an adapter's business.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>MemoryContent</code>: a payload
+(<code>str</code>, <code>bytes</code>, <code>dict</code> or
+<code>Image</code>), a <code>MemoryMimeType</code>, and an optional
+<code>metadata</code> dict. That is the whole schema, and it is
+deliberately closer to "a piece of content" than to "a belief".</p>
+<pre class="text"><code>   application (or a sample&#39;s learning loop)
+        │  add(MemoryContent)
+        ▼
+   memory store  ─── query(q) ──────────► MemoryQueryResult
+        │
+        │  update_context(model_context)
+        ▼
+   the memory writes itself into the prompt
+        │
+        └── clear() ──► everything is gone</code></pre>
+<p>There are no states. Nothing is a candidate, verified, superseded,
+expired or rejected. There is no supersession because there is no
+identity to supersede: two <code>add</code> calls with contradicting
+content produce two entries and <code>query</code> may return both.</p>
+<p>Control is <strong>application-controlled</strong>. The core does no
+extraction and no consolidation; something outside decides what to
+<code>add</code>. The <code>samples/ task_centric_memory</code> tree is
+where AutoGen's actual memory <em>research</em> lives — teachability,
+self-teaching, learning from demonstration — and those are samples with
+their own loops rather than framework guarantees, which is worth knowing
+before reading AutoGen's memory story from its papers.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Python (and a .NET tree not read here), MIT and CC-BY licences. The
+memory surface is small and deliberately so:</p>
+<ul>
+<li><code>autogen-core/src/autogen_core/memory/_base_memory.py</code> —
+<code>MemoryMimeType</code>, <code>MemoryContent</code>,
+<code>MemoryQueryResult</code>, <code>UpdateContextResult</code>, and
+the <code>Memory</code> ABC with <code>update_context</code>,
+<code>query</code>, <code>add</code>, <code>clear</code>,
+<code>close</code>.</li>
+<li><code>autogen-core/.../memory/_list_memory.py</code> —
+<code>ListMemory</code>, a chronological in-process list that appends
+<em>all</em> stored memories into the context.</li>
+<li><code>autogen-ext/.../memory/</code> — <code>chromadb</code>,
+<code>redis</code>, <code>mem0</code>, <code>canvas</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TB
+    APP[Application] --&gt;|add| M[Memory ABC]
+    M --&gt; L[ListMemory&lt;br/&gt;in-process list]
+    M --&gt; C[(ChromaDB)]
+    M --&gt; R[(Redis)]
+    M --&gt; M0[Mem0 adapter&lt;br/&gt;optional user_id]
+    M --&gt; CV[TextCanvasMemory]
+    M --&gt;|update_context| CTX[Model context]
+    M --&gt;|clear| Z[whole store emptied]</code></pre>
+<p><code>Memory</code> extends <code>ComponentBase</code>, so a memory
+is a declaratively configurable component — it can be serialised into a
+config and restored, which is a genuine ergonomic advantage over
+hand-wiring.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> nothing for
+<code>ListMemory</code>, which is the default and is a Python list.
+Durable memory means standing up ChromaDB or Redis, or signing up for
+Mem0.</li>
+<li><strong>Local and offline:</strong> yes with ChromaDB; the framework
+itself needs no model for memory because it performs no extraction.</li>
+<li><strong>No API key is required to store</strong>, unless the chosen
+adapter is hosted.</li>
+<li><strong>Hand-repairable:</strong> as repairable as the backend you
+picked. AutoGen adds no store of its own.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The contract.</strong> <code>_base_memory.py</code> — five
+methods, all abstract:
+<code>update_context(model_context) -&gt; UpdateContextResult</code>,
+<code>query(query, cancellation_token) -&gt; MemoryQueryResult</code>,
+<code>add(content, cancellation_token) -&gt; None</code>,
+<code>clear() -&gt; None</code>, <code>close() -&gt; None</code>.</p>
+<p><strong>The schema.</strong> Same file. <code>MemoryContent</code> is
+<code>content: ContentType</code>,
+<code>mime_type: MemoryMimeType | str</code>,
+<code>metadata: Dict[str, Any] | None</code>. Search the class for an id
+field and there is not one.</p>
+<p><strong>Default behaviour.</strong> <code>_list_memory.py</code> —
+<code>ListMemory</code> stores a <code>List[MemoryContent]</code> and
+its <code>update_context</code> appends <em>all</em> of them to the
+context. That is not retrieval; it is context stuffing with extra steps,
+and the class docstring says so plainly ("retrieves them in
+chronological order").</p>
+<p><strong>Durable adapters.</strong>
+<code>autogen-ext/.../memory/chromadb/</code>, <code>redis/</code>,
+<code>mem0/</code>. The Mem0 adapter is where scope appears:
+<code>user_id: Optional[str] = None</code> in the config and
+constructor, resolved by
+<code>self._user_id = user_id or str(uuid.uuid4())</code>.</p>
+<p><strong>Canvas.</strong> <code>memory/canvas/</code> —
+<code>TextCanvasMemory</code> plus a writer tool, a different shape
+again: a shared editable artifact the agents write into, rather than a
+retrieval store.</p>
+<p><strong>Where the research is.</strong>
+<code>python/samples/task_centric_memory/</code> —
+<code>eval_teachability.py</code>, <code>eval_self_teaching.py</code>,
+<code>eval_learning_from_demonstration.py</code>,
+<code>eval_retrieval.py</code>,
+<code>chat_with_teachable_agent.py</code>.</p>
+<p><strong>Tests.</strong> 56 memory test functions across the core and
+ext suites.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three fields, and the absent fourth is the report.</p>
+<p><strong>No identifier.</strong> Nothing in <code>MemoryContent</code>
+names the memory. A caller who wants to remove one specific thing cannot
+express the request in this protocol's vocabulary — which is why
+<code>clear()</code> is the only removal method and why none of the four
+adapters adds a targeted delete even though ChromaDB and Redis both
+support one natively. The gap is not that the authors forgot a method;
+it is that the schema makes the method unwritable.</p>
+<p><strong>No scope in the contract.</strong> <code>query</code> takes a
+query. <code>add</code> takes content. Neither takes a user, tenant,
+session or project. The one adapter that has a notion of a principal is
+Mem0's, it is optional, and its default is a random UUID — so misuse is
+silent, and the failure mode is a store you cannot find again rather
+than a leak.</p>
+<p><strong><code>metadata</code> is the escape hatch</strong>, typed
+<code>Dict[str, Any]</code>, with no conventions declared. Anything an
+application puts there is by definition not portable across adapters,
+which is the same anti-portability property ADK's
+<code>custom_metadata</code> has.</p>
+<p><strong>No temporal fields, no provenance, no confidence, no
+state.</strong> A <code>MemoryContent</code> cannot say when it was
+true, where it came from, or how sure anyone is.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>query(query, cancellation_token) -&gt; MemoryQueryResult</code>.
+No <code>k</code>, no filter, no threshold, no scoring contract on the
+way back — <code>MemoryQueryResult</code> carries results and the
+ranking semantics are the adapter's.</p>
+<p>The default is the notable case:
+<code>ListMemory.update_context</code> appends <strong>every</strong>
+stored memory to the model context. For a small session that is fine and
+honest. As a default for a framework whose users will accumulate
+memories over months, it is an unbounded prompt, and nothing in the
+protocol offers a budget parameter in which an adapter could be asked to
+behave differently.</p>
+<p><code>update_context</code> is nonetheless the best idea here. Making
+memory responsible for its own injection — rather than making the agent
+call a tool and paste the result — means a memory implementation can
+decide <em>how</em> to present itself, and the
+<code>UpdateContextResult</code> return makes what it did inspectable.
+Several systems in this atlas would be improved by having that seam.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add(content)</code> and nothing else. No deduplication, no
+conflict detection, no consolidation, no extraction — the core framework
+never decides that something is worth remembering, and never decides
+that two things disagree.</p>
+<p>That is a defensible position for a protocol, and it means AutoGen's
+memory <em>behaviour</em> in practice is whichever adapter is mounted:
+Mem0 brings its extraction and consolidation, ChromaDB brings none.</p>
+<p>Nothing filters input. Content whose text is a prompt injection is
+stored and then, via <code>update_context</code>, writes itself into the
+prompt — which is the same exposure every system here has, with a
+shorter path than most.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Writes are as cheap as the adapter.</strong> The core adds a
+method call.</li>
+<li><strong>Lag before a memory is retrievable</strong> is the
+adapter's; the protocol says nothing.</li>
+<li><strong>No background pass exists in the core.</strong></li>
+<li><strong>On the read path, nothing is bounded.</strong> The default
+injects the entire store into context on every turn, and the protocol
+has no budget parameter, so a well-behaved adapter cannot be
+<em>asked</em> for less — only written to decide for itself.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is a constructor argument on an agent, and
+<code>update_context</code> runs as part of building the model context.
+So integration is close to invisible at the call site, which is the
+point.</p>
+<p>Because <code>Memory</code> is a <code>ComponentBase</code>, a memory
+configuration can be serialised and shipped with an agent definition.
+Adapting a third-party memory system means implementing five methods,
+two of which (<code>clear</code>, <code>close</code>) are trivial — the
+lowest-friction provider interface in this atlas, and the reason its
+omissions travel.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No trust model, and no room for one.</strong>
+<code>MemoryContent</code> has no field in which an implementation could
+return provenance, confidence or state, so an adapter that tracks them
+internally must flatten them into untyped <code>metadata</code>. As with
+ADK, the interface does not merely lack a trust model — it makes a
+portable one inexpressible.</p>
+<p><strong>Deletion is all-or-nothing.</strong> <code>clear()</code> is
+in the protocol; targeted removal is not, in the ABC or in ChromaDB,
+Redis, Mem0 or canvas. An application asked to delete one user's one
+memory has two options: wipe the store, or bypass the abstraction and
+talk to the backend directly. This atlas's <a
+href="../../patterns/pluggable-memory-provider/">pluggable memory
+provider</a> page records that none of the reviewed provider contracts
+carries deletion; AutoGen is the instance where the reason is structural
+rather than an omission.</p>
+<p><strong>Scope failure is silent.</strong>
+<code>user_id or str(uuid.uuid4())</code> turns a forgotten argument
+into a working-but-orphaned store. A required argument, or a raised
+error, would cost one line and convert a silent data-partitioning bug
+into a stack trace — which is exactly what ADK does and the clearest
+thing AutoGen could borrow from it.</p>
+<p><strong>Multi-tenancy</strong> is therefore the application's problem
+entirely, and the framework provides no seam at which to solve it
+uniformly.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>56 memory test functions</strong> across
+<code>autogen-core</code> and the ext adapter suites, covering the
+protocol's behaviour, <code>ListMemory</code> semantics, and each
+adapter's round-tripping. Proportionate for an interface package.</p>
+<p>The evaluation story lives in
+<code>samples/task_centric_memory/</code>, and it is more substantial
+than most frameworks ship: separate harnesses for teachability,
+self-teaching, learning from demonstration, and retrieval. These are
+<strong>samples, not tests</strong> — they are not run by CI and they
+measure a memory <em>design</em> built on top of the protocol rather
+than the protocol itself. Worth reading; not evidence about the
+interface.</p>
+<p>No test asserts that particular material must <em>not</em> be
+retrieved, so <code>negative_eval</code> is withheld. Given that scope
+is optional and defaults to a random UUID, a test that two Mem0-backed
+memories with different <code>user_id</code>s cannot see each other
+would be the single most valuable addition.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong><code>update_context</code> as a first-class seam.</strong>
+Letting the memory write itself into the prompt — and returning a result
+describing what it did — is better than making the agent call a tool and
+splice the output. It puts the presentation decision with the component
+that knows the data.</li>
+<li><strong>Make the memory a configurable component.</strong>
+Serialising a memory configuration alongside an agent definition removes
+a whole class of wiring bugs and makes swapping providers a config
+change.</li>
+<li><strong>Keep the protocol small.</strong> Five methods is genuinely
+easy to implement, and low friction is why adapters exist at all. The
+critique below is about <em>which</em> five.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A memory schema with no identifier.</strong> Everything
+downstream follows from it: no targeted delete, no update, no
+supersession, no correction chain, no way for an adapter to expose one
+portably. If you ship a memory type, give it an id in v1 even if your
+first backend ignores it.</li>
+<li><strong><code>clear()</code> as your only removal verb.</strong>
+"Delete everything" is not a deletion story; it is the absence of one,
+and the first compliance request will route around your
+abstraction.</li>
+<li><strong>Defaulting an identity to a random UUID.</strong>
+<code>user_id or str(uuid.uuid4())</code> converts a caller's mistake
+into silently partitioned data. Require it, or raise.</li>
+<li><strong>A default implementation that injects the entire
+store.</strong> It teaches every new user that memory is free, and the
+protocol offers no parameter with which a more careful adapter could be
+asked for less.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>If you are building on AutoGen, the memory protocol is fine for what
+it is — mount Mem0 or ChromaDB, pass <code>user_id</code> explicitly
+every time, and treat deletion as something you will implement against
+the backend directly. The <code>update_context</code> seam is genuinely
+good and worth designing around.</p>
+<p>Do not adopt this as your provider interface if you are designing
+one. It is the clearest demonstration in the atlas that an interface's
+omissions are permanent in a way an implementation's are not: a better
+ChromaDB adapter cannot add an id to <code>MemoryContent</code>, and
+every agent written against the protocol inherits the ceiling.</p>
+<p>And if you came to AutoGen for the task-centric memory research, read
+the samples rather than the protocol. They are the interesting part and
+they are not what the framework guarantees.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the missing identifier deliberate?</strong> A
+content-addressed design would be a coherent answer — hash the content,
+address by hash — but nothing in the protocol hints at one, and the
+adapters do not behave that way.</li>
+<li><strong>Do the ChromaDB and Redis adapters expose their native
+delete anywhere?</strong> Both backends support targeted removal;
+nothing in the AutoGen wrapper surfaces it, and whether that is policy
+or backlog is not stated.</li>
+<li><strong>What does the .NET implementation's memory look
+like?</strong> Only the Python tree was read; whether the two protocols
+agree matters for anyone using both.</li>
+<li><strong>Are the task-centric memory samples run anywhere in
+CI?</strong> They are the strongest evaluation material in the
+repository and appear to be examples.</li>
+<li><strong>Is <code>update_context</code> expected to be
+idempotent</strong> across repeated turns? The default appends
+everything each time, and the contract does not say.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Contract and schema</strong></p>
+<ul>
+<li><code>python/packages/autogen-core/src/autogen_core/memory/_base_memory.py</code></li>
+<li><code>python/packages/autogen-core/src/autogen_core/memory/__init__.py</code></li>
+</ul>
+<p><strong>Default implementation</strong></p>
+<ul>
+<li><code>python/packages/autogen-core/src/autogen_core/memory/_list_memory.py</code></li>
+</ul>
+<p><strong>Adapters</strong></p>
+<ul>
+<li><code>python/packages/autogen-ext/src/autogen_ext/memory/chromadb/</code></li>
+<li><code>python/packages/autogen-ext/src/autogen_ext/memory/redis/</code></li>
+<li><code>python/packages/autogen-ext/src/autogen_ext/memory/mem0/_mem0.py</code></li>
+<li><code>python/packages/autogen-ext/src/autogen_ext/memory/canvas/</code></li>
+</ul>
+<p><strong>Evaluation samples</strong></p>
+<ul>
+<li><code>python/samples/task_centric_memory/eval_teachability.py</code></li>
+<li><code>python/samples/task_centric_memory/eval_self_teaching.py</code></li>
+<li><code>python/samples/task_centric_memory/eval_learning_from_demonstration.py</code></li>
+<li><code>python/samples/task_centric_memory/eval_retrieval.py</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>python/packages/autogen-core/tests/test_memory.py</code></li>
+<li><code>python/packages/autogen-ext/tests/memory/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

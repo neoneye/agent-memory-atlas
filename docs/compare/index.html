@@ -5,23 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+eighty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of eighty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of eighty agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -77,9 +77,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of
-seventy-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of eighty
+agent memory architectures, their retrieval mechanics, trust models, and
+operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into seventy-nine categories. They
+<p>Seventy-three systems do not fall into eighty categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -301,8 +301,8 @@ coupling memory to the framework, prompt assembly, and tool loop.</p>
 pluggable memory</h3>
 <p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
 <code>pi</code>, <code>mateclaw</code>, <code>opencode</code>,
-<code>nemoclaw</code>, <code>tigrimosr</code>, <code>adk-python</code>
-Plugins mounted on them: <code>holographic</code>,
+<code>nemoclaw</code>, <code>tigrimosr</code>, <code>adk-python</code>,
+<code>autogen</code> Plugins mounted on them: <code>holographic</code>,
 <code>magic-context</code>, <code>metaclaw</code>,
 <code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
 providers</p>
@@ -351,8 +351,20 @@ declares <code>add_session_to_memory</code>,
 <code>search_memory</code>, and <strong>no removal method of any
 kind</strong>, while the sibling <code>BaseSessionService</code> does
 declare <code>delete_session</code>. Content promoted out of a deletable
-session into memory becomes unremovable through the framework. Two
-contracts of five now carry scope; none carries deletion. See <a
+session into memory becomes unremovable through the framework.
+<strong>Microsoft's AutoGen is the same finding one level
+deeper.</strong> Its <code>Memory</code> protocol is five methods, and
+<code>MemoryContent</code> carries content, a MIME type and metadata —
+<strong>no identifier</strong>. So the absent delete is not an omission
+but a consequence: with nothing to address a memory by, a targeted
+removal cannot be written, and <code>clear()</code> — wipe everything —
+is the only removal verb in the protocol or in any of its ChromaDB,
+Redis, Mem0 and canvas adapters, both of the first two backends
+supporting targeted deletion natively. Scope is missing from the
+contract too, present only on the Mem0 adapter, optional, and defaulting
+to <code>user_id or str(uuid.uuid4())</code> — so a forgotten principal
+is a silently orphaned store rather than an error. Two contracts of six
+now carry scope; none carries deletion, and one of them cannot. See <a
 href="../patterns/pluggable-memory-provider/">pluggable memory
 provider</a>.</p>
 <h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
@@ -1048,6 +1060,31 @@ never authorize an effect</td>
 without breaking the chain; limits documented inline</td>
 <td>Forget records a rejection it never consults, so the same content
 can be written again; tiers are declared and never applied</td>
+</tr>
+<tr>
+<td><code>autogen</code></td>
+<td><code>MemoryContent</code> — content, a MIME type and optional
+metadata. There is no identifier field</td>
+<td>Interface only. Ships an in-process list plus ChromaDB, Redis, Mem0
+and a text-canvas adapter</td>
+<td><code>query(query)</code> returning <code>MemoryQueryResult</code>;
+the default returns everything in chronological order</td>
+<td><code>add(MemoryContent)</code>, called by the application or by a
+task-centric memory sample; no extraction in the core</td>
+<td><code>clear()</code> wipes the store. There is no targeted delete in
+the protocol or in any shipped adapter</td>
+<td>Absent from the protocol. Only the Mem0 adapter carries
+<code>user_id</code>, and it defaults to a fresh UUID</td>
+<td><code>update_context</code> lets memory inject itself into the model
+context; components are declaratively configured</td>
+<td>None in the core; the task-centric memory samples add their own
+learning loops</td>
+<td>MIME type and free-form metadata; no provenance, confidence or
+state</td>
+<td><code>update_context</code> as a first-class injection point; a
+small protocol that is genuinely easy to implement</td>
+<td>No identity on a memory, so targeted deletion is not expressible;
+scope is an adapter's option, not the contract's</td>
 </tr>
 <tr>
 <td><code>basic-memory</code></td>
@@ -2666,14 +2703,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 79:</em> <a
+<p><em>3 of 80:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 79:</em> <a
+<p><em>7 of 80:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2683,7 +2720,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 79:</em> <a
+<p><em>8 of 80:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2695,7 +2732,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>48 of 79:</em> <a
+<p><em>48 of 80:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -2748,7 +2785,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>8 of 79:</em> <a
+<p><em>8 of 80:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2760,7 +2797,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 79:</em> <a
+<p><em>14 of 80:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2778,7 +2815,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>4 of 79:</em> <a
+<p><em>4 of 80:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
@@ -2801,11 +2838,11 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Four
-repositories of seventy-nine assert that particular material must
-<em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Two reached it
-from memory work: <a href="../systems/open-cowork/">open-cowork</a>
-through <code>forbiddenHits</code> in its eval harness, <a
+repositories of eighty assert that particular material must <em>not</em>
+be retrieved — the assertion every scope, deletion and correction claim
+in this document ultimately rests on. Two reached it from memory work:
+<a href="../systems/open-cowork/">open-cowork</a> through
+<code>forbiddenHits</code> in its eval harness, <a
 href="../systems/verel/">Verel</a> through a regression suite built from
 the red-team finding that produced its tombstone. The third, <a
 href="../systems/mirix/">MIRIX</a>, arrived from somewhere else entirely
@@ -6778,6 +6815,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/adk-python/"><code>adk-python</code></a></li>
 <li><a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
+<li><a href="../systems/autogen/"><code>autogen</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -7059,6 +7097,9 @@ href="https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704
 href="https://github.com/aumara-xyz/aukora-kernel">aumara-xyz/aukora-kernel</a>
 at <a
 href="https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe"><code class="commit-id" title="b441edc4d17de778d30ae955f46408edae39bffe">b441edc4…</code></a></li>
+<li><a href="https://github.com/microsoft/autogen">microsoft/autogen</a>
+at <a
+href="https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14"><code class="commit-id" title="027ecf0a379bcc1d09956d46d12d44a3ad9cee14">027ecf0a…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
