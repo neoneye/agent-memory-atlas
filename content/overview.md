@@ -1278,18 +1278,20 @@ it in two directions. Downward, into code: `daimon anchor <file> <symbol>` pins
 an item to a Python symbol, fingerprinted as a SHA-256 of `ast.dump` of the
 definition node, so the anchor is stable under reformatting and comment edits
 and moves only on a structural change — and drift is reported in the next
-briefing. Outward, into the world: an opt-in `worldcheck` pass spot-checks
-carried claims across four classes — a repo-local `#N` via read-only
-`gh pr view` / `gh issue view`, a source path via `Path.exists()`, a branch via
-git's on-disk refs, and a pinned version via the lockfile — under one
-**0.8-second aggregate budget**, one five-probe cap, and silent-skip on any
-failure, so the briefing can never block or fail on the network. Three of the
-four are pure disk reads, so most of the pass runs with no `gh` and no remote at
-all. Two refusals define its edges: the cross-repo case is excluded by a
-lookbehind in the reference regex — `owner/repo#12` and `gemini-cli#14715` must
-not match, because `gh` would answer for the wrong repository — and a path whose
-resolved target escapes the project root is skipped for the same reason, since a
-symlink out of the tree answers about another checkout.
+briefing. Outward, into the world: an opt-in `worldcheck` pass spot-checks a carried claim
+against whatever it names — a ticket state, a source path, a branch, a pinned
+dependency — under one sub-second aggregate budget and one probe cap, skipping
+silently on any failure so a briefing can never block on a slow check. Only the
+ticket class leaves the machine; the other three are answered from disk, which
+is what lets the pass work in a project with no remote at all.
+
+Two refusals define its edges, and both are the same rule: **when a probe might
+answer about a different subject, skip rather than answer.** A reference that
+could name another repository is not probed, and a path resolving outside the
+project root is not probed, because in each case the reply would describe someone
+else's checkout. A verification that can be wrong about *which thing it checked*
+is worse than no verification, and this is the only system here that says so in
+code.
 
 Three of its correction decisions generalize. A machine-detected supersession is
 written as `supersede-candidate:<new-id>` and is **live by construction** — a
@@ -2126,11 +2128,15 @@ fail open — `waku-agent` states it in the code, "a stale memory beats a lost o
 `daimon` shows the zero-cost end of the same idea. Its proactive-recall gate is
 three lexical tests and no model call at all, and its world-check gate is a hard
 0.8-second aggregate budget with a five-probe cap where anything unfinished is
-killed and skipped — and the cap is allocated in checkpoint order rather than
-consumed first-come, so an expensive class cannot starve a cheap one. Both fail toward silence rather than toward a stale answer,
+killed and skipped. Both fail toward silence rather than toward a stale answer,
 which is the opposite of Waku's fail-open posture and correct for what they
 guard: a missing *suggestion* costs a reminder, a missing *memory* costs the
 answer.
+
+One sub-lesson generalizes past memory: when several classes of work share one
+budget, decide up front how the cap is divided rather than letting the first
+caller consume it. Daimon allocates in item order, so an expensive class cannot
+starve a cheap one — which is the difference between a shared budget and a race.
 
 ### Verify memory against its subject
 
@@ -2153,14 +2159,20 @@ and that it was reworked to per-memory timestamps so a timed-out run banks what
 it checked. Global watermarks make partial progress worthless.
 
 `daimon` is the second instance and answers the "degrades if the verdict is a
-model call" objection directly: none of its three verifications involve a model.
-A quote is checked by string match against the transcript, a code anchor by a
+model call" objection directly: none of its verifications involve a model. A
+quote is checked by string match against the transcript, a code anchor by a
 SHA-256 of `ast.dump` of the symbol's definition node — stable under
-reformatting, sensitive to structure — and an external claim by a read-only `gh`
-probe under a sub-second budget. It also extends the pattern's *subject* beyond
-local artifacts: a claim about a pull request has an inspectable subject that
-happens to live on someone else's server, and the interesting design question
-becomes latency and blast radius rather than adjudication. Its own stated
+reformatting, sensitive to structure — and a carried claim by probing whatever it
+names, under a sub-second budget.
+
+It also settles a question Magic Context leaves open: **what counts as an
+inspectable subject.** Magic Context maps a memory to files. Daimon shows the set
+is wider and mostly still local — a path, a branch, a pinned dependency version
+are all referents you can read off disk, and only a ticket state has to leave the
+machine. So the pattern's reach is not "memories about code"; it is *memories
+that name something*, and the naming is what makes them checkable. The design
+question that remains is latency and blast radius for the minority of referents
+that are remote, rather than adjudication for any of them. Its own stated
 measurement goal is the right one and still unanswered — how often a carried
 repo-state claim is already false by the next read.
 
