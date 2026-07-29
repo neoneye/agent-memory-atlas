@@ -453,6 +453,16 @@ it decides to write, or the store stays empty.
 - **Is NIP-AE published outside this repository?** The code cites the spec by
   rule name throughout; the spec document itself was not located here, and
   whether it is public affects how reimplementable the protocol actually is.
+- **Could this design have retrieval at all?** Section 11 says designing it would
+  be starting from scratch, which is true of *server-side* similarity search over
+  ciphertext and not true of the alternative: keep the index client-side and the
+  content remote. A quantised 384-dimension index is roughly 38 MB for 100k
+  memories, which is a phone. That argument, along with the two things
+  encryption fixes rather than costs — crypto-shredding as the only answer to
+  propagated copies, and a tombstone that blocks re-assertion *without* retaining
+  the rejected value — is worked through in
+  [a design note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-what-survives-encryption.md).
+  Nothing in it was read in code, including here.
 
 ## Appendix: File Index
 
