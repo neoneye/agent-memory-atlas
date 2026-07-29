@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-eighty-one agent memory architectures, their retrieval mechanics, trust
+eighty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of eighty-one agent memory architectures, their retrieval mechanics,
+of eighty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of eighty-one agent memory architectures, their retrieval mechanics,
+of eighty-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-eighty-one agent memory architectures, their retrieval mechanics, trust
+eighty-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into eighty-one categories. They
+<p>Seventy-three systems do not fall into eighty-two categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -389,7 +389,8 @@ provider</a>.</p>
 <code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
-<code>reme</code>, <code>acontext</code>, <code>logseq</code></p>
+<code>reme</code>, <code>acontext</code>, <code>logseq</code>,
+<code>everos</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -770,6 +771,25 @@ rejected value again and, if no detector independently matches it a
 second time, it commits. The one project in the field built specifically
 to secure agent memory implements four of the survey's five primitives,
 and the one it does not implement is Verified Forgetting.</p>
+<p><strong>Checkpointing is the boundary case most often argued about,
+and it belongs here rather than in the corpus.</strong> LangGraph's
+native thread-level persistence is the de-facto standard for stateful
+agents, it survives the process, and it supports time-travel — you can
+rewind a thread to an earlier checkpoint and resume. Those are real
+properties and none of them is memory by this atlas's test. A checkpoint
+is the <em>whole state of a run at a point in time</em>, addressed by
+thread and step; it has no unit a correction could name, no scope key
+beyond the thread, and nothing that could be individually superseded,
+rejected or forgotten. Rewinding a thread discards everything after a
+point rather than retracting a belief. It is the same category as <a
+href="#not-in-scope-conversation-window-management">MemAgent</a> above —
+durable, sophisticated, and about <em>runs</em> rather than about what
+an agent holds true — which is why this atlas reviews <a
+href="../systems/langmem/">LangMem</a>, the layer LangChain built for
+the other question, and not the checkpointer beneath it. Read them
+together and the split is the point: LangMem stores items in a
+<code>BaseStore</code> namespace precisely because checkpoints cannot
+hold that shape.</p>
 <p>A fifth boundary needs stating only because every list of recent
 memory papers puts it beside the systems here: <strong>an architecture
 is not a memory system.</strong> <em>Titans: Learning to Memorize at
@@ -1345,6 +1365,32 @@ rules</td>
 <td>Source/session/project metadata, explicit judgment path</td>
 <td>Simple durable local design, inspectable code</td>
 <td>Lexical retrieval limits; conflict UX depends on agent behavior</td>
+</tr>
+<tr>
+<td><code>everos</code></td>
+<td>Markdown on disk as the source, deriving episodes, atomic facts,
+agent cases and agent skills as typed rows</td>
+<td>Markdown files as canonical, with SQLite and LanceDB indexes rebuilt
+from them</td>
+<td>Keyword and dense search over LanceDB with a shared filter compile
+path for /search and /get, plus a case-to-skill bridge</td>
+<td>A watcher-scanner-worker cascade over the Markdown root, with one
+handler per derived type</td>
+<td>A <code>deprecated_by</code> column marks superseded episodes and
+atomic facts and is excluded on read; document deletion exists at the
+service layer</td>
+<td>Four keys — owner_id, owner_type, app_id, project_id — pinned into
+the base filter of every read</td>
+<td>A Python library, a service with /search and /get, and a
+<code>cascade sync</code> CLI</td>
+<td>The cascade: a filesystem watcher, a scanner, a worker, a reconciler
+and a backfill</td>
+<td>Confidence on some derived rows and a deprecation pointer; no
+epistemic state and no provenance chain</td>
+<td>Four scope keys enforced on one shared compile path, tested end to
+end; Markdown canonical with rebuildable indexes</td>
+<td>Supersession is excluded from reads but recorded on the row, not the
+value, so re-derivation is unguarded</td>
 </tr>
 <tr>
 <td><code>generative-agents</code></td>
@@ -2741,14 +2787,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 81:</em> <a
+<p><em>3 of 82:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 81:</em> <a
+<p><em>7 of 82:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2758,7 +2804,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 81:</em> <a
+<p><em>8 of 82:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2770,7 +2816,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>48 of 81:</em> <a
+<p><em>49 of 82:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -2786,6 +2832,7 @@ href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
+href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hindsight/"><code>hindsight</code></a>, <a
@@ -2823,7 +2870,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>8 of 81:</em> <a
+<p><em>8 of 82:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2835,7 +2882,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 81:</em> <a
+<p><em>14 of 82:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2853,8 +2900,9 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>4 of 81:</em> <a
+<p><em>5 of 82:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
+href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
@@ -2875,8 +2923,8 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Four
-repositories of eighty-one assert that particular material must
+<p><strong>Negative evidence is almost never tested.</strong> Five
+repositories of eighty-two assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -2894,17 +2942,23 @@ reads <code>ok: false</code>, and the owner reads
 <code>"the secret"</code> in the same assertion block — so the denial is
 proved <em>targeted</em> rather than a blanket failure, which is the
 control the other three negative suites omit.</p>
-<p>That two of the four arrived from access control is worth knowing:
-the assertion shape is reachable from ordinary engineering practice. It
-is also the limit — both are about a boundary, and neither is about a
-value that was corrected. <a href="../systems/daimon/">Daimon</a> is the
-near-miss that shows how narrow the bar is: 1,920 tests, a committed
-LongMemEval harness, unit tests asserting that a resolved item is
-withheld and that an id-bearing item is never fuzzy-matched into
-suppression — and still no case that forgets a value, re-extracts it,
-and asserts it stayed gone. The tombstone is the mechanism most in need
-of a negative test and the one least likely to get one, because nothing
-fails visibly when it silently stops working.</p>
+<p><a href="../systems/everos/">EverOS</a> is the fifth and does it at
+the endpoint: two owners, the same query string,
+<code>assert c_ids.isdisjoint(m_ids)</code> plus a positive control on
+each side, and a second test repeating it for two agent owners sharing a
+keyword.</p>
+<p>That three of the five arrived from access control is worth knowing:
+the assertion shape is reachable from ordinary engineering practice, and
+reliably so. It is also the limit — all three are about a boundary, and
+none is about a value that was corrected. <a
+href="../systems/daimon/">Daimon</a> is the near-miss that shows how
+narrow the bar is: 1,920 tests, a committed LongMemEval harness, unit
+tests asserting that a resolved item is withheld and that an id-bearing
+item is never fuzzy-matched into suppression — and still no case that
+forgets a value, re-extracts it, and asserts it stayed gone. The
+tombstone is the mechanism most in need of a negative test and the one
+least likely to get one, because nothing fails visibly when it silently
+stops working.</p>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
@@ -6855,6 +6909,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
 <li><a href="../systems/autogen/"><code>autogen</code></a></li>
 <li><a href="../systems/goodai-ltm/"><code>goodai-ltm</code></a></li>
+<li><a href="../systems/everos/"><code>everos</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -7147,6 +7202,10 @@ href="https://github.com/GoodAI/goodai-ltm-benchmark">GoodAI/goodai-ltm-benchmar
 at <a
 href="https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce783763d5ee0b5ccd4c31c9"><code class="commit-id" title="188e7618413775f1ce783763d5ee0b5ccd4c31c9">188e7618…</code></a>
 — the companion benchmark, described on the benchmarks page</li>
+<li><a
+href="https://github.com/EverMind-AI/EverOS">EverMind-AI/EverOS</a> at
+<a
+href="https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f"><code class="commit-id" title="4256419595f63fe307147dc19e379477cecdc44f">42564195…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
