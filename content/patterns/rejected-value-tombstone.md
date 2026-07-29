@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Three systems of sixty-six
+> **This is not an established best practice.** Three systems of sixty-seven
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, and one arrived at a weaker form independently. There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -124,7 +124,19 @@ would have missed the atlas's most-quoted finding entirely.
 
 Round 9 is empirical confirmation of the first tradeoff on this page.
 Normalization really is where the work is, and it was found by attacking the
-mechanism rather than by reasoning about it. Round 8 is the same for the fourth:
+mechanism rather than by reasoning about it.
+
+[Memori](../../systems/memori/) is the same seam reached from the opposite
+direction, and it is worth reading as a warning about the *positive* case.
+It builds a careful content-addressable key — implemented twice, in Rust and
+Python, with a comment requiring the two to agree, and unit-tested for case and
+punctuation insensitivity — and uses it to deduplicate facts rather than to
+reject them. The normalization keeps ASCII alphanumerics only, so any fact
+written in a non-Latin script reduces to the empty string and every such fact
+hashes identically. Nobody attacked it; the tests simply never passed it a
+non-ASCII string. Whatever a content key is *for* — deduplication here, refusal
+in Verel — normalization is the part that decides whether it works, and it is the
+part that looks finished long before it is. Round 8 is the same for the fourth:
 a tombstone that expires is not a tombstone.
 
 **The two systems are not independent inventions, and the count should be read
@@ -135,9 +147,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of sixty-six
+That makes the negative result stronger rather than weaker. Two of sixty-seven
 would suggest a hard idea that a few teams reach independently. One of
-sixty-six, plus one adoption by a reader who went looking, suggests an idea
+sixty-seven, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 

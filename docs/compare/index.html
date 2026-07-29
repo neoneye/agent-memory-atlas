@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-six agent memory architectures, their retrieval mechanics, trust
+sixty-seven agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-six agent memory architectures, their retrieval mechanics,
+of sixty-seven agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-six agent memory architectures, their retrieval mechanics,
+of sixty-seven agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-sixty-six agent memory architectures, their retrieval mechanics, trust
+sixty-seven agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,17 +145,17 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-six systems do not fall into sixty-six categories. They cluster
-around eight architectural commitments, and most systems belong to more
-than one — a coding-agent memory can also be verification-first, and a
-host runtime's plugin can also be a hosted service. The families below
-are lenses, not bins.</p>
+<p>Sixty-seven systems do not fall into sixty-seven categories. They
+cluster around eight architectural commitments, and most systems belong
+to more than one — a coding-agent memory can also be verification-first,
+and a host runtime's plugin can also be a hosted service. The families
+below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
 <h3 id="embeddable-memory-libraries">Embeddable memory libraries</h3>
 <p><code>mem0</code>, <code>langmem</code>, <code>llamaindex</code>,
-<code>cognee</code>, <code>a-mem</code></p>
+<code>cognee</code>, <code>a-mem</code>, <code>memori</code></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.
 <strong>Cognee</strong> is the outlier in surface area — a knowledge
@@ -163,7 +163,12 @@ pipeline platform with ontologies, dataset permissions, and provenance
 rollback behind a small remember/recall API. <strong>LlamaIndex</strong>
 composes memory from pluggable blocks that each truncate themselves to
 budget. <strong>A-MEM</strong> is a compact Zettelkasten research sketch
-whose linked-note evolution idea outruns its implementation.</p>
+whose linked-note evolution idea outruns its implementation.
+<strong>Memori</strong> ships a Rust core with Python and TypeScript
+bindings over seven backends, and is the atlas's sharpest illustration
+of the family's tradeoff taken one step further: the schema, the drivers
+and the migrations are all open, and the extraction that decides what a
+fact <em>is</em> runs in the vendor's hosted service.</p>
 <p>Tradeoff: a library can store and retrieve, but it cannot guarantee
 the model calls the right tool, verifies a fact, or uses recall
 safely.</p>
@@ -1300,6 +1305,31 @@ rows hidden from retrieval</td>
 <td>No tombstone; supersession hides rather than blocks re-entry</td>
 </tr>
 <tr>
+<td><code>memori</code></td>
+<td>An entity fact — content, embedding, num_times, and a normalized
+content hash — joined to every conversation that mentioned it</td>
+<td>Six SQL dialects plus MongoDB, from one Rust core with Python and
+TypeScript bindings</td>
+<td>Embedding search and lexical search over facts, ranked with a
+frequency index</td>
+<td>Durable turn first, then best-effort augmentation; extraction runs
+in the vendor's hosted API</td>
+<td>Upsert increments a counter and never rewrites content; deletion is
+per-entity only</td>
+<td>entity_id and process_id foreign keys applied on every read, with ON
+DELETE CASCADE throughout</td>
+<td>Python, TypeScript and Rust SDKs, plus plugins for Claude Code,
+Hermes and OpenClaw</td>
+<td>A Rust worker drains a write queue; augmentation is asynchronous and
+best-effort</td>
+<td>None represented; num_times is a frequency counter, and no fact
+carries a status</td>
+<td>Fact-to-conversation provenance as a real join table, and a capture
+path that survives extraction failure</td>
+<td>The dedupe key strips all non-ASCII, so facts in non-Latin scripts
+collide into one row; extraction is a closed hosted service</td>
+</tr>
+<tr>
 <td><code>memory-engine</code></td>
 <td>Row in one <code>memory</code> table: content, name, meta, tree
 path, temporal range, embedding</td>
@@ -1995,14 +2025,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 66:</em> <a
+<p><em>3 of 67:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 66:</em> <a
+<p><em>6 of 67:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2011,7 +2041,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 66:</em> <a
+<p><em>8 of 67:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2023,7 +2053,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>39 of 66:</em> <a
+<p><em>40 of 67:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -2048,6 +2078,7 @@ href="../systems/mastra-observational-memory/"><code>mastra-observational-memory
 href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memobase/"><code>memobase</code></a>, <a
+href="../systems/memori/"><code>memori</code></a>, <a
 href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memos/"><code>memos</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
@@ -2067,7 +2098,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 66:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 67:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2077,7 +2108,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>11 of 66:</em> <a
+<p><em>11 of 67:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -2092,7 +2123,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 66:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 67:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2113,7 +2144,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of sixty-six assert that particular material must
+repositories of sixty-seven assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -5946,6 +5977,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/mirix/"><code>mirix</code></a></li>
 <li><a href="../systems/memobase/"><code>memobase</code></a></li>
 <li><a href="../systems/memary/"><code>memary</code></a></li>
+<li><a href="../systems/memori/"><code>memori</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6184,6 +6216,9 @@ href="https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a1
 href="https://github.com/kingjulio8238/Memary">kingjulio8238/Memary</a>
 at <a
 href="https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1"><code class="commit-id" title="b2331a2c0844d66f69acd607b9e4dbaba56552c1">b2331a2c…</code></a></li>
+<li><a href="https://github.com/MemoriLabs/Memori">MemoriLabs/Memori</a>
+at <a
+href="https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d"><code class="commit-id" title="538b61f245295aa1a43df8033879f8293627f74d">538b61f2…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
