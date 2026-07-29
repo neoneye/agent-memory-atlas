@@ -363,7 +363,7 @@ not. That is the right trade for injection risk and it is not a trust state.
 
 Recording the near-miss properly: **this is the only system in the atlas with a
 capability-gating provenance label**, and it suggests a column this atlas does
-not currently have. "What may this memory cause?" is orthogonal to "is this
+does not have. "What may this memory cause?" is orthogonal to "is this
 memory true?", and the security survey's
 [Verifiable Memory Governance](../../compare/) primitives ask for the first
 without naming it either.

@@ -410,7 +410,7 @@ against a doctored receipts log in what was read here.
   `contentHash` on forget, check it on remember — otherwise the user who asked
   you to forget something watches it come straight back.
 - **Storing a tier the read path ignores.** `episodic` versus `fact` is the right
-  distinction and it currently changes nothing; a field that no query filters on
+  distinction and it changes nothing at this commit; a field that no query filters on
   will be assumed to work by the next person who reads the schema.
 - **Rewriting the whole store per write** while presenting it as an append-only
   log. It is O(n) per remember and it is not what the file extension implies.

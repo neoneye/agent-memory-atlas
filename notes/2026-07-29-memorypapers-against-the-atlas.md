@@ -137,7 +137,7 @@ Marks `scope_enforced` only, so the atlas's counts did not move.
 The sitemap declares `changefreq: weekly` and a `lastmod` of 2026-07-29 — today
 — on every entry. The newest paper in the corpus is from **late April 2026**.
 Absent, and verified absent: 2605.06716 (the ACL 2026 Findings survey read
-yesterday), 2605.10870, 2606.15903.
+on 2026-07-28), 2605.10870, 2606.15903.
 
 A second marker, and a more diagnostic one: its entry for 2604.16548 carries the
 title *"A Survey on the Security of Long-Term Memory in LLM Agents: Toward

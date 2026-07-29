@@ -27,7 +27,7 @@ matrix:
 ## 1. Executive Summary
 
 Logseq is a local-first outliner and knowledge base — a human tool, twelve years
-of it — that has recently grown an agent interface: an MCP server exposing six
+of it — that ships an agent interface: an MCP server exposing six
 tools over the graph, and a local embedding sidecar feeding a vector index. That
 combination is what brings it into this atlas, on the same footing as
 [Basic Memory](../basic-memory/) and [llm-wiki-memory](../llm-wiki-memory/): a

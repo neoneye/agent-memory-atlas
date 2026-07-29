@@ -102,7 +102,7 @@ that" is a question about files as much as about rows.
 ## 3. Architecture
 
 Python, Apache 2.0, ~645 source files with ~13,800 lines in the memory package
-alone. Active — the pinned commit is from the day of review.
+alone. Active — the pinned commit is dated 29 July 2026, the day it was read.
 
 ```mermaid
 flowchart TB

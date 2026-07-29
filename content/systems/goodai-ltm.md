@@ -323,7 +323,7 @@ Read this for the interface, not to run it. It is the cleanest demonstration in
 the atlas that a memory abstraction's first job is to give memories addresses,
 and the relevant part is two pages long.
 
-Do not adopt it. Dormant for two and a half years, no scope key, and persistence
+Do not adopt it. No commit since 28 February 2024, no scope key, and persistence
 by whole-state serialisation; the ecosystem moved to framework-mounted providers
 and hosted services and this library did not follow. If you are choosing
 something to run, choose something maintained — and then check whether its
@@ -336,8 +336,8 @@ missing methods are obvious in about ninety seconds.
 ## 12. Open Questions
 
 - **Is the project retired or paused?** Nothing in the repository says. The
-  benchmark repository was updated ten months later, which suggests the
-  evaluation work outlived the library.
+  benchmark repository was still being updated in December 2024, which suggests
+  the evaluation work outlived the library.
 - **Is `TextKeyType` stable across `state_as_text` / `set_state`?** If keys are
   not preserved across serialisation then the update and delete surface is
   process-scoped, which would substantially weaken the one advantage this library

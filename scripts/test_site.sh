@@ -156,6 +156,26 @@ if git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
   fi
 fi
 
+# Reports are pinned and stamped with analyzed_at, so a duration measured from
+# "now" is both redundant and perishable — "dormant for two and a half years" is
+# wrong a few months after it is written. See the report format's date rule.
+# The methodology page and the OpenWorker report quote these phrasings on
+# purpose, so they are exempt.
+# Deliberately narrow: only durations attached to a project's *activity* state,
+# plus two fixed phrasings. A check that fires on illustrative prose — "a claim
+# verified two years ago from one verified today" — gets switched off, so it is
+# scoped to the sentences that actually rot. Lines quoting the rule are exempt.
+stale_dates="$(
+  grep -rniE "(dormant|stale|inactive|unmaintained|abandoned|untouched|quiet|no commits?|last commits?|not been (updated|touched)) [^.]{0,40}(for|in) (the )?(past |last )?(a |an )?(one|two|three|four|five|six|seven|eight|nine|ten|half|[0-9]+)[ a-z-]*(year|month|week)s?|the day of review|\byesterday\b" \
+    "$project_dir/content/systems" "$project_dir/content/overview.md" 2>/dev/null \
+    | grep -v "absolute dates" || true
+)"
+if [[ -n "$stale_dates" ]]; then
+  echo "Relative date references found — use an absolute date or 'at this commit':" >&2
+  echo "$stale_dates" >&2
+  exit 1
+fi
+
 # The homepage card numbers are a reading order, and cards have historically been
 # prepended as well as appended — which left 46 through 63 running backwards in
 # the DOM without anything noticing. Assert the labels ascend contiguously from 1.

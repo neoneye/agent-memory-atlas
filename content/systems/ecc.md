@@ -245,7 +245,7 @@ verified from rejected, which is what the mark requires.
 the atlas's recurring shape and a clean instance of it. `rejected` and
 `superseded` are validated by the schema, honoured by both read paths, and set by
 nothing. The near-miss is genuinely near: writing `status: rejected` into a
-file's frontmatter by hand would work today and would remove that memory from
+file's frontmatter by hand works at this commit and removes that memory from
 retrieval. The mechanism exists end to end except for a verb — and nothing in the
 CLI, the MCP tool or the skill mentions that the file can be edited to that
 effect.
@@ -276,7 +276,7 @@ deliberate notes.
 No test asserts that particular material must not be retrieved, so
 `negative_eval` is withheld — though the cheapest valuable test here is obvious:
 write a file with `status: rejected` and assert search does not return it. It
-would pin the one mechanism that currently has no way to be exercised.
+would pin the one mechanism that has no other way to be exercised.
 
 ## 11. For Your Own Build
 

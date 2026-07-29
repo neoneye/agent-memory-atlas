@@ -14,6 +14,25 @@ Suggested output path:
 content/systems/<repo-name>.md
 ```
 
+## Dates are absolute, never relative
+
+Every report is pinned to a commit and stamped with `analyzed_at`, so the reader
+already knows when the reading happened. Durations measured from *now* — "dormant
+for two and a half years", "updated ten months later", "the day of review",
+"recently", "currently" — are redundant against that stamp and silently wrong a
+few months later. Write the date.
+
+- **No:** "Dormant for two and a half years."
+- **Yes:** "No commit since 28 February 2024."
+- **No:** "The pinned commit is from the day of review."
+- **Yes:** "The pinned commit is dated 29 July 2026."
+
+"At this commit" is the correct way to scope a claim to what was read.
+[OpenWorker](../../systems/openworker/) ships this as a rule in its own memory
+guidance — *"use absolute dates, never 'yesterday'"* — and this atlas quoted it
+approvingly before breaking it, which is how it became a rule here too.
+`scripts/test_site.sh` checks for the common phrasings.
+
 ## Title
 
 ```md
