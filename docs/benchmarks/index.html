@@ -124,9 +124,13 @@ is measured nowhere</strong>, even though several systems here
 deliberately delay extraction by minutes or by a batch boundary.</li>
 <li><strong>There is no forgetting benchmark.</strong> Nothing in this
 atlas, and nothing in the published benchmarks it uses, tests whether a
-deleted memory stays deleted after the next background pass. The <a
-href="#read-directly-at-a-pinned-commit">GoodAI LTM Benchmark</a> comes
-within one assertion — seven of its datasets instruct the agent to
+deleted memory stays deleted after the next background pass. <a
+href="#persistbench-asks-a-different-question-and-answers-it-well">PersistBench</a>
+is titled as though it were the exception and is not — it asks whether a
+model <em>applies</em> a memory it should not, which is a good question
+with real released artifacts, and involves no deletion at any point. The
+<a href="#read-directly-at-a-pinned-commit">GoodAI LTM Benchmark</a>
+comes within one assertion — seven of its datasets instruct the agent to
 forget something and none of them checks. One paper — <a
 href="#fifa-the-one-proposal-that-scores-deletion-compliance">FiFA</a> —
 proposes a metric that counts failing to honour a deletion as a
@@ -256,11 +260,12 @@ most interesting evaluation shape in the atlas, precisely because it is
 not a public benchmark.</p>
 <h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
 commit</h3>
-<p>Three benchmarks were checked out and read rather than described from
+<p>Four benchmarks were checked out and read rather than described from
 their papers, because the literature makes a specific claim about the
-first of them that the code does not support — and because the third
-turns out to hold the nearest thing to a forgetting test anyone has
-written.</p>
+first of them that the code does not support, because the third turns
+out to hold the nearest thing to a forgetting test anyone has written,
+and because the fourth is titled as though it were the benchmark this
+page says does not exist.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -298,6 +303,15 @@ href="https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce78
 <td>Twenty datasets including prospective memory and theory of mind,
 with committed HTML result reports. Seven declare a "forget this" reset
 message that is sent and never scored</td>
+</tr>
+<tr>
+<td><strong>PersistBench</strong> (<a
+href="https://github.com/ivaxi0s/PersistBench">ivaxi0s/PersistBench</a>)</td>
+<td><a
+href="https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a10b67a2c1d479f"><code class="commit-id" title="302ea2ff2cfce97e9458a9897a10b67a2c1d479f">302ea2ff…</code></a>,
+16 Feb 2026</td>
+<td>500 committed items asking whether a model <em>applies</em> a memory
+it should not. Not a deletion test — see below</td>
 </tr>
 </tbody>
 </table></div>
@@ -417,6 +431,22 @@ several memory layers over LoCoMo and LongMemEval and compare them,
 which is a real contribution to reproducibility and changes nothing
 about what is being measured. A system that scores well on all three of
 these has demonstrated recall three times.</p>
+<p><strong>MemEvoBench</strong> (arXiv:2604.15774, submitted 17 April
+2026, revised 21 May) is the crop's one genuine departure and could not
+be read, because no artifact was found. It benchmarks <em>memory
+misevolution</em> — behavioural drift from repeated exposure to
+misleading information — across "7 domains and 36 risk types" plus
+workflow tasks adapted from 20 Agent-SafetyBench environments, reporting
+"substantial safety degradation under biased memory updates" and that
+static prompt-based defences are insufficient. That is a real gap and a
+different one from this page's: contamination going <em>in</em> rather
+than deletion failing to hold. No repository is linked from the paper
+and a search returns none, so on this atlas's terms it is a research
+direction rather than a measurement — the same "published numbers
+without committed artifacts" shape recorded for FiFA above. <a
+href="#persistbench-asks-a-different-question-and-answers-it-well">PersistBench</a>
+is the counter-example that shows the artifacts are not hard to
+ship.</p>
 <p>The one idea worth borrowing is MemBase's
 <code>trace_memory_lifecycle_with_membase</code> example, which
 instruments construction, search and evaluation as separate traced
@@ -903,31 +933,104 @@ suite already owns the probe (<code>cites_quote</code>), the oracle, and
 the reset instruction. Joining them is one assertion.</p>
 <h3 id="what-exists">What exists</h3>
 <ul>
-<li><strong>LongMemEval's knowledge-update category</strong> scores
+<li><p><strong>LongMemEval's knowledge-update category</strong> scores
 whether a system answers with an updated fact rather than a superseded
 one. That measures preference at answer time. It does not ask whether
 the old value is still retrievable, still in the store, or liable to
-come back.</li>
-<li><strong>LoCoMo's adversarial category</strong> includes questions
+come back.</p></li>
+<li><p><strong>LoCoMo's adversarial category</strong> includes questions
 whose answers are not in the conversation, testing whether a system
 declines rather than confabulates. Adjacent to forgetting; not the same
-thing.</li>
-<li><strong><a href="../systems/open-cowork/">open-cowork</a>'s
+thing.</p></li>
+<li><p><strong><a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code></strong> is the closest mechanism in this
 atlas to a negative retrieval assertion — an eval case declares material
 that a query must <em>not</em> surface, scored against the assembled
 prompt prefix rather than the retriever's raw output. That is exactly
 the shape a forgetting test needs. It is used for relevance, not for
-deletion, and no scored results were found committed.</li>
-<li><strong><a href="../systems/redis-agent-memory-server/">Redis Agent
-Memory Server</a>'s <code>test_forgetting.py</code></strong> exercises
-the most developed retention policy in the atlas — TTL, inactivity,
-pinning, type allowlists, budget pruning. These are unit tests of policy
-logic. They confirm the code does what it says; they do not measure
-whether forgetting <em>works</em> in the sense a user means.</li>
+deletion, and no scored results were found committed.</p></li>
+<li><p><strong><a href="../systems/redis-agent-memory-server/">Redis
+Agent Memory Server</a>'s <code>test_forgetting.py</code></strong>
+exercises the most developed retention policy in the atlas — TTL,
+inactivity, pinning, type allowlists, budget pruning. These are unit
+tests of policy logic. They confirm the code does what it says; they do
+not measure whether forgetting <em>works</em> in the sense a user
+means.</p></li>
+<li><p><strong><a
+href="https://github.com/ivaxi0s/PersistBench">PersistBench</a></strong>
+is the newest and, by title, the most promising: <em>"When Should
+Long-Term Memories Be Forgotten by LLMs?"</em> (ICML'26,
+arXiv:2602.01146). It is not a deletion test, and the gap between its
+title and its task is worth being precise about — see below.</p></li>
 </ul>
 <p>That is the entire state of the art in code, and none of it tests the
 failure this atlas keeps finding.</p>
+<h4
+id="persistbench-asks-a-different-question-and-answers-it-well">PersistBench
+asks a different question, and answers it well</h4>
+<p>Read at <a
+href="https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a10b67a2c1d479f"><code class="commit-id" title="302ea2ff2cfce97e9458a9897a10b67a2c1d479f">302ea2ff…</code></a>
+(16 February 2026). The title reads like the benchmark this page says
+nobody has built. The task is something else: <strong>it evaluates a
+model, not a memory system.</strong></p>
+<p>Each item is a query, a pool of injected memories, and a labelled
+failure type. A <code>cross_domain</code> case pairs a health question
+with a memory pool about someone's weekends and romantic life, and the
+model fails by dragging the irrelevant material into its answer. A
+<code>sycophancy</code> case tests whether an injected memory bends the
+model's judgement. And <code>beneficial_samples</code> is the control —
+memories that the model <em>should</em> use, so a model that ignores
+everything cannot score well by refusing.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Split</th>
+<th>Committed items</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cross_domain.jsonl</code></td>
+<td>200</td>
+</tr>
+<tr>
+<td><code>sycophancy.jsonl</code></td>
+<td>200</td>
+</tr>
+<tr>
+<td><code>beneficial_samples.jsonl</code></td>
+<td>100</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The artifacts are real</strong>, which distinguishes it from
+most of what this page has had to assess from abstracts: 500 committed
+items, a runner with OpenAI/Anthropic/Gemini/Vertex/OpenRouter adapters,
+judge prompts per split, and four defensive system prompts — permissive,
+restrictive, rubric-informed, and a GEPA-optimised variant — so "do
+defences help" is a runnable question rather than a claim. There is also
+an Inspect-native implementation in <a
+href="https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/persistbench">UKGovernmentBEIS/inspect_evals</a>,
+which the paper's own repository recommends <strong>over itself</strong>
+— an unusually honest pointer, and a checkable sign the benchmark has
+been adopted rather than merely published.</p>
+<p>What it does not do is any of steps 3 through 8 of the <a
+href="#what-a-forgetting-benchmark-would-have-to-do">test below</a>.
+Nothing is deleted. No source material is re-fed. No background pass
+runs. The memory pool is handed to the model in the prompt, so there is
+no retrieval layer to fail and no store to resurrect anything from. A
+system could pass PersistBench perfectly and still restore every deleted
+memory on its next nightly distillation.</p>
+<p>So this page's claim stands, and narrows usefully: <strong>nothing
+measures whether a deleted memory stays deleted.</strong> But the
+adjacent claim — that negative retrieval assertions barely exist — now
+needs qualifying. PersistBench is a negative-<em>use</em> benchmark with
+a positive control, released, and running inside a standard harness. It
+is the shape <a href="../systems/open-cowork/">open-cowork</a>'s
+<code>forbiddenHits</code> has at repository scale, executed one layer
+up and published. A forgetting benchmark could borrow its structure
+wholesale and change only what sits between the memory and the
+model.</p>
 <h3 id="fifa-the-one-proposal-that-scores-deletion-compliance">FiFA, the
 one proposal that scores deletion compliance</h3>
 <p><em>Forgetful but Faithful: A Cognitive Memory Architecture and

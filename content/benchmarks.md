@@ -28,7 +28,11 @@ Six things are worth knowing before reading further.
    minutes or by a batch boundary.
 6. **There is no forgetting benchmark.** Nothing in this atlas, and nothing in
    the published benchmarks it uses, tests whether a deleted memory stays
-   deleted after the next background pass. The
+   deleted after the next background pass.
+   [PersistBench](#persistbench-asks-a-different-question-and-answers-it-well)
+   is titled as though it were the exception and is not — it asks whether a
+   model *applies* a memory it should not, which is a good question with real
+   released artifacts, and involves no deletion at any point. The
    [GoodAI LTM Benchmark](#read-directly-at-a-pinned-commit) comes within one
    assertion — seven of its datasets instruct the agent to forget something and
    none of them checks. One paper —
@@ -90,16 +94,18 @@ evaluation shape in the atlas, precisely because it is not a public benchmark.
 
 ### Read directly, at a pinned commit
 
-Three benchmarks were checked out and read rather than described from their
+Four benchmarks were checked out and read rather than described from their
 papers, because the literature makes a specific claim about the first of them
-that the code does not support — and because the third turns out to hold the
-nearest thing to a forgetting test anyone has written.
+that the code does not support, because the third turns out to hold the nearest
+thing to a forgetting test anyone has written, and because the fourth is titled
+as though it were the benchmark this page says does not exist.
 
 | Benchmark | Commit read | What the code does |
 | --- | --- | --- |
 | **MemoryAgentBench** ([HUST-AI-HYZ/MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench)) | [`455306dcabc3842526eb83cd4e225e5d486c5c5d`](https://github.com/HUST-AI-HYZ/MemoryAgentBench/commit/455306dcabc3842526eb83cd4e225e5d486c5c5d), 21 May 2026 | Four competencies over incremental multi-turn interaction. The fourth is **not selective forgetting** — see below |
 | **MemoryArena** ([ZexueHe/MemoryArena](https://github.com/ZexueHe/MemoryArena)) | [`6cd9de14b71915e39ac742a20dc33785e14b6aab`](https://github.com/ZexueHe/MemoryArena/commit/6cd9de14b71915e39ac742a20dc33785e14b6aab), 31 May 2026 | Memory-agent-environment loop over four task environments; adapters for MIRIX, Mem0, Letta, A-MEM, GraphRAG, MemoRAG and long context. No deletion or correction path anywhere in it |
 | **GoodAI LTM Benchmark** ([GoodAI/goodai-ltm-benchmark](https://github.com/GoodAI/goodai-ltm-benchmark)) | [`188e7618413775f1ce783763d5ee0b5ccd4c31c9`](https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce783763d5ee0b5ccd4c31c9), 17 Dec 2024 | Twenty datasets including prospective memory and theory of mind, with committed HTML result reports. Seven declare a "forget this" reset message that is sent and never scored |
+| **PersistBench** ([ivaxi0s/PersistBench](https://github.com/ivaxi0s/PersistBench)) | [`302ea2ff2cfce97e9458a9897a10b67a2c1d479f`](https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a10b67a2c1d479f), 16 Feb 2026 | 500 committed items asking whether a model *applies* a memory it should not. Not a deletion test — see below |
 
 MemoryArena is the more interesting *design* — it scores whether a later session
 can be completed at all given what an earlier one stored, which is closer to
@@ -191,6 +197,20 @@ MemBase both make it easy to run several memory layers over LoCoMo and
 LongMemEval and compare them, which is a real contribution to reproducibility and
 changes nothing about what is being measured. A system that scores well on all
 three of these has demonstrated recall three times.
+
+**MemEvoBench** (arXiv:2604.15774, submitted 17 April 2026, revised 21 May)
+is the crop's one genuine departure and could not be read, because no artifact
+was found. It benchmarks *memory misevolution* — behavioural drift from
+repeated exposure to misleading information — across "7 domains and 36 risk
+types" plus workflow tasks adapted from 20 Agent-SafetyBench environments,
+reporting "substantial safety degradation under biased memory updates" and that
+static prompt-based defences are insufficient. That is a real gap and a
+different one from this page's: contamination going *in* rather than deletion
+failing to hold. No repository is linked from the paper and a search returns
+none, so on this atlas's terms it is a research direction rather than a
+measurement — the same "published numbers without committed artifacts" shape
+recorded for FiFA above. [PersistBench](#persistbench-asks-a-different-question-and-answers-it-well)
+is the counter-example that shows the artifacts are not hard to ship.
 
 The one idea worth borrowing is MemBase's
 `trace_memory_lifecycle_with_membase` example, which instruments construction,
@@ -606,8 +626,60 @@ instruction. Joining them is one assertion.
   unit tests of policy logic. They confirm the code does what it says; they do
   not measure whether forgetting *works* in the sense a user means.
 
+- **[PersistBench](https://github.com/ivaxi0s/PersistBench)** is the newest and,
+  by title, the most promising: *"When Should Long-Term Memories Be Forgotten by
+  LLMs?"* (ICML'26, arXiv:2602.01146). It is not a deletion test, and the gap
+  between its title and its task is worth being precise about — see below.
+
 That is the entire state of the art in code, and none of it tests the failure
 this atlas keeps finding.
+
+#### PersistBench asks a different question, and answers it well
+
+Read at [`302ea2ff2cfce97e9458a9897a10b67a2c1d479f`](https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a10b67a2c1d479f)
+(16 February 2026). The title reads like the benchmark this page says nobody has
+built. The task is something else: **it evaluates a model, not a memory system.**
+
+Each item is a query, a pool of injected memories, and a labelled failure type.
+A `cross_domain` case pairs a health question with a memory pool about
+someone's weekends and romantic life, and the model fails by dragging the
+irrelevant material into its answer. A `sycophancy` case tests whether an
+injected memory bends the model's judgement. And `beneficial_samples` is the
+control — memories that the model *should* use, so a model that ignores
+everything cannot score well by refusing.
+
+| Split | Committed items |
+| --- | --- |
+| `cross_domain.jsonl` | 200 |
+| `sycophancy.jsonl` | 200 |
+| `beneficial_samples.jsonl` | 100 |
+
+**The artifacts are real**, which distinguishes it from most of what this page
+has had to assess from abstracts: 500 committed items, a runner with
+OpenAI/Anthropic/Gemini/Vertex/OpenRouter adapters, judge prompts per split, and
+four defensive system prompts — permissive, restrictive, rubric-informed, and a
+GEPA-optimised variant — so "do defences help" is a runnable question rather
+than a claim. There is also an Inspect-native implementation in
+[UKGovernmentBEIS/inspect_evals](https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/persistbench),
+which the paper's own repository recommends **over itself** — an unusually
+honest pointer, and a checkable sign the benchmark has been adopted rather than
+merely published.
+
+What it does not do is any of steps 3 through 8 of the
+[test below](#what-a-forgetting-benchmark-would-have-to-do). Nothing is
+deleted. No source material is re-fed. No background pass runs. The memory pool
+is handed to the model in the prompt, so there is no retrieval layer to fail and
+no store to resurrect anything from. A system could pass PersistBench perfectly
+and still restore every deleted memory on its next nightly distillation.
+
+So this page's claim stands, and narrows usefully: **nothing measures whether a
+deleted memory stays deleted.** But the adjacent claim — that negative
+retrieval assertions barely exist — now needs qualifying. PersistBench is a
+negative-*use* benchmark with a positive control, released, and running inside a
+standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
+`forbiddenHits` has at repository scale, executed one layer up and published.
+A forgetting benchmark could borrow its structure wholesale and change only what
+sits between the memory and the model.
 
 ### FiFA, the one proposal that scores deletion compliance
 
