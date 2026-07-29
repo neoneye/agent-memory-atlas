@@ -83,12 +83,11 @@ out of four.
 
 ## Open, and now recorded
 
-- **[MemMachine](https://github.com/MemMachine/MemMachine) is unreviewed and in
-  scope** — found on the re-read of item 9, which this note originally dismissed
-  in one line. Apache 2.0, active, persists across restarts, and holds an
-  architectural position the atlas has no strong representative of: keep the
-  whole episode, minimise LLM extraction. The one system report this round
-  generated.
+- ~~**MemMachine is unreviewed and in scope**~~ — **done**, same day, at
+  `a681abf9623299bba8ad931e5d9af02fb6ef0997`. Found on the re-read of item 9,
+  which this note originally dismissed in one line, and the only system report
+  this round generated. See
+  [the memorypapers note](2026-07-29-memorypapers-against-the-atlas.md).
 - **Substrate coverage in the deletion test.** The security survey's Verified
   Forgetting enumerates raw logs, compressed summaries, vector indices, **and
   propagated copies**. The atlas's deletion test does not cover the last, and

@@ -1,6 +1,7 @@
 # memorypapers.org, read against the atlas
 
-**Status:** comparison done; one finding published, one system report outstanding
+**Status:** done — comparison published, A-MemGuard finding published,
+[MemMachine reviewed](../content/systems/memmachine.md) and added
 **Origin:** [memorypapers.org](https://memorypapers.org/), the curated paper
 collection named in the reading list triaged in
 [the ledger note](2026-07-29-a-reading-list-triaged.md). It was dismissed there
@@ -113,7 +114,23 @@ has no strong representative of that stance, and the correction question is
 sharper for a system that keeps the raw episode: there is more to fail to
 delete.
 
-**Not done in this pass.** It is a full `add-memory-system` job, not a paragraph.
+**Reviewed on 2026-07-29** at `a681abf9623299bba8ad931e5d9af02fb6ef0997`. The
+bet paid off in both directions. Citations resolve, which makes it the
+evidence-before-belief pattern's plainest example. And the retention is exactly
+what makes correction thin: a deleted feature leaves no rejected-value record,
+and only a one-way `is_ingested` watermark stops the still-present evidence from
+re-deriving it — protection from bookkeeping rather than from knowing the claim
+was wrong.
+
+The two findings that only reading callers produced: `delete_session`
+acknowledges before it deletes, flipping the status to `Deleted` and enqueueing
+the work on an in-process queue whose worker only logs on failure; and class
+`MemMachine` defines `_cleanup_semantic_history` twice, with the live definition
+missing the `ResourceNotReadyError` handling the dead one has, on the batch loop
+that gates `delete_episodes`. `ruff` reports the file clean although `F` is
+selected and `F811` is not ignored.
+
+Marks `scope_enforced` only, so the atlas's counts did not move.
 
 ## Staleness, and a marker for it
 
