@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust agent platform whose
+synthesizer proposes skills beside the live ones and waits for approval
+— and forgets every rejection when the process exits.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TigrimOSR — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust agent platform whose
+synthesizer proposes skills beside the live ones and waits for approval
+— and forgets every rejection when the process exits.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TigrimOSR — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust agent platform
+whose synthesizer proposes skills beside the live ones and waits for
+approval — and forgets every rejection when the process exits.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TigrimOSR — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Proposed skills, staged on disk</p>
+          <h1>TigrimOSR</h1>
+          <p class="document-deck">A Rust agent platform whose
+synthesizer proposes skills beside the live ones and waits for approval
+— and forgets every rejection when the process exits.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Sompote/TigrimOSR">
+              <span>Source</span>
+              <strong>Sompote/TigrimOSR</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba3192ac49370d" title="92e8867b63acfb8592d6ae3067ba3192ac49370d">
+              <span>Analyzed revision</span>
+              <code>92e8867b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>3 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TigrimOSR is a single-binary Rust agent platform — desktop app,
+embedded web server, swarm orchestration, MCP, plugins, Telegram and
+LINE bots — of which the memory-relevant part is a <strong>skill
+synthesizer</strong>: a background pass that reads finished chat
+sessions, the user's thumbs-up/down feedback and subagent traces, and
+proposes new or updated skills.</p>
+<p>It belongs in this atlas for one mechanism. When the synthesizer
+wants to change an existing skill, it does not change it. It writes
+<code>SKILL.md.proposed</code> beside the live <code>SKILL.md</code>,
+sets the registry row to <code>review_status: "pending"</code> with the
+model's <code>rationale</code> and a <code>based_on</code> list of the
+sessions it drew from, and stops. The live skill is untouched and still
+in use. A person opens the proposal, sees a real before/after diff
+(<code>get_proposed_diff</code> returns both files), and approves — at
+which point promotion is a <code>tokio::fs::rename</code>. That is the
+<a href="../../patterns/promotion-between-tiers/">promotion between
+tiers</a> pattern with an atomic commit and a human gate, and it is
+better staged than most of this atlas.</p>
+<p>One rule inside it is worth pulling out on its own:
+<code>require_approval</code> defaults to true, and the code forces it
+true regardless of settings when the target skill's
+<code>source == "custom"</code>, with the comment <em>"User-authored
+(custom) skills are never overwritten silently"</em>. Automation may
+rewrite what automation wrote; it may never rewrite what a person wrote
+without asking. Nothing else in this atlas escalates its approval
+requirement based on who authored the memory.</p>
+<p><strong>The weakness is exactly symmetric to the strength, and it is
+the atlas's recurring finding in an unusually clean form.</strong>
+Approval is durable — a file rename, a registry row, a
+<code>SKILL.md</code> on disk. <em>Rejection is not.</em> The proposal
+list lives in a process-lifetime
+<code>OnceLock&lt;Mutex&lt;SynthesizerStatus&gt;&gt;</code> with no load
+or save; rejecting a create deletes the skill folder and drops the
+registry row; rejecting an update deletes the <code>.proposed</code>
+file and resets the status. Restart the binary and there is no record
+that anything was ever proposed or refused, and nothing in the synthesis
+path consults past rejections. The same sessions produce the same
+proposal again.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two kinds of memory, with very different levels of care.</p>
+<pre class="text"><code>project.memory   one memory.md per project — a blob, injected whole
+skill            SKILL.md + registry row {enabled, review_status, auto_meta}
+                   auto_meta: {kind, based_on[], generated_at, model, rationale}
+chat sessions    persisted history, and the synthesizer&#39;s raw material</code></pre>
+<p>The skill lifecycle is the interesting one:</p>
+<pre class="text"><code>finished sessions + user feedback + subagent traces
+        │  (scheduler → run_synthesis)
+        ▼
+   Proposal {kind: create|update, name, content, rationale, based_on}
+        │
+   ┌────┴───────────────────────────┐
+   │ require_approval = true (default; forced for source==&quot;custom&quot;)
+   ▼                                ▼  false
+create: SKILL.md written,     write straight through,
+        enabled=false,        review_status=&quot;approved&quot;
+        review_status=pending
+update: SKILL.md.proposed
+        beside the live file
+        │
+   ┌────┴────┐
+approve      reject
+   │            │
+rename to    delete .proposed;
+SKILL.md;    create → rm -rf the folder and drop the row
+enabled=true │
+             └─► nothing recorded, nothing remembered</code></pre>
+<p><code>review_status</code> is a persisted discrete state, and
+<code>pending</code> is coupled to <code>enabled: false</code>, so a
+pending skill exists on disk and is withheld from every run. That earns
+the trust-state mark under this atlas's definition — a discrete status
+field, not a score, with a state that withholds the memory from use —
+and two caveats belong with it. It is <em>approval</em> status rather
+than truth: nothing here can say a skill is wrong, only that nobody has
+said yes to it. And <code>rejected</code> is set on the in-memory
+proposal and never persists on a skill; the durable vocabulary is
+<code>pending</code> and <code>approved</code>.</p>
+<p><code>project.memory</code> gets none of this. It is a string,
+written whole by <code>PUT /:id/memory</code>, mirrored to
+<code>memory.md</code> in the working folder and to
+<code>projects.json</code>, and prepended to the system prompt as
+<code>Project memory/context:</code>. No entries, no identity below the
+project, no review.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<pre class="mermaid"><code>flowchart TD
+    UI[&quot;native Rust UI /&lt;br/&gt;embedded web UI /&lt;br/&gt;Telegram, LINE&quot;] --&gt; SRV[&quot;axum server&lt;br/&gt;src/server/routes&quot;]
+    SRV --&gt; AL[&quot;agent_loop&lt;br/&gt;+ toolbox, mcp, graph&quot;]
+    SRV --&gt; D[(&quot;JSON on disk&lt;br/&gt;projects.json, skills.json,&lt;br/&gt;chat history, settings&quot;)]
+    SCH[&quot;scheduler&quot;] --&gt; SY[&quot;skill_synthesizer&quot;]
+    SY --&gt; D
+    SY --&gt; SK[(&quot;skills/&amp;lt;slug&amp;gt;/&lt;br/&gt;SKILL.md&lt;br/&gt;SKILL.md.proposed&quot;)]
+    AL --&gt; SK
+    AL --&gt; CMP[&quot;compact&lt;br/&gt;track_file_read, track_invoked_skill&quot;]</code></pre>
+<ul>
+<li><strong>One Rust binary</strong>, roughly 66,000 lines across 70
+source files: <code>server/</code> for the axum routes and services,
+<code>ui/</code> for the native desktop views, <code>vm/</code>,
+<code>security/</code> with a sandbox and file-access control.</li>
+<li><strong>Persistence is JSON files</strong>, not a database —
+<code>read_json</code> / <code>write</code> through
+<code>src/server/data.rs</code>, with a remote-backend mode that proxies
+the same calls to another instance over HTTP with a bearer token.</li>
+<li><strong>No embeddings and no vector store.</strong> There is no
+memory search anywhere; recall is prompt assembly from the project's
+assigned skills and its <code>memory.md</code>.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The lightest deployment of anything in this atlas that does this
+much: download a DMG or MSI, or run one binary. No database, no Python,
+no Node. The README puts idle footprint at about 270 MB including an
+embedded browser.</p>
+<p>An LLM key is needed to <em>synthesize</em> skills but not to store
+anything — the memory paths are plain file writes, so the store works
+with the model offline. Providers are pluggable down to Claude Code,
+Gemini CLI and Codex with no API key.</p>
+<p>The store is as repairable as it gets: <code>skills.json</code>,
+<code>projects.json</code> and a tree of <code>SKILL.md</code> files. A
+wrong skill is fixed in an editor. This is the same property the
+file-canonical family has, arrived at by a different route.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Synthesis input</strong> —
+<code>src/server/services/skill_synthesizer.rs</code>.
+<code>SessionSummary</code> gathers <code>user_queries</code>,
+<code>final_assistant</code>, a <code>feedback</code> list of
+<code>FeedbackEntry {role, rating, comment, excerpt}</code>, and a
+<code>subagent_workflow</code> of
+<code>SubagentTrace {label, task, tools_used, skills_loaded, completed, error}</code>.
+Note <code>completed</code> and <code>error</code>: failed subagent runs
+are input, not filtered out.</p>
+<p><strong>Proposal construction</strong> —
+<code>Proposal {kind, name, description, content, based_on, rationale}</code>,
+surfaced through <code>add_proposal_to_status</code> as a
+<code>SkillProposal</code> with <code>review_status: "pending"</code>
+and an <code>existing_content</code> field so the reviewer sees what
+would be replaced.</p>
+<p><strong>Create path</strong> — <code>write_new_auto_skill</code>
+(line 977). Writes <code>SKILL.md</code> live, then registers the row
+with <code>enabled: !require_approval</code> and
+<code>review_status: pending | approved</code>. With the default, the
+file exists and the skill is disabled.</p>
+<p><strong>Update path</strong> — around line 1020. Looks up an existing
+<code>auto</code> or <code>custom</code> skill; if the target is missing
+it falls back to create. <code>require_approval</code> is read from
+settings, then <strong>forced true when
+<code>source == "custom"</code></strong>. Approved-through writes the
+live file; otherwise
+<code>write_skill_file(&amp;slug, &amp;p.content, true)</code> writes
+the <code>.proposed</code> sibling and the row goes <code>pending</code>
+with
+<code>auto_meta.proposed_path = Some("SKILL.md.proposed")</code>.</p>
+<p><strong>Approve</strong> — <code>approve_proposal</code> (line 1100).
+Sets the in-memory status, then
+<code>tokio::fs::rename(SKILL.md.proposed → SKILL.md)</code> when the
+proposal exists, or writes the content directly, then flips
+<code>enabled = true</code> and clears <code>proposed_path</code>.</p>
+<p><strong>Reject</strong> — <code>reject_proposal</code> (line 1146).
+Deletes the <code>.proposed</code> file; for an update, resets the
+skill's <code>review_status</code> to <code>"approved"</code>; for a
+create, <code>remove_dir_all(skill_dir)</code> and
+<code>skills.retain(|s| s.name != proposal_name)</code>.</p>
+<p><strong>Review affordance</strong> — <code>get_proposed_diff</code>
+returns <code>(current, proposed)</code> for a skill, reading both
+files, with an empty <code>current</code> for creates.</p>
+<p><strong>Project memory</strong> —
+<code>src/server/routes/projects.rs</code>: <code>put_memory</code>
+writes <code>memory.md</code> into the working folder and mirrors it
+into <code>projects.json</code>; <code>load_project_run_context</code>
+(line 113) assembles name, description, working folder,
+<code>memory</code>, custom instructions and the project's
+<code>skills</code> list into the system block.
+<code>POST /:id/memory/generate</code> is a stub.</p>
+<p><strong>Compaction</strong> —
+<code>src/server/services/compact.rs</code>:
+<code>track_file_read</code>, <code>track_invoked_skill</code>,
+<code>set_active_plan</code>, <code>on_pre_compact</code> /
+<code>on_post_compact</code> hooks and
+<code>validate_message_structure</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Everything is a serde struct in a JSON file. The skill row is the one
+with real metadata:</p>
+<pre class="rust"><code>struct Skill { id, name, description, source, script, enabled,
+               installed_at, review_status: Option&lt;String&gt;,
+               auto_meta: Option&lt;SkillAutoMeta&gt; }
+struct SkillAutoMeta { kind, based_on: Vec&lt;String&gt;, generated_at,
+                       model, proposed_path: Option&lt;String&gt;,
+                       rationale: Option&lt;String&gt; }</code></pre>
+<p><code>based_on</code>, <code>model</code>, <code>generated_at</code>
+and <code>rationale</code> together are better provenance than most of
+this atlas manages: a reviewer can see which sessions produced the
+proposal, which model wrote it, when, and why. <code>source</code>
+distinguishes <code>auto</code>, <code>custom</code> and installed
+skills, and it is load-bearing rather than decorative — it is what
+triggers the forced approval in section 4.</p>
+<p>Scoping is the project. <code>load_project_run_context</code> looks
+up one project by id and assembles only that project's
+<code>memory</code> and only the skills named in its <code>skills</code>
+list; nothing else reaches the prompt. That is a scope key applied on
+the read path, which is what the rubric asks for, and it is enough for
+the mark. It is also the atlas's thinnest instance of it: the boundary
+is a filter during prompt assembly rather than a property of storage,
+and the skill files themselves live in one global directory that any
+project may name.</p>
+<p>What is absent: no per-entry identity inside <code>memory.md</code>,
+no validity interval, no supersession pointer, no confidence, and — the
+finding in section 1 — no durable record of a rejection.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval. No embeddings, no index, no search over
+memory, no ranking. What reaches the model is whatever
+<code>load_project_run_context</code> assembles: the project's
+<code>memory.md</code> in full, plus the installed-skills block filtered
+to that project's assignment.</p>
+<p>For a project-scoped desktop tool that is a defensible choice and it
+has the property <a href="../../patterns/gate-the-expensive-path/">gate
+the expensive path</a> wants — nothing irrelevant is retrieved because
+nothing is retrieved. The cost is the one that shape always carries:
+<code>memory.md</code> is injected whole on every turn, so its size is a
+fixed tax and there is no mechanism that would notice it growing past
+usefulness. <code>POST /:id/memory/generate</code> — the endpoint that
+would presumably summarize or compact it — is a stub at this commit.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two write paths with opposite characters.</p>
+<p><code>memory.md</code> is a <strong>blind overwrite</strong>.
+<code>put_memory</code> takes the request body, writes the file, mirrors
+the string into <code>projects.json</code>, and stamps
+<code>updated_at</code>. There is no merge, no diff, no previous
+version, and no guard on what was lost. It is the human's file, edited
+by the human, so the risk is bounded — but the same endpoint is
+reachable by anything holding the API token.</p>
+<p>Skills are the <strong>staged</strong> path, described in section 4,
+and the staging is the good part. Three properties are worth naming
+because they are separable and each is copyable on its own:</p>
+<ol type="1">
+<li>The proposal is a <strong>file on disk</strong>, not a row in a
+queue. It survives a crash, it can be read with <code>cat</code>, and
+promotion is an atomic rename.</li>
+<li>The live memory is <strong>untouched</strong> while the proposal
+waits. A pending update costs nothing and risks nothing.</li>
+<li>The approval requirement <strong>escalates on provenance</strong>.
+<code>source == "custom"</code> forces review even when the operator has
+turned auto-update on globally.</li>
+</ol>
+<p>And then the fourth property, which is absent and which the other
+three make conspicuous: the decision is not remembered.
+<code>synth_status()</code> is a
+<code>OnceLock&lt;Arc&lt;Mutex&lt;SynthesizerStatus&gt;&gt;&gt;</code>
+initialized to <code>default()</code>; nothing reads it from disk at
+startup and nothing writes it. <code>last_run_at</code> lives in that
+same struct, so after a restart the synthesizer does not know when it
+last ran either. A user who rejects a proposed skill on Monday can be
+offered it again on Tuesday, and the only thing standing between them is
+that nobody restarted the binary.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous?</strong> No. Memory writes are file writes;
+synthesis is scheduled.</li>
+<li><strong>Lag?</strong> Skills appear at the next synthesis run
+<em>and</em> after a human approves, so the write-to-recall path
+includes a person. That is slow by design and is the right trade for
+content that becomes instructions.</li>
+<li><strong>Whole-store passes?</strong> Synthesis reads finished
+sessions and reasons across them; <code>consumed_session_ids</code>
+dedupes within a run, not across restarts.</li>
+<li><strong>Read path?</strong> <code>memory.md</code> in full plus the
+filtered skills block, every turn, unbounded and at the front of the
+prompt.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The widest surface of any single binary here: MCP servers (client
+side), a plugin system taking zip bundles of
+skills/MCP/agents/connectors, ClawHub skills, six swarm modes with a
+shared blackboard, a graph mode with a judge panel, custom tools defined
+in YAML, Telegram and LINE bots, and a remote mode where a desktop app
+drives another instance over HTTP — including forwarding proposal
+approve/reject actions to the remote synthesizer.</p>
+<p>The model has no memory tools. It cannot save, forget or correct; it
+produces sessions, and a separate pass decides what those sessions
+taught. Combined with the human gate, that is a deliberate and coherent
+allocation: the model does the work, the synthesizer proposes the
+lesson, the person decides.</p>
+<p>The judge panel is adjacent to memory rather than part of it — an
+evaluator-optimizer gate on <em>answers</em>, not on what is remembered
+— but it is the same instinct applied one layer up, and a reader
+interested in verified-write gates will find both in one codebase.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance on skills is good: <code>based_on</code>,
+<code>model</code>, <code>generated_at</code>, <code>rationale</code>.
+Provenance on <code>memory.md</code> is nil.</p>
+<p>The security module is more developed than the memory model —
+<code>security/sandbox.rs</code> and
+<code>security/file_access.rs</code>, per-tool approval, timeouts,
+output caps, and a working folder resolved as a sandbox root. For a
+desktop agent with shell and browser access that is the right
+emphasis.</p>
+<p>Prompt injection has a specific route into durable memory here, and
+the human gate is what closes it: injected text in a session can shape a
+proposal, but with <code>require_approval</code> on it cannot become an
+enabled skill without someone clicking approve. Turning that setting off
+removes the only barrier between a poisoned session and a live
+instruction file — which is worth stating plainly, because the setting
+exists and defaults the safe way.</p>
+<p>The concurrency model for JSON persistence is read-modify-write on
+whole files (<code>get_skills</code> → mutate →
+<code>save_skills</code>), so two writers can lose an update. With a
+single desktop user that is theoretical; with the remote mode and bots
+driving the same instance it is less so.</p>
+<p>Data-loss risk is concentrated in the reject path —
+<code>remove_dir_all</code> on a skill folder — and in the in-memory
+proposal list, which discards pending work on restart as well as
+rejections.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>62 inline Rust tests (<code>#[test]</code> /
+<code>#[tokio::test]</code>) across the source tree, which is real
+coverage for a project of this age but is concentrated on the agent
+loop, tool config resolution and message validation rather than on
+memory. No test in the tree exercises the propose/approve/reject cycle,
+and none asserts anything about <code>memory.md</code>.</p>
+<p>There is no eval harness, no benchmark, and no committed results,
+which is consistent — this is an agent platform, not a memory system
+making retrieval claims, and inventing a number would be worse than the
+absence.</p>
+<p>The test I would want is short and would have caught the finding in
+section 1: propose a skill, reject it, restart the synthesizer state,
+run synthesis over the same sessions, and assert the proposal does not
+return. As written it does.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Stage the proposal as a file beside the live one.</strong>
+<code>SKILL.md.proposed</code> next to <code>SKILL.md</code>, promoted
+by rename, is the cheapest correct implementation of a staged write:
+crash-safe, greppable, atomic on commit, and diffable by a person with
+no tooling.</li>
+<li><strong>Escalate the approval requirement on provenance.</strong>
+"Automation may overwrite what automation wrote, never what a person
+wrote" is one comparison in one <code>if</code>, and it removes the
+worst outcome of an auto-update feature.</li>
+<li><strong>Carry the rationale and the sources on the
+proposal.</strong> <code>based_on</code>, <code>rationale</code>,
+<code>model</code> and <code>generated_at</code> turn a review from a
+judgement about text into a judgement about an argument.</li>
+<li><strong>Feed failures into synthesis.</strong>
+<code>SubagentTrace</code> keeps <code>completed</code> and
+<code>error</code>, so what went wrong is available to learn from rather
+than filtered out.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not make approval durable and rejection
+ephemeral.</strong> This is the transferable lesson and it generalizes
+past this codebase: if a person's "yes" writes a file and their "no"
+writes nothing, the system is asymmetrically biased toward accumulating
+whatever the generator produces, and the user experiences it as being
+asked the same question forever. A rejection is a memory — see the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a>.</li>
+<li><strong>Do not keep review state in process memory.</strong> Pending
+proposals are work in progress; losing them on restart is a bug even
+before the rejection problem.</li>
+<li><strong>Do not inject an unbounded blob every turn with no path that
+compacts it.</strong> <code>memory.md</code> grows and the endpoint that
+would summarize it is a stub.</li>
+<li><strong>Do not let read-modify-write on whole JSON files be the
+persistence model</strong> once more than one client can write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>TigrimOSR suits an individual or small team who want a self-contained
+agent platform they can install in a minute, run offline against local
+models, and extend in YAML — and who value that the thing which learns
+from their sessions asks before changing anything. As a <em>host</em>,
+the breadth is unusual for one binary.</p>
+<p>As a <em>memory system</em> it is thin by design and should be read
+that way: one blob per project, plus a skill library. Its contribution
+to this atlas is the propose-stage-approve mechanism rather than the
+memory model, and that mechanism is worth copying into systems whose
+memory model is much richer.</p>
+<p>Do not adopt it where memory has to be correctable in the sense this
+atlas means. A user who says "no, don't remember that" is answered, and
+then forgotten.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was <code>synth_status</code> intended to persist?</strong>
+It holds <code>last_run_at</code>, which only makes sense across runs,
+so the in-memory-only lifetime reads as an oversight rather than a
+decision. Issue history was not read.</li>
+<li><strong>Does the remote mode persist proposals on the server
+side?</strong> <code>forward_proposal_action</code> and
+<code>/api/skills/auto/full-status</code> push the state to the remote
+instance, which has the same in-memory structure; whether a server-mode
+deployment behaves differently was not established.</li>
+<li><strong>What triggers <code>run_synthesis</code> in
+practice?</strong> <code>scheduler.rs</code> exists and
+<code>run_synthesis_forced</code> is exposed; the default cadence was
+not traced.</li>
+<li><strong>What does <code>POST /:id/memory/generate</code>
+become?</strong> It is a stub, and it is the hook where
+<code>memory.md</code> would acquire a lifecycle.</li>
+<li><strong>How do the swarm modes share memory?</strong> A shared
+blackboard is described; what of it survives a run was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Skill memory</strong> —
+<code>src/server/services/skill_synthesizer.rs</code>
+(<code>SkillProposal</code>, <code>write_new_auto_skill</code>,
+<code>approve_proposal</code>, <code>reject_proposal</code>,
+<code>get_proposed_diff</code>, <code>synth_status</code>),
+<code>src/server/routes/skills.rs</code></p>
+<p><strong>Project memory</strong> —
+<code>src/server/routes/projects.rs</code> (<code>put_memory</code>,
+<code>get_memory</code>, <code>load_project_run_context</code>),
+<code>src/ui/projects_view.rs</code></p>
+<p><strong>Persistence</strong> — <code>src/server/data.rs</code>
+(<code>Skill</code>, <code>SkillAutoMeta</code>, <code>Project</code>,
+<code>ChatSession</code>, <code>get_skills</code>,
+<code>save_skills</code>, <code>read_json</code>)</p>
+<p><strong>Agent loop and context</strong> —
+<code>src/server/services/agent_loop.rs</code>,
+<code>src/server/services/toolbox.rs</code>,
+<code>src/server/services/compact.rs</code>,
+<code>src/server/services/graph.rs</code></p>
+<p><strong>Scheduling</strong> —
+<code>src/server/services/scheduler.rs</code></p>
+<p><strong>Security</strong> — <code>src/security/sandbox.rs</code>,
+<code>src/security/file_access.rs</code></p>
+<p><strong>UI review surface</strong> —
+<code>src/ui/skills_view.rs</code>, <code>src/ui/settings.rs</code></p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

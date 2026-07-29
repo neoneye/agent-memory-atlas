@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+seventy-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-two agent memory architectures, their retrieval mechanics,
+of seventy-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-two agent memory architectures, their retrieval mechanics,
+of seventy-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+seventy-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-two systems do not fall into seventy-two categories. They
+<p>Seventy-three systems do not fall into seventy-three categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -257,17 +257,24 @@ coupling memory to the framework, prompt assembly, and tool loop.</p>
 pluggable memory</h3>
 <p>Hosts: <code>hermes-agent</code>, <code>openclaw</code>,
 <code>pi</code>, <code>mateclaw</code>, <code>opencode</code>,
-<code>nemoclaw</code> Plugins mounted on them: <code>holographic</code>,
-<code>magic-context</code>, <code>metaclaw</code>,
-<code>byterover</code>, <code>tencentdb-agent-memory</code>, plus hosted
-providers</p>
+<code>nemoclaw</code>, <code>tigrimosr</code> Plugins mounted on them:
+<code>holographic</code>, <code>magic-context</code>,
+<code>metaclaw</code>, <code>byterover</code>,
+<code>tencentdb-agent-memory</code>, plus hosted providers</p>
 <p>The runtime ships an interface, not a memory model.
 <strong>Hermes</strong> bounds its own curated Markdown hard and freezes
 it into the prompt at session start while mounting one external
-provider. <strong>OpenClaw</strong> ships memory entirely as extensions
-over a plugin contract. <strong>Pi</strong> is the limit case:
-twenty-plus lifecycle events and no memory concept at all, so plugins
-rebuild indexing, scope, and retrieval from scratch.
+provider. <strong>TigrimOSR</strong> is the exception that proves the
+family's rule: its own memory is one <code>memory.md</code> per project,
+and the mechanism worth copying is beside it — a skill synthesizer that
+stages a proposed skill as <code>SKILL.md.proposed</code> next to the
+live file, keeps the rationale and the sessions it came from, waits for
+a person, and promotes by rename. It also forces review when the target
+skill was authored by a human rather than by the automation, which
+nothing else here does. <strong>OpenClaw</strong> ships memory entirely
+as extensions over a plugin contract. <strong>Pi</strong> is the limit
+case: twenty-plus lifecycle events and no memory concept at all, so
+plugins rebuild indexing, scope, and retrieval from scratch.
 <strong>OpenCode</strong> is the commoner case and the more instructive
 one: it ships the two hooks a memory plugin needs — a system-prompt
 transform and a compaction hook — marks both experimental, and offers no
@@ -2073,6 +2080,32 @@ state</td>
 unsupported benchmark claims</td>
 </tr>
 <tr>
+<td><code>tigrimosr</code></td>
+<td>A skill — a SKILL.md with a registry row carrying review status,
+rationale and the sessions it came from — plus one memory.md per
+project</td>
+<td>JSON files on disk (skills.json, projects.json, chat history) and
+SKILL.md directories</td>
+<td>No search; the project's assigned skills and its memory.md are
+assembled into the system prompt</td>
+<td>A synthesizer reads finished sessions, user feedback and subagent
+traces, then proposes create or update</td>
+<td>Proposals stage as SKILL.md.proposed and become live by rename on
+approval; rejection deletes the proposal and records nothing</td>
+<td>Project id selects the memory.md and filters the installed-skills
+block on the read path</td>
+<td>Native Rust desktop app, embedded web UI, MCP servers, plugins,
+Telegram and LINE bots</td>
+<td>A scheduler runs the skill synthesizer; compaction hooks track file
+reads and invoked skills</td>
+<td>review_status pending or approved, persisted, with pending coupled
+to enabled=false</td>
+<td>A staged proposal a person can diff before it takes effect, carrying
+its rationale and source sessions</td>
+<td>Proposal state is in-memory only, so a rejected skill can be
+re-proposed after a restart</td>
+</tr>
+<tr>
 <td><code>verel</code></td>
 <td><code>MemoryRecord</code> fact/rule/schema/failure/skill</td>
 <td>SQLite local plus backend adapters</td>
@@ -2193,23 +2226,24 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 72:</em> <a
+<p><em>3 of 73:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 72:</em> <a
+<p><em>7 of 73:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 72:</em> <a
+<p><em>8 of 73:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2221,7 +2255,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>42 of 72:</em> <a
+<p><em>43 of 73:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
@@ -2263,12 +2297,13 @@ href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
 <a href="../systems/supermemory/"><code>supermemory</code></a>, <a
+href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Append-only mutation audit</strong> — A named append-only
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 72:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 73:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2278,7 +2313,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>13 of 72:</em> <a
+<p><em>14 of 73:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2291,11 +2326,12 @@ href="../systems/mercury-agent/"><code>mercury-agent</code></a>, <a
 href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/second-me/"><code>second-me</code></a>, <a
+href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 72:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 73:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2316,7 +2352,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-two assert that particular material must
+repositories of seventy-three assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6162,6 +6198,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/minecontext/"><code>minecontext</code></a></li>
 <li><a href="../systems/acontext/"><code>acontext</code></a></li>
 <li><a href="../systems/second-me/"><code>second-me</code></a></li>
+<li><a href="../systems/tigrimosr/"><code>tigrimosr</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6423,6 +6460,9 @@ href="https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc06
 href="https://github.com/mindverse/Second-Me">mindverse/Second-Me</a> at
 <a
 href="https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a"><code class="commit-id" title="d0e40251d9de61b3340b8d0d7d83150669f1885a">d0e40251…</code></a></li>
+<li><a href="https://github.com/Sompote/TigrimOSR">Sompote/TigrimOSR</a>
+at <a
+href="https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba3192ac49370d"><code class="commit-id" title="92e8867b63acfb8592d6ae3067ba3192ac49370d">92e8867b…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
