@@ -65,15 +65,19 @@ is a routing decision made once, at write time, by a classifier agent.
 
 The six types are not interchangeable:
 
-```text
-core          block of always-in-context persona/user text
-episodic      an event: occurred_at, actor, event_type, summary, details
-semantic      a named concept: name, summary, details, source
-procedural    an ordered how-to
-resource      a document or file reference
-knowledge     a credential/bookmark/api_key: sensitivity + secret_value
-raw_memory    the unprocessed task context string, retained separately
-```
+| Type | What a row holds |
+| --- | --- |
+| `core` | A block of always-in-context persona or user text |
+| `episodic` | An event — `occurred_at`, `actor`, `event_type`, `summary`, `details` |
+| `semantic` | A named concept — `name`, `summary`, `details`, `source` |
+| `procedural` | An ordered how-to |
+| `resource` | A document or file reference |
+| `knowledge` | A credential, bookmark or API key — `sensitivity` plus `secret_value` |
+
+A seventh table sits beside them rather than among them. `raw_memory` holds the
+unprocessed task-context string, and it is evidence rather than belief — which is
+why the six above are what the classifier routes to and this one is not a routing
+destination.
 
 `raw_memory` is the interesting one, and the atlas has a pattern for it:
 [evidence before belief](../../patterns/evidence-before-belief/). The raw context
