@@ -156,4 +156,22 @@ if git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
   fi
 fi
 
-echo "Validated $system_count reports, $pattern_count design patterns, revision metadata, analyzed-on dates, and project-relative navigation."
+# The homepage card numbers are a reading order, and cards have historically been
+# prepended as well as appended — which left 46 through 63 running backwards in
+# the DOM without anything noticing. Assert the labels ascend contiguously from 1.
+card_order="$(python3 - "$project_dir/site/index.html" <<'PY'
+import re, sys
+html = open(sys.argv[1]).read()
+nums = [int(n) for n in re.findall(r'<div class="system-card-top"><span>[^<]*</span><code>(\d+)</code>', html)]
+if nums != list(range(1, len(nums) + 1)):
+    bad = [f"{a}->{b}" for a, b in zip(nums, nums[1:]) if b != a + 1]
+    print(f"homepage card numbers are not 1..{len(nums)} in DOM order; breaks at: {', '.join(bad[:8])}")
+PY
+)"
+if [[ -n "$card_order" ]]; then
+  echo "$card_order" >&2
+  echo "Reorder the <article class=\"system-card\"> blocks so their numbers ascend." >&2
+  exit 1
+fi
+
+echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, analyzed-on dates, and project-relative navigation."

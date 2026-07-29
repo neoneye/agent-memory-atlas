@@ -107,10 +107,52 @@
       if (show) visible += 1;
     });
 
-    if (empty) empty.hidden = visible !== 0;
+    // Nothing matched an AND of capabilities. Rather than report a dead end,
+    // fall back to the nearest partial matches: the systems carrying the most
+    // of what was asked for. An engineer filtering for four mechanisms wants to
+    // know which system gets closest, not to be told the combination is rare.
+    let fallback = 0;
+    if (visible === 0 && activeCaps.size > 1) {
+      const eligible = cards.filter((card) => {
+        const categories = card.dataset.category || "";
+        const haystack = `${card.dataset.search || ""} ${card.textContent || ""}`.toLowerCase();
+        return (activeFilter === "all" || categories.split(" ").includes(activeFilter))
+          && (!query || haystack.includes(query));
+      });
+      const overlap = (card) => {
+        const caps = (card.dataset.capabilities || "").split(" ").filter(Boolean);
+        return [...activeCaps].filter((flag) => caps.includes(flag)).length;
+      };
+      const best = eligible.reduce((max, card) => Math.max(max, overlap(card)), 0);
+      if (best > 0) {
+        eligible.forEach((card) => {
+          if (overlap(card) === best) {
+            card.hidden = false;
+            fallback += 1;
+          }
+        });
+        if (empty) {
+          empty.hidden = false;
+          empty.textContent =
+            `No system carries all ${activeCaps.size}. Showing the ${fallback} that ` +
+            `carr${fallback === 1 ? "ies" : "y"} ${best} of ${activeCaps.size}.`;
+        }
+      } else if (empty) {
+        empty.hidden = false;
+        empty.textContent = "No system carries any of these together with the other filters.";
+      }
+    } else if (empty) {
+      empty.hidden = visible !== 0;
+      empty.textContent = "Nothing matches those filters.";
+    }
+
     if (count) {
       const filtered = activeCaps.size > 0 || activeFilter !== "all" || query;
-      count.textContent = filtered ? `${visible} of ${cards.length} systems` : "";
+      count.textContent = filtered
+        ? (fallback > 0
+            ? `0 exact, ${fallback} closest of ${cards.length} systems`
+            : `${visible} of ${cards.length} systems`)
+        : "";
     }
   };
 
