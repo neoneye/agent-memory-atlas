@@ -56,7 +56,7 @@ existence and use are verifiable from code.
 | **Human believability ratings** | Whether simulated agents behave plausibly | [Generative Agents](../systems/generative-agents/) |
 | **Repository-local eval harnesses** | Per-project cases with expected and forbidden hits, or replayed retrieval policies | [open-cowork](../systems/open-cowork/), [MetaClaw](../systems/metaclaw/), [MemPalace](../systems/mempalace/), [agentmemory](../systems/agentmemory/) |
 
-Two entries in that table are doing something the others are not.
+Three entries in that table are doing something the others are not.
 
 **LongMemEval's knowledge-update category** is the closest thing the field has
 to a correction benchmark: the conversation contains a fact that is later
@@ -65,19 +65,20 @@ Its abstention category is the closest thing to a test for *not* answering.
 Both are still question-answering — the system is never asked to prove the old
 value is gone, only to prefer the new one at answer time.
 
+**BEAM's `contradiction_resolution` category** goes one step further, and it is
+the only public benchmark in this atlas that scores correction at all. The
+published numbers are the interesting part: [ReMe](../systems/reme/) commits
+per-category BEAM results, and reports **0.100** on its prompted configuration
+and 0.384 on its agentic one. So correction is measured, barely, in one place, and
+what is measured is done badly.
+
+It still measures only the easy half. `contradiction_resolution` asks the system
+to answer with the right value; it never asks whether the rejected one is still
+reachable, still in the store, or liable to return. That distinction runs through
+the rest of this page.
+
 **open-cowork's harness** is described below and is the most interesting
 evaluation shape in the atlas, precisely because it is not a public benchmark.
-
-**A correction, prompted by [ReMe](../systems/reme/)'s committed results.** This
-page previously treated correction as entirely unmeasured. That was too strong.
-BEAM scores a `contradiction_resolution` category, and ReMe's
-`benchmark/result-beam.md` is the first committed per-category table in this atlas
-to report it: **0.100** on its prompted configuration and 0.384 on its agentic
-one. So one public benchmark does score an adjacent thing, and the published
-numbers are bad. What still has no benchmark is the harder half — whether the
-*rejected* value remains reachable after the contradiction is resolved.
-`contradiction_resolution` asks the system to answer with the right value, not to
-prove the wrong one is gone.
 
 ### Named benchmarks outside these repositories
 
@@ -91,15 +92,14 @@ familiarity with the literature rather than inspection.
 - **Machine-unlearning benchmarks** (TOFU and similar) — these measure whether
   information can be removed from *model weights*. That is a genuinely
   different problem from removing a row from a memory store, and the two are
-  often conflated in discussion. This page used to add "not relevant to any
-  system in this atlas"; that stopped being true when
-  [Second Me](../systems/second-me/) was reviewed. Second Me fine-tunes a local
-  model on the user's own documents, and its document deletion — one of the more
-  complete cascades here, reaching the vector store as well as the rows — does not
-  and cannot touch the trained weights. So there is now one system in this corpus
-  for which the unlearning literature is the relevant literature, and the general
-  rule holds: the moment you fine-tune on user data, "delete my data" acquires a
-  second half a database cascade cannot reach.
+  often conflated in discussion. **One system here makes them the same problem.**
+  [Second Me](../systems/second-me/) fine-tunes a local model on the user's own
+  documents, and its document deletion — one of the more complete cascades in this
+  atlas, reaching the vector store as well as the rows — does not and cannot touch
+  the trained weights. For that system the unlearning literature is the relevant
+  literature. The general rule it illustrates: the moment you fine-tune on user
+  data, "delete my data" acquires a second half that a database cascade cannot
+  reach.
 - **Long-context benchmarks** — needle-in-a-haystack, RULER, ∞Bench and
   relatives measure what a model can do with a long prompt. They are not memory
   benchmarks, and the distinction matters for the argument in the next section.

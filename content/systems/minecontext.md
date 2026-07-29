@@ -36,11 +36,10 @@ Architecturally it is [MIRIX](./mirix/)'s neighbour: passive multimodal capture,
 typed memory, LLM extraction, a local database. Two things make it worth its own
 entry.
 
-**It models prospective memory, and it is the second system in the atlas to do
-so.** The comparative report has until now credited
-[NOOA Memory](../../compare/#the-category-almost-nothing-models-prospective-memory)
-as the only system that remembers what the agent has *undertaken to do* rather
-than what happened. MineContext has a `todo` table with `content`, `start_time`,
+**It models prospective memory**, which
+[one other system in this atlas](../../compare/#the-category-almost-nothing-models-prospective-memory)
+does — memory of what the agent has *undertaken to do* rather than of what
+happened. MineContext has a `todo` table with `content`, `start_time`,
 `end_time` as a deadline, `urgency`, `assignee`, `reason`, and a `status` integer
 whose only two values are pending and completed, with `update_todo_status`
 stamping `end_time` on completion. It also has an `INTENT_CONTEXT` type for

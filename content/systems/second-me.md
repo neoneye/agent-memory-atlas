@@ -1,6 +1,6 @@
 ---
 title: "Second Me"
-eyebrow: "The first parametric memory here"
+eyebrow: "The atlas's only parametric memory"
 description: "Documents to a versioned biography to LoRA weights — and a deletion that cleans the vector store thoroughly while the trained model keeps what it learned."
 root: ../..
 page_kind: system
@@ -21,7 +21,7 @@ matrix:
   background: "Training pipelines run as scripted jobs rather than as a scheduler"
   trust: "Pipeline statuses only; no memory carries an epistemic state"
   strengths: "L1 is a numbered generation over retained L0, so the derived layer is rebuildable and comparable across versions"
-  risks: "Forgetting stops at the vector store; the trained model is the atlas's first genuine machine-unlearning problem"
+  risks: "Forgetting stops at the vector store; the trained model keeps what a deleted document taught it"
 ---
 
 ## 1. Executive Summary
@@ -34,12 +34,12 @@ fine-tuning followed by DPO, merges the adapter, and converts the result to GGUF
 for local inference. It is a 2025 research prototype from Mindverse with a paper
 behind it, and its last commit at the analyzed revision is September 2025.
 
-**It is the first system in this atlas with parametric memory**, and that is why
+**It is the only system in this atlas with parametric memory**, and that is why
 it earns an entry despite its age. Every other report here describes memory as
-rows, files or graph edges that a query returns. Second Me's L2 layer holds
-memory in weights: nothing is retrieved, the model simply answers as though it
-knows. The comparative report's taxonomy had no place for that, and the working
-note behind this round's reviews had flagged the omission as unresolved.
+rows, files or graph edges that a query returns. Second Me's L2 layer holds memory
+in weights: nothing is retrieved, the model simply answers as though it knows.
+That makes it the atlas's one data point on a whole branch of the field — and one
+system is not coverage, which the limitations say plainly.
 
 **The finding that matters most is what deletion does.** `delete_file_by_name` is
 a genuinely careful cascade — it removes the `memories` row, the document
@@ -51,9 +51,9 @@ model fine-tuned on data synthesized from it keeps whatever it learned. So a use
 who deletes a memory here has cleaned the retrieval path and left the belief
 intact.
 
-That makes Second Me the concrete case the [benchmarks page](../../benchmarks/)
-previously said did not exist in this atlas — the one where machine unlearning
-stops being a different field's problem and becomes this system's.
+It is the one system in this atlas where machine unlearning is not a different
+field's problem — see the [benchmarks page](../../benchmarks/) on why that
+literature is usually irrelevant here, and why it is not for this.
 
 ## 2. Mental Model
 

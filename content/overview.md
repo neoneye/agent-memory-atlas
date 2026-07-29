@@ -305,8 +305,8 @@ established procedural skill memory with an execution-verified write gate.
 the only system here whose memory ends up in *weights*: documents become a
 versioned biography, the biography becomes synthesized training data, and LoRA
 fine-tuning plus DPO produce a local model that answers without retrieving
-anything. It is the atlas's single instance of parametric memory, and section 3's
-correction discussion is where it earns the entry. **NOOA Memory** implements the cognitive models the others
+anything. It is the atlas's single instance of parametric memory — see the limitations for
+what one instance is and is not evidence of. **NOOA Memory** implements the cognitive models the others
 approximate — ACT-R base-level activation with spreading activation for
 retrieval, the Ebbinghaus curve for forgetting — and stores the score
 components of every retrieval on the memory that was retrieved. **MemoryOS** is
@@ -328,8 +328,8 @@ X…)" — and `todo`, "prospective: durable commitment with an open/done" lifec
 Nearly everything else here remembers what *was*; these remember what the agent
 has undertaken to do.
 
-**A second system has since turned up, and the way it differs is the interesting
-part.** [MineContext](../systems/minecontext/) has a `todo` table — `content`,
+**The second occupant differs in the way that matters.**
+[MineContext](../systems/minecontext/) has a `todo` table — `content`,
 `start_time`, `end_time` as a deadline, `urgency`, `assignee`, `reason`, and a
 `status` integer with exactly two values, stamped with an `end_time` on
 completion by `update_todo_status`. It also has an `INTENT_CONTEXT` type for
@@ -346,10 +346,10 @@ dates and priorities from what it watched the user do. It remembers commitments
 the user never made — and, per its report, offers no surface on which to reject
 one.
 
-So the category is no longer empty, and the two occupants bracket the design
-question rather than settling it. A declared commitment is a memory; an inferred
-commitment is a claim about someone's intentions, which is a stronger claim than
-any preference in this atlas and the one most costly to get wrong.
+Two occupants bracket the design question rather than settling it. A declared
+commitment is a memory; an inferred commitment is a claim about someone's
+intentions, which is a stronger claim than any preference in this atlas and the
+one most costly to get wrong.
 
 The nearest other neighbour is [ai-memory](../systems/ai-memory/)'s handoff with
 its `next_steps` list, and that is a record of an interrupted task rather than a
@@ -532,7 +532,7 @@ session with an identity you could later correct.
 | `rainbox` | Claim, evidence, embedding, retrieval event | Postgres/SQLAlchemy plus pgvector | Hard-filtered hybrid (vector + Postgres full-text + entity boost) for both chat and assistant; profile digest | User commands, assistant actions, review UI; single governed atomic path (`record_belief`); write-time conflict detection; active/candidate flows | Reject/supersede/reactivate/expiry/sensitivity; `MemoryRejectedValue` tombstones block model re-assertion of rejected values; governed atomic correction (`correct_belief`); UI stale-write guards | Global, agent, room, project; sensitivity | Full assistant app: chat prompt (via `build_chat_memory_block`→hybrid), action loop, review UI | Embedding sync/prune, telemetry, feedback/eval loop | Five-actor trust model (3 human/override + 2 model/candidate); rejected-value tombstones; write-time lattice-aware conflict detection; governed atomic correction; fenced prompt injection; claim/evidence provenance and retrieval audit | Operator governance, trust/correction machinery (tombstones + conflict detection + fenced recall + governed writes), telemetry, eval integration | Compact claims may lose source nuance; no automatic candidate extraction; `epistemic_confidence`/`retrieval_strength` columns exist but Tier-1 ranking still uses `confidence` (schema groundwork only); attribution is context-injection, not causal |
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
 | `reme` | A Markdown note with YAML frontmatter and wikilinks, chunked for indexing | Files on disk as canonical, with FAISS and a keyword index as rebuildable projections | Vector plus BM25 fused by reciprocal rank, then wikilink traversal, with date filters | An agent writes and edits the notes through tools; auto-memory, auto-resource and auto-dream run as pipelines | A validated CREATE / CORROBORATE / REFINE / CORRECT verb per integration, with an additive-only update rule | One workspace directory per application instance; no scope key on the read path | Python service and CLI, plus Claude Code and Hermes plugins and a SKILL.md | Auto-dream extracts cross-file units, integrates them into digests, and checkpoints changed paths | A `status` frontmatter field is reserved by the prompts and read by nothing | Committed per-category benchmark results including its own worst numbers; a real correction vocabulary; additive updates | The correction vocabulary is enforced as a returned label, not as a constraint on the edit |
-| `second-me` | Three layers — a document with its raw content, a versioned biography and shades derived from it, and the model weights trained on both | SQLite for documents, chunks and the versioned L1 tables; ChromaDB for embeddings; GGUF files for the model | Embedding search over documents and chunks, plus whatever the fine-tuned model recalls without retrieval | Upload documents, generate L1 as a numbered version, then synthesize training data and run LoRA SFT and DPO | Document deletion cascades through chunks and both Chroma collections, and touches neither L1 nor the weights | None — the design is one person, one machine, one model | A local web app over a Flask kernel, with GGUF export and a decentralized network for connecting AI selves | Training pipelines run as scripted jobs rather than as a scheduler | Pipeline statuses only; no memory carries an epistemic state | L1 is a numbered generation over retained L0, so the derived layer is rebuildable and comparable across versions | Forgetting stops at the vector store; the trained model is the atlas's first genuine machine-unlearning problem |
+| `second-me` | Three layers — a document with its raw content, a versioned biography and shades derived from it, and the model weights trained on both | SQLite for documents, chunks and the versioned L1 tables; ChromaDB for embeddings; GGUF files for the model | Embedding search over documents and chunks, plus whatever the fine-tuned model recalls without retrieval | Upload documents, generate L1 as a numbered version, then synthesize training data and run LoRA SFT and DPO | Document deletion cascades through chunks and both Chroma collections, and touches neither L1 nor the weights | None — the design is one person, one machine, one model | A local web app over a Flask kernel, with GGUF export and a decentralized network for connecting AI selves | Training pipelines run as scripted jobs rather than as a scheduler | Pipeline statuses only; no memory carries an epistemic state | L1 is a numbered generation over retained L0, so the derived layer is rebuildable and comparable across versions | Forgetting stops at the vector store; the trained model keeps what a deleted document taught it |
 | `supermemory` | Document, chunk, memory entry, space | Hosted backend; visible schemas/client only | Hosted search/profile API; SDK uses hybrid settings | API/MCP add memory/document | Version chains, relations, forget API | Space, container tags, org/user/project | SDK, AI SDK tools, MCP | Hosted processing not visible | Rich schema fields and relations; implementation not visible | Product/API surface, document-memory graph | Backend black box; semantic forget needs care |
 | `swafra` | Verbatim or synthetic chunk plus directed chunk edges | Three local JSON files | BM25 + vector + entity/date/preference heuristics + char n-gram; graph walk; best chunk per title | MCP add; Leiden or exchange/paragraph chunks; synchronous full-file rewrite | Exact source delete; implicit same-ID reindex; broken supersession path | Source ID/title only; no user/project/tenant scope | Python FastMCP; Node MCP over Python subprocess | None | Caller title and raw chunk; no actor, span-quality provenance, trust state, or injection fence | Very compact local hybrid graph-RAG; optional dependencies; source diversity | Non-atomic concurrent writes; unbounded context; dangling edges; benchmark cutoff invalid |
 | `tencentdb-agent-memory` | L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map | JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB | FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context | Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload | Internal merge/delete/cleanup; no first-class correction/forget tool | Session fields and data directories; no general tenant boundary | OpenClaw hooks/tools/context engine; Hermes gateway | Deferred embeddings, scene/persona generation, retention reclamation | Source message IDs and raw evidence; no verification/rejection state | Layered progressive disclosure with raw drill-down | Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims |
@@ -2961,6 +2961,14 @@ No internet sources were used for this report. The analysis is based on the chec
 - Supermemory's hosted backend implementation was not visible in this checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph UI.
 - Some mem0 advanced capabilities appear to be managed-platform-only in the inspected OSS code.
 - This is an implementation-oriented static review, not a runtime benchmark.
+- **Memory held in model weights is covered by exactly one system.**
+  [Second Me](../systems/second-me/) is the atlas's only parametric-memory entry,
+  and one system is a data point rather than coverage. Model editing, KV-cache
+  reuse and weight-space personalization are a substantial branch of the
+  literature and are essentially unrepresented here — which also means the seven
+  rubric capabilities have only been exercised against token stores. Whether a
+  tombstone, a scope key or an audit trail even has a referent in a fine-tuned
+  model is an open question this corpus cannot answer.
 - Four dimensions that matter operationally are not covered systematically here,
   and a reader choosing a system should investigate them directly. **Behaviour
   under embedding-model change or vector-store migration**: only a few systems
