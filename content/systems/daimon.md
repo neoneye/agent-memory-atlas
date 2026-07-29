@@ -65,10 +65,12 @@ Weakest parts: the live working set is **one checkpoint per project**, so
 anything not carried forward is reachable only through a lexical FTS5 index with
 no semantic component; the tombstone is keyed on a SHA-1 of the item's exact
 text, so a reworded re-assertion walks straight past it; and the retrieval
-numbers the repo does commit are modest and small-sample. The engineering
-quality is unusually high for a project at 10 GitHub stars — the tests outweigh
-the source roughly two to one — but the retrieval half of the system is much
-less proven than the trust half.
+numbers the repo does commit are modest and small-sample. The codebase is mature
+by the measures that can be checked — tests outweigh source roughly two to one,
+every non-obvious invariant carries the issue number and the failure that forced
+it, and defeated approaches are written down as scar files rather than quietly
+deleted — but that maturity is concentrated on the trust half. The retrieval
+half is much less proven.
 
 ## 2. Mental Model
 
