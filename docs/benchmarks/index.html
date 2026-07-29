@@ -124,7 +124,13 @@ is measured nowhere</strong>, even though several systems here
 deliberately delay extraction by minutes or by a batch boundary.</li>
 <li><strong>There is no forgetting benchmark.</strong> Nothing in this
 atlas, and nothing in the published benchmarks it uses, tests whether a
-deleted memory stays deleted after the next background pass.</li>
+deleted memory stays deleted after the next background pass. One paper —
+<a
+href="#fifa-the-one-proposal-that-scores-deletion-compliance">FiFA</a> —
+proposes a metric that counts failing to honour a deletion as a
+violation, which is the right question; it releases no code, its number
+did not separate one retention policy from another, and its abstract
+contradicts its own results table.</li>
 </ol>
 <p>Everything below is evidence for those six claims, plus what a better
 measurement set would look like — including a <a
@@ -761,16 +767,20 @@ entries are MemoryBank ("user memory updating") and HaluMem (memory
 hallucinations), and neither asks the question. This is the clearest gap
 in the field's measurement practice, and it is worth being precise about
 what exists and what does not.</p>
-<p><strong>The one apparent counterexample was checked and is not
-one.</strong> Two surveys name MemoryAgentBench's fourth competency as
+<p><strong>Two apparent counterexamples were checked. Neither closes the
+gap, and the reasons differ.</strong></p>
+<p><em>MemoryAgentBench</em> is named by two surveys as testing
 <em>selective forgetting</em> — the strongest public claim that a
 forgetting benchmark exists. <a
 href="#read-directly-at-a-pinned-commit">Section 2</a> records what its
 code does instead: superseded and current values coexist in the store,
 the recency rule is given in the prompt, and the score is answer-time
-preference. It is a supersession benchmark under another name. The gap
-is not that nobody has looked; it is that the thing found when looking
-gets relabelled on the way into the citation graph.</p>
+preference. It is a supersession benchmark under another name, named
+accurately in its repository and relabelled on the way into the citation
+graph.</p>
+<p><em>FiFA</em> is the harder case, and it moves this section's claim.
+It is described below, because it is the only proposal found across
+three consolidated lists that scores deletion compliance at all.</p>
 <h3 id="what-exists">What exists</h3>
 <ul>
 <li><strong>LongMemEval's knowledge-update category</strong> scores
@@ -796,8 +806,75 @@ pinning, type allowlists, budget pruning. These are unit tests of policy
 logic. They confirm the code does what it says; they do not measure
 whether forgetting <em>works</em> in the sense a user means.</li>
 </ul>
-<p>That is the entire state of the art, and none of it tests the failure
-this atlas keeps finding.</p>
+<p>That is the entire state of the art in code, and none of it tests the
+failure this atlas keeps finding.</p>
+<h3 id="fifa-the-one-proposal-that-scores-deletion-compliance">FiFA, the
+one proposal that scores deletion compliance</h3>
+<p><em>Forgetful but Faithful: A Cognitive Memory Architecture and
+Benchmark for Privacy-Aware Generative Agents</em> (<a
+href="https://arxiv.org/abs/2512.12856">arXiv:2512.12856</a>, 14
+December 2025, single author, 45 pages) is the closest thing in the
+literature to what <a
+href="#what-a-forgetting-benchmark-would-have-to-do">the next
+subsection</a> asks for, and it was found in a bibliography rather than
+in any of the three benchmark tables that ought to list it.</p>
+<p>Its privacy-preservation metric is</p>
+<pre class="text"><code>PP = 1 − |privacy violations| / |privacy opportunities|</code></pre>
+<p>where opportunities are turn-level events at which sensitive content
+is requested or likely to surface — including <strong>outputs after TTL
+expiry</strong> — and violations include disclosing sensitive tokens,
+<strong>retaining data beyond declared horizons</strong>, and
+<strong>failing to honour deletion preferences</strong>.</p>
+<p>That third clause is the question this page says nobody asks. Its
+vocabulary is unlike the rest of the field's: 211 uses of
+<em>privacy</em>, 68 of <em>forget</em>, 61 of <em>audit</em>, 7 each of
+<em>erasure</em> and <em>right to be forgotten</em>, against the
+107-page survey's 10, 52, 5, 0 and 0.</p>
+<p><strong>It still does not settle the question, for four reasons, and
+the last two are the serious ones.</strong></p>
+<ol type="1">
+<li><strong>The three violation classes share one denominator.</strong>
+Disclosure, over-retention and failed deletion collapse into a single
+rate, so no published number isolates whether a deleted item stayed
+unreachable.</li>
+<li><strong>It compares retention policies, not memory systems.</strong>
+The subject is six eviction policies — FIFO, LRU, Priority Decay,
+Reflection-Summary, Random-Drop, Hybrid — inside one architecture
+(MaRS), in simulation. Forgetting here means capacity eviction, the
+framing <a href="#5-what-gets-measured-and-what-does-not">section 5</a>
+describes; deletion compliance rides along as one violation class.</li>
+<li><strong>The metric did not discriminate.</strong> PP came out at
+0.722–0.780 across all five reported policies, <code>p = 0.485</code>,
+η² = 0.047. The paper is candid about why: violations are driven by
+adversarial prompts and TTL expiry, whose frequency is held constant, so
+PP "becomes less sensitive to retention strategy alone". A metric that
+does not separate FIFO from a principled hybrid is not yet measuring the
+design choice.</li>
+<li><strong>Nothing was released, and the abstract disagrees with the
+results table.</strong> Forty-five pages discuss version-locked code,
+archived artifacts, seeds and audit trails; no repository is linked, and
+a public leaderboard with released prompts appears in future work.
+Meanwhile the abstract reports "the Hybrid policy delivers the best
+composite performance (≈0.911)", and Table 2, §6.5.1, §7.2 and §7.6 all
+report Hybrid <strong>last</strong> of the five at 0.589±0.009, with
+Random-Drop leading at 0.635±0.024 — §7.2 states outright that "Hybrid
+does not win the aggregate". The sixth policy's row is marked as
+pending. Goal completion is 0.058–0.078 for every policy, so on the
+study's own numbers nothing completed the task.</li>
+</ol>
+<p>The honest summary: <strong>one paper has proposed the right question
+and has not yet answered it.</strong> That is a better state than this
+page previously described, and it changes the recommendation — a reader
+building the deletion test below should start from FiFA's violation
+taxonomy rather than from nothing. It does not change the conclusion,
+because a metric with no released artifact, no discriminating power, and
+an abstract at odds with its own table is a research direction rather
+than a measurement.</p>
+<p>It is also, for this atlas, a familiar shape. "Published benchmark
+numbers without committed artifacts" is a named antipattern here with
+several instances among the systems; this is the same antipattern in the
+evaluation literature, and it was caught the same way — by reading past
+the abstract.</p>
 <h3 id="the-failure-nobody-measures">The failure nobody measures</h3>
 <p>Deletion in these systems is usually a statement about the present
 that the next background pass is free to undo. <a
@@ -989,11 +1066,13 @@ test</a> below — <code>prompt_prefix</code> is the B measurement,
 assertions change.</p>
 <p><a id="contradiction-test"></a></p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
-<p>Forgetting has no benchmark. <strong>Supersession has half of
-one</strong> — LongMemEval's knowledge-update category — and that half
-measures the easy part. What follows is a specification for the rest of
-it, small enough to run in an afternoon against any system in this
-atlas.</p>
+<p>Forgetting has no benchmark, only <a
+href="#fifa-the-one-proposal-that-scores-deletion-compliance">a proposal
+that scores it as one violation class among three</a>.
+<strong>Supersession has half of one</strong> — LongMemEval's
+knowledge-update category — and that half measures the easy part. What
+follows is a specification for the rest of it, small enough to run in an
+afternoon against any system in this atlas.</p>
 <h3 id="why-the-obvious-version-is-too-easy">Why the obvious version is
 too easy</h3>
 <p>The natural test is: the user likes blue on day one, prefers red on

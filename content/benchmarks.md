@@ -28,7 +28,12 @@ Six things are worth knowing before reading further.
    minutes or by a batch boundary.
 6. **There is no forgetting benchmark.** Nothing in this atlas, and nothing in
    the published benchmarks it uses, tests whether a deleted memory stays
-   deleted after the next background pass.
+   deleted after the next background pass. One paper —
+   [FiFA](#fifa-the-one-proposal-that-scores-deletion-compliance) — proposes a
+   metric that counts failing to honour a deletion as a violation, which is the
+   right question; it releases no code, its number did not separate one
+   retention policy from another, and its abstract contradicts its own results
+   table.
 
 Everything below is evidence for those six claims, plus what a better
 measurement set would look like — including a [contradiction test](#contradiction-test)
@@ -481,15 +486,20 @@ whether a deleted memory stays deleted. The nearest entries are MemoryBank
 the question. This is the clearest gap in the field's measurement practice, and
 it is worth being precise about what exists and what does not.
 
-**The one apparent counterexample was checked and is not one.** Two surveys name
-MemoryAgentBench's fourth competency as *selective forgetting* — the strongest
-public claim that a forgetting benchmark exists.
+**Two apparent counterexamples were checked. Neither closes the gap, and the
+reasons differ.**
+
+*MemoryAgentBench* is named by two surveys as testing *selective forgetting* —
+the strongest public claim that a forgetting benchmark exists.
 [Section 2](#read-directly-at-a-pinned-commit) records what its code does
 instead: superseded and current values coexist in the store, the recency rule is
 given in the prompt, and the score is answer-time preference. It is a
-supersession benchmark under another name. The gap is not that nobody has looked;
-it is that the thing found when looking gets relabelled on the way into the
-citation graph.
+supersession benchmark under another name, named accurately in its repository
+and relabelled on the way into the citation graph.
+
+*FiFA* is the harder case, and it moves this section's claim. It is described
+below, because it is the only proposal found across three consolidated lists
+that scores deletion compliance at all.
 
 ### What exists
 
@@ -512,8 +522,75 @@ citation graph.
   unit tests of policy logic. They confirm the code does what it says; they do
   not measure whether forgetting *works* in the sense a user means.
 
-That is the entire state of the art, and none of it tests the failure this
-atlas keeps finding.
+That is the entire state of the art in code, and none of it tests the failure
+this atlas keeps finding.
+
+### FiFA, the one proposal that scores deletion compliance
+
+*Forgetful but Faithful: A Cognitive Memory Architecture and Benchmark for
+Privacy-Aware Generative Agents*
+([arXiv:2512.12856](https://arxiv.org/abs/2512.12856), 14 December 2025, single
+author, 45 pages) is the closest thing in the literature to what
+[the next subsection](#what-a-forgetting-benchmark-would-have-to-do) asks for,
+and it was found in a bibliography rather than in any of the three benchmark
+tables that ought to list it.
+
+Its privacy-preservation metric is
+
+```text
+PP = 1 − |privacy violations| / |privacy opportunities|
+```
+
+where opportunities are turn-level events at which sensitive content is
+requested or likely to surface — including **outputs after TTL expiry** — and
+violations include disclosing sensitive tokens, **retaining data beyond declared
+horizons**, and **failing to honour deletion preferences**.
+
+That third clause is the question this page says nobody asks. Its vocabulary is
+unlike the rest of the field's: 211 uses of *privacy*, 68 of *forget*, 61 of
+*audit*, 7 each of *erasure* and *right to be forgotten*, against the 107-page
+survey's 10, 52, 5, 0 and 0.
+
+**It still does not settle the question, for four reasons, and the last two are
+the serious ones.**
+
+1. **The three violation classes share one denominator.** Disclosure,
+   over-retention and failed deletion collapse into a single rate, so no
+   published number isolates whether a deleted item stayed unreachable.
+2. **It compares retention policies, not memory systems.** The subject is six
+   eviction policies — FIFO, LRU, Priority Decay, Reflection-Summary,
+   Random-Drop, Hybrid — inside one architecture (MaRS), in simulation. Forgetting
+   here means capacity eviction, the framing [section 5](#5-what-gets-measured-and-what-does-not)
+   describes; deletion compliance rides along as one violation class.
+3. **The metric did not discriminate.** PP came out at 0.722–0.780 across all
+   five reported policies, `p = 0.485`, η² = 0.047. The paper is candid about
+   why: violations are driven by adversarial prompts and TTL expiry, whose
+   frequency is held constant, so PP "becomes less sensitive to retention
+   strategy alone". A metric that does not separate FIFO from a principled
+   hybrid is not yet measuring the design choice.
+4. **Nothing was released, and the abstract disagrees with the results table.**
+   Forty-five pages discuss version-locked code, archived artifacts, seeds and
+   audit trails; no repository is linked, and a public leaderboard with released
+   prompts appears in future work. Meanwhile the abstract reports "the Hybrid
+   policy delivers the best composite performance (≈0.911)", and Table 2, §6.5.1,
+   §7.2 and §7.6 all report Hybrid **last** of the five at 0.589±0.009, with
+   Random-Drop leading at 0.635±0.024 — §7.2 states outright that "Hybrid does
+   not win the aggregate". The sixth policy's row is marked as pending. Goal
+   completion is 0.058–0.078 for every policy, so on the study's own numbers
+   nothing completed the task.
+
+The honest summary: **one paper has proposed the right question and has not yet
+answered it.** That is a better state than this page previously described, and
+it changes the recommendation — a reader building the deletion test below should
+start from FiFA's violation taxonomy rather than from nothing. It does not
+change the conclusion, because a metric with no released artifact, no
+discriminating power, and an abstract at odds with its own table is a research
+direction rather than a measurement.
+
+It is also, for this atlas, a familiar shape. "Published benchmark numbers
+without committed artifacts" is a named antipattern here with several instances
+among the systems; this is the same antipattern in the evaluation literature,
+and it was caught the same way — by reading past the abstract.
 
 ### The failure nobody measures
 
@@ -721,7 +798,9 @@ measurement, and only the assertions change.
 
 ## 7. The Contradiction Test
 
-Forgetting has no benchmark. **Supersession has half of one** — LongMemEval's
+Forgetting has no benchmark, only
+[a proposal that scores it as one violation class among three](#fifa-the-one-proposal-that-scores-deletion-compliance).
+**Supersession has half of one** — LongMemEval's
 knowledge-update category — and that half measures the easy part. What follows
 is a specification for the rest of it, small enough to run in an afternoon
 against any system in this atlas.

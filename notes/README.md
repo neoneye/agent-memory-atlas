@@ -40,6 +40,11 @@ when the work happens.
   contain the atlas's central mechanism, and all eleven of its unreviewed
   framework candidates were then triaged — nine became reports and four corrected
   claims the atlas had published.
+- [2026-07-29-the-forgetting-benchmark-in-a-bibliography.md](2026-07-29-the-forgetting-benchmark-in-a-bibliography.md) —
+  a third consolidated benchmark list with the same vocabulary gap, and the one
+  paper that does score deletion compliance — found in its citations, listed in
+  no benchmark table, releasing no code, with an abstract that contradicts its
+  own results table.
 - [2026-07-29-selective-forgetting-that-is-not.md](2026-07-29-selective-forgetting-that-is-not.md) —
   two surveys call MemoryAgentBench's fourth competency *selective forgetting*;
   the repository calls it conflict resolution, and its dataset keeps both values
