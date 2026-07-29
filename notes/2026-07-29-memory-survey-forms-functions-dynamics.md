@@ -1,6 +1,6 @@
 # The field's own survey, read against the atlas
 
-**Status:** comparison done, two systems reviewed and added, eight candidates open
+**Status:** comparison done; all eleven framework candidates triaged, nine reviewed and added, four excluded with reasons
 **Origin:** *Memory in the Age of AI Agents: A Survey — Forms, Functions and
 Dynamics*, [arXiv:2512.13564](https://arxiv.org/abs/2512.13564) (v2, 13 January
 2026). 47 authors across twelve institutions, 107 pages, with a companion
@@ -188,124 +188,102 @@ Two stale counts were also found and fixed while editing adjacent text:
 negative retrieval assertion when the grid had said two since open-cowork was
 added.
 
-## The candidates, reviewed
+## The candidates, reviewed — all eleven
 
-Three of the eleven were checked out and read on 2026-07-29. Two became reports;
-one did not, and the one that did not is the most interesting result.
+Every framework in Table 9 that the atlas had not read was checked out and
+triaged on 2026-07-29. Nine became reports; four earned none.
 
-### MemEngine — excluded, and it should not have been a candidate
+### The four that earned no report
 
-`nuster1128/MemEngine` has **no persistence layer at all**. `LinearStorage` is a
-Python list, `reset()` empties it, `BaseMemory` declares no save or load, and
-`server_start.py` holds sessions in `service_database = {}` — an in-process dict
-that dies with the process. Nothing writes to disk but a `Display` helper. It also
-has no licence file, which would have excluded it independently.
+| Candidate | Why |
+| --- | --- |
+| `nuster1128/MemEngine` | **No persistence layer at all.** `LinearStorage` is a Python list, `reset()` empties it, `BaseMemory` declares no save or load, and `server_start.py` holds sessions in `service_database = {}`. Also no licence file. It is a legitimate research library — a harness for comparing ten published memory algorithms — and it is in a peer-surveyed table of *memory frameworks*, which is why it is now named in the scope section as a third exclusion shape: an algorithm workbench is not a memory system. |
+| `elizaOS/agentmemory` | **The URL 404s** and the organization has no repository by that name. Recorded in the limitations rather than silently dropped. |
+| Pinecone, Chroma, Weaviate | Vector databases. The atlas's inclusion test excludes them as infrastructure, and the paper says as much itself. |
 
-It is a legitimate research library — a common harness for comparing ten published
-memory algorithms — and it is honest about that. But it is in Table 9 as a
-representative *open-source memory framework*, and a reader taking that table as a
-shortlist would evaluate it alongside Mem0 and Zep. The atlas's inclusion test
-catches this in one query, which is a small argument that the test is doing real
-work. Recorded in the
-[scope section](../content/overview.md) as a third exclusion shape: an algorithm
-workbench is not a memory system.
+### The nine that became reports
 
-### MIRIX — added, and it changed a count
+Nine rather than seven because MIRIX and Memobase were reviewed first, in the
+earlier pass this note originally recorded.
 
-[Report](../content/systems/mirix.md), pinned at `51f3342d`. Six typed memory
-tables, each with a manager, a writer agent and a prompt; Postgres/pgvector or
-SQLite, plus Redis Stack as a *searchable* cache. Letta's ORM lineage with a much
-stronger tenancy model.
-
-**It carries `negative_eval`, taking that column from 2 to 3.** This was not
-expected and the judgement is worth recording, because the atlas has been caught
-twice on semantic misclassification. `tests/test_filter_tags_db.py:300` creates a
-memory under scope `test-ft`, searches under `scopes=["other-scope"]`, and asserts
-`mem.id not in result_ids`; `test_search_all_users.py:405` asserts that user3
-(different scope) and user4 (different org) are absent from a cross-user search.
-Against the rubric — "committed evaluation cases assert that particular material
-must **not** be retrieved", *not* "ordinary recall tests" — that is the shape, and
-withholding it would have been strictness for its own sake.
-
-The line was drawn against Memobase in the same session, which is what makes it
-defensible: Memobase's `test_controller.py:347` asserts that filtering by a
-non-existent tag returns nothing, and that is *not* the same claim — no material is
-being excluded, the filter simply has no matches. One tests that a filter does not
-over-return; the other tests that named material stays out. Both reports state the
-distinction explicitly so a future reader can check the call.
-
-The route matters more than the count. open-cowork got there through a relevance
-harness and Verel through a red team; MIRIX got there through **multi-tenant
-access-control testing**, a discipline with no connection to memory research. The
-atlas's argument has been that this assertion shape is almost never reached; the
-useful amendment is that it is reachable from ordinary engineering practice, and
-that the systems reaching it that way assert it about *boundaries* rather than
-about corrected values — which is still the hard case nobody tests.
-
-MIRIX is also the atlas's best instance of the failure the benchmarks page names.
-Its `auto_dream` pass loads up to 500 items per memory type with an explicit
-`start_date=None, end_date=None`, and its prompt says "If uncertain, keep both and
-record the discrepancy" — the same rule as Memanto's `keep_both`, except Memanto's
-is an enum a validator enforces and MIRIX's is a sentence, and the tool it governs
-hard-deletes.
-
-### Memobase — added, one mark
-
-[Report](../content/systems/memobase.md), pinned at `358c16bb`. A user-profile
-service: a memo of at most five sentences per `(topic, subtopic)`, at most fifteen
-subtopics per topic, assembled into a token-budgeted context block.
-
-Two things are worth carrying into the pattern library, and both are now there.
-First, **scope in the primary key** — `PrimaryKeyConstraint("id", "project_id")`
-with composite foreign keys throughout, which makes a cross-tenant query a schema
-error rather than a review failure, and is the strongest form of that pattern in
-the atlas. Second, **evidence before belief, deliberately inverted**:
-`persistent_chat_blobs` defaults to `False`, so the transcript is hard-deleted
-after the profile is written. That is a defensible privacy posture *and* the reason
-a bad extraction is permanent, and Memobase is the clearest place to see that the
-two goals genuinely conflict.
-
-Memobase also gives the atlas a committed number for something it says nobody
-measures: `buffer_flush_interval` defaults to `60 * 60`. A fact stated now may not
-be recallable for an hour.
+| System | Marks | The finding |
+| --- | --- | --- |
+| [MIRIX](../content/systems/mirix.md) | scope, **negative evals** | Took the atlas's rarest column from 2 to 3, from multi-tenant access-control testing rather than memory work |
+| [Memobase](../content/systems/memobase.md) | scope | The tenant key in every primary key; the transcript deleted by default |
+| [Memary](../content/systems/memary.md) | — | `np.argsort(counts)[:20]` selects the *least*-mentioned entities; the whole reinforcement signal inverted at its only use |
+| [Memori](../content/systems/memori.md) | scope | `generate_uniq` strips all non-ASCII, so every non-Latin fact for an entity collides into one row |
+| [ReMe](../content/systems/reme.md) | — | Commits per-category benchmark results including a 26.7% and a 0.100 |
+| [PowerMem](../content/systems/powermem.md) | scope | A `history` table with a migration and zero callers repo-wide |
+| [MineContext](../content/systems/minecontext.md) | — | Prospective memory, inferred from screen capture, with no way to reject it |
+| [Acontext](../content/systems/acontext.md) | scope, review | The outcome gate the skills pattern asks for — with tests asserting it holds |
+| [Second Me](../content/systems/second-me.md) | review | Parametric memory: deletion reaches the vector store and cannot reach the weights |
 
 ## What the exercise settled
 
-The blind-spot hypothesis was **partly confirmed, and not in the direction
-expected**. The worry was that the atlas's opportunistic selection had missed a
-cluster of published memory frameworks that would look different from the corpus.
-Two of three landed exactly where the atlas predicts — scope enforced, nothing else
-— which is the null result. But MIRIX carried a mark that three systems in
-sixty-five carry, and the atlas would not have found it, because nothing about
-MIRIX's documentation suggests it. It was found by reading the test directory.
+The blind-spot hypothesis was **confirmed, and not in the direction expected.**
+The worry was that these systems would look unlike the corpus. Mostly they did
+not — five of nine carry `scope_enforced` and little else, which is exactly where
+the atlas predicts a system lands. What was not predicted is how much the reviews
+would change the atlas's *own* claims. Four published statements were corrected:
 
-That is the same lesson as the Verel tombstone, which the
-[tombstone page](../content/patterns/rejected-value-tombstone.md) records: the
-README did not mention the mechanism. Twice now the atlas's rarest findings have
-come from reading code that no summary would have pointed at. It is the argument
-for the whole method, and it has one uncomfortable corollary — the atlas's own
-counts are lower bounds, and the eight unreviewed candidates below may hold more.
+1. **Negative retrieval assertions: 2 → 3.** MIRIX reached the shape through
+   access-control testing, which is a discipline with no connection to memory
+   research. The amendment is that the assertion is reachable from ordinary
+   engineering practice — and that the systems reaching it that way assert it
+   about boundaries, not about corrected values.
+2. **"Correction is entirely unmeasured" was too strong.** ReMe's committed
+   `result-beam.md` shows BEAM has a `contradiction_resolution` category and
+   reports 0.100 prompted. One benchmark scores an adjacent thing and the numbers
+   are bad. What still has no benchmark is whether the rejected value stays
+   unreachable.
+3. **Prospective memory is no longer a category of one.** MineContext has a `todo`
+   table with a deadline and an open/done status, and an `event_time` documented
+   as "can be future". NOOA's commitments are declared; MineContext's are inferred
+   from watching the user. The section heading changed from "A category nothing
+   else models" to "The category almost nothing models".
+4. **Machine unlearning is now this atlas's problem.** The benchmarks page said
+   unlearning benchmarks were "not relevant to any system in this atlas". Second
+   Me fine-tunes on the user's documents, and its deletion — one of the more
+   complete cascades here — cannot reach the weights.
+
+Two stale counts were also found and fixed in passing, and two more were
+introduced and fixed: a count-bump helper written for this round rewrote "seventy
+sections" of TeleAI's survey and "seventy tested migrations" of Magic Context into
+the system total. The helper now only rewrites a number-word that qualifies a noun
+the atlas counts, matching `scripts/check_homepage.py`. Recorded here because the
+[methodology hazards](2026-07-28-methodology-hazards.md) note is about exactly
+this failure and it happened again, to a tool built to prevent it.
+
+## The pattern across the nine
+
+Five of the nine reports turn on a mechanism that exists in the schema and not in
+the code path, or in the code path and not in the tests:
+
+- PowerMem maintains a migration for a `history` table nothing writes.
+- MineContext routes a context-delete endpoint the UI never calls.
+- Second Me declares a `status` of `'deleted'` and hard-deletes the row.
+- Memary computes a mention count correctly everywhere except the line that uses it.
+- Memori tests its content key with two ASCII assertions and never a non-ASCII one.
+
+That is the strongest argument this round produced for the atlas's method. Every one of those would read as a present capability to a
+reviewer working from the schema, the API surface, or the test count. Only reading
+callers finds them.
 
 ## Still open
 
-**Eight candidates remain unreviewed**: Memary, Second Me, Memori, ReMe,
-MineContext, Acontext, PowerMem, and `elizaOS/agentmemory`. The case for continuing
-is now stronger than it was before this session, because the hit rate was not zero.
-The case against is unchanged: 22 stale pins in the
-[editorial backlog](2026-07-28-editorial-backlog.md) §3, and breadth added while
-depth rots is the wrong trade. My read is that this can wait behind the
-re-analysis work, with `elizaOS/agentmemory` first when it resumes — partly on
-merit and partly because the name collision with the atlas's existing
-`rohitg00/agentmemory` report will confuse somebody eventually.
+**Parametric and latent memory** are no longer entirely absent — Second Me is one
+instance — but the atlas has one system covering a third of the survey's Form axis,
+and the seven capability columns still assume a token store. Whether they
+generalize to weights, or are revealed by them as token-store-specific, is
+unresolved and is bigger than a report.
 
-**The freshness numbers could not be re-measured.** `check_freshness.py` against 65
-pins exceeds GitHub's anonymous rate limit; the run during this session returned
-46 unresolved. The "30 of 62" figure in the comparative report has been re-dated to
-its 2026-07-28 run rather than silently updated, since inventing a current number
-was the alternative.
+**The freshness numbers still could not be re-measured.** `check_freshness.py`
+over 72 pins exceeds GitHub's anonymous rate limit. The "30 of 62" figure in the
+comparative report is re-dated to its 2026-07-28 run rather than silently updated.
 
-**Parametric and latent memory remain absent from the atlas**, and this survey is
-the strongest argument yet that the omission is a choice the atlas has never
-actually made. Weight-space memory has no row, no scope key and no tombstone, so it
-either breaks the seven capabilities or reveals them as token-store-specific. That
-question is bigger than a report and is not resolved here.
+**Nine new pins were added to an atlas that already had 22 stale ones.** The
+[editorial backlog](2026-07-28-editorial-backlog.md) §3 argued against adding
+breadth while depth rots, and this round did it anyway on the user's instruction.
+The result justified it — four corrected claims and a capability count moved — but
+the backlog's arithmetic is now worse, not better, and the next session should
+weigh that before adding a tenth.
