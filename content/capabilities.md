@@ -16,6 +16,13 @@ commit; a dash means it was not found, which is different from impossible,
 planned, or badly built. The definitions, the evidence threshold, and why these
 seven rather than others are on [the atlas rubric](../methodology/atlas-rubric/).
 
+**Read the `of 7` column as a shape, not a score.** Three quarters of the systems
+here carry none or one, so a low number is the ordinary case rather than a poor
+one, and most of these columns are outside what most of these systems set out to
+do. A local coding agent that never claimed to arbitrate truth is not failing by
+carrying one mark. The column is worth sorting on only when you already know
+which mechanism you need.
+
 Filters combine with **and** — "tombstone *and* scope enforced" is the question
 worth asking, and it is the one a per-column view cannot answer.
 

@@ -11,6 +11,13 @@ under the deck.
 Absence of a flag means the mechanism was not found at the pinned commit. The
 definitions live in scripts/generate_matrix.py and are imported here so the two
 surfaces cannot disagree.
+
+The legend deliberately does **not** read as a score. These seven are rare by
+construction — most systems carry none or one — so a bare "1 of 7" invites a
+reader to see a failing grade where the honest reading is "typical, and five of
+these columns are outside what this system set out to do". The strip therefore
+states the distribution alongside the count, computed from the corpus at build
+time so it cannot drift.
 """
 
 from __future__ import annotations
@@ -40,6 +47,26 @@ SHORT = {
 }
 
 
+def _typical_share(systems_dir: Path) -> int | None:
+    """Percentage of reports carrying at most one rubric mechanism.
+
+    Computed from the corpus rather than hardcoded, so the legend cannot drift
+    away from the thing it claims. Returns None if the directory is unreadable,
+    in which case the legend simply omits the clause.
+    """
+    counts = []
+    try:
+        for report in sorted(systems_dir.glob("*.md")):
+            carried = read_capabilities(report)
+            if carried is not None:
+                counts.append(len(carried))
+    except OSError:
+        return None
+    if not counts:
+        return None
+    return round(100 * sum(1 for n in counts if n <= 1) / len(counts))
+
+
 def render(path: Path) -> str:
     carried = read_capabilities(path)
     if carried is None:
@@ -62,11 +89,18 @@ def render(path: Path) -> str:
 
     count = len(carried)
     total = len(CAPABILITIES)
+    share = _typical_share(path.parent)
+    context = (
+        f" Most systems here carry none or one ({share}%),"
+        if share is not None
+        else " These are rare by construction,"
+    )
     return (
         '<div class="capability-strip">'
-        '<p class="cap-legend">Atlas rubric '
-        f"<b>{count} of {total}</b> "
-        "<span>— a dash means the mechanism was not found at this commit</span></p>"
+        '<p class="cap-legend">Carries '
+        f"<b>{count}</b> of {total} rubric mechanisms."
+        f"<span>{context} and a dash means the mechanism was not found at this "
+        "commit — not that the system needed it.</span></p>"
         '<ul class="cap-chips">' + "".join(chips) + "</ul>"
         "</div>"
     )
