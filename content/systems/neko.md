@@ -354,6 +354,19 @@ zero.
 - **Model self-repetition as a memory problem.** A BM25 corpus over your own
   recent output catches "rephrased but still the same topic", which string
   similarity never will.
+- **Take the disputation mechanism into serious systems, not just companions.**
+  This is the transfer worth stating plainly, because the packaging invites
+  dismissal. A companion app builds this because raising something the user asked
+  it to drop is an emotional injury and the user leaves. The identical
+  architecture is what stops a customer-service agent volunteering a declined
+  mortgage application, a health assistant re-raising a terminated pregnancy, or a
+  CRM summary reminding a rep to ask after a client's late spouse. Every one of
+  those is a *retrieval* failure over a technically accurate memory, which a
+  confidence score cannot express and a relevance ranker will happily surface
+  forever. The distinction the atlas has been asking for — a durable record that
+  a specific value was *rejected*, separate from how confident anyone is in it —
+  gets built first where the cost of getting it wrong is felt immediately rather
+  than measured quarterly.
 
 ### Avoid
 

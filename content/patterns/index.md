@@ -89,6 +89,18 @@ Each pattern explains the problem it addresses, its architectural shape, why it 
     <p>Persist scoped events synchronously, then enrich them with models only when useful.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-mint" href="./retrieval-hysteresis/">
+    <span>Retrieval</span>
+    <h2>Retrieval hysteresis</h2>
+    <p>Give a unit its own activation state so it neither repeats every turn nor vanishes mid-thread.</p>
+    <b>Read pattern →</b>
+  </a>
+  <a class="pattern-index-card tone-gold" href="./memory-as-an-editing-surface/">
+    <span>Control</span>
+    <h2>Memory as an editing surface</h2>
+    <p>Let a person edit, pin, merge and delete the same rows the model reads — not a viewer over them.</p>
+    <b>Read pattern →</b>
+  </a>
   <a class="pattern-index-card tone-sage" href="./pluggable-memory-provider/">
     <span>Federation</span>
     <h2>Pluggable memory provider</h2>
@@ -207,6 +219,22 @@ exactly why they need the disclosure rather than the benefit of the doubt. A
 reader who assumed they were industry practice — as their author did until
 tracing the history — would be adopting them on the strength of an argument, not
 a consensus. That may still be the right call. It is a different decision.
+
+**A third case, added later and needing its own label.**
+[Retrieval hysteresis](./retrieval-hysteresis/) and
+[memory as an editing surface](./memory-as-an-editing-surface/) are neither
+advocacy nor general reporting. They are **well-established inside one category
+and unknown outside it.** Both are mature, refined against very large user bases,
+and almost every instance is a roleplay or companion client — SillyTavern,
+RisuAI, N.E.K.O., Soul of Waifu, Z-Waif. No extraction-based system in this atlas
+carries per-unit activation state, and the systems that hold `human_review`
+mostly offer approval of a queue rather than an editor over the store.
+
+That is a different epistemic situation from a mechanism three repositories
+invented. These are known solutions to problems the rest of the field has, sitting
+in codebases the rest of the field does not read — which is worth stating plainly,
+because it was a reader pointing out the atlas had described these mechanisms six
+times without ever collecting them that produced both pages.
 
 ## The smallest serious stack
 

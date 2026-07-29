@@ -30,10 +30,17 @@ RisuAI is a roleplay chat client, GPL-3.0, and it is in this atlas for a reason
 none of the other entries offers: **its team has replaced its own memory system
 twice, and all three generations are still in the tree.** SupaMemory arrived on
 2023-06-29, HypaV2 on 2024-05-23, HypaV3 on 2025-01-12, and the repository at
-this commit ships every one of them as a user-selectable mode. That makes the
-directory a rare, honest record of what a team learned by living with its own
-design — the kind of evidence usually lost when a rewrite deletes what came
-before.
+this commit ships every one of them as a user-selectable mode.
+
+Two things are true about that and the report needs both. For a *reader* it is
+evidence usually destroyed by the rewrite that produces it — the lessons are
+legible as a diff instead of being lost. For a *maintainer* it is three
+summarisers to keep alive, and the cost is visible inside the newest one:
+`hypav3.ts` is 2,042 lines mostly because `hypaMemoryV3Main` and
+`hypaMemoryV3MainExp` are near-duplicates behind a flag, so a fix to one is a fix
+to neither by default. Read the coexistence as an accident that happens to be
+instructive, not as a practice to copy. The [Avoid](#11-for-your-own-build)
+section says so.
 
 The lesson is legible in the diff between generations, and it is a lesson this
 atlas keeps asking for:

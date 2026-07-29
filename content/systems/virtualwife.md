@@ -74,6 +74,18 @@ Set against those, the storage contract itself is the best thing here and better
 than several in this atlas: four methods, `owner` on **every one of them**,
 including `clear`.
 
+**Why a dormant, partly-broken system keeps a slot.** The last commit is dated
+2024-10-27 and the scoring function does not do what its own method name says, so
+the fair question is what a 2026 atlas wants with it. Two things. `BaseStorage` is
+a better answer to "what must a memory backend implement" than the contracts this
+atlas has read in much larger frameworks, which routinely omit deletion entirely —
+it is worth copying with the implementations discarded. And the `normalize_scores`
+defect is *instructive precisely because the port is otherwise faithful*: someone
+carried across three components, equal weighting and an exponential recency decay,
+and dropped the one step that makes equal weights mean anything. That is a
+mistake a working system can make silently, and it is easier to see here, frozen,
+than in something still moving. Neither claim depends on the project being alive.
+
 ## 2. Mental Model
 
 Two kinds of memory with different units, different stores and different

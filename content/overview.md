@@ -484,6 +484,58 @@ trigger. Whether prospective memory belongs in a memory layer or in a scheduler
 is a real question — but it is being answered by omission nearly everywhere, and
 an agent that cannot remember its own commitments will keep rediscovering them.
 
+### The category that competes on control, not accuracy
+
+Six systems here — [SillyTavern](../systems/sillytavern/),
+[RisuAI](../systems/risuai/), [Project N.E.K.O.](../systems/neko/),
+[Soul of Waifu](../systems/soul-of-waifu/), [Z-Waif](../systems/z-waif/),
+[VirtualWife](../systems/virtualwife/) — are roleplay and companion clients, and
+reading them together produces a finding the seven-column rubric cannot express.
+
+Between them they hold four marks out of a possible 42. On the epistemic
+questions this atlas usually asks — is there a tombstone, a trust state, a
+validity time — the answer is mostly no. And these are, by hours of use, among
+the most-exercised memory implementations in existence, running against users who
+would notice immediately if memory failed them.
+
+The resolution is not that the users are undemanding. It is that **the axis they
+demand on is different.** What a companion user means by good memory is not
+autonomous factual accuracy; it is *authorial control* — being able to see what
+the model will read, and change it. Judged on that axis these systems are not
+primitive but mature, and the mechanisms are specific:
+
+- **Editability as the primary write path.** SillyTavern has no extraction at all;
+  a person writes every entry. RisuAI's HypaV3 modal lets a user edit, delete,
+  merge, pin and re-roll any summary the model wrote, with the re-roll previewed
+  before it lands. This is the [memory as an editing
+  surface](../patterns/memory-as-an-editing-surface/) pattern, and its clearest
+  instances are all in this group.
+- **Suppression as a first-class state.** `@@dont_activate` disables an entry
+  without deleting it; N.E.K.O.'s ban-topic directive is keyed on the term and
+  withholds it from recall; RisuAI's pin exempts a summary from budget pressure.
+- **Hysteresis on activation.** Sticky, cooldown and delay give a unit state about
+  its own recent firing, so it neither repeats every turn nor drops mid-thread —
+  see [retrieval hysteresis](../patterns/retrieval-hysteresis/). Nothing outside
+  this group has it.
+- **Guarding against the agent's own voice.** Z-Waif caps the character's previous
+  reply at two of six query terms; N.E.K.O. runs a BM25 corpus over its own
+  output to catch rephrased repetition.
+
+Read the four marks accordingly. A dash in the tombstone column means the
+mechanism was not found, and for a store whose only writer is the user it is a
+different absence than it would be in an extraction pipeline — there is no
+extractor to re-assert what was removed. The columns still measure what they
+measure; what they do not do is score these systems on the thing they were built
+to be good at.
+
+Two transfers run the other way, out of this group and into serious systems.
+N.E.K.O.'s separation of disputation from reinforcement is built because raising
+something a user asked you to drop is an emotional injury — and it is the same
+architecture that stops a customer-service agent volunteering a declined mortgage
+or a CRM summary asking after a late spouse. And the editing surface is the
+cheapest correction mechanism in this atlas: one click, no model, no trust-state
+machine, fixing a fact the user knows and the extractor guessed.
+
 ### Not in scope: conversation-window management
 
 Most agent frameworks ship something called "memory" that is a **chat buffer**,

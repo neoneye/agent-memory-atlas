@@ -4,23 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="Inverse document frequency, length
-normalisation and a self-citation guard, hand-derived with tuned
-constants and no library — plus a licence that is not open source.">
+    <meta name="description" content="A retrieval scorer that limits how
+much the agent's own last reply can steer what it recalls — hand-rolled,
+untested, and under a licence that is not open source.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Z-Waif — Agent Memory Atlas">
-    <meta property="og:description" content="Inverse document frequency,
-length normalisation and a self-citation guard, hand-derived with tuned
-constants and no library — plus a licence that is not open source.">
+    <meta property="og:description" content="A retrieval scorer that
+limits how much the agent's own last reply can steer what it recalls —
+hand-rolled, untested, and under a licence that is not open source.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Z-Waif — Agent Memory Atlas">
-    <meta name="twitter:description" content="Inverse document
-frequency, length normalisation and a self-citation guard, hand-derived
-with tuned constants and no library — plus a licence that is not open
-source.">
+    <meta name="twitter:description" content="A retrieval scorer that
+limits how much the agent's own last reply can steer what it recalls —
+hand-rolled, untested, and under a licence that is not open source.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Z-Waif — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -73,11 +72,11 @@ source.">
       <section class="document-hero">
         <div class="document-hero-inner">
           <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
-          <p class="eyebrow">BM25 rediscovered by hand</p>
+          <p class="eyebrow">It caps its own voice in its own query</p>
           <h1>Z-Waif</h1>
-          <p class="document-deck">Inverse document frequency, length
-normalisation and a self-citation guard, hand-derived with tuned
-constants and no library — plus a licence that is not open source.</p>
+          <p class="document-deck">A retrieval scorer that limits how
+much the agent's own last reply can steer what it recalls — hand-rolled,
+untested, and under a licence that is not open source.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/SugarcaneDefender/z-waif">
               <span>Source</span>
@@ -110,49 +109,52 @@ constants and no library — plus a licence that is not open source.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Z-Waif is a local VTuber-style companion, and
-<code>utils/based_rag.py</code> (628 lines) is the most instructive
-thing in this atlas about <strong>what a retrieval system looks like
-when someone builds one without knowing the literature exists</strong>.
-There is no embedding model, no vector store, no library, and no
-dependency heavier than <code>json</code>. There are <code>while</code>
-loops, four parallel Python lists, and a set of tuned magic numbers.</p>
-<p>What is remarkable is what those loops contain. Working from scratch,
-the author arrived at:</p>
-<ul>
-<li><strong>Inverse document frequency.</strong>
-<code>value = (1 / (count + 19)) * 20</code> (<code>:431</code>) — a
-smoothed inverse-frequency weight capped at 1, with the <code>+19</code>
-doing the same job as the smoothing term in every IDF variant ever
-published.</li>
-<li><strong>A stopword cutoff derived from the corpus.</strong>
-<code>prune_common</code> (<code>:439</code>) drops any word whose share
-of the total corpus exceeds <code>0.000937</code> — roughly one in 1,067
-— rather than shipping a stopword list.</li>
-<li><strong>Length normalisation, with a name for the failure it
-prevents.</strong> A candidate's score is reduced by
-<code>len(hist_word_ids) / 115</code>, commented as avoiding
-<em>"fillabustering"</em> — long messages winning by mass
-(<code>:479</code>). Floored at -1, and the comment notes long messages
-can now subtract.</li>
-<li><strong>A guard against the model's own words steering
-retrieval.</strong> Query terms are taken from both the user's message
-and the character's previous reply, but the character's are multiplied
-by <code>0.97</code> and capped at <strong>two of the six</strong> query
-words (<code>:239-241</code>). Nobody asked for this; the author noticed
-the loop and clamped it.</li>
-</ul>
-<p>That last one is the reason this report exists. The
-self-reinforcement problem — an agent's own output biasing what it
-retrieves, which biases its next output — is a named concern in this
-atlas and unaddressed in most of the systems here. It is addressed in
-Z-Waif by two constants and a counter.</p>
-<p>Two findings run the other way. <strong><code>central_score</code> is
-computed and never read</strong> (<code>:280-282</code>): three lines
-sum a candidate's score with its two neighbours, and the selection
-immediately below uses the bare single-message score instead. And the
-licence, presented on the reading list this repository came from as
-open-source, is <strong>not open source</strong> — see section 9.</p>
+<p>Z-Waif is a local VTuber-style companion, and one mechanism in
+<code>utils/based_rag.py</code> (628 lines) is why this report
+exists.</p>
+<p><strong>Query terms are drawn from the user's message <em>and the
+character's own previous reply</em>, and the character's contribution is
+deliberately clamped</strong> — multiplied by <code>0.97</code> and
+allowed to occupy at most <strong>two of the six</strong> query slots
+(<code>:202</code>, <code>:237</code>). Without that cap, a character
+that says a distinctive word retrieves the memory containing it, repeats
+it, and retrieves it again. The self-reinforcement loop — an agent's own
+output biasing what it recalls, which biases its next output — is a
+hazard this atlas names repeatedly and finds addressed almost nowhere,
+including in systems with embeddings, rerankers and far more machinery.
+Here it is closed by a multiplier and a counter.</p>
+<p>Alongside it, one more idea with no counterpart elsewhere: a query
+word that appears as a lorebook keyword is pulled halfway to a perfect
+score, <code>(score + 1) / 2</code> (<code>:172</code>). Hand-authored
+knowledge biases the statistical retrieval rather than running beside
+it, for the cost of a dictionary lookup.</p>
+<p>The surrounding scorer is hand-rolled with no embedding model, no
+vector store and no dependency heavier than <code>json</code>. It
+independently arrives at three of BM25's ideas — a smoothed
+inverse-frequency weight <code>(1 / (count + 19)) * 20</code>
+(<code>:431</code>), a stopword cutoff derived from corpus share rather
+than a list (<code>:439</code>), and a subtractive length penalty its
+author named <em>"fillabustering"</em> for long messages winning by mass
+(<code>:479</code>). That is worth knowing as context rather than as
+praise: rediscovering IDF is not an achievement, the constants
+<code>19</code>, <code>20</code>, <code>0.000937</code> and
+<code>115</code> are unexplained, and arriving at a well-published
+result by hand is mostly evidence that the literature was not consulted.
+<strong>The two mechanisms above are the transferable content; the
+archaeology is why they are surprising, not why they are
+good.</strong></p>
+<p>Three findings run the other way. <strong><code>central_score</code>
+is computed and never read</strong> (<code>:280-282</code>) — three
+lines sum a candidate with its two neighbours while the selection
+immediately below uses the bare single-message score, and the injection
+format assumes exactly the window those three lines describe.
+<strong><code>best_message_score</code> starts at <code>0</code> over a
+scorer that returns negatives</strong>, so an all-negative corpus leaves
+the index at <code>0</code> and injects
+<code>history_database[-1]</code>, the newest exchange, labelled as a
+distant memory. And the licence, presented on the reading list this
+repository came from as open-source, is <strong>not open source</strong>
+— see section 9. There are no tests.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <strong>message pair</strong> — one user turn, one
 character turn — stored twice: as raw text in

@@ -1,7 +1,7 @@
 ---
 title: "Z-Waif"
-eyebrow: "BM25 rediscovered by hand"
-description: "Inverse document frequency, length normalisation and a self-citation guard, hand-derived with tuned constants and no library — plus a licence that is not open source."
+eyebrow: "It caps its own voice in its own query"
+description: "A retrieval scorer that limits how much the agent's own last reply can steer what it recalls — hand-rolled, untested, and under a licence that is not open source."
 root: ../..
 page_kind: system
 source_name: "SugarcaneDefender/z-waif"
@@ -26,42 +26,45 @@ matrix:
 
 ## 1. Executive Summary
 
-Z-Waif is a local VTuber-style companion, and `utils/based_rag.py` (628 lines) is
-the most instructive thing in this atlas about **what a retrieval system looks
-like when someone builds one without knowing the literature exists**. There is no
-embedding model, no vector store, no library, and no dependency heavier than
-`json`. There are `while` loops, four parallel Python lists, and a set of tuned
-magic numbers.
+Z-Waif is a local VTuber-style companion, and one mechanism in
+`utils/based_rag.py` (628 lines) is why this report exists.
 
-What is remarkable is what those loops contain. Working from scratch, the author
-arrived at:
+**Query terms are drawn from the user's message *and the character's own previous
+reply*, and the character's contribution is deliberately clamped** — multiplied
+by `0.97` and allowed to occupy at most **two of the six** query slots
+(`:202`, `:237`). Without that cap, a character that says a distinctive word
+retrieves the memory containing it, repeats it, and retrieves it again. The
+self-reinforcement loop — an agent's own output biasing what it recalls, which
+biases its next output — is a hazard this atlas names repeatedly and finds
+addressed almost nowhere, including in systems with embeddings, rerankers and
+far more machinery. Here it is closed by a multiplier and a counter.
 
-- **Inverse document frequency.** `value = (1 / (count + 19)) * 20` (`:431`) — a
-  smoothed inverse-frequency weight capped at 1, with the `+19` doing the same job
-  as the smoothing term in every IDF variant ever published.
-- **A stopword cutoff derived from the corpus.** `prune_common` (`:439`) drops any
-  word whose share of the total corpus exceeds `0.000937` — roughly one in 1,067 —
-  rather than shipping a stopword list.
-- **Length normalisation, with a name for the failure it prevents.** A candidate's
-  score is reduced by `len(hist_word_ids) / 115`, commented as avoiding
-  *"fillabustering"* — long messages winning by mass (`:479`). Floored at -1, and
-  the comment notes long messages can now subtract.
-- **A guard against the model's own words steering retrieval.** Query terms are
-  taken from both the user's message and the character's previous reply, but the
-  character's are multiplied by `0.97` and capped at **two of the six** query
-  words (`:239-241`). Nobody asked for this; the author noticed the loop and
-  clamped it.
+Alongside it, one more idea with no counterpart elsewhere: a query word that
+appears as a lorebook keyword is pulled halfway to a perfect score,
+`(score + 1) / 2` (`:172`). Hand-authored knowledge biases the statistical
+retrieval rather than running beside it, for the cost of a dictionary lookup.
 
-That last one is the reason this report exists. The self-reinforcement problem —
-an agent's own output biasing what it retrieves, which biases its next output — is
-a named concern in this atlas and unaddressed in most of the systems here. It is
-addressed in Z-Waif by two constants and a counter.
+The surrounding scorer is hand-rolled with no embedding model, no vector store
+and no dependency heavier than `json`. It independently arrives at three of
+BM25's ideas — a smoothed inverse-frequency weight `(1 / (count + 19)) * 20`
+(`:431`), a stopword cutoff derived from corpus share rather than a list
+(`:439`), and a subtractive length penalty its author named *"fillabustering"*
+for long messages winning by mass (`:479`). That is worth knowing as context
+rather than as praise: rediscovering IDF is not an achievement, the constants
+`19`, `20`, `0.000937` and `115` are unexplained, and arriving at a
+well-published result by hand is mostly evidence that the literature was not
+consulted. **The two mechanisms above are the transferable content; the
+archaeology is why they are surprising, not why they are good.**
 
-Two findings run the other way. **`central_score` is computed and never read**
-(`:280-282`): three lines sum a candidate's score with its two neighbours, and
-the selection immediately below uses the bare single-message score instead. And
+Three findings run the other way. **`central_score` is computed and never read**
+(`:280-282`) — three lines sum a candidate with its two neighbours while the
+selection immediately below uses the bare single-message score, and the injection
+format assumes exactly the window those three lines describe.
+**`best_message_score` starts at `0` over a scorer that returns negatives**, so
+an all-negative corpus leaves the index at `0` and injects
+`history_database[-1]`, the newest exchange, labelled as a distant memory. And
 the licence, presented on the reading list this repository came from as
-open-source, is **not open source** — see section 9.
+open-source, is **not open source** — see section 9. There are no tests.
 
 ## 2. Mental Model
 
