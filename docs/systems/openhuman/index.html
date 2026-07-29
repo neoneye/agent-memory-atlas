@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Twelve memory modules in Rust
+whose distinguishing field is not how true a memory is but what it is
+allowed to cause.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenHuman — Agent Memory Atlas">
+    <meta property="og:description" content="Twelve memory modules in
+Rust whose distinguishing field is not how true a memory is but what it
+is allowed to cause.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenHuman — Agent Memory Atlas">
+    <meta name="twitter:description" content="Twelve memory modules in
+Rust whose distinguishing field is not how true a memory is but what it
+is allowed to cause.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenHuman — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Taint-gated memory</p>
+          <h1>OpenHuman</h1>
+          <p class="document-deck">Twelve memory modules in Rust whose
+distinguishing field is not how true a memory is but what it is allowed
+to cause.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tinyhumansai/openhuman">
+              <span>Source</span>
+              <strong>tinyhumansai/openhuman</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554" title="e213bc5fc4000e9ad599c977a560113cc018c554">
+              <span>Analyzed revision</span>
+              <code>e213bc5f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>1 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenHuman is an AI harness — a desktop agent runtime in Rust —
+carrying the largest memory subsystem in this atlas by volume: twelve
+top-level <code>memory_*</code> modules, roughly 76,000 lines, and about
+1,278 memory-specific test functions inside a repository with some
+12,548 in total.</p>
+<p>Most of that volume is competent and familiar: SQLite plus markdown,
+chunking, embeddings, FTS5, a summarisation tree with bucket-seal and
+flush, sync connectors, an agentic tree walk. What makes it worth
+reading is a single field that no other system here has.</p>
+<p><strong><code>MemoryTaint</code> labels every memory with where it
+came from, and that label gates what the memory is allowed to
+cause.</strong> Its two values are <code>Internal</code> and
+<code>ExternalSync</code>; unknown or corrupt column values <strong>fail
+closed</strong> to <code>ExternalSync</code>; and the downstream
+"subconscious gate" refuses external-effect tools when acting on chunks
+of external origin. Every other trust mechanism in this atlas answers
+<em>is this memory true?</em> — with confidence scores, verification
+passes, candidate states. This one answers <em>what may this memory be
+allowed to do?</em>, which is the question that actually matters when
+the memory store is an injection surface, and it is the only
+implementation of it here.</p>
+<p>Two further pieces of care stand out. Sanitization scrubs secrets and
+multilingual PII from content on the write path and <strong>deliberately
+leaves the taint untouched</strong> — a comment states the reason:
+redaction must not launder provenance. And <code>memory_diff</code>
+maintains a git repository as a derived ledger of how the agent's world
+view changed, where snapshots are commits, checkpoints are tags and read
+markers are refs, so an agent can ask what is new since it last looked
+and acknowledge it.</p>
+<p>The weaknesses are real. Nothing records a rejected value — the
+twelve files using the word <em>tombstone</em> all mean an unembeddable
+chunk or a delete-sync marker. The taint is binary and assigned once,
+never re-evaluated and never narrowed by corroboration. And a
+substantial share of the primitives — <code>MemoryEntry</code>,
+<code>MemoryTaint</code>, the <code>Memory</code> trait, the safety
+scrubbers, the diff engine — are <strong>re-exported from
+<code>tinycortex</code>, a separate repository that this review did not
+read</strong>, so parts of the mechanism described here are pinned by
+this repository's tests rather than inspected at their source.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three kinds of thing are remembered, and they have different
+standing.</p>
+<p>A <strong>chunk</strong> is a piece of canonicalised source: a
+conversation segment, a synced document, an uploaded file, rendered to
+markdown and split. It is evidence, and it is retained.</p>
+<p>A <strong>tree node</strong> is a summary over chunks, produced by
+bucket-seal and flush in <code>memory_tree</code>. Evidence is promoted
+into summary as buckets fill.</p>
+<p>An <strong>event</strong> is an atomic extracted claim in
+<code>event_log</code> — typed <code>Decision</code>,
+<code>Commitment</code>, <code>Preference</code> or fact — carrying a
+<code>confidence REAL NOT NULL</code>, a nullable
+<code>timestamp_ref</code>, and <code>source_turn_ids</code> pointing
+back at the turns it came from.</p>
+<p>Cutting across all three is the label that matters:</p>
+<pre class="text"><code>                    ┌──────────────────────────────────┐
+   user typed it ──►│  MemoryTaint::Internal           │──► may drive
+                    │                                  │    external-effect tools
+                    └──────────────────────────────────┘
+                    ┌──────────────────────────────────┐
+   synced from  ───►│  MemoryTaint::ExternalSync       │──► subconscious gate
+   email/docs/MCP   │  (also: unknown, corrupt, legacy │    refuses external effects
+                    │   → fails closed to here)        │
+                    └──────────────────────────────────┘</code></pre>
+<p>Note what this state machine is <em>not</em>. It has no
+<code>Candidate</code>, no <code>Verified</code>, no
+<code>Rejected</code>. A user's mistaken belief and a user's correct one
+are both <code>Internal</code>. A memory never moves between taints as
+evidence accumulates — provenance is assigned at ingest and is
+permanent. So OpenHuman does not model belief at all; it models
+<strong>blast radius</strong>, and it does so more carefully than
+anything else here models belief.</p>
+<p>How a memory dies: a source is removed and the watcher tombstones its
+entries; a chunk proves unembeddable and the backfill tombstones the row
+so the worker stops retrying; a bucket seals and its contents are
+summarised. Nothing is ever marked wrong, and nothing prevents a deleted
+thing being re-ingested from the same still-connected source on the next
+sync.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Rust, GPL-3.0, ~2,077 source files, a Tauri desktop app with a
+TypeScript frontend. The memory stack is deliberately split so each
+module has one job, documented in
+<code>src/openhuman/memory/README.md</code> with a stated layer rule:
+<em>"No storage in this module… If you're tempted to open a SQLite
+connection here, the connection helper belongs one layer down."</em></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Lines</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory</code></td>
+<td>18,374</td>
+<td>Orchestration: sync, query, remember, ingest pipeline, RPC</td>
+</tr>
+<tr>
+<td><code>memory_store</code></td>
+<td>17,433</td>
+<td>Storage primitives: raw, chunks, entities, trees, vectors, kv,
+contacts</td>
+</tr>
+<tr>
+<td><code>memory_sync</code></td>
+<td>17,125</td>
+<td>Composio, workspace and MCP sync pipelines</td>
+</tr>
+<tr>
+<td><code>memory_tree</code></td>
+<td>9,898</td>
+<td>Bucket-seal, flush, summarise, retrieval and traversal</td>
+</tr>
+<tr>
+<td><code>memory_sources</code></td>
+<td>4,964</td>
+<td>Source adapters</td>
+</tr>
+<tr>
+<td><code>memory_diff</code></td>
+<td>1,956</td>
+<td>Git-backed snapshot and change ledger</td>
+</tr>
+<tr>
+<td><code>agent_memory</code></td>
+<td>1,545</td>
+<td>Agent-facing memory surface</td>
+</tr>
+<tr>
+<td><code>memory_queue</code></td>
+<td>1,411</td>
+<td>Job queue</td>
+</tr>
+<tr>
+<td><code>memory_tools</code></td>
+<td>1,338</td>
+<td>Tool-scoped rules, agent read/write tools</td>
+</tr>
+<tr>
+<td><code>memory_goals</code></td>
+<td>869</td>
+<td>A durable goals list in markdown</td>
+</tr>
+<tr>
+<td><code>memory_conversations</code></td>
+<td>858</td>
+<td>Conversation memory</td>
+</tr>
+<tr>
+<td><code>memory_search</code></td>
+<td>718</td>
+<td>Hybrid and vector search tools</td>
+</tr>
+</tbody>
+</table></div>
+<pre class="mermaid"><code>flowchart TB
+    S[Sources: chat, email, docs, MCP, Composio] --&gt; ING[memory ingest_pipeline]
+    ING --&gt; SAN[memory_store safety&lt;br/&gt;secret + PII scrub, taint preserved]
+    SAN --&gt; CH[(chunks + vectors + FTS5)]
+    CH --&gt; TR[memory_tree&lt;br/&gt;bucket-seal → flush → summarise]
+    CH --&gt; EV[(event_log&lt;br/&gt;Tier A regex, Tier B local LLM)]
+    CH --&gt; DIFF[memory_diff&lt;br/&gt;git ledger: snapshots, checkpoints, read markers]
+    Q[memory_search / tree walk] --&gt; CH
+    Q --&gt; TR
+    Q --&gt; GATE{MemoryTaint}
+    GATE --&gt;|Internal| OK[external-effect tools allowed]
+    GATE --&gt;|ExternalSync| NO[subconscious gate refuses]</code></pre>
+<p><strong>A large share of the primitives live elsewhere.</strong>
+<code>memory/traits.rs</code> is 169 lines of which 28 are the module
+and the rest are tests, because <code>Memory</code>,
+<code>MemoryEntry</code>, <code>MemoryCategory</code>,
+<code>MemoryTaint</code>, <code>NamespaceSummary</code> and
+<code>RecallOpts</code> are
+<code>pub use tinycortex::memory::{…}</code>. The same is true of the
+safety scrubbers and of <code>memory_diff</code>'s
+<code>DiffEngine</code>. The comments describe a migration ("W2
+type-unification", "W3", "W7") that moved these into the crate
+"byte-identical". This report is therefore bounded: the
+<em>contracts</em> are pinned here by host-side seam tests, and the
+implementations were not read.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the desktop app, plus optional
+sidecars. SQLite and on-disk markdown are the store; there is no server
+or external database.</li>
+<li><strong>Local and offline:</strong> substantially yes. Embedding and
+extraction have local paths (<code>tinycortex</code> embedding sidecars;
+"Tier B (local LLM): runs on segment close if local AI is enabled"), and
+Tier A extraction is pure regex and always runs. What degrades offline
+is the sync connectors, which are the point of several modules.</li>
+<li><strong>An API key is not required to store</strong>, and with local
+AI enabled not required to extract either.</li>
+<li><strong>Hand-repairable:</strong> partly. Markdown and SQLite are
+inspectable, but twelve interacting modules with queues, backfills and a
+git ledger are not a store a person repairs casually.</li>
+<li>The GPL-3.0 licence is a genuine constraint for anyone considering
+reuse.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write and sanitize.</strong>
+<code>memory_store::safety::sanitize_document_input</code> scrubs title,
+content, tags and metadata field by field through the crate scrubbers,
+merging a <code>SanitizationReport</code> — and reconstructs
+<code>NamespaceDocumentInput</code> with <code>taint: input.taint</code>
+carried through unchanged.</p>
+<p><strong>Ingest.</strong> <code>memory/ingest_pipeline.rs</code>
+orchestrates source → canonicalise → chunk → score → persist → enqueue
+extract jobs. Canonicalisation is
+<code>tinycortex::memory::ingest::canonicalize</code>.</p>
+<p><strong>Extraction.</strong>
+<code>memory_store/namespace_store/events.rs</code> —
+<code>EVENTS_INIT_SQL</code> creates <code>event_log</code> and an
+<code>event_fts</code> FTS5 virtual table with insert/delete triggers.
+Tier A is heuristic regex and "always runs, free"; Tier B is a local LLM
+on segment close.</p>
+<p><strong>Trust gate.</strong> <code>memory/traits.rs</code> re-exports
+<code>MemoryTaint</code>; <code>MemoryTaint::from_db_str</code> fails
+closed to <code>ExternalSync</code> for <code>""</code>,
+<code>"EXTERNAL_SYNC"</code> and <code>"future"</code>, pinned by
+<code>memory_taint_from_db_str_known_values_roundtrip_unknown_fails_closed</code>.</p>
+<p><strong>Retrieval.</strong>
+<code>memory_search/tools/hybrid_search.rs</code> and
+<code>vector_search.rs</code>; the agentic tree walk in
+<code>memory/query/</code>; cross-session episodic recall in
+<code>memory_store/memory_trait.rs</code> behind
+<code>RecallOpts::cross_session</code>.</p>
+<p><strong>Change ledger.</strong> <code>memory_diff/mod.rs</code> — a
+git repository at <code>&lt;workspace&gt;/memory_diff/repo</code> where
+"snapshots are commits, checkpoints are tags, read markers are refs, and
+diffs are git tree diffs", built from <code>mem_tree_chunks</code>
+without re-calling source readers.</p>
+<p><strong>Health and tombstoning.</strong>
+<code>memory_tree/health/mod.rs</code> classifies unrecoverable per-row
+failures so <code>reembed_backfill</code> tombstones the offending chunk
+or summary rather than retrying forever;
+<code>tinycortex/queue_driver.rs</code> persists those tombstones, and
+distinguishes them from a cloud <code>AuthMissing</code> which "fail[s]
+without tombstone".</p>
+<p><strong>Goals.</strong> <code>memory_goals/mod.rs</code> maintains
+<code>MEMORY_GOALS.md</code> (~200–500 tokens), mutable explicitly by
+RPC or tool, by a reflection agent over several turns, or automatically
+when the conversation is summarised.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryEntry</code>: <code>id</code>, <code>key</code>,
+<code>content</code>, <code>namespace</code>, <code>category</code>,
+<code>timestamp</code>, <code>session_id</code>, <code>score</code>,
+<code>taint</code>. <code>MemoryCategory</code> is
+<code>Core | Daily | Conversation | Custom(String)</code>, the custom
+variant rendered as <code>custom:&lt;name&gt;</code> with a round-trip
+test and a legacy bare-value fallback.</p>
+<p><code>event_log</code>: <code>event_id</code>,
+<code>segment_id</code>, <code>session_id</code>,
+<code>namespace</code>, <code>event_type</code>, <code>content</code>,
+<code>subject</code>, <code>timestamp_ref</code>,
+<code>confidence</code>, <code>embedding</code>,
+<code>source_turn_ids</code>, <code>created_at</code>, indexed by
+segment, by <code>(namespace, created_at DESC)</code> and by
+<code>(event_type, namespace)</code>.</p>
+<p><strong>Provenance</strong> is the strong part of the schema.
+<code>source_turn_ids</code> links an extracted event to the turns that
+produced it, and a test —
+<code>recall_cross_session_preserves_provenance_via_session_id</code> —
+asserts <em>every</em> cross-session hit carries a non-empty
+<code>session_id</code> "so downstream layers (memory_loader, UI) can
+render provenance". Provenance is not just stored, it is required to
+survive retrieval.</p>
+<p><strong>Temporal:</strong> <code>created_at</code> is record time and
+<code>timestamp_ref</code> is a nullable free-text reference to a time
+the content mentions. That is adjacent to validity time but is not a
+validity interval, and nothing pairs it with an end — so this is
+<strong>not bi-temporal</strong>.</p>
+<p><strong>Scoping</strong> is real and applied. Namespace appears in
+SQL predicates on the read path
+(<code>WHERE event_fts MATCH ?1 AND el.namespace = ?2</code>,
+<code>WHERE namespace = ?1 AND event_type = ?2</code>), namespaces are
+sanitized before use, and there are tests that a "secret-like namespace
+should be rejected". Session scoping layers on top, with cross-session
+recall <strong>off by default</strong>. That earns
+<code>scope_enforced</code>.</p>
+<p><strong>Prospective memory, weakly.</strong>
+<code>EventType::Commitment</code> records that a commitment was made,
+and <code>timestamp_ref</code> can hold the time it refers to. There is
+no status column, no due date as a typed field, and no sweep that
+surfaces a commitment when it comes due — so unlike NOOA's declared
+commitments or MineContext's <code>todo</code> table, this captures
+commitments without tracking them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three surfaces. <strong>Hybrid search</strong> fuses vector and FTS5
+hits and returns previews capped at 200–300 characters. <strong>Vector
+search</strong> is a separate tool. And an <strong>agentic tree
+walk</strong> lets the model traverse the summary tree rather than
+receive a ranked list — retrieval as navigation, which suits a tree
+whose internal nodes are summaries of their children.</p>
+<p>The interesting behaviour is <strong>cross-session recall</strong>.
+<code>RecallOpts</code> carries a <code>cross_session</code> flag that
+defaults to <strong>false</strong>; with it on, episodic content from
+other chats surfaces with ids prefixed <code>episodic-cross:</code> and
+each hit carries its source <code>session_id</code>. Three tests pin the
+behaviour: that it surfaces the other chat's fact, that the current
+session is not swept into its own cross-session results, and that with
+the flag off no <code>episodic-cross:</code> hit appears at all.</p>
+<p>That last one is the closest thing here to a negative retrieval
+assertion, and it is <strong>not one</strong> by this atlas's
+definition: it asserts a feature is off by default, not that particular
+material must stay unreachable. The same query with
+<code>cross_session: true</code> returns the same content to the same
+caller. <code>negative_eval</code> is withheld on that reading.</p>
+<p>Failure modes: taint gates <em>tools</em>, not retrieval, so an
+<code>ExternalSync</code> chunk still enters the model's context and can
+still say whatever it says — the protection is against the memory
+<em>causing</em> an external effect, not against it influencing the
+answer. And the tree walk's cost depends on the model's traversal
+discipline, which nothing bounds.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write path is the most defended in this atlas, and it is defended
+against the right things.</p>
+<p><strong>Secrets and PII are scrubbed before storage.</strong>
+<code>has_likely_secret</code>, <code>has_likely_pii</code>,
+<code>sanitize_text</code> and <code>sanitize_json</code> run over every
+field of a document input, producing a merged
+<code>SanitizationReport</code>. The scrubbers include "the full
+multilingual national-ID PII module", and the retained host test suite
+"doubles as a byte-parity guard" that the crate scrubber still redacts
+every pattern the host relied on.</p>
+<p><strong>And sanitization cannot launder provenance.</strong> The
+comment is worth quoting because the mistake it prevents is easy to
+make: <em>"Sanitization is content-cleaning only; provenance
+<code>taint</code> survives untouched so the write gate's taint check
+still sees the real source signal."</em> Redact the content of an
+externally-synced document and it is still externally synced.</p>
+<p><strong>Extraction is two-tier and the cheap tier is
+unconditional.</strong> Tier A is regex pattern matching for decisions,
+commitments, preferences and facts — "always runs, free". Tier B is a
+local LLM that runs only on segment close and only if local AI is
+enabled. So a user with no model configured still accumulates structured
+events, at zero cost, which is the <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> pattern
+with an LLM tier layered above rather than instead.</p>
+<p>Conflict handling is by summarisation rather than resolution: buckets
+seal, contents are summarised, and the summary is what survives. Nothing
+detects that two events contradict each other, and
+<code>confidence</code> is a number attached at extraction that nothing
+subsequently revises.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Writes are queued, not blocking.</strong>
+<code>memory_queue</code> and the ingestion queue sit between capture
+and extraction; Tier A regex is cheap enough to run inline.</li>
+<li><strong>Lag before a memory is retrievable</strong> is one queue
+drain for chunks, and for extracted events it is bounded by
+<strong>segment close</strong> — Tier B does not run mid-conversation.
+So an event extracted by the LLM is available after the conversation
+segment ends, not during it. The exact interval is workload-dependent
+and not stated in configuration.</li>
+<li><strong>Background passes are targeted, not global.</strong> The
+re-embed backfill walks rows whose signature changed rather than the
+whole store, and tombstones unrecoverable rows so they are not
+revisited. Tree summarisation is per sealed bucket. There is no nightly
+rewrite of everything.</li>
+<li><strong>On the read path</strong> previews are capped at 200–300
+characters per hit, which bounds a search result but not the tree walk,
+whose token cost is the model's to control.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Every memory module ships its own agent tools and RPC operations —
+<code>memory_tools</code> for scoped read/write,
+<code>memory_search</code> for hybrid and vector search,
+<code>memory_diff</code> for snapshots and change acknowledgement,
+<code>memory_goals</code> for
+<code>goals_list</code>/<code>goals_add</code>/<code>goals_edit</code>/<code>goals_delete</code>.
+The RPC namespace is <code>openhuman.memory_*</code>.</p>
+<p>Agency is high and layered. The agent reads, searches, walks the
+tree, writes memories, and edits its own goals list. Above it sit two
+automatic paths: the archivist, which clips tool calls out of
+conversations and pushes them to the tree, and the goals reflection
+agent, fired best-effort when the conversation is summarised.</p>
+<p>The <code>memory_diff</code> surface deserves a note as an
+integration idea: an agent can diff the world against a checkpoint and
+then <em>acknowledge</em> what it has seen (<code>commit=false</code>
+previews "without acknowledging"). Read markers as git refs give each
+agent its own position in the change stream — a mechanism nothing else
+here has, and an obvious fit for multi-agent setups where each needs to
+know what it has already processed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The taint lattice is the contribution, and it should be read
+as a security mechanism rather than an epistemic one.</strong> Its
+design is textbook: two values, a restrictive default, a fail-closed
+parser, and a test asserting that empty strings, wrong-case values and
+unknown future values all land on the restrictive side. Legacy rows
+written before the column existed deserialize to <code>Internal</code>,
+and a test pins that too — with a comment explaining the deliberate
+asymmetry: old rows predate external sync, so treating them as internal
+is safe, while unknown <em>values</em> are not.</p>
+<p><code>trust_state</code> is nonetheless <strong>withheld</strong>,
+and the reason is the interesting part. The atlas's definition asks for
+discrete epistemic status — candidate, verified, rejected.
+<code>MemoryTaint</code> is a provenance class, not a belief state: it
+distinguishes where a memory came from, never whether it is true, and
+never changes. A hallucination the user repeated back is
+<code>Internal</code> and may drive external effects; a correct fact
+from a synced document is <code>ExternalSync</code> and may not. That is
+the right trade for injection risk and it is not a trust state.</p>
+<p>Recording the near-miss properly: <strong>this is the only system in
+the atlas with a capability-gating provenance label</strong>, and it
+suggests a column this atlas does not currently have. "What may this
+memory cause?" is orthogonal to "is this memory true?", and the security
+survey's <a href="../../compare/">Verifiable Memory Governance</a>
+primitives ask for the first without naming it either.</p>
+<p><strong>Nothing records a rejected value.</strong> The word
+<em>tombstone</em> appears in twelve files and always means something
+operational — a chunk that can never be embedded, a summary whose row
+must stop being retried, a removed vault file, a capped in-memory set of
+cancelled thread ids. Delete a memory and re-sync the source and it
+returns.</p>
+<p><strong>The git ledger is change tracking, not audit.</strong>
+<code>memory_diff</code> is a <em>derived</em> view rebuilt from
+<code>mem_tree_chunks</code>, snapshot-based rather than per-mutation,
+so it can say "these chunks appeared between checkpoints" and cannot say
+"this row was changed, by whom, when". Combined with the atlas's rule
+that git history alone is a different mechanism, <code>audit_log</code>
+is withheld — though this is a more deliberate construction than the
+incidental git histories elsewhere here.</p>
+<p><strong><code>confidence</code> on an event is a score assigned once
+by the extractor.</strong> Nothing revises it, nothing thresholds
+retrieval on it in the paths read, and two events that contradict each
+other both keep their numbers.</p>
+<p><strong>No human review surface for memory exists.</strong> The
+repository is full of approval machinery — <code>ApprovalGate</code>,
+<code>external_effect</code> declarations on tools, tests asserting that
+<code>skill_registry_install</code> and <code>shell</code> route through
+the gate — but it governs <em>tool calls</em>, not memory content.
+Nobody is asked to confirm a memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>About 12,548 test functions repository-wide and 1,278 inside
+the <code>memory_*</code> modules</strong>, which makes this the most
+heavily tested system in this atlas by count. The memory tests are not
+padding: they pin the fail-closed taint parser, the legacy-row default,
+category wire-format round-trips including the legacy bare form,
+namespace sanitization rejecting secret-like keys, cross-session recall
+behaviour in three directions, and provenance survival on every
+cross-session hit.</p>
+<p>The seam tests are a pattern worth naming. Because the value types
+moved into <code>tinycortex</code>, the host retains tests whose stated
+job is to pin the contract on the crate type — "the tests below are the
+host-side seam that pins that contract on the crate type", and the
+sanitizer suite "doubles as a byte-parity guard". That is how you depend
+on an extracted library without losing the guarantees you had before
+extracting it.</p>
+<p><strong>There are no memory benchmarks</strong> — no LoCoMo, no
+LongMemEval, no committed scores. For a harness whose memory is an
+internal subsystem rather than a product surface, that is defensible,
+and it means no published number here needs qualifying.</p>
+<p><strong>What I would want before trusting it:</strong> a test that a
+deleted memory does not return on the next sync of the same source; a
+test that an <code>ExternalSync</code> chunk cannot reach an
+external-effect tool end to end, rather than only that the parser fails
+closed; and any assertion that a tombstoned chunk stays out of retrieval
+results rather than merely out of the re-embed queue.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Label memories by what they may cause, not only by how sure
+you are.</strong> A two-value provenance taint with a fail-closed parser
+is perhaps forty lines and it closes the memory-as-injection-surface
+hole that confidence scores do nothing about. This is the single most
+transferable idea in the system.</li>
+<li><strong>Never let redaction launder provenance.</strong> If you
+scrub content on the way in, carry the source label through untouched
+and say so in a comment, because the next person to touch that function
+will not see why it matters.</li>
+<li><strong>Fail closed on unknown enum values from the
+database.</strong> <code>""</code>, wrong case and future variants
+should all land on the restrictive side, and it should be a test, not a
+convention.</li>
+<li><strong>Two-tier extraction with a free first tier.</strong> Regex
+that always runs plus an LLM that runs at segment close means a user
+with no model still accumulates structured memory, and your token bill
+tracks conversation boundaries rather than turns.</li>
+<li><strong>Read markers as refs in a change ledger.</strong> Letting
+each agent hold its own position in the stream of what changed, and
+acknowledge explicitly, is a clean answer to "what have I already
+processed?" in multi-agent setups.</li>
+<li><strong>Keep seam tests when you extract a library.</strong> The
+host-side byte-parity guard is what makes an extraction safe.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Assigning provenance once and never revisiting it.</strong>
+A taint that cannot be narrowed means externally-sourced material stays
+permanently second-class even after a user confirms it, which will
+eventually push someone to disable the gate rather than promote the
+memory.</li>
+<li><strong>Confusing a change ledger with an audit log.</strong>
+Snapshot diffs answer "what is different" and not "who changed this,
+when" — if you need the second, record mutations, not states.</li>
+<li><strong>Letting a source stay connected after deleting what it
+produced.</strong> With no record that a value was rejected, the next
+sync re-ingests it, and the delete looks like it silently failed.</li>
+<li><strong>A confidence float that nothing consumes.</strong> If no
+read path thresholds on it and no pass revises it, it is documentation
+with a type.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team building a desktop agent that ingests a user's real
+data — email, documents, workspace files, MCP sources — and that
+therefore has a genuine injection problem rather than a theoretical one.
+The taint gate, the PII scrubbers and the namespace sanitization are the
+work you would otherwise do yourself, done carefully and with tests, and
+the module boundaries are strict enough that you could adopt
+<code>memory_store</code> and <code>memory_tree</code> without the
+connectors.</p>
+<p>The cost is scale of a different kind: twelve modules, a companion
+crate you must also adopt and cannot read here, a Tauri desktop shell,
+and GPL-3.0. This is not a library you add to a service; it is a
+codebase you join.</p>
+<p>Walk away if your requirement is corrective memory. Nothing here
+records that a value was wrong, and the architecture actively works
+against it: sources stay connected, sync re-ingests, and summarisation
+folds evidence into prose. If your users will say "no, I moved house"
+and expect the old address to stay gone, this system will not help you,
+and the parts that would have to change are the ingest pipeline and the
+tree — not a column.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What is in <code>tinycortex</code>?</strong>
+<code>MemoryEntry</code>, <code>MemoryTaint</code>, the
+<code>Memory</code> trait, the safety scrubbers, the canonicalizer and
+<code>DiffEngine</code> are all re-exported from it. The contracts are
+pinned by seam tests here; the implementations, including how taint is
+actually assigned at ingest, were not read.</li>
+<li><strong>Where is taint set?</strong> The gate and the fail-closed
+parse were traced; the assignment site — what decides a chunk is
+<code>Internal</code> rather than <code>ExternalSync</code> — was not,
+and it is the whole security property.</li>
+<li><strong>Does the subconscious gate consult taint at retrieval or at
+tool-call time?</strong> The comments say it refuses external-effect
+tools "on chunks of unknown origin"; whether that is evaluated per
+retrieved chunk or per accumulated context was not determined.</li>
+<li><strong>Does a delete survive the next sync?</strong> No path was
+found that disconnects a source or suppresses re-ingest of removed
+content.</li>
+<li><strong>What does the goals reflection agent do on
+disagreement?</strong> It applies add/edit/delete over several turns
+against a capped file; what happens when it and the user disagree about
+a goal was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Contracts and trust</strong></p>
+<ul>
+<li><code>src/openhuman/memory/traits.rs</code> — re-exports plus the
+taint seam tests</li>
+<li><code>src/openhuman/memory_store/safety/mod.rs</code> —
+<code>sanitize_document_input</code>, taint preservation comment</li>
+<li><code>src/openhuman/memory_store/safety/pii.rs</code></li>
+</ul>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>src/openhuman/memory_store/namespace_store/events.rs</code> —
+<code>EVENTS_INIT_SQL</code>, <code>EventType</code>, FTS5 triggers</li>
+<li><code>src/openhuman/memory_store/namespace_store/documents_tests.rs</code>
+— secret-like key and namespace rejection</li>
+<li><code>src/openhuman/memory_store/memory_trait.rs</code> —
+cross-session recall tests</li>
+</ul>
+<p><strong>Ingest and extraction</strong></p>
+<ul>
+<li><code>src/openhuman/memory/ingest_pipeline.rs</code></li>
+<li><code>src/openhuman/memory/remember.rs</code> —
+<code>chat_history</code>, <code>uploaded_data</code>,
+<code>llm_thought</code></li>
+<li><code>src/openhuman/memory/README.md</code> — the module map and
+layer rules</li>
+</ul>
+<p><strong>Tree</strong></p>
+<ul>
+<li><code>src/openhuman/memory_tree/</code> — <code>ingest.rs</code>,
+<code>summarise.rs</code>, <code>score/</code>, <code>retrieval/</code>,
+<code>health/mod.rs</code></li>
+</ul>
+<p><strong>Change ledger</strong></p>
+<ul>
+<li><code>src/openhuman/memory_diff/mod.rs</code>, <code>ops.rs</code>,
+<code>source.rs</code>, <code>tools.rs</code></li>
+</ul>
+<p><strong>Retrieval</strong></p>
+<ul>
+<li><code>src/openhuman/memory_search/tools/hybrid_search.rs</code>,
+<code>vector_search.rs</code></li>
+<li><code>src/openhuman/memory/query/</code></li>
+</ul>
+<p><strong>Goals</strong></p>
+<ul>
+<li><code>src/openhuman/memory_goals/mod.rs</code>,
+<code>store.rs</code>, <code>enrich.rs</code></li>
+</ul>
+<p><strong>Health and queues</strong></p>
+<ul>
+<li><code>src/openhuman/memory_tree/health/mod.rs</code></li>
+<li><code>src/openhuman/tinycortex/queue_driver.rs</code></li>
+<li><code>src/openhuman/memory_queue/</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
