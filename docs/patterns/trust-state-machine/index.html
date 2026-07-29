@@ -178,6 +178,26 @@ how states participate in recall, promotion, consolidation, and pruning,
 and for separating epistemic confidence from retrieval strength. <a
 href="../../systems/rainbox/">RainBox</a> ties the transitions to an
 actor model and an operator review queue.</p>
+<p><a href="../../systems/daimon/">Daimon</a> is the smallest useful
+trust model in the atlas — two states, <code>verbatim</code> and
+<code>inferred</code> — and the only one where a transition is made by
+<em>code disproving the model</em>. The item ships with the class the
+extractor chose; then the quote is matched against the transcript and a
+miss forces the item down to <code>inferred</code>, and an outcome claim
+with no tool-result citation is forced down even when its quote matched.
+Everywhere else in this atlas a state change is a policy decision about
+a claim. Here it is a measurement, which is why two states are enough:
+the interesting question was never "how sure is the model" but "is the
+model's own evidence real".</p>
+<p>The same design also separates lifecycle from epistemics the way
+Magic Context does, but by <em>location</em> rather than by column.
+Trust lives on the item and is append-only; liveness — resolved,
+reopened, superseded-candidate, forgotten — lives in an event log folded
+at read time. That split has a concrete payoff: the system can add a
+lifecycle state without rewriting a single stored memory, and a
+rejection recorded in the wrong stream would hide the item instead of
+demoting it, which its own source comments call out as the reason the
+two logs are kept apart.</p>
 <p>Two later systems show the states are only half the work. Gini models
 <code>conflicted</code> with no visible resolution workflow, and <a
 href="../../systems/mateclaw/">MateClaw</a> ships a dedicated

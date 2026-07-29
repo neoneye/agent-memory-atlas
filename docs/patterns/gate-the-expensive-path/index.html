@@ -220,6 +220,26 @@ possible gate. Its temporal recall channel participates <strong>only
 when the query actually contains a temporal expression</strong>, so a
 channel that cannot contribute never dilutes the fusion. The gate is a
 parser, not a model.</p>
+<p><a href="../../systems/daimon/">Daimon</a> shows the same idea run to
+its conclusion — no model anywhere in either gate — and it is the one
+place in the atlas where the fail direction is deliberately reversed.
+Its proactive-recall gate is three lexical tests, each defaulting to
+silence: an unknown project, a prompt with fewer than two salient terms,
+or a candidate session sharing fewer than two <em>distinct</em> terms
+all return nothing. Its world-check gate is a hard 0.8-second aggregate
+budget with a five-probe cap, where anything unfinished at the deadline
+is killed and skipped, and any failure — no <code>gh</code>, no remote,
+bad output — makes the render byte-identical to what it would have been
+without the feature.</p>
+<p>Both fail toward silence rather than open, and the reason is that
+they guard different things than Waku's gate does. A missing
+<em>suggestion</em> costs a reminder; a missing <em>memory</em> costs
+the answer. Which way a gate should fail is a property of what sits
+behind it, not a house style — and the shared-term threshold is also the
+atlas's clearest case of a gate that was tuned by a field failure: it
+counts terms per <em>session</em> rather than per <em>item</em>, because
+a per-item count silenced exactly the multi-topic prompts the feature
+existed to serve.</p>
 <p><a href="../../systems/genericagent/">GenericAgent</a> gates what
 occupies permanent context with an explicit cost model —
 <code>ROI = (error probability × cost) / per-turn word cost</code> — and

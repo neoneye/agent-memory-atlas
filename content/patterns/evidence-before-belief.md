@@ -104,6 +104,25 @@ GenericAgent's action-verified axiom leaves no record of the tool call that
 justified a write. Evidence retained but unlinked supports recomputation and not
 explanation.
 
+[Daimon](../../systems/daimon/) is the atlas's counter-example to that failure,
+and it gets there without storing the evidence at all. It keeps no copy of the
+transcript: a checkpoint carries a hash of the source bytes, and each verbatim
+item carries the quote plus the id of the host message it came from. The link is
+the whole mechanism, and it is **checked rather than recorded** — at write time
+the quote is matched against the cited message, a resolvable-but-mismatched
+binding is *dropped* rather than stored as false provenance, and a quote found
+nowhere in the transcript costs the item its trust class.
+
+That is a different bargain from the one this page describes, and worth naming
+as its own option. Referencing evidence instead of copying it keeps the store
+small, keeps the strictest privacy obligations with whoever already holds the
+transcript, and makes the link falsifiable at the moment it is created. What it
+gives up is exactly what this page's "Skip it if" clause anticipates: when the
+host rotates its transcripts, the derivation can no longer be rebuilt or
+re-checked, and the verification stamp on the item becomes the only surviving
+evidence that a check ever happened. Reference evidence you control; copy
+evidence you do not.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

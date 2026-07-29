@@ -46,7 +46,7 @@ existence and use are verifiable from code.
 | Benchmark | What it tests | Shipped as a harness by |
 | --- | --- | --- |
 | **LoCoMo** | Question answering over very long multi-session conversations, with single-hop, multi-hop, temporal, open-domain and adversarial question categories | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Basic Memory](../systems/basic-memory/) |
-| **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/) |
+| **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/), [Daimon](../systems/daimon/) |
 | **BEAM** | Long-conversation QA at extreme length; Cognee's committed report covers 100K and 10M-token conversations | [Cognee](../systems/cognee/), [Honcho](../systems/honcho/) |
 | **Oolong** | Present in Honcho's bench tree; not characterized here | [Honcho](../systems/honcho/) |
 | **τ²-bench (tau2)** | Agentic tool use against a simulated user with policy compliance — a *downstream task*, not a memory test | [OpenViking](../systems/openviking/) |
@@ -300,7 +300,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/) and [Verel](../systems/verel/) — two of sixty-two |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/) and [Verel](../systems/verel/) — two of sixty-three |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -809,6 +809,26 @@ The published number was not measuring what it said.
 committed results reads as measured and is not. This atlas has now found that
 pattern in several repositories, including some of the most carefully
 engineered ones.
+
+[Daimon](../systems/daimon/) is the first system here to write the third rule
+down as policy rather than leave it to the reader, and it is the one this page
+has been implying throughout: **a recall number without its backend is not a
+result.** Its benchmark README commits to publishing only self-measured figures
+with the full config stamp — harness version, backend, model, prompt version,
+seed, dataset checksum — labels third-party figures as their publishers' claims
+rather than reproducing them as head-to-heads, and states that it will report
+the *trade* rather than only the win, publishing `avg_injected_tokens` beside
+recall so the efficiency story travels with the quality one. It also records the
+measurement choice that flatters it: `min_messages` is lowered from the
+product's default of 10 to 2 so short evidence sessions enter the index at all,
+surfaced in the run config instead of omitted.
+
+The counterweight is that policy is cheaper than sample size. The headline
+committed run is five questions; the more meaningful file is a 52-question
+interim baseline whose per-question rows average Recall@5 0.58, and it ships no
+aggregate block because the paired arm it exists for is unfinished. A stricter
+reporting policy than most vendors have, attached to numbers most vendors would
+not publish, is still the right order to do these things in.
 
 ## 9. Limits of This Page
 

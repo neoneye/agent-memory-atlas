@@ -94,13 +94,13 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Two
-systems of sixty-two carry it, one invented it under adversarial
-pressure, and the other adopted it from the first. There is no consensus
-behind this page, no library that provides the mechanism, and no shared
-vocabulary for it. Everything below is an argument, and the provenance
-is traced under <em>Seen in the atlas</em> so you can weigh it as
-one.</p>
+<p><strong>This is not an established best practice.</strong> Three
+systems of sixty-three carry it: one invented it under adversarial
+pressure, one adopted it from the first, and one arrived at a weaker
+form independently. There is no consensus behind this page, no library
+that provides the mechanism, and no shared vocabulary for it. Everything
+below is an argument, and the provenance is traced under <em>Seen in the
+atlas</em> so you can weigh it as one.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -166,14 +166,17 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Two systems in the atlas have this.</strong> That is the most
-striking negative result in the atlas, and it is the reason this page
-exists.</p>
+<p><strong>Three systems in the atlas have this.</strong> That is the
+most striking negative result in the atlas, and it is the reason this
+page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
-superseded, and model writes check them before asserting.</p>
+superseded, and model writes check them before asserting. <a
+href="../../systems/daimon/">Daimon</a> is the third and the weakest,
+and it is instructive precisely because of <em>how</em> it is
+weaker.</p>
 <p><strong>Where it came from: an adversary, not a designer.</strong>
 Verel's git history dates the mechanism to 28 June 2026, inside a
 numbered red-team sequence, and the commit that introduces it describes
@@ -247,11 +250,37 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-sixty-two would suggest a hard idea that a few teams reach
-independently. One of sixty-two, plus one adoption by a reader who went
-looking, suggests an idea that is <em>not</em> being reached at all —
-and that the way it spread was somebody reading another project's
+sixty-three would suggest a hard idea that a few teams reach
+independently. One of sixty-three, plus one adoption by a reader who
+went looking, suggests an idea that is <em>not</em> being reached at all
+— and that the way it spread was somebody reading another project's
 source.</p>
+<p><strong>The third is an independent arrival, and it stops short in
+the two places this page predicts.</strong> <a
+href="../../systems/daimon/">Daimon</a>'s <code>daimon forget</code>
+deletes the item from the live checkpoint and appends a
+<code>forgotten:&lt;content-hash&gt;</code> event to an append-only log.
+Because item ids are <code>sha1("&lt;field&gt;:&lt;text&gt;")</code>,
+that event is keyed on the <em>value</em>, not on a row: an identical
+re-extraction in a later session lands on the same id, is withheld from
+the briefing, is not carried forward, and is deleted from the search
+index across every historical checkpoint on the next rebuild. There is
+no evidence the author had read Verel or RainBox; the mechanism falls
+out of content-addressed ids rather than from a red-team finding.</p>
+<p>Two differences matter, and both are on the tradeoff list above.</p>
+<p><em>It is suppression at read, not refusal at write.</em> Verel and
+RainBox refuse the write; Daimon lets the extractor re-assert the value
+into a new checkpoint on disk and stops it reaching the agent. The
+observable behaviour is the same and the failure surface is not: every
+future read path has to remember to consult the fold, and the store
+itself holds content a user asked to forget.</p>
+<p><em>The key is not normalized.</em> It is a hash of the exact text,
+so the round-9 lesson on this page — that normalization is where the
+work is — has not been learned here, and it does not take a unicode
+look-alike to defeat it. Any paraphrase produces a different id. This is
+the difference between a tombstone that stops a <em>value</em> and one
+that stops a <em>string</em>, and it is the single change that would
+move Daimon into the same class as the other two.</p>
 <p>Everything else stops at supersession, archival, or deletion —
 mechanisms that remove a value from view without recording that it was
 <em>judged wrong</em>:</p>
@@ -319,7 +348,10 @@ idle days.</li>
 <li>Attack the key normalization with unicode look-alikes and case and
 whitespace variants. Verel's round 9 was an NFKC bypass of
 <code>strip().lower()</code>.</li>
-<li>Reject a value, rerun extraction, and prove it stays inactive.</li>
+<li>Reject a value, rerun extraction, and prove it stays inactive. Every
+system in the atlas that carries this mechanism should have this test;
+Daimon, which has 1,920 others, does not. A tombstone is the one
+mechanism whose silent failure looks exactly like success.</li>
 <li>Correct A to B, then try to reintroduce A through a different
 source.</li>
 <li>Verify scope isolation between users, projects, and agents.</li>

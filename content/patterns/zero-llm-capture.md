@@ -112,6 +112,22 @@ a synthetic observation path on the hot loop; [Claude-Mem](../../systems/claude-
 queues hook events durably before its observer runs; and
 [engram](../../systems/engram/) remains the small no-extraction baseline.
 
+[Daimon](../../systems/daimon/) is the variant worth studying if you have already
+decided you need an LLM. Its extraction is a model call and cannot be anything
+else — but every mechanism that *guards* that call is stdlib code: quote
+verification by string match, outcome grounding by lexicon, redaction by regex,
+carry and dedup by term overlap, code anchors by `ast.dump` hashing, external
+checks by a `gh` subprocess under a 0.8-second budget.
+
+Two of its zero-LLM passes go further and add memory the model did not produce.
+`pin_imperatives` scans user turns for hard imperatives — must, never, don't,
+always, forbidden — and force-pins any the model paraphrased away, on the
+reasoning that a "never" softened into summary prose leaves nothing to verify
+later. And the opt-in scar harvester drafts negative-knowledge candidates from a
+session by regex, dropping any hit with no real file path in its own span, on
+the stated principle that a scar system dies from noise rather than from a
+missed lesson. Both are cheap, both are auditable, and neither can hallucinate.
+
 **The recurring hazard is capturing your own output.** Five systems independently
 built guards against it: OpenClaw's envelope sanitizer, Holographic excluding
 compaction handoff summaries that were being stored as facts on every context

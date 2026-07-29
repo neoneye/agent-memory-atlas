@@ -176,6 +176,27 @@ for later.</p>
 dedicated mutation logs (<code>storage-memory-mutation-log.ts</code>,
 <code>storage-m0-mutation-log.ts</code>) alongside per-run dream
 records, so both what changed and what decided it are retained.</p>
+<p><a href="../../systems/daimon/">Daimon</a> makes the log
+<strong>load-bearing rather than observational</strong>, which is the
+strongest form this pattern takes: <code>events.jsonl</code> is not a
+record of what happened to memory, it <em>is</em> where liveness lives,
+folded at read time on every briefing. That forces two properties most
+audit logs never need. The fold keys on the latest event by timestamp
+rather than by line order, with same-second ties broken on event
+<em>content</em>, so a reordered or concurrently written log folds
+identically. And unknown statuses resolve rather than vanish, because a
+writer who bothered to record a lifecycle fact meant something by
+it.</p>
+<p>It also demonstrates when <strong>not</strong> to use one log.
+Rejections from the verification gates go to a separate
+<code>verification.jsonl</code>, and the source explains why in a
+sentence worth copying: the resolutions fold keys on the item reference
+alone and treats anything unrecognized as resolved, so a rejection
+written there would hide the very item it describes — from the briefing,
+from carry, and from search. A demoted memory must stay visible and
+merely read as less trusted. Any system tempted to add a
+<code>kind</code> column to one event stream should check what its own
+fold does with the new kind first.</p>
 <p><a href="../../systems/nanobot/">nanobot</a> shows that the audit's
 <em>scope</em> is itself a design decision. Its git commits are grounded
 in the real working-tree delta over an explicit allowlist of durable

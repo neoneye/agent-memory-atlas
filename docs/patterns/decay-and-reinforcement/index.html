@@ -180,6 +180,23 @@ matters and how long it should last are different questions, and one
 column cannot answer both. Mercury also keeps a
 <code>subconscious</code> tier — retained but below active recall — so
 demotion is available where most systems only have deletion.</p>
+<p><a href="../../systems/daimon/">Daimon</a> contributes the inversion
+this page has been missing. Its weight is
+<code>importance/10 × tiered recency × per-type linear decay</code>, and
+one type is exempt from the usual conclusion: an open question past a
+fourteen-day expected lifespan gets an <strong>escalating</strong>
+boost, <code>age**1.5 / 100</code>, capped so a fresh item still
+outranks an escalated one. For an open loop, staleness means
+<em>unresolved</em>, not <em>irrelevant</em>, and burying it is exactly
+wrong. Any system with a per-type decay table should ask which of its
+types this applies to; most have at least one.</p>
+<p>Two smaller guards in the same file generalize. A
+<code>first_seen</code> stamp further in the future than ordinary clock
+skew explains is treated as <em>neutral</em> rather than maximally
+fresh, so a teammate's mis-stamped item cannot outrank genuine local
+work — a bug that only exists once memory crosses machines. And decay is
+floored rather than allowed to reach zero, so ordering may bury an item
+but arithmetic never erases it.</p>
 <p><a href="../../systems/openviking/">OpenViking</a> computes hotness
 as
 <code>sigmoid(log1p(active_count)) * exp(-ln2 · age / half_life)</code>

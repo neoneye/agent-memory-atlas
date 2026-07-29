@@ -172,11 +172,30 @@ progress worthless.</p>
 <p><a href="../../systems/claude-mem/">Claude-Mem</a> is the durable
 hook-queue example: failures return claimed work to pending, canonical
 SQLite precedes acknowledgement, and Chroma sync is a best-effort
-projection. <a href="../../systems/cognee/">Cognee</a> stamps artifacts
-with pipeline provenance, rolls failed runs back, and recovers stale
-non-terminal runs at startup. <a
-href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> retains failed
-inputs for redistillation. <a
+projection.</p>
+<p><a href="../../systems/daimon/">Daimon</a> adds the part this pattern
+usually leaves to the operator: a <strong>classifier over the capture
+log, and a command that shows it</strong>. Every spawn and every result
+line is appended to one log, and a fold reduces it per session into
+outstanding failures, hung children, and retry-exhausted cases — which
+<code>daimon status</code> reports honestly, including crashes, and
+<code>daimon heal</code> re-drives. Liveness is decided by a heartbeat
+the child touches at every chunk and merge rather than by wall-clock, so
+a genuinely slow extraction is not mistaken for a dead one. Retries are
+capped at one per session with an explicit <code>--force</code>
+override, and the reasoning is recorded: the cap bounds token burn on a
+permanently bad transcript.</p>
+<p>Its recovery unit is the interesting choice. Chunk extractions are
+cached by content under an explicit version key, so a heal, a merge
+failure, or simply a transcript that grew re-pays only for the chunks
+that changed. The cache key is deliberately separate from the prompt
+version — wording edits keep the cache warm, semantic changes rotate it
+— which is the distinction between versioning your <em>output
+format</em> and versioning your <em>unit of work</em>. <a
+href="../../systems/cognee/">Cognee</a> stamps artifacts with pipeline
+provenance, rolls failed runs back, and recovers stale non-terminal runs
+at startup. <a href="../../systems/llm-wiki-memory/">llm-wiki-memory</a>
+retains failed inputs for redistillation. <a
 href="../../systems/hindsight/">Hindsight</a> gives consolidation capped
 retries with deterministic-error filtering. <a
 href="../../systems/redis-agent-memory-server/">Redis Agent Memory

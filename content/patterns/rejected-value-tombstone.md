@@ -6,12 +6,12 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Two systems of sixty-two carry
-> it, one invented it under adversarial pressure, and the other adopted it from
-> the first. There is no consensus behind this page, no library that provides
-> the mechanism, and no shared vocabulary for it. Everything below is an
-> argument, and the provenance is traced under *Seen in the atlas* so you can
-> weigh it as one.
+> **This is not an established best practice.** Three systems of sixty-three
+> carry it: one invented it under adversarial pressure, one adopted it from the
+> first, and one arrived at a weaker form independently. There is no consensus
+> behind this page, no library that provides the mechanism, and no shared
+> vocabulary for it. Everything below is an argument, and the provenance is
+> traced under *Seen in the atlas* so you can weigh it as one.
 
 ## Intent
 
@@ -80,13 +80,15 @@ enough.
 
 ## Seen in the atlas
 
-**Two systems in the atlas have this.** That is the most striking
+**Three systems in the atlas have this.** That is the most striking
 negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
 mechanism and protects rejected states from ordinary pruning.
 [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims
 are rejected or superseded, and model writes check them before asserting.
+[Daimon](../../systems/daimon/) is the third and the weakest, and it is
+instructive precisely because of *how* it is weaker.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
@@ -133,11 +135,37 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of sixty-two
+That makes the negative result stronger rather than weaker. Two of sixty-three
 would suggest a hard idea that a few teams reach independently. One of
-sixty-two, plus one adoption by a reader who went looking, suggests an idea
+sixty-three, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
+
+**The third is an independent arrival, and it stops short in the two places this
+page predicts.** [Daimon](../../systems/daimon/)'s `daimon forget` deletes the
+item from the live checkpoint and appends a `forgotten:<content-hash>` event to
+an append-only log. Because item ids are `sha1("<field>:<text>")`, that event is
+keyed on the *value*, not on a row: an identical re-extraction in a later
+session lands on the same id, is withheld from the briefing, is not carried
+forward, and is deleted from the search index across every historical checkpoint
+on the next rebuild. There is no evidence the author had read Verel or RainBox;
+the mechanism falls out of content-addressed ids rather than from a red-team
+finding.
+
+Two differences matter, and both are on the tradeoff list above.
+
+*It is suppression at read, not refusal at write.* Verel and RainBox refuse the
+write; Daimon lets the extractor re-assert the value into a new checkpoint on
+disk and stops it reaching the agent. The observable behaviour is the same and
+the failure surface is not: every future read path has to remember to consult
+the fold, and the store itself holds content a user asked to forget.
+
+*The key is not normalized.* It is a hash of the exact text, so the round-9
+lesson on this page — that normalization is where the work is — has not been
+learned here, and it does not take a unicode look-alike to defeat it. Any
+paraphrase produces a different id. This is the difference between a tombstone
+that stops a *value* and one that stops a *string*, and it is the single change
+that would move Daimon into the same class as the other two.
 
 Everything else stops at supersession, archival, or deletion — mechanisms that
 remove a value from view without recording that it was *judged wrong*:
@@ -193,7 +221,10 @@ nothing blocks. Rich relation modelling is not a substitute for negative memory.
   sequence again. Verel's round 8 was exactly this, at ninety idle days.
 - Attack the key normalization with unicode look-alikes and case and whitespace
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
-- Reject a value, rerun extraction, and prove it stays inactive.
+- Reject a value, rerun extraction, and prove it stays inactive. Every system
+  in the atlas that carries this mechanism should have this test; Daimon, which
+  has 1,920 others, does not. A tombstone is the one mechanism whose silent
+  failure looks exactly like success.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.
 - Verify trusted override and tombstone reactivation are audited.

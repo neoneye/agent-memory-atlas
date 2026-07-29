@@ -85,6 +85,25 @@ recall, promotion, consolidation, and pruning, and for separating epistemic
 confidence from retrieval strength. [RainBox](../../systems/rainbox/) ties the
 transitions to an actor model and an operator review queue.
 
+[Daimon](../../systems/daimon/) is the smallest useful trust model in the atlas —
+two states, `verbatim` and `inferred` — and the only one where a transition is
+made by *code disproving the model*. The item ships with the class the extractor
+chose; then the quote is matched against the transcript and a miss forces the
+item down to `inferred`, and an outcome claim with no tool-result citation is
+forced down even when its quote matched. Everywhere else in this atlas a state
+change is a policy decision about a claim. Here it is a measurement, which is why
+two states are enough: the interesting question was never "how sure is the
+model" but "is the model's own evidence real".
+
+The same design also separates lifecycle from epistemics the way Magic Context
+does, but by *location* rather than by column. Trust lives on the item and is
+append-only; liveness — resolved, reopened, superseded-candidate, forgotten —
+lives in an event log folded at read time. That split has a concrete payoff: the
+system can add a lifecycle state without rewriting a single stored memory, and a
+rejection recorded in the wrong stream would hide the item instead of demoting
+it, which its own source comments call out as the reason the two logs are kept
+apart.
+
 Two later systems show the states are only half the work. Gini models
 `conflicted` with no visible resolution workflow, and
 [MateClaw](../../systems/mateclaw/) ships a dedicated `ContradictionDetector`

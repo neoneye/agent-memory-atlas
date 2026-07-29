@@ -147,6 +147,23 @@ one with wide ones. Its design notes record that row-level security was tried
 and rejected on performance, with the benchmark retained — a negative result
 this atlas would like to see more often.
 
+[Daimon](../../systems/daimon/) contributes the distinction the others leave
+implicit: **scope strictness should depend on what the caller does with the
+result.** Its store exposes one read with a `fallback` flag, and the rule is that
+callers which *display* what they read may fall back to another project's
+pointer, while callers which *persist* what they read may not — so the code path
+that folds prior state into a new durable checkpoint always reads with the
+fallback off. A leak into a rendering is a confusing screen; a leak into the
+write path is a permanent cross-project memory.
+
+Its handling of the permitted fallback is the second idea. Rather than printing
+a foreign project's briefing under a warning line, the body is suppressed and
+only an orientation header appears, on the reasoning that one warning line above
+a hundred foreign lines does not read as a warning. The same instinct governs
+its MCP surface, which refuses the fallback outright and returns a message
+naming the explicit command instead — an agent tool result carrying another
+project's memory is contamination, not convenience.
+
 ## Tests to require
 
 - Cross-user, cross-agent, and cross-project leakage.

@@ -138,6 +138,26 @@ from *superseded* (once true, surfaced on request), and makes a reason mandatory
 on every governance action. It is aimed at review rather than at contradiction
 specifically.
 
+[Daimon](../../systems/daimon/) is the second complete instance, and it solves
+requirement 5 that Memanto misses while placing the decision somewhere neither
+of the others does: **inside the artifact the user is already reading**. A
+detected supersession renders in the next briefing as a flagged item with the
+confirm and reject commands printed beside it, so the disposition is chosen at
+the moment the stale claim is encountered rather than in a queue nobody opens.
+Confirming appends a resolution that withholds the item from then on; the
+`forget` path appends a content-keyed tombstone, which is the trace Memanto's
+`remove_both` lacks.
+
+Three rules make the surface safe, and all three are transferable. A machine
+suggestion is **live by construction** — the liveness fold refuses to let a
+`supersede-candidate` suppress anything, so a wrong guess costs a line of noise
+and never a memory. **Rejecting a guess needs no evidence, re-opening a resolved
+item does**, because overruling a machine suggestion is not the same act as
+vouching for a claim, and the code refuses the second without either a live code
+anchor or an explicit `--evidence` string. And a human verdict **silences
+re-detection permanently**, so the queue cannot refill with something a person
+has already answered.
+
 The absence is the more common finding, and four reports arrived at it
 independently. [Gini](../../systems/gini-agent/) has `rejected` and `conflicted`
 as states with no operator-facing resolution.

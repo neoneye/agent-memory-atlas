@@ -83,6 +83,24 @@ cold-start trap is gone)." Global watermarks make partial progress worthless.
 [Claude-Mem](../../systems/claude-mem/) is the durable hook-queue example:
 failures return claimed work to pending, canonical SQLite precedes
 acknowledgement, and Chroma sync is a best-effort projection.
+
+[Daimon](../../systems/daimon/) adds the part this pattern usually leaves to the
+operator: a **classifier over the capture log, and a command that shows it**.
+Every spawn and every result line is appended to one log, and a fold reduces it
+per session into outstanding failures, hung children, and retry-exhausted cases —
+which `daimon status` reports honestly, including crashes, and `daimon heal`
+re-drives. Liveness is decided by a heartbeat the child touches at every chunk
+and merge rather than by wall-clock, so a genuinely slow extraction is not
+mistaken for a dead one. Retries are capped at one per session with an explicit
+`--force` override, and the reasoning is recorded: the cap bounds token burn on
+a permanently bad transcript.
+
+Its recovery unit is the interesting choice. Chunk extractions are cached by
+content under an explicit version key, so a heal, a merge failure, or simply a
+transcript that grew re-pays only for the chunks that changed. The cache key is
+deliberately separate from the prompt version — wording edits keep the cache
+warm, semantic changes rotate it — which is the distinction between versioning
+your *output format* and versioning your *unit of work*.
 [Cognee](../../systems/cognee/) stamps artifacts with pipeline provenance, rolls
 failed runs back, and recovers stale non-terminal runs at startup.
 [llm-wiki-memory](../../systems/llm-wiki-memory/) retains failed inputs for

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-two agent memory architectures, their retrieval mechanics, trust
+sixty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-two agent memory architectures, their retrieval mechanics,
+of sixty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-two agent memory architectures, their retrieval mechanics,
+of sixty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-sixty-two agent memory architectures, their retrieval mechanics, trust
+sixty-three agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -120,11 +120,11 @@ reports say so at that point rather than hedging every sentence.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Two systems in this entire atlas
-can record that a <em>value</em> was rejected so extraction cannot bring
-it back — see the <a href="../capabilities/">capability index</a> for
-the live count. This is the single widest gap in the field, and it is
-invisible on every benchmark.</li>
+everything can overwrite or supersede. Three systems in this entire
+atlas can record that a <em>value</em> was rejected so extraction cannot
+bring it back — see the <a href="../capabilities/">capability index</a>
+for the live count. This is the single widest gap in the field, and it
+is invisible on every benchmark.</li>
 <li><strong>Whether evidence outlives its derivations.</strong> Systems
 that keep the raw event and treat summaries, profiles, and graphs as
 rebuildable projections can repair a bad extraction. Systems that
@@ -145,11 +145,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-two systems do not fall into sixty-two categories. They cluster
-around eight architectural commitments, and most systems belong to more
-than one — a coding-agent memory can also be verification-first, and a
-host runtime's plugin can also be a hosted service. The families below
-are lenses, not bins.</p>
+<p>Sixty-three systems do not fall into sixty-three categories. They
+cluster around eight architectural commitments, and most systems belong
+to more than one — a coding-agent memory can also be verification-first,
+and a host runtime's plugin can also be a hosted service. The families
+below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -272,7 +272,7 @@ memory provider</a>.</p>
 <code>moltis</code>, <code>open-cowork</code>, <code>byterover</code>,
 <code>magic-context</code>, <code>swafra</code>, <code>memora</code>,
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
-<code>openworker</code>, <code>qwen-code</code></p>
+<code>openworker</code>, <code>qwen-code</code>, <code>daimon</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -309,7 +309,11 @@ carrying open questions and next steps, which expires if nobody accepts
 it. <strong>Memora</strong> is the only system here whose automated
 correction pass defaults to a dry run: the sweep that would hide
 superseded memories reports its findings unless mutation is explicitly
-requested.</p>
+requested. <strong>Daimon</strong> narrows the unit of memory to the
+session boundary — one checkpoint written when a session ends, one
+skimmable briefing injected when the next begins — and spends its
+complexity budget on checking the extraction rather than on retrieving
+from it.</p>
 <p>Tradeoff: operationally simple and inspectable; no answer to hosted
 ranking, multi-tenancy, or rich user modelling.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
@@ -343,7 +347,7 @@ how connected the graph is.</p>
 trust-first memory</h3>
 <p><code>verel</code>, <code>rainbox</code>, <code>magic-context</code>,
 <code>metaclaw</code>, <code>gini-agent</code>,
-<code>core-memory</code></p>
+<code>core-memory</code>, <code>daimon</code></p>
 <p>These treat memory as a trust problem before a retrieval problem.
 <strong>Verel</strong> separates confidence, retrieval strength, and
 verification state, carries rejected values forward, and fences recall
@@ -358,7 +362,15 @@ regress across eight measured deltas. <strong>Core Memory</strong> goes
 furthest on the axis: a record's epistemic grounding sets a
 <em>ceiling</em> on how trusted it can ever become, so a speculative
 memory cannot be promoted into canon by being recalled often — the
-guarantee is structural rather than procedural.</p>
+guarantee is structural rather than procedural. <strong>Daimon</strong>
+attacks the problem one step earlier than any of them: the model is
+asked to label each item verbatim or inferred <em>and to cite the
+span</em>, and then code greps the quote against the transcript and
+downgrades the item when it is not there. Everywhere else in this
+family, trust is assigned by policy over a claim; here the claim's own
+evidence is mechanically falsifiable, which is why it is the only system
+in the atlas whose trust classes can be wrong in a way the system itself
+detects.</p>
 <p>Tradeoff: more machinery than an MVP needs, and it directly addresses
 the failures simpler systems discover in production.</p>
 <h3 id="research-lineage">Research lineage</h3>
@@ -743,6 +755,29 @@ than admitted</td>
 corpus from the literature</td>
 <td>Correction is region folding; nothing records that a digested claim
 was wrong</td>
+</tr>
+<tr>
+<td><code>daimon</code></td>
+<td>Trust-classed checkpoint item: open question, decision, belief,
+uncertainty</td>
+<td>Per-project JSON checkpoints plus a disposable SQLite FTS5
+index</td>
+<td>Automatic session-start injection; FTS5/BM25 for
+<code>recall</code>, ranked by importance x decay</td>
+<td>Detached LLM extraction at session end, then deterministic quote and
+outcome gates</td>
+<td>Append-only events; <code>forget</code> writes a content-hashed
+tombstone that deletes index rows</td>
+<td>Per-project bucket applied on the read path; cross-project reads
+only by explicit slug</td>
+<td>Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only
+stdio MCP</td>
+<td>Detached serialize child, retry ledger with self-heal, index
+rebuild</td>
+<td>verbatim vs inferred as a stored field, verified by code against the
+transcript</td>
+<td>The model's trust claims are checked by code, not believed</td>
+<td>One live checkpoint per project; tombstone keyed on exact text</td>
 </tr>
 <tr>
 <td><code>elastic-atlas</code></td>
@@ -1784,6 +1819,16 @@ near-misses are frequently the interesting part:</p>
 <li><a href="../systems/claude-mem/"><code>claude-mem</code></a> has
 "tombstones" that synchronize row deletion across stores, which is not a
 rejected-value tombstone.</li>
+<li>The three tombstones are not equal. <a
+href="../systems/verel/"><code>verel</code></a> and <a
+href="../systems/rainbox/"><code>rainbox</code></a> normalize the value
+and refuse the <em>write</em>; <a
+href="../systems/daimon/"><code>daimon</code></a> keys on a hash of the
+item's exact text and suppresses on every <em>read</em> path — briefing,
+carry and index deletion alike. For a byte-identical re-extraction the
+effect is the same, and a paraphrase defeats the third but not the first
+two. Its own test suite never exercises re-assertion after a forget, so
+the mechanism is read, not demonstrated.</li>
 <li><a href="../systems/mercury-agent/"><code>mercury-agent</code></a>
 grades confidence three ways but has no discrete state.</li>
 <li>Of the four trust-state systems, only <a
@@ -1825,21 +1870,23 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>2 of 62:</em> <a
+<p><em>3 of 63:</em> <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>5 of 62:</em> <a
+<p><em>6 of 63:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 62:</em> <a
+<p><em>8 of 63:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1851,7 +1898,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>36 of 62:</em> <a
+<p><em>37 of 63:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1860,6 +1907,7 @@ href="../systems/cognee/"><code>cognee</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1892,7 +1940,8 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>6 of 62:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 63:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -1901,8 +1950,9 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>10 of 62:</em> <a
+<p><em>11 of 63:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
 href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
@@ -1915,7 +1965,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>2 of 62:</em> <a
+<p><em>2 of 63:</em> <a
 href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -1923,7 +1973,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p>Three observations follow from the counts, stated no more strongly
 than the counts support.</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving, while two systems
+half the atlas applies a scope key when retrieving, while three systems
 carry a value-level tombstone. That is not the same as saying scope is
 solved — this flag measures the read path only. It says nothing about
 write authorization, whether background consolidation respects the same
@@ -1936,13 +1986,21 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Two
-repositories of sixty-two assert that particular material must
+repositories of sixty-three assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Both arrived at
 it the same way: <a href="../systems/open-cowork/">open-cowork</a>
 through <code>forbiddenHits</code> in its eval harness, <a
 href="../systems/verel/">Verel</a> through a regression suite built from
-the red-team finding that produced its tombstone.</p>
+the red-team finding that produced its tombstone. <a
+href="../systems/daimon/">Daimon</a> is the near-miss that shows how
+narrow the bar is: 1,920 tests, a committed LongMemEval harness, unit
+tests asserting that a resolved item is withheld and that an id-bearing
+item is never fuzzy-matched into suppression — and still no case that
+forgets a value, re-extracts it, and asserts it stayed gone. The
+tombstone is the mechanism most in need of a negative test and the one
+least likely to get one, because nothing fails visibly when it silently
+stops working.</p>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
@@ -1991,6 +2049,17 @@ messages, matched its decision-extraction patterns, and were stored as
 durable facts on every context rollover. Any system with automatic
 capture should test explicitly that its own generated text cannot
 re-enter as evidence.</p>
+<p><code>daimon</code> captures nothing during a session and everything
+at the end of one: a <code>SessionEnd</code> hook spawns a
+<strong>detached</strong> child that serializes the whole transcript
+into a single checkpoint, so the agent never blocks on capture and there
+is no incremental write path at all. It is also the clearest instance of
+<em>referencing</em> evidence rather than storing it — the checkpoint
+carries a <code>transcript_hash</code> and per-item source message ids
+pointing into the host's own transcript file, which daimon never copies.
+That keeps the store tiny and the provenance real, at the cost of a
+provenance chain that breaks the moment the host rotates its
+transcripts.</p>
 <p>The important split is whether the captured item is itself memory or
 evidence for memory. Cognee, Claude-Mem, Honcho, Verel, MemPalace,
 Graphiti, Hindsight, Basic Memory, Mastra, Swafra, RainBox, agentmemory,
@@ -2090,6 +2159,27 @@ unverified assumptions. Its slogan is "No Execution, No Memory". This is
 procedures to facts; the difference is that Voyager enforces it in the
 rollout loop while GenericAgent asks the model to enforce it against
 itself, and keeps no record of the justifying call.</p>
+<p><code>daimon</code> does the opposite of GenericAgent's
+self-enforcement: it lets the model claim whatever it likes and then
+<strong>checks the claim in code</strong>. The extraction prompt demands
+<code>trust: "verbatim"</code> plus a copy-pasted quote and the id of
+the message it came from; afterwards <code>verify_quotes</code> greps
+the quote against the rendered transcript and demotes any item that
+misses, <code>sanitize_source_ids</code> deletes citations the
+transcript cannot vouch for, and <code>ground_outcomes</code> demotes a
+verbatim claim that asserts an outcome — merged, deployed, tests green —
+without citing a tool result that shows it. Three of the atlas's harder
+extraction problems get deterministic answers here, and the module
+comments are unusually clear about what is left: <em>"verbatim matching
+certifies TRANSCRIPTION, not truth"</em>. A related backstop is worth
+stealing on its own. Because trust assignment is model-chosen, a "never
+do X" that the model paraphrases into prose leaves no quote to verify
+and can soften undetectably later — so <code>pin_imperatives</code>
+scans user turns for hard imperatives (must, never, don't, always,
+forbidden) with a regex and force-pins any the model skipped, through
+the same verification gauntlet. Soft modals are deliberately left to the
+model. It is the only place in this atlas where a system defends
+specifically against <em>constraint inversion</em>.</p>
 <p>The research lineage adds two capture disciplines the practical
 systems mostly lost. <code>voyager</code> writes memory
 <strong>only</strong> when a critic verifies the environment reached the
@@ -2183,6 +2273,19 @@ only what a rewrite would delete. <code>hermes-agent</code> is the
 outlier: consolidation is neither background nor automatic, but a
 synchronous obligation handed to the model when a write would exceed the
 character budget.</p>
+<p><code>daimon</code> is the one system here that ran the experiment
+everybody else assumes the answer to. Its cross-session carry — folding
+the previous checkpoint's unresolved items into the new one — was tried
+as an LLM re-emission and as an exact copy in code, and the logbook
+records that re-emission <strong>lost whole items even from lossless
+input</strong> while exact copy held perfect fidelity. Carry is
+therefore code: copy the item, keep its birth stamp, expire by weight,
+dedup by salient-term overlap. The rule it derives from that is sharper
+than the measurement: a verbatim item's frozen text and quote
+<em>overwrite</em> a reworded twin, because a pinned quote that
+consolidation is allowed to rephrase was never pinned. Any system whose
+background pass regenerates existing memories through a model should run
+the same A/B before trusting it.</p>
 <p>Cognee's <code>memify</code>/<code>improve</code> pipelines enrich an
 existing graph, while its session path bridges hot entries into
 permanent memory asynchronously. Claude-Mem compresses batches into
@@ -2238,7 +2341,18 @@ files while injecting <code>MEMORY.md</code> wholesale.</p>
 <p><code>waku-agent</code> inverts the question everyone else asks.
 Rather than ranking better, it decides per turn whether to retrieve at
 all, and its stated reason is not cost but quality: irrelevant memory in
-the prompt bends the answer. Nothing else in the atlas can abstain.</p>
+the prompt bends the answer. Almost nothing else in the atlas can
+abstain. <code>daimon</code>'s proactive path is the one comparable case
+and it arrives from the opposite direction — not a judgment about
+relevance but three cheap lexical gates, each defaulting to silence: an
+unknown project, a prompt with fewer than two salient terms, or a
+candidate session sharing fewer than two <em>distinct</em> terms all
+return nothing. The comment explains why the shared-term count is per
+session rather than per item: a multi-topic prompt splits its terms
+across items, and a per-item count silenced exactly the sessions the
+feature existed to surface. Abstention by budgeted noise gates is weaker
+than abstention by judgment, and it is far cheaper than either ranking
+or asking a model.</p>
 <p><code>loongflow</code> breaks a different assumption: every other
 system here ranks deterministically and takes the top <em>k</em>. Its
 evolutionary memory selects a remembered solution by <strong>Boltzmann
@@ -2277,7 +2391,14 @@ awkwardly with a category set dominated by preferences, entities, and
 decisions. <code>a-mem</code> is vector-only despite hybrid wording.
 <code>mastra-observational-memory</code> is the deliberate exception:
 its primary path is sequential observations plus a recent raw tail, with
-semantic observation retrieval optional.</p>
+semantic observation retrieval optional. <code>daimon</code> is the
+deliberate exception in the other direction: <strong>no embeddings exist
+anywhere in the codebase</strong>, and its index is disposable by
+contract — any doubt about the SQLite file resolves to a full rebuild
+from the JSON, with no incremental upsert path, on the stated principle
+of "correctness over cleverness". The cost lands exactly where you would
+expect, and the project measures it rather than asserting it away — see
+<a href="#evalstests">Evals/Tests</a>.</p>
 <h3 id="context-injection">Context Injection</h3>
 <p><code>letta</code> and <code>mastra-observational-memory</code> have
 the deepest runtime prompt integration. Mastra removes observed raw
@@ -2316,6 +2437,23 @@ is instructive: write-time filtering is cheaper and cache-friendly but
 is a denylist, while read-time fencing costs tokens every turn and does
 not depend on pattern coverage. <code>holographic</code> does neither,
 injecting its top five stored facts into the prompt unfenced.</p>
+<p><code>daimon</code> shares Hermes's session-start-snapshot shape but
+makes the artifact the product: a "while you were away" briefing ordered
+by <em>what to verify first</em>, each line tagged
+<code>✓ verbatim</code> or <code>~ inferred</code>, capped at 3,000
+estimated tokens. Two details generalize past the format. First, budget
+pressure is spent in the right order — long <em>inferred</em> items are
+truncated in place before anything is dropped, and verbatim text is
+never rewritten to fit, only dropped whole and announced, because a
+guarantee that survives until the context gets tight is not a guarantee.
+Second, the optional LLM re-render is <strong>post-validated</strong>:
+every verbatim quote must survive the generated prose intact
+(whitespace-normalized), and any loss falls back to the deterministic
+render. That is the <a
+href="#structural-loss-guard-on-generated-rewrites">structural-loss
+guard</a> applied to context assembly rather than to consolidation, and
+it is the cheapest way to let a model prettify memory without letting it
+edit it.</p>
 <h3 id="correction">Correction</h3>
 <p>This is where systems diverge sharply.</p>
 <p><code>verel</code> and <code>rainbox</code> have the strongest
@@ -2356,6 +2494,36 @@ handed to curation and age decay, because they "describe external
 behavior and cannot be checked against local code". Its remaining gap is
 the familiar one — supersession without a rejected-value tombstone, so
 an archived memory can be re-derived from retained history.</p>
+<p><code>daimon</code> is the second implementation of that
+re-verification idea and extends it in two directions. Downward, into
+code: <code>daimon anchor &lt;file&gt; &lt;symbol&gt;</code> pins an
+item to a Python symbol, fingerprinted as a SHA-256 of
+<code>ast.dump</code> of the definition node, so the anchor is stable
+under reformatting and comment edits and moves only on a structural
+change — and drift is reported in the next briefing. Outward, into the
+world: an opt-in <code>worldcheck</code> pass spot-checks carried claims
+that name a repo-local <code>#N</code> with read-only
+<code>gh pr view</code> / <code>gh issue view</code> probes, under a
+<strong>0.8-second aggregate budget</strong>, a five-probe cap, and
+silent-skip on any failure, so the briefing can never block or fail on
+the network. The cross-repo case is excluded by a lookbehind in the
+reference regex — <code>owner/repo#12</code> and
+<code>gemini-cli#14715</code> must not match, because <code>gh</code>
+would answer for the wrong repository.</p>
+<p>Three of its correction decisions generalize. A machine-detected
+supersession is written as
+<code>supersede-candidate:&lt;new-id&gt;</code> and is <strong>live by
+construction</strong> — a guess may annotate a briefing with a
+confirm/reject command but may never suppress anything, and the liveness
+rule enforces that rather than trusting callers to remember it.
+Re-opening a resolved item requires <em>evidence</em>: either the item's
+code anchor still checks out live, or an explicit
+<code>--evidence</code> string, on the reasoning that re-stamping
+without one would mark an unchecked claim verified. And staleness is
+measured honestly — a carried item restated by a fresh checkpoint is not
+corroborated, because both statements descend from the same original
+extraction, so effective age runs from the last time code or a human
+actually checked it.</p>
 <p>The six systems added from the Hermes/OpenClaw ecosystem are
 uniformly weak here, and usefully so: none of <code>holographic</code>,
 <code>hermes-agent</code>, <code>openviking</code>,
@@ -2425,12 +2593,12 @@ href="https://github.com/TeleAI-UAGI/Awesome-Agent-Memory">Awesome-Agent-Memory<
 survey runs to about 1,500 lines across seventy sections and covers
 mem0, Letta, Zep, Graphiti, Cognee, MemOS, and HippoRAG — every
 widely-cited system, and all of them reviewed here. It does not list
-<code>verel</code> or <code>rainbox</code>, the only two systems in this
-atlas that carry a rejected-value tombstone. That is not a criticism of
-the survey; those two are small and obscure. It does mean
-correction-focused memory is under-surveyed as well as under-built: a
-reader working from the standard reading list would not encounter the
-mechanism at all.</p>
+<code>verel</code>, <code>rainbox</code> or <code>daimon</code>, the
+only three systems in this atlas that carry a rejected-value tombstone.
+That is not a criticism of the survey; all three are small and obscure.
+It does mean correction-focused memory is under-surveyed as well as
+under-built: a reader working from the standard reading list would not
+encounter the mechanism at all.</p>
 <h3 id="forgetting">Forgetting</h3>
 <p>Visible deletion varies from hard API deletion to lifecycle
 state:</p>
@@ -2462,6 +2630,14 @@ path.</p></li>
 fallback delete is powerful but risky.</p></li>
 <li><p><code>verel</code>: rejected tombstones, TTL/volatile/stale
 pruning, and protection for verified/rejected/pinned records.</p></li>
+<li><p><code>daimon</code>: <code>forget</code> deletes the item from
+the live checkpoint, appends a
+<code>forgotten:&lt;content-hash&gt;</code> event carrying a hash and
+never the text, re-mints the checkpoint's signed receipt, and — because
+item ids are a hash of the item's own text — deletes every row with that
+id from the search index across <em>all</em> historical checkpoints on
+the next rebuild. Weight-based expiry from carry is the softer path: an
+item below the floor simply stops being carried forward.</p></li>
 <li><p><code>hindsight</code>: bank/document/memory operations plus
 cascading schema relations; derived observations must remain consistent
 with source changes.</p></li>
@@ -2587,7 +2763,20 @@ repository moves. <code>pi</code> has no scope because it has no memory.
 <code>holographic</code> has no scope at all — it describes itself as a
 single-user store, with <code>category</code> serving as partitioning
 rather than access control. A-MEM, Swafra, and Holographic remain the
-outliers with effectively global local corpora.</p>
+outliers with effectively global local corpora. <code>daimon</code>
+scopes by a slug munged from the project's working directory, and the
+rule it derives is worth copying: callers that <em>display</em> what
+they read may fall back to another bucket, callers that <em>persist</em>
+what they read may not — carry always reads with
+<code>fallback=False</code>, so a cross-project pointer can never enter
+durable state. When the display fallback does fire, the foreign body is
+suppressed and only a header appears, on the stated reasoning that one
+warning line above a hundred foreign lines does not read as a warning.
+Its team mode is the atlas's cleanest answer to conflict-free sharing:
+only immutable per-author files sync through a private git sidecar, no
+mutable pointer ever lands there, teammates' items stay attributed and
+are never merged into yours, and a non-fast-forward is surfaced as a
+warning that repairs nothing.</p>
 <h2 id="4-implementation-hotspots-by-repo">4. Implementation Hotspots by
 Repo</h2>
 <h3 id="memory-schema">Memory Schema</h3>
@@ -2696,6 +2885,10 @@ exists.</li>
 <li><code>openclaw</code>: <code>MemoryEntry</code> in
 <code>extensions/memory-lancedb/lancedb-store.ts</code>; categories in
 <code>config.ts</code>.</li>
+<li><code>daimon</code>: the item-field table in
+<code>plugin/daimon_briefing/schema.py</code>; checkpoint shape in the
+<code>SERIALIZE_SYS</code> prompt in <code>serializer.py</code>; on-disk
+layout and id stamping in <code>store.py</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -2816,6 +3009,12 @@ in <code>V0/agent_memory_server/long_term_memory.py</code>.</li>
 <li><code>openclaw</code>: <code>sanitizeForMemoryCapture()</code> in
 <code>extensions/memory-lancedb/memory-capture-sanitization.ts</code>;
 <code>store()</code> in <code>lancedb-store.ts</code>.</li>
+<li><code>daimon</code>: <code>serialize_strict()</code> in
+<code>plugin/daimon_briefing/serializer.py</code> with its gate chain
+(<code>sanitize_source_ids</code>, <code>pin_imperatives</code>,
+<code>verify_quotes</code>, <code>ground_outcomes</code>);
+<code>merge()</code> in <code>carry.py</code>;
+<code>write_checkpoint()</code> in <code>store.py</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -2924,6 +3123,9 @@ in <code>src/agent/infra/memory/memory-manager.ts</code>.</li>
 <code>extensions/memory-lancedb/lancedb-store.ts</code>;
 <code>normalizeRecallQuery()</code> in
 <code>memory-policy.ts</code>.</li>
+<li><code>daimon</code>: <code>search()</code> and
+<code>suggest()</code> in <code>plugin/daimon_briefing/recall.py</code>;
+ranking in <code>scoring.py</code>.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -3013,6 +3215,10 @@ shaping.</li>
 <li><code>byterover</code>: caller-owned after listing.</li>
 <li><code>openclaw</code>: auto-recall assembly in
 <code>extensions/memory-lancedb/index.ts</code>.</li>
+<li><code>daimon</code>: <code>build()</code>, <code>withhold()</code>,
+<code>stale_carried()</code> and <code>render_plain()</code> in
+<code>plugin/daimon_briefing/briefing.py</code>; terminal output in
+<code>render.py</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -3097,6 +3303,11 @@ extraction, compaction, dedupe, and forgetting sweeps via
 <li><code>byterover</code>: bounded-concurrency LLM deduplication.</li>
 <li><code>openclaw</code>: auto-capture cursor advancement; no separate
 worker.</li>
+<li><code>daimon</code>: no worker — a detached
+<code>daimon serialize</code> child spawned by
+<code>hook/daimon-session-end.py</code>, tracked through
+<code>ledger.py</code> (<code>_session_ledger</code>,
+<code>_heal_plan</code>) and re-driven by <code>daimon heal</code>.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -3177,6 +3388,10 @@ MCP (<code>mcp.py</code>), CLI, and generated SDK clients.</li>
 provider adapter.</li>
 <li><code>openclaw</code>: <code>extensions/memory-core/</code> plugin
 contract, memory tools, CLI, and doctor contracts.</li>
+<li><code>daimon</code>: host hooks in <code>hook/</code> and
+<code>plugin/daimon_briefing/_hooks/</code>; read-only stdio MCP in
+<code>mcp_server.py</code> and <code>mcp_tools.py</code>; commands in
+<code>cli.py</code>.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <p>What these harnesses do and do not measure — and why a bad benchmark
@@ -3314,6 +3529,19 @@ best idea.</li>
 <li><code>openclaw</code>: test lines far exceed implementation — 4,497
 for the LanceDB extension and 2,530 for the memory-core doctor contract;
 no committed retrieval benchmark.</li>
+<li><code>daimon</code>: 1,920 tests across roughly 29,100 lines against
+15,200 lines of source, with dedicated quote-verification, carry,
+withhold, redaction-leak, receipt, and host-isolation suites. Its
+<code>benchmark/</code> runs LongMemEval-S through the real serializer
+and answers only from <code>daimon recall</code>, under a written
+reporting policy — publish only self-measured numbers with the full
+config stamp, label third-party figures as their publishers' claims,
+never report a figure without its backend, and report the trade rather
+than the win. Two result files are committed; the honest one is a
+52-question interim baseline at <strong>Recall@5 0.58 / Hit@5 0.67 / MRR
+0.59</strong> (my arithmetic over its per-question rows — the file ships
+no aggregate block). The other is a five-question run, which the config
+stamp makes obvious.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -3471,6 +3699,19 @@ redistillation. This turns provider failure into delayed processing
 instead of silent data loss. It fails if the recovery stores themselves
 leak secrets or if no operator ever reviews/retries accumulated
 stashes.</p>
+<p><code>daimon</code> adds the part this pattern usually lacks: a
+<em>classifier</em> over the capture log, and a UI for it. Every spawn
+and every result line is appended to <code>serialize.log</code>, and
+<code>ledger.py</code> folds them per session into outstanding failures,
+hung children (a liveness heartbeat, not wall-clock, decides), and
+retry-exhausted cases — which <code>daimon status</code> prints honestly
+and <code>daimon heal</code> re-drives, one retry per session by default
+with <code>--force</code> as the operator override. Its chunk cache is
+what makes the retry cheap: extractions are cached by chunk content
+under an explicit version key, so a heal, a merge death, or a grown
+transcript re-pays only for the chunks that changed. The cache key is
+deliberately <em>separate</em> from the prompt version, so wording edits
+keep the cache warm while semantic changes rotate it.</p>
 <h3 id="zero-llm-capture">Zero-LLM capture</h3>
 <p>Pattern guide: <a href="../patterns/zero-llm-capture/">Zero-LLM
 capture</a>.</p>
@@ -3478,23 +3719,42 @@ capture</a>.</p>
 <code>claude-mem</code>, <code>llm-wiki-memory</code>,
 <code>tencentdb-agent-memory</code>, and message-first
 <code>honcho</code>; <code>engram</code> demonstrates the small
-no-extraction baseline.</p>
+no-extraction baseline; <code>daimon</code> applies it <em>beside</em>
+an LLM path rather than instead of one.</p>
 <p>Persist a scoped event before any model call, make it searchable
 through exact keys or lexical metadata, then enrich it asynchronously
 only when useful. This keeps provider latency and outages out of the
 capture path. It fails when raw capture has no privacy, size, retention,
 or retrieval policy.</p>
+<p><code>daimon</code> is the useful hybrid. Its main extraction is an
+LLM call, but every mechanism guarding that call is stdlib code: quote
+verification, outcome grounding, imperative pinning, carry, dedup,
+redaction, code anchors, the world-check probes, and the scar harvester
+that drafts negative-knowledge candidates from a session by regex and
+drops any hit with no file path in its own span. The lesson is not
+"avoid the model" but "never let the model be the only thing between a
+transcript and a durable claim".</p>
 <h3 id="decay-and-reinforcement">Decay and reinforcement</h3>
 <p>Pattern guide: <a href="../patterns/decay-and-reinforcement/">Decay
 and reinforcement</a>.</p>
 <p>Repos: strongest in <code>verel</code>; supporting behavior in
-<code>agentmemory</code> and <code>honcho</code>; <code>swafra</code> is
-a counterexample for unconditional age decay.</p>
+<code>agentmemory</code>, <code>honcho</code> and <code>daimon</code>;
+<code>swafra</code> is a counterexample for unconditional age decay.</p>
 <p>Let retrieval strength fade or grow without changing epistemic
 confidence. This keeps stale operational memory from dominating while
 protecting durable truths and correction history. It fails when
 retrieval itself creates a self-reinforcing popularity loop or one
 half-life is applied to every memory kind.</p>
+<p><code>daimon</code> supplies the missing inversion. Its per-type
+decay rates are ordinary — beliefs fade slowest, the active topic
+fastest — but open questions carry <code>auto_escalation</code>, and
+past a fourteen-day expected lifespan their weight <em>grows</em> by
+<code>age**1.5 / 100</code>, capped so a fresh item still outranks an
+escalated one. For that one type, staleness means unresolved rather than
+irrelevant. The same file also treats a stamp further in the future than
+clock skew explains as neutral rather than maximally fresh, so a
+teammate's mis-stamped item cannot outrank genuine local work — a small
+guard that only appears once memory is shared across machines.</p>
 <h3 id="profiles-and-working-representations">Profiles and working
 representations</h3>
 <p>Repos: <code>honcho</code>, <code>supermemory</code>,
@@ -3601,7 +3861,8 @@ the expensive path</a>.</p>
 <p>Repos: strongest in <code>waku-agent</code>; also
 <code>atomic-agent</code>, <code>gini-agent</code>,
 <code>hermes-agent</code>, <code>redis-agent-memory-server</code>,
-<code>metaclaw</code>, <code>genericagent</code>.</p>
+<code>metaclaw</code>, <code>genericagent</code>,
+<code>daimon</code>.</p>
 <p>Put a cheap decision in front of an expensive one.
 <code>waku-agent</code> asks a small model, per turn, whether the store
 should be touched at all — because default-on retrieval is not merely
@@ -3619,11 +3880,19 @@ permitted one merely costs a search. Gates must fail open —
 <code>waku-agent</code> states it in the code, "a stale memory beats a
 lost one" — and they must be measured. Nothing in the atlas measures its
 gate.</p>
+<p><code>daimon</code> shows the zero-cost end of the same idea. Its
+proactive-recall gate is three lexical tests and no model call at all,
+and its world-check gate is a hard 0.8-second aggregate budget with a
+five-probe cap where anything unfinished is killed and skipped. Both
+fail toward silence rather than toward a stale answer, which is the
+opposite of Waku's fail-open posture and correct for what they guard: a
+missing <em>suggestion</em> costs a reminder, a missing <em>memory</em>
+costs the answer.</p>
 <h3 id="verify-memory-against-its-subject">Verify memory against its
 subject</h3>
-<p>Repos: <code>magic-context</code>; the procedural analogue is
-<code>voyager</code>; contrast the judgment-based gates in
-<code>verel</code> and <code>rainbox</code>.</p>
+<p>Repos: <code>magic-context</code> and <code>daimon</code>; the
+procedural analogue is <code>voyager</code>; contrast the judgment-based
+gates in <code>verel</code> and <code>rainbox</code>.</p>
 <p>Where a memory describes something inspectable, do not adjudicate it
 — check it. Map each memory to the artifacts it is about, record a
 per-memory verification timestamp, and let a change in those artifacts
@@ -3639,6 +3908,19 @@ record that an earlier version used a global commit watermark with
 all-or-nothing coverage, and that it was reworked to per-memory
 timestamps so a timed-out run banks what it checked. Global watermarks
 make partial progress worthless.</p>
+<p><code>daimon</code> is the second instance and answers the "degrades
+if the verdict is a model call" objection directly: none of its three
+verifications involve a model. A quote is checked by string match
+against the transcript, a code anchor by a SHA-256 of
+<code>ast.dump</code> of the symbol's definition node — stable under
+reformatting, sensitive to structure — and an external claim by a
+read-only <code>gh</code> probe under a sub-second budget. It also
+extends the pattern's <em>subject</em> beyond local artifacts: a claim
+about a pull request has an inspectable subject that happens to live on
+someone else's server, and the interesting design question becomes
+latency and blast radius rather than adjudication. Its own stated
+measurement goal is the right one and still unanswered — how often a
+carried repo-state claim is already false by the next read.</p>
 <h3 id="diffusion-instead-of-traversal">Diffusion instead of
 traversal</h3>
 <p>Repo: <code>hipporag</code>; contrast with BFS traversal in
@@ -3677,9 +3959,9 @@ because the model chooses what to discard under time pressure, with no
 review and no record of what was dropped.</p>
 <h3 id="structural-loss-guard-on-generated-rewrites">Structural-loss
 guard on generated rewrites</h3>
-<p>Repo: <code>byterover</code>; related range-tracking in
-<code>mastra-observational-memory</code> and verbatim retention in
-<code>mempalace</code>.</p>
+<p>Repos: <code>byterover</code> and <code>daimon</code>; related
+range-tracking in <code>mastra-observational-memory</code> and verbatim
+retention in <code>mempalace</code>.</p>
 <p>Before an LLM rewrite replaces stored content, parse both versions
 and count only what would be <strong>deleted</strong> — ignoring
 additions so enrichment does not trigger false positives. Treat any loss
@@ -3688,6 +3970,17 @@ the cheapest countermeasure in the atlas to summarization silently
 discarding evidence. It fails if the parse is lossy, or if the same
 guard is not applied to every rewrite path — ByteRover itself protects
 document curation but not its own LLM memory merge.</p>
+<p><code>daimon</code> applies the guard on the <em>read</em> side,
+which is cheaper still because it needs no diff. Its optional LLM
+briefing render must reproduce every verbatim quote intact —
+whitespace-normalized, since models re-wrap lines — and any loss
+discards the whole render and falls back to the deterministic one. The
+check is possible only because the system already knows which spans are
+load-bearing; that is the real prerequisite, and it is why most systems
+cannot copy this. The same reasoning governs its token budget: inferred
+items are truncated first and verbatim ones are dropped whole rather
+than shortened, because a guarantee that lapses under budget pressure
+was never a guarantee.</p>
 <h3 id="buffered-observation-reflection">Buffered
 observation-reflection</h3>
 <p>Repos: strongest in <code>mastra-observational-memory</code>; related
@@ -3698,8 +3991,8 @@ This removes LLM compression from the critical path. It fails without
 durable markers, range-aware replacement, recovery, and distributed
 coordination.</p>
 <h3 id="resolve-do-not-just-detect">Resolve, do not just detect</h3>
-<p>Repos: <code>memanto</code>; governance half in
-<code>core-memory</code>; the absence in <code>gini-agent</code>,
+<p>Repos: <code>memanto</code> and <code>daimon</code>; governance half
+in <code>core-memory</code>; the absence in <code>gini-agent</code>,
 <code>mateclaw</code>, <code>magic-context</code>,
 <code>openviking</code>, <code>holographic</code>.</p>
 <p>Every contradiction a system detects must end in a named disposition,
@@ -3713,6 +4006,18 @@ findings should stay retrievable, since a blocking queue degrades memory
 whenever nobody is looking. It fails when the resolution leaves no trace
 the next extraction pass can consult, which is exactly where Memanto's
 <code>remove_both</code> stops.</p>
+<p><code>daimon</code> is the second implementation and the one that
+puts the disposition in front of the user rather than in a review queue:
+a detected supersession renders <em>inside the briefing</em> as a
+flagged item with the confirm and reject commands inline, so the
+resolution happens at the moment the stale claim is read. Two rules make
+that safe. A machine suggestion is live by construction — the liveness
+fold refuses to let a <code>supersede-candidate</code> suppress
+anything, so a wrong guess costs a line of noise and never a lost
+memory. And rejecting a suggestion needs no evidence, while re-opening a
+genuinely resolved item does: the system distinguishes "I am overruling
+your guess" from "I am vouching for this claim", which is a distinction
+every other governance surface here collapses.</p>
 <h3 id="rehearse-the-correction-before-committing-it">Rehearse the
 correction before committing it</h3>
 <p>Repos: <code>memora</code>; related staging in
@@ -3758,6 +4063,17 @@ preserves source events; <code>mem0</code>, <code>langmem</code>,
 workspace: it makes verbatim evidence the primary store and treats
 derived structures as indexes. That does not solve truth, but it avoids
 losing the original context during extraction.</p>
+<p><code>daimon</code> is the sharpest counterexample, because it names
+the failure precisely rather than routing around it. Verifying a quote
+proves the sentence was <em>said</em>; it says nothing about whether the
+sentence was <em>right</em>, and the code comments say so — the model
+concludes X, X is false, and the transcript faithfully records the model
+saying X. The narrow fix it ships is the transferable part: for claims
+that assert an <em>outcome</em>, demand a pointer to a tool result and
+downgrade the claim when there is none. That covers exactly the class
+where a false memory does the most damage — believing work is finished
+when it is not — and leaves the general case openly unsolved rather than
+papered over with a confidence score.</p>
 <h3 id="vector-only-memory">Vector-only memory</h3>
 <p>Vector search misses exact constraints and can retrieve plausible but
 wrong memories. Every serious design should include lexical search or
@@ -5208,6 +5524,29 @@ and want to know what memory looks like from underneath.</li>
 <li>Do not copy when: you want a memory system — it has none, and its
 product page correctly credits memory to the agents it wraps.</li>
 </ul>
+<h3 id="daimon"><code>daimon</code></h3>
+<ul>
+<li>Best idea: the model's trust label is a claim the code falsifies — a
+verbatim item's quote is grepped against the transcript and demoted on a
+miss, and an outcome claim with no tool result cited is demoted even
+when its quote verifies.</li>
+<li>Biggest risk: the live working set is one checkpoint per project, so
+anything carry drops is reachable only through a lexical index with no
+semantic arm, and the committed retrieval numbers are modest.</li>
+<li>Most reusable component: <code>verify_quotes</code> and
+<code>ground_outcomes</code> in <code>serializer.py</code> — about 200
+lines that make an extraction's own provenance mechanically
+checkable.</li>
+<li>Maturity impression: 15,200 lines of source under 29,100 lines of
+tests, a research logbook, a scar file per landmine, and a benchmark
+reporting policy stricter than most vendors'.</li>
+<li>Study when: you want cross-session continuity for a coding agent, or
+you want to see what taking trust classes seriously actually costs in
+code.</li>
+<li>Do not copy when: you need memory within a session, semantic
+retrieval, or a shared service — none of the three is here or
+planned.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -5388,6 +5727,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a></li>
 <li><a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
+<li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -5611,6 +5951,9 @@ href="https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad
 <li><a href="https://github.com/NVIDIA/NemoClaw">NVIDIA/NemoClaw</a> at
 <a
 href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03"><code class="commit-id" title="02b59e5dc1c995cd47574af5eafb23395959ea03">02b59e5d…</code></a></li>
+<li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
+at <a
+href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b"><code class="commit-id" title="522a217bba088fa4f65324b0b79ad90b50e6df5b">522a217b…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
