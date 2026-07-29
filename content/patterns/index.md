@@ -153,13 +153,13 @@ Where the atlas has an exact count — the seven mechanisms on
 <!-- BEGIN GENERATED SPREAD -->
 | Mechanism | Systems carrying it |
 | --- | --- |
-| Scope enforced in retrieval | 50 of 84 |
-| Human review surface | 14 of 84 |
-| Bi-temporal validity | 8 of 84 |
-| Append-only mutation audit | 8 of 84 |
-| Explicit trust state | 7 of 84 |
-| Negative retrieval assertion | 5 of 84 |
-| Rejected-value tombstone | 3 of 84 |
+| Scope enforced in retrieval | 51 of 85 |
+| Human review surface | 14 of 85 |
+| Append-only mutation audit | 9 of 85 |
+| Bi-temporal validity | 8 of 85 |
+| Explicit trust state | 7 of 85 |
+| Negative retrieval assertion | 6 of 85 |
+| Rejected-value tombstone | 3 of 85 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in two or three
