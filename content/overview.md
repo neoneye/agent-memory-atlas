@@ -1158,6 +1158,39 @@ appears 25 times, `rollback` 24, `forget*` 25, `audit*` 13, `unlearn` 9 — and
 `tombstone`, `rejected`, `negative` and `tenant` **zero** times each, exactly as
 in the 107-page survey. The property is now named. The mechanism still is not.
 
+**The security side has now built the mechanism twice and made it durable
+neither time.** Both artifacts capture the rejected value and then fail to keep
+it, in ways that only reading the callers reveals:
+
+- **[A-MemGuard](https://github.com/TangciuYueng/AMemGuard)** (at
+  [`dd92f7ff21b9a904a703141be3d5b80170e57228`](https://github.com/TangciuYueng/AMemGuard/commit/dd92f7ff21b9a904a703141be3d5b80170e57228),
+  paper [arXiv:2510.02373](https://arxiv.org/abs/2510.02373)) names this atlas's
+  failure mode more precisely than the memory literature does: a poisoned record
+  triggers an error whose "corrupted outcome is stored as precedent", which
+  "amplifies the initial error and progressively lowers the threshold for
+  similar attacks". Its defence is exactly the right shape. Consensus validation
+  splits retrieved memories into consistent and inconsistent; each inconsistent
+  one gets its reasoning chain written back onto the memory entry as a `lesson`;
+  and later retrievals inject those lessons under a header instructing the model
+  to "AVOID the operations that previously led to failure". That is a
+  rejected-value record consulted on the read path. It is **never written
+  back**: `main.py` loads the memory pool read-only with `json.load`, the only
+  `json.dump` is the results file, and the one call to `update_memory` is
+  commented out. Every lesson lives in a Python dict for one run and dies with
+  the process, so the next run meets the same poisoned record with no memory of
+  having been fooled by it. The defence against a self-reinforcing error cycle
+  does not itself survive the cycle.
+- **OWASP Agent Memory Guard** quarantines each blocked value into a dict that
+  nothing ever reads back — described in [§1](#not-in-scope-conversation-window-management).
+
+Neither is a defect in its own terms: one is a research harness for scoring an
+attack, the other a layer expecting you to bring the store. Together they make
+the point that the missing piece is not the idea. Both projects independently
+reached "keep a record of what was wrong and check it before acting", and in
+both the record is in-process. The gap between that and a tombstone is
+persistence, and persistence is the part nobody has treated as the interesting
+half.
+
 ### Forgetting
 
 Visible deletion varies from hard API deletion to lifecycle state:

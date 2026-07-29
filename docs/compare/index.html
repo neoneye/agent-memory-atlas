@@ -3191,6 +3191,45 @@ literature and the code have each found half of it.</p>
 <code>negative</code> and <code>tenant</code> <strong>zero</strong>
 times each, exactly as in the 107-page survey. The property is now
 named. The mechanism still is not.</p>
+<p><strong>The security side has now built the mechanism twice and made
+it durable neither time.</strong> Both artifacts capture the rejected
+value and then fail to keep it, in ways that only reading the callers
+reveals:</p>
+<ul>
+<li><strong><a
+href="https://github.com/TangciuYueng/AMemGuard">A-MemGuard</a></strong>
+(at <a
+href="https://github.com/TangciuYueng/AMemGuard/commit/dd92f7ff21b9a904a703141be3d5b80170e57228"><code class="commit-id" title="dd92f7ff21b9a904a703141be3d5b80170e57228">dd92f7ff…</code></a>,
+paper <a href="https://arxiv.org/abs/2510.02373">arXiv:2510.02373</a>)
+names this atlas's failure mode more precisely than the memory
+literature does: a poisoned record triggers an error whose "corrupted
+outcome is stored as precedent", which "amplifies the initial error and
+progressively lowers the threshold for similar attacks". Its defence is
+exactly the right shape. Consensus validation splits retrieved memories
+into consistent and inconsistent; each inconsistent one gets its
+reasoning chain written back onto the memory entry as a
+<code>lesson</code>; and later retrievals inject those lessons under a
+header instructing the model to "AVOID the operations that previously
+led to failure". That is a rejected-value record consulted on the read
+path. It is <strong>never written back</strong>: <code>main.py</code>
+loads the memory pool read-only with <code>json.load</code>, the only
+<code>json.dump</code> is the results file, and the one call to
+<code>update_memory</code> is commented out. Every lesson lives in a
+Python dict for one run and dies with the process, so the next run meets
+the same poisoned record with no memory of having been fooled by it. The
+defence against a self-reinforcing error cycle does not itself survive
+the cycle.</li>
+<li><strong>OWASP Agent Memory Guard</strong> quarantines each blocked
+value into a dict that nothing ever reads back — described in <a
+href="#not-in-scope-conversation-window-management">§1</a>.</li>
+</ul>
+<p>Neither is a defect in its own terms: one is a research harness for
+scoring an attack, the other a layer expecting you to bring the store.
+Together they make the point that the missing piece is not the idea.
+Both projects independently reached "keep a record of what was wrong and
+check it before acting", and in both the record is in-process. The gap
+between that and a tombstone is persistence, and persistence is the part
+nobody has treated as the interesting half.</p>
 <h3 id="forgetting">Forgetting</h3>
 <p>Visible deletion varies from hard API deletion to lifecycle
 state:</p>

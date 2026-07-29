@@ -40,6 +40,10 @@ when the work happens.
   contain the atlas's central mechanism, and all eleven of its unreviewed
   framework candidates were then triaged — nine became reports and four corrected
   claims the atlas had published.
+- [2026-07-29-memorypapers-against-the-atlas.md](2026-07-29-memorypapers-against-the-atlas.md) —
+  200 papers with a security category the surveys lack; A-MemGuard writes a
+  rejected-value lesson it never persists, MemMachine is an unreviewed system in
+  scope, and a site claiming weekly updates carries a title retired in June.
 - [2026-07-29-a-reading-list-triaged.md](2026-07-29-a-reading-list-triaged.md) —
   a nine-item recent-papers list worked end to end; four surveys link one
   repository between them, no report was added, and three published atlas claims

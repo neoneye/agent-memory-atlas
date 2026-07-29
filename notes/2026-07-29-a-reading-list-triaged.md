@@ -18,7 +18,7 @@ the ledger; the three substantive findings have their own notes.
 | 6 | [arXiv:2502.12110](https://arxiv.org/abs/2502.12110) A-MEM | `agiresearch/A-mem` | Pinned, [reviewed](../content/systems/a-mem.md) 2026-07-27 |
 | 7 | [arXiv:2507.03724](https://arxiv.org/abs/2507.03724) MemOS | `MemTensor/MemOS` | Pinned, [reviewed](../content/systems/memos.md) 2026-07-26 |
 | 8 | [arXiv:2501.00663](https://arxiv.org/abs/2501.00663) Titans | none official | Out of scope; now named in the scope section |
-| 9 | [memorypapers.org](https://memorypapers.org) | HippoRAG, Mem0, MemOS | All three already reviewed |
+| 9 | [memorypapers.org](https://memorypapers.org) | HippoRAG, Mem0, MemOS | **This row was wrong** — it rested on one landing-page fetch. Re-read properly: 200 papers, a security category, one published finding and one outstanding report — [note](2026-07-29-memorypapers-against-the-atlas.md) |
 
 All nine items verified to exist. The three surveys dated after this atlas's
 previous survey pass are real papers, not artifacts of the list.
@@ -83,6 +83,12 @@ out of four.
 
 ## Open, and now recorded
 
+- **[MemMachine](https://github.com/MemMachine/MemMachine) is unreviewed and in
+  scope** — found on the re-read of item 9, which this note originally dismissed
+  in one line. Apache 2.0, active, persists across restarts, and holds an
+  architectural position the atlas has no strong representative of: keep the
+  whole episode, minimise LLM extraction. The one system report this round
+  generated.
 - **Substrate coverage in the deletion test.** The security survey's Verified
   Forgetting enumerates raw logs, compressed summaries, vector indices, **and
   propagated copies**. The atlas's deletion test does not cover the last, and
