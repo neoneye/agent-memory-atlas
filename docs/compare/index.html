@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-eighty-nine agent memory architectures, their retrieval mechanics, trust
+ninety agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,15 +13,15 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of eighty-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of ninety agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of eighty-nine agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+of ninety agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -77,9 +77,9 @@ Report — Agent Memory Atlas</title>
           <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
-          <p class="document-deck">A code-grounded comparison of
-eighty-nine agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+          <p class="document-deck">A code-grounded comparison of ninety
+agent memory architectures, their retrieval mechanics, trust models, and
+operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,11 +145,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Eighty-nine systems do not fall into eighty-nine categories. They
-cluster around eight architectural commitments, and most systems belong
-to more than one — a coding-agent memory can also be verification-first,
-and a host runtime's plugin can also be a hosted service. The families
-below are lenses, not bins.</p>
+<p>Ninety systems do not fall into ninety categories. They cluster
+around eight architectural commitments, and most systems belong to more
+than one — a coding-agent memory can also be verification-first, and a
+host runtime's plugin can also be a hosted service. The families below
+are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -259,7 +259,8 @@ managed-platform-only.</p>
 <code>mateclaw</code>, <code>waku-agent</code>, <code>loongflow</code>,
 <code>buzz</code>, <code>openhuman</code>, <code>aukora-kernel</code>,
 <code>neko</code>, <code>sillytavern</code>, <code>risuai</code>,
-<code>soul-of-waifu</code>, <code>z-waif</code></p>
+<code>soul-of-waifu</code>, <code>z-waif</code>,
+<code>virtualwife</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -2873,6 +2874,31 @@ confidence, trust</td>
 <td>Complex; may be heavy for product MVP</td>
 </tr>
 <tr>
+<td><code>virtualwife</code></td>
+<td>Short term, a raw exchange as JSON in Django; long term, an LLM
+summary of an exchange with an LLM-assigned importance score 1–10</td>
+<td>Two stores behind one <code>BaseStorage</code> interface — a Django
+model for the short term, Milvus for the long term</td>
+<td>Short term is the last N rows by timestamp; long term sums
+relevance, importance and an hourly exponential recency decay</td>
+<td>Every exchange is saved raw; with long memory enabled it is also
+summarised and scored by an LLM before insertion</td>
+<td><code>clear(owner)</code> wipes everything for one owner; there is
+no per-memory delete anywhere in the interface</td>
+<td>An <code>owner</code> (character) and <code>sender</code> (user) key
+on the long-term path only; short-term retrieval drops the owner
+filter</td>
+<td>A Django backend behind a VRM avatar front-end; no agent API</td>
+<td>None. Summarisation and importance scoring run inline on the write
+path</td>
+<td>None. <code>importance_score</code> is salience assigned by a model,
+not confidence</td>
+<td>A four-method storage contract with <code>owner</code> on every
+method, including a scoped clear</td>
+<td><code>normalize_scores</code> sums three quantities on different
+scales without normalising any of them</td>
+</tr>
+<tr>
 <td><code>voyager</code></td>
 <td>Executable JavaScript skill plus generated description</td>
 <td><code>skills.json</code> and flat files, Chroma index over
@@ -3003,14 +3029,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 89:</em> <a
+<p><em>3 of 90:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 89:</em> <a
+<p><em>7 of 90:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3020,7 +3046,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 89:</em> <a
+<p><em>8 of 90:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3032,7 +3058,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>51 of 89:</em> <a
+<p><em>51 of 90:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -3088,7 +3114,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>10 of 89:</em> <a
+<p><em>10 of 90:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3102,7 +3128,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>15 of 89:</em> <a
+<p><em>15 of 90:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3121,7 +3147,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>6 of 89:</em> <a
+<p><em>6 of 90:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
@@ -3146,11 +3172,11 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Six
-repositories of eighty-nine assert that particular material must
-<em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Two reached it
-from memory work: <a href="../systems/open-cowork/">open-cowork</a>
-through <code>forbiddenHits</code> in its eval harness, <a
+repositories of ninety assert that particular material must <em>not</em>
+be retrieved — the assertion every scope, deletion and correction claim
+in this document ultimately rests on. Two reached it from memory work:
+<a href="../systems/open-cowork/">open-cowork</a> through
+<code>forbiddenHits</code> in its eval harness, <a
 href="../systems/verel/">Verel</a> through a regression suite built from
 the red-team finding that produced its tombstone. The third, <a
 href="../systems/mirix/">MIRIX</a>, arrived from somewhere else entirely
@@ -7164,6 +7190,7 @@ href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
 <li><a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a></li>
 <li><a href="../systems/z-waif/"><code>z-waif</code></a></li>
+<li><a href="../systems/virtualwife/"><code>virtualwife</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -7490,6 +7517,10 @@ href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29
 href="https://github.com/SugarcaneDefender/z-waif">SugarcaneDefender/z-waif</a>
 at <a
 href="https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f"><code class="commit-id" title="aaf905c12efcbd2a709a3b2285f55e554d47484f">aaf905c1…</code></a></li>
+<li><a
+href="https://github.com/yakami129/VirtualWife">yakami129/VirtualWife</a>
+at <a
+href="https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f"><code class="commit-id" title="c8afd6d3ce6bb6f58988c649c50299d36b63e08f">c8afd6d3…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>

@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of eighty-nine agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of ninety agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -56,7 +56,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Eighty-nine systems do not fall into eighty-nine categories. They cluster around
+Ninety systems do not fall into ninety categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -154,7 +154,7 @@ several documented capabilities are managed-platform-only.
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
 `mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`, `loongflow`, `buzz`,
-`openhuman`, `aukora-kernel`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`, `z-waif`
+`openhuman`, `aukora-kernel`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`, `z-waif`, `virtualwife`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -776,6 +776,7 @@ session with an identity you could later correct.
 | `tencentdb-agent-memory` | L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map | JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB | FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona context | Successful-turn capture, LLM extraction, store/update/merge/skip judge, symbolic tool-output offload | Internal merge/delete/cleanup; no first-class correction/forget tool | Session fields and data directories; no general tenant boundary | OpenClaw hooks/tools/context engine; Hermes gateway | Deferred embeddings, scene/persona generation, retention reclamation | Source message IDs and raw evidence; no verification/rejection state | Layered progressive disclosure with raw drill-down | Non-atomic dual writes, fail-open dedup, thin core tests, unsupported benchmark claims |
 | `tigrimosr` | A skill — a SKILL.md with a registry row carrying review status, rationale and the sessions it came from — plus one memory.md per project | JSON files on disk (skills.json, projects.json, chat history) and SKILL.md directories | No search; the project's assigned skills and its memory.md are assembled into the system prompt | A synthesizer reads finished sessions, user feedback and subagent traces, then proposes create or update | Proposals stage as SKILL.md.proposed and become live by rename on approval; rejection deletes the proposal and records nothing | Project id selects the memory.md and filters the installed-skills block on the read path | Native Rust desktop app, embedded web UI, MCP servers, plugins, Telegram and LINE bots | A scheduler runs the skill synthesizer; compaction hooks track file reads and invoked skills | review_status pending or approved, persisted, with pending coupled to enabled=false | A staged proposal a person can diff before it takes effect, carrying its rationale and source sessions | Proposal state is in-memory only, so a rejected skill can be re-proposed after a restart |
 | `verel` | `MemoryRecord` fact/rule/schema/failure/skill | SQLite local plus backend adapters | FTS5/BM25 default, cosine with embedder; rank adds strength, confidence, trust | Candidate extraction, attested/corroborated promotion | Correction chains, rejected tombstones, decay/prune | Scope lattice | Helpers, MCP, hosted/replicated adapters | Consolidation, promotion gate, replication | Explicit candidate/verified/rejected, provenance, confidence | Best correctness model in set | Complex; may be heavy for product MVP |
+| `virtualwife` | Short term, a raw exchange as JSON in Django; long term, an LLM summary of an exchange with an LLM-assigned importance score 1–10 | Two stores behind one `BaseStorage` interface — a Django model for the short term, Milvus for the long term | Short term is the last N rows by timestamp; long term sums relevance, importance and an hourly exponential recency decay | Every exchange is saved raw; with long memory enabled it is also summarised and scored by an LLM before insertion | `clear(owner)` wipes everything for one owner; there is no per-memory delete anywhere in the interface | An `owner` (character) and `sender` (user) key on the long-term path only; short-term retrieval drops the owner filter | A Django backend behind a VRM avatar front-end; no agent API | None. Summarisation and importance scoring run inline on the write path | None. `importance_score` is salience assigned by a model, not confidence | A four-method storage contract with `owner` on every method, including a scoped clear | `normalize_scores` sums three quantities on different scales without normalising any of them |
 | `voyager` | Executable JavaScript skill plus generated description | `skills.json` and flat files, Chroma index over descriptions | Vector similarity over descriptions, top-5, returns code | Written only when a critic verifies environment success | Same-name rewrite; old versions on disk but unreachable | Single agent checkpoint directory | Research rollout loop; prompt injection of retrieved code | None | Verified execution is the provenance | Environment-verified write gate — the strongest in the atlas | Unbounded skill concatenation into prompts; no failure memory; frozen since 2023 |
 | `waku-agent` | Fact (semantic), episode (episodic), and SKILL.md (procedural) | SQLite by default; Supabase for facts, Notion for episodes | Gated — a small model decides whether to search at all, and supplies the query | Consolidation batched after N new chats, not per message | None found; no supersession or tombstone | Single user | CLI agent; skills in the Anthropic Agent Skills format | Batched consolidation into facts and episodes | Gate decisions carry a reason string; no trust state on memories | Refusing expensive work at three levels, and failing open when the gate errors | No correction, scope, or trust model; gate adds a model call per turn |
 | `z-waif` | A message pair — one user turn and one character turn — reduced to a list of word ids with the common words pruned out | Three JSON files under `RAG_Database/`: a word table with counts and values, per-pair word ids and scores, and the raw text | Six highest-value query words scored against every stored pair by shared-word count, with a length penalty; the best pair and its two neighbours are injected | Every message pair is tokenised into the word table after it is sent; no model is involved at any point | An undo pops the word-id rows and documents that it does not uncount the words; a manual recalculate rebuilds everything | None. One global corpus per installation | The companion app's own prompt builder; the result is injected as a `[System M]` block | A thread recomputes word values every 120 seconds, plus a roughly one-in-three chance of recomputing on any given turn | None. Every stored pair is equally eligible and nothing records where it came from | Inverse document frequency, length normalisation and a cap on the character's own words steering retrieval — all derived from scratch | A three-message window score is computed and never used; the licence is not open source |
@@ -834,31 +835,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*3 of 89:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*3 of 90:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*7 of 89:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*7 of 90:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*8 of 89:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
+*8 of 90:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
 
-*51 of 89:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*51 of 90:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*10 of 89:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
+*10 of 90:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*15 of 89:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*15 of 90:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*6 of 89:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
+*6 of 90:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -877,7 +878,7 @@ nothing here measures that.
 "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Six repositories of eighty-nine
+**Negative evidence is almost never tested.** Six repositories of ninety
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests on. Two reached
 it from memory work: [open-cowork](../systems/open-cowork/) through `forbiddenHits`
@@ -3225,6 +3226,7 @@ Privacy/deletion:
 - [`risuai`](../systems/risuai/)
 - [`soul-of-waifu`](../systems/soul-of-waifu/)
 - [`z-waif`](../systems/z-waif/)
+- [`virtualwife`](../systems/virtualwife/)
 
 ### Repos Inspected
 
@@ -3318,6 +3320,7 @@ Privacy/deletion:
 - [kwaroran/RisuAI](https://github.com/kwaroran/RisuAI) at [`316e430bedbe68c80060ce74c5a1fff88f3bdf97`](https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97)
 - [jofizcd/Soul-of-Waifu](https://github.com/jofizcd/Soul-of-Waifu) at [`3d032badc07335012ae6917e29ea16b8203252f5`](https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5)
 - [SugarcaneDefender/z-waif](https://github.com/SugarcaneDefender/z-waif) at [`aaf905c12efcbd2a709a3b2285f55e554d47484f`](https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f)
+- [yakami129/VirtualWife](https://github.com/yakami129/VirtualWife) at [`c8afd6d3ce6bb6f58988c649c50299d36b63e08f`](https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f)
 
 ### Commands Used
 
