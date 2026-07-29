@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Agent memory as signed,
+NIP-44-encrypted events on a Nostr relay that can read neither the
+content nor which memory it is holding.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Buzz — Agent Memory Atlas">
+    <meta property="og:description" content="Agent memory as signed,
+NIP-44-encrypted events on a Nostr relay that can read neither the
+content nor which memory it is holding.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Buzz — Agent Memory Atlas">
+    <meta name="twitter:description" content="Agent memory as signed,
+NIP-44-encrypted events on a Nostr relay that can read neither the
+content nor which memory it is holding.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Buzz — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory as an encrypted protocol</p>
+          <h1>Buzz</h1>
+          <p class="document-deck">Agent memory as signed,
+NIP-44-encrypted events on a Nostr relay that can read neither the
+content nor which memory it is holding.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/block/buzz">
+              <span>Source</span>
+              <strong>block/buzz</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb" title="24d90d1280a9325c6cbcf8eea30ac54db5afd2cb">
+              <span>Analyzed revision</span>
+              <code>24d90d12…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>1 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Buzz is a workspace where people and agents share channels on a relay
+the operator runs, and its memory layer is the part worth reading. Agent
+memory here is not a library call or a service API — it is a
+<strong>wire protocol</strong>, specified as NIP-AE and implemented
+against the spec clause by clause, with the code citing rules by name
+(<code>spec: *Head selection* rule (3)</code>).</p>
+<p>The design goal is unusual in this atlas and clearly stated by the
+mechanism: <strong>the infrastructure holding the memory should learn
+nothing from holding it.</strong> Bodies are NIP-44 encrypted under a
+conversation key derived from the agent and owner keypairs, so the relay
+cannot read them. And the addressing is blinded too — the <code>d</code>
+tag a relay indexes by is
+<code>HMAC-SHA256(K_c, "agent-memory/v1/d-tag" || 0x00 || slug)</code>,
+so the relay cannot tell <code>mem/values/honesty</code> from
+<code>mem/projects/q3</code>, or even that two engrams belong to related
+topics. Nothing else in this atlas hides the <em>shape</em> of a memory
+store from its own storage provider.</p>
+<p>What is genuinely strong: a compare-and-swap write path
+(<code>buzz mem patch --base-hash</code>) that refuses a diff generated
+against a value another writer has since changed; last-writer-wins head
+selection with a monotonic <code>created_at</code> and a deterministic
+event-id tiebreak; and a small piece of prompt hygiene that most systems
+get wrong — the difference between "the relay confirmed you have no core
+memory" and "the fetch failed", which produce a nudge and
+<em>silence</em> respectively, so a transport error never teaches the
+agent it has no past.</p>
+<p>What is weakest is a direct consequence of the storage choice.
+Engrams are parameterized-replaceable events: the relay stores one head
+per <code>d</code> tag and <strong>discards what it replaces</strong>.
+So there is no version history, no way to see what a memory said last
+week, and a tombstone is a statement that the slug is now empty rather
+than a record of what was rejected. There is also no retrieval to speak
+of — no embeddings, no search, no ranking anywhere in the memory path —
+which is a defensible position for a store the agent curates by hand,
+and a hard ceiling if it ever grows.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>engram</strong>: one <code>kind:30174</code>
+event whose decrypted body is either</p>
+<pre class="text"><code>{&quot;slug&quot;:&quot;core&quot;,&quot;profile&quot;:&quot;…&quot;}          — the agent&#39;s identity surface
+{&quot;slug&quot;:&quot;mem/…&quot;,&quot;value&quot;:&quot;…&quot;}           — one logical entry
+{&quot;slug&quot;:&quot;mem/…&quot;,&quot;value&quot;:null}          — a tombstone</code></pre>
+<p><code>Body</code> in <code>crates/buzz-core/src/engram.rs</code> is
+exactly that two-variant enum, and <code>is_tombstone()</code> is
+<code>matches!(self, Body::Memory { value: None, .. })</code>.</p>
+<p>Slugs are a namespace, not a schema:
+<code>^mem/[a-z0-9][a-z0-9_-]{0,63}(/[a-z0-9][a-z0-9_-]{0,63})*$</code>,
+255 bytes maximum. Structure comes from <strong>references</strong> —
+literal <code>[[mem/some/slug]]</code> substrings inside a body's free
+text, extracted by <code>extract_refs</code>. The desktop viewer walks
+those refs from <code>core</code> to build a reachability tree, and
+reports two things the walk produces: <strong>orphans</strong> (engrams
+not reachable from <code>core</code>) and <strong>dangling refs</strong>
+(a <code>[[slug]]</code> pointing at something tombstoned or never
+written).</p>
+<p>The state machine is short, and there is no epistemic content in
+it:</p>
+<pre class="text"><code>   agent decides something is worth keeping
+        │
+        ▼
+   buzz mem set / patch  ──►  encrypt, sign, publish
+        │                          │
+        │                     relay replaces the head for this d-tag
+        │                     (the previous version is discarded)
+        ▼
+   engram is live ── reachable if some body references it, else an orphan
+        │
+        ├── mem patch --base-hash  ──► refused if the value moved underneath
+        │
+        └── mem rm ──► publish {value: null}
+                            │
+                            ▼
+                   head is a tombstone; listings skip it;
+                   refs to it become dangling.
+                   What it used to say is gone from the relay.</code></pre>
+<p>Memory is <strong>agent-controlled</strong>, and unusually so:
+nothing derives, extracts, summarizes, or scores. An engram exists
+because the agent wrote it, and says what the agent wrote. The owner is
+a second principal who can also write —
+<code>buzz mem set --owner …</code> — which makes this one of the few
+stores here where a human and an agent are peers over the same namespace
+rather than one supervising the other.</p>
+<p>There is <strong>no trust state and no provenance on a
+value</strong>. An engram is signed, so you know which key wrote it, and
+that is the entire epistemic apparatus. Nothing marks a memory as a
+guess, a corroborated fact, or a thing the user denied.
+<code>core</code> gets one structural protection: <code>mem rm</code>
+refuses to tombstone it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Rust, 26 crates, Apache 2.0. The memory path touches five of
+them:</p>
+<ul>
+<li><code>buzz-core/src/engram.rs</code> (1,049 lines) — the protocol:
+slug validation, key derivation, d-tag HMAC, body encode/decode, event
+build, validate-and-decrypt, head selection, ref extraction.</li>
+<li><code>buzz-cli</code> — the <code>buzz mem</code> verbs
+(<code>get</code>, <code>set</code>, <code>patch</code>,
+<code>hash</code>, <code>ls</code>, <code>rm</code>).</li>
+<li><code>buzz-acp/src/engram_fetch.rs</code> (248 lines) — renders the
+core profile into the agent's prompt.</li>
+<li><code>buzz-relay</code> — ingest, including the NIP-33
+replaceable-event path.</li>
+<li><code>buzz-conformance</code> — a property-test and replay-fixture
+harness for the spec.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TB
+    A[Agent / owner] --&gt;|buzz mem set, patch, rm| C[buzz-core engram]
+    C --&gt;|NIP-44 encrypt under K_c| E[kind:30174 event]
+    C --&gt;|d = HMAC K_c, slug| E
+    E --&gt; R[(Nostr relay you run)]
+    R --&gt;|replace_parameterized_event&lt;br/&gt;keyed by pubkey, kind, d_tag| R
+    R --&gt; F[buzz-acp engram_fetch]
+    F --&gt;|core profile only| P[Agent prompt]
+    R --&gt; V[Desktop viewer&lt;br/&gt;read-only tree, orphans, dangling]</code></pre>
+<p><code>conversation_key(my_seckey, their_pubkey)</code> is symmetric,
+so agent and owner derive the same <code>K_c</code> and either can read
+and write the namespace. The relay sees signed events with opaque tags
+and nothing else.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> a Nostr relay. Buzz ships one
+(<code>buzz-relay</code>), and the premise of the project is that you
+run it — "on a relay you own". There is no database to administer beyond
+what the relay needs, no vector service, no model provider. Memory costs
+no LLM calls at all.</li>
+<li><strong>Fully local and offline:</strong> yes, and nothing degrades,
+because nothing in the memory path calls a model.</li>
+<li><strong>No API key is required to store anything</strong>, which is
+rare here.</li>
+<li><strong>Hand-repairable:</strong> partly. The store is a relay
+database of ciphertext, so you cannot fix it with a text editor, but
+<code>buzz mem get</code>, <code>hash</code>, <code>ls</code> and
+<code>patch</code> give you a complete command-line surface over
+plaintext, and the body format is a two-field JSON object.</li>
+<li>The install path is a Rust workspace build plus a relay; this is the
+heaviest part of adopting it, and it buys the sovereignty the design is
+about.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>buzz mem set</code> →
+<code>Body::Memory{slug, value}</code> → <code>to_json_bytes</code>
+(hand-rolled so test vectors match byte-for-byte) → NIP-44 encrypt under
+<code>K_c</code> →
+<code>EventBuilder::new(Kind::Custom(KIND_AGENT_ENGRAM), …)</code> with
+the HMAC <code>d</code> tag and a <code>p</code> tag → sign → publish
+(<code>crates/buzz-core/src/engram.rs:430</code>).</p>
+<p><strong>Compare-and-swap write.</strong> <code>buzz mem patch</code>
+(<code>crates/buzz-cli/src/lib.rs:1602</code>) reads a unified diff,
+requires <code>--base-hash</code> (a sha256 of the exact UTF-8 bytes
+<code>mem get</code> returned), refuses if the slug moved since, and
+additionally "refuses hunks whose context doesn't match the current
+value verbatim". <code>--no-base-hash</code> disables the check and its
+doc comment says so plainly.</p>
+<p><strong>Read.</strong> <code>validate_and_decrypt</code> (line 475)
+checks kind, tag shape and addressing per <em>Head selection</em> rules
+(1) and (5), then decrypts. Body parsing rejects duplicate JSON member
+names at any nesting depth via a custom serde visitor (line 276) because
+<em>Head selection</em> rule (3) demands strict rejection and
+<code>serde_json</code> would otherwise take last-wins.</p>
+<p><strong>Head selection.</strong> <code>select_head</code> (line 564)
+takes the greatest <code>created_at</code>, tie-broken by event id.
+<code>monotonic_created_at</code> (line 588) returns
+<code>max(now, prior_head + 1)</code> so a write always beats the head
+it was based on even under clock skew.</p>
+<p><strong>Context injection.</strong> <code>engram_fetch.rs</code>
+builds one prompt section from <code>core</code> and nothing else. Its
+three-way return is the interesting part: <code>Some(profile)</code>
+when a core exists, <code>Some(nudge)</code> when <strong>the relay
+confirmed absence</strong>, and <code>None</code> when the fetch failed
+— with the comment that the caller injects nothing in that case "so the
+agent doesn't conclude" it has no memory.</p>
+<p><strong>Delete.</strong> <code>buzz mem rm</code> publishes
+<code>{slug, value: null}</code>; the type system bars
+<code>core</code>.</p>
+<p><strong>Graph.</strong>
+<code>desktop/src/features/agent-memory/lib/buildMemoryGraph.ts</code>
+walks <code>[[slug]]</code> refs from <code>core</code> with a visited
+set, emitting <code>rootedTree</code>, <code>orphans</code> and
+<code>dangling</code>.</p>
+<p><strong>Storage.</strong>
+<code>crates/buzz-relay/src/handlers/ingest.rs:2412</code> routes
+replaceable kinds; engrams take the
+<code>replace_parameterized_event</code> branch keyed by
+<code>(pubkey, kind, d_tag)</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no table. The unit is an event, and its fields are the Nostr
+envelope (<code>id</code>, <code>pubkey</code>, <code>created_at</code>,
+<code>kind</code>, <code>tags</code>, <code>sig</code>,
+<code>content</code>) plus a decrypted body of one or two fields.
+Everything the atlas usually looks for in a schema is absent by design:
+no confidence, no source, no category, no expiry, no version column, no
+<code>deleted_at</code>.</p>
+<p><strong>Temporal fields:</strong> one, <code>created_at</code>, used
+for last-writer-wins. Not bi-temporal — there is no validity interval,
+and because the relay replaces, there is not even a record time series
+to reason over.</p>
+<p><strong>Scoping</strong> is the strongest form in this atlas and it
+is cryptographic rather than procedural. The <code>d</code> tag is
+<code>HMAC(K_c, slug)</code> where <code>K_c</code> is derived from the
+agent-owner keypair, and the relay filters by
+<code>(pubkey, kind, d_tag)</code>. A different owner produces different
+d-tags for the same slug, so the namespaces do not merely fail to join —
+they are not addressable across the boundary at all. That earns
+<code>scope_enforced</code>, and it is worth noting that most systems
+here earn it with a <code>WHERE</code> clause.</p>
+<p><strong>Size limits are enforced at build time:</strong> bodies over
+the NIP-44 plaintext limit "MUST NOT be encrypted" and
+<code>body_too_large_rejected_at_build_time</code> tests it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is none, and that is a position rather than an
+omission.</strong></p>
+<p>No embeddings appear anywhere in the memory path.
+<code>buzz-search</code> does not touch engrams. There is no ranking, no
+scoring, no recency weighting, no hybrid fusion, no reranker. The three
+ways a memory reaches the model are:</p>
+<ol type="1">
+<li><code>core</code> is fetched and injected into the prompt on every
+session by <code>engram_fetch</code>.</li>
+<li>The agent reads a <code>[[slug]]</code> reference in something
+already in context and asks for that slug.</li>
+<li>Someone runs <code>buzz mem get &lt;slug&gt;</code> or
+<code>buzz mem ls</code>.</li>
+</ol>
+<p>So the reachability tree is not a visualization of retrieval — it
+<em>is</em> the retrieval model. An engram not referenced from
+<code>core</code>, directly or transitively, will never be seen unless
+the agent already knows its name. The desktop viewer surfacing
+<strong>orphans</strong> is therefore a genuine diagnostic: an orphan is
+a memory that exists and cannot be found.</p>
+<p>The failure mode is the obvious one. This scales to a curated store
+of tens or low hundreds of entries maintained deliberately, and not past
+that. There is no mechanism by which a relevant memory surfaces because
+it is relevant.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous and cheap</strong> — serialize,
+encrypt, sign, publish. No LLM runs, so there is no extraction prompt to
+inspect, no consolidation pass, and no deduplication. Whatever the agent
+decided to write is what is stored, verbatim.</p>
+<p>Conflict handling is where the care went, and it is the best
+concurrent-write story in this atlas:</p>
+<ul>
+<li><strong>Head selection</strong> is last-writer-wins on
+<code>created_at</code>, tie-broken by event id so two events in the
+same second resolve identically for every reader.</li>
+<li><strong><code>monotonic_created_at</code></strong> returns
+<code>max(now, prior_head + 1)</code>, so a writer with a slow clock
+still supersedes the head it read.</li>
+<li><strong><code>mem patch --base-hash</code></strong> is optimistic
+concurrency control: the diff carries a sha256 of the value it was
+generated against, and the patch is refused if the current value hashes
+differently, <em>and</em> refused if any hunk's context does not match
+verbatim. <code>buzz mem hash &lt;slug&gt;</code> exists to capture the
+base hash.</li>
+</ul>
+<p>Malicious input is handled at the envelope: signatures establish
+authorship, <code>validate_and_decrypt</code> rejects wrong kinds,
+non-lowercase d-tags, and malformed addressing, and the duplicate-member
+rejection closes a JSON parser ambiguity that would otherwise let two
+readers disagree about a body. What is <em>not</em> handled is content —
+an engram whose text is a prompt injection is stored and injected like
+any other, and there is no filter, classifier or trust level between the
+write and the prompt.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous, and free of models.</strong> A write is one
+encryption and one relay round trip. No system in this atlas has a
+cheaper write path.</li>
+<li><strong>Lag before a memory is retrievable: none in the extraction
+sense</strong> — there is no extraction. The memory is live when the
+relay accepts the event.</li>
+<li><strong>No background pass exists</strong>, so nothing rewrites the
+store, and the token bill for memory is zero.</li>
+<li><strong>On the read path</strong>, exactly one section is injected
+per session: the <code>core</code> profile, rendered under a fixed
+header. It is unbounded in the sense that <code>core</code> is free-form
+text the agent maintains, so its size is the agent's discipline rather
+than a budget the code enforces.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent surface is the <code>buzz mem</code> CLI, which the agent
+invokes as a tool, plus the automatic <code>core</code> injection
+through ACP. There is an MCP server (<code>buzz-dev-mcp</code>) but it
+is a development surface rather than the memory API.</p>
+<p>Agency is total and unusual: the agent decides what a memory is, what
+it is called, what it says, when to supersede it, and when to delete it.
+Nothing supervises that. The counterweight is that the owner shares the
+namespace and can read and rewrite anything in it from the same CLI.</p>
+<p>The onboarding path is worth naming because it is a design decision
+rather than copy: a new agent with no <code>core</code> gets a section
+telling it to create one and to <em>ask the user about themselves</em>.
+Memory formation starts with an interview rather than with observation,
+which is the opposite of the screen-capture systems elsewhere in this
+atlas.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Confidentiality is the strength, and it goes further than
+encryption at rest.</strong> Content is NIP-44 encrypted; addressing is
+HMAC-blinded. A relay operator — even a malicious one — learns the
+number of engrams an agent has, their sizes, and when they changed, and
+not what they are about. Traffic analysis over sizes and timing remains
+available, and nothing here claims otherwise.</p>
+<p><strong>Provenance is a signature and nothing more.</strong> You can
+prove which key wrote an engram. You cannot ask why it believes
+something, what it was derived from, or whether anyone corroborated it.
+For a store the agent writes by hand this is a defensible floor, and it
+means the memory layer cannot represent uncertainty at all.</p>
+<p><strong>The replaceable-event choice costs history.</strong>
+<code>replace_parameterized_event</code> keeps one row per
+<code>(pubkey, kind, d_tag)</code>. When an engram is rewritten the
+prior ciphertext is gone from the relay. Three consequences follow: you
+cannot diff a memory against its past, a mistaken overwrite is
+unrecoverable, and a tombstone carries no information about what it
+replaced. This is the reason the report withholds the tombstone mark —
+<code>value: null</code> is a <strong>delete marker keyed on the
+slug</strong>, which the atlas's definition explicitly separates from a
+record of a rejected <em>value</em>. Write the same wrong thing to the
+same slug again and nothing objects.</p>
+<p><strong>The audit crate does not cover memory.</strong>
+<code>buzz-audit</code> is a hash-chained append-and-verify log, and its
+<code>AuditAction</code> enum is <code>EventCreated</code>,
+<code>EventDeleted</code>, <code>ChannelCreated/Updated/Deleted</code>,
+<code>MemberAdded/Removed</code>, <code>AuthSuccess/Failure</code>,
+<code>RateLimitExceeded</code>, <code>MediaUploaded</code> — relay and
+channel operations. No engram action exists, and because the relay
+replaces rather than appends, there is no mutation history to audit even
+in principle. <code>audit_log</code> withheld.</p>
+<p><strong>The desktop viewer is explicitly read-only</strong> — its own
+comment says "IXI-7 phase 1 read-only viewer", and the single Tauri
+command is <code>get_agent_memory</code>. So <code>human_review</code>
+is withheld under the rule that a UI which only displays is not a review
+surface. The near-miss is real and worth stating: the owner
+<em>does</em> have authority over the agent's memory and can delete any
+of it — just from the CLI, not from the screen that shows them what is
+there.</p>
+<p><strong><code>--no-base-hash</code></strong> is a documented escape
+hatch that turns the compare-and-swap back into a blind write. It is
+honest about the risk in its help text, and it is the kind of flag that
+ends up in a script.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>34 tests in <code>engram.rs</code> alone</strong>, and they
+are the right ones: round-trip encrypt/decrypt, rejection of
+non-lowercase d-tags, oversized bodies refused at build time, head
+selection with an event-id tiebreak, distinct slugs that must not
+collide onto one head, and eighteen cases pinning
+<code>extract_refs</code> behaviour — unclosed brackets, triple
+brackets, UTF-8 either side, dedupe preserving first occurrence,
+oversized slugs dropped, self-reference allowed.</p>
+<p><code>buzz-conformance</code> is a separate crate with
+<strong>property tests</strong> (<code>proptest_checker.rs</code>) and
+<strong>replay fixtures</strong> (<code>replay_fixtures.rs</code>) plus
+a documented <code>TRACE_SCHEMA.md</code> and <code>LIMITS.md</code>.
+Testing a memory protocol by replaying recorded traces against a
+state-machine checker is a level of rigour this atlas sees rarely, and
+it is the direct benefit of having written the spec first.</p>
+<p>There are <strong>no benchmarks</strong>, which is correct — there is
+nothing to score. No LoCoMo run would mean anything for a store with no
+retrieval.</p>
+<p>No test asserts that particular material must <em>not</em> be
+retrievable, so <code>negative_eval</code> is withheld. The nearest
+thing is <code>select_head</code>'s collision test, which asserts two
+distinct slugs do not map to the same head — a correctness property, not
+a retrieval assertion.</p>
+<p><strong>What I would want before trusting it:</strong> a test that a
+tombstoned slug stays tombstoned after a concurrent write with an older
+clock; and any test at all of the <code>engram_fetch</code> three-way
+return, since the confirmed-absent versus fetch-failed distinction is
+the subtlest thing in the memory path and the easiest to regress.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Blind the index, not just the payload.</strong> Encrypting
+values while indexing them under their real names tells your storage
+provider the shape of everything you know. An HMAC of the key under a
+secret both endpoints hold costs one hash and removes that.</li>
+<li><strong>Compare-and-swap on a memory value.</strong>
+<code>hash → edit → patch --base-hash</code> is a three-command protocol
+that makes concurrent agent edits safe without locks, and it is
+trivially portable to any store that can return bytes.</li>
+<li><strong>Monotonic timestamps for last-writer-wins.</strong>
+<code>max(now, prior_head + 1)</code> removes clock skew as a
+correctness concern in about four lines. If you resolve conflicts by
+timestamp and have not done this, you have a bug waiting for a bad
+clock.</li>
+<li><strong>Distinguish "confirmed empty" from "could not
+check".</strong> Injecting a "you have no memories yet" nudge on a
+<em>failed fetch</em> teaches the agent something false about itself.
+Returning nothing is the correct behaviour and almost nobody codes the
+third case.</li>
+<li><strong>Report orphans.</strong> If reachability is your retrieval
+model, an unreachable memory is invisible, and a store that can list its
+own orphans can be repaired.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Replaceable storage for anything you may need to
+explain.</strong> Choosing a substrate that discards what it overwrites
+forecloses version history, undo, and any future audit, and it is not a
+decision you can reverse later without changing the wire format.</li>
+<li><strong>Confusing a delete marker with a rejection record.</strong>
+A null-valued head stops the old value being served and says nothing
+about <em>what</em> was wrong. If your concern is an agent re-asserting
+a corrected fact, this shape does not help.</li>
+<li><strong>Shipping a read-only memory viewer as the review
+story.</strong> People who can see a wrong memory and not fix it in the
+same place will stop looking.</li>
+<li><strong>An escape-hatch flag on your concurrency check.</strong>
+<code>--no-base-hash</code> is documented and dangerous; if you must
+have one, log every use.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for someone whose actual requirement is that a third party
+must not be able to read or profile their agent's memory — a regulated
+deployment, a sovereignty-conscious org, a personal agent whose owner
+means it. Buy that and you get a small, legible, model-free memory layer
+with an unusually careful concurrency story and a spec you can
+reimplement. The Rust workspace and the relay are the price, and the
+price is real.</p>
+<p>Anyone whose memory has to <em>scale</em> should walk away now rather
+than later. A store with no retrieval works while the agent can hold its
+own namespace in mind, and there is no growth path here that does not
+mean designing retrieval from scratch — embeddings over ciphertext the
+relay cannot read is a research problem, not a backlog item. The same
+applies if you need to explain a memory's history or prove a correction
+stuck: the substrate threw the evidence away.</p>
+<p>And if you want memory that forms itself from conversation, this is
+the wrong family entirely. Nothing here observes, extracts or infers.
+The agent writes what it decides to write, or the store stays empty.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does the relay retain any superseded engram
+anywhere?</strong> The ingest path replaces, but whether backups, the
+mesh (<code>buzz-relay-mesh</code>), or a pubsub subscriber retains
+prior ciphertext was not traced, and it decides whether "deleted" is a
+claim about one server or about the system.</li>
+<li><strong>What happens to dangling refs over time?</strong> The viewer
+reports them; nothing found repairs or garbage-collects them, so a
+long-lived <code>core</code> presumably accumulates references to things
+it deleted.</li>
+<li><strong>Is <code>core</code> size bounded anywhere?</strong> It is
+injected on every session and is free-form text the agent maintains. No
+budget was found on the injection path.</li>
+<li><strong>How do multiple agents over one owner interact?</strong>
+<code>K_c</code> is per agent-owner pair, so each agent has a private
+namespace — whether anything is intended to be shared between an owner's
+agents, and how, was not determined.</li>
+<li><strong>Is NIP-AE published outside this repository?</strong> The
+code cites the spec by rule name throughout; the spec document itself
+was not located here, and whether it is public affects how
+reimplementable the protocol actually is.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Protocol core</strong></p>
+<ul>
+<li><code>crates/buzz-core/src/engram.rs</code> — slugs,
+<code>conversation_key</code>, <code>d_tag</code>, <code>Body</code>,
+<code>extract_refs</code>, <code>select_head</code>,
+<code>monotonic_created_at</code>, 34 tests</li>
+<li><code>crates/buzz-core/src/kind.rs</code> —
+<code>KIND_AGENT_ENGRAM</code> (30174), <code>is_replaceable</code></li>
+</ul>
+<p><strong>Write and CLI</strong></p>
+<ul>
+<li><code>crates/buzz-cli/src/lib.rs</code> —
+<code>mem get|set|patch|hash|ls|rm</code></li>
+<li><code>crates/buzz-cli/src/error.rs</code> — absent-or-tombstoned
+error</li>
+</ul>
+<p><strong>Read and injection</strong></p>
+<ul>
+<li><code>crates/buzz-acp/src/engram_fetch.rs</code> — core section,
+nudge, and the inject-nothing-on-failure case</li>
+</ul>
+<p><strong>Storage</strong></p>
+<ul>
+<li><code>crates/buzz-relay/src/handlers/ingest.rs</code> —
+<code>replace_parameterized_event</code></li>
+<li><code>crates/buzz-relay/src/nip11.rs</code> — NIP-33
+advertisement</li>
+</ul>
+<p><strong>Graph and UI</strong></p>
+<ul>
+<li><code>desktop/src/features/agent-memory/lib/buildMemoryGraph.ts</code></li>
+<li><code>desktop/src/features/agent-memory/ui/MemorySection.tsx</code>
+— read-only viewer</li>
+<li><code>desktop/src-tauri/src/commands/engrams.rs</code> —
+<code>get_agent_memory</code></li>
+</ul>
+<p><strong>Audit (not memory)</strong></p>
+<ul>
+<li><code>crates/buzz-audit/src/action.rs</code> —
+<code>AuditAction</code>, no engram variant</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>crates/buzz-conformance/</code> — <code>checker.rs</code>,
+<code>transitions.rs</code>, <code>proptest_checker.rs</code>,
+<code>replay_fixtures.rs</code>, <code>TRACE_SCHEMA.md</code>,
+<code>LIMITS.md</code></li>
+<li><code>desktop/src/features/agent-memory/lib/buildMemoryGraph.test.mjs</code></li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

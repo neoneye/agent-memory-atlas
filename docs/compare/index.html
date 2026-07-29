@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-four agent memory architectures, their retrieval mechanics,
+seventy-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-four agent memory architectures, their retrieval mechanics,
+of seventy-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-four agent memory architectures, their retrieval mechanics,
+of seventy-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-four agent memory architectures, their retrieval mechanics,
+seventy-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into seventy-four categories. They
+<p>Seventy-three systems do not fall into seventy-five categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -241,8 +241,8 @@ managed-platform-only.</p>
 <code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
-<code>mateclaw</code>, <code>waku-agent</code>,
-<code>loongflow</code></p>
+<code>mateclaw</code>, <code>waku-agent</code>, <code>loongflow</code>,
+<code>buzz</code></p>
 <p>Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. <strong>Letta</strong>
 separates core, archival, and recall memory inside the loop.
@@ -266,6 +266,18 @@ match. <strong>LoongFlow</strong> carries two unrelated memories in one
 package — a conventional short/medium/long tier stack, and a population
 of scored solutions recalled by Boltzmann sampling whose temperature is
 driven by the population's measured diversity.</p>
+<p><strong>Buzz is the family's outlier and the only system here that
+treats memory as a wire protocol.</strong> An engram is a signed,
+NIP-44-encrypted Nostr event, and the <code>d</code> tag the relay
+indexes by is <code>HMAC(conversation_key, slug)</code> — so the
+operator holding the data can read neither its content nor which memory
+it is, and cannot tell two related slugs apart. Every other
+private-by-design system in this atlas protects the payload; this is the
+only one that blinds the <em>index</em>. The price is paid in the same
+place: engrams are parameterized-replaceable events, so the relay keeps
+one head per tag and discards what it overwrites. There is no history,
+no retrieval beyond following <code>[[slug]]</code> references from a
+<code>core</code> engram, and no model in the loop at all.</p>
 <p>Tradeoff: deeper integration buys behavioural control at the cost of
 coupling memory to the framework, prompt assembly, and tool loop.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
@@ -842,6 +854,40 @@ reindex</td>
 <td>Inspectable portable memory with rebuildable indexes</td>
 <td>Bidirectional sync complexity; agent can write unsupported
 claims</td>
+</tr>
+<tr>
+<td><code>buzz</code></td>
+<td>An engram — a <code>kind:30174</code> Nostr event whose NIP-44
+ciphertext decodes to <code>{slug, value}</code>, or
+<code>{slug: core, profile}</code> for the identity surface</td>
+<td>A Nostr relay the operator runs; engrams are
+parameterized-replaceable events keyed by (pubkey, kind, d_tag), so the
+relay holds only the head</td>
+<td>No search. <code>core</code> is fetched and injected; everything
+else is reached by following <code>[[slug]]</code> references or asking
+for a slug by name</td>
+<td>Synchronous — build body, encrypt, sign, publish.
+<code>mem set</code> replaces; <code>mem patch</code> applies a unified
+diff under a sha256 compare-and-swap</td>
+<td>Last-writer-wins head selection with monotonic
+<code>created_at</code> and event-id tiebreak; <code>mem rm</code>
+publishes a <code>value:null</code> tombstone, barred on
+<code>core</code></td>
+<td>The d-tag is <code>HMAC(conversation_key, slug)</code>, so
+addressing is per agent-owner pair; the relay filters by (pubkey, kind,
+d_tag) and can correlate neither</td>
+<td><code>buzz mem</code> CLI, ACP prompt injection of the core section,
+a read-only desktop viewer, and an MCP dev server</td>
+<td>None for memory — no extraction, no consolidation, no embedding, no
+scheduled pass</td>
+<td>Signatures and encryption, and nothing epistemic — no confidence, no
+candidate state, no provenance on a value</td>
+<td>The relay cannot read content or correlate slugs; compare-and-swap
+on a memory value; a careful distinction between confirmed-absent and
+unknown</td>
+<td>Replaceable events discard prior versions, so there is no history
+and a tombstone records only that something is gone, not what was
+rejected</td>
 </tr>
 <tr>
 <td><code>byterover</code></td>
@@ -2343,14 +2389,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 74:</em> <a
+<p><em>3 of 75:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 74:</em> <a
+<p><em>7 of 75:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2360,7 +2406,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 74:</em> <a
+<p><em>8 of 75:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2372,11 +2418,12 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>44 of 74:</em> <a
+<p><em>45 of 75:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
+href="../systems/buzz/"><code>buzz</code></a>, <a
 href="../systems/claude-mem/"><code>claude-mem</code></a>, <a
 href="../systems/cognee/"><code>cognee</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -2421,7 +2468,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 74:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 75:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2431,7 +2478,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 74:</em> <a
+<p><em>14 of 75:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2449,7 +2496,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 74:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 75:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2470,7 +2517,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-four assert that particular material must
+repositories of seventy-five assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6433,6 +6480,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 <li><a href="../systems/memmachine/"><code>memmachine</code></a></li>
+<li><a href="../systems/buzz/"><code>buzz</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -6699,6 +6747,8 @@ href="https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba31
 href="https://github.com/MemMachine/MemMachine">MemMachine/MemMachine</a>
 at <a
 href="https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997"><code class="commit-id" title="a681abf9623299bba8ad931e5d9af02fb6ef0997">a681abf9…</code></a></li>
+<li><a href="https://github.com/block/buzz">block/buzz</a> at <a
+href="https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb"><code class="commit-id" title="24d90d1280a9325c6cbcf8eea30ac54db5afd2cb">24d90d12…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
