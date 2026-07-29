@@ -47,7 +47,7 @@ existence and use are verifiable from code.
 | --- | --- | --- |
 | **LoCoMo** | Question answering over very long multi-session conversations, with single-hop, multi-hop, temporal, open-domain and adversarial question categories | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Basic Memory](../systems/basic-memory/) |
 | **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/), [Daimon](../systems/daimon/) |
-| **BEAM** | Long-conversation QA at extreme length; Cognee's committed report covers 100K and 10M-token conversations | [Cognee](../systems/cognee/), [Honcho](../systems/honcho/) |
+| **BEAM** | Long-conversation QA at extreme length; Cognee's committed report covers 100K and 10M-token conversations. Its category list includes **`contradiction_resolution`** and **`abstention`** — see the correction below | [Cognee](../systems/cognee/), [Honcho](../systems/honcho/), [ReMe](../systems/reme/) |
 | **Oolong** | Present in Honcho's bench tree; not characterized here | [Honcho](../systems/honcho/) |
 | **τ²-bench (tau2)** | Agentic tool use against a simulated user with policy compliance — a *downstream task*, not a memory test | [OpenViking](../systems/openviking/) |
 | **SkillsBench** | Procedural/skill retrieval; a repository-local harness | [OpenViking](../systems/openviking/) |
@@ -67,6 +67,17 @@ value is gone, only to prefer the new one at answer time.
 
 **open-cowork's harness** is described below and is the most interesting
 evaluation shape in the atlas, precisely because it is not a public benchmark.
+
+**A correction, prompted by [ReMe](../systems/reme/)'s committed results.** This
+page previously treated correction as entirely unmeasured. That was too strong.
+BEAM scores a `contradiction_resolution` category, and ReMe's
+`benchmark/result-beam.md` is the first committed per-category table in this atlas
+to report it: **0.100** on its prompted configuration and 0.384 on its agentic
+one. So one public benchmark does score an adjacent thing, and the published
+numbers are bad. What still has no benchmark is the harder half — whether the
+*rejected* value remains reachable after the contradiction is resolved.
+`contradiction_resolution` asks the system to answer with the right value, not to
+prove the wrong one is gone.
 
 ### Named benchmarks outside these repositories
 
@@ -312,7 +323,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [MIRIX](../systems/mirix/) — three of sixty-seven, and MIRIX's cases are about scope rather than correction |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [MIRIX](../systems/mirix/) — three of sixty-eight, and MIRIX's cases are about scope rather than correction |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
