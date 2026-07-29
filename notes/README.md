@@ -40,6 +40,10 @@ when the work happens.
   contain the atlas's central mechanism, and all eleven of its unreviewed
   framework candidates were then triaged — nine became reports and four corrected
   claims the atlas had published.
+- [2026-07-29-a-reading-list-triaged.md](2026-07-29-a-reading-list-triaged.md) —
+  a nine-item recent-papers list worked end to end; four surveys link one
+  repository between them, no report was added, and three published atlas claims
+  changed anyway.
 - [2026-07-29-security-research-names-the-column.md](2026-07-29-security-research-names-the-column.md) —
   a security survey derives four of the atlas's capability columns from threat
   models, gives deletion durability a formal definition, and marks it "no

@@ -509,6 +509,23 @@ in the field built specifically to secure agent memory implements four of the
 survey's five primitives, and the one it does not implement is Verified
 Forgetting.
 
+A fifth boundary needs stating only because every list of recent memory papers
+puts it beside the systems here: **an architecture is not a memory system.**
+*Titans: Learning to Memorize at Test Time*
+([arXiv:2501.00663](https://arxiv.org/abs/2501.00663), Google Research) adds a
+neural long-term memory module that learns what to store during inference,
+alongside short-term attention and persistent memory tokens. It is a genuine
+advance and it is a different object: what it memorizes lives in module weights
+updated per sequence, with no key, no scope, no provenance and nothing a later
+correction could name. It also has **no official implementation** — the
+repositories carrying the name are third-party reimplementations, so there is no
+canonical artifact to pin even if the boundary were drawn elsewhere. The same
+applies to the model-editing line (ROME and successors) that the field's surveys
+file under parametric memory. [Second Me](../systems/second-me/) is in this
+atlas because it is a *system* that fine-tunes on a user's documents and then
+has to answer "delete my data" — the deletion request is what pulls weights into
+scope, not the fact of learning.
+
 Compaction appears in this atlas only as a component of systems that also
 persist — `mastra-observational-memory` with exact covered ranges and buffered
 activation, `hermes-agent` with a hard budget forcing in-turn consolidation,
