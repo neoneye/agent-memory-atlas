@@ -133,8 +133,10 @@ outside.
 **Not this:** ordinary recall tests, however thorough.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
-this atlas ultimately rests on an assertion of this shape, and one repository of
-the whole corpus makes one.
+this atlas ultimately rests on an assertion of this shape, and three repositories
+of the whole corpus make one. Two of the three assert it about a *boundary*; only
+[Verel](../../systems/verel/) asserts it about a value that was corrected, which
+is the harder and more useful version.
 
 ## Why these seven
 

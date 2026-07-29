@@ -36,8 +36,9 @@ when the work happens.
   the comparative report names 29 recurring patterns and only 17 became pages.
 - [2026-07-29-memory-survey-forms-functions-dynamics.md](2026-07-29-memory-survey-forms-functions-dynamics.md) —
   the field's 107-page survey of itself read against the atlas; the corpora
-  overlap by ten systems of sixty-three, and the survey's vocabulary does not
-  contain the atlas's central mechanism.
+  overlapped by ten systems of sixty-three, the survey's vocabulary does not
+  contain the atlas's central mechanism, and three of its framework candidates
+  were reviewed — two became reports, one turned out to have no persistence.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.

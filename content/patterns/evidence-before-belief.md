@@ -123,6 +123,21 @@ re-checked, and the verification stamp on the item becomes the only surviving
 evidence that a check ever happened. Reference evidence you control; copy
 evidence you do not.
 
+[MIRIX](../../systems/mirix/) is the cheapest instance to copy: one `raw_memory`
+table holding the unprocessed context string, embedded and searchable in its own
+right, beside six typed derived tables. No versioning, no lineage graph — just the
+source kept where a bad extraction cannot destroy it. What it does not do is link
+the derived rows back to it, so the evidence is searchable but not attributable.
+
+[Memobase](../../systems/memobase/) is the deliberate inversion, and it is the
+useful counterexample because the reasoning is sound. `persistent_chat_blobs`
+defaults to `False`, so the source transcript is hard-deleted from Postgres once
+the profile is written. For a service holding other people's conversations that is
+a defensible privacy posture — and it means the profile, which is a lossy LLM
+derivation rewritten in place, is the only copy there has ever been. This pattern
+and data minimization are in genuine tension; Memobase is where the price of
+choosing the other side is clearest.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

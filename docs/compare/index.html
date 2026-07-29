@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-sixty-three agent memory architectures, their retrieval mechanics, trust
+sixty-five agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of sixty-three agent memory architectures, their retrieval mechanics,
+of sixty-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of sixty-three agent memory architectures, their retrieval mechanics,
+of sixty-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-sixty-three agent memory architectures, their retrieval mechanics, trust
+sixty-five agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Sixty-three systems do not fall into sixty-three categories. They
+<p>Sixty-five systems do not fall into sixty-five categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -172,7 +172,8 @@ safely.</p>
 <code>hindsight</code>, <code>redis-agent-memory-server</code>,
 <code>openviking</code>, <code>memanto</code>,
 <code>memory-engine</code>, <code>memu</code>,
-<code>elastic-atlas</code></p>
+<code>elastic-atlas</code>, <code>mirix</code>,
+<code>memobase</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -192,7 +193,21 @@ access-control principal and clamps a delegated agent grant to
 own agent is harmless by construction. <strong>memU</strong> ranks
 segments and returns the files they belong to, scoring each file by the
 max of its segments — the search unit and the return unit are
-deliberately different sizes.</p>
+deliberately different sizes. <strong>MIRIX</strong> gives each of six
+memory types its own table, manager, writer agent and prompt, and
+carries the most thoroughly <em>enforced</em> scope model here — four
+levels, applied in the SQL and in the Redis index queries alike.
+<strong>Memobase</strong> goes further on the same axis by making scope
+structural: every primary key is <code>(id, project_id)</code> and every
+foreign key is composite, so a cross-tenant query is a schema error
+rather than a review failure.</p>
+<p>The two newest members of this family also mark its boundaries.
+Memobase caps a user profile at five sentences per subtopic and fifteen
+subtopics per topic, and deletes the source transcript after extraction
+by default; MIRIX ingests screen captures continuously and runs a
+periodic pass that can rewrite the whole store. One is the smallest
+useful description of a user, the other is the largest, and neither can
+say that a value was rejected.</p>
 <p>Tradeoff: the API surface is usually easier to study than the
 decision machinery. In <code>supermemory</code> the hosted core is not
 visible at all; in <code>mem0</code> several documented capabilities are
@@ -495,6 +510,35 @@ again. It also carries <strong>no licence file</strong>. The OptMem
 exception was granted for mechanisms found nowhere else; an
 auto-generated taxonomy over a document tree is not that, so GAM gets a
 note rather than a report.</p>
+<p>A third shape declines for a reason worth separating from the other
+two: <strong>an algorithm workbench is not a memory system.</strong>
+<code>nuster1128/MemEngine</code> appears in the open-source framework
+table of the field's own 107-page survey as a representative memory
+framework with a "modular space" structure, and it implements ten named
+memory methods — <code>FUMemory</code>, <code>GAMemory</code>,
+<code>LTMemory</code>, <code>MBMemory</code>, <code>MGMemory</code>,
+<code>MTMemory</code>, <code>RFMemory</code>, <code>SCMemory</code>,
+<code>STMemory</code> — behind one <code>BaseMemory</code> interface
+with <code>store</code>, <code>recall</code>, <code>manage</code> and
+<code>optimize</code>. It is a genuinely useful thing: a common harness
+for comparing published memory algorithms against each other.</p>
+<p>It stores nothing. <code>LinearStorage</code> in
+<code>memengine/utils/Storage.py</code> is a Python list;
+<code>reset()</code> empties it; <code>BaseMemory</code> declares no
+save or load; and <code>server_start.py</code> keeps sessions in
+<code>service_database = {}</code>, an in-process dict addressed by a
+UUID that does not survive a restart. Nothing in the package writes to
+disk except a <code>Display</code> utility and the config reader. So
+MemEngine cannot fail this atlas's test in an interesting way — nothing
+survives the session to have an identity, let alone a correction. It
+also carries <strong>no licence file</strong>, which would have excluded
+it independently.</p>
+<p>That a peer-surveyed "open-source memory framework" turns out to have
+no persistence layer is not a criticism of the project, which is honest
+about being a research library. It is a reason to be careful with
+framework lists: the word covers both a store you would run in
+production and a benchmark rig for comparing algorithms, and only one of
+them can answer "forget what I told you last week".</p>
 <p>Compaction appears in this atlas only as a component of systems that
 also persist — <code>mastra-observational-memory</code> with exact
 covered ranges and buffered activation, <code>hermes-agent</code> with a
@@ -1182,6 +1226,31 @@ recommendation</td>
 what it removes</td>
 </tr>
 <tr>
+<td><code>memobase</code></td>
+<td>A free-text memo of at most five sentences, keyed by topic and
+subtopic, plus tagged events and their embedded gists</td>
+<td>Postgres with pgvector; composite (id, project_id) primary keys
+throughout</td>
+<td>Profiles selected by topic preference and token budget; events by
+tag filter and gist embedding similarity</td>
+<td>Buffered — blobs queue in buffer_zones until a token threshold or a
+one-hour flush, then one LLM extract-and-merge pass</td>
+<td>An LLM rewrites the memo in place (APPEND / UPDATE / ABORT); no
+prior value is retained</td>
+<td>project_id and user_id in every primary key, foreign key, index and
+read-path filter</td>
+<td>REST API with Python, TypeScript and Go clients, an MCP server, and
+an OpenAI-compatible wrapper</td>
+<td>Buffer flush, plus organize_profile when a topic exceeds
+max_profile_subtopics</td>
+<td>None represented; a memo is a string, and a rewrite leaves no record
+of what it replaced</td>
+<td>Scope is structurally impossible to omit; context assembly has a
+real token budget and a profile/event split</td>
+<td>persistent_chat_blobs defaults to false, so the source transcript is
+hard-deleted after extraction</td>
+</tr>
+<tr>
 <td><code>memora</code></td>
 <td>Memory row with content, tags, metadata, importance, and access
 count</td>
@@ -1367,6 +1436,32 @@ confidence</td>
 non-regression across eight metrics</td>
 <td>Optimizes overlap proxies; gate thresholds are themselves
 defaults</td>
+</tr>
+<tr>
+<td><code>mirix</code></td>
+<td>Six typed rows — episodic event, semantic concept, procedural step,
+resource, knowledge-vault secret, core block — plus a raw_memory
+evidence table</td>
+<td>Postgres with pgvector, or SQLite with FTS5; Redis Stack as a
+search-capable cache</td>
+<td>Per-type search by embedding, BM25/full-text or string match,
+selected by the caller</td>
+<td>Deferred — messages accumulate in a buffer, then a meta agent routes
+them to six specialist writer agents</td>
+<td>Tool-driven replace, implemented as hard delete followed by insert;
+no supersession record</td>
+<td>organization_id, user_id, client_id and a filter_tags scope, applied
+on every read path including the cache</td>
+<td>REST API, Python client, outbound MCP client, read-only React
+dashboard</td>
+<td>auto_dream — a periodic pass that loads up to 500 items per memory
+type and lets an agent merge and rewrite them</td>
+<td>None represented; no status field, no confidence, no provenance
+beyond a free-text source string</td>
+<td>Scope enforced across schema, queries, cache and tests; a raw
+evidence table; negative retrieval assertions in the test suite</td>
+<td>auto_dream can hard-delete a correction; credentials stored as
+plaintext in knowledge_vault; last_modify is last-write-only</td>
 </tr>
 <tr>
 <td><code>moltis</code></td>
@@ -1870,14 +1965,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 63:</em> <a
+<p><em>3 of 65:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 63:</em> <a
+<p><em>6 of 65:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1886,7 +1981,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 63:</em> <a
+<p><em>8 of 65:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -1898,7 +1993,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>37 of 63:</em> <a
+<p><em>39 of 65:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/basic-memory/"><code>basic-memory</code></a>, <a
@@ -1922,10 +2017,12 @@ href="../systems/mastra-observational-memory/"><code>mastra-observational-memory
 <a href="../systems/mateclaw/"><code>mateclaw</code></a>, <a
 href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
+href="../systems/memobase/"><code>memobase</code></a>, <a
 href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memos/"><code>memos</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
+href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
 href="../systems/openclaw/"><code>openclaw</code></a>, <a
@@ -1940,7 +2037,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 63:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 65:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -1950,7 +2047,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>11 of 63:</em> <a
+<p><em>11 of 65:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
@@ -1965,8 +2062,8 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>2 of 63:</em> <a
-href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
+<p><em>3 of 65:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
@@ -1985,22 +2082,29 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Two
-repositories of sixty-three assert that particular material must
+<p><strong>Negative evidence is almost never tested.</strong> Three
+repositories of sixty-five assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Both arrived at
-it the same way: <a href="../systems/open-cowork/">open-cowork</a>
+correction claim in this document ultimately rests on. Two reached it
+from memory work: <a href="../systems/open-cowork/">open-cowork</a>
 through <code>forbiddenHits</code> in its eval harness, <a
 href="../systems/verel/">Verel</a> through a regression suite built from
-the red-team finding that produced its tombstone. <a
-href="../systems/daimon/">Daimon</a> is the near-miss that shows how
-narrow the bar is: 1,920 tests, a committed LongMemEval harness, unit
-tests asserting that a resolved item is withheld and that an id-bearing
-item is never fuzzy-matched into suppression — and still no case that
-forgets a value, re-extracts it, and asserts it stayed gone. The
-tombstone is the mechanism most in need of a negative test and the one
-least likely to get one, because nothing fails visibly when it silently
-stops working.</p>
+the red-team finding that produced its tombstone. The third, <a
+href="../systems/mirix/">MIRIX</a>, arrived from somewhere else entirely
+— its <code>test_filter_tags_db.py</code> creates a memory under one
+scope, searches under another, and asserts the id is absent, which is
+multi-tenant access-control testing rather than anything about memory.
+That is worth knowing: the assertion shape is reachable from ordinary
+engineering practice. It is also narrower, because every negative case
+MIRIX makes is about a boundary and none is about a value that was
+corrected. <a href="../systems/daimon/">Daimon</a> is the near-miss that
+shows how narrow the bar is: 1,920 tests, a committed LongMemEval
+harness, unit tests asserting that a resolved item is withheld and that
+an id-bearing item is never fuzzy-matched into suppression — and still
+no case that forgets a value, re-extracts it, and asserts it stayed
+gone. The tombstone is the mechanism most in need of a negative test and
+the one least likely to get one, because nothing fails visibly when it
+silently stops working.</p>
 <h2 id="3-end-to-end-memory-lifecycle-comparison">3. End-to-End Memory
 Lifecycle Comparison</h2>
 <h3 id="capture">Capture</h3>
@@ -2069,9 +2173,26 @@ hook material before generated observations; Graphiti keeps episodes
 behind edges; Hindsight links observations to source facts; Basic Memory
 keeps canonical notes behind projections; Mastra records exact message
 ranges behind summaries; agentmemory links memories to observations; and
-TencentDB preserves L0 messages and offloaded raw tool output. These
-designs still differ sharply in trust: provenance supports correction,
-but only Verel and RainBox model rejection/promotion explicitly.</p>
+TencentDB preserves L0 messages and offloaded raw tool output.
+<code>mirix</code> belongs on the evidence-aware side by an unusually
+cheap route: a <code>raw_memory</code> table holding the unprocessed
+context string, embedded and searchable in its own right, sitting beside
+six typed derived tables. One table is the whole mechanism, which makes
+it the easiest instance in the atlas to copy.</p>
+<p><code>memobase</code> is the deliberate counterexample, and it is
+worth stating without disapproval. Its
+<code>persistent_chat_blobs</code> config defaults to
+<code>False</code>, so the source transcript is hard-deleted from
+Postgres once the buffer flushes and the profile is written. For a
+service holding other people's conversations that is a <em>good</em>
+privacy default and several systems here would be better for it — but it
+also means the profile is a lossy derivation whose source no longer
+exists, so a bad extraction is permanent. Evidence retention and data
+minimization pull in opposite directions, and Memobase is the clearest
+place in the atlas to see the price of each.</p>
+<p>These designs still differ sharply in trust: provenance supports
+correction, but only Verel and RainBox model rejection/promotion
+explicitly.</p>
 <h3 id="extraction">Extraction</h3>
 <p><code>mem0</code> has the clearest open implementation of LLM
 extraction: retrieve nearby existing memories, ask the model for
@@ -2582,6 +2703,27 @@ one row, which makes it queryable in a way Gini's
 supersession hides a memory from retrieval without recording the
 rejected value, and this is a system that ingests documents and images,
 so re-ingestion is a realistic path back.</p>
+<p><code>mirix</code> is the sharpest illustration of why a policy has
+to be a mechanism. Its <code>auto_dream</code> agent runs against the
+whole store under a prompt that says: "Resolve conflicts conservatively,
+preferring the more recent or more detailed item. If uncertain, keep
+both and record the discrepancy." That is close to Memanto's
+<code>keep_both</code> — the best correction rule in this atlas — except
+Memanto's is an enum a validator enforces and MIRIX's is a sentence a
+model may skip. The tool the sentence governs is
+<code>episodic_memory_replace</code>, which hard-deletes. So the atlas
+now has the same idea implemented twice, once as a constraint and once
+as a suggestion, and the difference is whether a user's correction
+survives the night.</p>
+<p><code>memobase</code> shows the failure without the good intention:
+an LLM is handed the current memo and the new information and returns
+<code>APPEND</code>, <code>ABORT</code>, or
+<code>UPDATE\t[UPDATED_MEMO]</code> — the last of which overwrites the
+string. Both ends lose information silently. <code>ABORT</code> discards
+the incoming fact with no record it was considered, and
+<code>UPDATE</code> discards the outgoing one, under a prompt that
+explicitly invites the model to decide "whether there are other parts of
+the current memo that can be simplified or removed".</p>
 <p>Cognee can forget and rebuild derived projections from retained
 source, but its ontology-valid, source-attributed graph facts still lack
 candidate/rejected epistemic state. Claude-Mem offers exact deletion and
@@ -2703,6 +2845,17 @@ suppression occurred.</p></li>
 <li><p><code>hermes-agent</code>: substring-addressed
 <code>remove</code> plus budget-driven eviction the model performs under
 pressure; nothing logs what was dropped.</p></li>
+<li><p><code>mirix</code>: <code>episodic_memory_replace</code> is a
+loop of <code>hard_delete</code> followed by a loop of
+<code>insert</code>, so a correction destroys the row rather than
+superseding it — and the periodic <code>auto_dream</code> pass loads up
+to 500 items per memory type and can do the same thing unprompted. The
+base class has a soft-delete flag; the memory path does not use
+it.</p></li>
+<li><p><code>memobase</code>: profile correction is an LLM rewriting the
+memo string in place (<code>UPDATE\t[UPDATED_MEMO]</code>), with no
+prior value kept and no check that the rewrite preserved what the old
+memo held.</p></li>
 <li><p><code>openviking</code>: hotness decays reachability on a single
 seven-day half-life for every memory kind.</p></li>
 <li><p><code>redis-agent-memory-server</code>: the most developed policy
@@ -5760,6 +5913,8 @@ href="../systems/memory-engine/"><code>memory-engine</code></a></li>
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a></li>
 <li><a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
+<li><a href="../systems/mirix/"><code>mirix</code></a></li>
+<li><a href="../systems/memobase/"><code>memobase</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -5988,6 +6143,12 @@ href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb2339
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
 href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b"><code class="commit-id" title="522a217bba088fa4f65324b0b79ad90b50e6df5b">522a217b…</code></a></li>
+<li><a href="https://github.com/Mirix-AI/MIRIX">Mirix-AI/MIRIX</a> at <a
+href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a></li>
+<li><a
+href="https://github.com/memodb-io/memobase">memodb-io/memobase</a> at
+<a
+href="https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901"><code class="commit-id" title="358c16bbc6d687937d79bc2f984a11c3be8da901">358c16bb…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
@@ -6307,8 +6468,10 @@ contain it — so that reading described a state absent from the project's
 history. The re-read moved Verel from three of the seven rubric
 capabilities to all seven, and changed four atlas-wide counts.
 <code>scripts/check_freshness.py</code> now distinguishes an orphaned
-pin from a stale one; at the time of writing 30 of 62 pins are stale, so
-the same correction is likely waiting elsewhere.</li>
+pin from a stale one. Its first run, on 2026-07-28, found 30 stale pins
+out of the 62 repositories the atlas held that day — a dated measurement
+rather than a live figure, and one that moves between runs, so read it
+as magnitude. The same correction is likely waiting elsewhere.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>

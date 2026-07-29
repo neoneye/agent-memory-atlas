@@ -123,6 +123,30 @@ and a rekey map for repositories that move.
 tenant and peer boundaries into retrieval itself, OpenViking separating memory
 *about* a peer under `peers/<peer_id>`.
 
+[Memobase](../../systems/memobase/) takes the enforcement one level lower than
+anything else here — into the schema. Every memory table declares
+`PrimaryKeyConstraint("id", "project_id")` with composite
+`ForeignKeyConstraint(["user_id", "project_id"], ...)`, so the tenant key is part
+of the row's identity rather than a column a query has to remember. OpenClaw makes
+an unscoped read inexpressible in application code; Memobase makes it a schema
+error. It also gets a correct cascade delete for free, which is the part most
+implementations discover they are missing when someone asks to remove a tenant.
+
+[MIRIX](../../systems/mirix/) is the instance that covers the *whole* read path
+rather than the obvious query. It carries four levels — `organization_id`,
+`user_id`, `client_id`, and a `filter_tags.scope` — and passes `user_id` and
+`organization_id` into every Redis search call as arguments
+(`search_recent`, `search_vector`, `search_text`), so the cache path cannot be
+looser than the database path. That is the failure this pattern's cost section
+warns about, closed. MIRIX also separates `read_scopes` (a list) from
+`write_scope` (one value) on the client, which makes "may read everything, may
+write only here" a single field rather than a policy document.
+
+MIRIX is additionally the only system in the atlas that **tests** the boundary the
+way this pattern's first required test asks: `tests/test_filter_tags_db.py` creates
+a memory under one scope, searches under another, and asserts the id is absent —
+which is why it carries the atlas's rarest capability mark.
+
 The counterexamples are as instructive as the implementations.
 [Holographic](../../systems/holographic/) describes itself as a "single-user
 memory store" and has no scope column at all; `category` partitions banks, not

@@ -312,7 +312,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/) and [Verel](../systems/verel/) — two of sixty-three |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [MIRIX](../systems/mirix/) — three of sixty-five, and MIRIX's cases are about scope rather than correction |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -453,7 +453,9 @@ next background pass is free to undo. [CowAgent](../systems/cowagent/)
 re-distils its memory file nightly from retained daily files.
 [Atomic Agent](../systems/atomic-agent/) re-clusters. Magic Context and Redis
 Agent Memory Server both extract on a schedule from retained history.
-OpenClaw's auto-capture can restore content a user deleted. Only
+OpenClaw's auto-capture can restore content a user deleted. MIRIX's `auto_dream`
+pass loads up to 500 items per memory type with an explicit `start_date=None,
+end_date=None` and lets an agent merge and hard-delete them. Only
 [Verel](../systems/verel/), [RainBox](../systems/rainbox/) and
 [Daimon](../systems/daimon/) carry a value-level tombstone that blocks
 re-assertion — and, as noted in the comparative report, neither the standard
