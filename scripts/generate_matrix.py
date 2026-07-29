@@ -50,7 +50,9 @@ CAPABILITIES = [
      "or expired it."),
     ("scope_enforced", "Scope enforced in retrieval",
      "A stored scope key (user, project, agent, tenant) applied as a filter "
-     "on the read path, not merely available as a tag."),
+     "on the read path, not merely available as a tag. This certifies that the "
+     "key reaches the query — not that the boundary is authenticated, nor that "
+     "a caller cannot widen it by passing a different argument."),
     ("audit_log", "Append-only mutation audit",
      "A named append-only event record of memory *mutations* in the system's "
      "own store. Logs of retrieval or feedback are the other half of the "
@@ -229,8 +231,14 @@ def build_capabilities() -> str:
             )
         raise SystemExit(1)
 
+    # Every value is non-None past the check above; rebind so that is visible to
+    # a type checker rather than only true at runtime.
+    declared: dict[str, set[str]] = {
+        slug: flags for slug, flags in carried.items() if flags is not None
+    }
+
     known = {flag for flag, _, _ in CAPABILITIES}
-    unknown = {f for flags in carried.values() for f in flags} - known
+    unknown = {f for flags in declared.values() for f in flags} - known
     if unknown:
         print(f"error: unknown capability flags: {sorted(unknown)}", file=sys.stderr)
         raise SystemExit(1)
@@ -238,7 +246,7 @@ def build_capabilities() -> str:
     total = len(paths)
     blocks: list[str] = []
     for flag, label, definition in CAPABILITIES:
-        holders = sorted(slug for slug, flags in carried.items() if flag in flags)
+        holders = sorted(slug for slug, flags in declared.items() if flag in flags)
         listing = ", ".join(f"[`{slug}`](../systems/{slug}/)" for slug in holders)
         blocks.append(
             f"**{label}** — {definition}\n\n"

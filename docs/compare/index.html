@@ -116,6 +116,31 @@ commit</em>. Every claim here is static review — code read, not run —
 and the reports are opinionated by design. Where the code is partly
 closed, or a capability is documented but managed-platform-only, the
 reports say so at that point rather than hedging every sentence.</p>
+<p><strong>What this method structurally cannot reach, and what that
+costs.</strong> Every claim here rests on reading code at a commit, so a
+system with no inspectable code is not merely absent from this atlas —
+it is <em>unreachable by it</em>. That excludes the memory features most
+users have actually met: OpenAI's memory, Claude's memory and project
+knowledge, Zep's hosted service, Google's Vertex Memory Bank as a
+service, and every enterprise offering whose multi-tenancy, retention
+and audit behaviour lives on someone else's servers.</p>
+<p>This is a real limitation and not a small one, because those are the
+systems operating under compliance, scale and tenancy constraints that
+the local-first projects here never face. Where a hosted product has an
+open component, the open component is what gets reviewed and the report
+says so: Zep is here as <a href="../systems/graphiti/">Graphiti</a>, and
+Vertex Memory Bank appears inside <a
+href="../systems/adk-python/">adk-python</a> as a client whose contract
+has no delete. That is genuinely less than reviewing the service, and
+the difference should be read as a gap in the atlas rather than a
+finding about the products.</p>
+<p>Two consequences worth stating plainly. The atlas's headline counts —
+three tombstones, six negative-eval suites — are counts <em>over
+inspectable code</em>, and a closed system could hold any of these
+mechanisms without this method ever knowing. And a mechanism's absence
+here is weaker evidence about the field than its presence: finding a
+tombstone proves someone built one, while not finding one proves only
+that nobody built one <em>in public</em>.</p>
 <p><strong>The divergences that actually separate these
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
@@ -129,9 +154,16 @@ is invisible on every benchmark.</li>
 that keep the raw event and treat summaries, profiles, and graphs as
 rebuildable projections can repair a bad extraction. Systems that
 discard the source cannot.</li>
-<li><strong>Whether scope is identity or decoration.</strong> A scope
-key applied on the read path is a boundary; a scope tag stored beside
-the memory is a hope.</li>
+<li><strong>Whether scope is identity or decoration.</strong> Three
+levels, and the atlas's <code>scope_enforced</code> mark only certifies
+the middle one. A scope <em>tag</em> stored beside the memory is a hope.
+A scope <em>key applied as a filter on the read path</em> is what 51 of
+90 systems here have, and is what the mark means. A scope
+<em>boundary</em> — authenticated identity, grants, and a filter that a
+caller cannot widen by passing a different argument — is rarer than the
+count suggests, and in a single-user desktop deployment is not even the
+right goal. Read the column as "the key reaches the query", not as "this
+is multi-tenant safe".</li>
 <li><strong>Whether retrieval can decline.</strong> Most systems always
 return their top <em>k</em>. Very few can decide that this turn needs no
 memory, and irrelevant memory in a prompt is not inert — it bends the
@@ -3114,7 +3146,9 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
-merely available as a tag.</p>
+merely available as a tag. This certifies that the key reaches the query
+— not that the boundary is authenticated, nor that a caller cannot widen
+it by passing a different argument.</p>
 <p><em>51 of 90:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -7869,6 +7903,22 @@ scope-boundary section), <code>Darwin-Agent/Mi-Memory</code> is a paper
 PDF and a landing page with no implementation, and
 <code>langchain-ai/memory-agent</code> is a 235-line LangGraph template
 whose substantive counterpart, LangMem, is already reviewed here.</li>
+<li><strong>Framework-native memory layers not yet reviewed</strong>,
+named because a reader looking for them should find the gap rather than
+infer coverage: <strong>CrewAI</strong>'s memory module,
+<strong>Semantic Kernel</strong>'s memory and plugin surfaces, and
+<strong>Haystack</strong>'s agent memory. The atlas has read the
+adjacent contracts — <a href="../systems/adk-python/">adk-python</a>, <a
+href="../systems/autogen/">AutoGen</a> and <a
+href="../systems/langmem/">LangMem</a> — and CrewAI in particular is the
+most-cited omission on that side. These are reachable by this method,
+unlike the hosted products above; they are simply not done.</li>
+<li><strong>MemGPT is here under its current name.</strong> The project
+renamed to Letta, so the OS-style tiered-memory reference implementation
+is the <a href="../systems/letta/">Letta report</a>, and a reader
+searching this atlas for "MemGPT" will otherwise find only a passing
+mention in the correction discussion. Recorded because the rename makes
+the lineage hard to find, not because anything is missing.</li>
 <li><code>Cohexa-ai/agent-coherence</code> was examined and has no
 report. It is MESI cache-coherence for shared agent artifacts —
 single-writer ownership, commit-CAS, a read-generation fence, pinned

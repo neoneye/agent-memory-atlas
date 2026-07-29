@@ -30,6 +30,30 @@ read, not run — and the reports are opinionated by design. Where the code is
 partly closed, or a capability is documented but managed-platform-only, the
 reports say so at that point rather than hedging every sentence.
 
+**What this method structurally cannot reach, and what that costs.** Every claim
+here rests on reading code at a commit, so a system with no inspectable code is
+not merely absent from this atlas — it is *unreachable by it*. That excludes the
+memory features most users have actually met: OpenAI's memory, Claude's memory and
+project knowledge, Zep's hosted service, Google's Vertex Memory Bank as a service,
+and every enterprise offering whose multi-tenancy, retention and audit behaviour
+lives on someone else's servers.
+
+This is a real limitation and not a small one, because those are the systems
+operating under compliance, scale and tenancy constraints that the local-first
+projects here never face. Where a hosted product has an open component, the open
+component is what gets reviewed and the report says so: Zep is here as
+[Graphiti](../systems/graphiti/), and Vertex Memory Bank appears inside
+[adk-python](../systems/adk-python/) as a client whose contract has no delete.
+That is genuinely less than reviewing the service, and the difference should be
+read as a gap in the atlas rather than a finding about the products.
+
+Two consequences worth stating plainly. The atlas's headline counts — three
+tombstones, six negative-eval suites — are counts *over inspectable code*, and a
+closed system could hold any of these mechanisms without this method ever
+knowing. And a mechanism's absence here is weaker evidence about the field than
+its presence: finding a tombstone proves someone built one, while not finding one
+proves only that nobody built one *in public*.
+
 **The divergences that actually separate these systems.** If you read nothing
 else:
 
@@ -41,8 +65,14 @@ else:
 2. **Whether evidence outlives its derivations.** Systems that keep the raw
    event and treat summaries, profiles, and graphs as rebuildable projections
    can repair a bad extraction. Systems that discard the source cannot.
-3. **Whether scope is identity or decoration.** A scope key applied on the read
-   path is a boundary; a scope tag stored beside the memory is a hope.
+3. **Whether scope is identity or decoration.** Three levels, and the atlas's
+   `scope_enforced` mark only certifies the middle one. A scope *tag* stored
+   beside the memory is a hope. A scope *key applied as a filter on the read
+   path* is what 51 of 90 systems here have, and is what the mark means. A scope
+   *boundary* — authenticated identity, grants, and a filter that a caller cannot
+   widen by passing a different argument — is rarer than the count suggests, and
+   in a single-user desktop deployment is not even the right goal. Read the
+   column as "the key reaches the query", not as "this is multi-tenant safe".
 4. **Whether retrieval can decline.** Most systems always return their top *k*.
    Very few can decide that this turn needs no memory, and irrelevant memory in
    a prompt is not inert — it bends the answer.
@@ -897,7 +927,7 @@ that never claims to model belief.
 
 *8 of 90:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
-**Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag.
+**Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument.
 
 *51 of 90:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
@@ -3485,6 +3515,8 @@ No internet sources were used for this report. The analysis is based on the chec
 - Nothing was run for memora or LoongFlow. Memora's pair classifier is the component that matters — its precision determines which memories get hidden — and no measurement of it was found; the dry-run mode makes exactly that measurable, and nothing indicates it has been done. LoongFlow's tests exist under `tests/agentsdk/memory` but were not run, and no comparison of adaptive against fixed temperature was found, though the code is parameterized for it.
 - Six repositories examined in the same round have no reports. `TeleAI-UAGI/Awesome-Agent-Memory` is a survey, cited in the correction discussion rather than reviewed as a system. `webbrain-one/webbrain` (368 lines) and `AmeNetwork/aser` (29 lines) are too small to carry a mechanism. `AgentTeam-TaichuAI/ScienceClaw` is 78 lines with no licence file, and is a different repository from the OpenClaw-derived `beita6969/ScienceClaw` noted above. `ArtificialAnalysis/Stirrup` and `howl-anderson/agentsilex` have no memory subsystem.
 - Nothing was run for the six systems added in this round. OptMem is reviewed **without a licence file** — all rights reserved by default — as a deliberate exception to the rule applied to `openyak` and others, because it carries mechanisms the atlas has not otherwise found; the exception covers reading it, not reusing it. MemAgent, HiAgent, Mi-Memory and langchain-ai/memory-agent were examined in the same round and have no reports: MemAgent and HiAgent are conversation-window management (MemAgent is discussed in the scope-boundary section), `Darwin-Agent/Mi-Memory` is a paper PDF and a landing page with no implementation, and `langchain-ai/memory-agent` is a 235-line LangGraph template whose substantive counterpart, LangMem, is already reviewed here.
+- **Framework-native memory layers not yet reviewed**, named because a reader looking for them should find the gap rather than infer coverage: **CrewAI**'s memory module, **Semantic Kernel**'s memory and plugin surfaces, and **Haystack**'s agent memory. The atlas has read the adjacent contracts — [adk-python](../systems/adk-python/), [AutoGen](../systems/autogen/) and [LangMem](../systems/langmem/) — and CrewAI in particular is the most-cited omission on that side. These are reachable by this method, unlike the hosted products above; they are simply not done.
+- **MemGPT is here under its current name.** The project renamed to Letta, so the OS-style tiered-memory reference implementation is the [Letta report](../systems/letta/), and a reader searching this atlas for "MemGPT" will otherwise find only a passing mention in the correction discussion. Recorded because the rename makes the lineage hard to find, not because anything is missing.
 - `Cohexa-ai/agent-coherence` was examined and has no report. It is MESI cache-coherence for shared agent artifacts — single-writer ownership, commit-CAS, a read-generation fence, pinned snapshot sessions — and it stores no memory: `CCSStore._apply_put` serialises the value to an opaque JSON string and versions it, never parsing, ranking, scoping or correcting it. What it durably holds is coordination metadata. That is the guard-is-not-a-store shape and the operates-rather-than-believes shape at once, and naming `memory.json` as an example artifact does not change it. Recorded rather than dropped for two reasons. Its premise is a failure this atlas asks about in every report and finds answered in **two** of ninety — [Mastra](../systems/mastra-observational-memory/) prevents lost updates with per-scope locks, [Logseq](../systems/logseq/) is last-write-wins — so a whole library existing for it says something about the corpus. And its central claim does not hold: the README says *"every spec carries a documented mutant that must fail — the invariants are load-bearing, not decorative"*, the mutants are written out in the specs' comments, and nothing executes them. `make tla-check` asserts six invariants hold; no job asserts a mutated spec fails, which is the standard defence against an invariant passing vacuously. A repository with 60,163 lines of tests documented its negative cases in prose — and the contrast is internal, because its *performance* claim is committed, checksummed and CI-regression-checked: `benchmarks/results/canonical/SUMMARY.md` reproduces its paper's Table 1 with all four figures against tolerances, which is the inverse of the traceability failure this atlas records for Memvid, MemoryOS and FiFA. The same discipline was applied to the speed claim and not to the safety claim. Its paper ([arXiv:2603.15183](https://arxiv.org/abs/2603.15183), 16 March 2026) is also worth noting for selling a different thing than the repository does — the paper leads with simulated token savings and the repository leads with preventing silent clobbers, which on this atlas's terms is the better framing of the same mechanism. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md) for what is unusually honest about it, and for the read-generation fence, which is the one mechanism there that memory systems with restartable background passes appear to need and none here has.
 - Core Memory's grounding ceiling, Memanto's conflict-detection precision, Memory Engine's agent clamp, ai-memory's cross-harness continuity claim, ctx's disclosure reachability, and OptMem's cover loss are all directly testable and none was measured here.
 - Nothing was run for the four systems added in this round. `gastownhall/beads` and `VectorSpaceLab/general-agentic-memory` were examined and have no reports, for the reasons given in the scope section; GAM additionally has no licence file. `langchain-ai/memory-agent` and `akitaonrails/ai-memory` were re-submitted in this round and were already handled — the first rejected as a 235-line template, the second reviewed.
