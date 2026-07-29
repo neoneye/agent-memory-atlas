@@ -7812,6 +7812,46 @@ scope-boundary section), <code>Darwin-Agent/Mi-Memory</code> is a paper
 PDF and a landing page with no implementation, and
 <code>langchain-ai/memory-agent</code> is a 235-line LangGraph template
 whose substantive counterpart, LangMem, is already reviewed here.</li>
+<li><code>Cohexa-ai/agent-coherence</code> was examined and has no
+report. It is MESI cache-coherence for shared agent artifacts —
+single-writer ownership, commit-CAS, a read-generation fence, pinned
+snapshot sessions — and it stores no memory:
+<code>CCSStore._apply_put</code> serialises the value to an opaque JSON
+string and versions it, never parsing, ranking, scoping or correcting
+it. What it durably holds is coordination metadata. That is the
+guard-is-not-a-store shape and the operates-rather-than-believes shape
+at once, and naming <code>memory.json</code> as an example artifact does
+not change it. Recorded rather than dropped for two reasons. Its premise
+is a failure this atlas asks about in every report and finds answered in
+<strong>two</strong> of ninety — <a
+href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
+updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
+last-write-wins — so a whole library existing for it says something
+about the corpus. And its central claim does not hold: the README says
+<em>"every spec carries a documented mutant that must fail — the
+invariants are load-bearing, not decorative"</em>, the mutants are
+written out in the specs' comments, and nothing executes them.
+<code>make tla-check</code> asserts six invariants hold; no job asserts
+a mutated spec fails, which is the standard defence against an invariant
+passing vacuously. A repository with 60,163 lines of tests documented
+its negative cases in prose — and the contrast is internal, because its
+<em>performance</em> claim is committed, checksummed and
+CI-regression-checked:
+<code>benchmarks/results/canonical/SUMMARY.md</code> reproduces its
+paper's Table 1 with all four figures against tolerances, which is the
+inverse of the traceability failure this atlas records for Memvid,
+MemoryOS and FiFA. The same discipline was applied to the speed claim
+and not to the safety claim. Its paper (<a
+href="https://arxiv.org/abs/2603.15183">arXiv:2603.15183</a>, 16 March
+2026) is also worth noting for selling a different thing than the
+repository does — the paper leads with simulated token savings and the
+repository leads with preventing silent clobbers, which on this atlas's
+terms is the better framing of the same mechanism. See <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md">the
+note</a> for what is unusually honest about it, and for the
+read-generation fence, which is the one mechanism there that memory
+systems with restartable background passes appear to need and none here
+has.</li>
 <li>Core Memory's grounding ceiling, Memanto's conflict-detection
 precision, Memory Engine's agent clamp, ai-memory's cross-harness
 continuity claim, ctx's disclosure reachability, and OptMem's cover loss
