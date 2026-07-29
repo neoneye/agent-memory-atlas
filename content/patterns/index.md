@@ -177,6 +177,16 @@ survives an attack. The
 [rejected-value tombstone](./rejected-value-tombstone/) page traces the whole
 chain.
 
+The outside view agrees, in the way that costs the atlas something to admit: the
+field's most comprehensive survey of itself
+([arXiv:2512.13564](https://arxiv.org/abs/2512.13564), 107 pages, 47 authors)
+does not contain the words *tombstone*, *rejected* or *negative* anywhere, while
+its trustworthy-memory section asks for "verifiable forgetting and auditable
+updates" as future work. So this is not a practice the atlas is reporting late.
+It is a mechanism three small repositories have and the literature has not
+named — which is either the atlas being early or the atlas being wrong about
+what matters, and one survey cannot tell you which.
+
 So this library is doing two different jobs at once, and it is worth knowing
 which one you are reading:
 

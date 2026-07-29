@@ -899,6 +899,35 @@ criticism of the survey; all three are small and obscure. It does mean
 correction-focused memory is under-surveyed as well as under-built: a reader
 working from the standard reading list would not encounter the mechanism at all.
 
+The stronger version of that observation is not about which repositories get
+listed. It is about vocabulary. *Memory in the Age of AI Agents*
+([arXiv:2512.13564](https://arxiv.org/abs/2512.13564), v2, 13 January 2026) is
+107 pages by 47 authors and is the most comprehensive description the field has
+written of itself. Its §5.2.2 traces external memory update as a clear
+progression — destructive replace and delete in MemGPT, D-SMART and Mem0ᵍ; then
+Zep annotating conflicting facts with invalid timestamps instead of deleting
+them; then dual-phase online/offline reconciliation; then reinforcement learning
+over *whether* to update at all. Every step improves the decision. None of them
+records the value that lost, and re-assertion by the next extraction pass is not
+named in the section.
+
+The term counts make the point without interpretation. Over a text extraction of
+the full paper, `memory` appears 1,570 times, `forget*` 52, `conflict` 28,
+`audit*` 5, `provenance` 3, `deletion` 2, `bi-temporal` 1. `tombstone`,
+`rejected`, `tenant` and `negative` each appear **zero** times — the last of
+those an ordinary English word that a 107-page technical survey manages never to
+use, which is what an absent concept looks like from the outside. Meanwhile its
+own trustworthy-memory frontier (§7.7) calls for "access control, verifiable
+forgetting, and auditable updates", and for memory that is "version-controlled,
+auditable, and jointly managed by agent and user": four of this atlas's seven
+capability columns, stated as open research directions. The field is asking for
+the property and has not yet named the mechanism.
+
+Read that as corroboration rather than as a scoop. The comparison in full,
+including where the survey covers ground the atlas does not — parametric and
+latent memory, RL-learned memory management, multimodal — is in
+[the working note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-memory-survey-forms-functions-dynamics.md).
+
 ### Forgetting
 
 Visible deletion varies from hard API deletion to lifecycle state:

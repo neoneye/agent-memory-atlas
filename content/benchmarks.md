@@ -88,6 +88,18 @@ familiarity with the literature rather than inspection.
 - Several newer conversational-memory benchmarks have appeared that this review
   has not inspected. Treat any list of them, including this one, as incomplete.
 
+The most complete published list is Table 8 of *Memory in the Age of AI Agents*
+([arXiv:2512.13564](https://arxiv.org/abs/2512.13564), v2, 13 January 2026) —
+**40 benchmarks**, split into 26 designed for memory, lifelong learning or
+self-evolving agents and 14 borrowed from adjacent evaluation. It is the right
+place to start, and none of it was inspected here. The entries closest to this
+page's concerns, by the survey's own one-line descriptions: **HaluMem** (memory
+hallucinations), **MemoryAgentBench** and **Evo-Memory** (test-time and
+multi-episode learning), **PersonaMem** and **PrefEval** (dynamic user profiles
+and stated preferences), **LifelongAgentBench** and **StreamBench** (continual
+and online learning), **MemoryBank** (user memory updating). What that table does
+*not* contain is the subject of [section 6](#6-does-anything-benchmark-forgetting).
+
 ### The boundary worth drawing
 
 A long-context benchmark asks: given all of this text in the prompt, can you
@@ -402,9 +414,13 @@ collect and none of them appears anywhere.
 
 ## 6. Does Anything Benchmark Forgetting?
 
-**No.** Not in this atlas, and not in the public benchmarks these repositories
-use. This is the clearest gap in the field's measurement practice, and it is
-worth being precise about what exists and what does not.
+**No.** Not in this atlas, not in the public benchmarks these repositories use,
+and not in the field's own consolidated list — the 40 benchmarks in Table 8 of
+[arXiv:2512.13564](https://arxiv.org/abs/2512.13564) contain nothing that tests
+whether a deleted memory stays deleted. The nearest entries are MemoryBank
+("user memory updating") and HaluMem (memory hallucinations), and neither asks
+the question. This is the clearest gap in the field's measurement practice, and
+it is worth being precise about what exists and what does not.
 
 ### What exists
 
@@ -438,9 +454,11 @@ re-distils its memory file nightly from retained daily files.
 [Atomic Agent](../systems/atomic-agent/) re-clusters. Magic Context and Redis
 Agent Memory Server both extract on a schedule from retained history.
 OpenClaw's auto-capture can restore content a user deleted. Only
-[Verel](../systems/verel/) and [RainBox](../systems/rainbox/) carry a
-value-level tombstone that blocks re-assertion — and, as noted in the
-comparative report, the standard survey of this field lists neither of them.
+[Verel](../systems/verel/), [RainBox](../systems/rainbox/) and
+[Daimon](../systems/daimon/) carry a value-level tombstone that blocks
+re-assertion — and, as noted in the comparative report, neither the standard
+reading list nor the field's 107-page survey lists any of the three, the latter
+never using the word *tombstone* at all.
 
 So the question "does a deleted memory stay deleted?" has, for most systems
 here, the answer "until the next scheduled job", and there is no benchmark that

@@ -34,6 +34,10 @@ when the work happens.
 - [2026-07-28-pattern-gap-analysis.md](2026-07-28-pattern-gap-analysis.md) —
   an external 20-pattern list checked against the library; the real gap is that
   the comparative report names 29 recurring patterns and only 17 became pages.
+- [2026-07-29-memory-survey-forms-functions-dynamics.md](2026-07-29-memory-survey-forms-functions-dynamics.md) —
+  the field's 107-page survey of itself read against the atlas; the corpora
+  overlap by ten systems of sixty-three, and the survey's vocabulary does not
+  contain the atlas's central mechanism.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
