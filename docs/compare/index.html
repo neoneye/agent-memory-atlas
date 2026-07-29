@@ -3312,7 +3312,7 @@ access-control work rather than from memory research, and one, N.E.K.O.,
 from a companion app where re-raising something the user asked you to
 drop is a product failure rather than a data-quality one.</p>
 <p><a href="../systems/daimon/">Daimon</a> is the near-miss that shows
-how narrow the bar is: 1,920 tests, a committed LongMemEval harness,
+how narrow the bar is: 1,974 tests, a committed LongMemEval harness,
 unit tests asserting that a resolved item is withheld and that an
 id-bearing item is never fuzzy-matched into suppression — and still no
 case that forgets a value, re-extracts it, and asserts it stayed gone.
@@ -3838,14 +3838,20 @@ item to a Python symbol, fingerprinted as a SHA-256 of
 under reformatting and comment edits and moves only on a structural
 change — and drift is reported in the next briefing. Outward, into the
 world: an opt-in <code>worldcheck</code> pass spot-checks carried claims
-that name a repo-local <code>#N</code> with read-only
-<code>gh pr view</code> / <code>gh issue view</code> probes, under a
-<strong>0.8-second aggregate budget</strong>, a five-probe cap, and
-silent-skip on any failure, so the briefing can never block or fail on
-the network. The cross-repo case is excluded by a lookbehind in the
-reference regex — <code>owner/repo#12</code> and
-<code>gemini-cli#14715</code> must not match, because <code>gh</code>
-would answer for the wrong repository.</p>
+across four classes — a repo-local <code>#N</code> via read-only
+<code>gh pr view</code> / <code>gh issue view</code>, a source path via
+<code>Path.exists()</code>, a branch via git's on-disk refs, and a
+pinned version via the lockfile — under one <strong>0.8-second aggregate
+budget</strong>, one five-probe cap, and silent-skip on any failure, so
+the briefing can never block or fail on the network. Three of the four
+are pure disk reads, so most of the pass runs with no <code>gh</code>
+and no remote at all. Two refusals define its edges: the cross-repo case
+is excluded by a lookbehind in the reference regex —
+<code>owner/repo#12</code> and <code>gemini-cli#14715</code> must not
+match, because <code>gh</code> would answer for the wrong repository —
+and a path whose resolved target escapes the project root is skipped for
+the same reason, since a symlink out of the tree answers about another
+checkout.</p>
 <p>Three of its correction decisions generalize. A machine-detected
 supersession is written as
 <code>supersede-candidate:&lt;new-id&gt;</code> and is <strong>live by
@@ -5065,8 +5071,8 @@ best idea.</li>
 <li><code>openclaw</code>: test lines far exceed implementation — 4,497
 for the LanceDB extension and 2,530 for the memory-core doctor contract;
 no committed retrieval benchmark.</li>
-<li><code>daimon</code>: 1,920 tests across roughly 29,100 lines against
-15,200 lines of source, with dedicated quote-verification, carry,
+<li><code>daimon</code>: 1,974 tests across roughly 29,700 lines against
+15,600 lines of source, with dedicated quote-verification, carry,
 withhold, redaction-leak, receipt, and host-isolation suites. Its
 <code>benchmark/</code> runs LongMemEval-S through the real serializer
 and answers only from <code>daimon recall</code>, under a written
@@ -5419,11 +5425,13 @@ gate.</p>
 <p><code>daimon</code> shows the zero-cost end of the same idea. Its
 proactive-recall gate is three lexical tests and no model call at all,
 and its world-check gate is a hard 0.8-second aggregate budget with a
-five-probe cap where anything unfinished is killed and skipped. Both
-fail toward silence rather than toward a stale answer, which is the
-opposite of Waku's fail-open posture and correct for what they guard: a
-missing <em>suggestion</em> costs a reminder, a missing <em>memory</em>
-costs the answer.</p>
+five-probe cap where anything unfinished is killed and skipped — and the
+cap is allocated in checkpoint order rather than consumed first-come, so
+an expensive class cannot starve a cheap one. Both fail toward silence
+rather than toward a stale answer, which is the opposite of Waku's
+fail-open posture and correct for what they guard: a missing
+<em>suggestion</em> costs a reminder, a missing <em>memory</em> costs
+the answer.</p>
 <h3 id="verify-memory-against-its-subject">Verify memory against its
 subject</h3>
 <p>Repos: <code>magic-context</code> and <code>daimon</code>; the
@@ -7074,7 +7082,7 @@ semantic arm, and the committed retrieval numbers are modest.</li>
 <code>ground_outcomes</code> in <code>serializer.py</code> — about 200
 lines that make an extraction's own provenance mechanically
 checkable.</li>
-<li>Maturity impression: 15,200 lines of source under 29,100 lines of
+<li>Maturity impression: 15,600 lines of source under 29,700 lines of
 tests, a research logbook, a scar file per landmine, and a benchmark
 reporting policy stricter than most vendors'.</li>
 <li>Study when: you want cross-session continuity for a coding agent, or
@@ -7519,7 +7527,7 @@ href="https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad
 href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03"><code class="commit-id" title="02b59e5dc1c995cd47574af5eafb23395959ea03">02b59e5d…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
-href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b"><code class="commit-id" title="522a217bba088fa4f65324b0b79ad90b50e6df5b">522a217b…</code></a></li>
+href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a"><code class="commit-id" title="ecb7fafefa817f0726f46b221ddd4c7f4400a30a">ecb7fafe…</code></a></li>
 <li><a href="https://github.com/Mirix-AI/MIRIX">Mirix-AI/MIRIX</a> at <a
 href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a></li>
 <li><a

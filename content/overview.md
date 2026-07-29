@@ -1007,7 +1007,7 @@ where re-raising something the user asked you to drop is a product failure
 rather than a data-quality one.
 
 [Daimon](../systems/daimon/) is the near-miss that shows how narrow the bar is:
-1,920 tests, a committed LongMemEval harness, unit tests asserting that a
+1,974 tests, a committed LongMemEval harness, unit tests asserting that a
 resolved item is withheld and that an id-bearing item is never fuzzy-matched
 into suppression — and still no case that forgets a value, re-extracts it, and
 asserts it stayed gone. The tombstone is the mechanism most in need of a
@@ -1279,12 +1279,17 @@ an item to a Python symbol, fingerprinted as a SHA-256 of `ast.dump` of the
 definition node, so the anchor is stable under reformatting and comment edits
 and moves only on a structural change — and drift is reported in the next
 briefing. Outward, into the world: an opt-in `worldcheck` pass spot-checks
-carried claims that name a repo-local `#N` with read-only `gh pr view` /
-`gh issue view` probes, under a **0.8-second aggregate budget**, a five-probe
-cap, and silent-skip on any failure, so the briefing can never block or fail on
-the network. The cross-repo case is excluded by a lookbehind in the reference
-regex — `owner/repo#12` and `gemini-cli#14715` must not match, because `gh`
-would answer for the wrong repository.
+carried claims across four classes — a repo-local `#N` via read-only
+`gh pr view` / `gh issue view`, a source path via `Path.exists()`, a branch via
+git's on-disk refs, and a pinned version via the lockfile — under one
+**0.8-second aggregate budget**, one five-probe cap, and silent-skip on any
+failure, so the briefing can never block or fail on the network. Three of the
+four are pure disk reads, so most of the pass runs with no `gh` and no remote at
+all. Two refusals define its edges: the cross-repo case is excluded by a
+lookbehind in the reference regex — `owner/repo#12` and `gemini-cli#14715` must
+not match, because `gh` would answer for the wrong repository — and a path whose
+resolved target escapes the project root is skipped for the same reason, since a
+symlink out of the tree answers about another checkout.
 
 Three of its correction decisions generalize. A machine-detected supersession is
 written as `supersede-candidate:<new-id>` and is **live by construction** — a
@@ -1864,7 +1869,7 @@ often weak evidence — is covered separately in
 - `redis-agent-memory-server`: roughly 27,000 lines of tests, with dedicated forgetting, extraction, strategy, and contextual-grounding suites; benchmark scaffolding but no published numbers.
 - `byterover`: no tests located for the memory or knowledge domain modules, including none for the structural-loss guard that is its best idea.
 - `openclaw`: test lines far exceed implementation — 4,497 for the LanceDB extension and 2,530 for the memory-core doctor contract; no committed retrieval benchmark.
-- `daimon`: 1,920 tests across roughly 29,100 lines against 15,200 lines of source, with dedicated quote-verification, carry, withhold, redaction-leak, receipt, and host-isolation suites. Its `benchmark/` runs LongMemEval-S through the real serializer and answers only from `daimon recall`, under a written reporting policy — publish only self-measured numbers with the full config stamp, label third-party figures as their publishers' claims, never report a figure without its backend, and report the trade rather than the win. Two result files are committed; the honest one is a 52-question interim baseline at **Recall@5 0.58 / Hit@5 0.67 / MRR 0.59** (my arithmetic over its per-question rows — the file ships no aggregate block). The other is a five-question run, which the config stamp makes obvious.
+- `daimon`: 1,974 tests across roughly 29,700 lines against 15,600 lines of source, with dedicated quote-verification, carry, withhold, redaction-leak, receipt, and host-isolation suites. Its `benchmark/` runs LongMemEval-S through the real serializer and answers only from `daimon recall`, under a written reporting policy — publish only self-measured numbers with the full config stamp, label third-party figures as their publishers' claims, never report a figure without its backend, and report the trade rather than the win. Two result files are committed; the honest one is a 52-question interim baseline at **Recall@5 0.58 / Hit@5 0.67 / MRR 0.59** (my arithmetic over its per-question rows — the file ships no aggregate block). The other is a five-question run, which the config stamp makes obvious.
 
 ## 5. Design Patterns That Recur
 
@@ -2121,7 +2126,8 @@ fail open — `waku-agent` states it in the code, "a stale memory beats a lost o
 `daimon` shows the zero-cost end of the same idea. Its proactive-recall gate is
 three lexical tests and no model call at all, and its world-check gate is a hard
 0.8-second aggregate budget with a five-probe cap where anything unfinished is
-killed and skipped. Both fail toward silence rather than toward a stale answer,
+killed and skipped — and the cap is allocated in checkpoint order rather than
+consumed first-come, so an expensive class cannot starve a cheap one. Both fail toward silence rather than toward a stale answer,
 which is the opposite of Waku's fail-open posture and correct for what they
 guard: a missing *suggestion* costs a reminder, a missing *memory* costs the
 answer.
@@ -3139,7 +3145,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: the model's trust label is a claim the code falsifies — a verbatim item's quote is grepped against the transcript and demoted on a miss, and an outcome claim with no tool result cited is demoted even when its quote verifies.
 - Biggest risk: the live working set is one checkpoint per project, so anything carry drops is reachable only through a lexical index with no semantic arm, and the committed retrieval numbers are modest.
 - Most reusable component: `verify_quotes` and `ground_outcomes` in `serializer.py` — about 200 lines that make an extraction's own provenance mechanically checkable.
-- Maturity impression: 15,200 lines of source under 29,100 lines of tests, a research logbook, a scar file per landmine, and a benchmark reporting policy stricter than most vendors'.
+- Maturity impression: 15,600 lines of source under 29,700 lines of tests, a research logbook, a scar file per landmine, and a benchmark reporting policy stricter than most vendors'.
 - Study when: you want cross-session continuity for a coding agent, or you want to see what taking trust classes seriously actually costs in code.
 - Do not copy when: you need memory within a session, semantic retrieval, or a shared service — none of the three is here or planned.
 
@@ -3386,7 +3392,7 @@ Privacy/deletion:
 - [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`b017db4449d592a982944986c2e3c18652bb36ad`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad)
 - [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d)
 - [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03)
-- [Daily-Nerd/daimon](https://github.com/Daily-Nerd/daimon) at [`522a217bba088fa4f65324b0b79ad90b50e6df5b`](https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b)
+- [Daily-Nerd/daimon](https://github.com/Daily-Nerd/daimon) at [`ecb7fafefa817f0726f46b221ddd4c7f4400a30a`](https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a)
 - [Mirix-AI/MIRIX](https://github.com/Mirix-AI/MIRIX) at [`51f3342d5366b0e215439581f92e0323227146af`](https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af)
 - [memodb-io/memobase](https://github.com/memodb-io/memobase) at [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901)
 - [kingjulio8238/Memary](https://github.com/kingjulio8238/Memary) at [`b2331a2c0844d66f69acd607b9e4dbaba56552c1`](https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1)

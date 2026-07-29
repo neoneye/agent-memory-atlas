@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 522a217bba088fa4f65324b0b79ad90b50e6df5b
-revision_url: https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b
-analyzed_at: 2026-07-29
+revision: ecb7fafefa817f0726f46b221ddd4c7f4400a30a
+revision_url: https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a
+analyzed_at: 2026-07-30
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
@@ -290,7 +290,7 @@ because zero runtime dependencies is a product claim — exposing four read-only
 tools (`daimon_recall`, `daimon_brief`, `daimon_projects`, `daimon_status`)
 through thin shims in `mcp_tools.py`.
 
-**Tests.** 1,920 test functions across ~29,100 lines under `plugin/tests/`,
+**Tests.** 1,974 test functions across ~29,700 lines under `plugin/tests/`,
 against ~15,200 lines of source.
 
 ## 5. Memory Data Model
@@ -505,21 +505,80 @@ re-extracts it, it survives only in historical session files and the index,
 reachable by `recall` but never again by a briefing.
 
 **Uncertainty representation** is the point of the system, and it does it in
-three registers: the trust class, the `uncertainties` field, and the
-`VERIFY BEFORE TRUSTING` section driven by `external_state`. The opt-in
-`worldcheck` module closes part of the loop by spot-checking carried PR/issue
-claims with read-only `gh` probes under a hard 0.8-second aggregate budget and a
-five-probe cap, skipping silently on any failure.
+four registers: the trust class, the `uncertainties` field, the
+`VERIFY BEFORE TRUSTING` section driven by `external_state`, and the opt-in
+`worldcheck` pass.
+
+**`worldcheck` is where a stored claim is checked against the world**, and it
+covers four claim classes (`worldcheck.py:76-82`):
+
+| Class | Answered from | Shells out |
+| --- | --- | --- |
+| `pr-state` | `gh pr view` / `gh issue view` | yes |
+| `file-exists` | `Path.exists()` | no |
+| `branch-state` | git's on-disk refs | no |
+| `dependency-version` | the lockfile or manifest | no |
+
+Three of the four are pure disk reads, so the majority of the pass works with no
+`gh` on `PATH`, no GitHub remote and no network — which matters because it makes
+verification available to a project that has none of those. One aggregate
+`BUDGET_SECONDS = 0.8` and one `MAX_PROBES = 5` cover all four, and the cap is
+*allocated in checkpoint order* rather than consumed first-come, so a burst of
+`gh` claims at the top of a checkpoint cannot starve the cheap local probes
+below them. A contradicted item is flagged and never dropped; nothing the pass
+learns is persisted.
+
+The local probes read like code written by someone bitten by each of these
+cases, and the reasoning sits beside the mechanism:
+
+- `_probe_branch` (`:332`) consults **both halves of git's ref storage** — a
+  loose `refs/heads/<name>` file *and* `packed-refs` — because *"every fresh
+  clone packs its refs, so missing this would contradict on sight."*
+- `_git_common_dir` (`:308`) follows the linked-**worktree** indirection, `.git`
+  as a file to `gitdir:` to `commondir`, absolute or relative, because reading
+  the worktree dir instead *"would report every branch gone for anyone working
+  out of a worktree."* Absent `refs/heads` returns `None` — a skip — rather than
+  `MISSING`, since *"answering MISSING there would fabricate a contradiction for
+  every claim."*
+- `_probe_path` (`:296`) resolves the target and **refuses when it escapes the
+  project root**, on the grounds that a symlink out of the tree *"answers about
+  ANOTHER checkout"* — the same stance as the cross-repo refusal that keeps
+  `owner/repo#12` out of the `gh` path.
+- `_MANIFESTS` (`:354`) is ordered lockfiles-first because a lock records a
+  resolved version and a manifest usually records a range, and consulting both
+  *"would leave every real project with two conflicting answers and nothing to
+  say."*
+
+The first three carry named tests — `test_check_branch_found_in_packed_refs`,
+`test_check_branch_probe_follows_relative_worktree_gitdir`,
+`test_check_file_exists_symlink_escape_is_skipped` — as do the budget rules,
+in `test_shared_probe_cap_is_allocated_in_item_order` and
+`test_exhausted_budget_skips_local_probes`. Eighty-eight tests cover the module.
+
+One of them is worth naming for its method.
+`test_check_file_exists_never_spawns_a_subprocess` patches `subprocess.Popen`
+and `subprocess.run` to raise, then asserts the check still answers — an
+architectural constraint expressed as an executable assertion rather than a
+comment, which is rarer in this atlas than it should be.
+
+The manifest ordering is the exception: the lockfile-before-manifest precedence
+is reasoned in the comment and no test asserts it. There are tests that a
+dependency claim reads `package.json`, and none that a project carrying both a
+lockfile and a manifest resolves to the lockfile — which is the case the ordering
+exists for.
 
 **The gap the system names itself.** Trust classes certify that a quote was
-said, not that it was true. `ground_outcomes` narrows this for outcome-shaped
-claims on one host with an English-only lexicon. For everything else — a wrong
-diagnosis, stated confidently, quoted exactly — verification passes and the
-briefing carries it forward as `✓ verbatim`.
+*said*, not that it was *true*. `worldcheck` answers the truth question for
+claims with a checkable referent — a PR state, a file path, a branch, a pinned
+version. For a claim shaped like a diagnosis, wrong and stated confidently and
+quoted exactly, there is nothing to probe: verification passes and the briefing
+carries it forward as `✓ verbatim`. The boundary is what has a referent on disk
+or on one host, which is a narrower gap than a lexicon over outcome words and
+still a gap.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,920 tests over ~29,100 lines, roughly twice the source. Coverage tracks the
+1,974 tests over ~29,700 lines, roughly twice the source. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
 `test_id_bearing_item_never_fuzzy_withheld`), `test_store.py`,
@@ -674,7 +733,8 @@ they stop working.
 
 **Verification and trust**
 - `plugin/daimon_briefing/anchor.py` — AST-hash code anchors and drift detection
-- `plugin/daimon_briefing/worldcheck.py` — budgeted read-only `gh` spot-checks
+- `plugin/daimon_briefing/worldcheck.py` — budgeted spot-checks over four claim
+  classes; only the PR/issue class shells out to `gh`
 - `plugin/daimon_briefing/receipts.py` — vitni Ed25519 provenance receipts
 - `plugin/daimon_briefing/ledger.py` — serialize log, health classification, heal plan
 
@@ -688,6 +748,6 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 1,920 tests
+- `plugin/tests/` — 1,974 tests
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/`, `.scars/` — the project's own decision and negative-knowledge trail

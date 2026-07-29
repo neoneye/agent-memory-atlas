@@ -87,14 +87,14 @@ stored.</p>
               <strong>Daily-Nerd/daimon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/522a217bba088fa4f65324b0b79ad90b50e6df5b" title="522a217bba088fa4f65324b0b79ad90b50e6df5b">
+            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a" title="ecb7fafefa817f0726f46b221ddd4c7f4400a30a">
               <span>Analyzed revision</span>
-              <code>522a217b…</code>
+              <code>ecb7fafe…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-07-30</strong>
             </div>
                       </div>
                               <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (76%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -414,7 +414,7 @@ product claim — exposing four read-only tools
 (<code>daimon_recall</code>, <code>daimon_brief</code>,
 <code>daimon_projects</code>, <code>daimon_status</code>) through thin
 shims in <code>mcp_tools.py</code>.</p>
-<p><strong>Tests.</strong> 1,920 test functions across ~29,100 lines
+<p><strong>Tests.</strong> 1,974 test functions across ~29,700 lines
 under <code>plugin/tests/</code>, against ~15,200 lines of source.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The checkpoint is a single JSON document:</p>
@@ -633,22 +633,112 @@ drops an item and no later session re-extracts it, it survives only in
 historical session files and the index, reachable by <code>recall</code>
 but never again by a briefing.</p>
 <p><strong>Uncertainty representation</strong> is the point of the
-system, and it does it in three registers: the trust class, the
-<code>uncertainties</code> field, and the
+system, and it does it in four registers: the trust class, the
+<code>uncertainties</code> field, the
 <code>VERIFY BEFORE TRUSTING</code> section driven by
-<code>external_state</code>. The opt-in <code>worldcheck</code> module
-closes part of the loop by spot-checking carried PR/issue claims with
-read-only <code>gh</code> probes under a hard 0.8-second aggregate
-budget and a five-probe cap, skipping silently on any failure.</p>
+<code>external_state</code>, and the opt-in <code>worldcheck</code>
+pass.</p>
+<p><strong><code>worldcheck</code> is where a stored claim is checked
+against the world</strong>, and it covers four claim classes
+(<code>worldcheck.py:76-82</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Answered from</th>
+<th>Shells out</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pr-state</code></td>
+<td><code>gh pr view</code> / <code>gh issue view</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>file-exists</code></td>
+<td><code>Path.exists()</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>branch-state</code></td>
+<td>git's on-disk refs</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>dependency-version</code></td>
+<td>the lockfile or manifest</td>
+<td>no</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three of the four are pure disk reads, so the majority of the pass
+works with no <code>gh</code> on <code>PATH</code>, no GitHub remote and
+no network — which matters because it makes verification available to a
+project that has none of those. One aggregate
+<code>BUDGET_SECONDS = 0.8</code> and one <code>MAX_PROBES = 5</code>
+cover all four, and the cap is <em>allocated in checkpoint order</em>
+rather than consumed first-come, so a burst of <code>gh</code> claims at
+the top of a checkpoint cannot starve the cheap local probes below them.
+A contradicted item is flagged and never dropped; nothing the pass
+learns is persisted.</p>
+<p>The local probes read like code written by someone bitten by each of
+these cases, and the reasoning sits beside the mechanism:</p>
+<ul>
+<li><code>_probe_branch</code> (<code>:332</code>) consults <strong>both
+halves of git's ref storage</strong> — a loose
+<code>refs/heads/&lt;name&gt;</code> file <em>and</em>
+<code>packed-refs</code> — because <em>"every fresh clone packs its
+refs, so missing this would contradict on sight."</em></li>
+<li><code>_git_common_dir</code> (<code>:308</code>) follows the
+linked-<strong>worktree</strong> indirection, <code>.git</code> as a
+file to <code>gitdir:</code> to <code>commondir</code>, absolute or
+relative, because reading the worktree dir instead <em>"would report
+every branch gone for anyone working out of a worktree."</em> Absent
+<code>refs/heads</code> returns <code>None</code> — a skip — rather than
+<code>MISSING</code>, since <em>"answering MISSING there would fabricate
+a contradiction for every claim."</em></li>
+<li><code>_probe_path</code> (<code>:296</code>) resolves the target and
+<strong>refuses when it escapes the project root</strong>, on the
+grounds that a symlink out of the tree <em>"answers about ANOTHER
+checkout"</em> — the same stance as the cross-repo refusal that keeps
+<code>owner/repo#12</code> out of the <code>gh</code> path.</li>
+<li><code>_MANIFESTS</code> (<code>:354</code>) is ordered
+lockfiles-first because a lock records a resolved version and a manifest
+usually records a range, and consulting both <em>"would leave every real
+project with two conflicting answers and nothing to say."</em></li>
+</ul>
+<p>The first three carry named tests —
+<code>test_check_branch_found_in_packed_refs</code>,
+<code>test_check_branch_probe_follows_relative_worktree_gitdir</code>,
+<code>test_check_file_exists_symlink_escape_is_skipped</code> — as do
+the budget rules, in
+<code>test_shared_probe_cap_is_allocated_in_item_order</code> and
+<code>test_exhausted_budget_skips_local_probes</code>. Eighty-eight
+tests cover the module.</p>
+<p>One of them is worth naming for its method.
+<code>test_check_file_exists_never_spawns_a_subprocess</code> patches
+<code>subprocess.Popen</code> and <code>subprocess.run</code> to raise,
+then asserts the check still answers — an architectural constraint
+expressed as an executable assertion rather than a comment, which is
+rarer in this atlas than it should be.</p>
+<p>The manifest ordering is the exception: the lockfile-before-manifest
+precedence is reasoned in the comment and no test asserts it. There are
+tests that a dependency claim reads <code>package.json</code>, and none
+that a project carrying both a lockfile and a manifest resolves to the
+lockfile — which is the case the ordering exists for.</p>
 <p><strong>The gap the system names itself.</strong> Trust classes
-certify that a quote was said, not that it was true.
-<code>ground_outcomes</code> narrows this for outcome-shaped claims on
-one host with an English-only lexicon. For everything else — a wrong
-diagnosis, stated confidently, quoted exactly — verification passes and
-the briefing carries it forward as <code>✓ verbatim</code>.</p>
+certify that a quote was <em>said</em>, not that it was <em>true</em>.
+<code>worldcheck</code> answers the truth question for claims with a
+checkable referent — a PR state, a file path, a branch, a pinned
+version. For a claim shaped like a diagnosis, wrong and stated
+confidently and quoted exactly, there is nothing to probe: verification
+passes and the briefing carries it forward as <code>✓ verbatim</code>.
+The boundary is what has a referent on disk or on one host, which is a
+narrower gap than a lexicon over outcome words and still a gap.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,920 tests over ~29,100 lines, roughly twice the source. Coverage
+<p>1,974 tests over ~29,700 lines, roughly twice the source. Coverage
 tracks the design claims closely:
 <code>test_quote_verification.py</code>, <code>test_carry.py</code>,
 <code>test_briefing.py</code> (withhold semantics, including
@@ -852,7 +942,8 @@ presentation</li>
 <li><code>plugin/daimon_briefing/anchor.py</code> — AST-hash code
 anchors and drift detection</li>
 <li><code>plugin/daimon_briefing/worldcheck.py</code> — budgeted
-read-only <code>gh</code> spot-checks</li>
+spot-checks over four claim classes; only the PR/issue class shells out
+to <code>gh</code></li>
 <li><code>plugin/daimon_briefing/receipts.py</code> — vitni Ed25519
 provenance receipts</li>
 <li><code>plugin/daimon_briefing/ledger.py</code> — serialize log,
@@ -877,7 +968,7 @@ scar-candidate drafting</li>
 </ul>
 <p><strong>Tests and evals</strong></p>
 <ul>
-<li><code>plugin/tests/</code> — 1,920 tests</li>
+<li><code>plugin/tests/</code> — 1,974 tests</li>
 <li><code>benchmark/</code> — LongMemEval-S harness, reporting policy,
 committed results</li>
 <li><code>research/</code>, <code>.scars/</code> — the project's own
