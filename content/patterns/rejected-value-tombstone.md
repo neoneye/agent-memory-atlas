@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Three systems of sixty-five
+> **This is not an established best practice.** Three systems of sixty-six
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, and one arrived at a weaker form independently. There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -135,9 +135,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of sixty-five
+That makes the negative result stronger rather than weaker. Two of sixty-six
 would suggest a hard idea that a few teams reach independently. One of
-sixty-five, plus one adoption by a reader who went looking, suggests an idea
+sixty-six, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 

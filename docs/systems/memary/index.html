@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A LlamaIndex knowledge graph plus
+two JSON files, where entity mention counts are the only ranking signal
+and the one line that uses them sorts the wrong way.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memary — Agent Memory Atlas">
+    <meta property="og:description" content="A LlamaIndex knowledge
+graph plus two JSON files, where entity mention counts are the only
+ranking signal and the one line that uses them sorts the wrong way.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memary — Agent Memory Atlas">
+    <meta name="twitter:description" content="A LlamaIndex knowledge
+graph plus two JSON files, where entity mention counts are the only
+ranking signal and the one line that uses them sorts the wrong way.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memary — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Knowledge-graph agent memory</p>
+          <h1>Memary</h1>
+          <p class="document-deck">A LlamaIndex knowledge graph plus two
+JSON files, where entity mention counts are the only ranking signal and
+the one line that uses them sorts the wrong way.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kingjulio8238/Memary">
+              <span>Source</span>
+              <strong>kingjulio8238/Memary</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1" title="b2331a2c0844d66f69acd607b9e4dbaba56552c1">
+              <span>Analyzed revision</span>
+              <code>b2331a2c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-29</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Atlas rubric <b>0 of 7</b> <span>— a dash means the mechanism was not found at this commit</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memary is a 2024-era LlamaIndex agent with a knowledge graph behind
+it, framed around emulating human memory. A chat turn produces entity
+mentions; those mentions accumulate into per-entity counts; the counts
+are meant to decide which entities get injected into the next prompt.
+Underneath sits a Neo4j or FalkorDB graph queried through
+<code>KnowledgeGraphRAGRetriever</code>.</p>
+<p>It is in this atlas because it passes the inclusion test cleanly —
+entities persist across sessions with stable identity in a graph and in
+two JSON files — and because it is the <strong>smallest legible
+implementation of reinforcement by frequency</strong> in the corpus.
+Everything the pattern needs is about forty lines of
+<code>entity_knowledge_store.py</code>, which makes it a better teaching
+example than the systems that bury the same idea in a scoring
+function.</p>
+<p>Two things should stop a reader adopting it. The first is a defect,
+stated in section 6: the one line that consumes the mention counts sorts
+them ascending, so the entities injected into the prompt are the twenty
+<em>least</em> mentioned. The second is architectural, in section 7: the
+graph is populated by feeding the agent's own web-search output back in
+as triplets, with no provenance, no trust state, and no path that
+removes anything from the graph afterwards.</p>
+<p>The repository was last committed to in October 2024. Read it as a
+reference implementation of an idea, not as a maintained system.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two memories, and neither one holds a fact.</p>
+<pre class="text"><code>memory_stream          [ MemoryItem(entity, date), ... ]      append-only
+entity_knowledge_store [ KnowledgeMemoryItem(entity, count, date), ... ]
+knowledge graph        triplets, via LlamaIndex</code></pre>
+<p>A <code>MemoryItem</code> is <em>"this entity was mentioned at this
+time"</em>. A <code>KnowledgeMemoryItem</code> is <em>"this entity has
+been mentioned this many times, most recently then"</em>. Neither says
+anything about the entity. The claims live in the graph, and the two
+JSON stores are an attention model over it — which entities are
+currently salient — rather than a belief store.</p>
+<p>That is a coherent design and worth naming, because the atlas has
+several systems that conflate the two jobs. Memary keeps "what do I
+know" and "what am I thinking about" in different places.</p>
+<p>The state machine is one transition wide:</p>
+<pre class="text"><code>entity mentioned ──► count += 1, date = now
+                          │
+                          └──► (nothing else; count never decreases)</code></pre>
+<p><code>remove_old_memory(days)</code> filters the <em>mention
+stream</em> by cutoff date, and <code>remove_memory_by_index</code> /
+<code>clear_memory</code> operate on the in-process lists. None of them
+touches the graph. So a triplet, once extracted, is permanent.</p>
+<p>Memory is fully <strong>automatic</strong>. Nothing asks the model
+whether a mention is worth keeping, and there is no surface on which a
+person adjudicates.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, not a service: <code>ChatAgent</code> in
+<code>src/memary/agent/chat_agent.py</code>, subclassing
+<code>Agent</code> in <code>base_agent.py</code>, plus a Streamlit front
+end.</p>
+<pre class="mermaid"><code>flowchart TD
+    U[&quot;chat turn&quot;] --&gt; CA[&quot;ChatAgent.add_chat&quot;]
+    CA --&gt; MS[&quot;memory_stream.json&quot;]
+    CA --&gt; EKS[&quot;entity_knowledge_store.json&quot;]
+    CA --&gt; Q[&quot;query_engine&lt;br/&gt;KnowledgeGraphRAGRetriever&quot;]
+    Q --&gt; KG[(&quot;Neo4j / FalkorDB&quot;)]
+    Q --&gt;|miss| PPLX[&quot;Perplexity&lt;br/&gt;external_query&quot;]
+    PPLX --&gt; F[&quot;data/external_response.txt&quot;]
+    F --&gt; WB[&quot;write_back()&lt;br/&gt;KnowledgeGraphIndex.from_documents&quot;]
+    WB --&gt; KG
+    EKS --&gt; INJ[&quot;top entities → prompt&quot;]</code></pre>
+<ul>
+<li><strong>Persistence</strong> is the graph plus two JSON files whose
+paths are constructor arguments. The JSON stores are rewritten whole on
+every save (<code>json.dump(...)</code> in
+<code>BaseMemory.save_memory</code>).</li>
+<li><strong>Models</strong> default to local Ollama, with
+<code>gpt-3.5-turbo</code> as the alternative and Perplexity for the
+external-search tool.</li>
+<li><strong>No background processing</strong> at all. Everything happens
+on the chat turn.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>You need a graph database running — Neo4j or FalkorDB — and a model
+provider. That is a heavier ask than the store deserves, since the
+durable state that Memary itself manages is two JSON arrays.</p>
+<p>It runs fully local if you use Ollama and a local FalkorDB, and the
+external search tool degrades to unavailable rather than breaking the
+loop. The store is trivially human-readable and repairable: both files
+are indented JSON with two fields per record, and hand-editing them is a
+supported-feeling operation in a way that Cypher against the graph is
+not.</p>
+<p>The pinned commit requires Python ≤ 3.11.9 per its own README, which
+is the clearest signal of the repository's age.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — <code>chat_agent.py:38</code>,
+<code>add_chat(role, content, entities)</code>. When entities are
+supplied it calls <code>memory_stream.add_memory(entities)</code>,
+<code>save_memory()</code>, then
+<code>entity_knowledge_store.add_memory(memory_stream.get_memory())</code>
+and <code>save_memory()</code> again. Two whole-file rewrites per turn
+with entities.</p>
+<p><strong>Count update</strong> —
+<code>entity_knowledge_store.py</code>,
+<code>_update_knowledge_memory()</code>. For each incoming item it scans
+the existing list for <code>entity.entity == item.entity</code>, adds
+the count and refreshes the date, or appends. Exact string equality, no
+normalization, linear scan.</p>
+<p><strong>Graph write</strong> — <code>base_agent.py:233</code>,
+<code>write_back()</code>. Reads <code>data/external_response.txt</code>
+and calls
+<code>KnowledgeGraphIndex.from_documents(..., max_triplets_per_chunk=8)</code>.
+This is the only path that adds to the graph.</p>
+<p><strong>The recall-miss loop</strong> — <code>check_KG(query)</code>
+(line 244) queries the graph and returns false when there is no
+<code>kg_rel_map</code>; <code>search()</code> (line 172) falls through
+to <code>external_query()</code> on an empty response, which asks
+Perplexity. The answer is written to the file that
+<code>write_back()</code> ingests. The loop is: <em>fail to remember →
+ask the web → believe the answer permanently</em>.</p>
+<p><strong>Retrieval and injection</strong> —
+<code>_select_top_entities()</code> (line 261) and
+<code>_change_llm_message_chat()</code> (line 278). The selected
+entities are appended to the prompt as a message whose content is the
+literal string
+<code>"Knowledge Entity Store:" + str(top_entities)</code>.</p>
+<p><strong>Schema</strong> — <code>src/memary/memory/types.py</code>,
+two dataclasses, forty lines including the serializers.</p>
+<p><strong>Tests</strong> — <code>dev/KG_memory_stream/tests/</code>,
+covering the two JSON stores only.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two dataclasses is the whole model:</p>
+<pre class="python"><code>@dataclass
+class MemoryItem:            entity: str; date: datetime
+@dataclass
+class KnowledgeMemoryItem:   entity: str; count: int; date: datetime</code></pre>
+<p>There is no id, no source, no scope, no confidence, no validity
+interval, and no link from either record to the graph triplet it came
+from. The entity string <em>is</em> the key, which means the identity of
+a memory is a name produced by an extractor — "Paris" and "paris" are
+two entities, and there is no <code>canonical_text()</code> seam of the
+kind <a href="./verel/">Verel</a> hardened.</p>
+<p>Scoping deserves a precise statement because it is a near-miss rather
+than an absence. With FalkorDB, <code>base_agent.py:87</code> constructs
+<code>FalkorDBGraphStore(self.falkordb_url, database=user_id)</code> — a
+<em>separate database per user</em>, which the README presents as the
+multi-agent story. That is real isolation, and it is stronger than a
+filter in one sense: there is no query that can cross it. It is not what
+this atlas marks as <code>scope_enforced</code>, for two reasons. It is
+physical separation chosen at construction time rather than a stored
+scope key applied on the read path, so nothing scopes the two JSON files
+that sit beside the graph; and the Neo4j branch three lines below has no
+equivalent, so the property is a function of which backend you
+picked.</p>
+<p>The <code>count</code> field is the only thing resembling trust, and
+section 6 explains why it does not work.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two retrievals happen per turn and they are not fused.</p>
+<p>The graph is queried through LlamaIndex's
+<code>KnowledgeGraphRAGRetriever</code> wrapped in a
+<code>RetrieverQueryEngine</code>, with a hand-built Cypher helper
+(<code>generate_string</code>) producing
+<code>MATCH p = (n) - [*1 .. 2] - () WHERE n.id IN [...] RETURN p</code>
+— a two-hop neighbourhood around the named entities.</p>
+<p>Separately, <code>_select_top_entities()</code> picks entities from
+the knowledge store and injects them into the prompt. <strong>This is
+where the defect is.</strong> The method is:</p>
+<pre class="python"><code>entity_counts = [entity[&quot;count&quot;] for entity in entities]
+top_indexes = np.argsort(entity_counts)[:TOP_ENTITIES]
+return [entities[index] for index in top_indexes]</code></pre>
+<p><code>np.argsort</code> returns indices that sort
+<strong>ascending</strong>, so <code>[:20]</code> takes the twenty
+<em>lowest</em> counts. Given counts <code>[5, 1, 9, 3]</code>,
+<code>np.argsort(...)[:2]</code> yields indices <code>[1, 3]</code> —
+the entities mentioned once and three times, not nine and five. The fix
+is <code>[::-1]</code> or <code>np.argsort(-counts)</code>; as written,
+the accumulated mention count — Memary's only ranking signal, and the
+whole point of the entity knowledge store — selects against itself.</p>
+<p>This is worth dwelling on beyond the bug, because it generalizes. The
+count is computed correctly, persisted correctly, and displayed in the
+logs, and nothing anywhere asserts a relationship between a high count
+and being selected. A reinforcement mechanism with no test over its
+consumer is indistinguishable from a decorative one, and this repository
+is the proof.</p>
+<p>The other failure mode is inherent to the design: injection is
+unconditional and unranked by relevance. Twenty entities go into every
+prompt whether or not the turn has anything to do with them — there is
+no <a href="../../patterns/gate-the-expensive-path/">gate on the
+expensive path</a>, and no notion of a turn that needs no memory.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, cheap, and unfiltered. <code>add_chat</code>
+appends every supplied entity with <code>datetime.now()</code> and
+rewrites both JSON files. There is no deduplication beyond the count
+merge, no extraction gate, and no LLM in the mention path at all — which
+makes the mention stream an unusually clean <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> instance,
+whatever else is wrong here.</p>
+<p>The graph write is the opposite, and it is the part to be careful
+with. The only thing that ever enters the graph is the text of a
+Perplexity answer, ingested by
+<code>KnowledgeGraphIndex.from_documents</code> and turned into up to
+eight triplets per chunk. So Memary's long-term factual store is
+populated exclusively by <strong>unverified external web search,
+triggered by its own recall failures</strong>, with no record of which
+query produced which triplet and no way to remove one afterwards.</p>
+<p>Correction does not exist. There is no supersession, no contradiction
+detection, no delete path into the graph, and the JSON-side removals are
+index- and age-based rather than content-based. A wrong triplet is
+permanent for the lifetime of the database.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Synchronous?</strong> Yes for mentions, and they are
+model-free, so the cost is two file writes.</li>
+<li><strong>Lag?</strong> None. A mention is retrievable
+immediately.</li>
+<li><strong>Whole-store passes?</strong> No background pass, but note
+that every turn with entities serializes <strong>both entire JSON
+files</strong> — cost grows linearly with the store on every write,
+which is fine at demo scale and is the usual reason the atlas flags <a
+href="../../compare/#flat-json-as-a-prototype-store">flat JSON as a
+prototype store</a>.</li>
+<li><strong>Read path?</strong> Twenty entities plus the graph query
+result, every turn, unbounded by tokens and inserted ahead of the
+conversation — so it invalidates the prompt prefix on each turn.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>ChatAgent</code> is the surface: instantiate it, call
+<code>add_chat</code>, register tools with <code>add_tool</code> /
+<code>remove_tool</code>. Tools are ordinary Python callables with
+docstrings, and the shipped set is <code>search</code>,
+<code>vision</code>, <code>locate</code>, <code>stocks</code>.</p>
+<p>There is no MCP server, no REST API, and no persistence adapter, so
+using Memary from a non-Python agent means reimplementing it. The two
+JSON files are a sufficiently simple contract that this is realistic —
+which is the honest way to adopt what is good here.</p>
+<p>The model has no agency over memory. It cannot save, forget, or
+correct; entities are supplied by the caller of
+<code>add_chat</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust model is frequency, and section 6 shows the one consumer of
+it is inverted.</p>
+<p>Provenance is absent in both directions: a
+<code>KnowledgeMemoryItem</code> does not say where its mentions came
+from, and a graph triplet does not say which external query produced it.
+That combination makes the <code>write_back()</code> path the most
+concerning thing in this report. An attacker who can influence what the
+web says about a topic the agent will ask about can write durable
+triplets into the graph, and there is no mechanism that would ever
+remove them or mark them as lower-trust than something the user said
+directly.</p>
+<p>Concurrency is unguarded. Two <code>ChatAgent</code> instances over
+the same file paths will clobber each other's stores, because
+<code>save_memory</code> rewrites the whole file with no locking or
+read-modify-write check.</p>
+<p>There is no backup, sync, or replication story, and no way to
+represent uncertainty.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The shipped package has <strong>no tests</strong>.
+<code>dev/KG_memory_stream/tests/</code> contains
+<code>test_memory_stream.py</code> and
+<code>test_entity_knowledge_store.py</code>, which exercise loading,
+adding, and saving the two JSON stores against a fixture — real tests,
+but of the serialization layer, and living in a development sandbox
+rather than beside the code that ships.</p>
+<p>Nothing tests <code>_select_top_entities</code>, which is how a
+one-character sort-direction error survives in the function that decides
+what the model sees.</p>
+<p><code>dev/recursive_retrieval/benchmarking/</code> holds two
+notebooks comparing Ollama and Perplexity outputs. No scored results are
+committed, and there is no harness for any public memory benchmark. The
+survey that prompted this review lists Memary with an empty evaluation
+column, which matches what is in the repository.</p>
+<p>The tests I would want first: an assertion that a high-count entity
+appears in <code>_select_top_entities</code> output, and one that two
+spellings of the same entity name do not create two records.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate "what I know" from "what I am attending
+to."</strong> The graph holds claims; the entity store holds salience.
+Keeping them in different structures means you can rebuild attention
+without touching belief, and it is a distinction several larger systems
+in this atlas never draw.</li>
+<li><strong>Make the salience model small enough to read.</strong> Forty
+lines and two fields is enough to implement reinforcement by frequency,
+and being able to read the whole mechanism on one screen is worth more
+than a tuned scoring function you cannot audit.</li>
+<li><strong>Capture without a model.</strong> Mentions are appended with
+no LLM call, so capture cannot fail because a provider is down.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a recall miss become a write.</strong> "The graph
+did not know, so ask the web and ingest the answer" turns every gap into
+a permanent unverified belief. If you must do it, mark the provenance
+and give the resulting rows a trust state you can filter on later — the
+<a href="../../patterns/trust-state-machine/">trust-state machine</a>
+exists for exactly this.</li>
+<li><strong>Do not ship a ranking signal with no test on its
+consumer.</strong> The count is correct everywhere except the line that
+uses it. A single assertion that "the entity with the highest count is
+in the selected set" would have caught it, and the same assertion is
+cheap in any system that ranks.</li>
+<li><strong>Do not use an extractor's output string as a primary
+key.</strong> Entity identity by raw string means casing and spelling
+variants fragment the store, and there is no later point at which they
+can be merged.</li>
+<li><strong>Do not rewrite the whole store on every turn.</strong> It is
+fine until it is not, and the failure is a slow one that arrives after
+the design has hardened.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Memary suits someone learning how a graph-backed agent memory fits
+together, or someone who wants the salience idea and intends to write
+the rest themselves. As a reference it is genuinely clear: small,
+readable, and honest about being a demonstration.</p>
+<p>It does not suit production use, and the reason is not the bug — bugs
+get fixed. It is that the design has no place to put a correction. A
+wrong triplet cannot be removed, a wrong entity name cannot be merged,
+and the store's only quality signal counts mentions rather than
+accuracy. Anyone who needs to answer for what the system believes should
+treat this as a diagram rather than a dependency.</p>
+<p>Walk away if you were considering it as a maintained option. The last
+commit is October 2024 and the README pins Python at ≤ 3.11.9.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the <code>_select_top_entities</code> inversion known
+upstream?</strong> Issue and PR history was not read, and the
+repository's activity makes a fix unlikely either way.</li>
+<li><strong>Was the FalkorDB per-user database intended as the scope
+model,</strong> or as a multi-agent demo? The README presents it as the
+latter and the code supports both readings; the Neo4j branch has no
+equivalent, which suggests it was not a cross-cutting decision.</li>
+<li><strong>Does anything ever call
+<code>remove_old_memory</code>?</strong> It is defined on the base class
+and no caller was found in <code>src/</code>.</li>
+<li><strong>What happens to the graph across runs with the same
+database?</strong> Triplets accumulate with no dedupe path found, but
+the LlamaIndex layer may merge them; that behaviour lives outside this
+repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage/schema</strong> —
+<code>src/memary/memory/types.py</code>,
+<code>src/memary/memory/base_memory.py</code></p>
+<p><strong>Write path</strong> —
+<code>src/memary/agent/chat_agent.py</code> (<code>add_chat</code>),
+<code>src/memary/memory/memory_stream.py</code>,
+<code>src/memary/memory/entity_knowledge_store.py</code></p>
+<p><strong>Retrieval path</strong> —
+<code>src/memary/agent/base_agent.py</code>
+(<code>generate_string</code>, <code>search</code>,
+<code>check_KG</code>, <code>_select_top_entities</code>,
+<code>_change_llm_message_chat</code>)</p>
+<p><strong>Graph write</strong> —
+<code>src/memary/agent/base_agent.py</code>
+(<code>external_query</code>, <code>write_back</code>)</p>
+<p><strong>Tools</strong> —
+<code>src/memary/agent/llm_api/tools.py</code>,
+<code>src/memary/synonym_expand/synonym.py</code></p>
+<p><strong>Tests</strong> —
+<code>dev/KG_memory_stream/tests/test_memory_stream.py</code>,
+<code>dev/KG_memory_stream/tests/test_entity_knowledge_store.py</code></p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
