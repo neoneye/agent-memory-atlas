@@ -1,27 +1,27 @@
 ---
 title: Swafra
 eyebrow: Compact local graph-RAG
-description: A tiny local MCP sidecar combining hybrid retrieval, graph traversal, and source-diverse context over JSON state.
+description: A tiny local MCP sidecar with hybrid retrieval, graph traversal, and a new fact-supersession engine the agent cannot see.
 root: ../..
 page_kind: system
 source_name: kunal12203/swafra
 source_url: https://github.com/kunal12203/swafra
-revision: 24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
-revision_url: https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7
-analyzed_at: 2026-07-26
+revision: 669e7bdbcbcd421deb172a05f8fe52b741c0e915
+revision_url: https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915
+analyzed_at: 2026-07-29
 capabilities: ""
 matrix:
-  memory_unit: "Verbatim or synthetic chunk plus directed chunk edges"
-  storage: "Three local JSON files"
-  retrieval: "BM25 + vector + entity/date/preference heuristics + char n-gram; graph walk; best chunk per title"
-  write: "MCP add; Leiden or exchange/paragraph chunks; synchronous full-file rewrite"
-  update_delete: "Exact source delete; implicit same-ID reindex; broken supersession path"
+  memory_unit: "Verbatim or synthetic chunk plus directed chunk edges, and since v0.3 a (subject, relation, value) fact with a validity end"
+  storage: "Adaptive: three JSON files by default, auto-migrating to SQLite with WAL only past 5,000 chunks"
+  retrieval: "BM25 + vector + entity/date/preference heuristics + char n-gram; graph walk; best chunk per title; optional LLM rerank"
+  write: "MCP add; Leiden or exchange/paragraph chunks; synchronous full-file rewrite; optional LLM dedup and entity extraction"
+  update_delete: "Working intra-source supersession; transition-only fact supersession that a new session re-asserts; delete still strands cross-session edges"
   scoping: "Source ID/title only; no user/project/tenant scope"
-  integration: "Python FastMCP; Node MCP over Python subprocess"
+  integration: "Python FastMCP, Node MCP over subprocess, Python and JS SDKs, a native CLI, a Claude Code skill"
   background: "None"
-  trust: "Caller title and raw chunk; no actor, span-quality provenance, trust state, or injection fence"
-  strengths: "Very compact local hybrid graph-RAG; optional dependencies; source diversity"
-  risks: "Non-atomic concurrent writes; unbounded context; dangling edges; benchmark cutoff invalid"
+  trust: "Fact confidence score and a validity end; no actor, span-quality provenance, trust state, or injection fence"
+  strengths: "Compact local hybrid graph-RAG; a real correction path reaching the ranker; optional dependencies; source diversity"
+  risks: "Default JSON writes still unlocked and non-atomic; dangling edges now in SQLite too; benchmark invalid and no longer runnable"
 ---
 
 ## 1. Executive Summary
@@ -34,13 +34,17 @@ Its design is appealing as a small personal memory sidecar:
 - the Python package is a complete MCP server;
 - the Node package offers a second MCP wrapper over the same Python engine;
 - source text remains in the stored chunks instead of being replaced by LLM-generated facts;
-- BM25, embeddings, entity/date hints, character n-grams, source diversity, and graph traversal are combined in fewer than 1,000 lines of engine code.
+- BM25, embeddings, entity/date hints, character n-grams, source diversity, and graph traversal are combined in a small engine package.
 
 The strongest technical idea is the source-diverse retrieval shape: rank chunks, expand through graph edges, then return the best chunk from each source. The conversation fallback also creates useful exchange chunks and a deterministic facts/navigation chunk without calling an LLM.
 
-The implementation is alpha-quality, not yet a safe durable memory layer. Persistence is three unlocked, non-atomic JSON rewrites. There are no user/project scopes, authentication boundaries, token budgets, update API, provenance spans, trust states, or unit tests. Several advertised behaviors do not match the code. Most importantly, the committed LongMemEval artifact labeled `k=10` returned 28–46 sessions per question, so the headline recall score is not evidence of recall at 10.
+**The v0.3 line added the thing this report previously said was missing: a working correction path.** `engine/facts.py` extracts `(subject, relation, value)` triples, detects when a new *transition* fact conflicts with a standing one, closes the old fact's validity instead of deleting it, and penalises the chunks behind superseded facts at search time. The duplicated engine is gone, the previously dead intra-source supersession loop now runs, an MIT licence was added, and the API-key config file is written `0600`.
 
-Verdict: study Swafra for a concise hybrid-retrieval prototype and MCP affordances. Do not borrow its storage, benchmark methodology, deletion semantics, or trust model for a serious system without substantial redesign.
+Three things keep it from being a durable memory layer, and the first two are the same as before. Persistence on the **default path is still three unlocked, non-atomic JSON rewrites** — SQLite arrives only past 5,000 chunks. **Deletion still strands cross-session edges**, and that bug was carried faithfully into the new SQLite backend, whose `edges` table has no foreign key and no cascade. And the correction subsystem is **invisible to the agent**: `get_active_facts`, `get_fact_history` and `invalidate_fact` exist on the internal RPC surface and none of them is one of the six MCP tools, so the only consumer of the whole fact lifecycle is a ranking multiplier.
+
+There are still no tests. The committed LongMemEval artifact is unchanged and still not evidence of recall at 10 — re-measured for this review, all 470 evaluated questions returned between 28 and 46 results against 38–62 ingested sessions — and the harness that produced it **no longer imports**, so those numbers now describe an engine that cannot be re-run.
+
+Verdict: study Swafra for a concise hybrid-retrieval prototype, for MCP affordances, and now for a small, local, LLM-free supersession engine. Do not borrow its storage, benchmark methodology, or deletion semantics for a serious system without substantial redesign.
 
 ## 2. Mental Model
 
@@ -67,7 +71,8 @@ MCP add_knowledge
 -> choose Leiden or fallback chunking
 -> annotate and embed chunks
 -> add within-source and cross-source edges
--> rewrite chunks.json, edges.json, sources.json
+-> extract facts and close conflicting ones
+-> rewrite chunks/edges/sources/facts (JSON, or SQLite past 5k chunks)
 -> later hybrid search
 -> optional directed graph walk
 -> best chunk per source
@@ -76,35 +81,59 @@ MCP add_knowledge
 
 Memory is agent-controlled. `CLAUDE.md`, `SKILL.md`, and MCP descriptions instruct the model to save proactively and call `get_context` at session start. The backend does not observe conversations or inject memory automatically.
 
-Stored text is treated as recallable evidence, but there is no explicit epistemic distinction between user statements, assistant statements, imported documents, extracted navigation text, current values, rejected values, or verified facts.
+Stored chunk text is still treated as undifferentiated evidence — no distinction between user statements, assistant statements, imported documents, or extracted navigation text. Since v0.3 there is a **second, parallel memory** with an actual lifecycle, and the two do not share a state machine.
+
+A **fact** is a `(subject, relation, value)` triple carrying `chunk_id`, `source_id`, `created_at`, `confidence`, `evidence` (the original text span), `valid_until`, and `superseded_by`. Its states are exactly two:
+
+```text
+   extract_facts()  ── regex patterns over chunk text ──►  fact (valid_until = None)
+                                                              │
+   a later *transition* fact ("I switched to X",               │
+   "changed to", "stopped", "replaced") arrives                │
+   with the same subject, a different value, and               │
+   slot similarity ≥ 0.65                                      │
+                                                              ▼
+                                          valid_until = now, superseded_by = new id
+                                          (the row is kept, never deleted)
+                                                              │
+                                                              ▼
+                        chunks whose facts are superseded get score × (1 − penalty × 0.85)
+```
+
+Two deliberate limits are worth stating because they are documented choices rather than oversights. Only **transition** facts supersede — a plain "I use X" does not invalidate a prior state, on the stated grounds that a user may use several things at once. And supersession is a *penalty*, not an exclusion: a fully superseded chunk keeps 15% of its score and can still be returned.
+
+The system therefore models **current versus historical**, which is a validity distinction, and still models nothing epistemic. No fact is ever marked unverified or false; `confidence` is a number assigned once by the extractor and never revised.
 
 ## 3. Architecture
 
-Swafra has two public runtime shapes over one duplicated engine implementation.
+Swafra has two public runtime shapes over **one** engine implementation. The duplication this report previously recorded is gone: `swafra/engine.py` is now a 28-line re-export shim and `engine/scimap_engine.py` an 18-line subprocess entry point, both resolving to the `engine/` package (`storage`, `graph`, `facts`, `chunking`, `embedding`, `bm25`, `extractors`, `llm`, `rpc`, `tokenizer`, `deps`).
 
 Python distribution:
 
-- `swafra/server.py`: `FastMCP` stdio server.
-- `swafra/engine.py`: chunking, embedding, graph construction, JSON persistence, search, graph walk, and context selection.
+- `swafra/server.py`: `FastMCP` stdio server, six tools.
+- `swafra/cli.py`: a native CLI — `setup`, `stats`, `config`, `skill`, `remove`.
+- `swafra/engine.py`: re-export shim.
 
 Node distribution:
 
 - `src/index.ts`: MCP stdio server using the TypeScript SDK.
 - `src/engine.ts`: starts `engine/scimap_engine.py` and sends JSON-line RPC requests.
-- `engine/scimap_engine.py`: byte-for-byte duplicate of `swafra/engine.py` in the inspected checkout.
+- `src/cli.ts`, `src/sdk.ts`: a Node CLI and a JS SDK added in v0.3.1.
 
-Persistence:
+Persistence is **adaptive**, and the tiering matters more than the headline suggests (`engine/storage.py`):
 
-- `${SCIMAP_DATA_DIR}/chunks.json`;
-- `${SCIMAP_DATA_DIR}/edges.json`;
-- `${SCIMAP_DATA_DIR}/sources.json`;
-- default directory `~/.scimap`.
+- **Tier 1, the default**: `chunks.json`, `edges.json`, `sources.json`, `facts.json` under `${SCIMAP_DATA_DIR}` (default `~/.scimap`).
+- **Tier 2, SQLite**: `swafra.db` with `journal_mode=WAL`, `synchronous=NORMAL`, a 64 MB cache and `timeout=10`. Migration is one-way and fires only when `chunks.json` exceeds 500 KB *and* holds at least `_MIGRATION_THRESHOLD = 5000` chunks.
+- **Tier 3**: `sqlite-vec` if importable, to accelerate vector search.
+
+So a typical personal corpus never leaves Tier 1, and every durability property below is the JSON path's.
 
 External dependencies:
 
 - required Python MCP package for the Python distribution;
 - optional `fastembed` for `BAAI/bge-small-en-v1.5`;
 - optional NumPy, igraph, and leidenalg for Leiden chunking;
+- optional LLM provider key, which switches on entity extraction, semantic dedup at ingest, and reranking (`engine/llm.py`, gated behind `is_llm_available()`);
 - Node MCP SDK and Zod for the Node wrapper.
 
 If FastEmbed cannot load, `_local_vector()` creates deterministic signed hash vectors over words and character trigrams. If Leiden dependencies are unavailable, ingestion uses conversation/paragraph chunking.
@@ -133,18 +162,21 @@ There is no daemon, database, queue, background worker, hosted API, replication 
 
 Python MCP starts at `add_knowledge()` in `swafra/server.py`, which directly calls `engine.add_knowledge()`.
 
-The Node path starts in the `add_knowledge` case in `src/index.ts`, calls `Engine.call()` in `src/engine.ts`, and dispatches through the `METHODS` map in `engine/scimap_engine.py`.
+The Node path starts in the `add_knowledge` case in `src/index.ts`, calls `Engine.call()` in `src/engine.ts`, and dispatches through the `METHODS` map now living in `engine/rpc.py`.
 
-`add_knowledge()` in `swafra/engine.py`:
+`add_knowledge()` in `engine/graph.py`:
 
-1. loads all three JSON files;
+1. loads all chunks, edges and sources upfront, **including superseded rows**, through the storage tier;
 2. derives `source_id` from `SHA-256(title + ":" + first 100 text characters)[:16]`;
-3. removes records already carrying that exact source ID;
-4. tries `leiden_chunk()`, then `chunk_conversation()`;
-5. embeds all resulting chunk contents;
-6. derives chunk IDs from source ID and chunk index;
-7. appends chunk records;
-8. builds within-source and cross-source edges;
+3. optionally asks an LLM whether the text duplicates an existing source, and returns early if so;
+4. removes records already carrying that exact source ID;
+5. tries `leiden_chunk()`, then `chunk_conversation()`;
+6. embeds all resulting chunk contents;
+7. derives chunk IDs from source ID and chunk index;
+8. marks same-source chunks superseded when they share three entities and reach cosine 0.85;
+9. calls `ingest_facts()` per chunk to extract triples and close conflicting ones;
+10. appends chunk records;
+11. builds within-source and cross-source edges;
 9. rewrites all three files.
 
 State changes only in the final `_save_json()` calls. There is no transaction covering the three files.
@@ -217,31 +249,53 @@ The public Python MCP server fixes `min_source_pct=0.15`. This means `k` is a lo
 
 ### Delete and Update
 
-`delete_source()` removes:
+`delete_source()` calls `_delete_source_data()` (`engine/graph.py:98`), which removes:
 
 - chunks with the target `source_id`;
 - edges whose own `source_id` equals the target;
 - the source list entry.
 
-Cross-session edges are stored with `source_id: None`, so edges pointing from or to deleted chunks survive. They become dangling graph records and accumulate.
+**Cross-session edges are still stored with `source_id: None`** (`engine/graph.py:306`), so edges pointing from or to deleted chunks survive on both backends. The SQLite path is `DELETE FROM edges WHERE source_id = ?` with the same blind spot, and the `edges` table declares `source_id TEXT` with **no `FOREIGN KEY`, no `REFERENCES`, and no `ON DELETE CASCADE`**. The migration to a relational store was the moment this bug became free to fix, and it was carried across instead.
 
 There is no update tool. Calling `add_knowledge` is only an idempotent replacement when the title and first 100 text characters derive the same source ID. Changing early content creates a second source even when the title is unchanged.
 
-The `superseded_by` loop cannot currently mark an old version from the same source: matching-source chunks are removed from `chunks_store` before `old_chunks` is computed.
+**Intra-source supersession now works.** The previous report recorded the loop as unreachable because matching-source chunks were removed before `old_chunks` was computed. In the current code `all_chunks` is loaded upfront including superseded rows (`engine/graph.py:178`), `old_source_chunks` is derived from it at line 210, and the comparison runs before any removal. A new chunk supersedes an old one from the same source when they share at least three entities and cosine similarity reaches 0.85.
+
+**Fact supersession is the new path, and a new session undoes it.** `ingest_facts()` closes a conflicting fact by setting `valid_until` and `superseded_by`, keeping the row. But the fact identity is
+
+```python
+def _fact_id(subject, relation, value, source_id):
+    key = f"{subject}:{relation}:{value.lower()}:{source_id}"
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
+```
+
+— **`source_id` is in the key.** The dedupe guard on insert is `if f["id"] not in existing_ids`, so the same `(subject, relation, value)` arriving from a *different* session hashes differently, passes the guard, and is stored fresh with `valid_until: None`. Since sessions are the natural source unit, a value superseded in one session returns as current the next time it is mentioned. `detect_conflicts` will not catch it either: it considers only `is_transition` facts as superseding, so a plain restatement never triggers the check at all.
+
+That is the difference between a supersession record and a tombstone, and it is one field in one hash.
 
 ### Storage Definitions
 
-The schema is implicit dictionary construction in `add_knowledge()`:
+The JSON schema is still implicit dictionary construction in `add_knowledge()`:
 
 - source: `id`, `title`, `chunks`;
 - chunk: `id`, `source_id`, `source_title`, `content`, `embedding`, `token_count`, `chunk_index`, `community_id`, `entities`, `dates`, `preferences`, `type`, `span`, `created_at`, `superseded_by`;
-- edge: `source_id`, `from`, `to`, `type`, `weight`.
+- edge: `source_id`, `from`, `to`, `type`, `weight`;
+- fact: `id`, `subject`, `relation`, `value`, `chunk_id`, `source_id`, `created_at`, `valid_until`, `superseded_by`, `confidence`, `evidence`, `is_transition`.
 
-There are no migrations or schema-version fields.
+The SQLite tier adds explicit `CREATE TABLE` statements, and one of them is a table nothing writes.
+
+**Three names for one concept, and a dashboard that always reads zero.** The engine's working field is `valid_until`. The SQLite `facts` table declares `valid_from REAL, valid_to REAL` alongside `subject, predicate, object, value, confidence, superseded_by` — a properly normalised, genuinely bi-temporal-shaped table. **`db_save_facts()` does not write it.** It writes `facts_data`, a blob table of `(id, chunk_id, source_id, data)` where `data` is the whole fact dict as JSON, and `db_load_facts()` reads it back. So the normalised `facts` table is created by the schema, indexed twice, and populated by nothing — the same shape this atlas recorded for PowerMem's `history` table.
+
+The consequence is visible in the product. `swafra/cli.py`'s `stats` dashboard prints an Active/Superseded/Total breakdown, and it reads **`valid_to`**:
+
+- on SQLite it runs `SELECT * FROM facts` — the empty table — so it sees no facts at all;
+- on JSON it evaluates `f.get("valid_to")` against dicts that only carry `valid_until`, so every fact is `None` and counts as active.
+
+By either route the "Superseded" line reports **0**, permanently, on a subsystem whose whole purpose is to supersede. `valid_from` — the one field that would make the model bi-temporal rather than supersession-with-a-timestamp — exists only in that unwritten table.
 
 ### Tests and Evals
 
-No unit or integration test files are present.
+No unit or integration test files are present. This is unchanged across 21 commits, a storage-backend migration, and a new fact-lifecycle subsystem.
 
 LongMemEval harnesses exist at:
 
@@ -356,50 +410,69 @@ The integration depends heavily on prompt/tool policy. `CLAUDE.md` and Python to
 
 Those are good affordances but are not backend guarantees. An agent can omit writes, store assistant speculation, duplicate a source under a new title, retrieve too much context, or recall prompt-injected source text.
 
-The Python and Node public surfaces have drift:
+The v0.3 line also added a Python SDK, a JS SDK (`src/sdk.ts`), a native Node CLI (`src/cli.ts`), and `swafra skill`, which installs Swafra as a Claude Code skill so it can be used without MCP at all.
 
-- Python package version is `0.1.5`; npm package version is `0.1.2`; Node server advertises `0.1.0`.
-- Python uses FastMCP and passes `min_source_pct=0.15` explicitly.
-- Node uses a subprocess bridge and relies on the engine default.
+Version drift is mostly resolved and not entirely:
+
+- `package.json` and `pyproject.toml` now agree at `0.3.2`, against `0.1.2`/`0.1.5` previously.
+- `src/index.ts` still advertises `version: "0.1.0"` to the MCP client — two releases of drift, down from three surfaces disagreeing.
+- Python uses FastMCP and passes `min_source_pct=0.15` explicitly; Node relies on the engine default.
 - Node tool text says `search_knowledge` is cosine search, while the engine performs hybrid search.
-- names and docs still alternate between `swafra` and the earlier `scimap`.
+- names and docs still alternate between `swafra` and the earlier `scimap`, and the data directory is still `~/.scimap`.
 
-The Python MCP package is the cleaner integration path. The Node wrapper adds process management, a second protocol, duplicated engine packaging, and a 60-second timeout without adding memory semantics.
+The Python MCP package remains the cleaner integration path. The Node wrapper adds process management, a second protocol, and a 60-second timeout without adding memory semantics — though it no longer ships a duplicate engine, since both entry points now resolve to the same `engine/` package.
 
 ## 9. Reliability, Safety, and Trust
 
-Positive:
+Positive, and three of these are new since the previous revision:
 
 - local-only default;
-- no model/API key required;
+- no model/API key required — the LLM paths are all gated on `is_llm_available()`;
+- **an MIT `LICENSE`, added in `8469f1f`**;
+- **the API-key config file is written `0o600`** (`engine/llm.py`, `swafra/cli.py`);
+- **a correction path that reaches the ranker**: superseded facts are retained, not deleted, and the chunks behind them are demoted at search time;
+- facts carry `evidence`, the original text span they were extracted from — the closest thing here to provenance;
 - exact-ID source deletion;
 - source title and chunk ID accompany recalled text;
 - deterministic fallback embeddings;
 - MCP errors are returned rather than silently swallowed;
 - Node wrapper sends engine logs to stderr, keeping JSON-line stdout clean.
 
-Serious gaps:
+Serious gaps, most of them unchanged:
 
-- no atomicity, locking, backup, repair, sync, or corruption handling;
+- **no atomicity or locking on the default path.** `save_json()` is still `open(path, "w")` then `json.dump` — no temp file, no `os.replace`, no lock. `engine/storage.py` contains no occurrence of `lock`, `flock`, `fcntl`, `os.replace` or `tmp`. The SQLite tier does get WAL and a 10-second busy timeout, but only past 5,000 chunks;
 - JSON parse failure can make the server unusable;
-- cross-session edges survive source deletion;
-- no embedding-model/version record;
+- **cross-session edges still survive source deletion**, now on both backends, with no foreign key in the new schema;
+- no embedding-model/version record; `SCIMAP_EMBED_BACKEND` is still read nowhere in `engine/` or `swafra/`;
 - no access control or multi-user scoping;
-- no provenance beyond a caller-supplied title;
-- no trust/verification state or uncertainty representation;
+- no trust/verification state — `confidence` is a score written once and never revised, and `valid_until` distinguishes current from historical, not believed from doubted;
 - no prompt-injection fencing for recalled content;
 - no differentiation between user text and assistant text in stored exchange content;
 - no privacy metadata, expiry, hard-delete audit, or derived-data deletion verification;
 - no bounded context assembly;
 - no protection from malicious documents creating dense entity edges or dominating heuristic scores.
 
-Swafra is best understood as a trusted, single-user local retrieval utility. It should not be treated as a truth-bearing memory database.
+**The correction subsystem has no correction surface.** `get_active_facts`, `get_fact_history` and `invalidate_fact` are exported from `engine/__init__.py` and routed in `engine/rpc.py`, and the MCP server still exposes exactly six tools — `add_knowledge`, `search_knowledge`, `get_context`, `graph_walk`, `list_sources`, `delete_source`. None of the fact operations is among them. So the agent cannot ask what it currently believes, cannot see a fact's history, and cannot invalidate a fact it has just been told is wrong; the only consumer of the lifecycle is the `× (1 − penalty × 0.85)` multiplier inside the ranker. The user's view is the `stats` dashboard, which — for the field-name reason in section 4 — reports zero superseded facts regardless.
+
+Swafra is best understood as a trusted, single-user local retrieval utility that has grown a genuine correction mechanism it does not yet expose. It should not be treated as a truth-bearing memory database.
+
+### A correction to this report
+
+The previous revision of this report analysed commit `24dba18a` and did not record that **the repository had no licence file at that commit**. `git ls-tree` confirms it. The atlas declines unlicensed repositories — `general-agentic-memory` and `MemEngine` were both excluded partly on that basis — so this report should not have been published in the form it was. The situation has resolved itself: `LICENSE` (MIT) landed in `8469f1f` and the current pin carries it. Recorded because the omission was the review's, not the project's.
 
 ## 10. Tests, Evals, and Benchmarks
 
-There are no ordinary tests in the repository. The only executable quality evidence is LongMemEval retrieval code and committed result JSON.
+There are no ordinary tests in the repository. The only quality evidence is LongMemEval retrieval code and committed result JSON, and as of this revision the code no longer runs.
 
-The benchmark deserves special caution.
+**The harness is broken.** `bench/run_eval.py:27` reads
+
+```python
+from scimap_engine import add_knowledge, get_context, _save_json, _CHUNKS_FILE, _EDGES_FILE, _SOURCES_FILE
+```
+
+Those private names belonged to the monolithic engine. After the v0.3 refactor `engine/scimap_engine.py` is an 18-line entry point exposing none of them, and importing the harness fails with `ImportError: cannot import name 'add_knowledge' from 'scimap_engine'`. The committed results therefore describe an engine that no longer exists and cannot be regenerated from this checkout.
+
+The benchmark deserves special caution, and the caution below was re-verified against the artifact at this revision rather than carried over.
 
 What the harness does well:
 
@@ -409,12 +482,12 @@ What the harness does well:
 - reports `recall_any`, `recall_all`, and fractional session recall;
 - retains per-question details.
 
-Why the published result is not valid `recall_all@10` evidence:
+Why the published result is not valid `recall_all@10` evidence — recomputed from `bench/results.json` for this review:
 
 - `get_context()` treats `k` as a lower bound and can return a percentage of all sources.
-- The checked-in `bench/results.json` is labeled `k: 10`, but every one of the 470 evaluated questions returned more than 10 sessions: minimum 28, maximum 46, mean 35.4.
-- The artifact truncates `retrieved_sessions` to ten for display while scoring recall against the full untruncated result list.
-- Thus the metric is effectively recall over roughly two-thirds of the haystack, not recall at ten.
+- The artifact's config records `k: 10`. **All 470 evaluated questions returned more than 10 results: minimum 28, maximum 46, mean 35.4**, against haystacks of 38–62 ingested sessions.
+- `run_eval.py:110` scores `recall_at_k(retrieved_sids, answer_sids)` on the **full** result list, while line 125 stores `retrieved_sessions: retrieved_sids[:10]`. The truncation is presentational; the metric is not truncated.
+- Thus the metric is recall over roughly two-thirds of the haystack, not recall at ten. A 99.6% `recall_all` under those conditions is close to what returning most of the corpus would produce by construction.
 
 The evidence is also internally inconsistent:
 
@@ -462,7 +535,10 @@ The smoke review for this report used the hash embedder on a temporary directory
 - Applying unconditional recency decay to durable facts.
 - Building directed semantic/entity edges without making traversal direction intentional.
 - Leaving cross-source edges behind during deletion.
-- Keeping unreachable supersession code and presenting it as an update mechanism.
+- Hashing the *source* into a fact's identity when the fact is meant to be corrected. `sha256(subject:relation:value:source_id)` means the same claim from a new session is a new fact, so every supersession is undone by restatement. Key correction state on what the claim says, not on where it arrived.
+- Declaring a normalised table your writer never populates. Swafra's SQLite `facts` table carries the `valid_from`/`valid_to` columns that would make the model bi-temporal, and the engine persists a JSON blob to a different table instead — leaving a dashboard reading the empty one.
+- Letting three names for one field coexist: `valid_until` in the engine, `valid_to` in the schema and CLI, `valid_from` nowhere at all.
+- Building a correction subsystem and exposing none of it. If the agent cannot ask what it currently believes or invalidate a fact it was just corrected on, a ranking penalty is the only thing your lifecycle achieves.
 - Advertising graph signals not used by the implementation, such as entity-weighted Leiden partitioning and community edges.
 - Relying on tool descriptions to enforce proactive capture, dedupe, source trust, and retrieval hygiene.
 - Duplicating the full engine across package layouts and letting Python/Node/docs versions drift.
@@ -480,7 +556,7 @@ Reuse conceptually:
 
 Reimplement rather than copy:
 
-- persistence on SQLite with transactions, FTS5, schema migrations, foreign keys, WAL, and exact cascading deletion;
+- persistence on SQLite from the first write rather than past a five-thousand-chunk threshold, with transactions, FTS5, schema migrations, foreign keys, WAL, and exact cascading deletion — the `edges.source_id` nullable column with no `REFERENCES` is precisely where a cascade would have retired the dangling-edge bug for free;
 - embeddings in a versioned vector index or typed blob table;
 - graph adjacency with indexed, intentionally bidirectional relations;
 - stable source IDs plus full content hashes and source/version records;
@@ -511,13 +587,22 @@ This design is appropriate for a small, trusted, single-user MCP prototype where
 - How should two sources with the same title be represented in `get_context`?
 - What is the intended upgrade path when the embedding model changes?
 - Are Node and Python packages both supported surfaces, or is one transitional?
+- Is the normalised SQLite `facts` table intended to be the real store, with `facts_data` a temporary blob shim — and if so, is `valid_from` meant to make the model bi-temporal?
+- Is `valid_to` in the schema and CLI a rename of `valid_until` that was only half applied, or two fields that were meant to differ?
+- Should a fact's identity include `source_id`? Removing it would make supersession survive restatement in a later session, which appears to be the intent of the lifecycle.
+- Are `get_active_facts`, `get_fact_history` and `invalidate_fact` deliberately withheld from MCP, or not yet wired?
+- Is `bench/run_eval.py` intended to be repaired against the refactored engine, or retired along with its committed results?
 
 ## Appendix: File Index
 
 Storage/schema/write/retrieval/graph:
 
-- `swafra/swafra/engine.py`
-- `swafra/engine/scimap_engine.py` (duplicate engine copy)
+- `engine/storage.py` (adaptive JSON/SQLite tiers, `save_json`, `db_delete_source`, `db_save_facts`)
+- `engine/graph.py` (`add_knowledge`, `search_knowledge`, `get_context`, `_delete_source_data`)
+- `engine/facts.py` (`extract_facts`, `detect_conflicts`, `ingest_facts`, `invalidate_fact`)
+- `engine/chunking.py`, `engine/embedding.py`, `engine/bm25.py`, `engine/extractors.py`
+- `engine/llm.py` (optional extraction, dedup, rerank)
+- `engine/rpc.py` (`METHODS` map for the Node bridge)
 
 Python MCP:
 

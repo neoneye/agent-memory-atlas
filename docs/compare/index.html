@@ -368,12 +368,22 @@ for: a task's <code>status</code> is constrained to
 <code>success | failed | running | pending</code> by a database CHECK,
 only the two terminal values enqueue learning, and three committed tests
 assert that the other cases write nothing. <strong>Swafra</strong> shows
-how little code a local graph-RAG sidecar needs, and why flat JSON is
-not a database. <strong>Qwen Code</strong> has three memory tiers and
-commits the third to the repository, so shared memory is distributed by
-<code>git pull</code> — and a write to that tier containing a detected
-secret is refused <em>unconditionally</em>, even when the tier is
-switched off, because the directory is source-controlled regardless.
+how little code a local graph-RAG sidecar needs, and — since its v0.3
+line — how narrowly a correction mechanism can miss. It now retains
+superseded facts with a validity end instead of deleting them, and
+demotes the chunks behind them at search time; but the fact id hashes
+<code>source_id</code> alongside the value, so the same value restated
+in a <em>different session</em> is stored fresh as current, and the
+whole lifecycle is absent from the six MCP tools, leaving a ranking
+multiplier as its only consumer. Its SQLite tier also declares a
+normalised <code>facts</code> table with <code>valid_from</code> and
+<code>valid_to</code> that nothing writes — the shape <a
+href="../systems/powermem/">PowerMem</a> showed first. <strong>Qwen
+Code</strong> has three memory tiers and commits the third to the
+repository, so shared memory is distributed by <code>git pull</code> —
+and a write to that tier containing a detected secret is refused
+<em>unconditionally</em>, even when the tier is switched off, because
+the directory is source-controlled regardless.
 <strong>OpenWorker</strong> carries a 260-line memory whose real
 artifact is the paragraph governing it, and a comment recording why it
 exists: without when-to-remember rules, "models either never call
@@ -2356,23 +2366,27 @@ deleted document taught it</td>
 </tr>
 <tr>
 <td><code>swafra</code></td>
-<td>Verbatim or synthetic chunk plus directed chunk edges</td>
-<td>Three local JSON files</td>
+<td>Verbatim or synthetic chunk plus directed chunk edges, and since
+v0.3 a (subject, relation, value) fact with a validity end</td>
+<td>Adaptive: three JSON files by default, auto-migrating to SQLite with
+WAL only past 5,000 chunks</td>
 <td>BM25 + vector + entity/date/preference heuristics + char n-gram;
-graph walk; best chunk per title</td>
+graph walk; best chunk per title; optional LLM rerank</td>
 <td>MCP add; Leiden or exchange/paragraph chunks; synchronous full-file
-rewrite</td>
-<td>Exact source delete; implicit same-ID reindex; broken supersession
-path</td>
+rewrite; optional LLM dedup and entity extraction</td>
+<td>Working intra-source supersession; transition-only fact supersession
+that a new session re-asserts; delete still strands cross-session
+edges</td>
 <td>Source ID/title only; no user/project/tenant scope</td>
-<td>Python FastMCP; Node MCP over Python subprocess</td>
+<td>Python FastMCP, Node MCP over subprocess, Python and JS SDKs, a
+native CLI, a Claude Code skill</td>
 <td>None</td>
-<td>Caller title and raw chunk; no actor, span-quality provenance, trust
-state, or injection fence</td>
-<td>Very compact local hybrid graph-RAG; optional dependencies; source
-diversity</td>
-<td>Non-atomic concurrent writes; unbounded context; dangling edges;
-benchmark cutoff invalid</td>
+<td>Fact confidence score and a validity end; no actor, span-quality
+provenance, trust state, or injection fence</td>
+<td>Compact local hybrid graph-RAG; a real correction path reaching the
+ranker; optional dependencies; source diversity</td>
+<td>Default JSON writes still unlocked and non-atomic; dangling edges
+now in SQLite too; benchmark invalid and no longer runnable</td>
 </tr>
 <tr>
 <td><code>tencentdb-agent-memory</code></td>
@@ -2714,7 +2728,8 @@ assistant memory actions, and review UI mutations. <code>engram</code>
 captures via MCP tools and can also store prompt/session metadata.
 <code>mempalace</code> captures by mining files/conversations and by MCP
 drawer writes, preserving verbatim text. <code>swafra</code> captures
-titled text via one MCP tool, then stores chunks in local JSON.
+titled text via one MCP tool, then stores chunks in local JSON — or in
+SQLite once a corpus passes five thousand chunks.
 <code>llm-wiki-memory</code> combines explicit MCP/CLI writes with
 lifecycle hooks. <code>honcho</code> captures messages as the primary
 event stream, then derives observations. <code>verel</code> routes
