@@ -711,11 +711,13 @@ are retrieval-only, which is honest but partial</td>
 <tr>
 <td>Negative precision (forbidden hits)</td>
 <td>Whether the <em>wrong</em> memory stayed out</td>
-<td><a href="../systems/open-cowork/">open-cowork</a>, <a
-href="../systems/verel/">Verel</a>, <a
-href="../systems/mirix/">MIRIX</a> and <a
-href="../systems/aukora-kernel/">Aukora Kernel</a> — four of eighty, and
-the last two are about scope rather than correction</td>
+<td>Six of ninety. <a href="../systems/open-cowork/">open-cowork</a>, <a
+href="../systems/verel/">Verel</a> and <a
+href="../systems/neko/">Project N.E.K.O.</a> assert it about
+<em>content</em>; <a href="../systems/mirix/">MIRIX</a>, <a
+href="../systems/aukora-kernel/">Aukora Kernel</a> and <a
+href="../systems/everos/">EverOS</a> assert it about a <em>scope
+boundary</em>, which is a different question</td>
 </tr>
 <tr>
 <td>Prompt-prefix fidelity</td>
@@ -1032,8 +1034,23 @@ benchmark would have to do</h3>
 <p>Steps 7 and 9 are where the interesting failures live. Step 9 in
 particular: deleting a source memory that has already been folded into a
 summary, a user profile, or a graph edge leaves the value present in
-derived form, and every system in this atlas that derives compact
+derived form, and nearly every system in this atlas that derives compact
 representations from raw evidence has this exposure.</p>
+<p><strong>Nearly</strong>, because one system closes it, and it is
+worth naming precisely because it shows how little the fix costs. <a
+href="../systems/risuai/">RisuAI</a> stores on every generated summary
+the set of chat-message ids it was derived from, and drops the summary
+when any one of those messages no longer exists. One <code>Set</code>
+per summary, checked on every turn. It is not step 9 in full — nothing
+records that the deletion happened, and the next context overflow will
+summarize the surviving messages again — but the derived-artifact
+substrate that step 9 exists to probe is genuinely handled, and it has
+been since 2024-05-23, in the generation after a summarizer that kept no
+link at all between a summary and its sources.</p>
+<p>The conclusion the step was written to support survives intact:
+nothing <em>measures</em> this. RisuAI has no test asserting the
+behaviour, so the one system that passes step 9 would not be able to
+prove it.</p>
 <pre class="mermaid"><code>flowchart LR
     Raw[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
     Raw -. &quot;derived earlier&quot; .-&gt; Sum[&quot;session summary&lt;br/&gt;still contains it&quot;]

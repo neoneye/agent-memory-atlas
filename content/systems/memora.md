@@ -28,7 +28,7 @@ matrix:
 
 Memora is an MIT-licensed MCP memory layer — about 14,900 lines, dominated by `storage.py` (4,881) and `server.py` (3,240), with a `graph/` package, embeddings, document and image ingestion, a dotted-tag hierarchy, and cloud sync to a D1 backend.
 
-Most of that is competent and familiar. One part is not, and it addresses the failure this atlas has spent forty-four reports circling: **correction here can be rehearsed before it is committed.**
+Most of that is competent and familiar. One part is not, and it addresses the failure this atlas has spent its whole corpus circling: **correction here can be rehearsed before it is committed.**
 
 Memora's supersession pass runs in three phases — candidate pairs by embedding similarity, LLM classification of each pair, then edge creation — and the signature is:
 

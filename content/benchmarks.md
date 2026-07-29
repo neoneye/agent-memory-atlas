@@ -450,7 +450,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [MIRIX](../systems/mirix/) and [Aukora Kernel](../systems/aukora-kernel/) — four of eighty, and the last two are about scope rather than correction |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Six of ninety. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [Project N.E.K.O.](../systems/neko/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -717,9 +717,24 @@ Not a QA benchmark. A state-machine test, run per system:
 
 Steps 7 and 9 are where the interesting failures live. Step 9 in particular:
 deleting a source memory that has already been folded into a summary, a user
-profile, or a graph edge leaves the value present in derived form, and every
-system in this atlas that derives compact representations from raw evidence has
-this exposure.
+profile, or a graph edge leaves the value present in derived form, and nearly
+every system in this atlas that derives compact representations from raw
+evidence has this exposure.
+
+**Nearly**, because one system closes it, and it is worth naming precisely
+because it shows how little the fix costs. [RisuAI](../systems/risuai/) stores
+on every generated summary the set of chat-message ids it was derived from, and
+drops the summary when any one of those messages no longer exists. One `Set`
+per summary, checked on every turn. It is not step 9 in full — nothing records
+that the deletion happened, and the next context overflow will summarize the
+surviving messages again — but the derived-artifact substrate that step 9 exists
+to probe is genuinely handled, and it has been since 2024-05-23, in the
+generation after a summarizer that kept no link at all between a summary and its
+sources.
+
+The conclusion the step was written to support survives intact: nothing
+*measures* this. RisuAI has no test asserting the behaviour, so the one system
+that passes step 9 would not be able to prove it.
 
 ```mermaid
 flowchart LR

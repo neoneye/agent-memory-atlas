@@ -49,7 +49,7 @@ def _calculate_diversity(solutions, sample_size=50) -> float:
 
 **Every other system in this atlas retrieves deterministically.** Rank by some blend of similarity, recency, and importance; take the top *k*. LoongFlow's evolutionary memory deliberately returns a *worse* remembered solution some of the time, with the probability governed by a temperature that rises when the population has collapsed toward sameness and falls when it is already varied.
 
-That is an explicit exploration/exploitation trade applied to recall, and it has no counterpart in the other forty-four systems. It is closest in spirit to [Voyager](../voyager/)'s skill library and [Verel](../verel/)'s induced rules — remembered attempts that shape future attempts — but where those retrieve greedily, this samples.
+That is an explicit exploration/exploitation trade applied to recall, and it has no counterpart anywhere else in this atlas. It is closest in spirit to [Voyager](../voyager/)'s skill library and [Verel](../verel/)'s induced rules — remembered attempts that shape future attempts — but where those retrieve greedily, this samples.
 
 The caveat is scope. This is memory for an optimization loop, not belief about a user or a project. It answers "what should I try next, given what I have tried" rather than "what is true." Read it for the mechanism, not as a general memory design.
 

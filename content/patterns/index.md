@@ -163,7 +163,7 @@ Where the atlas has an exact count — the seven mechanisms on
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in two or three
-systems out of eighty is **not a best practice**. There is no consensus
+systems out of ninety is **not a best practice**. There is no consensus
 behind it, no library that gives it to you, no shared vocabulary, and nobody to
 ask when your implementation has a hole. Adopting it means building it.
 

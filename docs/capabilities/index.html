@@ -149,39 +149,55 @@ is visible here in one column pair.</p>
 collapse "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Four
-repositories of eighty assert that particular material must <em>not</em>
+<p><strong>Negative evidence is almost never tested.</strong> Six
+repositories of ninety assert that particular material must <em>not</em>
 be retrieved — the assertion every scope, deletion and correction claim
-in this atlas ultimately rests on. Two reached it from memory work: <a
-href="../systems/open-cowork/">open-cowork</a> through
-<code>forbiddenHits</code> in its eval harness, <a
-href="../systems/verel/">Verel</a> through a regression suite built from
-the red-team finding that produced its tombstone. The third, <a
-href="../systems/mirix/">MIRIX</a>, arrived from somewhere else entirely
-— its <code>test_filter_tags_db.py</code> creates a memory under one
-scope, searches under another, and asserts the id is absent, which is
-multi-tenant access-control testing rather than anything about memory.
-The fourth, <a href="../systems/aukora-kernel/">Aukora Kernel</a>,
-arrives the same way and does it better: an unrelated principal reads
-<code>ok: false</code>, a subject whose delegation manifest was revoked
-reads <code>ok: false</code>, and the owner reads
-<code>"the secret"</code> in the same assertion block — so the denial is
-proved <em>targeted</em> rather than a blanket failure, which is the
-control the other three negative suites omit.</p>
-<p><a href="../systems/everos/">EverOS</a> is the fifth and does it at
-the endpoint: two owners, the same query string,
+in this atlas ultimately rests on. Read together rather than one at a
+time, they split cleanly in two, and the split says more than the
+count.</p>
+<p><strong>Three assert a boundary:</strong> that a principal cannot
+retrieve another principal's material. <a
+href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
+creates a memory under one scope, searches under another, and asserts
+the id is absent. <a href="../systems/aukora-kernel/">Aukora Kernel</a>
+does it better — an unrelated principal reads <code>ok: false</code>, a
+subject whose delegation manifest was revoked reads
+<code>ok: false</code>, and the owner reads <code>"the secret"</code> in
+the same block, so the denial is proved <em>targeted</em> rather than a
+blanket failure. <a href="../systems/everos/">EverOS</a> does it at the
+endpoint: two owners, the same query string,
 <code>assert c_ids.isdisjoint(m_ids)</code> plus a positive control on
-each side, and a second test repeating it for two agent owners sharing a
-keyword.</p>
-<p>That three of the six arrived from access control is worth knowing:
-the assertion shape is reachable from ordinary engineering practice.</p>
-<p><strong>The sixth closes the gap the others leave.</strong> <a
-href="../systems/neko/">Project N.E.K.O.</a> asserts that a
-user-<em>disputed</em> entry is dropped before the rerank — a negative
-assertion about a corrected value rather than a boundary, and the first
-of its kind here. It came from a companion app, where re-raising
-something the user asked you to drop is a product failure rather than a
-data-quality one.</p>
+each side, repeated for two agent owners sharing a keyword.</p>
+<p>All three of those systems also hold <code>scope_enforced</code>.
+Their negative suites are therefore tests <strong>of a capability the
+same system already claims</strong> — which is worth having, and is not
+evidence about deletion or correction.</p>
+<p><strong>Three assert about content:</strong> that particular material
+must not surface to anyone entitled to search, regardless of who is
+asking. <a href="../systems/open-cowork/">open-cowork</a>'s
+<code>forbiddenHits</code> is an eval-harness field naming what a query
+must not return, scored as a penalty. <a
+href="../systems/verel/">Verel</a>'s
+<code>tests/test_memory_negative_eval.py</code> asserts a REJECTED fact
+is invisible to every recall path — a suite built from the red-team
+finding that produced its tombstone. <a href="../systems/neko/">Project
+N.E.K.O.</a>'s <code>test_hard_filter_drops_negative_score</code>
+asserts that an entry the user <em>disputed</em> is dropped before the
+rerank, the docstring giving the reason: <em>"Stage-2 would either
+reinforce the dispute or, worse, cancel it."</em></p>
+<p><strong>Only these three probe the question the atlas is actually
+asking.</strong> A boundary test proves the filter works; a content test
+proves a value that was rejected, disputed or forbidden stays gone.
+Three of ninety is the real figure for the second kind.</p>
+<p>Two further things the joint reading shows. The <strong>positive
+control</strong> — asserting that the denial is targeted rather than an
+empty result — appears in Aukora and EverOS and is absent from the rest,
+and a negative test without one passes just as well when retrieval is
+broken. And the assertion shape is <strong>reachable from ordinary
+engineering practice</strong>: three of the six arrived from
+access-control work rather than from memory research, and one, N.E.K.O.,
+from a companion app where re-raising something the user asked you to
+drop is a product failure rather than a data-quality one.</p>
 <h2 id="near-misses">Near-misses</h2>
 <p>Strictness is what makes the counts mean anything, and it hides the
 interesting cases. The ones worth knowing:</p>

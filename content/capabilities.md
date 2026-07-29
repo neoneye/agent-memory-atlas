@@ -62,35 +62,51 @@ is the atlas's central finding, and it is visible here in one column pair.
 into "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Four repositories of eighty
+**Negative evidence is almost never tested.** Six repositories of ninety
 assert that particular material must *not* be retrieved — the assertion every
-scope, deletion and correction claim in this atlas ultimately rests on. Two reached
-it from memory work: [open-cowork](../systems/open-cowork/) through `forbiddenHits`
-in its eval harness, [Verel](../systems/verel/) through a regression suite built
-from the red-team finding that produced its tombstone. The third,
-[MIRIX](../systems/mirix/), arrived from somewhere else entirely — its
-`test_filter_tags_db.py` creates a memory under one scope, searches under another,
-and asserts the id is absent, which is multi-tenant access-control testing rather
-than anything about memory. The fourth, [Aukora Kernel](../systems/aukora-kernel/),
-arrives the same way and does it better: an unrelated principal reads `ok: false`,
-a subject whose delegation manifest was revoked reads `ok: false`, and the owner
-reads `"the secret"` in the same assertion block — so the denial is proved
-*targeted* rather than a blanket failure, which is the control the other three
-negative suites omit.
+scope, deletion and correction claim in this atlas ultimately rests on. Read together
+rather than one at a time, they split cleanly in two, and the split says more
+than the count.
 
-[EverOS](../systems/everos/) is the fifth and does it at the endpoint: two
-owners, the same query string, `assert c_ids.isdisjoint(m_ids)` plus a positive
-control on each side, and a second test repeating it for two agent owners
-sharing a keyword.
+**Three assert a boundary:** that a principal cannot retrieve another
+principal's material. [MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`
+creates a memory under one scope, searches under another, and asserts the id is
+absent. [Aukora Kernel](../systems/aukora-kernel/) does it better — an unrelated
+principal reads `ok: false`, a subject whose delegation manifest was revoked
+reads `ok: false`, and the owner reads `"the secret"` in the same block, so the
+denial is proved *targeted* rather than a blanket failure.
+[EverOS](../systems/everos/) does it at the endpoint: two owners, the same query
+string, `assert c_ids.isdisjoint(m_ids)` plus a positive control on each side,
+repeated for two agent owners sharing a keyword.
 
-That three of the six arrived from access control is worth knowing: the
-assertion shape is reachable from ordinary engineering practice.
+All three of those systems also hold `scope_enforced`. Their negative suites are
+therefore tests **of a capability the same system already claims** — which is
+worth having, and is not evidence about deletion or correction.
 
-**The sixth closes the gap the others leave.** [Project N.E.K.O.](../systems/neko/)
-asserts that a user-*disputed* entry is dropped before the rerank — a negative
-assertion about a corrected value rather than a boundary, and the first of its
-kind here. It came from a companion app, where re-raising something the user
-asked you to drop is a product failure rather than a data-quality one.
+**Three assert about content:** that particular material must not surface to
+anyone entitled to search, regardless of who is asking.
+[open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
+naming what a query must not return, scored as a penalty.
+[Verel](../systems/verel/)'s `tests/test_memory_negative_eval.py` asserts a
+REJECTED fact is invisible to every recall path — a suite built from the
+red-team finding that produced its tombstone. [Project N.E.K.O.](../systems/neko/)'s
+`test_hard_filter_drops_negative_score` asserts that an entry the user
+*disputed* is dropped before the rerank, the docstring giving the reason:
+*"Stage-2 would either reinforce the dispute or, worse, cancel it."*
+
+**Only these three probe the question the atlas is actually asking.** A boundary
+test proves the filter works; a content test proves a value that was rejected,
+disputed or forbidden stays gone. Three of ninety is the real figure for the
+second kind.
+
+Two further things the joint reading shows. The **positive control** — asserting
+that the denial is targeted rather than an empty result — appears in Aukora and
+EverOS and is absent from the rest, and a negative test without one passes just
+as well when retrieval is broken. And the assertion shape is **reachable from
+ordinary engineering practice**: three of the six arrived from access-control
+work rather than from memory research, and one, N.E.K.O., from a companion app
+where re-raising something the user asked you to drop is a product failure
+rather than a data-quality one.
 
 ## Near-misses
 

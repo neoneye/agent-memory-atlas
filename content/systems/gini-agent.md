@@ -192,7 +192,7 @@ No memory-quality benchmark was found. Given that the recall implementation cite
 
 ### Steal
 
-- **Write down memory decisions as ADRs.** Status, date, decision, context, consequences — and crucially the failure that motivated it. Forty systems into this atlas, Gini is the clearest example of a project that can explain itself.
+- **Write down memory decisions as ADRs.** Status, date, decision, context, consequences — and crucially the failure that motivated it. Across this whole corpus, Gini is the clearest example of a project that can explain itself.
 - **`conflicted` as a first-class status.** Most systems either resolve conflicts silently or surface them outside the data model; making it a state means a conflicted unit can be found, counted, and worked through.
 - **Epistemic kind as a column.** `world | experience | opinion | observation` costs one field and prevents a whole class of category errors.
 - **Bi-temporal without a graph database.** Two occurrence columns plus a mention timestamp gets most of the value of temporal validity at unit granularity.

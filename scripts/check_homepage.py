@@ -22,13 +22,41 @@ PATTERNS = re.compile(r"<strong>(\d+)</strong><span>reusable design patterns</sp
 SOURCE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 
 
-WORDS = {
-    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
-    "forty-five": 45, "forty-six": 46, "forty-seven": 47, "forty-eight": 48,
-    "forty-nine": 49, "fifty": 50, "fifty-one": 51, "fifty-two": 52,
-    "fifty-three": 53, "fifty-four": 54, "fifty-five": 55, "fifty-six": 56,
-    "fifty-seven": 57, "fifty-eight": 58, "fifty-nine": 59, "sixty": 60,
-}
+def _number_words(lo: int, hi: int) -> dict[str, int]:
+    """Spelled-out numbers in the range this atlas counts things in.
+
+    Hand-maintained until the list stopped at sixty while the corpus passed
+    eighty, which is how "Four repositories of eighty" and "Seventy-three
+    systems do not fall into eighty-five categories" both survived a green
+    build. A generated range cannot fall behind the same way.
+
+    Deliberately starts at sixteen. Below that, spelled-out numbers in this
+    atlas are usually capability counts ("three systems carry a tombstone")
+    that `live` does not know about, and flagging them produced nothing but
+    noise the first time it was tried.
+    """
+    units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    teens = {
+        10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
+        15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen",
+    }
+    tens = {
+        2: "twenty", 3: "thirty", 4: "forty", 5: "fifty", 6: "sixty",
+        7: "seventy", 8: "eighty", 9: "ninety",
+    }
+    words = {}
+    for n in range(lo, hi + 1):
+        if n in teens:
+            words[teens[n]] = n
+        elif n < 100:
+            t, u = divmod(n, 10)
+            words[tens[t] + ("-" + units[u] if u else "")] = n
+        elif n == 100:
+            words["one hundred"] = n
+    return words
+
+
+WORDS = _number_words(16, 100)
 
 
 def stale_number_words(root: Path, live: set[int]) -> list[str]:
@@ -60,10 +88,17 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     found: list[str] = []
     for source in [root / "site" / "index.html"] + sorted((root / "content").rglob("*.md")):
         text = source.read_text(encoding="utf-8")
-        for pattern in patterns:
+        for index, pattern in enumerate(patterns):
             for match in pattern.finditer(text):
                 value = WORDS[match.group(1).lower()]
                 if value in live:
+                    continue
+                # The bare "of N" form is noun-blind, so it reads a research
+                # paper's own figures as atlas counts — "a simulation of
+                # twenty-five agents" is not a claim about this corpus. Apply
+                # the same floor the digit rule below already uses: only the
+                # system total is ever this large.
+                if index == 1 and value < 40:
                     continue
                 line = text[: match.start()].count("\n") + 1
                 found.append(
