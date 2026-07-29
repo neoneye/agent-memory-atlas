@@ -93,6 +93,14 @@ if [[ -n "$nested_wraps" ]]; then
   exit 1
 fi
 
+# A mermaid diagram that fails to parse renders as "Syntax error in text" on the
+# published page and is invisible to every other check here — the markdown is
+# valid, the HTML is valid, and only the browser knows. Reported from the live
+# site once already.
+if ! python3 "$project_dir/scripts/check_mermaid.py" "$project_dir/content"; then
+  exit 1
+fi
+
 # Heading ids are generated from heading text, so a numbered section changes its
 # anchor whenever sections are renumbered. Catch fragment links that no longer land.
 broken_anchors="$(python3 "$project_dir/scripts/check_anchors.py" "$site_dir")"

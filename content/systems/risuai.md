@@ -118,10 +118,10 @@ flowchart TB
     C[Chat messages] --> OV{context<br/>overflow?}
     OV -->|no| P[Prompt]
     OV -->|yes| SUM[summarize<br/>LLM or local WebLLM]
-    SUM --> S[(Summary[]<br/>text + chatMemos<br/>per chat room)]
+    SUM --> S[("Summary records<br/>text + chatMemos<br/>per chat room")]
     S --> CLEAN[cleanOrphanedSummary<br/>drop if a source is gone]
     CLEAN --> SEL
-    subgraph SEL[token budget, four reserved bands]
+    subgraph SEL["token budget, four reserved bands"]
       IMP[pinned] --> REC[recent] --> SIM[embedding-similar<br/>RRF chunks to parents] --> RND[random]
     end
     SEL --> P
