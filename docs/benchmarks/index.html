@@ -124,8 +124,10 @@ is measured nowhere</strong>, even though several systems here
 deliberately delay extraction by minutes or by a batch boundary.</li>
 <li><strong>There is no forgetting benchmark.</strong> Nothing in this
 atlas, and nothing in the published benchmarks it uses, tests whether a
-deleted memory stays deleted after the next background pass. One paper —
-<a
+deleted memory stays deleted after the next background pass. The <a
+href="#read-directly-at-a-pinned-commit">GoodAI LTM Benchmark</a> comes
+within one assertion — seven of its datasets instruct the agent to
+forget something and none of them checks. One paper — <a
 href="#fifa-the-one-proposal-that-scores-deletion-compliance">FiFA</a> —
 proposes a metric that counts failing to honour a deletion as a
 violation, which is the right question; it releases no code, its number
@@ -254,9 +256,11 @@ most interesting evaluation shape in the atlas, precisely because it is
 not a public benchmark.</p>
 <h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
 commit</h3>
-<p>Two benchmarks were checked out and read rather than described from
+<p>Three benchmarks were checked out and read rather than described from
 their papers, because the literature makes a specific claim about the
-first of them that the code does not support.</p>
+first of them that the code does not support — and because the third
+turns out to hold the nearest thing to a forgetting test anyone has
+written.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -285,12 +289,67 @@ href="https://github.com/ZexueHe/MemoryArena/commit/6cd9de14b71915e39ac742a20dc3
 for MIRIX, Mem0, Letta, A-MEM, GraphRAG, MemoRAG and long context. No
 deletion or correction path anywhere in it</td>
 </tr>
+<tr>
+<td><strong>GoodAI LTM Benchmark</strong> (<a
+href="https://github.com/GoodAI/goodai-ltm-benchmark">GoodAI/goodai-ltm-benchmark</a>)</td>
+<td><a
+href="https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce783763d5ee0b5ccd4c31c9"><code class="commit-id" title="188e7618413775f1ce783763d5ee0b5ccd4c31c9">188e7618…</code></a>,
+17 Dec 2024</td>
+<td>Twenty datasets including prospective memory and theory of mind,
+with committed HTML result reports. Seven declare a "forget this" reset
+message that is sent and never scored</td>
+</tr>
 </tbody>
 </table></div>
 <p>MemoryArena is the more interesting <em>design</em> — it scores
 whether a later session can be completed at all given what an earlier
 one stored, which is closer to what memory is for than conversational QA
 is. It is orthogonal to this page's concern: nothing in it deletes.</p>
+<p><strong>GoodAI LTM Benchmark</strong> (<a
+href="https://github.com/GoodAI/goodai-ltm-benchmark">GoodAI/goodai-ltm-benchmark</a>,
+<a
+href="https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce783763d5ee0b5ccd4c31c9"><code class="commit-id" title="188e7618413775f1ce783763d5ee0b5ccd4c31c9">188e7618…</code></a>,
+17 December 2024) is a third, and it deserves more attention than it
+gets. Its twenty datasets are far more varied than the conversational-QA
+monoculture the rest of this page describes:
+<code>prospective_memory</code>, <code>delayed_recall</code>,
+<code>instruction_recall</code>, <code>sally_ann</code> (theory of
+mind), <code>spy_meeting</code>, <code>shopping</code>,
+<code>chapterbreak</code>, <code>name_list</code>, <code>colours</code>,
+<code>kv</code>. Results are committed as HTML comparative and detailed
+reports, so the numbers have artifacts behind them.</p>
+<p>Two entries bear directly on this atlas.</p>
+<p><strong>It tests prospective memory</strong>, which the comparative
+report calls a category almost nothing models:
+<code>ProspectiveMemoryDataset</code> gives the agent a quote and asks
+it to append that quote to the <em>n</em>-th reply, then checks with
+<code>cites_quote</code>. A deferred instruction, executed at a future
+turn, machine-checked.</p>
+<p><strong>And it comes within one assertion of testing
+forgetting.</strong> Seven of the twenty datasets declare a
+<code>reset_message</code>, and they read exactly like the test this
+page has been asking for:</p>
+<pre class="text"><code>prospective_memory : &quot;Forget my instruction to append a quote to one of your replies.&quot;
+name_list          : &quot;Forget, or otherwise disregard, all of the names I have given
+                      you before this message. You do not currrently know my name.&quot;
+delayed_recall     : &quot;Forget all of the facts given to you about the fictional world…&quot;
+instruction_recall : &quot;Forget all of the instructions for operating the technology…&quot;
+restaurant         : &quot;Let&#39;s not pretend to be at a restaurant anymore. Please also
+                      forget everything about it.&quot;</code></pre>
+<p><code>runner/scheduler.py:423</code> sends them —
+<strong>after</strong> <code>example.finished</code>, after
+<code>result</code> has been read out of
+<code>in_progress_results</code> and handed to the progress dialog. The
+reset is housekeeping, so a standing instruction from one test does not
+contaminate the next in a long-running session. <strong>Nothing checks
+that it took effect.</strong></p>
+<p>That is the closest any benchmark in this survey comes to measuring
+forgetting, and the gap is one assertion in a suite that already knows
+how to make it: after sending "forget my instruction to append a quote",
+run a few more turns and call the <code>cites_quote</code> predicate
+that the same file already defines. A pass means the instruction was
+dropped; a failure means it was not. The harness has the probe, the
+oracle and the reset, and never joins them.</p>
 <p>MemoryAgentBench is the one worth being precise about. Two surveys
 describe its fourth competency as <strong>selective forgetting</strong>,
 and at least one secondary source calls it the gold standard for
@@ -768,8 +827,8 @@ entries are MemoryBank ("user memory updating") and HaluMem (memory
 hallucinations), and neither asks the question. This is the clearest gap
 in the field's measurement practice, and it is worth being precise about
 what exists and what does not.</p>
-<p><strong>Two apparent counterexamples were checked. Neither closes the
-gap, and the reasons differ.</strong></p>
+<p><strong>Three apparent counterexamples were checked. None closes the
+gap, and the reasons all differ.</strong></p>
 <p><em>MemoryAgentBench</em> is named by two surveys as testing
 <em>selective forgetting</em> — the strongest public claim that a
 forgetting benchmark exists. <a
@@ -782,6 +841,17 @@ graph.</p>
 <p><em>FiFA</em> is the harder case, and it moves this section's claim.
 It is described below, because it is the only proposal found across
 three consolidated lists that scores deletion compliance at all.</p>
+<p><em>The GoodAI LTM Benchmark</em> is the closest miss, and the most
+frustrating. Seven of its twenty datasets end by sending the agent a
+message like <em>"Forget my instruction to append a quote to one of your
+replies"</em> or <em>"Forget, or otherwise disregard, all of the names I
+have given you before this message."</em> <a
+href="#read-directly-at-a-pinned-commit">Section 2</a> records what
+happens next: <code>runner/scheduler.py</code> sends the reset
+<strong>after</strong> the result has been computed, as hygiene between
+tests in a long-running session, and nothing checks compliance. The
+suite already owns the probe (<code>cites_quote</code>), the oracle, and
+the reset instruction. Joining them is one assertion.</p>
 <h3 id="what-exists">What exists</h3>
 <ul>
 <li><strong>LongMemEval's knowledge-update category</strong> scores
