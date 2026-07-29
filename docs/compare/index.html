@@ -2366,17 +2366,16 @@ deleted document taught it</td>
 </tr>
 <tr>
 <td><code>swafra</code></td>
-<td>Verbatim or synthetic chunk plus directed chunk edges, and since
-v0.3 a (subject, relation, value) fact with a validity end</td>
+<td>Verbatim or synthetic chunk plus directed chunk edges, and a
+(subject, relation, value) fact carrying a validity end</td>
 <td>Adaptive: three JSON files by default, auto-migrating to SQLite with
 WAL only past 5,000 chunks</td>
 <td>BM25 + vector + entity/date/preference heuristics + char n-gram;
 graph walk; best chunk per title; optional LLM rerank</td>
 <td>MCP add; Leiden or exchange/paragraph chunks; synchronous full-file
 rewrite; optional LLM dedup and entity extraction</td>
-<td>Working intra-source supersession; transition-only fact supersession
-that a new session re-asserts; delete still strands cross-session
-edges</td>
+<td>Intra-source chunk supersession; transition-only fact supersession
+that a new session re-asserts; delete strands cross-session edges</td>
 <td>Source ID/title only; no user/project/tenant scope</td>
 <td>Python FastMCP, Node MCP over subprocess, Python and JS SDKs, a
 native CLI, a Claude Code skill</td>
@@ -2385,8 +2384,8 @@ native CLI, a Claude Code skill</td>
 provenance, trust state, or injection fence</td>
 <td>Compact local hybrid graph-RAG; a real correction path reaching the
 ranker; optional dependencies; source diversity</td>
-<td>Default JSON writes still unlocked and non-atomic; dangling edges
-now in SQLite too; benchmark invalid and no longer runnable</td>
+<td>Default JSON writes unlocked and non-atomic; dangling edges on both
+backends; benchmark invalid and its harness broken</td>
 </tr>
 <tr>
 <td><code>tencentdb-agent-memory</code></td>
@@ -6955,6 +6954,16 @@ UI.</li>
 in the inspected OSS code.</li>
 <li>This is an implementation-oriented static review, not a runtime
 benchmark.</li>
+<li><strong>The licence check has not been applied uniformly.</strong>
+The atlas declines repositories that ship no licence file —
+<code>general-agentic-memory</code> and <code>MemEngine</code> are both
+named above partly on that basis — but the check was performed at review
+time rather than as a build invariant, and at least one report was
+published against a commit that carried no licence. Swafra's original
+pin, <code>24dba18a</code>, had none; MIT landed later and the current
+pin carries it, so the entry is sound today, but the omission was the
+review's and the same gap may be waiting in other early reports. Nothing
+in <code>scripts/test_site.sh</code> enforces it.</li>
 <li><strong>Memory held in model weights is covered by exactly one
 system.</strong> <a href="../systems/second-me/">Second Me</a> is the
 atlas's only parametric-memory entry, and one system is a data point

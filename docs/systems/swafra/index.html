@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A tiny local MCP sidecar with
-hybrid retrieval, graph traversal, and a new fact-supersession engine
-the agent cannot see.">
+hybrid retrieval, graph traversal, and a fact-supersession engine the
+agent cannot see.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Swafra — Agent Memory Atlas">
     <meta property="og:description" content="A tiny local MCP sidecar
-with hybrid retrieval, graph traversal, and a new fact-supersession
-engine the agent cannot see.">
+with hybrid retrieval, graph traversal, and a fact-supersession engine
+the agent cannot see.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Swafra — Agent Memory Atlas">
     <meta name="twitter:description" content="A tiny local MCP sidecar
-with hybrid retrieval, graph traversal, and a new fact-supersession
-engine the agent cannot see.">
+with hybrid retrieval, graph traversal, and a fact-supersession engine
+the agent cannot see.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Swafra — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -75,7 +75,7 @@ engine the agent cannot see.">
           <p class="eyebrow">Compact local graph-RAG</p>
           <h1>Swafra</h1>
           <p class="document-deck">A tiny local MCP sidecar with hybrid
-retrieval, graph traversal, and a new fact-supersession engine the agent
+retrieval, graph traversal, and a fact-supersession engine the agent
 cannot see.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/kunal12203/swafra">
@@ -131,37 +131,34 @@ rank chunks, expand through graph edges, then return the best chunk from
 each source. The conversation fallback also creates useful exchange
 chunks and a deterministic facts/navigation chunk without calling an
 LLM.</p>
-<p><strong>The v0.3 line added the thing this report previously said was
-missing: a working correction path.</strong>
+<p>Alongside the chunk store it runs a <strong>fact lifecycle</strong>.
 <code>engine/facts.py</code> extracts
 <code>(subject, relation, value)</code> triples, detects when a new
 <em>transition</em> fact conflicts with a standing one, closes the old
-fact's validity instead of deleting it, and penalises the chunks behind
-superseded facts at search time. The duplicated engine is gone, the
-previously dead intra-source supersession loop now runs, an MIT licence
-was added, and the API-key config file is written <code>0600</code>.</p>
-<p>Three things keep it from being a durable memory layer, and the first
-two are the same as before. Persistence on the <strong>default path is
-still three unlocked, non-atomic JSON rewrites</strong> — SQLite arrives
-only past 5,000 chunks. <strong>Deletion still strands cross-session
-edges</strong>, and that bug was carried faithfully into the new SQLite
-backend, whose <code>edges</code> table has no foreign key and no
-cascade. And the correction subsystem is <strong>invisible to the
-agent</strong>: <code>get_active_facts</code>,
-<code>get_fact_history</code> and <code>invalidate_fact</code> exist on
-the internal RPC surface and none of them is one of the six MCP tools,
-so the only consumer of the whole fact lifecycle is a ranking
-multiplier.</p>
-<p>There are still no tests. The committed LongMemEval artifact is
-unchanged and still not evidence of recall at 10 — re-measured for this
-review, all 470 evaluated questions returned between 28 and 46 results
-against 38–62 ingested sessions — and the harness that produced it
-<strong>no longer imports</strong>, so those numbers now describe an
-engine that cannot be re-run.</p>
+fact's validity instead of deleting the row, and penalises the chunks
+behind superseded facts at search time. That is a correction path that
+reaches the ranker, built from regex and embedding similarity with no
+LLM in it.</p>
+<p>Three things keep it from being a durable memory layer. Persistence
+on the <strong>default path is unlocked, non-atomic JSON
+rewrites</strong> — the SQLite tier engages only past 5,000 chunks.
+<strong>Deletion strands cross-session edges</strong> on both backends,
+and the SQLite <code>edges</code> table has no foreign key and no
+cascade, so the relational store does not fix it either. And the
+correction subsystem is <strong>invisible to the agent</strong>:
+<code>get_active_facts</code>, <code>get_fact_history</code> and
+<code>invalidate_fact</code> live on the internal RPC surface, none of
+them is one of the six MCP tools, and a ranking multiplier is the only
+consumer of the whole lifecycle.</p>
+<p>There are no tests. The committed LongMemEval artifact is not
+evidence of recall at 10 — all 470 evaluated questions returned between
+28 and 46 results against 38–62 ingested sessions — and the harness that
+produced it <strong>does not import</strong> against the current engine,
+so those numbers describe code that cannot be re-run.</p>
 <p>Verdict: study Swafra for a concise hybrid-retrieval prototype, for
-MCP affordances, and now for a small, local, LLM-free supersession
-engine. Do not borrow its storage, benchmark methodology, or deletion
-semantics for a serious system without substantial redesign.</p>
+MCP affordances, and for a small, local, LLM-free supersession engine.
+Do not borrow its storage, benchmark methodology, or deletion semantics
+for a serious system without substantial redesign.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Swafra considers a memory source to be a titled text blob. Ingestion
 turns that blob into one or more chunk records. Those chunks, not
@@ -203,11 +200,11 @@ graph" is a separate list of directed edges between chunk IDs:</p>
 proactively and call <code>get_context</code> at session start. The
 backend does not observe conversations or inject memory
 automatically.</p>
-<p>Stored chunk text is still treated as undifferentiated evidence — no
-distinction between user statements, assistant statements, imported
-documents, or extracted navigation text. Since v0.3 there is a
-<strong>second, parallel memory</strong> with an actual lifecycle, and
-the two do not share a state machine.</p>
+<p>Stored chunk text is undifferentiated evidence — no distinction
+between user statements, assistant statements, imported documents, or
+extracted navigation text. Beside it sits a <strong>second, parallel
+memory</strong> with an actual lifecycle, and the two do not share a
+state machine.</p>
 <p>A <strong>fact</strong> is a <code>(subject, relation, value)</code>
 triple carrying <code>chunk_id</code>, <code>source_id</code>,
 <code>created_at</code>, <code>confidence</code>, <code>evidence</code>
@@ -232,16 +229,15 @@ stated grounds that a user may use several things at once. And
 supersession is a <em>penalty</em>, not an exclusion: a fully superseded
 chunk keeps 15% of its score and can still be returned.</p>
 <p>The system therefore models <strong>current versus
-historical</strong>, which is a validity distinction, and still models
-nothing epistemic. No fact is ever marked unverified or false;
+historical</strong>, which is a validity distinction, and models nothing
+epistemic. No fact is ever marked unverified or false;
 <code>confidence</code> is a number assigned once by the extractor and
 never revised.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Swafra has two public runtime shapes over <strong>one</strong> engine
-implementation. The duplication this report previously recorded is gone:
-<code>swafra/engine.py</code> is now a 28-line re-export shim and
-<code>engine/scimap_engine.py</code> an 18-line subprocess entry point,
-both resolving to the <code>engine/</code> package
+implementation. <code>swafra/engine.py</code> is a 28-line re-export
+shim and <code>engine/scimap_engine.py</code> an 18-line subprocess
+entry point, both resolving to the <code>engine/</code> package
 (<code>storage</code>, <code>graph</code>, <code>facts</code>,
 <code>chunking</code>, <code>embedding</code>, <code>bm25</code>,
 <code>extractors</code>, <code>llm</code>, <code>rpc</code>,
@@ -321,7 +317,7 @@ Paths</h2>
 <p>The Node path starts in the <code>add_knowledge</code> case in
 <code>src/index.ts</code>, calls <code>Engine.call()</code> in
 <code>src/engine.ts</code>, and dispatches through the
-<code>METHODS</code> map now living in <code>engine/rpc.py</code>.</p>
+<code>METHODS</code> map in <code>engine/rpc.py</code>.</p>
 <p><code>add_knowledge()</code> in <code>engine/graph.py</code>:</p>
 <ol type="1">
 <li>loads all chunks, edges and sources upfront, <strong>including
@@ -441,28 +437,27 @@ maximum context size.</p>
 <li>edges whose own <code>source_id</code> equals the target;</li>
 <li>the source list entry.</li>
 </ul>
-<p><strong>Cross-session edges are still stored with
+<p><strong>Cross-session edges are stored with
 <code>source_id: None</code></strong>
 (<code>engine/graph.py:306</code>), so edges pointing from or to deleted
 chunks survive on both backends. The SQLite path is
 <code>DELETE FROM edges WHERE source_id = ?</code> with the same blind
 spot, and the <code>edges</code> table declares
 <code>source_id TEXT</code> with <strong>no <code>FOREIGN KEY</code>, no
-<code>REFERENCES</code>, and no <code>ON DELETE CASCADE</code></strong>.
-The migration to a relational store was the moment this bug became free
-to fix, and it was carried across instead.</p>
+<code>REFERENCES</code>, and no <code>ON DELETE CASCADE</code></strong>
+— a relational store carrying a bug a cascade would retire for free.</p>
 <p>There is no update tool. Calling <code>add_knowledge</code> is only
 an idempotent replacement when the title and first 100 text characters
 derive the same source ID. Changing early content creates a second
 source even when the title is unchanged.</p>
-<p><strong>Intra-source supersession now works.</strong> The previous
-report recorded the loop as unreachable because matching-source chunks
-were removed before <code>old_chunks</code> was computed. In the current
-code <code>all_chunks</code> is loaded upfront including superseded rows
+<p><strong>Intra-source supersession works.</strong>
+<code>all_chunks</code> is loaded upfront including superseded rows
 (<code>engine/graph.py:178</code>), <code>old_source_chunks</code> is
 derived from it at line 210, and the comparison runs before any removal.
 A new chunk supersedes an old one from the same source when they share
-at least three entities and cosine similarity reaches 0.85.</p>
+at least three entities and cosine similarity reaches 0.85 —
+re-ingesting an updated version of a document demotes the version it
+replaced.</p>
 <p><strong>Fact supersession is the new path, and a new session undoes
 it.</strong> <code>ingest_facts()</code> closes a conflicting fact by
 setting <code>valid_until</code> and <code>superseded_by</code>, keeping
@@ -483,7 +478,7 @@ all.</p>
 <p>That is the difference between a supersession record and a tombstone,
 and it is one field in one hash.</p>
 <h3 id="storage-definitions">Storage Definitions</h3>
-<p>The JSON schema is still implicit dictionary construction in
+<p>The JSON schema is implicit dictionary construction in
 <code>add_knowledge()</code>:</p>
 <ul>
 <li>source: <code>id</code>, <code>title</code>,
@@ -534,9 +529,9 @@ permanently, on a subsystem whose whole purpose is to supersede.
 bi-temporal rather than supersession-with-a-timestamp — exists only in
 that unwritten table.</p>
 <h3 id="tests-and-evals">Tests and Evals</h3>
-<p>No unit or integration test files are present. This is unchanged
-across 21 commits, a storage-backend migration, and a new fact-lifecycle
-subsystem.</p>
+<p>No unit or integration test files are present anywhere in the
+repository — not for chunking, not for the storage tiers, and not for
+the fact lifecycle.</p>
 <p>LongMemEval harnesses exist at:</p>
 <ul>
 <li><code>bench/run_eval.py</code>;</li>
@@ -684,44 +679,40 @@ and likely future context;</li>
 can omit writes, store assistant speculation, duplicate a source under a
 new title, retrieve too much context, or recall prompt-injected source
 text.</p>
-<p>The v0.3 line also added a Python SDK, a JS SDK
-(<code>src/sdk.ts</code>), a native Node CLI (<code>src/cli.ts</code>),
-and <code>swafra skill</code>, which installs Swafra as a Claude Code
-skill so it can be used without MCP at all.</p>
-<p>Version drift is mostly resolved and not entirely:</p>
+<p>Beyond MCP there is a Python SDK, a JS SDK (<code>src/sdk.ts</code>),
+a native Node CLI (<code>src/cli.ts</code>), and
+<code>swafra skill</code>, which installs Swafra as a Claude Code skill
+so it can be used without MCP at all.</p>
+<p>The public surfaces disagree about what version they are:</p>
 <ul>
-<li><code>package.json</code> and <code>pyproject.toml</code> now agree
-at <code>0.3.2</code>, against <code>0.1.2</code>/<code>0.1.5</code>
-previously.</li>
-<li><code>src/index.ts</code> still advertises
-<code>version: "0.1.0"</code> to the MCP client — two releases of drift,
-down from three surfaces disagreeing.</li>
+<li><code>package.json</code> and <code>pyproject.toml</code> agree at
+<code>0.3.2</code>.</li>
+<li><code>src/index.ts</code> advertises <code>version: "0.1.0"</code>
+to the MCP client — two releases behind the package it ships in.</li>
 <li>Python uses FastMCP and passes <code>min_source_pct=0.15</code>
 explicitly; Node relies on the engine default.</li>
 <li>Node tool text says <code>search_knowledge</code> is cosine search,
 while the engine performs hybrid search.</li>
-<li>names and docs still alternate between <code>swafra</code> and the
-earlier <code>scimap</code>, and the data directory is still
+<li>names and docs alternate between <code>swafra</code> and the earlier
+<code>scimap</code>, and the data directory is
 <code>~/.scimap</code>.</li>
 </ul>
-<p>The Python MCP package remains the cleaner integration path. The Node
+<p>The Python MCP package is the cleaner integration path. The Node
 wrapper adds process management, a second protocol, and a 60-second
-timeout without adding memory semantics — though it no longer ships a
-duplicate engine, since both entry points now resolve to the same
-<code>engine/</code> package.</p>
+timeout without adding memory semantics, though both entry points
+resolve to the same <code>engine/</code> package so there is no
+duplicated implementation to drift.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p>Positive, and three of these are new since the previous revision:</p>
+<p>Positive:</p>
 <ul>
 <li>local-only default;</li>
 <li>no model/API key required — the LLM paths are all gated on
 <code>is_llm_available()</code>;</li>
-<li><strong>an MIT <code>LICENSE</code>, added in
-<code>8469f1f</code></strong>;</li>
-<li><strong>the API-key config file is written
-<code>0o600</code></strong> (<code>engine/llm.py</code>,
-<code>swafra/cli.py</code>);</li>
-<li><strong>a correction path that reaches the ranker</strong>:
+<li>an MIT <code>LICENSE</code>;</li>
+<li>the API-key config file is written <code>0o600</code>
+(<code>engine/llm.py</code>, <code>swafra/cli.py</code>);</li>
+<li><strong>a correction path that reaches the ranker</strong> —
 superseded facts are retained, not deleted, and the chunks behind them
 are demoted at search time;</li>
 <li>facts carry <code>evidence</code>, the original text span they were
@@ -733,21 +724,21 @@ extracted from — the closest thing here to provenance;</li>
 <li>Node wrapper sends engine logs to stderr, keeping JSON-line stdout
 clean.</li>
 </ul>
-<p>Serious gaps, most of them unchanged:</p>
+<p>Serious gaps:</p>
 <ul>
 <li><strong>no atomicity or locking on the default path.</strong>
-<code>save_json()</code> is still <code>open(path, "w")</code> then
+<code>save_json()</code> is <code>open(path, "w")</code> then
 <code>json.dump</code> — no temp file, no <code>os.replace</code>, no
 lock. <code>engine/storage.py</code> contains no occurrence of
 <code>lock</code>, <code>flock</code>, <code>fcntl</code>,
 <code>os.replace</code> or <code>tmp</code>. The SQLite tier does get
 WAL and a 10-second busy timeout, but only past 5,000 chunks;</li>
 <li>JSON parse failure can make the server unusable;</li>
-<li><strong>cross-session edges still survive source deletion</strong>,
-now on both backends, with no foreign key in the new schema;</li>
+<li><strong>cross-session edges survive source deletion</strong> on both
+backends, with no foreign key in the SQLite schema;</li>
 <li>no embedding-model/version record; <code>SCIMAP_EMBED_BACKEND</code>
-is still read nowhere in <code>engine/</code> or
-<code>swafra/</code>;</li>
+is documented and set by the benchmark but read nowhere in
+<code>engine/</code> or <code>swafra/</code>;</li>
 <li>no access control or multi-user scoping;</li>
 <li>no trust/verification state — <code>confidence</code> is a score
 written once and never revised, and <code>valid_until</code>
@@ -765,8 +756,8 @@ or dominating heuristic scores.</li>
 <code>get_active_facts</code>, <code>get_fact_history</code> and
 <code>invalidate_fact</code> are exported from
 <code>engine/__init__.py</code> and routed in
-<code>engine/rpc.py</code>, and the MCP server still exposes exactly six
-tools — <code>add_knowledge</code>, <code>search_knowledge</code>,
+<code>engine/rpc.py</code>, and the MCP server exposes exactly six tools
+— <code>add_knowledge</code>, <code>search_knowledge</code>,
 <code>get_context</code>, <code>graph_walk</code>,
 <code>list_sources</code>, <code>delete_source</code>. None of the fact
 operations is among them. So the agent cannot ask what it currently
@@ -777,19 +768,8 @@ user's view is the <code>stats</code> dashboard, which — for the
 field-name reason in section 4 — reports zero superseded facts
 regardless.</p>
 <p>Swafra is best understood as a trusted, single-user local retrieval
-utility that has grown a genuine correction mechanism it does not yet
-expose. It should not be treated as a truth-bearing memory database.</p>
-<h3 id="a-correction-to-this-report">A correction to this report</h3>
-<p>The previous revision of this report analysed commit
-<code>24dba18a</code> and did not record that <strong>the repository had
-no licence file at that commit</strong>. <code>git ls-tree</code>
-confirms it. The atlas declines unlicensed repositories —
-<code>general-agentic-memory</code> and <code>MemEngine</code> were both
-excluded partly on that basis — so this report should not have been
-published in the form it was. The situation has resolved itself:
-<code>LICENSE</code> (MIT) landed in <code>8469f1f</code> and the
-current pin carries it. Recorded because the omission was the review's,
-not the project's.</p>
+utility carrying a genuine correction mechanism it does not expose. It
+should not be treated as a truth-bearing memory database.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>There are no ordinary tests in the repository. The only quality
@@ -804,9 +784,7 @@ exposing none of them, and importing the harness fails with
 <code>ImportError: cannot import name 'add_knowledge' from 'scimap_engine'</code>.
 The committed results therefore describe an engine that no longer exists
 and cannot be regenerated from this checkout.</p>
-<p>The benchmark deserves special caution, and the caution below was
-re-verified against the artifact at this revision rather than carried
-over.</p>
+<p>The benchmark deserves special caution.</p>
 <p>What the harness does well:</p>
 <ul>
 <li>uses labeled <code>answer_session_ids</code>;</li>
@@ -817,8 +795,7 @@ fractional session recall;</li>
 <li>retains per-question details.</li>
 </ul>
 <p>Why the published result is not valid <code>recall_all@10</code>
-evidence — recomputed from <code>bench/results.json</code> for this
-review:</p>
+evidence, computed from <code>bench/results.json</code>:</p>
 <ul>
 <li><code>get_context()</code> treats <code>k</code> as a lower bound
 and can return a percentage of all sources.</li>
@@ -872,11 +849,10 @@ measures;</li>
 <li>a committed manifest tying results to engine commit, dependencies,
 embedder, and configuration.</li>
 </ul>
-<p>The smoke review for this report used the hash embedder on a
-temporary directory. It confirmed that current
-<code>get_context(k=3)</code> returns three results for 20 sources at
-the default 15% rule, and that adding two different texts under the same
-title creates two source records.</p>
+<p>A smoke check with the hash embedder on a temporary directory
+confirmed that <code>get_context(k=3)</code> returns three results for
+20 sources at the default 15% rule, and that adding two different texts
+under the same title creates two source records.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
