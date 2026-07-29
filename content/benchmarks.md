@@ -91,8 +91,15 @@ familiarity with the literature rather than inspection.
 - **Machine-unlearning benchmarks** (TOFU and similar) — these measure whether
   information can be removed from *model weights*. That is a genuinely
   different problem from removing a row from a memory store, and the two are
-  often conflated in discussion. Relevant if you fine-tune on user data; not
-  relevant to any system in this atlas.
+  often conflated in discussion. This page used to add "not relevant to any
+  system in this atlas"; that stopped being true when
+  [Second Me](../systems/second-me/) was reviewed. Second Me fine-tunes a local
+  model on the user's own documents, and its document deletion — one of the more
+  complete cascades here, reaching the vector store as well as the rows — does not
+  and cannot touch the trained weights. So there is now one system in this corpus
+  for which the unlearning literature is the relevant literature, and the general
+  rule holds: the moment you fine-tune on user data, "delete my data" acquires a
+  second half a database cascade cannot reach.
 - **Long-context benchmarks** — needle-in-a-haystack, RULER, ∞Bench and
   relatives measure what a model can do with a long prompt. They are not memory
   benchmarks, and the distinction matters for the argument in the next section.
@@ -323,7 +330,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [MIRIX](../systems/mirix/) — three of seventy-one, and MIRIX's cases are about scope rather than correction |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/) and [MIRIX](../systems/mirix/) — three of seventy-two, and MIRIX's cases are about scope rather than correction |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |

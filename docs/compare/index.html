@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-seventy-one agent memory architectures, their retrieval mechanics, trust
+seventy-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of seventy-one agent memory architectures, their retrieval mechanics,
+of seventy-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of seventy-one agent memory architectures, their retrieval mechanics,
+of seventy-two agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-seventy-one agent memory architectures, their retrieval mechanics, trust
+seventy-two agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-one systems do not fall into seventy-one categories. They
+<p>Seventy-two systems do not fall into seventy-two categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -415,7 +415,7 @@ the failures simpler systems discover in production.</p>
 <h3 id="research-lineage">Research lineage</h3>
 <p><code>generative-agents</code>, <code>voyager</code>,
 <code>hipporag</code>, <code>a-mem</code>, <code>memoryos</code>,
-<code>nooa-memory</code></p>
+<code>nooa-memory</code>, <code>second-me</code></p>
 <p>Artifacts the practical systems are largely responses to.
 <strong>Generative Agents</strong> established the
 observation/reflection/planning stream and the
@@ -423,13 +423,19 @@ importance-recency-relevance score — whose weights, read at the source,
 are hand-tuned constants with two abandoned settings left in comments.
 <strong>Voyager</strong> established procedural skill memory with an
 execution-verified write gate. <strong>HippoRAG</strong> established
-diffusion-based associative retrieval. <strong>NOOA Memory</strong>
-implements the cognitive models the others approximate — ACT-R
-base-level activation with spreading activation for retrieval, the
-Ebbinghaus curve for forgetting — and stores the score components of
-every retrieval on the memory that was retrieved.
-<strong>MemoryOS</strong> is the tiered short/mid/long architecture in
-its most legible form, with the promotion rule written down as
+diffusion-based associative retrieval. <strong>Second Me</strong> is the
+only system here whose memory ends up in <em>weights</em>: documents
+become a versioned biography, the biography becomes synthesized training
+data, and LoRA fine-tuning plus DPO produce a local model that answers
+without retrieving anything. It is the atlas's single instance of
+parametric memory, and section 3's correction discussion is where it
+earns the entry. <strong>NOOA Memory</strong> implements the cognitive
+models the others approximate — ACT-R base-level activation with
+spreading activation for retrieval, the Ebbinghaus curve for forgetting
+— and stores the score components of every retrieval on the memory that
+was retrieved. <strong>MemoryOS</strong> is the tiered short/mid/long
+architecture in its most legible form, with the promotion rule written
+down as
 <code>alpha * N_visit + beta * L_interaction + gamma * R_recency</code>
 — and the coefficients left at 1, 1 and 1 with no ablation, so verbosity
 scores like importance.</p>
@@ -1990,6 +1996,30 @@ numbers; a real correction vocabulary; additive updates</td>
 constraint on the edit</td>
 </tr>
 <tr>
+<td><code>second-me</code></td>
+<td>Three layers — a document with its raw content, a versioned
+biography and shades derived from it, and the model weights trained on
+both</td>
+<td>SQLite for documents, chunks and the versioned L1 tables; ChromaDB
+for embeddings; GGUF files for the model</td>
+<td>Embedding search over documents and chunks, plus whatever the
+fine-tuned model recalls without retrieval</td>
+<td>Upload documents, generate L1 as a numbered version, then synthesize
+training data and run LoRA SFT and DPO</td>
+<td>Document deletion cascades through chunks and both Chroma
+collections, and touches neither L1 nor the weights</td>
+<td>None — the design is one person, one machine, one model</td>
+<td>A local web app over a Flask kernel, with GGUF export and a
+decentralized network for connecting AI selves</td>
+<td>Training pipelines run as scripted jobs rather than as a
+scheduler</td>
+<td>Pipeline statuses only; no memory carries an epistemic state</td>
+<td>L1 is a numbered generation over retained L0, so the derived layer
+is rebuildable and comparable across versions</td>
+<td>Forgetting stops at the vector store; the trained model is the
+atlas's first genuine machine-unlearning problem</td>
+</tr>
+<tr>
 <td><code>supermemory</code></td>
 <td>Document, chunk, memory entry, space</td>
 <td>Hosted backend; visible schemas/client only</td>
@@ -2165,14 +2195,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 71:</em> <a
+<p><em>3 of 72:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>6 of 71:</em> <a
+<p><em>6 of 72:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2181,7 +2211,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 71:</em> <a
+<p><em>8 of 72:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2193,7 +2223,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>42 of 71:</em> <a
+<p><em>42 of 72:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
@@ -2240,7 +2270,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>7 of 71:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
+<p><em>7 of 72:</em> <a href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
@@ -2250,7 +2280,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>12 of 71:</em> <a
+<p><em>13 of 72:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2262,11 +2292,12 @@ href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a>, <a
 href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/second-me/"><code>second-me</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>3 of 71:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
+<p><em>3 of 72:</em> <a href="../systems/mirix/"><code>mirix</code></a>,
 <a href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
@@ -2287,7 +2318,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Three
-repositories of seventy-one assert that particular material must
+repositories of seventy-two assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -3049,6 +3080,13 @@ suppression occurred.</p></li>
 <li><p><code>hermes-agent</code>: substring-addressed
 <code>remove</code> plus budget-driven eviction the model performs under
 pressure; nothing logs what was dropped.</p></li>
+<li><p><code>second-me</code>: the most thorough deletion cascade here —
+the memory row, the document embedding, every chunk embedding, every
+chunk row, the document row and the file — and it stops there. The
+versioned biography derived from that document stays, and the model
+fine-tuned on data synthesized from it keeps what it learned. This is
+the atlas's one case where "delete" reaches the retrieval layer and
+cannot reach the belief.</p></li>
 <li><p><code>mirix</code>: <code>episodic_memory_replace</code> is a
 loop of <code>hard_delete</code> followed by a loop of
 <code>insert</code>, so a correction destroys the row rather than
@@ -6125,6 +6163,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a></li>
 <li><a href="../systems/powermem/"><code>powermem</code></a></li>
 <li><a href="../systems/minecontext/"><code>minecontext</code></a></li>
 <li><a href="../systems/acontext/"><code>acontext</code></a></li>
+<li><a href="../systems/second-me/"><code>second-me</code></a></li>
 <li><a href="../systems/nemoclaw/"><code>nemoclaw</code></a></li>
 <li><a href="../systems/daimon/"><code>daimon</code></a></li>
 </ul>
@@ -6382,6 +6421,10 @@ href="https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10
 href="https://github.com/memodb-io/Acontext">memodb-io/Acontext</a> at
 <a
 href="https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6"><code class="commit-id" title="259d73bfdebeed35ec2d4211ddc060a2d4126bc6">259d73bf…</code></a></li>
+<li><a
+href="https://github.com/mindverse/Second-Me">mindverse/Second-Me</a> at
+<a
+href="https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a"><code class="commit-id" title="d0e40251d9de61b3340b8d0d7d83150669f1885a">d0e40251…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a
