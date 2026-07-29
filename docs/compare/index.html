@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-eighty-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+eighty-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of eighty-two agent memory architectures, their retrieval mechanics,
+of eighty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of eighty-two agent memory architectures, their retrieval mechanics,
+of eighty-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-eighty-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+eighty-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -145,7 +145,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Seventy-three systems do not fall into eighty-two categories. They
+<p>Seventy-three systems do not fall into eighty-three categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -390,7 +390,7 @@ provider</a>.</p>
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
 <code>reme</code>, <code>acontext</code>, <code>logseq</code>,
-<code>everos</code></p>
+<code>everos</code>, <code>ecc</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -452,6 +452,18 @@ session boundary — one checkpoint written when a session ends, one
 skimmable briefing injected when the next begins — and spends its
 complexity budget on checking the extraction rather than on retrieving
 from it.</p>
+<p><strong>ECC makes the honest declaration the rest of this family
+avoids.</strong> Its vault schema gives <code>trust</code> an enum of
+exactly one value — <code>unreviewed</code> — and documents why:
+verified knowledge is promoted into a governed artifact elsewhere rather
+than upgraded in place, so the store never claims authority it cannot
+support. Set beside the systems here carrying a <code>confidence</code>
+float nothing revises, a field that can only say "not checked" is the
+more truthful design. Its <code>status</code> enum is the counterweight:
+<code>active | rejected | superseded</code> is validated and filtered on
+both read paths, and every write sets <code>active</code>, so two thirds
+of the state machine is honoured on read and reachable only by
+hand-editing a Markdown file.</p>
 <p><strong>Logseq is the odd member and the only one here that is not
 developer-shaped</strong> — a twelve-year-old outliner that grew an MCP
 server, filed beside Basic Memory and llm-wiki-memory because it is the
@@ -1326,6 +1338,33 @@ rebuild</td>
 transcript</td>
 <td>The model's trust claims are checked by code, not believed</td>
 <td>One live checkpoint per project; tombstone keyed on exact text</td>
+</tr>
+<tr>
+<td><code>ecc</code></td>
+<td>A Markdown file with validated frontmatter — id, title, kind, scope,
+trust, status, sourceHarness, targetHarnesses, tags, links, timestamps,
+body</td>
+<td>One <code>${id}.md</code> per memory under a per-scope vault root,
+with a trusted-boundary assertion on every read</td>
+<td>Index and lexical search over the vault, filtered to
+<code>status === 'active'</code>, with scope selecting the root</td>
+<td>Create-only through the <code>ecc memory</code> CLI or the
+<code>memory_save</code> MCP tool; every write sets
+<code>trust: unreviewed</code> and <code>status: active</code></td>
+<td>Neither. Writes are create-only, and no code path sets
+<code>rejected</code> or <code>superseded</code></td>
+<td><code>project | team | user</code>, each a separate vault root with
+a configured boundary policy asserted on read</td>
+<td>A CLI, an MCP server, and harness skills for Claude Code, Codex,
+OpenCode and Cursor, plus session hooks</td>
+<td>Session hooks that persist memory at lifecycle boundaries</td>
+<td><code>trust</code> is an enum of exactly one value,
+<code>unreviewed</code>, and the design says so — verified knowledge is
+promoted out of the vault, not within it</td>
+<td>Says in the schema that its memory is never authoritative; harness
+routing on every record</td>
+<td>The read path filters a status the write path cannot produce, so
+rejection is reachable only by hand-editing frontmatter</td>
 </tr>
 <tr>
 <td><code>elastic-atlas</code></td>
@@ -2787,14 +2826,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 82:</em> <a
+<p><em>3 of 83:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 82:</em> <a
+<p><em>7 of 83:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2804,7 +2843,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 82:</em> <a
+<p><em>8 of 83:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -2816,7 +2855,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
 merely available as a tag.</p>
-<p><em>49 of 82:</em> <a
+<p><em>50 of 83:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -2830,6 +2869,7 @@ href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/ecc/"><code>ecc</code></a>, <a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
@@ -2870,7 +2910,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>8 of 82:</em> <a
+<p><em>8 of 83:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2882,7 +2922,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>14 of 82:</em> <a
+<p><em>14 of 83:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -2900,7 +2940,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>5 of 82:</em> <a
+<p><em>5 of 83:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
@@ -2924,7 +2964,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Five
-repositories of eighty-two assert that particular material must
+repositories of eighty-three assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Two reached it
 from memory work: <a href="../systems/open-cowork/">open-cowork</a>
@@ -6910,6 +6950,7 @@ href="../systems/aukora-kernel/"><code>aukora-kernel</code></a></li>
 <li><a href="../systems/autogen/"><code>autogen</code></a></li>
 <li><a href="../systems/goodai-ltm/"><code>goodai-ltm</code></a></li>
 <li><a href="../systems/everos/"><code>everos</code></a></li>
+<li><a href="../systems/ecc/"><code>ecc</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -7206,6 +7247,8 @@ href="https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce78
 href="https://github.com/EverMind-AI/EverOS">EverMind-AI/EverOS</a> at
 <a
 href="https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f"><code class="commit-id" title="4256419595f63fe307147dc19e379477cecdc44f">42564195…</code></a></li>
+<li><a href="https://github.com/affaan-m/ECC">affaan-m/ECC</a> at <a
+href="https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e"><code class="commit-id" title="591ab5cbd3f2f65860ea91c226e410b1502c8e2e">591ab5cb…</code></a></li>
 <li><a
 href="https://github.com/netease-youdao/LobsterAI">netease-youdao/LobsterAI</a>
 at <a

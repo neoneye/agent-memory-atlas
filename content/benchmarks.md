@@ -173,6 +173,32 @@ literature that cites it, and the difference matters exactly here: a reader
 looking for a forgetting benchmark will be sent to this one and will not find
 one.
 
+### The 2026 crop reproduces the monoculture
+
+A search for agent-memory repositories pushed in 2026, sorted by stars, returns
+new benchmark harnesses at a steady rate. Three of the most active were checked
+against the question this page asks:
+
+| Repository | What it wraps | Forgetting |
+| --- | --- | --- |
+| [supermemoryai/memorybench](https://github.com/supermemoryai/memorybench) | LoCoMo, LongMemEval, MSC, behind a pluggable provider interface | No occurrence of *forget* anywhere in the repository |
+| [zjunlp/MemBase](https://github.com/zjunlp/MemBase) | LoCoMo and LongMemEval, with adapters for Mem0, A-MEM, MemOS | One, incidental |
+| [YuanchenBei/Mem-Gallery](https://github.com/YuanchenBei/Mem-Gallery) | A multimodal long-term conversational dataset of its own | Four, none a deletion test |
+
+So the answer to "is anyone building the missing benchmark?" is that the new
+harnesses are **better plumbing for the same two datasets**. memorybench and
+MemBase both make it easy to run several memory layers over LoCoMo and
+LongMemEval and compare them, which is a real contribution to reproducibility and
+changes nothing about what is being measured. A system that scores well on all
+three of these has demonstrated recall three times.
+
+The one idea worth borrowing is MemBase's
+`trace_memory_lifecycle_with_membase` example, which instruments construction,
+search and evaluation as separate traced phases rather than reporting a single
+end-to-end number. That is the shape [section 3](#3-does-a-bad-score-matter)
+argues for — attributing a score to a stage instead of to a pipeline — and it is
+independent of which dataset is underneath.
+
 ### Named benchmarks outside these repositories
 
 The atlas's convention is to separate what was read in code from what is known
