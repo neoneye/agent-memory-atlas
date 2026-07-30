@@ -70,6 +70,10 @@ when the work happens.
 - [2026-07-29-the-other-agent-memory-atlas.md](2026-07-29-the-other-agent-memory-atlas.md) —
   a different public project with the same name; a link check of its 122 sources
   and what a confidence score determined entirely by one other column is worth.
+- [2026-07-30-a-review-that-found-the-undisclosed-method.md](2026-07-30-a-review-that-found-the-undisclosed-method.md) —
+  a reader reconstructed how the reports are written from reading them, stated it
+  in passing, and was right about a thing the atlas had never disclosed; plus
+  three suggestions declined and one claim pushed back on.
 - [2026-07-30-two-ai-reviews.md](2026-07-30-two-ai-reviews.md) —
   every checkable claim in two favourable reviews held except the one given the
   authority of a direct quotation, which is not in the atlas; plus the field's
