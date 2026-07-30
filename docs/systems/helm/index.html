@@ -195,35 +195,42 @@ free text per notable turn, with a channel tag and a timestamp. Episodes
 are the raw stream; facts are what survives it.</p>
 <p>Confidence is a float, not a state. But there are effectively two
 grades, distinguished by who wrote the row and how it was tagged:</p>
-<pre class="text"><code>                    remember --source observed          remember (untagged/--force)
-                              │                                    │
-                              ▼                                    ▼
-                    ┌──────────────────┐                  ┌──────────────────┐
-     first write →  │ PROVISIONAL      │                  │ ASSERTED         │
-                    │ conf ≤ 0.70      │                  │ conf = requested │
-                    │ evidence = 1     │                  │ (1.0 by default) │
-                    └────────┬─────────┘                  └────────┬─────────┘
-                             │ same value seen again               │
-                             │ conf ← min(req, 0.70 + 0.05·(n-1))  │
-                             │ evidence += 1                       │
-                             ▼                                     │
-                    ┌──────────────────┐                           │
-                    │ CORROBORATED     │                           │
-                    │ conf climbs      │◄──────────────────────────┘
-                    └────────┬─────────┘
-                             │
-        ┌────────────────────┼──────────────────────┬─────────────────────┐
-        │ different value    │ 30d untouched        │ conf &lt; 0.05         │ forget &lt;id&gt;
-        │ for the same key   │ and evidence &lt; 2     │ and evidence &lt; 2    │
-        ▼                    ▼                      ▼                     ▼
-   ┌──────────┐      ┌──────────────┐        ┌────────────┐        ┌────────────┐
-   │ EXPIRED  │      │ DECAYING     │        │  PRUNED    │        │  DELETED   │
-   │ row kept │      │ conf ·= 0.9^ │        │ hard DELETE│        │ hard DELETE│
-   │ readable │      │ (weeks −     │        │ no record  │        │ + vector   │
-   │ via      │      │  log1p(acc)) │        │ kept       │        │ row        │
-   │ history  │      └──────────────┘        └────────────┘        └────────────┘
-   └──────────┘
-   (deletable by the dedupe branch — see §9)</code></pre>
+<pre class="mermaid"><code>stateDiagram-v2
+    direction TB
+    [*] --&gt; Provisional: remember --source observed&lt;br/&gt;conf capped at 0.70, evidence 1
+    [*] --&gt; Asserted: remember untagged or --force&lt;br/&gt;conf as requested, 1.0 by default
+
+    Provisional --&gt; Corroborated: same value again&lt;br/&gt;conf climbs 0.05 per repeat
+    Asserted --&gt; Corroborated: same value again&lt;br/&gt;conf ratchets to the highest seen
+
+    Provisional --&gt; Decaying: 30 days untouched&lt;br/&gt;while evidence is still 1
+    Asserted --&gt; Decaying: 30 days untouched&lt;br/&gt;unless sourced from CLAUDE.md
+    Decaying --&gt; Corroborated: re-asserted with new evidence
+    Decaying --&gt; Pruned: conf falls below 0.05
+
+    Provisional --&gt; Expired: a different value arrives&lt;br/&gt;for the same key
+    Asserted --&gt; Expired: a different value arrives&lt;br/&gt;for the same key
+    Corroborated --&gt; Expired: a different value arrives&lt;br/&gt;for the same key
+
+    Expired --&gt; Deleted: the dedupe branch,&lt;br/&gt;on a legacy database
+    Pruned --&gt; [*]
+    Deleted --&gt; [*]
+
+    note right of Corroborated
+        Immortal against time. Decay and prune both
+        require evidence_count below 2, so only a
+        replacement ends a corroborated fact.
+    end note
+
+    note left of Deleted
+        forget id reaches every state — the delete
+        filters on id alone, expired rows included.
+        Hard DELETE either way, with no record of
+        the value that was removed.
+    end note</code></pre>
+<p>Decay is <code>conf *= 0.9</code> per stale week, with
+<code>log1p(access_count)</code> subtracted from the week count first,
+so retrieval slows the fall without ever reversing it.</p>
 <p>Three properties of this machine matter.</p>
 <p><strong>Corroboration is the only thing that raises belief.</strong>
 Nothing in the system verifies a fact against the world. A repeat

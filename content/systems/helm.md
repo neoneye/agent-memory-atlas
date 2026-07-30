@@ -101,37 +101,44 @@ survives it.
 Confidence is a float, not a state. But there are effectively two grades,
 distinguished by who wrote the row and how it was tagged:
 
-```text
-                    remember --source observed          remember (untagged/--force)
-                              │                                    │
-                              ▼                                    ▼
-                    ┌──────────────────┐                  ┌──────────────────┐
-     first write →  │ PROVISIONAL      │                  │ ASSERTED         │
-                    │ conf ≤ 0.70      │                  │ conf = requested │
-                    │ evidence = 1     │                  │ (1.0 by default) │
-                    └────────┬─────────┘                  └────────┬─────────┘
-                             │ same value seen again               │
-                             │ conf ← min(req, 0.70 + 0.05·(n-1))  │
-                             │ evidence += 1                       │
-                             ▼                                     │
-                    ┌──────────────────┐                           │
-                    │ CORROBORATED     │                           │
-                    │ conf climbs      │◄──────────────────────────┘
-                    └────────┬─────────┘
-                             │
-        ┌────────────────────┼──────────────────────┬─────────────────────┐
-        │ different value    │ 30d untouched        │ conf < 0.05         │ forget <id>
-        │ for the same key   │ and evidence < 2     │ and evidence < 2    │
-        ▼                    ▼                      ▼                     ▼
-   ┌──────────┐      ┌──────────────┐        ┌────────────┐        ┌────────────┐
-   │ EXPIRED  │      │ DECAYING     │        │  PRUNED    │        │  DELETED   │
-   │ row kept │      │ conf ·= 0.9^ │        │ hard DELETE│        │ hard DELETE│
-   │ readable │      │ (weeks −     │        │ no record  │        │ + vector   │
-   │ via      │      │  log1p(acc)) │        │ kept       │        │ row        │
-   │ history  │      └──────────────┘        └────────────┘        └────────────┘
-   └──────────┘
-   (deletable by the dedupe branch — see §9)
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> Provisional: remember --source observed<br/>conf capped at 0.70, evidence 1
+    [*] --> Asserted: remember untagged or --force<br/>conf as requested, 1.0 by default
+
+    Provisional --> Corroborated: same value again<br/>conf climbs 0.05 per repeat
+    Asserted --> Corroborated: same value again<br/>conf ratchets to the highest seen
+
+    Provisional --> Decaying: 30 days untouched<br/>while evidence is still 1
+    Asserted --> Decaying: 30 days untouched<br/>unless sourced from CLAUDE.md
+    Decaying --> Corroborated: re-asserted with new evidence
+    Decaying --> Pruned: conf falls below 0.05
+
+    Provisional --> Expired: a different value arrives<br/>for the same key
+    Asserted --> Expired: a different value arrives<br/>for the same key
+    Corroborated --> Expired: a different value arrives<br/>for the same key
+
+    Expired --> Deleted: the dedupe branch,<br/>on a legacy database
+    Pruned --> [*]
+    Deleted --> [*]
+
+    note right of Corroborated
+        Immortal against time. Decay and prune both
+        require evidence_count below 2, so only a
+        replacement ends a corroborated fact.
+    end note
+
+    note left of Deleted
+        forget id reaches every state — the delete
+        filters on id alone, expired rows included.
+        Hard DELETE either way, with no record of
+        the value that was removed.
+    end note
 ```
+
+Decay is `conf *= 0.9` per stale week, with `log1p(access_count)` subtracted from
+the week count first, so retrieval slows the fall without ever reversing it.
 
 Three properties of this machine matter.
 
