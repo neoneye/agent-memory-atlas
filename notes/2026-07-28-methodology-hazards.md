@@ -211,3 +211,42 @@ method.
 
 **Watch for:** any other atlas entry that cites an arXiv id — each is a place the
 same inversion could have happened, and the check is cheap.
+
+## 8b. The inverse: a repository claim attributed to the paper it cites
+
+**Happened, 2026-07-31.** Following hazard 8, the remaining reports citing an
+arXiv id were checked. Three of four held. [SimpleMem](../content/systems/simplemem.md)'s
+figures match its abstract exactly — 26.4% average F1 on LoCoMo, ~30× less
+inference-time token consumption. [NOOA Memory](../content/systems/nooa-memory.md)
+was the model case: it has a *Sources Beyond the Code* appendix, and every
+section reference resolved except one that pointed at a parent section rather
+than the subsection.
+
+[Second Me](../content/systems/second-me.md) did not. Its report said the paper
+*"reports on Hierarchical Memory Modeling and the Me-Alignment algorithm"*.
+Neither term appears in the paper. Both appear in the repository's README, in a
+Key Features sentence that **cites the paper in the same breath**: *"Using
+Hierarchical Memory Modeling (HMM) and the Me-Alignment Algorithm…"*. The atlas
+read the README, followed its citation, and wrote the README's vocabulary as the
+paper's finding.
+
+**Why it is structural, and why it is not the same as hazard 8.** Hazard 8 is
+reading the code and missing what only the paper says. This is reading the
+project's own prose and passing its citation through unchecked — the failure is
+not *which* source was read but that a **second-hand citation was reported as
+first-hand**. A README that cites a paper is making a claim about that paper, and
+the atlas treats README claims as needing verification everywhere else.
+
+It is also the exact failure the atlas caught an outside reviewer making: [a Grok
+review](2026-07-30-two-ai-reviews.md) quoted a sentence as the atlas's "central
+thesis" that is not in the atlas, at the point where it reached for maximum
+confidence. Same shape, and this time it was the atlas's own sentence.
+
+**Mitigation:** when a report attributes something to a paper, the phrase should
+be findable in the paper. If it came from the README, attribute it to the README
+— which is usually the more interesting sentence anyway, because it says what the
+project wants to be known for.
+
+**Watch for:** the five remaining arXiv ids cited in `content/overview.md`
+(2501.00663, 2510.02373, 2512.13564, 2603.15183, 2604.16548), which were not
+checked in this pass.

@@ -327,12 +327,28 @@ sequential steps across three stores with `try/except` blocks that log and
 continue on ChromaDB failures. A partial delete — the row gone, the embedding
 still present — is silent by construction.
 
-There is no eval harness, no benchmark, and no committed results. The
-[paper](https://arxiv.org/abs/2503.08102) reports on Hierarchical Memory Modeling
-and the Me-Alignment algorithm; those results were not verified against this
-repository, and nothing here reproduces them. That is the atlas's standard
-caveat, and it applies more strongly than usual because the claims are about model
-quality rather than about a retrieval score.
+There is no eval harness, no benchmark, and no committed results.
+
+**A correction, 2026-07-31.** This report previously said the
+[paper](https://arxiv.org/abs/2503.08102) *"reports on Hierarchical Memory
+Modeling and the Me-Alignment algorithm"*. **Neither term appears in the paper.**
+Its sections are Introduction, An Overview of Second Me, Second Me: Practice and
+Result, Applications, and Conclusions; what it reports is a training study —
+Tables 1 and 2 score *Memory (Self)*, *Memory (Third-Party)*, *Context Enhance*
+and *Context Critic* across chain-of-thought strategies with and without DPO.
+
+The two names come from the repository's own README, in a Key Features sentence
+that cites this paper in the same breath: *"Using Hierarchical Memory Modeling
+(HMM) and the Me-Alignment Algorithm, your AI self captures your identity,
+understands your context, and reflects you authentically."* The atlas followed
+that citation and inherited its attribution rather than checking the paper. The
+terms are the project's; they are not the paper's vocabulary.
+
+The caveat the passage existed to make still stands, and is now attached to the
+right thing: the paper's results are about **model quality after training**, not
+about anything in this repository's retrieval path, and nothing here reproduces
+them. That gap matters more than a retrieval-score caveat would, because no
+amount of reading this code can tell you whether the trained model is any good.
 
 ## 11. For Your Own Build
 
