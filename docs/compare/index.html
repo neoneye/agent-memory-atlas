@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and eight agent memory architectures, their retrieval mechanics,
+hundred and nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and eight agent memory architectures, their retrieval
+of one hundred and nine agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and eight agent memory architectures, their retrieval
+of one hundred and nine agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and eight agent memory architectures, their retrieval mechanics,
+hundred and nine agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -158,7 +158,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 61 of
-108 systems here have, and is what the mark means. A scope
+109 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and eight systems do not fall into one hundred and eight
+<p>One hundred and nine systems do not fall into one hundred and nine
 categories. They cluster around eight architectural commitments, and
 most systems belong to more than one — a coding-agent memory can also be
 verification-first, and a host runtime's plugin can also be a hosted
@@ -357,8 +357,9 @@ managed-platform-only.</p>
 <p><code>letta</code>, <code>rainbox</code>, <code>memos</code>,
 <code>mastra-observational-memory</code>, <code>claude-mem</code>,
 <code>npcpy</code>, <code>juggler</code>, <code>gitlord</code>,
-<code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
-<code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
+<code>tokenmizer</code>, <code>agentmemory</code>,
+<code>tencentdb-agent-memory</code>, <code>nanobot</code>,
+<code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
 <code>mateclaw</code>, <code>waku-agent</code>, <code>loongflow</code>,
 <code>buzz</code>, <code>openhuman</code>, <code>aukora-kernel</code>,
@@ -434,6 +435,39 @@ corrects are both in the log, in order, with nothing preferring either.
 Git history is not this atlas's append-only audit column — the rubric
 says so — and this is the clearest case of why that is a different
 mechanism rather than a weaker one.</p>
+<p><strong>TokenMizer has a status for not knowing, and it is the best
+answer in the corpus to the problem supersession usually
+creates.</strong> Every other system here resolves a contradiction by
+picking: the newer decision supersedes, the old row drops out of
+retrieval, and nothing tells the model there was a disagreement.
+TokenMizer's contradiction check asks whether the evidence supports that
+call, and when two decisions share a topic bucket without sharing enough
+context to call one a replacement — its own example is <em>"Use
+PostgreSQL for primary user data"</em> against <em>"Use SQLite for the
+local offline cache"</em> — it marks <strong>both</strong>
+<code>CONTESTED</code> rather than <em>"silently guessing and marking
+one SUPERSEDED — destroying it from resume context on possibly-wrong
+evidence"</em>. The pair is joined by a symmetric
+<code>CONFLICTS_WITH</code> edge, and <code>CONTESTED</code> is the one
+status that <strong>stays visible</strong> in <code>query()</code> and
+<code>to_context_block()</code> where <code>SUPERSEDED</code>,
+<code>ARCHIVED</code> and <code>INVALIDATED</code> are hidden — because
+the point is to put the unresolved pair in front of whoever can settle
+it.</p>
+<p>Its correction record is the richest here too: a
+<code>DecisionTransition</code> stores <em>"what triggered the change,
+why the old decision was wrong, what evidence caused the switch, and how
+confident we are now"</em>, in a table deliberately outside the node and
+edge JSON <em>"so it survives graph pruning"</em>. Most systems record
+that a value was replaced; this records the argument.</p>
+<p>And it measures its own extraction, which almost nothing here does.
+<code>tests/memory_accuracy/test_retention.py</code> runs a synthetic
+thirty-turn coding session past the extractor against a hand-written
+ground truth and asserts recall thresholds — 0.4 for tasks, 0.33 for
+decisions and files. Read those numbers as a disclosure rather than a
+weakness: this is a project that knows roughly two-thirds of a session's
+decisions never reach its graph, has written that down where CI enforces
+it, and has not dressed it up.</p>
 <p><strong>agent-afk answers the criticism this atlas ends the Helm
 report on.</strong> Helm computes a provisional-confidence cap, earns
 increases through corroboration, and then formats the surviving facts as
@@ -3898,6 +3932,35 @@ its rationale and source sessions</td>
 re-proposed after a restart</td>
 </tr>
 <tr>
+<td><code>tokenmizer</code></td>
+<td>A graph node — one of fourteen types (task, decision, file, error,
+endpoint, schema, goal, test…) carrying a label, a summary and one of
+eight statuses</td>
+<td>SQLite: nodes and edges plus a separate
+<code>decision_transitions</code> table that survives graph pruning</td>
+<td><code>query()</code> over the graph, excluding superseded, archived
+and invalidated nodes; <code>to_context_block()</code> renders a resume
+block</td>
+<td>A hybrid extractor over session messages, with an ontology and a
+validator, then a contradiction check on every decision node</td>
+<td>Supersession when the evidence is clear, <code>CONTESTED</code> on
+both sides when it is not, <code>INVALIDATED</code> for explicitly
+wrong, plus pruning</td>
+<td>Per-project graph caches; no scope predicate inside a graph</td>
+<td>A CLI and server for coding sessions — checkpointing, compression, a
+dashboard and a visualiser</td>
+<td>Decay, pruning and compression passes, with idempotence and
+correctness suites of their own</td>
+<td>Eight statuses — pending, in_progress, completed, failed,
+superseded, invalidated, archived, contested — with three excluded from
+retrieval and one deliberately not</td>
+<td>A status for unresolved ambiguity that keeps both sides visible
+instead of guessing, and a committed ground-truth measurement of
+extraction recall</td>
+<td>The redaction functions are unit-tested in isolation and nothing
+asserts a secret fails to reach the rendered context block</td>
+</tr>
+<tr>
 <td><code>verel</code></td>
 <td><code>MemoryRecord</code> fact/rule/schema/failure/skill</td>
 <td>SQLite local plus backend adapters</td>
@@ -4068,14 +4131,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 108:</em> <a
+<p><em>3 of 109:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>8 of 108:</em> <a
+<p><em>9 of 109:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -4083,10 +4146,11 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
+href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 108:</em> <a
+<p><em>9 of 109:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4101,7 +4165,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>61 of 108:</em> <a
+<p><em>61 of 109:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4167,7 +4231,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>12 of 108:</em> <a
+<p><em>13 of 109:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -4179,11 +4243,12 @@ href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a>, <a
 href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a>, <a
+href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>19 of 108:</em> <a
+<p><em>19 of 109:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4206,7 +4271,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>12 of 108:</em> <a
+<p><em>12 of 109:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4237,7 +4302,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Twelve
-repositories of one hundred and eight assert that particular material
+repositories of one hundred and nine assert that particular material
 must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -4298,7 +4363,7 @@ row lives.</p>
 <p><strong>Only these eight probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eight of one hundred and eight is the real figure for the second kind,
+Eight of one hundred and nine is the real figure for the second kind,
 and the two newest are the cheap version of it: a <em>superseded</em>
 value is easy to assert about, because the row is still there to filter
 on. The expensive assertion is that a value the system destroyed does
@@ -7107,7 +7172,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and eight systems, almost none can explain why they are shaped the way
+and nine systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -8598,6 +8663,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/agent-afk/"><code>agent-afk</code></a></li>
 <li><a href="../systems/cortex/"><code>cortex</code></a></li>
 <li><a href="../systems/mnemopi/"><code>mnemopi</code></a></li>
+<li><a href="../systems/tokenmizer/"><code>tokenmizer</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8993,6 +9059,10 @@ href="https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e09
 <li><a href="https://github.com/can1357/oh-my-pi">can1357/oh-my-pi</a>
 at <a
 href="https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835641624757"><code class="commit-id" title="4df68d60438423b384b2b47fb3d6835641624757">4df68d60…</code></a></li>
+<li><a
+href="https://github.com/Shweta-Mishra-ai/tokenmizer">Shweta-Mishra-ai/tokenmizer</a>
+at <a
+href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf28c5cd12532ba337aeee"><code class="commit-id" title="ed7860e626ccc5c67fdf28c5cd12532ba337aeee">ed7860e6…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -9316,7 +9386,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and eight — <a
+<strong>three</strong> of one hundred and nine — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
