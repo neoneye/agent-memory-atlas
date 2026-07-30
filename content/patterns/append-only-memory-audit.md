@@ -153,6 +153,30 @@ drops the earliest accesses, which are the ones explaining how a memory became
 established. Both arrangements are defensible; only one of them is usually
 chosen deliberately.
 
+[CSM](../../systems/csm/) is the atlas's only implementation of the third bullet
+below — *distinguish considered, returned, and injected memories* — and it is
+worth copying whole. Alongside a conventional mutation stream (`memory_events`
+for created/deleted/retention-cleanup, `memory_merges` for each merge with its
+normalized hash) it writes a second pair of tables for **assembly**:
+`context_injection_events` holds one row per injected block with an idempotency
+key, a `block_hash`, a `builder_version` and a `config_hash`, and
+`context_injection_items` holds one row per *candidate*, carrying its layer,
+position, selection rank and score, a `disposition` of
+`injected | trimmed | omitted`, and a `selection_reason_code` drawn from a
+closed set — `importance_rank`, `recent_session`, `explicit_preference`,
+`active_goal`, `budget_trim`, `layer_budget_exhausted`, `filter_rejection`,
+`empty_source`.
+
+The distinction that makes it useful is between the last three. A mutation log
+tells you the memory exists; a recall log tells you it was found; only this tells
+you it was found, ranked fourth, and lost to a layer budget — which is the
+actual answer to "why didn't the agent know that?" and the one no other audit
+shape in this atlas can produce. The `builder_version` and `config_hash` matter
+for the same reason: without them, an old row cannot be read against the
+selection rules that produced it. The cost is one row per considered item per
+turn, which is the highest write volume of any audit design here, and CSM
+attaches no retention policy to it.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

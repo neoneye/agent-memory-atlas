@@ -169,6 +169,34 @@ half of this pattern and provenance is the load-bearing half: without it,
 repeated exposure to the same wrong value is indistinguishable from evidence,
 and a bad belief can be raised but not traced.
 
+[CSM](../../systems/csm/) has the half Helm is missing, and adds a gate the rest
+of this section does not: **evidence diversity, not just evidence count.** A
+promotion candidate carries `source_packet_ids` pointing back to rows in
+`experience_packets`, and `BeliefPromotionEngine` joins those ids to
+`experience_packets.session_id` and counts *distinct sessions* before promoting.
+That separates a pattern from a loop — one runaway session can reinforce the
+same candidate fifty times and still be a single observation, which every
+count-based threshold in this atlas will happily read as overwhelming evidence.
+Each decision also carries a `thresholdChecks` object recording
+actual-versus-required for all five gates, so a promotion report explains its own
+refusals; and a candidate with any contradiction returns `needs_review` rather
+than a silent skip.
+
+Three things blunt it at the pinned commit. The engine ships **disabled and
+dry-run by default**, and `minSessions` defaults to `1`, which makes the gate
+that distinguishes this implementation a no-op until an operator raises it. A
+threshold whose default value disables it is a design that has been thought
+through and then not committed to — and the number to ship is the one that makes
+the mechanism do something.
+
+The third is worse and generalizes further. The parallel belief store this feeds
+declares `candidate | promoted | rejected | stale`, the injected beliefs layer
+admits only `promoted`, and **no code path writes `promoted`** — so the evidence
+chain is built, maintained, decayed and contradicted, and terminates in a state
+nothing can enter. Evidence-before-belief has a last mile that is easy to leave
+unbuilt precisely because the interesting work is upstream of it: if you build
+the ladder, commit a test that something can climb it.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

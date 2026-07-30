@@ -337,6 +337,30 @@ read as a warning. The same instinct governs its MCP surface, which
 refuses the fallback outright and returns a message naming the explicit
 command instead — an agent tool result carrying another project's memory
 is contamination, not convenience.</p>
+<p><a href="../../systems/csm/">CSM</a> contributes two moves and one
+warning. The first move is that <strong>the scope is not an
+argument</strong>: every public memory tool is constructed with its
+<code>projectId</code> bound at registration and the parameter is absent
+from the tool's argument schema, so the model has no way to express a
+cross-project read — verified by a committed test asserting the tool
+passes its bound project and <code>searchMode: 'project'</code>. The
+second is that the read path <strong>fails closed</strong>: project mode
+with no project id appends the predicate <code>1=0</code> rather than
+dropping the filter, with a test asserting the empty result and the
+message <em>"project mode without a project ID must fail closed"</em>.
+Both are cheap, and together they close the two failure modes this
+pattern most often leaves open — a caller widening its own scope, and a
+refactor that turns a missing scope into a table scan.</p>
+<p>The warning is about <strong>derived</strong> state. CSM's
+<code>memories</code> table is scoped rigorously; its
+<code>self_model_capabilities</code> table has no
+<code>project_id</code> at all, and the updater that fills it reads
+<code>experience_packets</code> with no project filter. So capability
+confidence learned in one repository is computed from every repository
+and injected into all of them. Scoping the store is the visible half of
+the work; scoping everything the store is projected into is the half
+that gets skipped, and a derived table is exactly where nobody looks for
+a leak.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>

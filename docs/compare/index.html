@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and eleven agent memory architectures, their retrieval
+hundred and twelve agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and eleven agent memory architectures, their retrieval
+of one hundred and twelve agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and eleven agent memory architectures, their retrieval
+of one hundred and twelve agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and eleven agent memory architectures, their retrieval
+hundred and twelve agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -157,8 +157,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 61 of
-111 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 62 of
+112 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,8 +177,8 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and eleven systems do not fall into one hundred and
-eleven categories. They cluster around eight architectural commitments,
+<p>One hundred and twelve systems do not fall into one hundred and
+twelve categories. They cluster around eight architectural commitments,
 and most systems belong to more than one — a coding-agent memory can
 also be verification-first, and a host runtime's plugin can also be a
 hosted service. The families below are lenses, not bins.</p>
@@ -735,7 +735,8 @@ instructing a behaviour and enforcing one.</p>
 <code>ai-memory</code>, <code>ctx</code>, <code>optmem</code>,
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
 <code>reme</code>, <code>acontext</code>, <code>logseq</code>,
-<code>everos</code>, <code>ecc</code>, <code>skales</code></p>
+<code>everos</code>, <code>ecc</code>, <code>skales</code>,
+<code>csm</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -797,18 +798,55 @@ session boundary — one checkpoint written when a session ends, one
 skimmable briefing injected when the next begins — and spends its
 complexity budget on checking the extraction rather than on retrieving
 from it.</p>
+<p><strong>CSM is the family's maximalist, and the one that keeps
+receipts on its own context window.</strong> Forty-six tables and 55,000
+lines behind an OpenCode plugin, with no language model anywhere on the
+write path — the sole outbound call in the runtime is an embedding
+request. Two mechanisms are worth the visit. Its
+<code>context_injection_items</code> table records <em>every candidate
+considered</em> for the re-entry block with a position, a score, a
+disposition of <code>injected | trimmed | omitted</code>, and a reason
+code separating <code>budget_trim</code> from
+<code>layer_budget_exhausted</code> from <code>filter_rejection</code>;
+most of this atlas can say what it injected, and CSM can say what came
+fourth when three fit. And its work ledger stores each file edit as
+before/after hashes plus a line-hash multiset, then <strong>re-reads the
+file later</strong> to classify the edit <code>active</code>,
+<code>partially_superseded</code>, <code>superseded</code> or
+<code>reverted</code> — a memory of work checked against the artifact it
+claims to have produced, which is the <a
+href="#verify-memory-against-its-subject">verify-memory-against-its-subject</a>
+move applied to the agent's own output rather than to a document. The
+disconnect is in the plumbing: merge sets <code>superseded_by</code>,
+the archive pass sets <code>archived_at</code>, and the retrieval
+WHERE-clause builder filters on neither, so a memory correctly
+identified as a duplicate keeps answering searches while the governance
+report calls the store clean. And the belief tier below it never arrives
+at all: the injected <code>beliefs</code> layer admits only
+<code>status === 'promoted'</code>, and no code path in the repository
+writes <code>promoted</code>, so a consolidator that runs every two
+minutes computing confidence, uncertainty and contradiction counts feeds
+a section that renders "No consolidated beliefs yet." forever.</p>
 <p><strong>ECC makes the honest declaration the rest of this family
-avoids.</strong> Its vault schema gives <code>trust</code> an enum of
-exactly one value — <code>unreviewed</code> — and documents why:
-verified knowledge is promoted into a governed artifact elsewhere rather
-than upgraded in place, so the store never claims authority it cannot
+avoids</strong>, and reading it next to CSM is the point of putting them
+together. Its vault schema gives <code>trust</code> an enum of exactly
+one value — <code>unreviewed</code> — and documents why: verified
+knowledge is promoted into a governed artifact elsewhere rather than
+upgraded in place, so the store never claims authority it cannot
 support. Set beside the systems here carrying a <code>confidence</code>
 float nothing revises, a field that can only say "not checked" is the
 more truthful design. Its <code>status</code> enum is the counterweight:
 <code>active | rejected | superseded</code> is validated and filtered on
 both read paths, and every write sets <code>active</code>, so two thirds
 of the state machine is honoured on read and reachable only by
-hand-editing a Markdown file.</p>
+hand-editing a Markdown file. That is the same defect as CSM's beliefs
+layer with the sign reversed, and the comparison is what makes it
+legible: ECC's unreachable states are the <em>withholding</em> ones, so
+the failure is that nothing can be rejected; CSM's unreachable state is
+the <em>admitting</em> one, so the failure is that nothing can be
+believed. In both cases a read path was written against a state machine
+nobody checked a writer could reach, and in both cases it fails by
+rendering less rather than by raising anything.</p>
 <p><strong>Skales is the atlas's clearest case of a deletion affordance
 that does not delete.</strong> Its memory page renders a bin icon beside
 every known fact; clicking it confirms <em>"Delete fact «key»?"</em>,
@@ -844,7 +882,9 @@ defines a <code>created-by-ref</code> property that the MCP write path
 never sets — so the store cannot answer "what did the agent change?",
 and the agent has no delete verb with which to correct itself.</p>
 <p>Tradeoff: operationally simple and inspectable; no answer to hosted
-ranking, multi-tenancy, or rich user modelling.</p>
+ranking, multi-tenancy, or rich user modelling. CSM is the exception to
+the first half and not to the second — Postgres, pgvector and a local
+embedding server to stand up, and still exactly one scope axis.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h3>
 <p><code>graphiti</code>, <code>cognee</code>, <code>hipporag</code>,
@@ -2079,6 +2119,34 @@ test that a rooted view cannot recall a sibling's records; recall that
 reports what it looked for and did not find</td>
 <td>An LLM on the write path is authorised to delete existing records,
 with no tombstone, no audit and no human in the loop</td>
+</tr>
+<tr>
+<td><code>csm</code></td>
+<td>Typed memory row across eleven types, plus experience packets,
+AgentBook events, and work-ledger file changes</td>
+<td>PostgreSQL with pgvector HNSW across 46 tables; a deliberately
+narrower SQLite core</td>
+<td>RRF over vector, Postgres FTS, and entity boost, weighted
+0.35/0.25/0.35 with a 0.05 recency term and a 168-hour half-life</td>
+<td>Fully deterministic — no LLM on the write path; synchronous on the
+embedding call</td>
+<td>Exact-content supersede, flag-based archive, and a capped
+per-project TTL delete — none of which the read path filters on</td>
+<td>project_id bound at tool registration and applied on the read path,
+failing closed to <code>1=0</code> when absent</td>
+<td>OpenCode plugin over eleven hooks, four of them experimental; plus a
+stdio Codex MCP bridge</td>
+<td>In-process timers — distiller flush, belief consolidation,
+self-model replay, doc flush; no queue or worker</td>
+<td>Provenance fields on every row and a known-versus-inferred claim
+classifier; no status on a memory, and the belief store's only admitting
+state is one no code path writes</td>
+<td>Per-item injection provenance recording what was trimmed and why; a
+work ledger that re-reads the file to decide whether an edit
+survived</td>
+<td>Superseded and archived memories still answer searches; three read
+paths filter on states no writer produces, so the whole belief tier
+renders empty</td>
 </tr>
 <tr>
 <td><code>ctx</code></td>
@@ -4190,14 +4258,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 111:</em> <a
+<p><em>3 of 112:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>9 of 111:</em> <a
+<p><em>9 of 112:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -4209,7 +4277,7 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 111:</em> <a
+<p><em>9 of 112:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4224,7 +4292,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>61 of 111:</em> <a
+<p><em>62 of 112:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4241,6 +4309,7 @@ href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cortex/"><code>cortex</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
+href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/ecc/"><code>ecc</code></a>, <a
@@ -4290,8 +4359,9 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>15 of 111:</em> <a
+<p><em>16 of 112:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
+href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/lethe/"><code>lethe</code></a>, <a
@@ -4309,7 +4379,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>19 of 111:</em> <a
+<p><em>19 of 112:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4332,11 +4402,12 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>14 of 111:</em> <a
+<p><em>15 of 112:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
+href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
@@ -4364,13 +4435,13 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Fourteen
-repositories of one hundred and eleven assert that particular material
+<p><strong>Negative evidence is almost never tested.</strong> Fifteen
+repositories of one hundred and twelve assert that particular material
 must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
 more than the count.</p>
-<p><strong>Four assert a boundary:</strong> that a principal cannot
+<p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
 creates a memory under one scope, searches under another, and asserts
@@ -4389,8 +4460,13 @@ three records written under <code>/other/scope</code>,
 <code>Memory</code> opened with <code>root_scope="/crew/crew-a"</code>,
 and an assertion that recall returns exactly one result and it is the
 rooted one — a boundary test with its own positive control in the same
-three lines.</p>
-<p>All four of those systems also hold <code>scope_enforced</code>.
+three lines. <a href="../systems/csm/">CSM</a> asserts the degenerate
+case the other four leave implicit: <code>searchMemories</code> called
+in project mode with <em>no</em> project id must return <code>[]</code>,
+with the assertion message spelling out the intent — <em>"project mode
+without a project ID must fail closed"</em>. Cheap, and it is the branch
+a refactor is most likely to turn into an unscoped table scan.</p>
+<p>All five of those systems also hold <code>scope_enforced</code>.
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
@@ -4426,7 +4502,7 @@ row lives.</p>
 <p><strong>Only these nine probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Ten
-of one hundred and eleven is the real figure for the second kind, and
+of one hundred and twelve is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
@@ -4960,6 +5036,26 @@ href="#structural-loss-guard-on-generated-rewrites">structural-loss
 guard</a> applied to context assembly rather than to consolidation, and
 it is the cheapest way to let a model prettify memory without letting it
 edit it.</p>
+<p><code>csm</code> is the one that instruments the assembly itself. Its
+re-entry block is eight named layers under a
+<strong>2,100-character</strong> ceiling with per-layer budgets and two
+layers marked never-trim, which is already stricter than most; the
+contribution is that every candidate item is written to
+<code>context_injection_items</code> with its position, selection score,
+a disposition of <code>injected | trimmed | omitted</code>, and a reason
+code — <code>budget_trim</code>, <code>layer_budget_exhausted</code>,
+<code>filter_rejection</code>, <code>empty_source</code> — beside an
+event row carrying a <code>builder_version</code> and a
+<code>config_hash</code>. When a reader asks why the agent did not know
+something, every other system in this section can offer the block that
+was injected; this one can name the item that lost, the layer whose
+budget it lost to, and the builder version that made the call. Set
+against that, CSM sits at the Helm end of the cache question and
+further: <strong>twelve</strong> injection stages run inside the host's
+system-prompt transform on every request, so the prefix differs each
+turn by construction. The block is small enough that the tokens do not
+matter; the cache miss it forces every turn is the cost, and nothing in
+the repository measures it.</p>
 <h3 id="correction">Correction</h3>
 <p>This is where systems diverge sharply.</p>
 <p><code>verel</code> and <code>rainbox</code> have the strongest
@@ -4989,6 +5085,23 @@ row; the dedupe pass can delete superseded history and sum retracted
 evidence onto the survivor. Any system that expresses correction as a
 nullable column needs a view or an accessor, because "remember the
 predicate" is not an invariant.</p>
+<p><code>csm</code> is the cleanest demonstration of that sentence in
+the atlas, because it fails the test on the main path rather than in
+three stragglers. Its correction machinery is careful — an exact-content
+merge that sets <code>superseded_by</code> and appends a row to a
+<code>memory_merges</code> audit table, and an archive pass that stamps
+<code>archived_at</code>, a reason, a batch id and a note, with a
+documented un-archive that sets them all back to NULL. Then the
+retrieval WHERE-clause builder that serves vector, full-text and entity
+search composes project, type, tag and importance predicates and
+mentions <strong>neither column</strong>, and neither do the two
+fallback paths. The re-entry compiler does filter
+<code>archived_at IS NULL</code>, so the same store answers differently
+depending on which door you knock on, and the governance report — which
+does read both columns — will describe a store as cleanly deduplicated
+while <code>csm_memory_search</code> keeps returning the duplicates. Two
+predicates at three query sites separate the design from its behaviour,
+and no test asserts the difference.</p>
 <p>Graphiti closes a fact's validity interval and retains history, which
 is the strongest temporal correction model here, but it does not mark
 claims verified/rejected. Hindsight rewrites or merges observations
@@ -5660,6 +5773,14 @@ arrive as guarded <code>ALTER</code>s re-run on every process start and
 the active-row invariant is a partial unique index over
 <code>(kind, key) WHERE expired_at IS NULL</code>; vector side tables
 created lazily in <code>workspace/memory/embed.mjs</code>.</li>
+<li><code>csm</code>: <code>memories</code> in
+<code>src/schema/memory-table-schema.ts</code>; the other forty-five
+tables across <code>src/schema/</code> plus
+<code>belief-knowledge-schema.ts</code>,
+<code>candidate-schema.ts</code>,
+<code>experience-packet-schema.ts</code>,
+<code>self-model-schema.ts</code> and
+<code>work-ledger-schema.ts</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -5792,6 +5913,11 @@ evidence ratchet, supersession, gated supersede episode; hot-path
 capture in <code>index.js:572-583</code>; the tool wrapper
 <code>workspace/tools/impl/memory.remember.mjs</code>, which omits
 <code>--source</code> and so never trips the cap.</li>
+<li><code>csm</code>: <code>MemoryManager.saveMemory()</code> in
+<code>src/memory-manager.ts:185</code> — provenance defaults,
+project-ownership check, transcript dedup, redaction, type quota,
+embedding, insert, chunk dual-write; deterministic extraction in
+<code>src/memory-extractor.ts</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -5909,6 +6035,12 @@ recency-ordered candidate window, hand-written BM25, a semantic arm that
 is MiniLM if cached and TF-IDF cosine otherwise, RRF at k=60, a
 confidence weight and a key-match boost, and a separate episode scorer
 with a 30-day recency term.</li>
+<li><code>csm</code>: <code>hybridSearch()</code> in
+<code>src/hybrid-search.ts:26</code> over
+<code>src/hybrid-search-sources.ts</code> and
+<code>src/hybrid-search-ranking.ts</code>; the three fallback tiers and
+the fail-closed scope branch in
+<code>src/memory-manager.ts:512</code>.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -6008,6 +6140,11 @@ shaping.</li>
 <code>workspace/memory/refresh-index.mjs</code> writing
 <code>INDEX.md</code>, imported by the <code>@memory/INDEX.md</code>
 line at <code>workspace/CLAUDE.md:15</code>.</li>
+<li><code>csm</code>: <code>runSystemTransform()</code> in
+<code>src/hooks/system-transform.ts:31</code> — twelve stages per
+request; layer construction in <code>src/reentry-layer-builder.ts</code>
+under the budgets in <code>src/reentry-contract.ts</code>; per-item
+provenance in <code>src/context-injection-logger.ts</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -6104,6 +6241,10 @@ manager to restart, and a weekly deep review whose completion mark is
 stamped only on a clean exit; then
 <code>workspace/memory/consolidate.mjs</code> (distil, decay, prune,
 dedupe) and an index rewrite after every tick.</li>
+<li><code>csm</code>: no worker — in-process timers only: a 2-second
+debounced doc flush in <code>src/hooks/tool-execute-memory.ts</code>, a
+120-second belief consolidation, and self-model replay in
+<code>src/self-model-updater.ts</code>.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -6193,6 +6334,11 @@ contract, memory tools, CLI, and doctor contracts.</li>
 <code>workspace/tools/registry.json</code>, and Discord, iMessage and
 terminal front doors converging on one Claude Code session keyed
 <code>'owner'</code> in <code>workspace/sessions.mjs</code>.</li>
+<li><code>csm</code>: OpenCode hooks in
+<code>src/hooks-registration.ts:35</code> and about fifty tools in
+<code>src/hooks/tool-registry.ts</code>; a stdio Codex MCP server in
+<code>src/codex-mcp-server.ts</code> with
+<code>src/codex-bridge-extra-ops.ts</code>.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <p>What these harnesses do and do not measure — and why a bad benchmark
@@ -6361,6 +6507,11 @@ committed 25-issue self-audit — severity, <code>file:line</code>,
 already in the repo — and every issue I checked is closed at the pinned
 commit, including the shared engine-resolution module the report itself
 recommended.</li>
+<li><code>csm</code>: 1,686 <code>test(</code>/<code>it(</code> call
+sites across 189 files; the committed <code>full-test-output.txt</code>
+records 808 passing across 172 suites. Retrieval ground truth is
+<code>test/benchmark-hybrid.ts</code> — eight seeded memories, five
+labelled queries, hybrid against vector-only.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -6579,8 +6730,9 @@ capture</a>.</p>
 <code>claude-mem</code>, <code>llm-wiki-memory</code>,
 <code>tencentdb-agent-memory</code>, and message-first
 <code>honcho</code>; <code>engram</code> demonstrates the small
-no-extraction baseline; <code>daimon</code> applies it <em>beside</em>
-an LLM path rather than instead of one.</p>
+no-extraction baseline; <code>csm</code> is the largest instance by an
+order of magnitude; <code>daimon</code> applies it <em>beside</em> an
+LLM path rather than instead of one.</p>
 <p>Persist a scoped event before any model call, make it searchable
 through exact keys or lexical metadata, then enrich it asynchronously
 only when useful. This keeps provider latency and outages out of the
@@ -6609,6 +6761,29 @@ uncorroborated, so the one thing the owner said <em>explicitly</em> is
 the row most exposed to the confidence-floor prune. A zero-LLM capture
 path still has to decide what a memory is <em>about</em>, and a
 timestamp is not an answer.</p>
+<p><code>csm</code> shows the pattern held at scale and the
+<em>other</em> thing it still has to decide. Forty-six tables, 55,000
+lines, and the only outbound call in the entire runtime is an embedding
+request — extraction is a deterministic distiller that stamps
+<code>extractionMethod: 'deterministic'</code> on what it writes,
+classification is regexes, promotion is five numeric thresholds. Keying
+is handled properly, which is where Helm failed: a partial unique index
+on pending candidates, a <code>messageId</code> index on transcripts
+with a unique-violation handler that returns the existing row rather
+than failing the capture, and an <code>md5</code> index on distilled
+summaries. What it did not decide is what a memory should be
+<em>called</em>. Its operational ledger declares twenty-six event types
+and its one writer — a <code>classifyToolEvent</code> switch on the tool
+name — can emit seven, so <code>decision</code>,
+<code>blocker_identified</code>, <code>verification_evidence</code> and
+<code>goal_achieved</code> are schema that no code path ever produces.
+The repository's own committed front page is the evidence: 5,111 events
+across 49 sessions, and it reports no goal, no phase, no blockers, and a
+recent-work list in which seven of nine entries are truncated dumps of
+CSM's own memory tools. Determinism removes the hallucination; it does
+not supply the judgement about what was worth writing down, and a
+classifier that falls through to <code>note</code> will happily record
+thousands of events that say nothing.</p>
 <h3 id="decay-and-reinforcement">Decay and reinforcement</h3>
 <p>Pattern guide: <a href="../patterns/decay-and-reinforcement/">Decay
 and reinforcement</a>.</p>
@@ -6796,9 +6971,10 @@ an expensive class cannot starve a cheap one — which is the difference
 between a shared budget and a race.</p>
 <h3 id="verify-memory-against-its-subject">Verify memory against its
 subject</h3>
-<p>Repos: <code>magic-context</code> and <code>daimon</code>; the
-procedural analogue is <code>voyager</code>; contrast the judgment-based
-gates in <code>verel</code> and <code>rainbox</code>.</p>
+<p>Repos: <code>magic-context</code>, <code>daimon</code> and
+<code>csm</code>; the procedural analogue is <code>voyager</code>;
+contrast the judgment-based gates in <code>verel</code> and
+<code>rainbox</code>.</p>
 <p>Where a memory describes something inspectable, do not adjudicate it
 — check it. Map each memory to the artifacts it is about, record a
 per-memory verification timestamp, and let a change in those artifacts
@@ -6832,6 +7008,30 @@ question that remains is latency and blast radius for the minority of
 referents that are remote, rather than adjudication for any of them. Its
 own stated measurement goal is the right one and still unanswered — how
 often a carried repo-state claim is already false by the next read.</p>
+<p><code>csm</code> is the third instance and moves the subject again:
+not a document the agent read, but <strong>the edit the agent
+made</strong>. Its work ledger stores each file change as a before hash,
+an after hash, and a lineage manifest of per-line SHA-256 counts, then
+re-reads the file under a per-file capture lease and classifies the
+change <code>active</code>, <code>partially_superseded</code>,
+<code>superseded</code> or <code>reverted</code> by comparing surviving
+line multiplicities against the manifest — <code>superseded</code> when
+nothing survives, <code>active</code> when everything does, partial in
+between, with a terminal state that will not be reopened. There is no
+model in it and no diff library either; it is line hashes and set
+arithmetic.</p>
+<p>That extends the pattern's reach in a direction the other two do not
+cover. Magic Context and Daimon verify claims <em>about</em> an
+artifact; CSM verifies a claim about its own <em>authorship</em> of one.
+The distinction matters because the failure it catches is specific and
+common: an agent that says "I fixed the retry logic" in session three,
+when session five rewrote the file and the fix is gone. Every system in
+this atlas that stores a session summary carries that risk, and this is
+the only one that can answer it. The obvious gap is that the ledger
+tracks what survived in the file and not whether it was ever
+<em>right</em> — survival is a weaker claim than correctness, and CSM's
+own self-model shows what happens when that distinction is dropped
+elsewhere in the same codebase.</p>
 <h3 id="diffusion-instead-of-traversal">Diffusion instead of
 traversal</h3>
 <p>Repo: <code>hipporag</code>; contrast with BFS traversal in
@@ -7079,6 +7279,22 @@ append-only; derive counters from events" recommendation, implemented.
 Ranged against Holographic's in-place mutation, RainBox's human gate,
 and MetaClaw's replay-gated policy tuning, it is the option that
 preserves the most future choices.</p>
+<p><code>csm</code> shows the failure one level further down, where the
+telemetry is not even about the memory. Its self-model maintains a
+confidence and an uncertainty per capability, updated from experience
+packets, with two thoughtful guards: a hard ceiling of 0.9 because
+<em>"raw tool-call success cannot prove 100% capability"</em>, and a
+diminishing-returns rate after twenty observations. Both guard the
+<em>number</em>. Neither guards the <em>observable</em>, which
+<code>determineOutcome</code> defines as the absence of an error field
+and a zero exit code — so what is being counted is that the edit tool
+returned, not that the edit was right. The repository's own committed
+state reports
+<code>code_editing confidence=0.900 successes=3849 failures=0</code>. A
+capability estimate that has never once observed a failure across 3,849
+attempts is not a calibrated belief; it is a tautology with a decimal
+place. Careful arithmetic on the wrong signal is still the wrong
+signal.</p>
 <h3 id="the-harnesss-own-output-captured-as-evidence">The harness's own
 output captured as evidence</h3>
 <p>A system that generates text and also captures text will eventually
@@ -7090,10 +7306,24 @@ exclude its host's compaction handoff summaries, which arrive as
 <code>role="user"</code> messages and reliably matched its own
 decision-extraction regexes, so the compactor's output was being stored
 as durable facts on every context rollover.</p>
-<p>Both fixes arrived after the bug. Any system with automatic capture
-should have a test asserting that its own generated scaffolding —
-summaries, envelopes, tool wrappers, injected memory blocks — cannot
-re-enter as evidence.</p>
+<p><code>csm</code> is the third case and the unfixed one, in the store
+whose whole purpose is to answer "what is happening in this project".
+Its AgentBook journal appends an event for tool executions, summarised
+as the first 200 characters of the tool's output — and the
+<code>csm_*</code> tools are not excluded, so
+<code>csm_memory_list</code>, <code>csm_continuity_report</code>,
+<code>csm_agentbook_events</code> and <code>csm_self_model</code> all
+land in the project's operational history as project activity. The
+committed <code>AGENTBOOK_STATE.md</code> at the pinned commit is the
+proof, because it is generated: of the nine entries under "Recent Work",
+seven are truncated dumps of CSM reading its own memory, and none
+describes work on the repository. The store did not fail; it faithfully
+recorded the wrong thing.</p>
+<p>All three fixes arrived after the bug, or have not arrived. Any
+system with automatic capture should have a test asserting that its own
+generated scaffolding — summaries, envelopes, tool wrappers, injected
+memory blocks, and its own tool surface — cannot re-enter as
+evidence.</p>
 <h3 id="one-score-for-truth-and-reachability">One score for truth and
 reachability</h3>
 <p>Separating epistemic confidence from retrieval strength is one of the
@@ -7240,7 +7470,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and eleven systems, almost none can explain why they are shaped the way
+and twelve systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -8500,6 +8730,38 @@ or project shares it (there is no scope to add), or deletion has to
 survive re-derivation (<code>forget</code> and prune are hard deletes
 with no record).</li>
 </ul>
+<h3 id="csm"><code>csm</code></h3>
+<ul>
+<li>Best idea: <code>context_injection_items</code> — every candidate
+for the injected block recorded with its position, score, a disposition
+of <code>injected | trimmed | omitted</code> and a reason code, so "why
+didn't the agent know that?" becomes a query instead of an
+argument.</li>
+<li>Biggest risk: correction and retrieval have drifted apart. Merge
+sets <code>superseded_by</code>, archive sets <code>archived_at</code>,
+and the search WHERE-clause builder filters on neither — so the
+governance report calls the store clean while search keeps returning the
+duplicates.</li>
+<li>Most reusable component: <code>src/work-ledger-lineage.ts</code> —
+about 130 lines of line-hash multiset arithmetic that decide whether an
+edit the agent made still exists in the file, with no model and no diff
+library.</li>
+<li>Maturity impression: finished-looking in a way it is not. 55,000
+lines across 392 files, 46 tables, 189 test files, a checksummed
+migration ledger that fails fast on an unknown history, a committed
+backup/restore drill in the release gate — beside a beliefs layer that
+admits only a status nothing writes, a review queue whose table has no
+INSERT, and a self-model reporting 3,849 successes and zero failures
+because it counts exit codes.</li>
+<li>Study when: you want to see how far deterministic capture scales, or
+you want the two mechanisms above, which are each a few hundred lines
+and copy cleanly.</li>
+<li>Do not copy when: more than one person or tenant will share the
+deployment (there is one scope axis and a cross-project self-model), you
+cannot run Postgres and a local embedding server, or you need the SQLite
+mode to do hybrid retrieval — it degrades to substring matching without
+saying so.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -8734,6 +8996,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/tokenmizer/"><code>tokenmizer</code></a></li>
 <li><a href="../systems/zerostack/"><code>zerostack</code></a></li>
 <li><a href="../systems/lethe/"><code>lethe</code></a></li>
+<li><a href="../systems/csm/"><code>csm</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -9140,6 +9403,8 @@ href="https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa6
 <li><a href="https://github.com/deeplethe/lethe">deeplethe/lethe</a> at
 <a
 href="https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495"><code class="commit-id" title="b6053b7bdacc78a91b9ea4bb25f32edad278c495">b6053b7b…</code></a></li>
+<li><a href="https://github.com/NovasPlace/CSM">NovasPlace/CSM</a> at <a
+href="https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e"><code class="commit-id" title="21d00969c25ca170ef40bc07e6811beb5e78c99e">21d00969…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -9463,7 +9728,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and eleven — <a
+<strong>three</strong> of one hundred and twelve — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a

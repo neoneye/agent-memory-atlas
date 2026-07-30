@@ -241,6 +241,34 @@ memory. The price is written into the design: a ring buffer drops the
 earliest accesses, which are the ones explaining how a memory became
 established. Both arrangements are defensible; only one of them is
 usually chosen deliberately.</p>
+<p><a href="../../systems/csm/">CSM</a> is the atlas's only
+implementation of the third bullet below — <em>distinguish considered,
+returned, and injected memories</em> — and it is worth copying whole.
+Alongside a conventional mutation stream (<code>memory_events</code> for
+created/deleted/retention-cleanup, <code>memory_merges</code> for each
+merge with its normalized hash) it writes a second pair of tables for
+<strong>assembly</strong>: <code>context_injection_events</code> holds
+one row per injected block with an idempotency key, a
+<code>block_hash</code>, a <code>builder_version</code> and a
+<code>config_hash</code>, and <code>context_injection_items</code> holds
+one row per <em>candidate</em>, carrying its layer, position, selection
+rank and score, a <code>disposition</code> of
+<code>injected | trimmed | omitted</code>, and a
+<code>selection_reason_code</code> drawn from a closed set —
+<code>importance_rank</code>, <code>recent_session</code>,
+<code>explicit_preference</code>, <code>active_goal</code>,
+<code>budget_trim</code>, <code>layer_budget_exhausted</code>,
+<code>filter_rejection</code>, <code>empty_source</code>.</p>
+<p>The distinction that makes it useful is between the last three. A
+mutation log tells you the memory exists; a recall log tells you it was
+found; only this tells you it was found, ranked fourth, and lost to a
+layer budget — which is the actual answer to "why didn't the agent know
+that?" and the one no other audit shape in this atlas can produce. The
+<code>builder_version</code> and <code>config_hash</code> matter for the
+same reason: without them, an old row cannot be read against the
+selection rules that produced it. The cost is one row per considered
+item per turn, which is the highest write volume of any audit design
+here, and CSM attaches no retention policy to it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

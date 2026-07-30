@@ -262,6 +262,37 @@ them. Corroboration is the affordable half of this pattern and
 provenance is the load-bearing half: without it, repeated exposure to
 the same wrong value is indistinguishable from evidence, and a bad
 belief can be raised but not traced.</p>
+<p><a href="../../systems/csm/">CSM</a> has the half Helm is missing,
+and adds a gate the rest of this section does not: <strong>evidence
+diversity, not just evidence count.</strong> A promotion candidate
+carries <code>source_packet_ids</code> pointing back to rows in
+<code>experience_packets</code>, and <code>BeliefPromotionEngine</code>
+joins those ids to <code>experience_packets.session_id</code> and counts
+<em>distinct sessions</em> before promoting. That separates a pattern
+from a loop — one runaway session can reinforce the same candidate fifty
+times and still be a single observation, which every count-based
+threshold in this atlas will happily read as overwhelming evidence. Each
+decision also carries a <code>thresholdChecks</code> object recording
+actual-versus-required for all five gates, so a promotion report
+explains its own refusals; and a candidate with any contradiction
+returns <code>needs_review</code> rather than a silent skip.</p>
+<p>Three things blunt it at the pinned commit. The engine ships
+<strong>disabled and dry-run by default</strong>, and
+<code>minSessions</code> defaults to <code>1</code>, which makes the
+gate that distinguishes this implementation a no-op until an operator
+raises it. A threshold whose default value disables it is a design that
+has been thought through and then not committed to — and the number to
+ship is the one that makes the mechanism do something.</p>
+<p>The third is worse and generalizes further. The parallel belief store
+this feeds declares
+<code>candidate | promoted | rejected | stale</code>, the injected
+beliefs layer admits only <code>promoted</code>, and <strong>no code
+path writes <code>promoted</code></strong> — so the evidence chain is
+built, maintained, decayed and contradicted, and terminates in a state
+nothing can enter. Evidence-before-belief has a last mile that is easy
+to leave unbuilt precisely because the interesting work is upstream of
+it: if you build the ladder, commit a test that something can climb
+it.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>

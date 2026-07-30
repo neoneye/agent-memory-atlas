@@ -168,6 +168,28 @@ choice — it is the absence of one. Normalizing the captured span into a slug, 
 routing the write through an existing key when one matches, is the work this
 pattern skips at its peril.
 
+[CSM](../../systems/csm/) is the pattern held at a scale nothing else here
+approaches — 46 tables and 55,000 lines in which the only outbound call is an
+embedding request — and it gets the keying right where Helm got it wrong: a
+partial unique index on pending candidates over `(candidate_type, dedup_key)`, a
+unique index on `(session_id, metadata->>'messageId')` for transcript rows with a
+unique-violation handler that returns the existing row rather than failing the
+capture, and an `md5(compressed)` index on distilled summaries.
+
+Its failure is the one *after* keying: **naming**. The operational ledger
+declares twenty-six event types and its single writer is a switch on the tool
+name that can produce seven, so `decision`, `blocker_identified`,
+`verification_evidence` and `goal_achieved` are schema no code path emits, and
+everything unrecognised becomes `note` with the first 200 characters of tool
+output as its summary. The repository's own committed front page shows the
+result: 5,111 events, 49 sessions, and a current-state projection reporting no
+goal, no phase and no blockers. Determinism buys you a capture path that cannot
+hallucinate; it does not decide what is worth capturing, and a classifier with a
+catch-all bucket will record volume in place of state. If your event vocabulary
+is richer than your emitters, shrink the vocabulary or write the emitters —
+leaving the gap open produces a store that looks well-designed and answers
+nothing.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.
