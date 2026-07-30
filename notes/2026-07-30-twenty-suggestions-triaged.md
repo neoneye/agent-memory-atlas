@@ -187,8 +187,12 @@ from any single report and is the round's most useful observation.
 
 ## Still not done
 
-- **CrewAI** and **Haystack** remain the two named framework-native gaps, now
-  the only two left in that bullet.
+- ~~**CrewAI** and **Haystack** remain the two named framework-native gaps~~ —
+  **both closed on 2026-07-30.** CrewAI is [reviewed](../content/systems/crewai.md).
+  Haystack turned out not to exist as a subject: `deepset-ai/haystack` has no
+  agent memory, and the two things it calls memory stores are Mem0 and Cognee
+  adapters living in a separate repository, both already in the atlas. The gap
+  bullet had been naming an unreviewed thing that was not there.
 - Nothing was run for any of the five. No suite was executed and no benchmark
   reproduced, including SimpleMem's, where the harness is committed and checking
   one figure is a bounded job.
