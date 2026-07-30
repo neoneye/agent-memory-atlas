@@ -161,6 +161,32 @@ error, just a worse answer.</p>
 <p><strong>Skip it if</strong> your store is small. Decay solves a
 crowding problem you may not have.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong><a href="../../systems/mnemopi/">Mnemopi</a> has the most
+considered forgetting model here, and the reason is a second
+parameter.</strong> Every other decaying system on this page picks a
+rate: an exponential half-life, an Ebbinghaus curve, a decay constant.
+Mnemopi gives each of fourteen memory types a Weibull <code>k</code>
+(shape) and <code>eta</code> (scale, in hours) — <code>profile</code> at
+k=0.3/eta=8760, <code>relationship</code> at 0.35/8760,
+<code>preference</code> at 0.4/4380, <code>fact</code> at 0.8/720,
+<code>context</code> at 0.85/360, <code>observation</code> at 0.9/480 —
+with a comment stating the intent: higher eta is slower decay, lower k
+is more long-term retention.</p>
+<p>The shape is what a single rate cannot express. A <code>k</code>
+below 1 gives a heavy tail: a profile fact fades slowly <em>and keeps
+fading slowly</em>, so it never quite leaves, while
+<code>observation</code> at k=0.9 approaches memoryless and is gone on
+schedule. That is the difference between "how fast" and "how
+stubbornly", and it is the instrument the <a
+href="../../systems/helm/">Helm</a> report is asking for when it says a
+preference should not fall down the ranking for being old while an event
+should, and that one ranking function for both is usually an unexamined
+decision.</p>
+<p>The cost is twenty-eight hand-set parameters with no committed
+derivation, and one of them is wrong in a way the model itself reveals:
+<code>commitment</code> is given k=1.0, exactly exponential, so an
+outstanding obligation decays memorylessly rather than persisting until
+it is discharged.</p>
 <p>Three systems added since this page was written show what the pattern
 looks like done carefully, and one shows the failure it warns about.</p>
 <p><a href="../../systems/redis-agent-memory-server/">Redis Agent Memory

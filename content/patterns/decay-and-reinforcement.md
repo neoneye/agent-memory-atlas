@@ -87,6 +87,28 @@ have.
 
 ## Seen in the atlas
 
+**[Mnemopi](../../systems/mnemopi/) has the most considered forgetting model
+here, and the reason is a second parameter.** Every other decaying system on this
+page picks a rate: an exponential half-life, an Ebbinghaus curve, a decay
+constant. Mnemopi gives each of fourteen memory types a Weibull `k` (shape) and
+`eta` (scale, in hours) — `profile` at k=0.3/eta=8760, `relationship` at
+0.35/8760, `preference` at 0.4/4380, `fact` at 0.8/720, `context` at 0.85/360,
+`observation` at 0.9/480 — with a comment stating the intent: higher eta is
+slower decay, lower k is more long-term retention.
+
+The shape is what a single rate cannot express. A `k` below 1 gives a heavy tail:
+a profile fact fades slowly *and keeps fading slowly*, so it never quite leaves,
+while `observation` at k=0.9 approaches memoryless and is gone on schedule. That
+is the difference between "how fast" and "how stubbornly", and it is the
+instrument the [Helm](../../systems/helm/) report is asking for when it says a
+preference should not fall down the ranking for being old while an event should,
+and that one ranking function for both is usually an unexamined decision.
+
+The cost is twenty-eight hand-set parameters with no committed derivation, and
+one of them is wrong in a way the model itself reveals: `commitment` is given
+k=1.0, exactly exponential, so an outstanding obligation decays memorylessly
+rather than persisting until it is discharged.
+
 Three systems added since this page was written show what the pattern looks like
 done carefully, and one shows the failure it warns about.
 
