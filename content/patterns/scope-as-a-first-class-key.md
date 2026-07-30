@@ -126,6 +126,23 @@ enforced by nothing, and the stored key makes it harder to notice, because a
 reader auditing the code finds `agent_id` everywhere and reasonably concludes the
 scoping is done.
 
+**[CrewAI](../../systems/crewai/) is the only system here that makes scope a
+path, and it is worth copying if your tenancy is hierarchical.** A record's
+scope is `/company/team/user`, matching is by prefix, and the caller holds a
+`MemoryScope` — a view of the store rooted at a subtree, with `subscope()` to
+descend and a `read_only` flag — rather than passing a key on every call. That
+inverts the usual failure: a scope you must remember to pass is a scope you can
+forget to pass, and a view you hold cannot be forgotten. `MemorySlice` covers
+the case a flat key handles badly, a caller who legitimately spans several
+scopes at once.
+
+A second axis rides on top, and the two are genuinely orthogonal: a `source`
+records which user or session wrote a memory, and `private` marks it visible
+only to that source, filtered in recall as `if not r.private or r.source ==
+self.state.source`. Path answers *whose tree is this*; source answers *who wrote
+it*. Systems that collapse them cannot express a memory that lives in a shared
+team scope and is still nobody else's business.
+
 [OpenClaw](../../systems/openclaw/) has the strongest enforcement in SQL, and the
 idea is one line:
 

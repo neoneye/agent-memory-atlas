@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Memory as a filesystem — records
+live at /company/team/user, a scoped view cannot see its siblings, and a
+test proves it — with an LLM on the write path authorised to delete the
+records it decides are superseded.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CrewAI — Agent Memory Atlas">
+    <meta property="og:description" content="Memory as a filesystem —
+records live at /company/team/user, a scoped view cannot see its
+siblings, and a test proves it — with an LLM on the write path
+authorised to delete the records it decides are superseded.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CrewAI — Agent Memory Atlas">
+    <meta name="twitter:description" content="Memory as a filesystem —
+records live at /company/team/user, a scoped view cannot see its
+siblings, and a test proves it — with an LLM on the write path
+authorised to delete the records it decides are superseded.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CrewAI — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Hierarchical scope paths</p>
+          <h1>CrewAI</h1>
+          <p class="document-deck">Memory as a filesystem — records live
+at /company/team/user, a scoped view cannot see its siblings, and a test
+proves it — with an LLM on the write path authorised to delete the
+records it decides are superseded.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/crewAIInc/crewAI">
+              <span>Source</span>
+              <strong>crewAIInc/crewAI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">
+              <span>Analyzed revision</span>
+              <code>ceed4a3f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (73%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CrewAI is the most-cited framework-native memory omission in this
+atlas, and the memory module at this commit is not the
+entity/short-term/long-term arrangement its documentation history
+suggests. It is a <strong>unified memory</strong> of roughly 5,300 lines
+built around one idea: memory is a filesystem.</p>
+<p>A <code>MemoryRecord</code> carries a <code>scope</code> —
+<em>"Hierarchical path organizing the memory (e.g.
+/company/team/user)"</em> — and everything else follows from that.
+<code>Memory</code> holds the whole tree. <code>MemoryScope</code> is
+<em>"a view of Memory restricted to a root path"</em>, with
+<code>subscope()</code> to descend, a <code>read_only</code> flag, and
+<code>tree()</code>, <code>info()</code> and <code>list_scopes()</code>
+for navigation. <code>MemorySlice</code> is a view over several scopes
+at once. Recall takes a <code>scope_prefix</code>; <code>forget()</code>
+takes one too. Nothing else in the corpus models scope as a path with
+views over it, and it is the right shape for the problem CrewAI has,
+which is many agents in one crew in one organisation.</p>
+<p><strong>The scoping is enforced and proven.</strong>
+<code>test_recall_with_root_scope_only_returns_scoped_records</code>
+writes three records under <code>/other/scope</code>,
+<code>/crew/crew-a/inner</code> and <code>/crew/crew-b/inner</code>,
+opens a <code>Memory</code> rooted at <code>/crew/crew-a</code>,
+recalls, and asserts exactly one result comes back from the rooted
+scope. A sibling test asserts <code>"/crew/b" not in scopes</code> for
+<code>list_scopes()</code>. That is the boundary form of the negative
+assertion, with a positive control in the same test, and it earns the
+mark.</p>
+<p>There is a second scope axis on top of the path. Every record carries
+a <code>source</code> — <em>"Origin of this memory (e.g. user ID,
+session ID), used for provenance tracking and privacy filtering"</em> —
+and a <code>private</code> boolean. Recall filters
+<code>if not r.private or r.source == self.state.source</code>, so a
+private memory only returns to the origin that wrote it, with an
+explicit <code>include_private=True</code> bypass. Two orthogonal
+boundaries, both applied on the read path.</p>
+<p><strong>And then the write path hands an LLM a delete.</strong>
+<code>analyze_for_consolidation</code> returns a
+<code>ConsolidationPlan</code> whose <code>actions</code> are
+<em>"Actions to take on existing records (keep/update/delete)"</em>,
+plus <code>insert_new</code> and an <code>insert_reason</code>. So on
+every save, a model looks at what is already stored and decides which
+existing records to rewrite and which to remove. There is no tombstone,
+no audit record, no trust state, no confirmation, and no human in the
+loop. The best-scoped memory system in this atlas is also the one that
+most readily authorises a language model to destroy what it already
+believed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Truth is a location and a score. A memory is true because it is
+stored, it is <em>relevant</em> because of a composite of semantic
+similarity, recency and <code>importance</code>, and it belongs to
+whoever owns the path it sits under. There is no status field, nothing
+withholds a record from being treated as true, and
+<code>importance</code> is explicitly a ranking input rather than a
+belief.</p>
+<p>What replaces an epistemic model is <strong>consolidation on
+write</strong>. Rather than letting contradictory records accumulate and
+resolving at read time, the encoding flow finds similar existing records
+before inserting and asks a model what should happen to them. That is a
+real position — resolve early, keep the store clean — and its cost is
+that the resolution is unlogged and irreversible.</p>
+<p>Recall carries one unusual honesty mechanism.
+<code>MemoryMatch.evidence_gaps</code> is <em>"Information the system
+looked for but could not find"</em>, populated during the recall flow
+and attached to the results. Almost nothing else in this atlas reports
+its own misses; a retriever that can say "I looked for X and there was
+none" gives the model something to reason with instead of silent
+absence. It is attached only to <code>final_results[0]</code>, so a
+per-match field is carrying a per-query fact — a small structural oddity
+in an otherwise good idea.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A vector store and an embedder, and that is the bill. LanceDB is the
+default and is embedded, so a local install needs no service;
+<code>qdrant_edge_storage.py</code> (903 lines) is the alternative and
+the larger of the two implementations. Both sit behind
+<code>storage/backend.py</code>, selected by
+<code>storage/factory.py</code>. A separate SQLite-backed
+<code>kickoff_task_outputs_storage.py</code> persists task outputs and
+is a different concern from the memory tree.</p>
+<p>Both flows are <code>crewai.flow.Flow</code> subclasses with
+<code>@start</code>/<code>@listen</code> steps and
+<code>ThreadPoolExecutor</code> parallelism, so memory reuses the
+framework's own orchestration primitive rather than inventing a
+pipeline.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>memory/unified_memory.py</code> (1,104) — <code>Memory</code>,
+<code>remember</code>, <code>recall</code>, <code>forget</code>,
+<code>update</code>, scope navigation.</li>
+<li><code>memory/types.py</code> (380) — <code>MemoryRecord</code>,
+<code>MemoryMatch</code>, <code>ScopeInfo</code>, and the 2× recall
+oversample constant.</li>
+<li><code>memory/memory_scope.py</code> (379) — <code>MemoryScope</code>
+and <code>MemorySlice</code> views.</li>
+<li><code>memory/encoding_flow.py</code> (499) — the five-step write
+pipeline.</li>
+<li><code>memory/recall_flow.py</code> (378) — parallel multi-query,
+multi-scope search.</li>
+<li><code>memory/analyze.py</code> (375) —
+<code>analyze_for_save</code>, <code>analyze_for_consolidation</code>,
+<code>ConsolidationPlan</code>.</li>
+<li><code>memory/storage/qdrant_edge_storage.py</code> (903) and
+<code>lancedb_storage.py</code> (669).</li>
+<li><code>lib/cli/src/crewai_cli/memory_tui.py</code> — the
+browser.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryRecord</code>: <code>id</code>, <code>content</code>,
+<code>scope</code> (default <code>/</code>), <code>categories</code>,
+<code>metadata</code>, <code>importance</code> (0.0–1.0),
+<code>created_at</code>, <code>last_accessed</code>,
+<code>embedding</code> (excluded from serialisation <em>"to save
+tokens"</em>, with three tests asserting it never appears in a dump, a
+JSON string or a <code>repr</code>), <code>source</code>,
+<code>private</code>.</p>
+<p>Two clocks and both are record clocks — <code>created_at</code> and
+<code>last_accessed</code>. There is no validity time, so a corrected
+fact and a changed fact are the same event, and no
+<code>bitemporal</code> mark.</p>
+<p><code>ScopeInfo</code> — path, record count, categories — is what
+makes the tree navigable, and <code>MemoryMatch</code> carries
+<code>score</code>, <code>match_reasons</code> and
+<code>evidence_gaps</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The recall flow decomposes a query into sub-queries, embeds them, and
+runs the cartesian product of (embeddings × candidate scopes) in
+parallel, catching per-scope failures and skipping rather than failing
+the recall. It oversamples by
+<code>_RECALL_OVERSAMPLE_FACTOR = 2</code>, documented in a comment
+explaining that post-search scoring, deduplication and category
+filtering need spare candidates to fill the result set — which is the
+kind of decision usually left implicit.</p>
+<p>Results are composite-scored on semantic similarity, recency and
+importance, with the contributing factors listed in
+<code>match_reasons</code>, so a caller can see <em>why</em> something
+ranked. A test asserts <code>"recency" not in reasons</code> when the
+decay term does not clear its threshold — the reasons are tested, not
+just produced.</p>
+<p>Both boundaries apply here: <code>scope_prefix</code> on every
+storage search, and the <code>private</code>/<code>source</code> filter
+after.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block and do a lot. The encoding flow is five steps and its
+docstring names them: one batched embedder call for all items,
+intra-batch cosine deduplication dropping near-exact duplicates,
+parallel find-similar searches against storage, <strong>N concurrent LLM
+calls for field resolution and consolidation</strong>, then a batch of
+re-embedded updates and a bulk insert.</p>
+<p>So a <code>remember()</code> costs an embedding call plus a model
+call per item, inline. The batching is genuine engineering — one embed
+call rather than N, dedup before the expensive step — and the latency
+floor is still a model round trip.</p>
+<p>Nothing runs in the background. There is no decay job, no scheduled
+consolidation and no promotion between tiers; the store is maintained
+entirely by what happens at write time, plus whatever
+<code>forget()</code> a caller issues.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>Memory</code>, <code>MemoryScope</code> and
+<code>MemorySlice</code> form a discriminated union so a configuration
+or checkpoint can carry any of the three, with a validator that
+backfills the <code>memory_kind</code> discriminator on pre-1.14.6 dicts
+by inference — <code>scopes</code> key means slice,
+<code>root_path</code> means scope, otherwise memory. That is a
+compatibility shim written with a comment explaining exactly which
+versions it serves, which is rarer than it should be.</p>
+<p><code>tools/memory_tools.py</code> exposes memory to agents, and
+<code>events/types/memory_events.py</code> publishes query and save
+lifecycle events on the framework's bus.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The consolidation delete is the risk in this report.</strong>
+An LLM returning <code>{"action": "delete"}</code> against an existing
+record, executed inline on the write path, is the most consequential
+automatic operation in the module, and every safeguard this atlas looks
+for is absent from it: no tombstone keyed on the removed value, no
+append-only record that it happened, no trust state that would let a
+doubtful record be withheld instead of destroyed, and no review surface
+where a person could see it before or after. A model that misjudges two
+records as duplicates removes one, and nothing anywhere records that it
+did.</p>
+<p><strong><code>memory_events.py</code> is not an audit log</strong>,
+and it is worth naming because the filename suggests otherwise. Its ten
+classes are <code>MemoryQueryStarted/Completed/ Failed</code>,
+<code>MemorySaveStarted/Completed/Failed</code>,
+<code>MemoryRetrievalStarted/Completed/ Failed</code> — runtime events
+published on the framework's bus for observability. They are not
+durable, not in the memory store, and half of them are about retrieval,
+which the rubric explicitly counts as the other half of the pattern.
+Nothing records what a mutation changed.</p>
+<p><strong>The TUI is a browser, not a review surface.</strong>
+<code>memory_tui.py</code> builds a scope tree, lists entries, runs
+recalls and renders a detail panel; every <code>update()</code> call in
+it is a Textual panel repaint. There is no edit and no delete. Viewing
+is not reviewing, so <code>human_review</code> is withheld.</p>
+<p><code>forget()</code> is a genuine, well-parameterised deletion — by
+scope prefix, category, age, metadata filter or explicit ids — and it is
+a hard delete with nothing left behind.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>147 test functions across seven files, none run here.
+<code>test_memory_root_scope.py</code> alone holds 63 of them and is the
+reason two marks are earned: it drives root scoping through recall,
+listing, nesting, path normalisation
+(<code>assert "//" not in record.scope</code>), and the global case.</p>
+<p><code>test_concurrent_storage.py</code> and
+<code>test_dimension_mismatch.py</code> cover the two failure modes a
+vector-backed store actually hits, and
+<code>test_qdrant_edge_storage.py</code> asserts local paths and orphans
+are cleaned up. Three tests assert the embedding never leaks into a
+serialisation.</p>
+<p>No memory benchmark, no retrieval-quality measurement, and no
+published numbers — so nothing to check, and nothing claimed. What is
+<em>not</em> tested is the consolidation plan's judgement: nothing
+measures how often the model's keep/update/delete decision is right,
+which is the number the design rests on.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Model scope as a path and give callers views over
+it.</strong> <code>MemoryScope</code> with <code>subscope()</code> and a
+<code>read_only</code> flag turns multi-tenancy into something a caller
+holds rather than a parameter they must remember to pass. Prefix
+matching gives you hierarchy for free.</li>
+<li><strong>Prove the boundary with a rooted-view test.</strong> Three
+records in three scopes, a view rooted at one, assert exactly one comes
+back. It is ten lines and it is the assertion every scope claim in this
+atlas ultimately rests on.</li>
+<li><strong>Report what you looked for and did not find.</strong>
+<code>evidence_gaps</code> gives the model an explicit "no evidence"
+instead of silent absence, which is the difference between the model
+reasoning about a gap and hallucinating into it.</li>
+<li><strong>Say why something ranked.</strong>
+<code>match_reasons</code> naming semantic, recency or importance makes
+ranking debuggable, and testing that a reason is <em>absent</em> when
+its term does not clear threshold is better than testing the score.</li>
+<li><strong>Document your oversample factor.</strong> The comment
+explaining why the store is asked for 2× the requested results — so
+scoring, dedup and filtering have candidates to work with — is the kind
+of thing that is otherwise a magic number forever.</li>
+<li><strong>Exclude embeddings from serialisation, and test it three
+ways.</strong> Dump, JSON and <code>repr</code>.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Giving a model a delete on the write path with nothing
+behind it.</strong> If an LLM may remove existing records, the minimum
+is an append-only record of what it removed and why. Without that, a bad
+consolidation is indistinguishable from a memory that was never
+written.</li>
+<li><strong>Naming a file <code>memory_events.py</code> when it holds
+observability events.</strong> The name is the one an auditor will
+search for.</li>
+<li><strong>A memory browser with no edit.</strong> The TUI is one
+keystroke away from being a review surface and stops short of it, which
+is the most common near-miss in this atlas.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take CrewAI's memory if you are running crews and your problem is
+<em>organisational</em> — several agents, several teams, one store, and
+a need for one agent's memories not to reach another's prompt. The path
+model fits that exactly, the enforcement is real, and the test proving
+it is committed.</p>
+<p>Do not take it where a wrong deletion is expensive, because the write
+path can delete on a model's say-so and leaves no trace. If you adopt it
+there, the first thing to build is a wrapper that logs
+<code>ConsolidationPlan</code> actions before they execute.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often is the consolidation plan right?</strong> Nothing
+measures the model's keep/update/delete precision, and it is the
+load-bearing judgement.</li>
+<li><strong>What does <code>include_private=True</code> gate
+on?</strong> The bypass exists on the recall state; which callers may
+set it was not traced.</li>
+<li><strong>Why does <code>evidence_gaps</code> attach to
+<code>final_results[0]</code>?</strong> A per-query fact on a per-match
+field means an empty result set carries no gaps at all — the case where
+the information is most useful.</li>
+<li><strong>Is <code>last_accessed</code> written on read?</strong> It
+is on the record; whether recall updates it, and what that costs a
+vector store per query, was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory/unified_memory.py</code></td>
+<td>1,104</td>
+<td><code>Memory</code>, remember/recall/forget/update, scope
+navigation</td>
+</tr>
+<tr>
+<td><code>memory/storage/qdrant_edge_storage.py</code></td>
+<td>903</td>
+<td>Qdrant Edge backend</td>
+</tr>
+<tr>
+<td><code>memory/storage/lancedb_storage.py</code></td>
+<td>669</td>
+<td>Default embedded backend</td>
+</tr>
+<tr>
+<td><code>memory/encoding_flow.py</code></td>
+<td>499</td>
+<td>Five-step batched write pipeline</td>
+</tr>
+<tr>
+<td><code>memory/types.py</code></td>
+<td>380</td>
+<td><code>MemoryRecord</code>, <code>MemoryMatch</code>,
+<code>ScopeInfo</code></td>
+</tr>
+<tr>
+<td><code>memory/memory_scope.py</code></td>
+<td>379</td>
+<td><code>MemoryScope</code>, <code>MemorySlice</code> views</td>
+</tr>
+<tr>
+<td><code>memory/recall_flow.py</code></td>
+<td>378</td>
+<td>Parallel multi-query, multi-scope recall</td>
+</tr>
+<tr>
+<td><code>memory/analyze.py</code></td>
+<td>375</td>
+<td><code>ConsolidationPlan</code> — keep, update, delete</td>
+</tr>
+<tr>
+<td><code>memory/storage/kickoff_task_outputs_storage.py</code></td>
+<td>222</td>
+<td>SQLite task-output store</td>
+</tr>
+<tr>
+<td><code>events/types/memory_events.py</code></td>
+<td>103</td>
+<td>Ten bus events; not an audit log</td>
+</tr>
+<tr>
+<td><code>lib/crewai/tests/memory/</code></td>
+<td>147 tests</td>
+<td>63 of them on root scoping</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

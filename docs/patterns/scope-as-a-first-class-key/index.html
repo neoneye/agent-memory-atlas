@@ -213,6 +213,25 @@ shares a backend. That is a convention enforced by nothing, and the
 stored key makes it harder to notice, because a reader auditing the code
 finds <code>agent_id</code> everywhere and reasonably concludes the
 scoping is done.</p>
+<p><strong><a href="../../systems/crewai/">CrewAI</a> is the only system
+here that makes scope a path, and it is worth copying if your tenancy is
+hierarchical.</strong> A record's scope is
+<code>/company/team/user</code>, matching is by prefix, and the caller
+holds a <code>MemoryScope</code> — a view of the store rooted at a
+subtree, with <code>subscope()</code> to descend and a
+<code>read_only</code> flag — rather than passing a key on every call.
+That inverts the usual failure: a scope you must remember to pass is a
+scope you can forget to pass, and a view you hold cannot be forgotten.
+<code>MemorySlice</code> covers the case a flat key handles badly, a
+caller who legitimately spans several scopes at once.</p>
+<p>A second axis rides on top, and the two are genuinely orthogonal: a
+<code>source</code> records which user or session wrote a memory, and
+<code>private</code> marks it visible only to that source, filtered in
+recall as
+<code>if not r.private or r.source == self.state.source</code>. Path
+answers <em>whose tree is this</em>; source answers <em>who wrote
+it</em>. Systems that collapse them cannot express a memory that lives
+in a shared team scope and is still nobody else's business.</p>
 <p><a href="../../systems/openclaw/">OpenClaw</a> has the strongest
 enforcement in SQL, and the idea is one line:</p>
 <pre class="typescript"><code>function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
