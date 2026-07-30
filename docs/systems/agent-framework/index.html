@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="AutoGen's successor replaces a
+five-method Memory protocol with a two-method ContextProvider that still
+declares no delete and no scope — and ships a harness memory beside it
+whose owner id is mandatory, path-traversal-checked, and verified to
+stay inside its base.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Microsoft Agent
+Framework — Agent Memory Atlas">
+    <meta property="og:description" content="AutoGen's successor
+replaces a five-method Memory protocol with a two-method ContextProvider
+that still declares no delete and no scope — and ships a harness memory
+beside it whose owner id is mandatory, path-traversal-checked, and
+verified to stay inside its base.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Microsoft Agent
+Framework — Agent Memory Atlas">
+    <meta name="twitter:description" content="AutoGen's successor
+replaces a five-method Memory protocol with a two-method ContextProvider
+that still declares no delete and no scope — and ships a harness memory
+beside it whose owner id is mandatory, path-traversal-checked, and
+verified to stay inside its base.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Microsoft Agent Framework — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The contract AutoGen became</p>
+          <h1>Microsoft Agent Framework</h1>
+          <p class="document-deck">AutoGen's successor replaces a
+five-method Memory protocol with a two-method ContextProvider that still
+declares no delete and no scope — and ships a harness memory beside it
+whose owner id is mandatory, path-traversal-checked, and verified to
+stay inside its base.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/microsoft/agent-framework">
+              <span>Source</span>
+              <strong>microsoft/agent-framework</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4" title="28389df805b97f846ca21d857e291602a7adc0a4">
+              <span>Analyzed revision</span>
+              <code>28389df8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (74%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Microsoft Agent Framework is the successor to both AutoGen and
+Semantic Kernel, MIT-licensed, shipping .NET and Python. It matters to
+this atlas for a specific reason: the <a href="../autogen/">AutoGen
+report</a> records that its <code>Memory</code> protocol carried
+<code>MemoryContent</code> with <strong>no identifier</strong>, so a
+targeted delete was not merely absent but <em>inexpressible</em>, and
+<code>clear()</code> was the only removal verb. This is what that team
+built next.</p>
+<p><strong>The contract changed shape and kept the gap.</strong>
+<code>ContextProvider</code>
+(<code>python/packages/core/agent_framework/_sessions.py:750</code>) is
+<code>before_run</code> and <code>after_run</code> plus a
+<code>source_id</code>, with provider-scoped state persisted inside
+<code>AgentSession.state</code>. It is a <em>context engineering</em>
+interface rather than a memory interface — a provider adds messages,
+instructions and tools before the model runs, and processes the response
+after. There is no <code>add</code>, no <code>query</code>, no
+<code>delete</code>, and no scope parameter. So the finding this atlas
+made about <a href="../adk-python/">ADK</a> and AutoGen holds for a
+third contract from the same two vendors: <strong>none of the three
+declares a removal method.</strong> The difference is that MAF's
+contract does not pretend to be a memory contract, which is a more
+honest position — and leaves every provider to invent deletion and
+tenancy separately, in incompatible forms.</p>
+<p><strong>Then the in-tree implementation is much better than the
+contract requires.</strong> The harness memory
+(<code>_harness/_memory.py</code>, 1,657 lines, plus
+<code>_file_memory.py</code>) stores one Markdown file per
+<em>topic</em>: a <code>MemoryTopicRecord</code> with a summary, a list
+of durable bullets, an <code>updated_at</code>, and — the good part —
+<code>session_ids</code>, the sessions that contributed to it.
+Provenance is on the record by default, which is rare in this corpus and
+free here because the consolidation pass already knows which sessions it
+read.</p>
+<p>Its scoping is the strongest thing in the report and one of the
+better examples in the atlas. <code>MemoryFileStore._get_owner_id</code>
+reads the owner from <code>session.state</code> and <strong>raises if it
+is missing</strong> — no default, no fallback, no anonymous bucket. It
+then rejects an owner id that is absolute or contains <code>..</code>.
+Owner and source are base64url-encoded into path components, and after
+resolving the root the store asserts
+<code>memory_root.is_relative_to(self._base_root)</code> and raises
+<em>"Memory storage path escaped base_path"</em> if not. That is
+fail-closed, defence in depth, and a post-hoc containment check — the
+same instinct as the <a href="../pydantic-ai-harness/">Pydantic AI
+Harness</a>'s scope re-verification, arrived at independently and
+applied to the filesystem rather than to a store's return value.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no epistemic model. A topic memory is a bullet list that the
+model wrote and the consolidation prompt later rewrote "into a tighter
+durable form". Nothing carries a status, a confidence or a verification,
+and nothing marks a bullet as disputed. What the design models instead
+is <strong>topic hygiene</strong>: memory is organised by subject rather
+than by time, an index of one-line pointers keeps the per-turn cost
+bounded, and a periodic pass rewrites a topic file when enough sessions
+have touched it.</p>
+<p>The lifecycle is therefore: write bullets into a topic, let
+consolidation compress the topic, delete the topic if you no longer want
+it. Correction is compression — a bullet stops being true by being
+rewritten out of the file by an LLM, with no record that it was
+there.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>For the file-backed case, nothing to run: a base path and a model.
+The tree is <code>{base}/{source}/{owner}/{kind}/</code> holding a
+topics directory, an index file, a state file and a transcript archive.
+<code>agent-framework-azure-cosmos-memory</code> is a separate package
+(505 lines) providing a Cosmos DB context provider with its own
+extraction, and <code>agent_framework_foundry/_memory_provider.py</code>
+(279 lines) is a client for the hosted Foundry memory service — which is
+closed, and therefore reviewable here only as a client, exactly as <a
+href="../adk-python/">Vertex Memory Bank is inside adk-python</a>.</p>
+<p>That Foundry client requires a <code>scope</code> at construction and
+raises <code>ValueError("scope is required")</code> on an empty one,
+then at three call sites passes
+<code>self.scope or context.session_id</code>. The fallback cannot fire
+given the constructor check; it reads as a defensive default that would
+silently substitute a session id for a user id if the invariant ever
+moved.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>python/packages/core/agent_framework/_sessions.py</code> —
+<code>ContextProvider</code>, <code>AgentSession</code>, state
+registration.</li>
+<li><code>python/packages/core/agent_framework/_harness/_memory.py</code>
+(1,657) — topic records, the index, the store ABC, the file store,
+consolidation.</li>
+<li><code>python/packages/core/agent_framework/_harness/_file_memory.py</code>
+(531) — the file-level tools and their traversal handling.</li>
+<li><code>python/packages/azure-cosmos-memory/.../_context_provider.py</code>
+(505) — the Cosmos provider.</li>
+<li><code>python/packages/foundry/agent_framework_foundry/_memory_provider.py</code>
+(279) — the hosted client.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryTopicRecord</code>: <code>topic</code>,
+<code>slug</code>, <code>summary</code>,
+<code>memories: list[str]</code>, <code>updated_at</code>,
+<code>session_ids</code>. Bullets are deduplicated on construction; the
+topic is normalised and slugified for a stable filename; the record
+round-trips to both a dict and Markdown, so the on-disk artifact is the
+source of truth and a person can read it.</p>
+<p><code>MemoryIndexEntry</code> is the pointer form — topic, slug,
+summary, <code>updated_at</code> — rendered as a length-capped line for
+the index that goes into the prompt.</p>
+<p>Absences: no per-bullet id, so a single memory cannot be addressed,
+only the topic containing it. No status, no confidence, no validity
+time. <code>updated_at</code> is record time. The
+<code>session_ids</code> list is the one provenance field and it is
+coarse — it says which sessions contributed to the topic, not which
+sentence came from where.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two tiers, and the split is the design. The <strong>index</strong> —
+one pointer line per topic — is injected every turn, so the model always
+knows what it knows about without paying for the content.
+<strong>Expansion</strong> is driven by <code>_extract_keywords</code>
+over the current messages, selecting topic files to read in full.</p>
+<p>There is no embedding and no similarity ranking on this path: topic
+selection is keyword overlap against topic names and summaries. For a
+store organised into tens of topics that is proportionate, and it fails
+in the ordinary way — a question phrased without the topic's vocabulary
+does not reach the file.</p>
+<p>Scope applies underneath all of it: every path resolves through the
+owner-scoped root described above, so retrieval cannot address another
+owner's topics.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Model tools write topic records; the consolidation pass rewrites
+them. <code>DEFAULT_MEMORY_CONSOLIDATION_PROMPT</code> instructs a model
+to consolidate one topic file "into a tighter durable form", and
+provider state tracks <code>last_consolidated_at</code> and
+<code>sessions_since_consolidation</code>, so the pass is scheduled by
+accumulated sessions rather than by a clock. The state validators coerce
+malformed values back to a list and <code>None</code> rather than
+failing — a deliberate tolerance for corrupted persisted state.</p>
+<p>The consequence worth stating: <strong>consolidation is a rewrite by
+a language model over the durable copy.</strong> A bullet that the model
+drops during compression is gone, the file's <code>updated_at</code>
+moves, and nothing anywhere records what the previous version said. The
+transcript archive holds the raw sessions, so the material may be
+recoverable in principle from a different artifact; the memory itself
+keeps no history.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>ContextProvider</code> instances are attached to an
+<code>Agent</code> and participate per run. <code>source_id</code>
+exists for attribution, so providers can filter messages and tool calls
+that other providers contributed — a small, good idea in a framework
+that expects several providers at once. DevUI provides an inspection
+surface, and the .NET side carries a parallel set of abstractions.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>scope_enforced</code> is earned three times over: mandatory
+owner, traversal rejection, and a post-resolve containment assertion. It
+is one of the few places in this atlas where the <em>failure</em> of
+scoping is treated as a thing to detect rather than as something that
+cannot happen.</p>
+<p>Everything else is absent. <strong>No tombstone</strong> —
+<code>delete_topic</code> removes the file and consolidation rewrites
+bullets away, with nothing keyed on the value, so a later session that
+re-derives a deleted preference writes it back unopposed. <strong>No
+trust state, no confidence, no bi-temporality.</strong> <strong>No audit
+log</strong>: the transcript archive is the raw material, not a record
+of what changed in memory. <strong>No human review surface</strong>
+beyond the fact that the artifacts are Markdown a person can open —
+which this atlas does not count, on the same basis as <a
+href="../basic-memory/">Basic Memory</a>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,357 lines across <code>test_harness_memory.py</code> and
+<code>test_harness_file_memory.py</code>, none run here, and they are
+aimed at the right things: state round-trips, Markdown parsing,
+consolidation scheduling, disk-full and misconfigured-client failures,
+and the boundary.</p>
+<p><strong>The boundary tests are the interesting near-miss on
+<code>negative_eval</code>.</strong> One sets
+<code>session.state["owner_id"] = "../escape"</code>, asserts
+<code>pytest.raises(ValueError, match="path traversal")</code> on
+<code>write_topic</code>, and then asserts
+<code>not (tmp_path.parent / "escape").exists()</code> — that the write
+did not land outside the base. The file-memory suite does the same for
+<code>../escape.md</code> on write and delete, checking that the refusal
+is reported as a tool message rather than raised into the run.</p>
+<p>That is an assertion that particular material must not be
+<strong>written</strong> outside the boundary, which is the mirror of
+the column and arguably as valuable — but the column is about retrieval,
+and nothing here asserts that one owner's query cannot return another
+owner's topic. The mark is withheld and the near-miss is the report's
+most useful sentence about the suite. No memory benchmark or
+retrieval-quality measurement exists, and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the scope key mandatory and check it three
+ways.</strong> Raise when it is missing, reject traversal segments in
+it, and after resolving the path assert it is still inside your base.
+The third check is the one everyone skips, and it is the one that
+catches the encoding bug you have not written yet.</li>
+<li><strong>Split the index from the content.</strong> A one-line
+pointer per topic in every prompt, with expansion on keyword match,
+gives the model an accurate map of what it knows for a fixed cost. This
+is the cheapest version of bounded injection in the atlas.</li>
+<li><strong>Put the contributing session ids on the record.</strong>
+Coarse provenance costs nothing when the consolidation pass already
+knows them, and it is the difference between "where did this come from"
+being answerable and not.</li>
+<li><strong>Organise durable memory by topic, not by time.</strong>
+Consolidation has a natural unit, deletion has a natural unit, and the
+index has natural rows.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A provider contract with no removal method — again.</strong>
+ADK declared none, AutoGen could not express one, and
+<code>ContextProvider</code> declares none. Every third-party provider
+now invents deletion, or does not.</li>
+<li><strong>Compression as your only correction path.</strong> An LLM
+rewriting the durable file "into a tighter durable form" is a lossy edit
+with no diff, no previous version and no record of the bullet it
+dropped.</li>
+<li><strong>A fallback that substitutes a session id for a tenant
+id.</strong> <code>self.scope or context.session_id</code> cannot fire
+today because the constructor raises on an empty scope. It is one
+refactor away from silently changing what a memory is scoped to.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is the framework to build on if you are in the Microsoft stack
+and want the context-provider seam — it is a cleaner abstraction than
+AutoGen's <code>Memory</code> protocol was, and the harness memory is a
+genuinely competent default with the best filesystem scoping in this
+atlas. It suits a per-user assistant whose memory is topical and whose
+correction needs are "rewrite the topic".</p>
+<p>Look elsewhere if you need to prove a deletion, hold a claim you are
+unsure about, or answer what the system believed last month. There is no
+unit below the topic file to attach any of that to, and the contract
+will not help a provider that wants to.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What does consolidation drop?</strong> The prompt asks for a
+tighter durable form and nothing measures fidelity. This is the same
+unmeasured-compression question the atlas records for Magic Context's
+verification precision.</li>
+<li><strong>Does the Cosmos provider enforce scope in the query, or by
+container?</strong> The 505-line provider was not traced in full
+here.</li>
+<li><strong>How does the hosted Foundry memory service handle deletion
+and tenancy?</strong> Not reviewable — the client is in-tree and the
+service is not, which is the same limit this atlas records for Vertex
+Memory Bank.</li>
+<li><strong>Does the .NET side share these semantics?</strong> Only the
+Python packages were read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>python/packages/core/agent_framework/_harness/_memory.py</code></td>
+<td>1,657</td>
+<td>Topic records, index, store ABC, file store, consolidation</td>
+</tr>
+<tr>
+<td><code>python/packages/core/agent_framework/_harness/_file_memory.py</code></td>
+<td>531</td>
+<td>File-level tools and traversal handling</td>
+</tr>
+<tr>
+<td><code>python/packages/azure-cosmos-memory/.../_context_provider.py</code></td>
+<td>505</td>
+<td>Cosmos DB context provider</td>
+</tr>
+<tr>
+<td><code>python/packages/foundry/agent_framework_foundry/_memory_provider.py</code></td>
+<td>279</td>
+<td>Client for the hosted Foundry memory service</td>
+</tr>
+<tr>
+<td><code>python/packages/core/agent_framework/_sessions.py</code></td>
+<td>—</td>
+<td><code>ContextProvider</code>, <code>AgentSession</code>, state
+registration</td>
+</tr>
+<tr>
+<td><code>python/packages/core/tests/core/test_harness_memory.py</code></td>
+<td>877</td>
+<td>State, parsing, consolidation, the traversal boundary</td>
+</tr>
+<tr>
+<td><code>python/packages/core/tests/core/test_harness_file_memory.py</code></td>
+<td>480</td>
+<td>File tools, traversal reported as tool messages</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
