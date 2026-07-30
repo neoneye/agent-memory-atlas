@@ -146,6 +146,28 @@ sanitizing before export, and CowAgent's distillation rules. If you capture
 without a model, capture cheaply enough that everything flows in — which means
 something must decide what does not.
 
+[Helm](../../systems/helm/) is the smallest instance and demonstrates a failure
+this page had not recorded: the problem is not only *what* you capture without a
+model, it is *what you key it on*. One regex on the reply path — `remember that`,
+`note that`, `for the record`, `fyi` — lifts the following span into a durable
+fact with no model call and no latency on the turn. The key is
+`'note-' + Date.now().toString(36)`.
+
+Because every capture mints a new key, three mechanisms that exist in the same
+file never fire: the unique index over `(kind, key)` never matches, supersession
+can never trigger, and the evidence counter never increments. Saying "remember
+that I prefer X" twice with different values leaves two live, equally-confident,
+mutually contradictory facts. Worse, those rows are uncorroborated by
+construction, and the nightly pass prunes uncorroborated rows below a confidence
+floor — so the one thing the user stated *explicitly* is on the fastest path to
+silent deletion.
+
+A model-based extractor gets keying for free by being asked for a subject. A
+zero-LLM path has to choose one deterministically, and a timestamp is not a
+choice — it is the absence of one. Normalizing the captured span into a slug, or
+routing the write through an existing key when one matches, is the work this
+pattern skips at its peril.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

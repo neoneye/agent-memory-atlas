@@ -152,6 +152,23 @@ derivation rewritten in place, is the only copy there has ever been. This patter
 and data minimization are in genuine tension; Memobase is where the price of
 choosing the other side is clearest.
 
+[Helm](../../systems/helm/) is the cheapest instance in the atlas, and it splits
+the pattern in half in a way worth studying. The belief side is right: a write
+tagged `--source observed` is capped at 0.7 confidence regardless of what the
+caller asked for, and rises 0.05 per independent repeat of the same value, so a
+single sighting cannot be recorded as certain. That is the whole gate, in about
+fifteen lines of arithmetic on a SQLite row.
+
+The evidence side is missing, and the consequence is precise. Episodes are
+retained, but no fact links to the episodes that produced it — the `links` table
+that could express it is created and never written. So a distilled row reading
+`mentioned in 5 episodes` is a claim about evidence that cannot name any of it,
+and a fact whose confidence has ratcheted to 0.9 across five corroborations
+cannot be audited back to a single one of them. Corroboration is the affordable
+half of this pattern and provenance is the load-bearing half: without it,
+repeated exposure to the same wrong value is indistinguishable from evidence,
+and a bad belief can be raised but not traced.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

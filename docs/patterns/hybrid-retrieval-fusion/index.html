@@ -200,6 +200,30 @@ promotes one only on non-regression across eight metrics. Everyone else,
 including <a href="../../systems/generative-agents/">Generative
 Agents</a> with its hand-tuned <code>gw = [0.5, 3, 2]</code>, ships
 constants nobody has defended.</p>
+<p><a href="../../systems/helm/">Helm</a> is the smallest correct
+instance — both arms and the fusion are about sixty lines of JavaScript
+over rows already in memory, with no FTS extension and no vector store —
+and it is the clearest place in the atlas to see that <strong>fusion
+quality is bounded by candidate generation, not by the fusion
+rule.</strong> Its RRF is textbook (k=60, no score normalization, which
+is the right refusal when you have no relevance data to calibrate
+against), and its belief weight is applied as a multiplier rather than a
+filter so a low-confidence row is penalized instead of excluded. Then
+every arm runs over
+<code>SELECT … WHERE expired_at IS NULL ORDER BY updated DESC LIMIT 500</code>
+— a hard window ordered by <strong>recency</strong>. Past a few hundred
+active facts, the memories that stop being candidates are the ones
+nothing has touched lately, which is precisely the set of long-lived
+preferences the store worked hardest to establish. A perfect ranker over
+the wrong 500 rows is still wrong, and no amount of fusion tuning
+recovers a candidate that was never scored.</p>
+<p>Helm is also the atlas's plainest example of <strong>silent tier
+degradation</strong>. The semantic arm is a cached MiniLM embedding if
+the model is on disk, TF-IDF cosine if it is not, and nothing at all if
+the import throws — three materially different retrieval qualities
+behind one output shape, one <code>catch {}</code>, and no signal to the
+caller. If a channel can degrade, the result should say which channel
+ran.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

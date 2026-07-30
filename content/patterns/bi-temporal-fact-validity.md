@@ -117,6 +117,22 @@ bi-temporality was added stays recoverable rather than silently assumed.
 `expires_at` and TTL, which is validity's poorer relative: an expiry says when to
 stop believing something but not when it was true.
 
+[Helm](../../systems/helm/) is the near-miss worth checking your own schema
+against. It has `valid_from` and `expired_at` on the fact row, a `history <key>`
+verb that orders by `valid_from DESC`, and correction that stamps the old row
+rather than erasing it — every structural piece of this pattern. And it is not
+bi-temporal, because `valid_from` is only ever written as the insert timestamp or
+backfilled to `created`. No writer anywhere in the repository can set it to
+anything else, so validity time is record time under a second name, and the
+history the verb returns is a list of *when the system changed its mind*, never
+of when anything was true.
+
+The diagnostic generalizes past this one repository, because the columns are the
+easy part and are usually the part that gets built: ask whether any caller can
+land a fact whose validity **precedes its own row**. If a backfill cannot express
+"this was true from March, and I am only learning it now", the second time
+dimension is decorative no matter what the column is called.
+
 ## Tests to require
 
 - Backfilled old events ingested today.

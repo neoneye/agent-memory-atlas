@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of ninety agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of ninety-one agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -68,7 +68,7 @@ else:
 3. **Whether scope is identity or decoration.** Three levels, and the atlas's
    `scope_enforced` mark only certifies the middle one. A scope *tag* stored
    beside the memory is a hope. A scope *key applied as a filter on the read
-   path* is what 51 of 90 systems here have, and is what the mark means. A scope
+   path* is what 51 of 91 systems here have, and is what the mark means. A scope
    *boundary* — authenticated identity, grants, and a filter that a caller cannot
    widen by passing a different argument — is rarer than the count suggests, and
    in a single-user desktop deployment is not even the right goal. Read the
@@ -86,7 +86,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Ninety systems do not fall into ninety categories. They cluster around
+Ninety-one systems do not fall into ninety-one categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -184,7 +184,7 @@ several documented capabilities are managed-platform-only.
 `letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`,
 `agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
 `mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`, `loongflow`, `buzz`,
-`openhuman`, `aukora-kernel`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`, `z-waif`, `virtualwife`
+`openhuman`, `aukora-kernel`, `helm`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`, `z-waif`, `virtualwife`
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -204,6 +204,20 @@ skill bodies load only on match. **LoongFlow** carries two unrelated memories in
 one package — a conventional short/medium/long tier stack, and a population of
 scored solutions recalled by Boltzmann sampling whose temperature is driven by
 the population's measured diversity.
+
+**Helm is the family's floor, and it shows how little a working epistemic model
+costs.** One SQLite file opened through Node's built-in `node:sqlite`, no
+service, no key required to store anything, 401 lines — and inside them a
+provisional-confidence cap on any fact the agent thinks it noticed, an evidence
+counter that is the only thing able to raise belief, decay that retrieval slows
+rather than resets, and supersession that keeps the row it replaced. It is the
+cheapest instance in this atlas of [evidence before
+belief](../patterns/evidence-before-belief/) and worth reading beside systems a
+hundred times its size. Its failure is at the boundary rather than in the model:
+`recallMemories` formats the surviving facts as `- (kind) key: value` under the
+instruction *"use these, never contradict them"*, so the confidence the store
+worked to earn never reaches the model that consumes it. A system can compute
+trust carefully and still ship it as an assertion.
 
 **Buzz is the family's outlier and the only system here that treats memory as a
 wire protocol.** An engram is a signed, NIP-44-encrypted Nostr event, and the
@@ -798,6 +812,7 @@ session with an identity you could later correct.
 | `gini-agent` | `memory_units` with network, status, confidence, bi-temporal occurrence | SQLite (`memory_banks`, `entities`, `entity_mentions`, `memory_links`) | Four channels — semantic, BM25, graph spreading activation, temporal — fused by RRF then reranked | `retain.ts`; `proposed` status as a candidate tier | `rejected` and `conflicted` states, `archived`, supersession | `agent_id` enforced across every channel and the HTTP API | CLI, HTTP, web UI | `reflect.ts` consolidation, `reinforce.ts` | Per-unit `embedding_model`, source task and session ids | Bi-temporal columns and a rejected/conflicted trust model, with decisions kept as ADRs | Conflict state has no visible resolution workflow; no value tombstone |
 | `goodai-ltm` | A chunk of text addressed by a `text_key` returned at insert, with optional metadata and a timestamp | In-process chunk queue over a simple vector database, serialised whole through `state_as_text` / `set_state` | Embedding retrieval with a pluggable reranker — embedding, cross-encoder or a probabilistic matching model — plus optional LLM query rewriting | `add_text` with optional LLM rewriting; chunking is queue-based with section separators bounding chunk expansion | `replace_text` and `delete_text` by key, both abstract on the base interface — the complete lifecycle, keyed | None. No user, session, project or tenant concept anywhere | A Python library plus example LTM agents; no MCP, no server, no framework binding | None | Metadata and timestamps; no provenance, confidence or state | Targeted update and delete on the interface itself; a trainable reranker; a companion benchmark suite | Dormant since February 2024; whole-state serialisation; no scope key of any kind |
 | `graphiti` | Episode, entity, temporal relationship edge, community/saga | Neo4j, FalkorDB, Kuzu, Neptune | BM25 + cosine + BFS across edges/nodes/episodes/communities; RRF/MMR/cross-encoder | Episode ingestion, entity/edge extraction, resolution, temporal invalidation | Close `valid_at` intervals, expire edges, remove episodes | `group_id`, entity/edge types | Python library, MCP, server | Ingestion maintenance; saga summaries | Source episode UUIDs and bi-temporal history; no verified state | Preserves changing facts without erasing history | Entity merge/invalidation mistakes reshape the graph |
+| `helm` | A `(kind, key)` fact carrying confidence, evidence_count, access_count and an expiry, plus a free-text episode | One local SQLite file via `node:sqlite`, vectors as JSON text in side tables; a separate Markdown vault the agent edits by prompt | BM25 fused with MiniLM cosine by RRF, scaled by confidence and a key-match boost, over the 500 most recently updated active facts | One CLI verb per fact, a regex on the hot path, and a 15-minute think tick plus a weekly LLM pass for the rest | A same-key rewrite expires the old row and inserts a new one; `forget` and the prune sweep hard-delete | None on the fact table — one owner, enforced at the gateway; `channel` is stored on episodes but never filtered on | Discord, iMessage and a terminal client into one Claude Code session; two registry tools; a generated index imported into the prompt | A launchd/systemd think tick, a weekly deep review, consolidation with decay and prune, and index regeneration | A confidence float with a 0.7 cap on a first observation that rises only on independent repeats | The evidence gate, decay slowed by access, and episode-noise gates anchored by tests that name the pollution that forced them | Confidence never reaches the model, three readers ignore the expiry predicate, and the 500-row recall window is ordered by recency |
 | `hermes-agent` | Delimited text entry in `MEMORY.md` / `USER.md`; session message; skill | Markdown files plus SQLite `state.db` with FTS5 | Curated memory always in prompt; session history via FTS5; no cross-layer fusion | Explicit `memory` tool through a staged write-approval gate | Substring-addressed replace/remove; hard char cap forces in-turn consolidation | Profile-level only; no project or room boundary within a profile | Own tools plus one mounted `MemoryProvider`; MCP serve | None for curated memory; providers may run their own | Threat-scanned at write; no provenance on entries | Frozen prompt snapshot preserves cache; foreign-write detection with backup | Model writes are instantly authoritative; unlogged budget-driven eviction |
 | `hindsight` | Source chunk, world/experience fact, observation, reflection | PostgreSQL/pgvector or Oracle | Semantic + BM25 + graph + temporal, RRF/interleave, cross-encoder rerank | Screen, chunk, extract, embed, link, consolidate | Replace/append source; observation create/update/history; exact bank/document operations | Memory bank, tags, schemas/tenants | REST, MCP, generated SDKs, framework integrations | Queued consolidation and maintenance with retries | Source IDs, proof counts, audit/LLM traces; no explicit truth state | Complete service pipeline; task-specific fusion; temporal recall | LLM facts/observations can harden errors; operational complexity |
 | `hipporag` | Chunk plus derived entity and passage graph nodes | igraph graph with pluggable vector store (Qdrant/Chroma/Milvus) | Fact scores → LLM rerank → IDF-penalized graph seeding → Personalized PageRank diffusion | `index()`: chunk, OpenIE triples, fact/passage/synonymy edges | Chunk-scoped delete; shared entities survive by reference count | None — corpus is global | Python library only; no MCP, tools, or service | Cacheable OpenIE; incremental synonymy edges | Chunk identity only; no actor, time, or trust state | Diffusion replaces hop planning; synonymy as edges rather than merges | Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction |
@@ -917,31 +932,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*3 of 90:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*3 of 91:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*7 of 90:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*7 of 91:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*8 of 90:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
+*8 of 91:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument.
 
-*51 of 90:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*51 of 91:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*10 of 90:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
+*10 of 91:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*15 of 90:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*15 of 91:* [`acontext`](../systems/acontext/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*6 of 90:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
+*7 of 91:* [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`helm`](../systems/helm/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -1021,6 +1036,8 @@ visibly when it silently stops working.
 `mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `cognee` supports both explicit permanent writes and a session-hot capture path through `remember`. `claude-mem` writes hook events to a durable queue before invoking its observer. `a-mem` accepts direct Python note writes but runs LLM evolution before the new note is durable. `hindsight` retains documents/chunks before extracting facts. `graphiti` stores episodes before deriving entities and temporal relationships. `mastra-observational-memory` persists messages before compressing covered ranges. `memos` routes items into configured memory cubes. `basic-memory` accepts Markdown writes from MCP/API or human file edits and reconciles indexes. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores chunks in local JSON — or in SQLite once a corpus passes five thousand chunks. `llm-wiki-memory` combines explicit MCP/CLI writes with lifecycle hooks. `honcho` captures messages as the primary event stream, then derives observations. `verel` routes captured percepts through a trust gate. `agentmemory` combines cheap hook capture with explicit `mem::remember`; compression is optional. `tencentdb-agent-memory` records raw conversation evidence, then extracts higher layers from successful turns. `redis-agent-memory-server` writes messages into TTL-scoped working memory first and defers extraction behind a debounce. `hermes-agent` captures curated memory only through explicit tool calls, because a hard character budget makes automatic capture self-defeating. `openclaw` and `holographic` both capture without a model — OpenClaw after sanitizing its own message envelope, Holographic by regex over user turns when auto-extraction is enabled.
 
 Two systems in the Hermes/OpenClaw ecosystem independently guard against the same subtle failure: **the harness's own scaffolding becoming memory.** OpenClaw devotes 567 lines to stripping media notes, context markers, reply headers, and sender prefixes before capture, with a `looksLikeEnvelopeSludge` gate rejecting what remains. Holographic had to exclude its host's compaction handoff summaries, which were being injected as `role="user"` messages, matched its decision-extraction patterns, and were stored as durable facts on every context rollover. Any system with automatic capture should test explicitly that its own generated text cannot re-enter as evidence.
+
+`helm` is the third instance, and the only one where the scaffolding entering memory was the *memory layer's own audit trail*. Every supersession writes a `fact superseded: <kind>/<key>` row into the same episode table that its word-frequency distiller reads from, so the distiller began minting `learned` facts about supersession, ticks and smoke tests. The fix is visible in three places at once and worth reading together: a twenty-word extension to the distiller's stop list containing `supersed`, `episode`, `tick`, `think`, `memory` and `smoke`; two smoke tests asserting that a `__smoke`-keyed supersede emits zero episodes and that four rapid supersedes of one key collapse to one row; and a changelog entry naming the cleanup — 42 smoke episodes, 85 duplicate supersedes and 24 polluted `learned` rows deleted. The general rule: if you log mutations into the store you consolidate from, tag them at the source, because a stop list is how you find out you did not.
 
 `daimon` captures nothing during a session and everything at the end of one: a `SessionEnd` hook spawns a **detached** child that serializes the whole transcript into a single checkpoint, so the agent never blocks on capture and there is no incremental write path at all. It is also the clearest instance of *referencing* evidence rather than storing it — the checkpoint carries a `transcript_hash` and per-item source message ids pointing into the host's own transcript file, which daimon never copies. That keeps the store tiny and the provenance real, at the cost of a provenance chain that breaks the moment the host rotates its transcripts.
 
@@ -1115,7 +1132,7 @@ The research lineage adds two capture disciplines the practical systems mostly l
 
 `honcho`, `hindsight`, `mastra-observational-memory`, and `verel` have the strongest visible consolidation stories. Honcho derives working representations from event streams. Hindsight creates/updates observations with source IDs and proof counts. Mastra reflects growing observation logs and can prepare the result asynchronously before activation. Verel clusters failures, induces candidate design rules and schemas, then requires promotion gates for verification. `agentmemory` separately consolidates important observations into versioned memories and optional semantic/procedural layers. `tencentdb-agent-memory` compiles L1 records into scene files and changed scenes into a persona.
 
-`mem0` V3 is intentionally more append-oriented; consolidation is mostly dedupe and entity linking in the OSS path. `mempalace` consolidates operationally through dedup, closets, halls, tunnels, graph layers, and repair paths rather than by rewriting memories into summaries. `swafra` has no real consolidation worker or correction policy: ingestion adds cross-source edges, and a `superseded_by` loop exists, but old same-source chunks are removed before that loop can see them. `llm-wiki-memory` has a substantial opt-in, brain-only pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup, optional LLM merge, deterministic staleness flags, optional LLM refresh, orphan archive, archived-body compression, cache pruning, and index rebuild. `rainbox` consolidates through claim supersession, rejection, expiry, profile selection, and eval/feedback loops rather than through background summarization. `letta` separates core and archival memory but does not make consolidation the central visible mechanism in the inspected files. `langmem` provides reflection hooks rather than a fixed consolidation policy. `engram` keeps a pragmatic local model: update topic keys, count duplicates, surface conflicts.
+`mem0` V3 is intentionally more append-oriented; consolidation is mostly dedupe and entity linking in the OSS path. `mempalace` consolidates operationally through dedup, closets, halls, tunnels, graph layers, and repair paths rather than by rewriting memories into summaries. `swafra` has no real consolidation worker or correction policy: ingestion adds cross-source edges, and a `superseded_by` loop exists, but old same-source chunks are removed before that loop can see them. `llm-wiki-memory` has a substantial opt-in, brain-only pipeline: per-leaf similarity clusters, hash/lesson-key/cosine dedup, optional LLM merge, deterministic staleness flags, optional LLM refresh, orphan archive, archived-body compression, cache pruning, and index rebuild. `rainbox` consolidates through claim supersession, rejection, expiry, profile selection, and eval/feedback loops rather than through background summarization. `letta` separates core and archival memory but does not make consolidation the central visible mechanism in the inspected files. `langmem` provides reflection hooks rather than a fixed consolidation policy. `engram` keeps a pragmatic local model: update topic keys, count duplicates, surface conflicts. `helm` splits the job in two and only one half is real: a weekly LLM pass is *instructed* to turn themes appearing in two or more episodes into durable facts, with no schema and no validator, while a deterministic pass counts word stems and writes any stem seen in three episodes as a fact whose value is literally `mentioned in 3 episodes (last: "…")`. That is term frequency in the vocabulary of learning — no subject, no predicate, no claim — stored at up to 0.9 confidence and injectable like anything else. A distiller that cannot produce a proposition should not be writing into the store the model reads.
 
 `generative-agents` is the origin of the reflection loop that several systems
 here descend from, and its trigger is still the most elegant: a countdown seeded
@@ -1230,7 +1247,7 @@ the correct trade for a search loop and the wrong one for facts about a user.
 
 `letta` and `mastra-observational-memory` have the deepest runtime prompt integration. Mastra removes observed raw messages, injects active observations as system context, retains a recent tail, and adds a continuation reminder. `claude-mem` automatically renders a project-scoped chronological timeline, showing only a bounded subset of observations in full. `rainbox` injects an operator profile block and hybrid memory context and records what was injected. `verel` has the safest visible recall renderer: recalled memory is token-budgeted and fenced as untrusted data. `mempalace` has a four-layer stack. `basic-memory` builds graph context through MCP while leaving final prompt placement to the client. `agentmemory` assembles pinned items, profiles, lessons, summaries, and observations within a token budget; its smart search separately supports compact-first expansion. `tencentdb-agent-memory` separates dynamic L1 recall from stable scene/persona context and adds navigable short-term offload maps. `cognee`, `graphiti`, `hindsight`, and `memos` return structured recall/context to integrations. `swafra` exposes unbounded `get_context`; `llm-wiki-memory` injects session work context; `supermemory` emits profile text; `engram` has MCP context tools; `honcho` exposes working representations. A-MEM leaves injection entirely to its caller.
 
-`hermes-agent` takes the most distinctive position in this set: curated memory is rendered into the system prompt **once, at session start, as a frozen snapshot**, and mid-session writes deliberately do not update it, so the provider's prefix cache survives the whole session. That choice is economic rather than epistemic, but it drives a real safety decision — because a poisoned entry would persist for the entire session and beyond, Hermes scans memory content against its broadest threat-pattern set at *write* time. This is the mirror image of Verel's and RainBox's read-time fencing, and the trade is instructive: write-time filtering is cheaper and cache-friendly but is a denylist, while read-time fencing costs tokens every turn and does not depend on pattern coverage. `holographic` does neither, injecting its top five stored facts into the prompt unfenced.
+`hermes-agent` takes the most distinctive position in this set: curated memory is rendered into the system prompt **once, at session start, as a frozen snapshot**, and mid-session writes deliberately do not update it, so the provider's prefix cache survives the whole session. That choice is economic rather than epistemic, but it drives a real safety decision — because a poisoned entry would persist for the entire session and beyond, Hermes scans memory content against its broadest threat-pattern set at *write* time. This is the mirror image of Verel's and RainBox's read-time fencing, and the trade is instructive: write-time filtering is cheaper and cache-friendly but is a denylist, while read-time fencing costs tokens every turn and does not depend on pattern coverage. `holographic` does neither, injecting its top five stored facts into the prompt unfenced. `helm` is worse than unfenced: its eight recalled facts are prefixed *"MEMORY — use these, never contradict them"*, and the format is `- (kind) key: value` with the confidence, evidence count and source all dropped — so a preference the background loop guessed once from a transcript at 0.7 and a fact the owner stated outright arrive as the same kind of sentence, under an instruction not to argue with either. It also runs both injection channels at once: a generated `INDEX.md` imported through `CLAUDE.md` (stable between background ticks, and the only place a confidence figure survives) plus a per-turn recall block appended to the system prompt, which means the system-prompt prefix differs on every turn and the prefix cache is invalidated by construction. Hermes pays tokens to keep the prefix frozen; Helm gives the prefix up for free, and the cheaper arrangement — stable index in the prefix, query-specific hits in the user turn — is one line away.
 
 `daimon` shares Hermes's session-start-snapshot shape but makes the artifact the
 product: a "while you were away" briefing ordered by *what to verify first*,
@@ -1251,6 +1268,8 @@ a model prettify memory without letting it edit it.
 This is where systems diverge sharply.
 
 `verel` and `rainbox` have the strongest visible epistemic correction semantics in this set. `verel` has explicit trust states and rejected tombstones. `rainbox` has governed atomic correction, conflict detection, and tombstones that prevent model-write laundering. `engram` has conflict candidates and judgment tools. `mempalace`, `llm-wiki-memory`, `letta`, `mem0`, `honcho`, `supermemory`, and `langmem` expose increasingly operational forms of update/supersession without the same trust model.
+
+`helm` has the shape of temporal correction and none of the temporality: a rewrite of an existing `(kind, key)` stamps `expired_at` on the old row, inserts the new one, and `history <key>` returns the chain — but `valid_from` is only ever written as the insert timestamp, so validity time is record time under a different name, and no caller can say "this became true in March". The instructive part is what the soft delete costs. Active rows are defined by the predicate `expired_at IS NULL`, enforced by a *partial* unique index that constrains writes and leaves every `SELECT` to remember the filter itself — and three readers do not. The agent's own autonomy setting is read back without it and therefore returns the stale pre-supersession value; the distiller's lookup can write onto a dead row; the dedupe pass can delete superseded history and sum retracted evidence onto the survivor. Any system that expresses correction as a nullable column needs a view or an accessor, because "remember the predicate" is not an invariant.
 
 Graphiti closes a fact's validity interval and retains history, which is the strongest temporal correction model here, but it does not mark claims verified/rejected. Hindsight rewrites or merges observations while retaining source/history fields. Basic Memory makes correction a human-readable file edit followed by transactional reindexing. Mastra replaces only the observation range covered by a reflection. MemOS correction varies by module and therefore lacks one consistent semantic contract.
 
@@ -1511,6 +1530,7 @@ Visible deletion varies from hard API deletion to lifecycle state:
 - `letta`: block/file/passage update paths, archival insert/search visible; deletion depends on manager APIs outside the key path.
 - `supermemory`: forget API in MCP/client; semantic fallback delete is powerful but risky.
 - `verel`: rejected tombstones, TTL/volatile/stale pruning, and protection for verified/rejected/pinned records.
+- `helm`: two hard deletes and one soft. `forget <id>` removes the fact and its cached vector; the nightly consolidation prunes any active row below 0.05 confidence that was never corroborated; supersession is the only exit that keeps the row. Deletion is therefore genuinely irreversible — good for a private local store, and the reason nothing stops the same reflection loop re-deriving a pruned fact from the same episodes tomorrow. The exposure is specific: the hot-path regex that captures an explicit "remember that …" mints a fresh timestamped key each time, so those rows never corroborate, never supersede, and sit on the fastest path to a silent prune.
 - `daimon`: `forget` deletes the item from the live checkpoint, appends a `forgotten:<content-hash>` event carrying a hash and never the text, re-mints the checkpoint's signed receipt, and — because item ids are a hash of the item's own text — deletes every row with that id from the search index across *all* historical checkpoints on the next rebuild. Weight-based expiry from carry is the softer path: an item below the floor simply stops being carried forward.
 - `hindsight`: bank/document/memory operations plus cascading schema relations; derived observations must remain consistent with source changes.
 - `graphiti`: episode removal and edge invalidation preserve temporal history and source support.
@@ -1622,6 +1642,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: `src/agent/core/domain/memory/types.ts`; `ContextData` in `src/server/core/domain/knowledge/markdown-writer.ts`.
 - `openclaw`: `MemoryEntry` in `extensions/memory-lancedb/lancedb-store.ts`; categories in `config.ts`.
 - `daimon`: the item-field table in `plugin/daimon_briefing/schema.py`; checkpoint shape in the `SERIALIZE_SYS` prompt in `serializer.py`; on-disk layout and id stamping in `store.py`.
+- `helm`: `facts`, `episodes` and an unused `links` table in `workspace/memory/memory.mjs:13-64`, where five later columns arrive as guarded `ALTER`s re-run on every process start and the active-row invariant is a partial unique index over `(kind, key) WHERE expired_at IS NULL`; vector side tables created lazily in `workspace/memory/embed.mjs`.
 
 ### Add/Write Path
 
@@ -1662,6 +1683,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: `MemoryDeduplicator.deduplicate()` in `src/agent/infra/memory/memory-deduplicator.ts`; `resolveStructuralLoss()` in `knowledge/conflict-resolver.ts`.
 - `openclaw`: `sanitizeForMemoryCapture()` in `extensions/memory-lancedb/memory-capture-sanitization.ts`; `store()` in `lancedb-store.ts`.
 - `daimon`: `serialize_strict()` in `plugin/daimon_briefing/serializer.py` with its gate chain (`sanitize_source_ids`, `pin_imperatives`, `verify_quotes`, `ground_outcomes`); `merge()` in `carry.py`; `write_checkpoint()` in `store.py`.
+- `helm`: the `remember` verb in `workspace/memory/memory.mjs:87-162` — provisional cap, evidence ratchet, supersession, gated supersede episode; hot-path capture in `index.js:572-583`; the tool wrapper `workspace/tools/impl/memory.remember.mjs`, which omits `--source` and so never trips the cap.
 
 ### Search/Retrieve Path
 
@@ -1702,6 +1724,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: `ListMemoriesOptions` filtering in `src/agent/infra/memory/memory-manager.ts`.
 - `openclaw`: `scopedPredicate()` and `query()` in `extensions/memory-lancedb/lancedb-store.ts`; `normalizeRecallQuery()` in `memory-policy.ts`.
 - `daimon`: `search()` and `suggest()` in `plugin/daimon_briefing/recall.py`; ranking in `scoring.py`.
+- `helm`: one function, `workspace/memory/memory.mjs:164-326` — a 500-row recency-ordered candidate window, hand-written BM25, a semantic arm that is MiniLM if cached and TF-IDF cosine otherwise, RRF at k=60, a confidence weight and a key-match boost, and a separate episode scorer with a 30-day recency term.
 
 ### Context Assembly
 
@@ -1742,6 +1765,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: caller-owned after listing.
 - `openclaw`: auto-recall assembly in `extensions/memory-lancedb/index.ts`.
 - `daimon`: `build()`, `withhold()`, `stale_carried()` and `render_plain()` in `plugin/daimon_briefing/briefing.py`; terminal output in `render.py`.
+- `helm`: `recallMemories()` in `index.js:490-510` for the per-turn block, prompt assembly at `index.js:595-607`, and the static channel — `workspace/memory/refresh-index.mjs` writing `INDEX.md`, imported by the `@memory/INDEX.md` line at `workspace/CLAUDE.md:15`.
 
 ### Background Workers
 
@@ -1782,6 +1806,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: bounded-concurrency LLM deduplication.
 - `openclaw`: auto-capture cursor advancement; no separate worker.
 - `daimon`: no worker — a detached `daimon serialize` child spawned by `hook/daimon-session-end.py`, tracked through `ledger.py` (`_session_ledger`, `_heal_plan`) and re-driven by `daimon heal`.
+- `helm`: `workspace/think/think.mjs` under launchd/systemd — a ~15-minute reflection tick with a stale-PID lock, a quiet window, a tick and wall-clock guard that exits for the service manager to restart, and a weekly deep review whose completion mark is stamped only on a clean exit; then `workspace/memory/consolidate.mjs` (distil, decay, prune, dedupe) and an index rewrite after every tick.
 
 ### MCP/API/SDK Surfaces
 
@@ -1822,6 +1847,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `byterover`: `brv` CLI and MCP; Hermes provider adapter.
 - `openclaw`: `extensions/memory-core/` plugin contract, memory tools, CLI, and doctor contracts.
 - `daimon`: host hooks in `hook/` and `plugin/daimon_briefing/_hooks/`; read-only stdio MCP in `mcp_server.py` and `mcp_tools.py`; commands in `cli.py`.
+- `helm`: no MCP or SDK for memory — a JSON-on-stdout CLI (`memory.mjs`), two shell-out entries in `workspace/tools/registry.json`, and Discord, iMessage and terminal front doors converging on one Claude Code session keyed `'owner'` in `workspace/sessions.mjs`.
 
 ### Evals/Tests
 
@@ -1872,6 +1898,7 @@ often weak evidence — is covered separately in
 - `byterover`: no tests located for the memory or knowledge domain modules, including none for the structural-loss guard that is its best idea.
 - `openclaw`: test lines far exceed implementation — 4,497 for the LanceDB extension and 2,530 for the memory-core doctor contract; no committed retrieval benchmark.
 - `daimon`: 1,974 tests across roughly 29,700 lines against 15,600 lines of source, with dedicated quote-verification, carry, withhold, redaction-leak, receipt, and host-isolation suites. Its `benchmark/` runs LongMemEval-S through the real serializer and answers only from `daimon recall`, under a written reporting policy — publish only self-measured numbers with the full config stamp, label third-party figures as their publishers' claims, never report a figure without its backend, and report the trade rather than the win. Two result files are committed; the honest one is a 52-question interim baseline at **Recall@5 0.58 / Hit@5 0.67 / MRR 0.59** (my arithmetic over its per-question rows — the file ships no aggregate block). The other is a five-question run, which the config stamp makes obvious.
+- `helm`: `workspace/tests/smoke.mjs`, 88 labelled cases against the live SQLite file, of which about nineteen touch memory. Two assert *ranking* rather than round-trips — confidence weighting placing a high-confidence fact above a low-confidence lexical match, and BM25 term-frequency ordering — which is rare at this scale. Others cover the provisional cap and its evidence ratchet, supersession end to end, the unique index rejecting a raw duplicate `INSERT`, the `access_count` bump on read, and two gates on the system's own episode noise. There is no eval harness, no retrieval benchmark, and no committed benchmark artefact; nothing tests the 500-row recall boundary that caps the whole design, and the second brain is covered by a case that explicitly asserts "no Claude run". Separately, `workspace/repo-scan-report.md` is a committed 25-issue self-audit — severity, `file:line`, "reproduced empirically", and a fix pointing at a correct pattern already in the repo — and every issue I checked is closed at the pinned commit, including the shared engine-resolution module the report itself recommended.
 
 ## 5. Design Patterns That Recur
 
@@ -1900,11 +1927,22 @@ Repos: strongest in `cognee`, `honcho`, `verel`, `mempalace`, `rainbox`, `graphi
 
 Raw messages, observations, files, drawers, or evidence rows are retained, and derived facts/representations/indexes are computed from them. This works because wrong memories can be audited and recomputed. It fails if the derived layer does not preserve source IDs, if raw stores become too noisy, if evidence excerpts are too thin, or if background derivation makes read consistency surprising.
 
+`helm` is the cheapest version of the idea in the atlas and shows how much of it
+survives at that price. A write tagged as an agent observation is capped at 0.7
+confidence no matter what the caller asked for, and rises by 0.05 only per
+independent repeat of the *same value* — so a first sighting is structurally
+incapable of being stored as certain, in about fifteen lines. What it does not
+buy is auditability: the fact carries no link back to the episodes that produced
+it, the table that could express one is created and never used, and a distilled
+row reading "mentioned in 5 episodes" cannot name a single one. Corroboration
+without provenance is the affordable half of the pattern, and it can raise
+belief in a value it can no longer explain.
+
 ### Hybrid retrieval
 
 Pattern guide: [Hybrid retrieval fusion](../patterns/hybrid-retrieval-fusion/).
 
-Repos with visible fused lexical/semantic or multi-arm ranking: `mem0`, `honcho`, `mempalace`, `swafra`, `rainbox`, `verel`, `hindsight`, `graphiti`, `basic-memory`, `agentmemory`, `tencentdb-agent-memory`, and configured `memos` pipelines. Supermemory exposes hybrid settings, but the hosted implementation is not visible. Engram's FTS/topic-key retrieval and Letta's separate archival/conversation searches are useful multi-mode retrieval surfaces, not evidence of fused hybrid ranking.
+Repos with visible fused lexical/semantic or multi-arm ranking: `mem0`, `honcho`, `mempalace`, `swafra`, `rainbox`, `verel`, `hindsight`, `graphiti`, `basic-memory`, `agentmemory`, `helm`, `tencentdb-agent-memory`, and configured `memos` pipelines. Supermemory exposes hybrid settings, but the hosted implementation is not visible. Engram's FTS/topic-key retrieval and Letta's separate archival/conversation searches are useful multi-mode retrieval surfaces, not evidence of fused hybrid ranking.
 
 Vector search alone is not enough. Identifiers, names, exact phrases, dates, file paths, and project keys often need lexical search. Hybrid retrieval works because it handles both fuzzy semantic recall and exact lookup. MemPalace adds a useful variant: extracted/indexed "closets" boost drawer ranking but never gate direct evidence retrieval. Swafra is a useful compact example of BM25 + vector + cheap heuristic fusion, but also a warning: ad hoc component normalization and unbounded bonuses make scores hard to interpret. Hybrid retrieval fails when rank fusion is opaque or not evaluated.
 
@@ -1912,6 +1950,21 @@ Cognee has genuine multi-view hybrid retrievers but also many non-fused modes
 with different result contracts. Claude-Mem and A-MEM are naming
 counterexamples: ordinary Claude-Mem text search selects semantic rather than
 fusing it with FTS, and A-MEM's “hybrid” path is vector-only.
+
+`helm` answers the "opaque fusion" objection the cheap way and is worth copying
+for it. Both arms are computed in JavaScript over the same candidate rows, and
+they are combined by reciprocal rank at the conventional k=60 rather than by
+normalizing two incomparable score scales — the right call precisely because the
+project has no relevance data to calibrate against. The belief weight is applied
+as a multiplier (`0.7 + 0.3·confidence`) rather than as a filter, so a
+low-confidence row is penalized rather than excluded. The cost of arriving here
+so cheaply shows up in two places: the semantic arm silently degrades through
+three quality tiers — cached MiniLM, then TF-IDF cosine, then nothing — with one
+output shape and no signal to the caller, and every arm runs over a hard
+500-row window ordered by *recency*, so past a few hundred active facts the
+oldest and best-corroborated memories stop being candidates at all. Fusion
+quality is bounded by candidate generation, and this is the clearest place in the
+atlas to see it.
 
 ### Scope as a first-class key
 
@@ -1931,9 +1984,21 @@ MCP is useful because it lets different coding agents and desktop tools use the 
 
 ### Local SQLite for inspectable memory
 
-Repos: `engram`, `mempalace`, `verel`, `claude-mem`, `basic-memory`, `agentmemory`, and the local backends of `cognee` and `tencentdb-agent-memory`; SQLite also supports history/messages in `mem0`.
+Repos: `engram`, `mempalace`, `verel`, `claude-mem`, `basic-memory`, `agentmemory`, `helm`, and the local backends of `cognee` and `tencentdb-agent-memory`; SQLite also supports history/messages in `mem0`.
 
 SQLite works well for local agent memory: durable, fast, easy to inspect, transaction-friendly, and good enough with FTS5. MemPalace also shows the complementary local pattern: SQLite metadata/KG/FTS plus a local vector store. It fails if a product needs multi-tenant scale, remote sharing, or vector-heavy retrieval without extensions/adapters.
+
+`helm` is the minimum viable instance: Node 22's built-in `node:sqlite`, so the
+store has *no dependency at all*, and no FTS5 either — BM25 is computed in
+JavaScript over the candidate rows. That buys a memory layer with nothing to
+install and nothing to run, and it costs two things worth knowing before copying
+it. Concurrency is a `busy_timeout` of five seconds against four unsynchronized
+writer classes, each `remember` being a read-then-write across separate
+statements with no transaction, where the partial unique index is what turns a
+lost race into an error rather than a duplicate. And schema evolution is a stack
+of `try { ALTER TABLE … } catch {}` re-executed by every entry point on every
+start — idempotent, effective, and the reason the real schema is the union of
+five files rather than a declaration in one.
 
 ### Flat JSON as a prototype store
 
@@ -1989,12 +2054,24 @@ candidates from a session by regex and drops any hit with no file path in its
 own span. The lesson is not "avoid the model" but "never let the model be the
 only thing between a transcript and a durable claim".
 
+`helm` is the smallest instance and a clean demonstration of the pattern's real
+failure mode, which is not privacy but *keying*. One regex on the reply path —
+`remember that`, `note that`, `for the record`, `fyi` — captures the following
+span as a fact, with no model in the path and no latency on the turn. The key is
+`'note-' + Date.now().toString(36)`. Because every capture mints a new key, the
+uniqueness index never applies, supersession can never fire, and telling the
+agent "remember that I prefer X" twice with different values leaves both facts
+live and contradictory at equal confidence. Those rows also arrive
+uncorroborated, so the one thing the owner said *explicitly* is the row most
+exposed to the confidence-floor prune. A zero-LLM capture path still has to
+decide what a memory is *about*, and a timestamp is not an answer.
+
 ### Decay and reinforcement
 
 Pattern guide: [Decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-Repos: strongest in `verel`; supporting behavior in `agentmemory`, `honcho`
-and `daimon`; `swafra` is a counterexample for unconditional age decay.
+Repos: strongest in `verel`; supporting behavior in `agentmemory`, `honcho`,
+`helm` and `daimon`; `swafra` is a counterexample for unconditional age decay.
 
 Let retrieval strength fade or grow without changing epistemic confidence.
 This keeps stale operational memory from dominating while protecting durable
@@ -2011,6 +2088,18 @@ same file also treats a stamp further in the future than clock skew explains as
 neutral rather than maximally fresh, so a teammate's mis-stamped item cannot
 outrank genuine local work — a small guard that only appears once memory is
 shared across machines.
+
+`helm` shows the pattern's failure mode being *narrowly avoided* and then
+reintroduced two lines later. Retrieval does not raise belief — it slows loss:
+`log1p(access_count)` is subtracted from the count of stale weeks, so a fact the
+agent keeps reaching for holds its confidence without ever gaining any, which is
+exactly the separation this pattern asks for. Only never-corroborated rows decay
+at all, and rows sourced from the persona document are exempt entirely. Then the
+same pass advances `last_seen` by the stale weeks it just consumed, purely so the
+next nightly run does not re-apply the same step — an effective idempotence trick
+that destroys the column's stated meaning for every other reader, including the
+one that orders the weakly-evidenced list by it. If a batch job needs to remember
+what it already did, give it its own column.
 
 ### Profiles and working representations
 
@@ -2031,6 +2120,16 @@ Pattern guide: [Bi-temporal fact validity](../patterns/bi-temporal-fact-validity
 Repos: strongest in `graphiti`; supporting temporal/event-time ideas in `hindsight`.
 
 Record both when a fact was valid in the represented world and when the system learned or expired it. This preserves historical truth during correction and backfill. It fails when LLM-extracted dates or invalidation decisions are treated as certain.
+
+`helm` is the instructive near-miss, and the reason the mark is withheld rather
+than the columns counted. It has `valid_from` and `expired_at`, a `history` verb
+that orders by `valid_from DESC`, and supersession that keeps the row it
+replaced — the whole shape. But `valid_from` is only ever written as the insert
+timestamp or backfilled to `created`, so validity time is record time under a
+second name, and no writer can express that something became true before it was
+recorded. Two columns and a history verb are not bi-temporality until some caller
+can set them apart; the test to ask of any candidate is whether a backfill can
+land a fact whose validity precedes its own row.
 
 ### Pluggable memory provider
 
@@ -3161,6 +3260,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want cross-session continuity for a coding agent, or you want to see what taking trust classes seriously actually costs in code.
 - Do not copy when: you need memory within a session, semantic retrieval, or a shared service — none of the three is here or planned.
 
+### `helm`
+
+- Best idea: a first observation is capped at 0.7 confidence and can only rise 0.05 per independent repeat of the same value, so the store cannot record a single sighting as certain — the whole gate is about fifteen lines.
+- Biggest risk: the confidence it computes never reaches the model. The per-turn block is `- (kind) key: value` under *"use these, never contradict them"*, which promotes every provisional guess to an assertion at the last step.
+- Most reusable component: `workspace/memory/` — four scripts, a JSON-on-stdout CLI, no dependency beyond Node 22's built-in `node:sqlite`, and no coupling to the rest of Helm beyond a path.
+- Maturity impression: uneven and legible. A committed 25-issue self-audit with `file:line` and reproduction steps, every issue I checked closed at this commit, and smoke tests that assert ranking and the system's own noise gates — beside a schema that exists as guarded `ALTER`s in five files and three readers that forgot the active-row predicate.
+- Study when: you want the cheapest working epistemic model in this atlas, or you are building a single-owner local agent and want more than a JSON blob.
+- Do not copy when: the store will pass a few hundred active facts (the recall window is 500 rows ordered by recency), more than one person or project shares it (there is no scope to add), or deletion has to survive re-derivation (`forget` and prune are hard deletes with no record).
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -3340,6 +3448,7 @@ Privacy/deletion:
 - [`soul-of-waifu`](../systems/soul-of-waifu/)
 - [`z-waif`](../systems/z-waif/)
 - [`virtualwife`](../systems/virtualwife/)
+- [`helm`](../systems/helm/)
 
 ### Repos Inspected
 
@@ -3434,6 +3543,7 @@ Privacy/deletion:
 - [jofizcd/Soul-of-Waifu](https://github.com/jofizcd/Soul-of-Waifu) at [`3d032badc07335012ae6917e29ea16b8203252f5`](https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5)
 - [SugarcaneDefender/z-waif](https://github.com/SugarcaneDefender/z-waif) at [`aaf905c12efcbd2a709a3b2285f55e554d47484f`](https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f)
 - [yakami129/VirtualWife](https://github.com/yakami129/VirtualWife) at [`c8afd6d3ce6bb6f58988c649c50299d36b63e08f`](https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f)
+- [GOODMAN-PRO/helm](https://github.com/GOODMAN-PRO/helm) at [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73)
 
 ### Commands Used
 
@@ -3535,7 +3645,7 @@ No internet sources were used for this report. The analysis is based on the chec
 - Nothing was run for the six systems added in this round. OptMem is reviewed **without a licence file** — all rights reserved by default — as a deliberate exception to the rule applied to `openyak` and others, because it carries mechanisms the atlas has not otherwise found; the exception covers reading it, not reusing it. MemAgent, HiAgent, Mi-Memory and langchain-ai/memory-agent were examined in the same round and have no reports: MemAgent and HiAgent are conversation-window management (MemAgent is discussed in the scope-boundary section), `Darwin-Agent/Mi-Memory` is a paper PDF and a landing page with no implementation, and `langchain-ai/memory-agent` is a 235-line LangGraph template whose substantive counterpart, LangMem, is already reviewed here.
 - **Framework-native memory layers not yet reviewed**, named because a reader looking for them should find the gap rather than infer coverage: **CrewAI**'s memory module, **Semantic Kernel**'s memory and plugin surfaces, and **Haystack**'s agent memory. The atlas has read the adjacent contracts — [adk-python](../systems/adk-python/), [AutoGen](../systems/autogen/) and [LangMem](../systems/langmem/) — and CrewAI in particular is the most-cited omission on that side. These are reachable by this method, unlike the hosted products above; they are simply not done.
 - **MemGPT is here under its current name.** The project renamed to Letta, so the OS-style tiered-memory reference implementation is the [Letta report](../systems/letta/), and a reader searching this atlas for "MemGPT" will otherwise find only a passing mention in the correction discussion. Recorded because the rename makes the lineage hard to find, not because anything is missing.
-- `Cohexa-ai/agent-coherence` was examined and has no report. It is MESI cache-coherence for shared agent artifacts — single-writer ownership, commit-CAS, a read-generation fence, pinned snapshot sessions — and it stores no memory: `CCSStore._apply_put` serialises the value to an opaque JSON string and versions it, never parsing, ranking, scoping or correcting it. What it durably holds is coordination metadata. That is the guard-is-not-a-store shape and the operates-rather-than-believes shape at once, and naming `memory.json` as an example artifact does not change it. Recorded rather than dropped for two reasons. Its premise is a failure this atlas asks about in every report and finds answered in **two** of ninety — [Mastra](../systems/mastra-observational-memory/) prevents lost updates with per-scope locks, [Logseq](../systems/logseq/) is last-write-wins — so a whole library existing for it says something about the corpus. And its central claim does not hold: the README says *"every spec carries a documented mutant that must fail — the invariants are load-bearing, not decorative"*, the mutants are written out in the specs' comments, and nothing executes them. `make tla-check` asserts six invariants hold; no job asserts a mutated spec fails, which is the standard defence against an invariant passing vacuously. A repository with 60,163 lines of tests documented its negative cases in prose — and the contrast is internal, because its *performance* claim is committed, checksummed and CI-regression-checked: `benchmarks/results/canonical/SUMMARY.md` reproduces its paper's Table 1 with all four figures against tolerances, which is the inverse of the traceability failure this atlas records for Memvid, MemoryOS and FiFA. The same discipline was applied to the speed claim and not to the safety claim. Its paper ([arXiv:2603.15183](https://arxiv.org/abs/2603.15183), 16 March 2026) is also worth noting for selling a different thing than the repository does — the paper leads with simulated token savings and the repository leads with preventing silent clobbers, which on this atlas's terms is the better framing of the same mechanism. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md) for what is unusually honest about it, and for the read-generation fence, which is the one mechanism there that memory systems with restartable background passes appear to need and none here has.
+- `Cohexa-ai/agent-coherence` was examined and has no report. It is MESI cache-coherence for shared agent artifacts — single-writer ownership, commit-CAS, a read-generation fence, pinned snapshot sessions — and it stores no memory: `CCSStore._apply_put` serialises the value to an opaque JSON string and versions it, never parsing, ranking, scoping or correcting it. What it durably holds is coordination metadata. That is the guard-is-not-a-store shape and the operates-rather-than-believes shape at once, and naming `memory.json` as an example artifact does not change it. Recorded rather than dropped for two reasons. Its premise is a failure this atlas asks about in every report and finds answered in **two** of ninety-one — [Mastra](../systems/mastra-observational-memory/) prevents lost updates with per-scope locks, [Logseq](../systems/logseq/) is last-write-wins — so a whole library existing for it says something about the corpus. And its central claim does not hold: the README says *"every spec carries a documented mutant that must fail — the invariants are load-bearing, not decorative"*, the mutants are written out in the specs' comments, and nothing executes them. `make tla-check` asserts six invariants hold; no job asserts a mutated spec fails, which is the standard defence against an invariant passing vacuously. A repository with 60,163 lines of tests documented its negative cases in prose — and the contrast is internal, because its *performance* claim is committed, checksummed and CI-regression-checked: `benchmarks/results/canonical/SUMMARY.md` reproduces its paper's Table 1 with all four figures against tolerances, which is the inverse of the traceability failure this atlas records for Memvid, MemoryOS and FiFA. The same discipline was applied to the speed claim and not to the safety claim. Its paper ([arXiv:2603.15183](https://arxiv.org/abs/2603.15183), 16 March 2026) is also worth noting for selling a different thing than the repository does — the paper leads with simulated token savings and the repository leads with preventing silent clobbers, which on this atlas's terms is the better framing of the same mechanism. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md) for what is unusually honest about it, and for the read-generation fence, which is the one mechanism there that memory systems with restartable background passes appear to need and none here has.
 - Core Memory's grounding ceiling, Memanto's conflict-detection precision, Memory Engine's agent clamp, ai-memory's cross-harness continuity claim, ctx's disclosure reachability, and OptMem's cover loss are all directly testable and none was measured here.
 - Nothing was run for the four systems added in this round. `gastownhall/beads` and `VectorSpaceLab/general-agentic-memory` were examined and have no reports, for the reasons given in the scope section; GAM additionally has no licence file. `langchain-ai/memory-agent` and `akitaonrails/ai-memory` were re-submitted in this round and were already handled — the first rejected as a 235-line template, the second reviewed.
 - Memvid's headline figures ("+35% SOTA on LoCoMo", "+76% multi-hop", "+56% temporal") could not be traced to committed raw artifacts at the inspected commit and are recorded as claims. MemoryOS commits the LoCoMo dataset beside its harness but no scored results were found. Neither was run here.
@@ -3547,3 +3657,4 @@ No internet sources were used for this report. The analysis is based on the chec
 - Oracle's `oracleagentmemory` was suggested for review and has **no public source repository** — a GitHub search returns only third-party demos consuming the SDK. It cannot be reviewed on this atlas's terms, which require inspectable code at a pinned commit, and is recorded here rather than silently omitted.
 - Verel was re-reviewed on 2026-07-28 at `5aa050fe` (v1.9.0) after its author reported the entry was out of date. The previous pin was not merely old but **unreachable from any branch** — GitHub served it by SHA while a full clone did not contain it — so that reading described a state absent from the project's history. The re-read moved Verel from three of the seven rubric capabilities to all seven, and changed four atlas-wide counts. `scripts/check_freshness.py` now distinguishes an orphaned pin from a stale one. Its first run, on 2026-07-28, found 30 stale pins out of the 62 repositories the atlas held that day — a dated measurement rather than a live figure, and one that moves between runs, so read it as magnitude. The same correction is likely waiting elsewhere.
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.
+- Helm was read, not run. Three claims in its report are inferences from code that a live database would settle: that `getAutonomyMode` returns the stale pre-supersession row (argued from SQLite's partial-index eligibility and rowid scan order, and consistent with the 82 duplicate supersessions of that one key recorded in the project's own changelog); that the 500-row recall window is reached in practice, which depends on a fact count that is gitignored; and which of the three retrieval quality tiers a typical install actually runs, since the MiniLM model is an explicit opt-in download and all three tiers produce the same output shape. Helm's third memory surface could not be reviewed at all: twelve `cortex.*` tools are registered and documented as a five-layer memory stack, and `workspace/cortex/` is gitignored and absent from the repository.

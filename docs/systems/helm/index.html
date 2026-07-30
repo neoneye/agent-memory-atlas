@@ -1,0 +1,1309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-owner personal agent
+whose SQLite fact store caps a first observation at 0.7 confidence and
+lets it ratchet up only on independent repeats, then injects the
+surviving facts into the turn with the confidence stripped off.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Helm — Agent Memory Atlas">
+    <meta property="og:description" content="A single-owner personal
+agent whose SQLite fact store caps a first observation at 0.7 confidence
+and lets it ratchet up only on independent repeats, then injects the
+surviving facts into the turn with the confidence stripped off.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Helm — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-owner personal
+agent whose SQLite fact store caps a first observation at 0.7 confidence
+and lets it ratchet up only on independent repeats, then injects the
+surviving facts into the turn with the confidence stripped off.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Helm — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Confidence-ratcheted SQLite memory</p>
+          <h1>Helm</h1>
+          <p class="document-deck">A single-owner personal agent whose
+SQLite fact store caps a first observation at 0.7 confidence and lets it
+ratchet up only on independent repeats, then injects the surviving facts
+into the turn with the confidence stripped off.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GOODMAN-PRO/helm">
+              <span>Source</span>
+              <strong>GOODMAN-PRO/helm</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73" title="f453eaa9683ea0a66b45c76275cb6576bcf14f73">
+              <span>Analyzed revision</span>
+              <code>f453eaa9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (76%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Helm is a <strong>single-owner personal agent</strong> that runs on
+the owner's own machine. Messages arrive from Discord, iMessage or a
+terminal client; <code>index.js</code> shells out to the
+<code>claude</code> CLI with the workspace and the home directory
+mounted; the agent acts and reports back. Memory is not a product
+surface here — it is one SQLite file, five columns of bookkeeping bolted
+onto it, and a background process that reflects every fifteen
+minutes.</p>
+<p>The design worth reading the code for is the <strong>evidence
+gate</strong> in <code>workspace/memory/memory.mjs:87-162</code>. A
+write tagged <code>--source observed</code> — the tag the background
+reflection loop uses when it thinks it has noticed something about the
+owner — is capped at <code>PROVISIONAL_CAP = 0.7</code> no matter what
+confidence the caller asked for. It can only rise by 0.05 per
+<em>independent repeat</em>, tracked in <code>evidence_count</code>. A
+first observation is therefore structurally incapable of being stored as
+certain. That is the <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+pattern implemented in about fifteen lines of SQL and arithmetic, in a
+project whose whole memory layer is 401 lines.</p>
+<p>The apparatus around it is unusually complete for its size.
+Supersession expires the old row and keeps it (<code>expired_at</code>),
+so <code>history &lt;key&gt;</code> returns the chain. Decay in
+<code>consolidate.mjs</code> applies only to single-evidence facts,
+exempts rows sourced from <code>CLAUDE.md</code>, and is <em>slowed by
+retrieval</em> — <code>log1p(access_count)</code> is subtracted from the
+number of stale weeks, so a fact the agent keeps reaching for holds its
+confidence. Recall fuses BM25 with a genuinely local MiniLM embedding by
+reciprocal rank, and degrades to TF-IDF cosine and then to keyword-only
+without saying so. Retrieval quality is anchored by behavioural tests
+that assert <em>ranking</em>, not just round-trips:
+<code>smoke.mjs:892</code> asserts a high-confidence fact outranks a
+low-confidence match, <code>smoke.mjs:1253</code> asserts BM25
+term-frequency ordering.</p>
+<p><strong>And then the number is thrown away at the point of
+use.</strong> <code>recallMemories</code>
+(<code>index.js:490-510</code>) formats the top eight facts as
+<code>- (kind) key: value</code> and prefixes them with
+<code>MEMORY — use these, never contradict them</code>. No confidence,
+no evidence count, no source, no id. A preference the loop guessed once
+from a transcript and a fact the owner stated directly reach the model
+as the same kind of sentence, under an instruction not to contradict
+either. The one channel that does carry the number — the generated
+<code>INDEX.md</code>, imported at <code>CLAUDE.md:15</code> — prints
+<code>_(conf 0.62)_</code> for <code>preference</code> rows and omits it
+for every other kind. The system spends real effort deciding how much to
+believe each fact and then declines to tell the consumer.</p>
+<p>The second weakness is structural rather than epistemic. Active rows
+are identified by the predicate <code>expired_at IS NULL</code>,
+enforced by a <em>partial</em> unique index
+(<code>memory.mjs:54-64</code>), and every reader has to remember it.
+Three do not: <code>getAutonomyMode</code> (<code>index.js:244</code>)
+reads the agent's own autonomy setting without the filter and will
+return the stale pre-supersession value; the distillation lookup in
+<code>consolidate.mjs:74</code> can write a distilled value onto a dead
+row; the dedupe pass at <code>consolidate.mjs:146</code> selects
+candidate rows without the filter, so the branch that fires can delete
+superseded history and sum retracted evidence onto the survivor. A
+soft-delete predicate with no view and no accessor is a design that only
+works while every author remembers it.</p>
+<p>Where it is weakest overall: three memory surfaces are advertised to
+the model and only one of them is in the repository. <code>mind</code>
+drives a Markdown vault whose "AI-first note format" — frontmatter
+<code>confidence</code>, <code>recency</code>, a
+<code>## Contradictions</code> section with <code>open | resolved</code>
+status — is defined entirely in a prompt
+(<code>workspace/mind/MIND.md</code>) and parsed by no code. Twelve
+<code>cortex.*</code> tools are registered as "the 5-layer memory
+stack", and their backend is gitignored and absent.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong><code>(kind, key)</code> slot holding one
+current value</strong>. <code>kind</code> is an open string used by
+convention — <code>preference</code>, <code>learned</code>,
+<code>note</code>, <code>goal</code>, <code>profile</code>,
+<code>exam</code>, <code>fact</code> — not an enum in code. The key is
+meant to be stable and short; the CLAUDE.md guidance and the think
+prompt both tell the agent to reuse a key rather than mint one.</p>
+<p>Alongside the slots is an <strong>episode log</strong>: one row of
+free text per notable turn, with a channel tag and a timestamp. Episodes
+are the raw stream; facts are what survives it.</p>
+<p>Confidence is a float, not a state. But there are effectively two
+grades, distinguished by who wrote the row and how it was tagged:</p>
+<pre class="text"><code>                    remember --source observed          remember (untagged/--force)
+                              │                                    │
+                              ▼                                    ▼
+                    ┌──────────────────┐                  ┌──────────────────┐
+     first write →  │ PROVISIONAL      │                  │ ASSERTED         │
+                    │ conf ≤ 0.70      │                  │ conf = requested │
+                    │ evidence = 1     │                  │ (1.0 by default) │
+                    └────────┬─────────┘                  └────────┬─────────┘
+                             │ same value seen again               │
+                             │ conf ← min(req, 0.70 + 0.05·(n-1))  │
+                             │ evidence += 1                       │
+                             ▼                                     │
+                    ┌──────────────────┐                           │
+                    │ CORROBORATED     │                           │
+                    │ conf climbs      │◄──────────────────────────┘
+                    └────────┬─────────┘
+                             │
+        ┌────────────────────┼──────────────────────┬─────────────────────┐
+        │ different value    │ 30d untouched        │ conf &lt; 0.05         │ forget &lt;id&gt;
+        │ for the same key   │ and evidence &lt; 2     │ and evidence &lt; 2    │
+        ▼                    ▼                      ▼                     ▼
+   ┌──────────┐      ┌──────────────┐        ┌────────────┐        ┌────────────┐
+   │ EXPIRED  │      │ DECAYING     │        │  PRUNED    │        │  DELETED   │
+   │ row kept │      │ conf ·= 0.9^ │        │ hard DELETE│        │ hard DELETE│
+   │ readable │      │ (weeks −     │        │ no record  │        │ + vector   │
+   │ via      │      │  log1p(acc)) │        │ kept       │        │ row        │
+   │ history  │      └──────────────┘        └────────────┘        └────────────┘
+   └──────────┘
+   (deletable by the dedupe branch — see §9)</code></pre>
+<p>Three properties of this machine matter.</p>
+<p><strong>Corroboration is the only thing that raises belief.</strong>
+Nothing in the system verifies a fact against the world. A repeat
+observation of the same value is the entire evidence model, and it is
+deliberately weak: <code>0.05</code> per repeat means six independent
+sightings to reach 1.0 from the cap.</p>
+<p><strong>Death is asymmetric.</strong> Being <em>replaced</em> is
+recoverable — the row stays and <code>history</code> shows it. Being
+<em>forgotten</em> or <em>pruned</em> is not: both are
+<code>DELETE FROM facts</code>, and nothing records that the value ever
+existed. So the system remembers what it changed its mind about but not
+what it discarded, and the next reflection tick is free to re-derive a
+pruned fact from the same episodes that produced it.</p>
+<p><strong>Who moves memory between states.</strong> Almost everything
+is agent-controlled but not owner-visible. The owner writes memory only
+by talking — either the hot-path regex catches an explicit "remember
+that …", or the reflection loop reads the transcript later and decides
+for itself. There is no review surface:
+<code>unsure --threshold 0.7</code> lists the weakly-evidenced
+preferences, and the weekly prompt tells the agent to re-assert the ones
+it found evidence for, but no code takes an owner verdict and writes it
+back. The nearest thing to human adjudication is the owner saying
+something different next time and hoping the loop notices.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Helm is a set of Node processes on one machine, plus the
+<code>claude</code> CLI as the reasoning engine. There is no server, no
+container, no vector service.</p>
+<ul>
+<li><strong><code>index.js</code></strong> (1,241 lines) — the Discord
+brain. Owner-locked to <code>OWNER_ID</code>, holds the session,
+assembles the prompt, spawns <code>claude -p</code> with
+<code>--append-system-prompt</code>, <code>--add-dir WORKSPACE</code>,
+<code>--add-dir ~</code>. <code>imessage.js</code> and
+<code>cli.js</code> are alternative front doors onto the same
+session.</li>
+<li><strong><code>workspace/memory/</code></strong> — the store.
+<code>memory.mjs</code> is the CLI and the schema;
+<code>embed.mjs</code> the embedding cache; <code>consolidate.mjs</code>
+the nightly hygiene pass; <code>refresh-index.mjs</code> the
+prompt-facing Markdown projection; <code>migrate.mjs</code> a one-shot
+CLAUDE.md importer.</li>
+<li><strong><code>workspace/think/think.mjs</code></strong> — background
+cognition as a long-lived process under launchd/systemd
+(<code>com.helm.think</code>), ticking every
+<code>THINK_INTERVAL_MIN</code> (default 15).</li>
+<li><strong><code>workspace/tools/</code></strong> — a JSON registry of
+135 shell-out tools, two of which are <code>memory.remember</code> and
+<code>memory.recall</code>.</li>
+<li><strong><code>workspace/sessions.mjs</code></strong> — a second
+SQLite file mapping the single key <code>'owner'</code> to a Claude Code
+session id for <code>--resume</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TB
+    subgraph FE[&quot;Front doors (owner-locked)&quot;]
+        D[&quot;Discord DM&quot;]
+        IM[&quot;iMessage&quot;]
+        T[&quot;helm terminal&quot;]
+    end
+    D --&gt; BRAIN[&quot;index.js&quot;]
+    IM --&gt; BRAIN
+    T --&gt; BRAIN
+
+    BRAIN --&gt;|&quot;raw message, 240 chars&quot;| RC[&quot;recallMemories()&lt;br/&gt;spawnSync, 12s timeout&quot;]
+    RC --&gt; MEM[&quot;memory.mjs recall&lt;br/&gt;--with-episodes&quot;]
+    MEM --&gt; DB[(&quot;memory.db&lt;br/&gt;facts · episodes · vectors&quot;)]
+    RC --&gt;|&quot;8 facts + 6 episodes,&lt;br/&gt;confidence stripped&quot;| PROMPT[&quot;--append-system-prompt&quot;]
+    IDX[&quot;INDEX.md&lt;br/&gt;(@memory/INDEX.md in CLAUDE.md)&quot;] --&gt; PROMPT
+    PROMPT --&gt; CC[&quot;claude -p&lt;br/&gt;--resume &amp;lt;sid&amp;gt;&quot;]
+    CC --&gt; SESS[(&quot;sessions.db&quot;)]
+    CC --&gt;|&quot;reply&quot;| BRAIN
+    BRAIN --&gt;|&quot;detached, per turn&quot;| CAP[&quot;captureTurn()&lt;br/&gt;episode + regex fact&quot;]
+    CAP --&gt; DB
+
+    subgraph BG[&quot;Background (launchd / systemd)&quot;]
+        TH[&quot;think.mjs tick&lt;br/&gt;every ~15 min&quot;]
+        WK[&quot;weekly deep review&lt;br/&gt;every 7 days&quot;]
+        CONS[&quot;consolidate.mjs&lt;br/&gt;distil · decay · prune · dedupe&quot;]
+        RI[&quot;refresh-index.mjs&quot;]
+    end
+    TH --&gt; CC
+    WK --&gt; CC
+    TH --&gt; RI
+    WK --&gt; CONS
+    CONS --&gt; DB
+    RI --&gt; IDX
+    DB --&gt; RI
+
+    subgraph OTHER[&quot;Advertised, not in this store&quot;]
+        VAULT[&quot;HelmBrain vault&lt;br/&gt;mind.mjs, 8 prompt verbs&quot;]
+        CX[&quot;cortex.* — 12 tools&lt;br/&gt;backend gitignored, absent&quot;]
+    end
+    CC -.-&gt;|&quot;tool call&quot;| VAULT
+    CC -.-&gt;|&quot;tool call, fails closed&quot;| CX</code></pre>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>This is the cheapest memory deployment in the atlas that still has an
+epistemic model. What has to be running: <strong>nothing</strong>. The
+store is a SQLite file opened synchronously by whichever script needs
+it, through Node's built-in <code>node:sqlite</code> — hence the hard
+<code>engines: node &gt;=22.5.0</code>. There is no separate dependency
+for the database at all.</p>
+<p>Fully local and offline, with one graceful degradation: semantic
+recall wants <code>Xenova/all-MiniLM-L6-v2</code> under
+<code>~/.helm-models</code>, and <code>embed.mjs:48-51</code> sets
+<code>allowRemoteModels = false</code>, so it will <em>never</em> fetch
+the model mid-flight. If the cache is cold,
+<code>ensurePipelineLoaded()</code> returns false and retrieval falls
+back to TF-IDF cosine.
+<code>node workspace/memory/embed.mjs download</code> is the explicit
+opt-in that populates it. Refusing to download at query time is the
+right call and rarer than it should be.</p>
+<p>No API key is required to store anything — memory is entirely local
+arithmetic. A key is required to <em>think</em>, and even that is
+optional: <code>AUTH_MODE=custom</code> points the engine at Ollama.</p>
+<p>The store is human-readable and repairable by hand: it is one SQLite
+file with three small tables, a <code>dump</code> verb that emits JSON,
+and a generated <code>INDEX.md</code> in Markdown. Recovery from a bad
+memory is <code>sqlite3</code> or
+<code>memory.mjs forget &lt;id&gt;</code>. Against that:
+<code>*.db</code> is gitignored, so there is no committed fixture, and
+every schema change is expressed as a
+<code>try { ALTER TABLE … } catch {}</code> executed on every process
+start (<code>memory.mjs:41-49</code>, repeated in
+<code>consolidate.mjs:29-35</code> and <code>migrate.mjs:29-33</code>).
+It works, it is idempotent, and it means the real schema is the union of
+five files rather than anything declared in one place.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture — hot path.</strong> <code>index.js:572-583</code>
+<code>captureTurn(userText, reply, channel)</code> runs after every
+reply. It spawns two <em>detached, unwaited</em> children: an
+<code>episode add "&lt;user, 160 chars&gt; → &lt;reply, 160 chars&gt;"</code>,
+and — only if the user text matches
+<code>\b(?:remember(?:\s+that)?|note\s+that|for\s+the\s+record|fyi[:,]?)\s+(.{4,200})</code>
+— a
+<code>remember learned note-&lt;base36 timestamp&gt; "&lt;captured span&gt;" --source observed --confidence 0.8</code>.
+This is the whole zero-LLM write path.</p>
+<p><strong>Capture — gateway backfill.</strong>
+<code>index.js:520</code> <code>ingestEpisodes()</code> bulk-inserts
+text as episodes, deduped against the last 2,000 summaries.
+<code>catchUpDiscord()</code> (<code>index.js:537</code>) uses it on
+reconnect to absorb messages Discord did not replay while the bot was
+down, marks the last seen id in
+<code>workspace/.discord-last-seen</code>, and deliberately does not act
+on the backlog — it ingests and sends one notice.
+<code>scanDiscordHistory()</code> pages up to 2,000 messages on
+demand.</p>
+<p><strong>Extraction / consolidation.</strong> Two passes, one LLM and
+one not.</p>
+<p>The LLM pass is the weekly deep review (<code>think.mjs:54-82</code>,
+<code>WEEKLY_PROMPT</code>): read <code>dump</code>, the last 50
+episodes, and <code>unsure --threshold 0.7</code>; write 1-3 summary
+episodes; turn themes appearing in 2+ recent episodes into
+<code>learned</code> facts; re-assert low-confidence preferences that
+got new evidence. It is instruction only — no schema, no validator, no
+retry.</p>
+<p>The deterministic pass is <code>consolidate.mjs</code>, four
+stages:</p>
+<ol type="1">
+<li><strong>Distil</strong> (lines 44-92) — count word stems across
+episodes in the window; any stem in ≥3 distinct episodes becomes a
+<code>learned</code> fact whose value is literally
+<code>mentioned in N episodes (last: "…")</code>, at
+<code>min(0.9, 0.4 + 0.1·N)</code>.</li>
+<li><strong>Decay</strong> (lines 94-123) —
+<code>evidence_count &lt; 2</code> and <code>last_seen</code> older than
+<code>--decay-days</code> (30) and not <code>source='CLAUDE.md'</code>:
+<code>conf ·= 0.9^max(0, (weeksStale+1) − log1p(access_count))</code>.</li>
+<li><strong>Prune</strong> (lines 125-134) — <code>DELETE</code> where
+<code>confidence &lt; 0.05</code> and
+<code>evidence_count &lt; 2</code>.</li>
+<li><strong>Dedupe</strong> (lines 136-158) — merge multiple active rows
+per <code>(kind, key)</code>, summing <code>evidence_count</code> onto
+the highest-confidence survivor.</li>
+</ol>
+<p><strong>Retrieval.</strong> <code>memory.mjs:164-326</code>, one
+function, no abstraction. Detailed in §6.</p>
+<p><strong>Context assembly.</strong> Two channels, and they behave
+differently:</p>
+<ul>
+<li><em>Static</em>: <code>workspace/CLAUDE.md:15</code> is the line
+<code>@memory/INDEX.md</code>. Claude Code resolves that import into the
+base prompt on every turn, so the whole active fact set — every
+<code>preference</code> with its confidence, up to 30 rows per other
+kind, and the last 12 episodes — is present by default.
+<code>refresh-index.mjs</code> regenerates it after every think tick,
+writing to a <code>.tmp</code> and <code>renameSync</code>-ing over the
+target so a reader never sees a partial file.</li>
+<li><em>Dynamic</em>: <code>index.js:601</code> appends
+<code>recallMemories(prompt)</code> to <code>buildPersona(mode)</code>
+in <code>--append-system-prompt</code>. The query is the raw user
+message, whitespace-collapsed, first 240 characters.
+<code>spawnSync</code> with a 12 second timeout — the comment explains
+the number is sized for the first-call MiniLM load. Facts whose
+<code>source</code> matches <code>/^(CLAUDE|helm)\.md$/i</code> are
+dropped as already-present persona text; eight facts and six episodes
+survive, truncated to 80/180/200 characters and wrapped in
+<code>MEMORY — use these, never contradict them; don't recite them unless asked:</code>.
+Every failure path returns <code>''</code>.</li>
+</ul>
+<p><strong>Update / delete / forget / conflict.</strong>
+<code>remember</code> with a different value for a live
+<code>(kind, key)</code> is the conflict path
+(<code>memory.mjs:120-152</code>): stamp <code>expired_at</code> on the
+old row, insert the new one with <code>evidence_count</code> reset to 1,
+and write a <code>fact superseded: &lt;kind&gt;/&lt;key&gt;</code>
+episode on channel <code>memory</code>. That episode is gated twice —
+skipped entirely for keys starting with <code>__smoke</code>, and
+collapsed to one row per six hours per key by <em>updating the existing
+episode's timestamp</em> rather than inserting.
+<code>forget &lt;id&gt;</code> hard-deletes the fact and its cached
+vector. <code>history &lt;key&gt;</code> is the only reader that
+intentionally omits the <code>expired_at</code> filter.</p>
+<p><strong>Schema.</strong> <code>memory.mjs:13-64</code>. Base tables
+<code>facts</code>, <code>episodes</code>, <code>links</code>; five
+columns added by guarded <code>ALTER</code>; the partial unique index
+<code>facts_kind_key_uniq ON facts(kind, key) WHERE expired_at IS NULL</code>,
+with a self-healing check that drops and recreates it if an earlier
+non-partial version is found (lines 54-64). <code>vectors</code> and
+<code>episode_vectors</code> are created lazily by
+<code>embed.mjs</code> on first use, keyed by fact/episode id, with the
+vector stored as a JSON string. <code>links</code> is created and never
+written or read by any file in the repository.</p>
+<p><strong>Background worker.</strong> <code>think.mjs</code>. Lock file
+with stale-PID reclaim via <code>process.kill(pid, 0)</code> (lines
+148-160); skip if the self-upgrade lock is held; skip between 00:00 and
+05:00; <code>MAX_TICKS</code> 500 or eight days wall-clock then
+<code>process.exit(0)</code> and let the service manager restart it.
+After the tick it scores the thought with
+<code>computeInterruptScore</code> (lines 93-125) —
+<code>0.7·urgency + 0.3·relevance</code>, where urgency is keyword hits
+over three and relevance is the mean confidence of the top three
+<code>--keyword-only</code> recall hits, plus 0.2 if a
+<code>kind=goal</code> value appears in the text — and DMs the owner
+above 0.65. The weekly mark is stamped only when the engine exited zero
+and unsignalled (lines 211-215), so a timed-out review is retried rather
+than silently skipped.</p>
+<p><strong>Tool surface.</strong>
+<code>workspace/tools/registry.json</code> declares
+<code>memory.remember</code> (<code>kind</code>, <code>key</code>,
+<code>value</code>, <code>confidence</code>) and
+<code>memory.recall</code> (<code>query</code>, <code>limit</code>). The
+wrappers in <code>workspace/tools/impl/</code> are thin
+<code>spawnSync</code> shims. Notably <code>memory.remember.mjs</code>
+never passes <code>--source</code>, so a tool-mediated write is never
+<code>observed</code> and never hits the provisional cap.</p>
+<p><strong>Tests.</strong> <code>workspace/tests/smoke.mjs</code>, 2,317
+lines, 88 labelled cases, of which about nineteen exercise memory.
+Covered in §10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<pre class="sql"><code>facts(id, kind, key, value, source, confidence,
+      created, updated,                    -- base
+      evidence_count, last_seen,           -- added by ALTER
+      valid_from, expired_at, access_count)
+episodes(id, ts, channel, summary, raw_ref)
+links(from_id, to_id, kind)                -- created, never used
+vectors(fact_id, vector TEXT, model, created)
+episode_vectors(episode_id, vector TEXT, created)</code></pre>
+<p><strong>Scoping: none on the fact table.</strong> There is no user,
+project, session or agent column. The boundary is the process:
+<code>index.js</code> refuses anything but <code>OWNER_ID</code>, and
+<code>sessions.mjs</code> hardcodes the key <code>'owner'</code> with
+the comment "this bot is owner-locked". Episodes carry a
+<code>channel</code> (<code>discord</code>, <code>chat</code>,
+<code>memory</code>, <code>weekly-review</code>), and no read path ever
+filters on it — the episode arm of recall scores the last 500 rows
+regardless of origin. A scope that is stored and never applied is
+exactly the case the atlas withholds <code>scope_enforced</code>
+for.</p>
+<p><strong>Provenance</strong> is one free-text <code>source</code>
+column: <code>observed</code>, <code>consolidate</code>,
+<code>CLAUDE.md</code>, or null. It carries real weight for two
+mechanisms — <code>source='observed'</code> triggers the confidence cap,
+<code>source='CLAUDE.md'</code> exempts a row from decay and prune — and
+it is unvalidated and self-asserted by the caller. There is no link from
+a fact back to the episodes that produced it; the <code>links</code>
+table that could express it is dead. So a distilled <code>learned</code>
+fact says "mentioned in 5 episodes" without being able to name one.</p>
+<p><strong>Temporal fields.</strong> Four: <code>created</code>,
+<code>updated</code>, <code>last_seen</code>, <code>valid_from</code>,
+plus the nullable <code>expired_at</code>. This is the near-miss on
+bi-temporality. The columns are shaped for it, <code>history</code>
+orders by <code>valid_from DESC</code>, and the ambition is legible. But
+<code>valid_from</code> is only ever written as <code>unixepoch()</code>
+at insert time (<code>memory.mjs:126-128</code>, <code>156-158</code>)
+or backfilled to <code>created</code> (line 49). No caller can express
+"this became true last March"; validity time is record time under a
+different name. <code>expired_at</code> is likewise the moment of
+<em>recording</em> the replacement.</p>
+<p>There is also a live correctness hazard in <code>last_seen</code>.
+Decay advances it by <code>weeksStale · 7 · 86400</code>
+(<code>consolidate.mjs:108-110</code>) purely so the same decay step is
+not re-applied on the next nightly run. It is an effective idempotence
+trick and it destroys the column's stated meaning: after a decay pass,
+<code>last_seen</code> no longer records when the fact was last seen.
+<code>unsure</code> orders by <code>last_seen ASC</code>, so the
+ordering of the weakly-evidenced list is partly a function of how many
+decay passes have run.</p>
+<p><strong>Versioning and correction.</strong> Supersession chains are
+real and readable, keyed on <code>(kind, key)</code>. What is absent is
+any record keyed on the <em>value</em>: nothing prevents the next
+distillation or reflection tick from re-asserting a value that was
+superseded, forgotten or pruned, because there is nothing to consult. No
+TTL, no pinning beyond the <code>CLAUDE.md</code> source exemption, no
+contradiction representation — a fact cannot disagree with another fact,
+only replace it.</p>
+<p><strong>Separation of memory types</strong> is by <code>kind</code>
+convention only, enforced nowhere. Episodic (<code>episodes</code>) and
+semantic (<code>facts</code>) are genuinely separate tables with
+separate retrieval arms and separate vector caches, which is the one
+clean separation in the model.</p>
+<p>The <strong>HelmBrain vault</strong> is a second, disjoint data
+model: PARA directories of Markdown under <code>~/HelmBrain</code>, with
+a frontmatter schema (<code>type</code>, <code>tags</code>,
+<code>sources</code>, <code>last_updated</code>,
+<code>confidence: high|medium|low</code>, <code>recency</code>) and a
+<code>## Contradictions</code> section carrying
+<code>status: open | resolved</code>. It is defined in
+<code>workspace/mind/MIND.md</code> and read by no code —
+<code>grep</code> for <code>last_updated</code> or
+<code>Contradictions</code> outside that protocol file and the prompt
+strings that quote it returns nothing. The vault's trust model is a
+request to an LLM, not a structure. The two stores are kept in sync by
+instruction: the think prompt tells the agent to persist a fact
+<em>and</em> mirror it into <code>02 People/About Me.md</code>
+(<code>think.mjs:45-47</code>). Nothing reconciles them, and nothing
+detects divergence.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One function, <code>memory.mjs:164-326</code>, and it is more
+sophisticated than the file size suggests.</p>
+<p><strong>Candidate set.</strong>
+<code>SELECT * FROM facts WHERE expired_at IS NULL ORDER BY updated DESC, confidence DESC LIMIT 500</code>.
+Everything downstream — document frequency, average document length,
+BM25 idf, both rank lists — is computed in JavaScript over those 500
+rows on every call. This is the ceiling on the whole design: past 500
+active facts, retrieval stops being able to see the older ones <em>at
+all</em>, and the window is ordered by recency rather than relevance, so
+the facts that fall out are the ones that have not been touched lately —
+precisely the long-lived preferences the evidence gate worked hardest to
+establish. There is no warning and no test at that boundary.</p>
+<p><strong>Query processing.</strong> Lowercase, <code>[a-z0-9]+</code>
+tokens longer than one character, a 26-word stop list, and a three-rule
+suffix stemmer (<code>ies→y</code>, strip <code>ing|ed|s</code>). An
+empty query after stopping returns the most recently updated rows.</p>
+<p><strong>Two arms, fused by rank.</strong></p>
+<ul>
+<li><em>Lexical</em>: BM25 with <code>k1=1.5</code>,
+<code>b=0.75</code>, computed by hand (lines 197-213).</li>
+<li><em>Semantic</em>: MiniLM-L6-v2 mean-pooled and normalized via
+<code>@xenova/transformers</code>, per-fact vectors cached in
+<code>vectors</code> as JSON text and compared by cosine in JS. If the
+model is not in the local cache, the arm is TF-IDF cosine over the same
+500 documents instead (lines 215-243). If the import or the pipeline
+throws, <code>catch {}</code> keeps the TF-IDF scores.</li>
+<li><em>Fusion</em>: <code>1/(60 + rank_bm25) + 1/(60 + rank_cos)</code>
+— reciprocal rank fusion with the conventional k=60 — then multiplied by
+<code>confWeight = 0.7 + 0.3·conf</code> and by
+<code>keyMatchBoost = 1.3</code> when a query stem appears in the fact's
+<code>key</code>. Survivors need
+<code>_bm25 &gt; 0 || _cos &gt; 0.01</code>.</li>
+</ul>
+<p>RRF is the right choice here for the reason it usually is: the two
+arms produce incomparable scores, and Helm cannot calibrate them because
+it has no relevance data. Multiplying the fused score by a confidence
+weight rather than adding it means a 0.05-confidence fact is penalized
+by 0.715× rather than excluded — a sensible refusal to let belief fully
+override relevance.</p>
+<p><strong>The episode arm</strong> (<code>--with-episodes</code>, lines
+299-322) is a parallel and deliberately different scorer over the last
+500 episodes: <code>(cos + 0.12·bm25) · (0.6 + 0.4·recency)</code> with
+<code>recency = exp(-Δt / 30 days)</code>, gated at
+<code>cos &gt; 0.18 || bm &gt; 0</code>, six results by default. Facts
+get no recency term at all; episodes get an explicit 30-day half-life.
+That asymmetry is correct — a preference should not fade from the
+ranking because it is old — and it is the kind of distinction most
+systems this size do not draw.</p>
+<p><strong>A write on the read path.</strong> Line 295: every returned
+fact gets <code>access_count = access_count + 1</code>. This is what
+feeds the access-slowed decay, so it earns its place, but it means
+<code>recall</code> is not a read-only operation, the registry's
+<code>"side_effects": "none"</code> declaration for
+<code>memory.recall</code> is wrong, and
+<code>computeInterruptScore</code> — which calls recall on every think
+tick to score its own thought — reinforces facts as a side effect of
+deciding whether to interrupt the owner.</p>
+<p><strong>Failure modes.</strong> Over-recall is bounded at eight facts
+on the hot path. The real exposures are the 500-row window above; silent
+degradation from MiniLM to TF-IDF to nothing (three quality tiers, one
+output shape, no signal to the caller); the 240-character query
+truncation, which for a long message searches only its opening; and
+distillation artefacts polluting results — a <code>learned</code> row
+reading <code>mentioned in 4 episodes (last: "…")</code> is a high-BM25
+match for common vocabulary and carries no information.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>one process per fact</strong>. Every path shells
+out to <code>node workspace/memory/memory.mjs remember …</code>, which
+opens the database, runs the guarded <code>ALTER</code>s, does its work,
+prints JSON, and closes. There is no connection pool, no transaction
+spanning more than one statement, and no write queue —
+<code>PRAGMA busy_timeout = 5000</code> is the entire concurrency
+strategy, against a background think tick, a consolidation pass,
+detached per-turn captures and the dashboard all opening the same
+file.</p>
+<p><strong>Who writes:</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Trigger</th>
+<th>Tag</th>
+<th>Blocking?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>captureTurn</code> episode</td>
+<td>every turn</td>
+<td>—</td>
+<td>no, detached</td>
+</tr>
+<tr>
+<td><code>captureTurn</code> regex fact</td>
+<td>"remember that …" in the turn</td>
+<td><code>observed</code>, 0.8</td>
+<td>no, detached</td>
+</tr>
+<tr>
+<td><code>ingestEpisodes</code></td>
+<td>Discord reconnect / manual scan</td>
+<td>—</td>
+<td>in-process</td>
+</tr>
+<tr>
+<td>think tick</td>
+<td>every ~15 min</td>
+<td><code>observed</code>, 0.6</td>
+<td>separate process</td>
+</tr>
+<tr>
+<td>weekly review</td>
+<td>every 7 days</td>
+<td>LLM's choice</td>
+<td>separate process</td>
+</tr>
+<tr>
+<td><code>consolidate</code> distil</td>
+<td>after weekly review</td>
+<td><code>consolidate</code></td>
+<td>separate process</td>
+</tr>
+<tr>
+<td><code>memory.remember</code> tool</td>
+<td>agent decides</td>
+<td><strong>never</strong> <code>observed</code></td>
+<td>inside the turn</td>
+</tr>
+<tr>
+<td><code>migrate.mjs</code></td>
+<td>first run</td>
+<td><code>CLAUDE.md</code>, 1.0</td>
+<td>one-shot</td>
+</tr>
+</tbody>
+</table></div>
+<p>The gate is opt-in by the writer, and that is its weak point.
+<code>PROVISIONAL_CAP</code> only applies when the caller passes
+<code>--source observed</code>. The think prompt does. The hot-path
+regex does. The registry tool <code>memory.remember</code> does not
+(<code>workspace/tools/impl/memory.remember.mjs:20-22</code> builds argv
+without it), so whenever the model chooses to save something through its
+tool surface, the value lands at the requested confidence — default
+<code>1.0</code> — and is exempt from decay because
+<code>evidence_count</code> is 1 but confidence is at ceiling. The
+mechanism that makes the design interesting can be bypassed by the least
+deliberate writer in the system.</p>
+<p><strong>Extraction</strong> is a prompt, not a component. There is no
+structured extractor, no JSON schema, no output validator anywhere on
+the fact-write path. The weekly review's instruction to write
+<code>learned</code> facts for themes in "2+ recent episodes" is checked
+by nobody. The deterministic distiller in <code>consolidate.mjs</code>
+is the counterweight, and what it produces is <strong>word frequency
+wearing the vocabulary of learning</strong>: a stem appearing in three
+episodes becomes a fact whose value is the sentence
+<code>mentioned in 3 episodes</code>. It has no subject, predicate or
+claim. It is retrievable, weighted at up to 0.9 confidence, and
+injectable.</p>
+<p>The stop list guarding that distiller is the most informative twelve
+lines in the repository (<code>consolidate.mjs:44-53</code>). Past the
+ordinary English stopwords sit <code>fact</code>, <code>facts</code>,
+<code>note</code>, <code>notes</code>, <code>supersed</code>,
+<code>superseded</code>, <code>supersede</code>,
+<code>superseding</code>, <code>episode</code>, <code>episodes</code>,
+<code>tick</code>, <code>think</code>, <code>memory</code>,
+<code>smoke</code>, <code>dump</code>, <code>index</code>,
+<code>workspace</code>, <code>learned</code>, <code>pending</code>,
+<code>loader</code>. That is the system's own bookkeeping vocabulary,
+and it is there because the distiller learned facts about its own
+mechanism from its own supersession log. The <code>QUEUE.md</code> entry
+dated 1 June 2026 states the cleanup: 42 smoke episodes, 85 duplicate
+supersedes and 24 polluted <code>learned</code> rows deleted, "INDEX.md
+is now legible again". Any system that logs its own mutations into the
+same store it consolidates from will meet this, and most will not
+notice.</p>
+<p><strong>Deduplication</strong> happens at three levels: the partial
+unique index makes two live rows per <code>(kind, key)</code>
+impossible; <code>ingestEpisodes</code> checks new summaries against the
+last 2,000; the supersede episode collapses to one row per key per six
+hours.</p>
+<p><strong>The <code>note-&lt;timestamp&gt;</code> leak.</strong> The
+hot-path regex mints its key as
+<code>'note-' + Date.now().toString(36)</code>
+(<code>index.js:578</code>). Every captured note is therefore a
+<em>new</em> <code>(kind, key)</code> pair, which means the uniqueness
+index never applies, supersession can never fire, and saying "remember
+that I prefer X" twice with different values leaves both facts live and
+mutually contradictory at confidence 0.8. These rows also arrive with
+<code>evidence_count = 1</code>, so they are decay-eligible after 30
+days — the one thing the owner said explicitly is on the fastest path to
+being pruned, and pruning leaves no record.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p><strong>The write path never blocks the agent.</strong> No LLM call,
+no embedding, no network — a fact write is a spawn, a few SQL statements
+and an exit. The per-turn captures are <code>detached</code> and
+<code>unref</code>'d, so the reply is not waiting on them.</p>
+<p><strong>Retrievable immediately.</strong> There is no indexing lag:
+<code>remember</code> commits and the next <code>recall</code> sees the
+row. The embedding, if any, is computed lazily on first retrieval
+(<code>getOrComputeVector</code>) and cached, so the first recall
+touching a new fact pays for its vector and later ones do not. The lag
+that does exist is elsewhere — a fact the owner reveals in conversation
+is not stored until the think tick reads the transcript, up to fifteen
+minutes later, and is not distilled or corroborated until the weekly
+pass.</p>
+<p><strong>The read path does block.</strong>
+<code>recallMemories</code> is a synchronous <code>spawnSync</code> on
+the critical path of every turn, with a 12-second ceiling, and a cold
+MiniLM load is the reason the ceiling is that high. Every message the
+owner sends pays a process spawn, a 500-row scan, BM25 over the corpus,
+up to 500 cosine comparisons, and a second pass for episodes.</p>
+<p><strong>Background cost scales with the corpus, not the day.</strong>
+<code>consolidate.mjs</code> reads every episode in the window and every
+decay-candidate fact; <code>refresh-index.mjs</code> rewrites the whole
+index from all active facts after <em>every</em> tick — roughly 96 times
+a day. Both are pure SQL and arithmetic with no token cost, which is the
+saving grace: the nightly rewrite that would be a token bill in an
+LLM-consolidating system is free here. The LLM cost is bounded
+differently — one cheap <code>sonnet</code> call per 15 minutes, one
+deeper call per week.</p>
+<p><strong>Prompt-prefix caching is invalidated on every turn, by
+construction.</strong> <code>INDEX.md</code> arrives through
+<code>CLAUDE.md</code>'s import and is stable between think ticks. But
+<code>--append-system-prompt</code> carries
+<code>buildPersona(mode) + recallMemories(prompt)</code>, and the recall
+block is a function of the current message, so the system prompt differs
+every turn. The cheaper arrangement — the stable index in the prefix,
+the query-specific memories in the user turn — is one line away and the
+static channel already demonstrates it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is <strong>Claude Code driven as a subprocess</strong>.
+<code>index.js</code> builds
+<code>claude -p --output-format stream-json --verbose --model &lt;m&gt; --permission-mode &lt;pm&gt; --append-system-prompt &lt;persona+memory&gt; --add-dir workspace --add-dir ~ --strict-mcp-config --mcp-config &lt;json&gt;</code>
+and, when a session id exists, <code>--resume &lt;sid&gt;</code>. Memory
+reaches the model three ways, in descending reliability:</p>
+<ol type="1">
+<li><strong>Automatic static injection</strong> —
+<code>@memory/INDEX.md</code> in <code>CLAUDE.md</code>. Not optional,
+not query-dependent, includes confidence for preferences.</li>
+<li><strong>Automatic dynamic injection</strong> —
+<code>recallMemories</code>, eight facts and six episodes, confidence
+stripped, under a "never contradict" instruction.</li>
+<li><strong>Tool-mediated</strong> — <code>memory.recall</code> /
+<code>memory.remember</code> through the registry, plus the CLI verbs
+documented in <code>CLAUDE.md:130-150</code> which the agent can call
+directly through Bash since the workspace is mounted.</li>
+</ol>
+<p>The model has <strong>broad agency and no gate</strong>.
+<code>PERMISSION_MODE</code> defaults to <code>bypassPermissions</code>
+in the think and mind paths, the workspace is <code>--add-dir</code>'d,
+and the memory CLI is a shell command like any other. So the agent may
+write any <code>kind</code>, any confidence, <code>--force</code> past
+the provisional cap, or <code>forget &lt;id&gt;</code> — nothing
+mediates. This is the <a
+href="../../patterns/governed-write-gateway/">governed write gateway</a>
+pattern's exact inverse: one store, many writers, no arbiter.</p>
+<p><strong>Session lifecycle</strong> is a single thread.
+<code>sessions.mjs</code> maps <code>'owner'</code> to one Claude Code
+session id shared by Discord, iMessage and the terminal — a genuinely
+nice property the README sells as "one brain, one memory, one
+conversation" and which the code actually delivers. The cost is that
+there is no session scope in memory either, so nothing distinguishes
+what was said where.</p>
+<p><strong>Compaction handling is absent in practice.</strong>
+<code>workspace/sessions/compact.mjs</code> implements
+<code>maybeCompact</code> — estimate tokens at 4 characters each, at 60%
+of a 100k budget call <code>haiku</code> for a five-field JSON anchor
+(<code>intent</code>, <code>changes_made</code>, <code>decisions</code>,
+<code>next_steps</code>, <code>constraints</code>), write
+<code>session_anchor.json</code>. It is well-formed, tested
+(<code>smoke.mjs:1612</code>), and <strong>called by nothing in the
+running agent</strong>: <code>swarm.mjs</code> imports only
+<code>HANDOFF_SCHEMA</code> and <code>pruneFileReads</code>, and no
+other file calls <code>maybeCompact</code>. The live path relies
+entirely on <code>--resume</code> and whatever Claude Code does
+internally at its own context limit. Whatever the host drops at that
+boundary is not mirrored into the fact store, and the anchor that was
+built to survive the boundary is only reachable by hand.</p>
+<p><strong>Adapting this for another agent</strong> would be easy in the
+parts that matter and irrelevant in the rest.
+<code>workspace/memory/</code> is four self-contained scripts with a
+JSON-on-stdout CLI and no dependency on Helm beyond a path — genuinely
+portable, and the cleanest way to lift the evidence gate into another
+system. Everything around it is welded to Claude Code's flags.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is a self-asserted string</strong> with real
+consequences and no verification. <code>--source observed</code> invites
+the cap; <code>source='CLAUDE.md'</code> grants permanent immunity from
+decay and prune. Any writer can claim either. Since the model can shell
+out to the CLI directly, a fact can be made undecayable by typing the
+right word.</p>
+<p><strong>The store is an injection surface, and the framing makes it
+worse.</strong> Facts enter from: the owner's messages, Discord history
+scans, the transcript as read by a reflection loop, and word-frequency
+distillation over episodes that themselves contain arbitrary text. There
+is no sanitization of any of it — no counterpart to the
+envelope-stripping other local agents in this atlas were forced to
+build. Those facts are then injected under
+<code>use these, never contradict them</code>. Content that reaches an
+episode — a web page the agent read aloud, a Discord message, a filename
+— can become a <code>learned</code> fact with a confidence up to 0.9 and
+be presented to the next turn as something not to be contradicted. The
+mitigation is real but incidental: the gateway is locked to one owner,
+so the attack surface is whatever that owner's machine and inbox
+touch.</p>
+<p><strong>Uncertainty is representable and then discarded.</strong>
+This is the central finding. <code>confidence</code>,
+<code>evidence_count</code>, <code>source</code> and
+<code>access_count</code> are all computed carefully, and the hot-path
+injection format (<code>index.js:504</code>) emits
+<code>- (kind) key: value</code>. A 0.7 provisional guess and a 1.0
+owner statement are typographically identical in the prompt. Fixing it
+is a template change; the data is already there.</p>
+<p><strong>Three readers ignore the expiry predicate.</strong> Active
+rows are defined by <code>expired_at IS NULL</code>, and the partial
+index enforces it <em>for writes</em> only — <code>SELECT</code>s must
+remember it themselves:</p>
+<ul>
+<li><code>index.js:244</code> <code>getAutonomyMode()</code> —
+<code>SELECT value FROM facts WHERE kind = 'preference' AND key = 'helm.autonomy_mode'</code>
+with no expiry filter, no <code>ORDER BY</code>, and
+<code>.get()</code>. Because SQLite cannot use the partial index for a
+query that does not imply its predicate, this scans and returns the
+<em>first</em> matching row by rowid — the oldest, which after any mode
+change is an expired one. <code>setAutonomyMode</code> writes through
+<code>remember</code>, which supersedes. So the agent's own autonomy
+setting is read back stale. The corroborating detail is in the project's
+own changelog: the <code>QUEUE.md</code> entry dated 1 June 2026 reports
+cleaning up "82 <code>helm.autonomy_mode</code> duplicates" — the same
+key superseded 82 times. Consistent with a setting that never appears to
+take effect and gets re-set; not proof of it.</li>
+<li><code>consolidate.mjs:74</code> — the distiller's lookup for an
+existing <code>learned</code> fact omits the filter, so it can find and
+<code>UPDATE</code> an expired row, writing the distilled value onto a
+dead record while the live one goes untouched.</li>
+<li><code>consolidate.mjs:146</code> — dedupe selects the group's rows
+without the filter, though the group <em>membership</em> query (line
+143) applies it. If that branch fires it deletes every row but one,
+including superseded history, and sums retracted evidence onto the
+survivor; if an expired row happens to hold the highest confidence it is
+kept and the live row deleted. The partial unique index makes duplicate
+live rows impossible going forward, so this branch should only be
+reachable on a legacy database — a conditional bug, in the cleanup path
+built for exactly the databases that can still trigger it.</li>
+<li>The dashboard (<code>workspace/dashboard/server.mjs:58-65</code>)
+counts and lists recent facts unfiltered, so the operator's view of the
+store overstates it and can show retracted values as current.</li>
+</ul>
+<p><strong>Concurrency.</strong> Four writer classes on one SQLite file
+with a 5-second busy timeout and no WAL pragma in the code. Each
+<code>remember</code> is read-then-write across separate statements with
+no transaction, so two concurrent same-key writes can interleave; the
+partial unique index is what turns the loser into an error rather than a
+duplicate, which is a good backstop reached by accident.
+<code>refresh-index</code> is properly atomic. <code>think.mjs</code>
+locks against itself and against self-upgrade, which is the collision
+that would actually hurt.</p>
+<p><strong>Data loss.</strong> Two hard deletes with no record:
+<code>forget &lt;id&gt;</code> and the prune sweep. Prune is the more
+concerning because it is automatic, silent, and targets exactly the
+never-corroborated rows the hot-path regex creates for explicit owner
+statements. No backup or sync of <code>memory.db</code> exists in the
+repository; <code>*.db</code> is gitignored; recovery is whatever the
+owner's machine does. The vault has no reconciliation with the fact
+store, so a divergence between "what Helm knows" and "what the vault
+says Helm knows" is undetectable by design.</p>
+<p><strong>Privacy</strong> is the strongest part of the safety story,
+and it is a matter of architecture rather than mechanism: everything is
+local, the store is a file on the owner's disk, <code>.gitignore</code>
+excludes <code>owner.md</code>, <code>memory.db</code>, conversations,
+the vault key and the secrets vault, and the install refuses to publish
+them. Deletion is genuine — <code>DELETE</code> means gone — which is
+the flip side of having no tombstone.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>workspace/tests/smoke.mjs</code> is 2,317 lines and 88 labelled
+cases, with <code>smoke-phase2.mjs</code> and
+<code>smoke-phase3.mjs</code> alongside. About nineteen cases touch
+memory, and they are behavioural: they spawn the real CLI against the
+real <code>memory.db</code>, assert on parsed JSON, and clean up by key
+— <code>__smoke</code>-prefixed for the cases that must not pollute the
+episode log.</p>
+<p>What is genuinely covered:</p>
+<ul>
+<li><strong>The evidence gate.</strong> <code>smoke.mjs:285</code> — an
+<code>observed</code> first write is capped at 0.7 and a repeat
+increments <code>evidence_count</code>. This is the mechanism the design
+rests on, and it is tested.</li>
+<li><strong>Ranking, not just recall.</strong>
+<code>smoke.mjs:892</code> asserts a high-confidence fact outranks a
+low-confidence lexical match; <code>smoke.mjs:1253</code> asserts BM25
+puts higher term frequency first. Retrieval <em>quality</em> assertions
+are rare at this scale.</li>
+<li><strong>Supersession end to end.</strong>
+<code>smoke.mjs:1293</code> — the second value supersedes, the old row
+carries <code>expired_at</code>, <code>recall</code> returns exactly one
+active row and it is the new value, <code>history</code> returns
+both.</li>
+<li><strong>The schema invariant.</strong> <code>smoke.mjs:535</code>
+asserts the unique index exists and blocks a direct duplicate
+<code>INSERT</code> — testing the constraint, not just the code path
+that respects it.</li>
+<li><strong>The read-path side effect.</strong>
+<code>smoke.mjs:1339</code> asserts <code>access_count</code> is bumped
+for returned facts.</li>
+<li><strong>Its own noise gates.</strong> <code>smoke.mjs:1953</code>
+asserts a <code>__smoke</code> supersede emits <em>zero</em> episodes;
+<code>smoke.mjs:1975</code> asserts four rapid supersedes of one key
+collapse to one episode row.</li>
+<li><strong>Graceful degradation.</strong> <code>smoke.mjs:399</code>
+asserts <code>isModelAvailable</code> is safe with no model on
+disk.</li>
+<li><strong>A named regression.</strong> <code>smoke.mjs:200</code>,
+labelled <code>BUG-2</code>, asserts a double <code>migrate.mjs</code>
+run does not grow the fact count.</li>
+</ul>
+<p><strong><code>negative_eval</code> is earned, narrowly.</strong> The
+supersede case asserts that a value still present in the database must
+<em>not</em> come back from <code>recall</code> — exactly one active
+row, and failing with "recall returned old value" if the expired one
+appears. The episode-gate cases assert that particular material must not
+be written to the stream at all. That is a retrieval-exclusion assertion
+rather than a boundary or default-off check, so the flag holds. It is
+two cases, not a suite: nothing asserts that a <em>pruned</em> or
+<em>forgotten</em> value stays unreachable, which is where this store is
+actually weak.</p>
+<p>What is missing, in order of what I would want first: a case at the
+500-row recall boundary, since that limit silently caps the whole
+design; any assertion that <code>getAutonomyMode</code> returns the
+value just written, which would have caught the stale read; a test that
+the injected memory block carries enough for the model to weight what it
+is given; a decay test over more than one pass, to pin the
+<code>last_seen</code> mutation; and anything at all exercising the
+<code>mind</code> verbs against a real vault —
+<code>smoke.mjs:1893</code> explicitly checks "no Claude run", so the
+entire second brain is covered by "the verbs and the protocol file
+exist". The CORTEX case (<code>smoke.mjs:2299</code>) asserts the client
+parses and the tools are registered, which is all it can do, since the
+server is not in the repository.</p>
+<p><strong>No eval harness, no retrieval benchmark, no committed
+benchmark artefacts.</strong> Nothing measures recall quality against a
+labelled set, and nothing in the README claims otherwise — the
+comparison table on the marketing page claims capabilities, not scores,
+which is the honest version of this gap.</p>
+<p><strong>The self-audit is the most unusual artefact here.</strong>
+<code>workspace/repo-scan-report.md</code>, dated 2 June 2026, is a
+committed 25-issue bug report: severity, <code>file:line</code>, a
+described failure mode, "reproduced empirically" where it was, and a
+named fix that usually points at a correct pattern already present
+elsewhere in the same repository. It is candid against its own marketing
+— one Low entry is "Public marketing site still promises the removed
+multi-machine fleet feature", filed as "user-facing false
+advertising".</p>
+<p>It is also <em>closed</em>. Every issue I checked at this commit is
+fixed: the <code>migrate.mjs</code> column guards are in place before
+the dedup <code>DELETE</code> (<code>migrate.mjs:29-33</code>, High #1);
+<code>gui_task.mjs:115</code> uses <code>{ shell: true }</code> (High
+#3); <code>swarm.mjs:39</code> wraps npm with <code>shell: IS_WIN</code>
+(High #4/#5); <code>web.mjs:18</code> calls bare <code>curl</code>
+instead of <code>/usr/bin/curl</code> (High #2); the fleet remnants are
+gone from <code>dashboard/server.mjs</code>, <code>cli.js</code> and
+<code>docs/index.html</code> (Low #3/#4/#5);
+<code>compact.mjs:148</code> reads fd 0 (Medium #9). The report's own
+architectural recommendation — "factor <code>resolveClaude()</code> into
+a shared module imported by index.js, scheduler.mjs, think.mjs,
+self-upgrade.mjs and plan.mjs" — became
+<code>workspace/lib/engine.mjs</code>, now imported by fourteen modules.
+<code>workspace/upgrades/QUEUE.md</code> records the same loop in
+changelog form: dated entries, each naming the smoke test that anchors
+it and, in the best ones, the observed pollution that forced it. Finding
+your own bugs is common; writing them down with reproduction steps and
+then closing them is not.</p>
+<p>That maturity is uneven, and it is worth being precise about where it
+stops. It covers process spawning, cross-platform correctness and
+mechanism hygiene thoroughly. It has not reached the memory model's
+epistemics: the injection template that discards confidence, the readers
+that forget the expiry predicate, and the 500-row window are all
+invisible to a scan looking for crashes, because none of them crash.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Cap a first observation and make belief earn its way
+up.</strong> Fifteen lines: a constant, a source tag,
+<code>min(requested, CAP + step·(evidence−1))</code>, and a counter. It
+gives you a defensible answer to "the model thought it noticed
+something" without a trust-state machine, and it is the cheapest correct
+thing in this report.</li>
+<li><strong>Let retrieval slow decay, and keep the two signals
+apart.</strong> Subtracting <code>log1p(access_count)</code> from stale
+weeks means use extends life without ever raising confidence. Access is
+evidence of <em>relevance</em>; corroboration is evidence of
+<em>truth</em>; systems that add usage into a single score conflate
+them.</li>
+<li><strong>Give episodes a recency term and facts none.</strong> A
+preference should not fall down the ranking for being old, and an event
+should. One ranking function for both is a decision, usually an
+unexamined one.</li>
+<li><strong>Refuse to download a model on the query path.</strong>
+<code>allowRemoteModels = false</code> plus an explicit
+<code>download</code> subcommand converts a mysterious first-call stall
+into a documented setup step.</li>
+<li><strong>Test the constraint, not just the code that honours
+it.</strong> Asserting the unique index rejects a raw
+<code>INSERT</code> covers every future writer, including the ones
+written by an LLM at 3am.</li>
+<li><strong>Write your bugs down where the code lives.</strong> A
+committed report with <code>file:line</code>, a reproduction, and a
+pointer to the correct pattern already in the repo is worth more than an
+issue tracker, because the next agent reading the repository finds
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Computing a confidence and not shipping it.</strong> If the
+consumer of a memory is a language model, the number has to appear in
+the string. Otherwise the epistemics are an internal ceremony, and the
+phrasing you <em>do</em> ship — "never contradict them" — silently
+promotes every guess to a fact.</li>
+<li><strong>A soft-delete predicate with no accessor.</strong>
+<code>WHERE expired_at IS NULL</code> in fourteen places is fourteen
+chances to forget it, and a partial unique index protects the writes
+while leaving every <code>SELECT</code> on its own. Expose a view or a
+single query function and make the raw table unreachable. This is the
+generalizable half of §9.</li>
+<li><strong>Minting a unique key per captured item.</strong> A
+timestamped key defeats every uniqueness, supersession and update
+mechanism you built, and turns "remember X" said twice into two
+contradictory live rows.</li>
+<li><strong>Word frequency dressed as learning.</strong> "Mentioned in N
+episodes" is a term count with no claim in it. If a distiller cannot
+produce a subject and a predicate, keep the count out of the store the
+model reads.</li>
+<li><strong>Logging your own mutations into the store you consolidate
+from.</strong> The supersession log becomes input to the distiller, the
+distiller learns about supersession, and you discover it by reading a
+stop list. Tag mechanism events and exclude them at the source, and test
+that exclusion.</li>
+<li><strong>Mutating a timestamp to make a batch job
+idempotent.</strong> Advancing <code>last_seen</code> so decay does not
+re-run is effective and destroys the column's meaning for every other
+reader. Keep a separate <code>last_decayed</code>.</li>
+<li><strong>Making a gate opt-in for writers.</strong> A cap that
+applies only when the caller passes the right flag will be bypassed by
+the laziest call site — here, the tool the model itself reaches
+for.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a design for <strong>one person, one machine, a few thousand
+facts</strong>, and inside those bounds the economics are hard to beat:
+no service to run, no key required to store anything, a store you can
+repair with <code>sqlite3</code>, and a genuine epistemic model in 401
+lines. If you are building a personal assistant that lives on your own
+hardware and you want memory that is more than a JSON blob, this is a
+better starting point than most of the larger systems here, and
+<code>workspace/memory/</code> lifts out cleanly.</p>
+<p>Walk away if any of three things is true. <strong>If the store will
+exceed a few hundred active facts</strong>, the recency-ordered 500-row
+window means retrieval quietly stops seeing your oldest and
+best-established memories, and fixing it means replacing the retrieval
+function rather than tuning it. <strong>If more than one person or
+project shares the store</strong>, there is no scope to add — the
+boundary is the process, and <code>channel</code> demonstrates how a
+scope column behaves when nothing applies it. <strong>If deletion must
+be durable against re-derivation</strong> — regulated data, a user's
+explicit retraction — the hard-delete-with-no-record semantics put you
+on the wrong side of the requirement, and a reflection loop reading the
+same transcripts will re-derive what you removed.</p>
+<p>There is also a maintenance judgement to make that is not about
+scale. This codebase improves itself nightly, under a smoke gate, with
+an auto-revert. That is why the audit findings are closed and why the
+noise gates exist. It is also why the schema is the union of five files'
+<code>ALTER</code> statements and why three readers drifted from the
+expiry predicate — a system that grows by accretion under test pressure
+gets locally correct and globally inconsistent. Adopting the memory
+module is straightforward. Adopting the development model that produced
+it means accepting that the invariants live in the smoke tests, and that
+anything the smoke tests cannot see is free to rot.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does <code>getAutonomyMode</code> actually return the stale
+row?</strong> The reasoning is from SQLite's partial-index eligibility
+rules and rowid scan order, and the 82 duplicate supersessions in
+<code>QUEUE.md</code> are consistent with it. Confirming it needs a live
+database with a superseded <code>helm.autonomy_mode</code> and an
+<code>EXPLAIN QUERY PLAN</code>.</li>
+<li><strong>How large does the store get in practice?</strong> Whether
+the 500-row window is a live problem or a latent one depends on the fact
+count after months of 15-minute ticks, and <code>memory.db</code> is
+gitignored. The <code>INDEX.md</code> cap of 30 rows per kind suggests
+the author has seen kinds grow past 30.</li>
+<li><strong>Is MiniLM usually loaded?</strong> The three retrieval
+quality tiers are indistinguishable from the output shape, and whether a
+typical install ever runs <code>embed.mjs download</code> is unknowable
+from the repository.</li>
+<li><strong>What is CORTEX?</strong> Twelve registered tools, a
+documented five-layer memory stack, on-device embeddings, an HTTP API on
+port 7002 — and <code>workspace/cortex/</code> is gitignored. Whether it
+is a prototype, a separate product, or abandoned changes how to read the
+memory architecture, since the vault and the fact store are described in
+<code>CLAUDE.md</code> as deliberately distinct from it.</li>
+<li><strong>Does the vault stay coherent with the fact store?</strong>
+Both are written by prompt instruction with no reconciliation. Only
+running the nightly <code>com.helm.mind</code> pass against a real vault
+would show whether "the vault rewrites itself" converges or accumulates
+contradictory notes.</li>
+<li><strong>What did the nightly self-upgrade do to the memory layer
+that the smoke tests did not catch?</strong> The QUEUE records what was
+intended and anchored. Whether auto-reverted attempts left partial
+schema changes would need the git history of
+<code>workspace/memory/</code> read commit by commit.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>workspace/memory/memory.mjs:13-64</code> — <code>facts</code>,
+<code>episodes</code>, <code>links</code>; guarded <code>ALTER</code>s;
+the self-healing partial unique index.</li>
+<li><code>workspace/memory/embed.mjs:14-23</code>, <code>104-110</code>
+— <code>vectors</code> and <code>episode_vectors</code>, created
+lazily.</li>
+<li><code>workspace/sessions.mjs</code> —
+<code>sessions(key, session_id, adapter, updated)</code>, key always
+<code>'owner'</code>.</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>workspace/memory/memory.mjs:87-162</code> —
+<code>remember</code>: the provisional cap, evidence ratchet,
+supersession, and the gated supersede episode.</li>
+<li><code>workspace/memory/memory.mjs:341-349</code> —
+<code>forget</code>, hard delete plus vector.</li>
+<li><code>index.js:572-583</code> — <code>captureTurn</code>: per-turn
+episode and the regex fact.</li>
+<li><code>index.js:520</code>, <code>537</code>, <code>559</code> —
+<code>ingestEpisodes</code>, <code>catchUpDiscord</code>,
+<code>scanDiscordHistory</code>.</li>
+<li><code>workspace/memory/migrate.mjs</code> — CLAUDE.md bullets to
+<code>profile</code>/<code>exam</code>/<code>note</code> facts at
+confidence 1.0, updated in place with no supersession.</li>
+<li><code>workspace/tools/impl/memory.remember.mjs</code> — the wrapper
+that omits <code>--source</code>.</li>
+</ul>
+<p><strong>Retrieval path</strong></p>
+<ul>
+<li><code>workspace/memory/memory.mjs:164-326</code> — the 500-row
+window, BM25, TF-IDF and MiniLM arms, RRF fusion, confidence weight, key
+boost, <code>access_count</code> bump, and the episode scorer.</li>
+<li><code>workspace/memory/embed.mjs:44-101</code> — pipeline load with
+remote models disabled, <code>getOrComputeVector</code> cache.</li>
+<li><code>workspace/memory/memory.mjs:328-339</code> —
+<code>unsure</code>.</li>
+<li><code>workspace/memory/memory.mjs:369-379</code> —
+<code>history</code>, the intentional unfiltered read.</li>
+</ul>
+<p><strong>Context assembly</strong></p>
+<ul>
+<li><code>index.js:490-510</code> — <code>recallMemories</code>, the
+injection template that drops confidence.</li>
+<li><code>index.js:595-607</code> — prompt assembly,
+<code>--append-system-prompt</code>, <code>--resume</code>.</li>
+<li><code>workspace/CLAUDE.md:15</code> — <code>@memory/INDEX.md</code>,
+the static channel.</li>
+<li><code>workspace/memory/refresh-index.mjs</code> — the index
+projection, written atomically.</li>
+</ul>
+<p><strong>Background workers</strong></p>
+<ul>
+<li><code>workspace/think/think.mjs:39-82</code> — the cheap and weekly
+prompts.</li>
+<li><code>workspace/think/think.mjs:93-136</code> —
+<code>computeInterruptScore</code>, <code>loadActiveGoals</code>.</li>
+<li><code>workspace/think/think.mjs:146-225</code> — the tick: locks,
+quiet window, consolidate, refresh, guards.</li>
+<li><code>workspace/memory/consolidate.mjs:44-158</code> — distil,
+decay, prune, dedupe, and the stop list.</li>
+</ul>
+<p><strong>Other memory surfaces</strong></p>
+<ul>
+<li><code>workspace/mind/MIND.md</code> — the AI-first note format and
+three rules, parsed by no code.</li>
+<li><code>workspace/tools/impl/mind.mjs:21-30</code>, <code>47-56</code>
+— eight verbs as prompt strings, <code>bypassPermissions</code> on the
+vault.</li>
+<li><code>workspace/tools/impl/cortex.mjs</code> — HTTP client for the
+absent server.</li>
+<li><code>workspace/tools/registry.json</code> — <code>memory.*</code>,
+<code>mind</code>, and the twelve <code>cortex.*</code>
+declarations.</li>
+<li><code>workspace/sessions/compact.mjs:81-132</code> —
+<code>maybeCompact</code>, unreferenced by the running agent.</li>
+<li><code>workspace/dashboard/server.mjs:58-65</code> — the unfiltered
+operator view.</li>
+</ul>
+<p><strong>Tests and self-audit</strong></p>
+<ul>
+<li><code>workspace/tests/smoke.mjs:285</code>, <code>892</code>,
+<code>1253</code>, <code>1293</code>, <code>1339</code>,
+<code>535</code>, <code>1953</code>, <code>1975</code>,
+<code>399</code>, <code>200</code> — the memory cases named in §10.</li>
+<li><code>workspace/repo-scan-report.md</code> — the 25-issue committed
+self-audit dated 2 June 2026.</li>
+<li><code>workspace/upgrades/QUEUE.md</code> — dated self-upgrade
+changelog with anchoring test numbers.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

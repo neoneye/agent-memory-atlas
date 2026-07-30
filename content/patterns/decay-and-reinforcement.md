@@ -167,6 +167,29 @@ is measuring its own decisions and calling it usage; separating deliberate reads
 from injections is the cheap fix, and it is a one-line distinction at the call
 site.
 
+[Helm](../../systems/helm/) keeps the two signals apart correctly and then
+damages a third. Retrieval cannot raise confidence — it only slows loss:
+`log1p(access_count)` is subtracted from the count of stale weeks before the
+`0.9^weeks` multiplier applies, so a fact the agent keeps reaching for holds what
+it has and gains nothing. Only never-corroborated rows decay at all, and rows
+sourced from the persona document are exempt outright. That is the separation
+this page asks for, at the cost of one logarithm.
+
+The flaw is in the bookkeeping. The same pass advances `last_seen` by the stale
+weeks it just consumed, purely so the next nightly run does not re-apply an
+identical step. It works, and it means `last_seen` no longer records when the
+fact was last seen — including for the `unsure` query that orders the
+weakly-evidenced list by exactly that column. If a decay pass needs to remember
+what it has already done, give it `last_decayed` and leave the observation
+timestamp alone.
+
+Helm also shows the reinforcement signal being collected where nobody would look
+for it: `access_count` is incremented inside the recall verb, so the background
+loop that calls recall to score whether its own thought is worth interrupting the
+owner about reinforces every fact it touches on the way past. A read that writes
+should be documented as one — Helm's tool registry declares
+`"side_effects": "none"` for it.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

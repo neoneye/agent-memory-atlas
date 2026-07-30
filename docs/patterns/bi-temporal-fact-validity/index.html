@@ -195,6 +195,24 @@ and <a href="../../systems/redis-agent-memory-server/">Redis Agent
 Memory Server</a> carry <code>expires_at</code> and TTL, which is
 validity's poorer relative: an expiry says when to stop believing
 something but not when it was true.</p>
+<p><a href="../../systems/helm/">Helm</a> is the near-miss worth
+checking your own schema against. It has <code>valid_from</code> and
+<code>expired_at</code> on the fact row, a
+<code>history &lt;key&gt;</code> verb that orders by
+<code>valid_from DESC</code>, and correction that stamps the old row
+rather than erasing it — every structural piece of this pattern. And it
+is not bi-temporal, because <code>valid_from</code> is only ever written
+as the insert timestamp or backfilled to <code>created</code>. No writer
+anywhere in the repository can set it to anything else, so validity time
+is record time under a second name, and the history the verb returns is
+a list of <em>when the system changed its mind</em>, never of when
+anything was true.</p>
+<p>The diagnostic generalizes past this one repository, because the
+columns are the easy part and are usually the part that gets built: ask
+whether any caller can land a fact whose validity <strong>precedes its
+own row</strong>. If a backfill cannot express "this was true from
+March, and I am only learning it now", the second time dimension is
+decorative no matter what the column is called.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Backfilled old events ingested today.</li>
