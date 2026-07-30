@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The durable memory is a SQLite
+file the agent designs and queries itself, sandboxed by a sqlite3
+authorizer — and the eight tables the platform projects into it are all
+dropped before it is saved, with each one's mortality written into the
+schema prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gobii — Agent Memory Atlas">
+    <meta property="og:description" content="The durable memory is a
+SQLite file the agent designs and queries itself, sandboxed by a sqlite3
+authorizer — and the eight tables the platform projects into it are all
+dropped before it is saved, with each one's mortality written into the
+schema prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gobii — Agent Memory Atlas">
+    <meta name="twitter:description" content="The durable memory is a
+SQLite file the agent designs and queries itself, sandboxed by a sqlite3
+authorizer — and the eight tables the platform projects into it are all
+dropped before it is saved, with each one's mortality written into the
+schema prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gobii — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory as a database the agent writes</p>
+          <h1>Gobii</h1>
+          <p class="document-deck">The durable memory is a SQLite file
+the agent designs and queries itself, sandboxed by a sqlite3 authorizer
+— and the eight tables the platform projects into it are all dropped
+before it is saved, with each one's mortality written into the schema
+prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gobii-ai/gobii-platform">
+              <span>Source</span>
+              <strong>gobii-ai/gobii-platform</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9" title="26844673ac9f134e2ad3851a12dd26762d94c3a9">
+              <span>Analyzed revision</span>
+              <code>26844673…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (73%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Gobii is a hosted platform for persistent agents — a Django monolith
+of 183 models and roughly 473,000 lines of Python, MIT-licensed with an
+explicitly carved-out <code>proprietary/</code> module and a trademark
+notice. Agents have email, SMS, Discord and web endpoints, cron
+schedules, MCP servers, a browser-use agent, skills, secrets, a
+filespace and a kanban plan.</p>
+<p><strong>Its memory is a SQLite database that the agent designs and
+queries itself</strong>, and that is not a shape this atlas has seen
+before. There is no <code>MemoryRecord</code>, no extraction pass, no
+embedding and no vector store on the memory path. There is one file per
+agent, a generated schema prompt, and a SQL tool. What the agent
+remembers is whatever it wrote <code>CREATE TABLE</code> for.</p>
+<p>Around that sit roughly 12,000 lines of tooling in thirteen
+<code>sqlite_*</code> modules — <code>sqlite_batch</code> (2,515),
+<code>sqlite_analysis</code> (1,506), <code>sqlite_state</code> (1,316),
+<code>sqlite_guardrails</code> (1,316), plus autocorrect, recovery,
+digest, query quality, skills and config. The investment is not in
+deciding what to remember; it is in making a language model's SQL
+survive contact with a real database.</p>
+<p><strong>The mechanism worth taking is the persistence
+contract.</strong> Gobii projects its own platform state into the
+agent's database as eight double-underscore tables —
+<code>__messages</code>, <code>__files</code>, <code>__contacts</code>,
+<code>__agent_config</code>, <code>__agent_schedules</code>,
+<code>__agent_skills</code>, <code>__tool_results</code>,
+<code>__kanban_cards</code> — so the agent can join its own data against
+the platform's in one query. Every one of them is listed in
+<code>EPHEMERAL_TABLES</code>, and <code>_drop_ephemeral_tables</code>
+executes <code>DROP TABLE IF EXISTS</code> on all eight before the file
+is persisted. The durable artifact contains only what the agent
+created.</p>
+<p>And the model is <em>told which is which</em>.
+<code>BUILTIN_TABLE_NOTES</code> carries a phrase per table —
+<code>"built-in, ephemeral (dropped before persistence)"</code>,
+<code>"built-in, ephemeral (recent messages snapshot for this cycle)"</code>,
+<code>"built-in, ephemeral (reset every LLM call)"</code> — that goes
+into the schema prompt. Almost every system in this atlas decides what
+survives and leaves the model to infer it. This one writes the mortality
+of each table into the prompt the model reads before it decides where to
+put something.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no epistemic model, and the absence is structural rather
+than neglectful: <strong>there is no schema to hang one on</strong>. A
+trust state needs a column, a column needs a table, and the tables
+belong to the model. If an agent wants <code>confidence</code> or
+<code>verified_at</code>, it can create them; nothing in Gobii asks it
+to, and nothing in Gobii would understand them if it did.</p>
+<p>What Gobii models instead is a <strong>cycle</strong>. A run restores
+the database, mounts the platform's state as ephemeral tables, hands the
+model a schema prompt, lets it read and write SQL, drops the ephemeral
+tables, validates the file, and uploads it. Durability is a property of
+the file, and the boundary between "this cycle" and "forever" is drawn
+by one set literal.</p>
+<p>The consequence is the report's central tension. Memory that is a
+relational database is the most <em>queryable</em> memory in this atlas
+— an agent can compute over its own history in ways a vector store
+cannot. It is also the least <em>legible from outside</em>, because the
+shape is discovered rather than declared.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The platform needs Postgres, Redis, Celery and blob storage; the
+memory path needs the last of those.
+<code>sqlite_storage_key(agent_uuid)</code> gives one key per agent.
+<code>_restore_sqlite_db_from_storage</code> opens it from
+<code>default_storage</code>, decompresses it with zstd <strong>in a
+subprocess with a 120-second timeout</strong>, and validates it before
+use — a decompression bomb and a corrupt file are both treated as
+expected conditions rather than crashes.
+<code>create_validated_sqlite_snapshot</code> and
+<code>validate_sqlite_file</code> guard the write side, and
+<code>sqlite_recovery.py</code> distinguishes a recovered failure from
+an unrecoverable one in its telemetry.</p>
+<p>Beside it, Postgres holds everything the platform owns: steps, tool
+calls, messages, conversations, kanban cards, skills, secrets, filespace
+nodes, and two snapshot chains.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>api/agent/tools/sqlite_state.py</code> (1,316) — the table
+constants, the ephemeral set, the schema prompt budget, storage keys,
+restore and persist.</li>
+<li><code>api/agent/tools/sqlite_guardrails.py</code> (1,316) — the
+authorizer, the safe custom functions, the statement checks.</li>
+<li><code>api/agent/tools/sqlite_batch.py</code> (2,515) — the
+agent-facing SQL tool.</li>
+<li><code>api/agent/tools/sqlite_analysis.py</code> (1,506) and
+<code>sqlite_digest.py</code> — turning a table into something a prompt
+can hold.</li>
+<li><code>api/models.py</code> — <code>PersistentAgent</code> (charter),
+<code>PersistentAgentStep</code>,
+<code>PersistentAgentCommsSnapshot</code>,
+<code>PersistentAgentStepSnapshot</code>,
+<code>PersistentAgentKanbanCard</code>,
+<code>PersistentAgentSkill</code>.</li>
+<li><code>console/agent_chat/plan_events.py</code> — the kanban
+feed.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two halves that do not share a vocabulary.</p>
+<p><strong>Agent-side</strong>: unknown by construction. The only fixed
+names are the eight ephemeral system tables, and the durable content is
+model-authored. The constants that bound it are the interesting part —
+<code>MAX_PROMPT_BYTES = 30000</code>, <code>MAX_TABLES = 25</code>,
+three sample rows and eight sample columns per table in the prompt, with
+<code>sqlite_analysis</code> producing column summaries, detected types
+(it sniffs email, URL, UUID, ISO date, IPv4, phone patterns), and
+JSON/CSV detection thresholds. The schema prompt is a compression
+problem, and it is solved carefully.</p>
+<p><strong>Platform-side</strong>: <code>PersistentAgent.charter</code>
+is a <code>TextField</code> — the agent's durable purpose,
+human-authored and human-editable, with a
+<code>short_description_charter_hash</code> so a generated summary can
+be invalidated when the charter changes.
+<code>PersistentAgentKanbanCard</code> carries
+<code>todo</code>/<code>doing</code>/<code>done</code>, a priority and a
+<code>completed_at</code>. Both snapshot models carry a
+<code>summary</code>, a <code>snapshot_until</code> upper bound, and a
+<code>previous_snapshot</code> one-to-one link, with a unique constraint
+on <code>(agent, snapshot_until)</code> — an incrementally generated
+chain of summaries over history that is <em>not</em> deleted, which is
+<a href="../../patterns/evidence-before-belief/">evidence before
+belief</a> in the shape the pattern recommends.</p>
+<p>No validity time anywhere; every clock is a record clock.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The agent writes <code>SELECT</code>. That is the whole retrieval
+story, and it is both the strongest and the weakest thing here —
+strongest because aggregation, joins, <code>GROUP BY</code> and window
+functions are all available to an agent reasoning over its own history,
+which no vector store offers; weakest because recall quality is the
+model's SQL, and nothing measures it.</p>
+<p>The support around it is real. <code>sqlite_autocorrect</code>
+repairs malformed statements, <code>sqlite_query_quality</code> inspects
+them, <code>json_goldilocks</code> (1,166 lines) and the digest modules
+size results to fit a prompt, and the guardrails register safe
+pure-computation functions such as <code>REGEXP</code> so common
+patterns do not require the blocked ones.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block, and they are the model's own SQL through the batch
+tool. There is no extraction pass: nothing is remembered that the agent
+did not decide to write, which is the <a
+href="../../patterns/zero-llm-capture/">zero-LLM-capture</a> trade
+inverted — all capture is deliberate, and none is automatic.</p>
+<p>Persistence happens at the end of a cycle: drop the eight ephemeral
+tables, validate, compress, upload, with failures classified as
+<code>sqlite_persistence_upload_failed</code>,
+<code>sqlite_persistence_failed</code>, or recovered. The background
+work is Celery and the snapshot chains, which summarise comms and steps
+incrementally rather than rewriting a single running summary — so a
+regeneration can start from the previous cut-off instead of from the
+beginning.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>This is a product, not a library: agents own email addresses, phone
+numbers, Discord channels and web sessions; they can spawn other agents,
+link as peers, request human input, solicit credentials, and run
+scheduled. Memory is one subsystem inside it, reachable only through the
+agent's own tool calls.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The authorizer is the scope mechanism, and it is the right
+place for it.</strong> <code>_sqlite_authorizer</code> denies
+<code>SQLITE_ATTACH</code> and <code>SQLITE_DETACH</code>, so no query
+can mount another agent's database file; denies
+<code>load_extension</code>, <code>readfile</code>,
+<code>writefile</code>, <code>edit</code> and
+<code>fts3_tokenizer</code>, closing the filesystem escapes SQL offers;
+and denies the <code>database_list</code>, <code>key</code>,
+<code>rekey</code>, <code>temp_store</code> and
+<code>temp_store_directory</code> pragmas. Isolation is therefore
+<strong>partition plus capability</strong> — one file per agent UUID,
+and no SQL verb that can reach across — rather than a <code>WHERE</code>
+clause. On the Django side every model is foreign-keyed to the agent and
+filtered on read. <code>scope_enforced</code> is earned, and the shape
+is worth naming because it is the only instance in the corpus where the
+boundary is enforced by an authorizer callback rather than by a query
+predicate.</p>
+<p><strong>No tombstone, and the reason is the schema.</strong>
+Correction is whatever <code>DELETE FROM</code> the model writes.
+Nothing records that a value was rejected, and nothing <em>could</em>
+generically — a platform operator asked to erase everything about a
+named person cannot write that query, because the tables are different
+for every agent and were invented by a model. This is the sharpest
+version of a problem this atlas keeps finding: here it is not that
+deletion is unimplemented, it is that deletion is not expressible at the
+platform level at all.</p>
+<p><strong>No trust state and no bi-temporality</strong>, for the same
+reason.</p>
+<p><strong>The kanban event log is not an audit log, and the near-miss
+is instructive.</strong> <code>PersistentAgentKanbanEvent</code> and
+<code>PersistentAgentKanbanEventChange</code> record created / started /
+completed / updated / deleted / archived per card with
+<code>from_status</code> → <code>to_status</code>, and
+<code>card_id</code> is a bare <code>UUIDField</code> rather than a
+foreign key, so the history survives the card's deletion and keeps a
+denormalised <code>title</code>. That is exactly the data model an audit
+wants. But <code>persist_plan_event</code> lives in
+<code>console/agent_chat/</code> and is called from the console's
+signals and timeline — it is the activity feed the web UI renders, built
+from a payload with <code>displayText</code>,
+<code>snapshot_files</code> and <code>snapshot_messages</code> and made
+idempotent on a <code>cursor_identifier</code>. It records what the
+interface showed, not what the store did, so a change that never reaches
+the feed is unrecorded. The mark is withheld.</p>
+<p><strong>Prospective memory, partially.</strong> The kanban card is a
+durable commitment with an enforced
+<code>todo</code>/<code>doing</code>/<code>done</code> lifecycle and a
+<code>completed_at</code> — two of the three requirements the atlas's <a
+href="../../compare/#the-category-almost-nothing-models-prospective-memory">prospective
+memory section</a> names, which puts Gobii beside NOOA and MineContext
+in the emptiest category here. The third is missing in both directions:
+triggers are cron (<code>PersistentAgentCronTrigger</code>,
+<code>PersistentAgentSchedule</code>), not semantic, and there is no way
+to reject a commitment such that it cannot be re-created. Its SQLite
+mirror, <code>__kanban_cards</code>, is ephemeral.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>381 test functions across the SQLite-named test files alone, none run
+here, covering the schema prompt, digest, recovery, agent config,
+schedules, messages and contacts tables, batch behaviour, and
+cross-process coordination. There is also an eval framework in the
+platform proper — <code>EvalSuiteRun</code>, <code>EvalRun</code>,
+<code>EvalRunTask</code>, with an ephemeral-agent-per-scenario strategy
+— aimed at agent task performance rather than at memory.</p>
+<p>No negative retrieval assertion was found. The obvious one is absent
+and would be cheap: nothing asserts that the eight ephemeral tables are
+gone from a persisted file. <code>_drop_ephemeral_tables</code> is the
+single line standing between a per-cycle projection of the user's
+messages and contacts and a durable copy of them in blob storage, and it
+is not covered by a test that says so.</p>
+<p>No memory benchmark, no retrieval-quality measurement, and no
+published numbers — so nothing claimed and nothing to check.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Declare which tables are ephemeral, in one place, and drop
+them on the way out.</strong> <code>EPHEMERAL_TABLES</code> plus
+<code>_drop_ephemeral_tables</code> is about fifteen lines and it makes
+the persistence boundary a value you can read instead of a behaviour you
+have to trace.</li>
+<li><strong>Tell the model which of its tables survive.</strong>
+<code>BUILTIN_TABLE_NOTES</code> putting
+<code>"ephemeral (dropped before persistence)"</code> into the schema
+prompt is the cheapest honesty mechanism in this report. A model that
+does not know what persists will put durable facts in a scratch
+table.</li>
+<li><strong>Mount the platform's own state as tables the agent can join
+against.</strong> Messages, files, contacts and schedules as queryable
+relations means the agent can ask "which contacts have I not emailed
+this month" instead of being handed a summary that already decided.</li>
+<li><strong>Use <code>sqlite3.set_authorizer</code> if you let a model
+write SQL.</strong> Denying <code>ATTACH</code>,
+<code>load_extension</code>, <code>readfile</code> and
+<code>writefile</code> closes the escapes that make agent-authored SQL
+frightening, and it is enforcement at the engine rather than a regex
+over the statement.</li>
+<li><strong>Decompress untrusted archives in a subprocess with a
+timeout.</strong> 120 seconds and a validation pass, treating a corrupt
+database as an expected state with its own telemetry
+classification.</li>
+<li><strong>Chain your summaries and keep the source.</strong>
+<code>previous_snapshot</code> plus an inclusive
+<code>snapshot_until</code> and a uniqueness constraint means
+summarisation is incremental and re-derivable, and the underlying steps
+and messages are still there.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting the model own the schema if you will ever need to
+erase a subject.</strong> A per-agent, model-authored database has no
+shape an operator can write a deletion query against. If a
+right-to-erasure request must be satisfiable, something in the durable
+store has to be declared.</li>
+<li><strong>Shipping the drop and not testing it.</strong> One missing
+line in the persist path turns an ephemeral projection of a user's
+contacts and messages into a durable copy in object storage, and no test
+asserts it did not happen.</li>
+<li><strong>Building the audit's data model in the UI layer.</strong>
+The kanban change records are shaped exactly like an audit trail and are
+written by the console for rendering, so they cover what was displayed
+rather than what was stored.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Gobii suits an agent whose memory is genuinely <em>tabular</em> —
+scraped listings, tracked prices, contact pipelines, anything where the
+useful question is an aggregate. For that, SQL beats every retrieval
+mechanism in this atlas, and the supporting apparatus is serious enough
+that model-written SQL mostly works.</p>
+<p>It is the wrong model where memory is a set of beliefs about a person
+that may turn out to be wrong. There is no place to record that a value
+was rejected, no status to withhold a doubtful one, and no
+operator-level way to find the value again once an agent has filed it
+under a name only it chose.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Do the ephemeral tables actually get dropped in every
+persist path?</strong> One call site, no test. It is the highest-value
+assertion the repository is missing.</li>
+<li><strong>How large do these databases get, and what happens
+then?</strong> The schema prompt caps at 25 tables and 30,000 bytes; the
+file has no stated cap, and nothing prunes it.</li>
+<li><strong>What does an agent's SQL actually look like after a
+year?</strong> The whole design rests on model-authored schemas staying
+coherent across hundreds of cycles and model upgrades, and nothing in
+the repository measures schema drift.</li>
+<li><strong>Is the charter reviewed after edit?</strong> It is
+human-editable and hashed for summary invalidation; whether an agent can
+rewrite its own charter, and whether anyone reviews that, was not
+traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>api/models.py</code></td>
+<td>13,931</td>
+<td>183 models including the agent, steps, snapshots, kanban,
+skills</td>
+</tr>
+<tr>
+<td><code>api/agent/tools/sqlite_batch.py</code></td>
+<td>2,515</td>
+<td>The agent-facing SQL tool</td>
+</tr>
+<tr>
+<td><code>api/agent/tools/sqlite_analysis.py</code></td>
+<td>1,506</td>
+<td>Column summaries, type sniffing, prompt-sized samples</td>
+</tr>
+<tr>
+<td><code>api/agent/tools/sqlite_state.py</code></td>
+<td>1,316</td>
+<td>Ephemeral set, schema prompt, storage key, restore and persist</td>
+</tr>
+<tr>
+<td><code>api/agent/tools/sqlite_guardrails.py</code></td>
+<td>1,316</td>
+<td>The authorizer and safe functions</td>
+</tr>
+<tr>
+<td><code>api/agent/tools/json_goldilocks.py</code></td>
+<td>1,166</td>
+<td>Fitting results into a prompt</td>
+</tr>
+<tr>
+<td><code>console/agent_chat/plan_events.py</code></td>
+<td>—</td>
+<td>The kanban activity feed</td>
+</tr>
+<tr>
+<td><code>tests/unit/test_sqlite_*.py</code></td>
+<td>381 tests</td>
+<td>Schema prompt, recovery, batch, coordination</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

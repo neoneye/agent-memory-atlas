@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-ninety-seven agent memory architectures, their retrieval mechanics,
+ninety-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of ninety-seven agent memory architectures, their retrieval mechanics,
+of ninety-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of ninety-seven agent memory architectures, their retrieval mechanics,
+of ninety-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-ninety-seven agent memory architectures, their retrieval mechanics,
+ninety-eight agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -157,8 +157,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 56 of
-97 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 57 of
+98 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Ninety-seven systems do not fall into ninety-seven categories. They
+<p>Ninety-eight systems do not fall into ninety-eight categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -293,7 +293,7 @@ safely.</p>
 <code>openviking</code>, <code>memanto</code>,
 <code>memory-engine</code>, <code>memu</code>,
 <code>elastic-atlas</code>, <code>mirix</code>, <code>memobase</code>,
-<code>powermem</code>, <code>memmachine</code></p>
+<code>powermem</code>, <code>memmachine</code>, <code>gobii</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -412,6 +412,38 @@ place: engrams are parameterized-replaceable events, so the relay keeps
 one head per tag and discards what it overwrites. There is no history,
 no retrieval beyond following <code>[[slug]]</code> references from a
 <code>core</code> engram, and no model in the loop at all.</p>
+<p><strong>Gobii inverts what a memory system decides.</strong> Its
+durable store is a SQLite file the <em>agent</em> designs: no
+<code>MemoryRecord</code>, no extraction pass, no embeddings — one
+database per agent, a generated schema prompt capped at 30,000 bytes and
+25 tables, and a SQL tool with roughly 12,000 lines of guardrails,
+autocorrect, recovery and digest around it. The platform mounts its own
+state as eight double-underscore tables — <code>__messages</code>,
+<code>__files</code>, <code>__contacts</code>,
+<code>__agent_config</code>, <code>__agent_schedules</code>,
+<code>__agent_skills</code>, <code>__tool_results</code>,
+<code>__kanban_cards</code> — so the agent can join its own data against
+the platform's, and <strong>every one of them is dropped before the file
+is persisted</strong>. What survives is only what the agent created.</p>
+<p>The mechanism worth copying is one string per table.
+<code>BUILTIN_TABLE_NOTES</code> writes each built-in table's mortality
+into the schema prompt — <em>"built-in, ephemeral (dropped before
+persistence)"</em>, <em>"reset every LLM call"</em> — so the model is
+told what survives before it chooses where to put something. Every other
+system here decides the persistence boundary and leaves the model to
+infer it. Its scope enforcement is also unlike anything else in the
+corpus: a <code>sqlite3</code> authorizer denies <code>ATTACH</code> and
+<code>DETACH</code> so no query can mount another agent's file,
+alongside <code>load_extension</code>, <code>readfile</code>,
+<code>writefile</code> and five pragmas — the boundary held by an engine
+callback rather than a query predicate.</p>
+<p>The cost is on the other side of the same decision. A model-authored
+schema means there is no shape an operator can write against: no
+tombstone is possible, no trust column exists unless a model invented
+one, and an erasure request cannot be satisfied generically because the
+tables differ per agent and were named by an LLM. It is the clearest
+case in the atlas of deletion being not unimplemented but
+<em>inexpressible at the platform level</em>.</p>
 <p><strong>OpenHuman is the largest memory subsystem in the atlas —
 twelve modules, some 76,000 lines, about 1,278 memory tests — and it
 earns its place on one field.</strong> <code>MemoryTaint</code> labels
@@ -820,10 +852,22 @@ were completed, and asks a model to extract tasks with due dates and
 priorities from what it watched the user do. It remembers commitments
 the user never made — and, per its report, offers no surface on which to
 reject one.</p>
-<p>Two occupants bracket the design question rather than settling it. A
-declared commitment is a memory; an inferred commitment is a claim about
-someone's intentions, which is a stronger claim than any preference in
-this atlas and the one most costly to get wrong.</p>
+<p><a href="../systems/gobii/">Gobii</a> is a third occupant and it
+satisfies a different two of the three requirements below. Its
+<code>PersistentAgentKanbanCard</code> is a durable commitment with an
+enforced <code>todo</code>/<code>doing</code>/<code>done</code>
+lifecycle and a <code>completed_at</code> — the strict lifecycle NOOA
+has and MineContext approximates with a two-valued integer — but its
+triggers are cron (<code>PersistentAgentCronTrigger</code>,
+<code>PersistentAgentSchedule</code>) rather than semantic, and nothing
+can reject a commitment such that it cannot be recreated. Its SQLite
+mirror of the board, <code>__kanban_cards</code>, is one of the eight
+tables dropped before persistence, so the durable copy lives in Postgres
+and the agent sees a per-cycle projection of it.</p>
+<p>Three occupants bracket the design question rather than settling it.
+A declared commitment is a memory; an inferred commitment is a claim
+about someone's intentions, which is a stronger claim than any
+preference in this atlas and the one most costly to get wrong.</p>
 <p><strong>Why the category is nearly empty is a boundary dispute, not
 an oversight.</strong> Ordinary software already has somewhere for
 future commitments to live — a scheduler, a job queue, a state machine —
@@ -1934,6 +1978,39 @@ ids</td>
 decisions kept as ADRs</td>
 <td>Conflict state has no visible resolution workflow; no value
 tombstone</td>
+</tr>
+<tr>
+<td><code>gobii</code></td>
+<td>A row in a table the agent invented. There is no framework-defined
+memory record — the schema is whatever the model wrote
+<code>CREATE TABLE</code> for</td>
+<td>One zstd-compressed SQLite file per agent in Django's
+<code>default_storage</code>, restored per run through a validating
+subprocess; Postgres holds the platform's own 183 models</td>
+<td>SQL. The agent is shown a generated schema prompt capped at 30,000
+bytes and 25 tables, then writes queries against it</td>
+<td>SQL, through a batch tool with autocorrect, query-quality checks and
+recovery; the file is validated and re-uploaded after the cycle</td>
+<td><code>UPDATE</code> and <code>DELETE FROM</code>, written by the
+model. No framework-level correction, no record of what was removed</td>
+<td>One database file per agent UUID, with
+<code>ATTACH</code>/<code>DETACH</code> denied by a <code>sqlite3</code>
+authorizer so SQL cannot reach another agent's file; Django models are
+foreign-keyed to the agent</td>
+<td>A Django platform — persistent agents with email, SMS, Discord and
+web endpoints, MCP servers, schedules, a browser-use agent, skills and a
+kanban plan</td>
+<td>Celery. Comms and step snapshot chains summarise history
+incrementally, each linked to its predecessor with an inclusive
+cut-off</td>
+<td>None. A row is true because the model inserted it; there is no
+status, confidence or provenance column unless the model invented
+one</td>
+<td>An explicit persistence contract — eight built-in tables declared
+ephemeral and dropped before save, with each one's mortality stated in
+the prompt the model reads; a real SQL authorizer sandbox</td>
+<td>The schema is model-authored, so nobody can write a query to correct
+or erase a subject without first discovering what tables exist</td>
 </tr>
 <tr>
 <td><code>goodai-ltm</code></td>
@@ -3555,14 +3632,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 97:</em> <a
+<p><em>3 of 98:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 97:</em> <a
+<p><em>7 of 98:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3572,7 +3649,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 97:</em> <a
+<p><em>8 of 98:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3586,7 +3663,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>56 of 97:</em> <a
+<p><em>57 of 98:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -3608,6 +3685,7 @@ href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
+href="../systems/gobii/"><code>gobii</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hindsight/"><code>hindsight</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a
@@ -3647,7 +3725,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>11 of 97:</em> <a
+<p><em>11 of 98:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3662,7 +3740,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>16 of 97:</em> <a
+<p><em>16 of 98:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3682,7 +3760,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>10 of 97:</em> <a href="../systems/agno/"><code>agno</code></a>,
+<p><em>10 of 98:</em> <a href="../systems/agno/"><code>agno</code></a>,
 <a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
@@ -3710,7 +3788,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Ten
-repositories of ninety-seven assert that particular material must
+repositories of ninety-eight assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -3769,7 +3847,7 @@ row lives.</p>
 <p><strong>Only these six probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Six
-of ninety-seven is the real figure for the second kind, and the two
+of ninety-eight is the real figure for the second kind, and the two
 newest are the cheap version of it: a <em>superseded</em> value is easy
 to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come
@@ -6577,7 +6655,7 @@ half-life to every memory kind.</p>
 <p>Write your memory decisions down. <code>gini-agent</code> keeps ADRs
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
-memories were polluting a research agent's recall. Across ninety-seven
+memories were polluting a research agent's recall. Across ninety-eight
 systems, almost none can explain why they are shaped the way they
 are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
@@ -8057,6 +8135,7 @@ href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a></li>
 <li><a
 href="../systems/agent-framework/"><code>agent-framework</code></a></li>
 <li><a href="../systems/crewai/"><code>crewai</code></a></li>
+<li><a href="../systems/gobii/"><code>gobii</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8409,6 +8488,10 @@ href="https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d
 <li><a href="https://github.com/crewAIInc/crewAI">crewAIInc/crewAI</a>
 at <a
 href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2"><code class="commit-id" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">ceed4a3f…</code></a></li>
+<li><a
+href="https://github.com/gobii-ai/gobii-platform">gobii-ai/gobii-platform</a>
+at <a
+href="https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9"><code class="commit-id" title="26844673ac9f134e2ad3851a12dd26762d94c3a9">26844673…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -8732,7 +8815,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of ninety-seven — <a
+<strong>three</strong> of ninety-eight — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
