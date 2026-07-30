@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-agent framework whose
+memory unit is the message rather than the fact, where every record
+carries an agent_id that no read path consults, and the class called
+ScoreBasedContextCreator no longer scores or filters.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CAMEL — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-agent framework
+whose memory unit is the message rather than the fact, where every
+record carries an agent_id that no read path consults, and the class
+called ScoreBasedContextCreator no longer scores or filters.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CAMEL — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-agent framework
+whose memory unit is the message rather than the fact, where every
+record carries an agent_id that no read path consults, and the class
+called ScoreBasedContextCreator no longer scores or filters.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CAMEL — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Message store with vector recall</p>
+          <h1>CAMEL</h1>
+          <p class="document-deck">A multi-agent framework whose memory
+unit is the message rather than the fact, where every record carries an
+agent_id that no read path consults, and the class called
+ScoreBasedContextCreator no longer scores or filters.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/camel-ai/camel">
+              <span>Source</span>
+              <strong>camel-ai/camel</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">
+              <span>Analyzed revision</span>
+              <code>ec48f997…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (74%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CAMEL is a multi-agent framework — role-playing, workforce, society —
+and its memory module is small: roughly 1,350 lines across
+<code>camel/memories/</code>, Apache-2.0. The contract is three parts
+and it is genuinely clean. A <code>MemoryBlock</code> stores and
+retrieves; an <code>AgentMemory</code> wraps a block and adds
+<code>retrieve</code>, <code>write_records</code>, <code>clear</code>
+and a context creator; a <code>BaseContextCreator</code> turns retrieved
+records into the messages that go to the model. Three implementations
+ship: <code>ChatHistoryMemory</code> over a key-value store,
+<code>VectorDBMemory</code> over a vector store, and
+<code>LongtermAgentMemory</code> composing both.</p>
+<p><strong>The unit is a message, not a fact.</strong>
+<code>MemoryRecord</code> holds a <code>BaseMessage</code>, the role it
+played at the backend, a UUID, a timestamp and an
+<code>extra_info</code> dict. Nothing extracts, summarises, or derives;
+what is stored is the transcript, and what is retrieved is some of the
+transcript. That places CAMEL near the boundary this atlas draws between
+memory and conversation-window management, on the memory side of it only
+because <code>VectorDBMemory</code> embeds messages into a durable
+vector store and recalls them by similarity across sessions rather than
+by recency within one.</p>
+<p>Two things in the module are worth a reader's attention, and both are
+gaps.</p>
+<p><strong>Every record carries an <code>agent_id</code>, and no read
+path uses it.</strong> <code>ChatHistoryBlock.retrieve</code> calls
+<code>self.storage.load()</code> and returns the store.
+<code>VectorDBBlock.retrieve</code> issues
+<code>VectorDBQuery(query_vector=..., top_k=limit)</code> with no filter
+argument. The field is set in <code>write_records</code>, serialised by
+<code>to_dict</code>, parsed back by <code>from_dict</code>, printed in
+<code>__repr__</code> — and consulted by nothing that reads. Isolation
+in CAMEL comes from <em>handing each agent its own storage object</em>,
+a separate JSON file or Qdrant collection, so the moment two agents
+share a backend they share its memories. This is the exact case the
+atlas rubric names — storing a boundary is not enforcing one — and it is
+unusually legible here because the key is present, correct, and
+inert.</p>
+<p><strong><code>ScoreBasedContextCreator</code> no longer
+scores.</strong> Its docstring describes "a context creation strategy
+that orders records chronologically", and its <code>token_limit</code>
+parameter is documented as <em>"Retained for API compatibility. No
+longer used to filter records."</em> The name and the parameter outlived
+the mechanism they described, which matters because the parameter reads,
+from a call site, like a budget that is being enforced.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no epistemic model, and the design does not claim one. A
+message was sent, so it is in the store; it stays there until someone
+pops it or clears everything. Nothing is ever judged, corroborated,
+superseded or doubted, and no field exists on which to record such a
+judgement.</p>
+<p>What CAMEL models instead is <em>composition</em> — which is a
+reasonable thing for a multi-agent framework to care about.
+<code>LongtermAgentMemory.retrieve()</code> returns
+<code>chat_history[:1] + vector_db_retrieve + chat_history[1:]</code>,
+which keeps the system message first, inserts the similarity hits after
+it, and follows with the rest of the recent history. That ordering is a
+deliberate decision about where recalled material sits relative to the
+live conversation, and it is written in one line with no comment
+explaining it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing to run for the default case: <code>ChatHistoryMemory</code>
+with <code>InMemoryKeyValue Storage</code> needs no service, and
+<code>JsonStorage</code> makes it a file. Redis and a Mem0 cloud adapter
+are the other key-value options. The vector path defaults to
+<code>QdrantStorage</code> with <code>OpenAIEmbedding</code>, so
+<code>VectorDBMemory</code> costs an embedding call per message written
+and per retrieval, and — since the default embedding is OpenAI's — an
+API key to store anything at all.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>camel/memories/base.py</code> (196) —
+<code>MemoryBlock</code>, <code>BaseContextCreator</code>,
+<code>AgentMemory</code> with the <code>agent_id</code> property.</li>
+<li><code>camel/memories/agent_memories.py</code> (321) — the three
+memories.</li>
+<li><code>camel/memories/records.py</code> (195) —
+<code>MemoryRecord</code>, <code>ContextRecord</code>,
+serialisation.</li>
+<li><code>camel/memories/blocks/chat_history_block.py</code> (286) —
+key-value storage, windowing, system-message preservation.</li>
+<li><code>camel/memories/blocks/vectordb_block.py</code> (111) — embed,
+write, unfiltered query.</li>
+<li><code>camel/memories/context_creators/score_based.py</code> (169) —
+the chronological creator with the vestigial name.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryRecord</code> is the whole model: message,
+<code>role_at_backend</code>, <code>uuid</code>,
+<code>extra_info</code>, <code>timestamp</code> (nanosecond-precision
+record time), <code>agent_id</code>. <code>ContextRecord</code> wraps it
+with a <code>score</code> and a timestamp for the retrieval result.</p>
+<p>The absences follow from the unit. There is no status because there
+is no claim to hold one; no validity time because a message has only the
+moment it was sent; no provenance because the record <em>is</em> the
+provenance. <code>extra_info</code> is <code>Dict[str, str]</code> and
+unused by the framework — the one place a caller could attach something,
+with nothing reading it either.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>ChatHistoryBlock.retrieve(window_size)</code> loads the stored
+records and, with a window, keeps the leading SYSTEM or DEVELOPER
+message plus the most recent <code>window_size</code> entries. That is
+window management, done carefully — pinning the system message so a
+truncation cannot decapitate the agent is the right detail.</p>
+<p><code>VectorDBBlock.retrieve(keyword, limit)</code> embeds a string
+and returns the top <code>limit</code> by similarity. The string is
+<code>VectorDBMemory._current_topic</code>, which
+<code>write_records</code> sets to the content of the last USER message
+it saw. Two consequences follow and neither is documented. The query is
+whatever the user last said, so recall is driven by phrasing rather than
+by any analysis of what the turn needs. And <code>_current_topic</code>
+is in-process state initialised to <code>""</code>, so in a fresh
+process the first retrieval embeds the empty string and returns
+whichever three records happen to sit nearest to it.</p>
+<p>There is no fusion, no reranking, no recency weighting and no scope
+filter.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block and are trivial: <code>write_records</code> appends to
+the key-value store, or embeds and upserts to the vector store, on every
+turn. Empty-content records are filtered out before embedding. There is
+no extraction, no consolidation, no background pass and no compaction,
+so the store grows monotonically with the conversation and the only
+bound on what reaches the model is the context creator's ordering plus
+whatever window the caller passes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>ChatAgent</code> holds an <code>AgentMemory</code> and the
+<code>agent_id</code> setter propagates the identifier down to it. A
+<code>MemoryToolkit</code> gives an agent save/load over its own memory.
+The role-playing and workforce layers compose agents that each carry
+their own memory object — which is, in practice, the isolation
+mechanism.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>No marks are earned, and the interesting part is which near-misses
+exist.</p>
+<p><strong>Scope</strong>: described above. The field is there; nothing
+filters on it.</p>
+<p><strong>Deletion</strong>: <code>ChatHistoryMemory</code> can
+<code>pop_records(count)</code> from the end or
+<code>remove_records_by_indices(indices)</code> — positional operations
+on a list, not addressed removal, even though every record has a UUID
+that could address it. <code>VectorDBMemory</code> raises
+<code>NotImplementedError</code> for both, with the message
+<em>"VectorDBMemory does not support removing historical records"</em>,
+leaving <code>clear()</code> as the only removal. So in
+<code>LongtermAgentMemory</code> — the composed configuration a
+long-running agent is meant to use — deleting one thing a user asked to
+be forgotten is not expressible on the durable half. It can be removed
+from the recent transcript and remains in the vector index, retrievable
+by similarity, indefinitely.</p>
+<p><strong>Audit, trust state, bi-temporality, human review</strong>:
+absent, and consistent with a transcript store.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>868 lines across four files in <code>test/memories/</code>, none run
+here. They cover round-tripping records, windowing, the composed memory,
+and the <code>NotImplementedError</code> paths. No test asserts that
+particular material must not be retrieved — which follows: with no scope
+filter and no deletion on the vector side, there is no boundary to
+assert about. No memory benchmark and no retrieval quality measurement
+exists in the repository, and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Split block, memory and context creator.</strong> Storage,
+policy and prompt assembly are three concerns, and CAMEL's three-way
+split is the clearest small example of separating them. A custom backend
+means implementing one narrow interface.</li>
+<li><strong>Pin the system message through truncation.</strong> Keeping
+index 0 when it is SYSTEM or DEVELOPER is two lines and prevents the
+worst windowing bug.</li>
+<li><strong>Decide where recalled material sits in the prompt,
+explicitly.</strong>
+<code>chat_history[:1] + vector_db_retrieve + chat_history[1:]</code> is
+a real decision. Most systems make it accidentally.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope key that only travels.</strong>
+<code>agent_id</code> on the record, absent from every query, is worse
+than no key: it reads at a call site like isolation, and the isolation
+is actually coming from whether you remembered to give each agent its
+own storage object.</li>
+<li><strong>A query that is whatever the user last typed.</strong> Using
+the last user message as the recall key is cheap and couples retrieval
+to phrasing; initialising it to <code>""</code> means the first
+retrieval of a process is arbitrary.</li>
+<li><strong>Leaving a parameter named after a mechanism you
+removed.</strong> <code>token_limit</code>, documented as no longer used
+to filter, is still in the constructor signature of a class still called
+<code>ScoreBasedContextCreator</code>.</li>
+<li><strong>A durable store you cannot delete one record from.</strong>
+<code>NotImplementedError</code> on both removal paths plus
+<code>clear()</code> means the only supported forget is forgetting
+everything.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take CAMEL's memory if you are already using CAMEL and your agents
+are short-lived, single-tenant, and their memory is genuinely just their
+transcript. It is small, readable, and easy to replace — the
+<code>AgentMemory</code> ABC is the right seam, and swapping in one of
+the fact-level systems in this atlas behind it is a day's work.</p>
+<p>Do not use it multi-tenant without adding a filter yourself, and do
+not use <code>LongtermAgentMemory</code> anywhere a user can ask you to
+delete something.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the unfiltered vector query intentional?</strong>
+<code>VectorDBQuery</code> carries no filter argument at this commit, so
+scoping recall would require a change to the storage interface rather
+than to the memory block — which may be why it is absent.</li>
+<li><strong>What is <code>extra_info</code> for?</strong> Present on
+every record, serialised both ways, read by nothing in the
+framework.</li>
+<li><strong>Does anything downstream still depend on
+<code>token_limit</code>?</strong> It is retained for API compatibility
+and no longer filters; whether callers still pass it expecting a budget
+was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>camel/memories/agent_memories.py</code></td>
+<td>321</td>
+<td>ChatHistory, VectorDB and Longterm memories</td>
+</tr>
+<tr>
+<td><code>camel/memories/blocks/chat_history_block.py</code></td>
+<td>286</td>
+<td>Key-value storage, windowing, system-message pinning</td>
+</tr>
+<tr>
+<td><code>camel/memories/base.py</code></td>
+<td>196</td>
+<td><code>MemoryBlock</code>, <code>AgentMemory</code>,
+<code>BaseContextCreator</code></td>
+</tr>
+<tr>
+<td><code>camel/memories/records.py</code></td>
+<td>195</td>
+<td><code>MemoryRecord</code>, <code>ContextRecord</code>,
+serialisation</td>
+</tr>
+<tr>
+<td><code>camel/memories/context_creators/score_based.py</code></td>
+<td>169</td>
+<td>Chronological ordering; the name is vestigial</td>
+</tr>
+<tr>
+<td><code>camel/memories/blocks/vectordb_block.py</code></td>
+<td>111</td>
+<td>Embed, write, and the unfiltered query</td>
+</tr>
+<tr>
+<td><code>test/memories/</code></td>
+<td>868</td>
+<td>Round-trips, windowing, the <code>NotImplementedError</code>
+paths</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

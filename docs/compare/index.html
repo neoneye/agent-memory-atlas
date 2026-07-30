@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-ninety-four agent memory architectures, their retrieval mechanics, trust
+ninety-five agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of ninety-four agent memory architectures, their retrieval mechanics,
+of ninety-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of ninety-four agent memory architectures, their retrieval mechanics,
+of ninety-five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-ninety-four agent memory architectures, their retrieval mechanics, trust
+ninety-five agent memory architectures, their retrieval mechanics, trust
 models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -158,7 +158,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 54 of
-94 systems here have, and is what the mark means. A scope
+95 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Ninety-four systems do not fall into ninety-four categories. They
+<p>Ninety-five systems do not fall into ninety-five categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -188,7 +188,8 @@ own.</p>
 <h3 id="embeddable-memory-libraries">Embeddable memory libraries</h3>
 <p><code>mem0</code>, <code>langmem</code>, <code>llamaindex</code>,
 <code>cognee</code>, <code>a-mem</code>, <code>memori</code>,
-<code>goodai-ltm</code>, <code>pydantic-ai-harness</code></p>
+<code>goodai-ltm</code>, <code>pydantic-ai-harness</code>,
+<code>camel</code></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>GoodAI LTM is the family's cautionary comparison, and it
@@ -234,6 +235,25 @@ that it was enforced. Writes carry an idempotency id derived from the
 run and the tool call, so a retried write is a replay rather than a
 second append — the failure mode an agent framework hits constantly and
 which almost nothing here models.</p>
+<p><strong>CAMEL is the family's floor and its clearest warning about
+stored scope.</strong> Its memory unit is the message rather than the
+fact — <code>MemoryRecord</code> is a chat message, a backend role, a
+UUID and a timestamp, with nothing extracted or derived — so it sits at
+the boundary between memory and window management, on the memory side
+only because <code>VectorDBMemory</code> embeds messages into a durable
+store and recalls them by similarity across sessions. Every record
+carries an <code>agent_id</code> that is set on write, serialised both
+ways, and <strong>applied on no read path</strong>; isolation comes from
+handing each agent its own storage object, which is a convention rather
+than a mechanism. Two smaller things are worth recording because they
+are the shape of drift rather than of design: the recall query is
+<code>_current_topic</code>, set to whatever the last user message said
+and initialised to the empty string, so the first retrieval in a fresh
+process is arbitrary; and <code>ScoreBasedContextCreator</code> neither
+scores nor filters, its <code>token_limit</code> documented as
+<em>"Retained for API compatibility. No longer used to filter
+records."</em> A name and a parameter outlived the mechanism they
+described.</p>
 <p>Tradeoff: a library can store and retrieve, but it cannot guarantee
 the model calls the right tool, verifies a fact, or uses recall
 safely.</p>
@@ -1427,6 +1447,37 @@ enforced</td>
 rewrites</td>
 <td>Elastic License 2.0, not open source; merge path itself is
 unguarded</td>
+</tr>
+<tr>
+<td><code>camel</code></td>
+<td>A <code>MemoryRecord</code> — a chat message plus its backend role,
+a UUID, a timestamp, an <code>extra_info</code> dict and an
+<code>agent_id</code>. Nothing is derived from the transcript</td>
+<td>Key-value backends for chat history (in-memory, JSON file, Redis,
+Mem0 cloud) and a vector backend for recall (Qdrant by default)</td>
+<td>Chat history returns the stored list, optionally windowed; the
+vector block embeds the last user message and takes the top
+<code>k</code> by similarity with no filter</td>
+<td><code>write_records</code> on every turn — no extraction, no
+summarisation, no consolidation. The transcript is the memory</td>
+<td><code>pop_records(count)</code> and
+<code>remove_records_by_indices(indices)</code> on chat history; both
+raise <code>NotImplementedError</code> on the vector store, where
+<code>clear()</code> is the only removal</td>
+<td><code>agent_id</code> is stored on every record and serialised both
+ways, and is applied on no read path. Isolation comes from giving each
+agent its own storage object</td>
+<td><code>AgentMemory</code> ABC consumed by <code>ChatAgent</code>; a
+<code>MemoryToolkit</code> for save/load; role-playing and workforce
+runtimes on top</td>
+<td>None</td>
+<td>None. A record is a message that was sent; there is no status,
+confidence, source or provenance beyond the backend role</td>
+<td>A small, legible three-part contract — block, memory, context
+creator — that a custom store can satisfy in an afternoon</td>
+<td>A stored-and-unused scope key, a vector store that cannot delete one
+record, and a retrieval query that is whatever the last user message
+happened to say</td>
 </tr>
 <tr>
 <td><code>claude-mem</code></td>
@@ -3330,14 +3381,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 94:</em> <a
+<p><em>3 of 95:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 94:</em> <a
+<p><em>7 of 95:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3347,7 +3398,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 94:</em> <a
+<p><em>8 of 95:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3361,7 +3412,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>54 of 94:</em> <a
+<p><em>54 of 95:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -3420,7 +3471,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>11 of 94:</em> <a
+<p><em>11 of 95:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3435,7 +3486,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>16 of 94:</em> <a
+<p><em>16 of 95:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3455,7 +3506,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>9 of 94:</em> <a href="../systems/agno/"><code>agno</code></a>,
+<p><em>9 of 95:</em> <a href="../systems/agno/"><code>agno</code></a>,
 <a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
@@ -3482,7 +3533,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Nine
-repositories of ninety-four assert that particular material must
+repositories of ninety-five assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -3534,7 +3585,7 @@ row lives.</p>
 <p><strong>Only these six probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Six
-of ninety-four is the real figure for the second kind, and the two
+of ninety-five is the real figure for the second kind, and the two
 newest are the cheap version of it: a <em>superseded</em> value is easy
 to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come
@@ -6342,7 +6393,7 @@ half-life to every memory kind.</p>
 <p>Write your memory decisions down. <code>gini-agent</code> keeps ADRs
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
-memories were polluting a research agent's recall. Across ninety-four
+memories were polluting a research agent's recall. Across ninety-five
 systems, almost none can explain why they are shaped the way they
 are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
@@ -7806,6 +7857,7 @@ href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a></li>
 <li><a href="../systems/simplemem/"><code>simplemem</code></a></li>
 <li><a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a></li>
+<li><a href="../systems/camel/"><code>camel</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8149,6 +8201,8 @@ href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5
 href="https://github.com/pydantic/pydantic-ai-harness">pydantic/pydantic-ai-harness</a>
 at <a
 href="https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555"><code class="commit-id" title="39ee7e08101c54b1ddf9c1e3a7f603f09ae34555">39ee7e08…</code></a></li>
+<li><a href="https://github.com/camel-ai/camel">camel-ai/camel</a> at <a
+href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8"><code class="commit-id" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">ec48f997…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -8459,7 +8513,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of ninety-four — <a
+<strong>three</strong> of ninety-five — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a

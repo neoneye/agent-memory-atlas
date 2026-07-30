@@ -110,6 +110,22 @@ a cross-tenant read. The cost is a prefix comparison per returned path, and it
 converts the most expensive silent failure in this atlas into the cheapest loud
 one.
 
+**[CAMEL](../../systems/camel/) is the cleanest counterexample in the atlas, and
+it is what this pattern's failure looks like when nothing is obviously wrong.**
+`MemoryRecord` carries an `agent_id`. `AgentMemory` exposes it as a property with
+a setter, `ChatAgent` propagates it down, `write_records` stamps it onto every
+record, `to_dict` and `from_dict` round-trip it, and `__repr__` prints it. Then
+`ChatHistoryBlock.retrieve` calls `self.storage.load()` and returns the store,
+and `VectorDBBlock.retrieve` issues `VectorDBQuery(query_vector=..., top_k=limit)`
+with no filter. The key is correct, present on every record, and read by nothing.
+
+What supplies isolation instead is *construction*: each agent is normally handed
+its own storage object — a separate JSON file, a separate Qdrant collection — so
+the boundary holds as long as nobody shares a backend. That is a convention
+enforced by nothing, and the stored key makes it harder to notice, because a
+reader auditing the code finds `agent_id` everywhere and reasonably concludes the
+scoping is done.
+
 [OpenClaw](../../systems/openclaw/) has the strongest enforcement in SQL, and the
 idea is one line:
 
