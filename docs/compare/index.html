@@ -296,7 +296,7 @@ safely.</p>
 <code>memory-engine</code>, <code>memu</code>,
 <code>elastic-atlas</code>, <code>mirix</code>, <code>memobase</code>,
 <code>powermem</code>, <code>memmachine</code>, <code>gobii</code>,
-<code>cortex</code></p>
+<code>cortex</code>, <code>lorekit</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -323,7 +323,19 @@ levels, applied in the SQL and in the Redis index queries alike.
 <strong>Memobase</strong> goes further on the same axis by making scope
 structural: every primary key is <code>(id, project_id)</code> and every
 foreign key is composite, so a cross-tenant query is a schema error
-rather than a review failure.</p>
+rather than a review failure. <strong>LoreKit</strong> takes the third
+position on that axis and the one most projects can actually reach: the
+boundary is neither a filter nor a composite key but Postgres row-level
+security, so every read is gated on <code>auth.uid()</code> or a
+matching <code>org_id</code> JWT claim by the database rather than by
+the query. Its <code>org_scope_bindings</code> table then routes a write
+on a bound scope to the organisation instead of the writer, checked
+through <code>lorekit_org_can</code> — which means a team's shared scope
+is not a naming convention. It is also the atlas's clearest case of
+infrastructure outrunning epistemics: RLS, org roles, invites, token
+scopes, per-user caps, an append-only audit log — over a store whose
+memory model is a keyed slot with no status, no confidence and no
+history.</p>
 <p>Three members mark the family's boundaries on the same axis: what
 happens to the evidence. Memobase caps a user profile at five sentences
 per subtopic and fifteen subtopics per topic, and <strong>deletes the
@@ -5881,6 +5893,11 @@ tables across <code>src/schema/</code> plus
 <code>save_query_result</code> in <code>graphify/ingest.py</code>; the
 derived sidecar shape in <code>build_learning_overlay</code>
 (<code>graphify/reflect.py:758</code>).</li>
+<li><code>lorekit</code>:
+<code>supabase/migrations/00001_memories.sql</code> (table, RLS,
+generated FTS), <code>00003_archive.sql</code>,
+<code>00010_audit_log.sql</code>,
+<code>00030_memory_ttl.sql</code>.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -6021,6 +6038,10 @@ embedding, insert, chunk dual-write; deterministic extraction in
 <li><code>graphify</code>: <code>save_query_result()</code> in
 <code>graphify/ingest.py:274</code> — one append-only Markdown file per
 answered question, outcome written to both frontmatter and body.</li>
+<li><code>lorekit</code>:
+<code>packages/mcp-core/src/tools/write.ts</code> into the
+<code>memory_write</code> RPC — an upsert on the partial unique index,
+with <code>xmax</code> deciding create versus update.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -6148,6 +6169,11 @@ the fail-closed scope branch in
 <code>_finalize_sources()</code> in <code>graphify/reflect.py</code>;
 the read-side annotation and preferred-first reordering in
 <code>graphify/serve.py:927</code> and <code>:1128</code>.</li>
+<li><code>lorekit</code>:
+<code>packages/mcp-core/src/tools/read.ts</code>, <code>list.ts</code>
+and <code>search.ts</code> — exact scope equality plus
+<code>websearch_to_tsquery</code>, each applying the archive and expiry
+filters.</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -6256,6 +6282,10 @@ provenance in <code>src/context-injection-logger.ts</code>.</li>
 (<code>graphify/reflect.py:489</code>) into
 <code>reflections/LESSONS.md</code>, read whole at session start per the
 skill in <code>graphify/skills/*/references/query.md</code>.</li>
+<li><code>lorekit</code>: none server-side — the plugins' lifecycle
+hooks call <code>memory.list</code>, and the narrow-to-broad ladder
+lives in
+<code>packages/cli/skill/lorekit-memory/references/scope-resolution.md</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -6359,6 +6389,10 @@ debounced doc flush in <code>src/hooks/tool-execute-memory.ts</code>, a
 <li><code>graphify</code>: no worker — git post-commit and post-checkout
 hooks (<code>graphify/hooks.py:142</code>, <code>:191</code>) refresh
 the lessons doc best-effort, gated by <code>lessons_fresh()</code>.</li>
+<li><code>lorekit</code>: none committed —
+<code>purge_archived_memories</code> and
+<code>purge_expired_memories</code> are RPCs the migration suggests
+running under pg_cron.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -6456,6 +6490,10 @@ terminal front doors converging on one Claude Code session keyed
 <li><code>graphify</code>: no MCP or SDK — a CLI plus the same skill
 compiled into fourteen harness formats under
 <code>graphify/skills/</code>.</li>
+<li><code>lorekit</code>: MCP over a Supabase edge function
+(<code>supabase/functions/mcp/</code>) with logic shared from
+<code>packages/mcp-core</code>, plus a CLI and Claude/Cursor/Codex
+plugins.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <p>What these harnesses do and do not measure — and why a bad benchmark
@@ -6633,6 +6671,10 @@ labelled queries, hybrid against vector-only.</li>
 59,500 lines against 15,959 of source;
 <code>tests/test_reflect.py</code> carries 58 of them for the ~900-line
 memory layer, including the self-ingestion regression guard.</li>
+<li><code>lorekit</code>: 1,184 cases across 90 files, concentrated on
+scope, TTL, tokens, org permissions and the archive lifecycle;
+<code>edge-parity.spec.ts</code> guards the two MCP implementations
+against drift.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -7365,7 +7407,14 @@ write-time conflict detection is lattice-aware across the scope
 hierarchy. <code>llm-wiki-memory</code> shows the limit of operational
 supersession without epistemic state: it can archive a selected
 predecessor, but cannot prevent the rejected value from being distilled
-again.</p>
+again. <a href="../systems/lorekit/">LoreKit</a> shows the same limit
+with the mechanism made explicit in a migration comment: archiving a
+lesson drops the unique constraint and recreates it as a partial index
+<code>where archived_at is null</code>, <em>"so the same (user_id,
+scope, key) can be re-created after an archive."</em> Freeing the
+address is a defensible ergonomic choice, and it is the exact inverse of
+a tombstone — the one operation a user reaches for when a lesson is
+<em>wrong</em> is the one that makes re-asserting it easiest.</p>
 <h3 id="semantic-deletion">Semantic deletion</h3>
 <p>Deleting by "similar memory" is dangerous. It is useful as a
 discovery aid, but the actual forget operation should target exact IDs
@@ -8935,6 +8984,35 @@ read.</li>
 query over this project turned out" — there is no user, no preference,
 no entity, and nothing crosses a project directory.</li>
 </ul>
+<h3 id="lorekit"><code>lorekit</code></h3>
+<ul>
+<li>Best idea: an audit log made immutable by the absence of a policy —
+a SELECT and an INSERT policy on the table and deliberately no UPDATE or
+DELETE, so the invariant is enforced by RLS rather than by everyone
+remembering not to write the statement.</li>
+<li>Biggest risk: that log records <code>{scope, key}</code> over an
+in-place upsert, so it proves a memory changed and cannot show what it
+replaced — and archiving frees the address, which is the inverse of a
+tombstone on the operation a user reaches for when a lesson is
+wrong.</li>
+<li>Most reusable component: <code>packages/mcp-core/src/scope.ts</code>
+plus the <code>org_scope_bindings</code> routing — a validated
+four-level scope key, an authenticated tenancy boundary, and a table
+that makes "this repo's lessons belong to the team" a row instead of a
+convention.</li>
+<li>Maturity impression: 37 migrations written like design documents
+with numbered decisions, 1,184 tests, RLS on every table, hashed and
+scoped tokens, HMAC-verified webhook ingest with an explicit
+no-timing-oracle note — beside five entrenchment guards of which one is
+enforced by code.</li>
+<li>Study when: you need shared agent memory for more than one person
+and have to answer who changed what, or you want the cleanest separation
+of a scope key from a tenancy boundary in this atlas.</li>
+<li>Do not copy when: you are one developer (the parts worth paying for
+are the multi-user parts), or your problem is deciding which lesson to
+trust — LoreKit is an excellent filing cabinet with an excellent lock
+and no opinion about the contents.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -9171,6 +9249,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/lethe/"><code>lethe</code></a></li>
 <li><a href="../systems/csm/"><code>csm</code></a></li>
 <li><a href="../systems/graphify/"><code>graphify</code></a></li>
+<li><a href="../systems/lorekit/"><code>lorekit</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -9583,6 +9662,9 @@ href="https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5
 href="https://github.com/Graphify-Labs/graphify">Graphify-Labs/graphify</a>
 at <a
 href="https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4"><code class="commit-id" title="4fe11092ccbe9f543608f140c790f68d5d83cae4">4fe11092…</code></a></li>
+<li><a href="https://github.com/mthines/lorekit">mthines/lorekit</a> at
+<a
+href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f"><code class="commit-id" title="08e3065b3f77dffa8ec313c25e6b38cbab77b67f">08e3065b…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>

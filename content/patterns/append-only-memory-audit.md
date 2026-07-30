@@ -177,6 +177,28 @@ selection rules that produced it. The cost is one row per considered item per
 turn, which is the highest write volume of any audit design here, and CSM
 attaches no retention policy to it.
 
+[LoreKit](../../systems/lorekit/) contributes the cheapest correct
+implementation of the invariant and the sharpest warning about what it buys.
+The implementation: `audit_log` carries a SELECT policy and an INSERT policy and
+**deliberately no UPDATE and no DELETE policy**, so immutability is enforced by
+row-level security rather than by everyone remembering not to write the
+statement. The migration numbers the choice (Decision D5) and says why app-layer
+capture beats a trigger on the data tables — application code can see the
+resolved actor and shape a human-readable target — then names the single table
+where no call site exists and a trigger is therefore the right answer. Eleven
+actions are pinned in a CHECK constraint.
+
+The warning is what the log then cannot answer. Every mutation is recorded with
+`{scope, key}` as its metadata, and the write path is an in-place upsert with no
+version chain — so the log proves that a memory changed, by whom and when, and
+**cannot show what it replaced**. That is a complete answer to "who touched
+this?" and no answer at all to "what did it used to say?", which in a memory
+system is usually the question being asked. The two properties look like one
+feature and are not: an audit trail is about *actors*, and memory history is
+about *values*. If you want both, put the old value in the log or keep the
+version — deciding you have history because you have an audit log is the failure
+this entry exists to name.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

@@ -187,7 +187,7 @@ calls the right tool, verifies a fact, or uses recall safely.
 
 `honcho`, `supermemory`, `hindsight`, `redis-agent-memory-server`, `openviking`,
 `memanto`, `memory-engine`, `memu`, `elastic-atlas`, `mirix`, `memobase`,
-`powermem`, `memmachine`, `gobii`, `cortex`
+`powermem`, `memmachine`, `gobii`, `cortex`, `lorekit`
 
 Multi-user, API-first, with background derivation. **Honcho** models workspaces,
 peers, sessions, and derived representations rather than flat facts.
@@ -209,7 +209,17 @@ agent and prompt, and carries the most thoroughly *enforced* scope model here �
 four levels, applied in the SQL and in the Redis index queries alike.
 **Memobase** goes further on the same axis by making scope structural: every
 primary key is `(id, project_id)` and every foreign key is composite, so a
-cross-tenant query is a schema error rather than a review failure.
+cross-tenant query is a schema error rather than a review failure. **LoreKit**
+takes the third position on that axis and the one most projects can actually
+reach: the boundary is neither a filter nor a composite key but Postgres
+row-level security, so every read is gated on `auth.uid()` or a matching
+`org_id` JWT claim by the database rather than by the query. Its
+`org_scope_bindings` table then routes a write on a bound scope to the
+organisation instead of the writer, checked through `lorekit_org_can` — which
+means a team's shared scope is not a naming convention. It is also the atlas's
+clearest case of infrastructure outrunning epistemics: RLS, org roles, invites,
+token scopes, per-user caps, an append-only audit log — over a store whose memory
+model is a keyed slot with no status, no confidence and no history.
 
 Three members mark the family's boundaries on the same axis: what happens to the
 evidence. Memobase caps a user profile at five sentences per subtopic and fifteen
@@ -2135,6 +2145,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: `facts`, `episodes` and an unused `links` table in `workspace/memory/memory.mjs:13-64`, where five later columns arrive as guarded `ALTER`s re-run on every process start and the active-row invariant is a partial unique index over `(kind, key) WHERE expired_at IS NULL`; vector side tables created lazily in `workspace/memory/embed.mjs`.
 - `csm`: `memories` in `src/schema/memory-table-schema.ts`; the other forty-five tables across `src/schema/` plus `belief-knowledge-schema.ts`, `candidate-schema.ts`, `experience-packet-schema.ts`, `self-model-schema.ts` and `work-ledger-schema.ts`.
 - `graphify`: Markdown frontmatter written by `save_query_result` in `graphify/ingest.py`; the derived sidecar shape in `build_learning_overlay` (`graphify/reflect.py:758`).
+- `lorekit`: `supabase/migrations/00001_memories.sql` (table, RLS, generated FTS), `00003_archive.sql`, `00010_audit_log.sql`, `00030_memory_ttl.sql`.
 
 ### Add/Write Path
 
@@ -2178,6 +2189,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: the `remember` verb in `workspace/memory/memory.mjs:87-162` — provisional cap, evidence ratchet, supersession, gated supersede episode; hot-path capture in `index.js:572-583`; the tool wrapper `workspace/tools/impl/memory.remember.mjs`, which omits `--source` and so never trips the cap.
 - `csm`: `MemoryManager.saveMemory()` in `src/memory-manager.ts:185` — provenance defaults, project-ownership check, transcript dedup, redaction, type quota, embedding, insert, chunk dual-write; deterministic extraction in `src/memory-extractor.ts`.
 - `graphify`: `save_query_result()` in `graphify/ingest.py:274` — one append-only Markdown file per answered question, outcome written to both frontmatter and body.
+- `lorekit`: `packages/mcp-core/src/tools/write.ts` into the `memory_write` RPC — an upsert on the partial unique index, with `xmax` deciding create versus update.
 
 ### Search/Retrieve Path
 
@@ -2221,6 +2233,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: one function, `workspace/memory/memory.mjs:164-326` — a 500-row recency-ordered candidate window, hand-written BM25, a semantic arm that is MiniLM if cached and TF-IDF cosine otherwise, RRF at k=60, a confidence weight and a key-match boost, and a separate episode scorer with a 30-day recency term.
 - `csm`: `hybridSearch()` in `src/hybrid-search.ts:26` over `src/hybrid-search-sources.ts` and `src/hybrid-search-ranking.ts`; the three fallback tiers and the fail-closed scope branch in `src/memory-manager.ts:512`.
 - `graphify`: `aggregate_lessons()` and `_finalize_sources()` in `graphify/reflect.py`; the read-side annotation and preferred-first reordering in `graphify/serve.py:927` and `:1128`.
+- `lorekit`: `packages/mcp-core/src/tools/read.ts`, `list.ts` and `search.ts` — exact scope equality plus `websearch_to_tsquery`, each applying the archive and expiry filters.
 
 ### Context Assembly
 
@@ -2264,6 +2277,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: `recallMemories()` in `index.js:490-510` for the per-turn block, prompt assembly at `index.js:595-607`, and the static channel — `workspace/memory/refresh-index.mjs` writing `INDEX.md`, imported by the `@memory/INDEX.md` line at `workspace/CLAUDE.md:15`.
 - `csm`: `runSystemTransform()` in `src/hooks/system-transform.ts:31` — twelve stages per request; layer construction in `src/reentry-layer-builder.ts` under the budgets in `src/reentry-contract.ts`; per-item provenance in `src/context-injection-logger.ts`.
 - `graphify`: `render_lessons_md()` (`graphify/reflect.py:489`) into `reflections/LESSONS.md`, read whole at session start per the skill in `graphify/skills/*/references/query.md`.
+- `lorekit`: none server-side — the plugins' lifecycle hooks call `memory.list`, and the narrow-to-broad ladder lives in `packages/cli/skill/lorekit-memory/references/scope-resolution.md`.
 
 ### Background Workers
 
@@ -2307,6 +2321,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: `workspace/think/think.mjs` under launchd/systemd — a ~15-minute reflection tick with a stale-PID lock, a quiet window, a tick and wall-clock guard that exits for the service manager to restart, and a weekly deep review whose completion mark is stamped only on a clean exit; then `workspace/memory/consolidate.mjs` (distil, decay, prune, dedupe) and an index rewrite after every tick.
 - `csm`: no worker — in-process timers only: a 2-second debounced doc flush in `src/hooks/tool-execute-memory.ts`, a 120-second belief consolidation, and self-model replay in `src/self-model-updater.ts`.
 - `graphify`: no worker — git post-commit and post-checkout hooks (`graphify/hooks.py:142`, `:191`) refresh the lessons doc best-effort, gated by `lessons_fresh()`.
+- `lorekit`: none committed — `purge_archived_memories` and `purge_expired_memories` are RPCs the migration suggests running under pg_cron.
 
 ### MCP/API/SDK Surfaces
 
@@ -2350,6 +2365,7 @@ Deletion is also where pluggable memory breaks down. Both host runtimes in the a
 - `helm`: no MCP or SDK for memory — a JSON-on-stdout CLI (`memory.mjs`), two shell-out entries in `workspace/tools/registry.json`, and Discord, iMessage and terminal front doors converging on one Claude Code session keyed `'owner'` in `workspace/sessions.mjs`.
 - `csm`: OpenCode hooks in `src/hooks-registration.ts:35` and about fifty tools in `src/hooks/tool-registry.ts`; a stdio Codex MCP server in `src/codex-mcp-server.ts` with `src/codex-bridge-extra-ops.ts`.
 - `graphify`: no MCP or SDK — a CLI plus the same skill compiled into fourteen harness formats under `graphify/skills/`.
+- `lorekit`: MCP over a Supabase edge function (`supabase/functions/mcp/`) with logic shared from `packages/mcp-core`, plus a CLI and Claude/Cursor/Codex plugins.
 
 ### Evals/Tests
 
@@ -2403,6 +2419,7 @@ often weak evidence — is covered separately in
 - `helm`: `workspace/tests/smoke.mjs`, 88 labelled cases against the live SQLite file, of which about nineteen touch memory. Two assert *ranking* rather than round-trips — confidence weighting placing a high-confidence fact above a low-confidence lexical match, and BM25 term-frequency ordering — which is rare at this scale. Others cover the provisional cap and its evidence ratchet, supersession end to end, the unique index rejecting a raw duplicate `INSERT`, the `access_count` bump on read, and two gates on the system's own episode noise. There is no eval harness, no retrieval benchmark, and no committed benchmark artefact; nothing tests the 500-row recall boundary that caps the whole design, and the second brain is covered by a case that explicitly asserts "no Claude run". Separately, `workspace/repo-scan-report.md` is a committed 25-issue self-audit — severity, `file:line`, "reproduced empirically", and a fix pointing at a correct pattern already in the repo — and every issue I checked is closed at the pinned commit, including the shared engine-resolution module the report itself recommended.
 - `csm`: 1,686 `test(`/`it(` call sites across 189 files; the committed `full-test-output.txt` records 808 passing across 172 suites. Retrieval ground truth is `test/benchmark-hybrid.ts` — eight seeded memories, five labelled queries, hybrid against vector-only.
 - `graphify`: 3,308 test functions across 177 files and 59,500 lines against 15,959 of source; `tests/test_reflect.py` carries 58 of them for the ~900-line memory layer, including the self-ingestion regression guard.
+- `lorekit`: 1,184 cases across 90 files, concentrated on scope, TTL, tokens, org permissions and the archive lifecycle; `edge-parity.spec.ts` guards the two MCP implementations against drift.
 
 ## 5. Design Patterns That Recur
 
@@ -2999,7 +3016,13 @@ A retrieval benchmark is invalid at a stated cutoff if the system scores more th
 
 Pattern guide: [Rejected-value tombstone](../patterns/rejected-value-tombstone/).
 
-Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. Verel's rejected tombstones are the clearest research-grade countermeasure; RainBox has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. `llm-wiki-memory` shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again.
+Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. Verel's rejected tombstones are the clearest research-grade countermeasure; RainBox has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. `llm-wiki-memory` shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again. [LoreKit](../systems/lorekit/) shows the same limit with the mechanism made
+explicit in a migration comment: archiving a lesson drops the unique constraint
+and recreates it as a partial index `where archived_at is null`, *"so the same
+(user_id, scope, key) can be re-created after an archive."* Freeing the address
+is a defensible ergonomic choice, and it is the exact inverse of a tombstone —
+the one operation a user reaches for when a lesson is *wrong* is the one that
+makes re-asserting it easiest.
 
 ### Semantic deletion
 
@@ -3891,6 +3914,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want the smallest complete work-memory loop in this atlas, or you need a verification mechanism cheap enough to run on every read.
 - Do not copy when: you need memory about anything other than "how a query over this project turned out" — there is no user, no preference, no entity, and nothing crosses a project directory.
 
+### `lorekit`
+
+- Best idea: an audit log made immutable by the absence of a policy — a SELECT and an INSERT policy on the table and deliberately no UPDATE or DELETE, so the invariant is enforced by RLS rather than by everyone remembering not to write the statement.
+- Biggest risk: that log records `{scope, key}` over an in-place upsert, so it proves a memory changed and cannot show what it replaced — and archiving frees the address, which is the inverse of a tombstone on the operation a user reaches for when a lesson is wrong.
+- Most reusable component: `packages/mcp-core/src/scope.ts` plus the `org_scope_bindings` routing — a validated four-level scope key, an authenticated tenancy boundary, and a table that makes "this repo's lessons belong to the team" a row instead of a convention.
+- Maturity impression: 37 migrations written like design documents with numbered decisions, 1,184 tests, RLS on every table, hashed and scoped tokens, HMAC-verified webhook ingest with an explicit no-timing-oracle note — beside five entrenchment guards of which one is enforced by code.
+- Study when: you need shared agent memory for more than one person and have to answer who changed what, or you want the cleanest separation of a scope key from a tenancy boundary in this atlas.
+- Do not copy when: you are one developer (the parts worth paying for are the multi-user parts), or your problem is deciding which lesson to trust — LoreKit is an excellent filing cabinet with an excellent lock and no opinion about the contents.
+
 ## 10. Practical Checklist for Your Own System
 
 Schema and scoping:
@@ -4093,6 +4125,7 @@ Privacy/deletion:
 - [`lethe`](../systems/lethe/)
 - [`csm`](../systems/csm/)
 - [`graphify`](../systems/graphify/)
+- [`lorekit`](../systems/lorekit/)
 
 ### Repos Inspected
 
@@ -4210,6 +4243,7 @@ Privacy/deletion:
 - [deeplethe/lethe](https://github.com/deeplethe/lethe) at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495)
 - [NovasPlace/CSM](https://github.com/NovasPlace/CSM) at [`21d00969c25ca170ef40bc07e6811beb5e78c99e`](https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e)
 - [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4)
+- [mthines/lorekit](https://github.com/mthines/lorekit) at [`08e3065b3f77dffa8ec313c25e6b38cbab77b67f`](https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f)
 
 ### Commands Used
 

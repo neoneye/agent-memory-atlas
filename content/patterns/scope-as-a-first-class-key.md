@@ -261,6 +261,35 @@ repository and injected into all of them. Scoping the store is the visible half
 of the work; scoping everything the store is projected into is the half that
 gets skipped, and a derived table is exactly where nobody looks for a leak.
 
+[LoreKit](../../systems/lorekit/) is the instance to read if you are building
+for more than one person, because it separates the two things this pattern
+routinely conflates. The **scope key** is a validated string with four canonical
+forms — `global`, `project::{name}`, `repo::{owner}/{repo}`,
+`branch::{owner}/{repo}::{branch}` — normalised to lowercase, rejecting the
+single-colon mistake with an error that prints the corrected form, and applied
+as an equality filter on every read. The **tenancy boundary** is something else
+entirely: row-level security policies gating each read on `auth.uid()` or a
+matching `org_id` JWT claim. One says *which* memories are relevant; the other
+says *whose* they are, and it holds even against a caller that constructs its own
+query.
+
+Then a third layer joins them, which is the part worth stealing.
+`org_scope_bindings` maps a scope string to an organisation, and the write RPC
+consults it: a write to a bound scope is routed to the org rather than to the
+writer, provided `lorekit_org_can(user, org, 'write')` passes. So "this repo's
+lessons belong to the team" is a row rather than a convention, and a personal
+write into a shared scope becomes a shared memory automatically instead of
+silently staying private.
+
+The counterweight, and the reason this is not simply the best entry here: the
+scope *hierarchy* is not enforced anywhere. LoreKit's own README describes agents
+reading branch, then repo, then global and merging — and `memory.list` filters on
+one exact scope. The ladder is three separate calls a skill file instructs the
+agent to make. A validated, RLS-backed, org-routed key whose hierarchy exists
+only in prose is a good reminder that a scope *format* and a scope *resolution
+order* are different pieces of work, and the second one is easy to assume you
+have done.
+
 ## Tests to require
 
 - Cross-user, cross-agent, and cross-project leakage.

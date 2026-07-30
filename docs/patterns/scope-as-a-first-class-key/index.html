@@ -361,6 +361,37 @@ and injected into all of them. Scoping the store is the visible half of
 the work; scoping everything the store is projected into is the half
 that gets skipped, and a derived table is exactly where nobody looks for
 a leak.</p>
+<p><a href="../../systems/lorekit/">LoreKit</a> is the instance to read
+if you are building for more than one person, because it separates the
+two things this pattern routinely conflates. The <strong>scope
+key</strong> is a validated string with four canonical forms —
+<code>global</code>, <code>project::{name}</code>,
+<code>repo::{owner}/{repo}</code>,
+<code>branch::{owner}/{repo}::{branch}</code> — normalised to lowercase,
+rejecting the single-colon mistake with an error that prints the
+corrected form, and applied as an equality filter on every read. The
+<strong>tenancy boundary</strong> is something else entirely: row-level
+security policies gating each read on <code>auth.uid()</code> or a
+matching <code>org_id</code> JWT claim. One says <em>which</em> memories
+are relevant; the other says <em>whose</em> they are, and it holds even
+against a caller that constructs its own query.</p>
+<p>Then a third layer joins them, which is the part worth stealing.
+<code>org_scope_bindings</code> maps a scope string to an organisation,
+and the write RPC consults it: a write to a bound scope is routed to the
+org rather than to the writer, provided
+<code>lorekit_org_can(user, org, 'write')</code> passes. So "this repo's
+lessons belong to the team" is a row rather than a convention, and a
+personal write into a shared scope becomes a shared memory automatically
+instead of silently staying private.</p>
+<p>The counterweight, and the reason this is not simply the best entry
+here: the scope <em>hierarchy</em> is not enforced anywhere. LoreKit's
+own README describes agents reading branch, then repo, then global and
+merging — and <code>memory.list</code> filters on one exact scope. The
+ladder is three separate calls a skill file instructs the agent to make.
+A validated, RLS-backed, org-routed key whose hierarchy exists only in
+prose is a good reminder that a scope <em>format</em> and a scope
+<em>resolution order</em> are different pieces of work, and the second
+one is easy to assume you have done.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>
