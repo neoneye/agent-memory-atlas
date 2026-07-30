@@ -70,17 +70,33 @@ MemoryRecord(
 
 Lifecycle:
 
-```text
-transcript/percept/failure -> extraction/proposal -> CANDIDATE memory
--> corroboration or attestation -> VERIFIED
--> contradiction -> lower confidence or REJECTED
--> recall reinforces retrieval_strength only
--> decay/prune affects reachability, not truth
--> consolidation induces candidate design rules/schemas
--> held-out attested promotion gate verifies rules
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> CANDIDATE: extraction, proposal,<br/>or induced rule
+    CANDIDATE --> VERIFIED: promote
+    VERIFIED --> CANDIDATE: demote
+    CANDIDATE --> REJECTED: contradict
+    note right of REJECTED
+        Terminal. approve() refuses a
+        REJECTED record; resurrection
+        means writing a NEW fact.
+    end note
 ```
 
-The key design principle is that retrieval and truth are orthogonal.
+Three states, and three ways into `VERIFIED`: multi-principal corroboration, the
+held-out attestation gate, and a human `approve()` that is CLI-only so an agent
+cannot promote its own candidate.
+
+**What the diagram leaves out is the design principle: retrieval and truth are
+orthogonal.** `epistemic_confidence` moves on every contradiction and
+`retrieval_strength` moves on every recall, and neither is a transition above —
+they are fields, not states. That separation is enforced rather than asserted.
+The mutation audit logs `write`, `corroborate`, `contradict`, `promote`,
+`demote`, `decay` and more, and **excludes recall on purpose**, on the reasoning
+that reinforcement is *"reachability bookkeeping (the testing effect), not a
+belief mutation"*. Decay and prune change what is reachable and never what is
+true.
 
 ## 3. Architecture
 

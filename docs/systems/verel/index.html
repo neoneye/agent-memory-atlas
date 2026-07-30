@@ -159,15 +159,33 @@ tombstone</a> pattern.</p>
     detail_json=...
 )</code></pre>
 <p>Lifecycle:</p>
-<pre class="text"><code>transcript/percept/failure -&gt; extraction/proposal -&gt; CANDIDATE memory
--&gt; corroboration or attestation -&gt; VERIFIED
--&gt; contradiction -&gt; lower confidence or REJECTED
--&gt; recall reinforces retrieval_strength only
--&gt; decay/prune affects reachability, not truth
--&gt; consolidation induces candidate design rules/schemas
--&gt; held-out attested promotion gate verifies rules</code></pre>
-<p>The key design principle is that retrieval and truth are
-orthogonal.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    direction LR
+    [*] --&gt; CANDIDATE: extraction, proposal,&lt;br/&gt;or induced rule
+    CANDIDATE --&gt; VERIFIED: promote
+    VERIFIED --&gt; CANDIDATE: demote
+    CANDIDATE --&gt; REJECTED: contradict
+    note right of REJECTED
+        Terminal. approve() refuses a
+        REJECTED record; resurrection
+        means writing a NEW fact.
+    end note</code></pre>
+<p>Three states, and three ways into <code>VERIFIED</code>:
+multi-principal corroboration, the held-out attestation gate, and a
+human <code>approve()</code> that is CLI-only so an agent cannot promote
+its own candidate.</p>
+<p><strong>What the diagram leaves out is the design principle:
+retrieval and truth are orthogonal.</strong>
+<code>epistemic_confidence</code> moves on every contradiction and
+<code>retrieval_strength</code> moves on every recall, and neither is a
+transition above — they are fields, not states. That separation is
+enforced rather than asserted. The mutation audit logs
+<code>write</code>, <code>corroborate</code>, <code>contradict</code>,
+<code>promote</code>, <code>demote</code>, <code>decay</code> and more,
+and <strong>excludes recall on purpose</strong>, on the reasoning that
+reinforcement is <em>"reachability bookkeeping (the testing effect), not
+a belief mutation"</em>. Decay and prune change what is reachable and
+never what is true.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core files:</p>
 <ul>
