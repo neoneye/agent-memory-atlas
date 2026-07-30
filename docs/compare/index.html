@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-ninety-three agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.">
+ninety-four agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of ninety-three agent memory architectures, their retrieval mechanics,
+of ninety-four agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of ninety-three agent memory architectures, their retrieval mechanics,
+of ninety-four agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-ninety-three agent memory architectures, their retrieval mechanics,
-trust models, and operational tradeoffs.</p>
+ninety-four agent memory architectures, their retrieval mechanics, trust
+models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -157,8 +157,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 53 of
-93 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 54 of
+94 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Ninety-three systems do not fall into ninety-three categories. They
+<p>Ninety-four systems do not fall into ninety-four categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -188,7 +188,7 @@ own.</p>
 <h3 id="embeddable-memory-libraries">Embeddable memory libraries</h3>
 <p><code>mem0</code>, <code>langmem</code>, <code>llamaindex</code>,
 <code>cognee</code>, <code>a-mem</code>, <code>memori</code>,
-<code>goodai-ltm</code></p>
+<code>goodai-ltm</code>, <code>pydantic-ai-harness</code></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>GoodAI LTM is the family's cautionary comparison, and it
@@ -216,6 +216,24 @@ bindings over seven backends, and is the atlas's sharpest illustration
 of the family's tradeoff taken one step further: the schema, the drivers
 and the migrations are all open, and the extraction that decides what a
 fact <em>is</em> runs in the vendor's hosted service.</p>
+<p><strong>The Pydantic AI Harness is the family's answer to the
+tradeoff below, and it answers it by narrowing the claim.</strong> Its
+memory is a Markdown notebook behind four tools, with no unit below the
+file, no status, no confidence and no provenance — and the engineering
+all sits where a library actually can act: what reaches the prompt, and
+who is allowed to ask. The namespace is resolved from run context and
+documented as never exposed as a tool argument, so a model has no
+argument in which to name another tenant; then
+<code>list_subfiles</code> re-checks every returned path against the
+requested prefix and raises if a store hands back anything outside it.
+<strong>That check is unique in this atlas.</strong> Every other system
+with a pluggable store trusts the store to have filtered; this one
+treats its own backend as untrusted and verifies the boundary on the way
+back, which is the difference between enforcing a scope and asserting
+that it was enforced. Writes carry an idempotency id derived from the
+run and the tool call, so a retried write is a replay rather than a
+second append — the failure mode an agent framework hits constantly and
+which almost nothing here models.</p>
 <p>Tradeoff: a library can store and retrieve, but it cannot guarantee
 the model calls the right tool, verifies a fact, or uses recall
 safely.</p>
@@ -2756,6 +2774,40 @@ promotion, archival and reinforcement as separate decisions</td>
 writes to the store</td>
 </tr>
 <tr>
+<td><code>pydantic-ai-harness</code></td>
+<td>A Markdown file. <code>MEMORY.md</code> is the notebook; other files
+hold focused notes, each versioned with a generation counter and a
+fingerprint</td>
+<td>A <code>MemoryStore</code> Protocol with three implementations —
+in-memory, a directory of files with a SQLite sidecar, and Postgres —
+plus an optional <code>SearchableMemoryStore</code> extension</td>
+<td>A bounded excerpt of the notebook plus a file listing injected per
+request under a token budget; <code>read_memory</code> for a prefix and
+<code>search_memory</code> for bounded text search</td>
+<td>Model tool calls only — no extraction pass. Optimistic concurrency
+on a version, with an idempotency id derived from the run and tool
+call</td>
+<td><code>write_memory</code> appends or replaces one unique fragment;
+<code>delete_memory</code> removes a file and the main notebook is
+protected. No record of what a delete removed</td>
+<td><code>{namespace}/{agent_name}</code> composed by application code,
+never exposed as a tool argument, and the toolset raises if the backend
+returns a path outside it</td>
+<td>A Pydantic AI capability —
+<code>Agent(..., capabilities=[Memory(FileStore(...))])</code> —
+contributing four tools and a user-role context part</td>
+<td>None. Writes are synchronous tool calls; crash recovery replays an
+incomplete operation from its receipt</td>
+<td>None. A memory is a line in a Markdown file; there is no status,
+confidence, provenance or source on any of it</td>
+<td>Scope the model cannot name and the toolset re-checks; idempotent
+writes under optimistic concurrency; 2,498 lines of tests to 2,452 of
+code, asserting what must not reach the prompt</td>
+<td>Delete is content-free by design, so nothing records that a value
+was rejected; the operations table clears its own payload on success, so
+it audits nothing</td>
+</tr>
+<tr>
 <td><code>qwen-code</code></td>
 <td>Auto-memory entry typed
 <code>user | feedback | project | reference</code>, with source
@@ -3278,14 +3330,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 93:</em> <a
+<p><em>3 of 94:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 93:</em> <a
+<p><em>7 of 94:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3295,7 +3347,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 93:</em> <a
+<p><em>8 of 94:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3309,7 +3361,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>53 of 93:</em> <a
+<p><em>54 of 94:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -3356,7 +3408,8 @@ href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openviking/"><code>openviking</code></a>, <a
 href="../systems/openworker/"><code>openworker</code></a>, <a
 href="../systems/powermem/"><code>powermem</code></a>, <a
-href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
+href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
+<a href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
 <a href="../systems/simplemem/"><code>simplemem</code></a>, <a
@@ -3367,7 +3420,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>11 of 93:</em> <a
+<p><em>11 of 94:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3382,7 +3435,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>16 of 93:</em> <a
+<p><em>16 of 94:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3402,14 +3455,15 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>8 of 93:</em> <a href="../systems/agno/"><code>agno</code></a>,
+<p><em>9 of 94:</em> <a href="../systems/agno/"><code>agno</code></a>,
 <a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/open-cowork/"><code>open-cowork</code></a>, <a
-href="../systems/verel/"><code>verel</code></a></p>
+href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
+<a href="../systems/verel/"><code>verel</code></a></p>
 <!-- END GENERATED CAPABILITIES -->
 
 <p>Three observations follow from the counts, stated no more strongly
@@ -3427,8 +3481,8 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Eight
-repositories of ninety-three assert that particular material must
+<p><strong>Negative evidence is almost never tested.</strong> Nine
+repositories of ninety-four assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -3450,7 +3504,7 @@ each side, repeated for two agent owners sharing a keyword.</p>
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
-<p><strong>Five assert about content:</strong> that particular material
+<p><strong>Six assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
 asking. <a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
@@ -3467,11 +3521,20 @@ href="../systems/helm/">Helm</a>'s supersede case asserts a replaced
 value no longer appears, and <a href="../systems/agno/">Agno</a>'s
 <code>test_entity_supersession.py</code> does the same against a judged
 verdict — a retired fact absent from <code>live_facts()</code> while
-both rows remain in the record.</p>
-<p><strong>Only these five probe the question the atlas is actually
+both rows remain in the record. The <a
+href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> asserts
+it about the <em>prompt</em>:
+<code>test_delete_existing_is_content_free</code> requires the deleted
+body to be absent from the tool result, one search test requires
+<code>all('secret' not in repr(match))</code> under a character budget,
+and two injection tests require a superseded line and a stale fact from
+an earlier history not to appear in the captured model context. That is
+the assertion aimed at where the damage happens rather than at where the
+row lives.</p>
+<p><strong>Only these six probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
-proves a value that was rejected, disputed or forbidden stays gone. Five
-of ninety-three is the real figure for the second kind, and the two
+proves a value that was rejected, disputed or forbidden stays gone. Six
+of ninety-four is the real figure for the second kind, and the two
 newest are the cheap version of it: a <em>superseded</em> value is easy
 to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come
@@ -6279,7 +6342,7 @@ half-life to every memory kind.</p>
 <p>Write your memory decisions down. <code>gini-agent</code> keeps ADRs
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
-memories were polluting a research agent's recall. Across ninety-three
+memories were polluting a research agent's recall. Across ninety-four
 systems, almost none can explain why they are shaped the way they
 are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
@@ -7741,6 +7804,8 @@ href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a></li>
 <li><a href="../systems/helm/"><code>helm</code></a></li>
 <li><a href="../systems/agno/"><code>agno</code></a></li>
 <li><a href="../systems/simplemem/"><code>simplemem</code></a></li>
+<li><a
+href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8080,6 +8145,10 @@ href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f
 href="https://github.com/aiming-lab/SimpleMem">aiming-lab/SimpleMem</a>
 at <a
 href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299"><code class="commit-id" title="db80b6a7c591e0ea730a058e9f5fc4eb06572299">db80b6a7…</code></a></li>
+<li><a
+href="https://github.com/pydantic/pydantic-ai-harness">pydantic/pydantic-ai-harness</a>
+at <a
+href="https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555"><code class="commit-id" title="39ee7e08101c54b1ddf9c1e3a7f603f09ae34555">39ee7e08…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -8390,20 +8459,22 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>two</strong> of ninety-three — <a
+<strong>three</strong> of ninety-four — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
-last-write-wins — so a whole library existing for it says something
-about the corpus. And its central claim does not hold: the README says
-<em>"every spec carries a documented mutant that must fail — the
-invariants are load-bearing, not decorative"</em>, the mutants are
-written out in the specs' comments, and nothing executes them.
-<code>make tla-check</code> asserts six invariants hold; no job asserts
-a mutated spec fails, which is the standard defence against an invariant
-passing vacuously. A repository with 60,163 lines of tests documented
-its negative cases in prose — and the contrast is internal, because its
-<em>performance</em> claim is committed, checksummed and
-CI-regression-checked:
+last-write-wins, and the <a
+href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> adds an
+idempotency receipt so a retried write is a replay rather than a second
+append — so a whole library existing for it says something about the
+corpus. And its central claim does not hold: the README says <em>"every
+spec carries a documented mutant that must fail — the invariants are
+load-bearing, not decorative"</em>, the mutants are written out in the
+specs' comments, and nothing executes them. <code>make tla-check</code>
+asserts six invariants hold; no job asserts a mutated spec fails, which
+is the standard defence against an invariant passing vacuously. A
+repository with 60,163 lines of tests documented its negative cases in
+prose — and the contrast is internal, because its <em>performance</em>
+claim is committed, checksummed and CI-regression-checked:
 <code>benchmarks/results/canonical/SUMMARY.md</code> reproduces its
 paper's Table 1 with all four figures against tolerances, which is the
 inverse of the traceability failure this atlas records for Memvid,

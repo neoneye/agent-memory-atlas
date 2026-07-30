@@ -171,8 +171,29 @@ filter parameter does not.</p>
 forever. Retrofitting is painful, so be honest about whether that is
 true.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong><a href="../../systems/pydantic-ai-harness/">Pydantic AI
+Harness</a> adds the step the rest of this list is missing: it checks
+that the filter worked.</strong> Two mechanisms, both small. The
+namespace is <code>str | Callable[[RunContext], str]</code>, resolved by
+application code and documented as <em>"never exposed as a tool
+argument"</em> — so a model given <code>write_memory</code> and
+<code>search_memory</code> has no parameter in which to name another
+tenant, and prompt injection cannot ask for one. Then
+<code>list_subfiles</code> verifies every path the backend returned
+against the prefix it requested and raises
+<code>RuntimeError('memory backend returned a path outside the requested scope')</code>
+on a mismatch.</p>
+<p>That second line is what nothing else here has. Every system on this
+page composes a scope into a query and trusts the store to have honoured
+it; the <code>MemoryStore</code> Protocol is public and third-party
+implementations are expected, so this one treats its own backend as
+untrusted and re-checks the boundary on the way back. A custom store
+that forgets the prefix produces a loud crash instead of a cross-tenant
+read. The cost is a prefix comparison per returned path, and it converts
+the most expensive silent failure in this atlas into the cheapest loud
+one.</p>
 <p><a href="../../systems/openclaw/">OpenClaw</a> has the strongest
-enforcement, and the idea is one line:</p>
+enforcement in SQL, and the idea is one line:</p>
 <pre class="typescript"><code>function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {
   const scope = memoryAgentPredicate(agentId);
   return filter ? `(${scope}) AND (${formatQueryFilter(filter)})` : scope;

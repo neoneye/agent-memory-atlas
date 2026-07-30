@@ -91,8 +91,27 @@ painful, so be honest about whether that is true.
 
 ## Seen in the atlas
 
-[OpenClaw](../../systems/openclaw/) has the strongest enforcement, and the idea
-is one line:
+**[Pydantic AI Harness](../../systems/pydantic-ai-harness/) adds the step the
+rest of this list is missing: it checks that the filter worked.** Two mechanisms,
+both small. The namespace is `str | Callable[[RunContext], str]`, resolved by
+application code and documented as *"never exposed as a tool argument"* — so a
+model given `write_memory` and `search_memory` has no parameter in which to name
+another tenant, and prompt injection cannot ask for one. Then `list_subfiles`
+verifies every path the backend returned against the prefix it requested and
+raises `RuntimeError('memory backend returned a path outside the requested
+scope')` on a mismatch.
+
+That second line is what nothing else here has. Every system on this page
+composes a scope into a query and trusts the store to have honoured it; the
+`MemoryStore` Protocol is public and third-party implementations are expected,
+so this one treats its own backend as untrusted and re-checks the boundary on the
+way back. A custom store that forgets the prefix produces a loud crash instead of
+a cross-tenant read. The cost is a prefix comparison per returned path, and it
+converts the most expensive silent failure in this atlas into the cheapest loud
+one.
+
+[OpenClaw](../../systems/openclaw/) has the strongest enforcement in SQL, and the
+idea is one line:
 
 ```typescript
 function scopedPredicate(agentId: string, filter?: MemoryQueryFilter): string {

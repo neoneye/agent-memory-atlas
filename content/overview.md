@@ -1,7 +1,7 @@
 ---
 title: Agent Memory Systems Comparative Report
 eyebrow: Cross-system synthesis
-description: A code-grounded comparison of ninety-three agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
+description: A code-grounded comparison of ninety-four agent memory architectures, their retrieval mechanics, trust models, and operational tradeoffs.
 root: ..
 page_kind: comparison
 ---
@@ -68,7 +68,7 @@ else:
 3. **Whether scope is identity or decoration.** Three levels, and the atlas's
    `scope_enforced` mark only certifies the middle one. A scope *tag* stored
    beside the memory is a hope. A scope *key applied as a filter on the read
-   path* is what 53 of 93 systems here have, and is what the mark means. A scope
+   path* is what 54 of 94 systems here have, and is what the mark means. A scope
    *boundary* — authenticated identity, grants, and a filter that a caller cannot
    widen by passing a different argument — is rarer than the count suggests, and
    in a single-user desktop deployment is not even the right goal. Read the
@@ -86,7 +86,7 @@ marks, filterable — is the fastest way in.
 
 ## 1. High-Level Taxonomy
 
-Ninety-three systems do not fall into ninety-three categories. They cluster around
+Ninety-four systems do not fall into ninety-four categories. They cluster around
 eight architectural commitments, and most systems belong to more than one —
 a coding-agent memory can also be verification-first, and a host runtime's
 plugin can also be a hosted service. The families below are lenses, not bins.
@@ -96,7 +96,8 @@ characterized in place rather than given a category of its own.
 
 ### Embeddable memory libraries
 
-`mem0`, `langmem`, `llamaindex`, `cognee`, `a-mem`, `memori`, `goodai-ltm`
+`mem0`, `langmem`, `llamaindex`, `cognee`, `a-mem`, `memori`, `goodai-ltm`,
+`pydantic-ai-harness`
 
 Called from an application that owns the agent loop. Easy to adopt; weak
 authority over when memory is written or how recall is used.
@@ -121,6 +122,22 @@ core with Python and TypeScript bindings over seven backends, and is the atlas's
 sharpest illustration of the family's tradeoff taken one step further: the schema,
 the drivers and the migrations are all open, and the extraction that decides what
 a fact *is* runs in the vendor's hosted service.
+
+**The Pydantic AI Harness is the family's answer to the tradeoff below, and it
+answers it by narrowing the claim.** Its memory is a Markdown notebook behind
+four tools, with no unit below the file, no status, no confidence and no
+provenance — and the engineering all sits where a library actually can act: what
+reaches the prompt, and who is allowed to ask. The namespace is resolved from
+run context and documented as never exposed as a tool argument, so a model has
+no argument in which to name another tenant; then `list_subfiles` re-checks
+every returned path against the requested prefix and raises if a store hands
+back anything outside it. **That check is unique in this atlas.** Every other
+system with a pluggable store trusts the store to have filtered; this one treats
+its own backend as untrusted and verifies the boundary on the way back, which is
+the difference between enforcing a scope and asserting that it was enforced.
+Writes carry an idempotency id derived from the run and the tool call, so a
+retried write is a replay rather than a second append — the failure mode an
+agent framework hits constantly and which almost nothing here models.
 
 Tradeoff: a library can store and retrieve, but it cannot guarantee the model
 calls the right tool, verifies a fact, or uses recall safely.
@@ -897,6 +914,7 @@ session with an identity you could later correct.
 | `optmem` | One line of at most 280 characters, fixed width, position-addressed | `LOG.txt` append-only, never edited; `TREE/` of compressed blocks, a rebuildable cache | `wake` prints a budgeted cover of the merge tree — verbatim recent, compressed ancient | `note` appends one line and may return a compression for the agent to answer | `forget <lo>-<hi>` drops a summary; the next nap rebuilds it. The log is never edited | One store per `$MEMORY_DIR`; none within it | A 426-token prompt block pasted into AGENTS.md or CLAUDE.md | None, by design — every compression is requested inline in the output of `note` | None; the log is append-only and everything derived is rebuildable from it | Detail decays by geometry, not policy, and no job can rewrite memory behind your back | No licence file; no scope, trust, or correction of the log itself |
 | `pi` | None — session-tree entry, not a memory record | JSONL session tree (`id`/`parentId`), swappable in-memory backend | None; context is the tree walked to root plus discovered resource files | Append to session; compaction replaces a range | None; no durable claim exists | None | Own CLI/TUI/SDK; 20+ extension events, none memory-shaped | Compaction and branch summarization | Deterministic `readFiles`/`modifiedFiles` on compaction entries | Deterministic file manifest kept out of the model's output; branchable sessions | No memory contract at all, so scope and deletion have nowhere to live |
 | `powermem` | An LLM-extracted memory row with retention metadata, plus distilled Experience and Skill records above it | SQLite, pgvector or OceanBase for memory; the skill and source stores are OceanBase only | Vector, FTS and graph fused by RRF, with recency and retention scores applied | LLM extraction with a simple and an intelligent path, plus background workers | Update and delete APIs; forgetting is a retention score falling below a threshold | user_id, agent_id and run_id built into effective filters and carried into the store | Python SDK, HTTP server, MCP, CLI, VS Code extension and a Claude Code plugin | Decay, promotion and archival evaluated during search, with some updates dispatched to a thread pool | None; retention and importance are scores, and no memory carries a status | The atlas's most complete forgetting-curve implementation, with promotion, archival and reinforcement as separate decisions | The history table has no callers anywhere in the repository; search writes to the store |
+| `pydantic-ai-harness` | A Markdown file. `MEMORY.md` is the notebook; other files hold focused notes, each versioned with a generation counter and a fingerprint | A `MemoryStore` Protocol with three implementations — in-memory, a directory of files with a SQLite sidecar, and Postgres — plus an optional `SearchableMemoryStore` extension | A bounded excerpt of the notebook plus a file listing injected per request under a token budget; `read_memory` for a prefix and `search_memory` for bounded text search | Model tool calls only — no extraction pass. Optimistic concurrency on a version, with an idempotency id derived from the run and tool call | `write_memory` appends or replaces one unique fragment; `delete_memory` removes a file and the main notebook is protected. No record of what a delete removed | `{namespace}/{agent_name}` composed by application code, never exposed as a tool argument, and the toolset raises if the backend returns a path outside it | A Pydantic AI capability — `Agent(..., capabilities=[Memory(FileStore(...))])` — contributing four tools and a user-role context part | None. Writes are synchronous tool calls; crash recovery replays an incomplete operation from its receipt | None. A memory is a line in a Markdown file; there is no status, confidence, provenance or source on any of it | Scope the model cannot name and the toolset re-checks; idempotent writes under optimistic concurrency; 2,498 lines of tests to 2,452 of code, asserting what must not reach the prompt | Delete is content-free by design, so nothing records that a value was rejected; the operations table clears its own payload on success, so it audits nothing |
 | `qwen-code` | Auto-memory entry typed `user \| feedback \| project \| reference`, with source refs | Markdown context files on disk; the team tier is committed to the repository | Indexed scan with a relevance selector; async recall on demand | Background extraction from sessions, cursor-tracked; `dream` consolidation; skills reviewed before use | `forget` by candidate selection, by match, or by entry; no value-level tombstone found | User, project and team tiers with separate paths; team writes guarded unconditionally | Built into the CLI; memory channels for intent and recall | Extraction with a resumable offset cursor, dream consolidation, skill review nudges | Source session and message ids; extraction and dream record `updated` or `noop` | A shared tier that is source-controlled, with secret writes refused even when the tier is off | Correction is entry-keyed, and re-extraction from retained sessions is unguarded |
 | `rainbox` | Claim, evidence, embedding, retrieval event | Postgres/SQLAlchemy plus pgvector | Hard-filtered hybrid (vector + Postgres full-text + entity boost) for both chat and assistant; profile digest | User commands, assistant actions, review UI; single governed atomic path (`record_belief`); write-time conflict detection; active/candidate flows | Reject/supersede/reactivate/expiry/sensitivity; `MemoryRejectedValue` tombstones block model re-assertion of rejected values; governed atomic correction (`correct_belief`); UI stale-write guards | Global, agent, room, project; sensitivity | Full assistant app: chat prompt (via `build_chat_memory_block`→hybrid), action loop, review UI | Embedding sync/prune, telemetry, feedback/eval loop | Five-actor trust model (3 human/override + 2 model/candidate); rejected-value tombstones; write-time lattice-aware conflict detection; governed atomic correction; fenced prompt injection; claim/evidence provenance and retrieval audit | Operator governance, trust/correction machinery (tombstones + conflict detection + fenced recall + governed writes), telemetry, eval integration | Compact claims may lose source nuance; no automatic candidate extraction; `epistemic_confidence`/`retrieval_strength` columns exist but Tier-1 ranking still uses `confidence` (schema groundwork only); attribution is context-injection, not causal |
 | `redis-agent-memory-server` | Working-memory message; long-term `MemoryRecord` typed episodic/semantic/message | Redis with TTL for working memory; pluggable vector DB for long-term | Vector search plus metadata filters, reranked by recency with dual half-lives | Debounced trailing extraction via swappable strategies, then layered dedupe | Exact delete; composite forgetting policy; no tombstones | Namespace, `user_id`, `session_id`, with auth | REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin | Debounced extraction, compaction, dedupe, forgetting sweeps | Session linkage and per-message extraction flags; no trust state | Best-specified retention policy in the atlas; cohesion-gated semantic merge | Deletion is not durable against re-extraction; access-driven reinforcement |
@@ -971,31 +989,31 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*3 of 93:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
+*3 of 94:* [`daimon`](../systems/daimon/), [`rainbox`](../systems/rainbox/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*7 of 93:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*7 of 94:* [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`magic-context`](../systems/magic-context/), [`rainbox`](../systems/rainbox/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*8 of 93:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
+*8 of 94:* [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument.
 
-*53 of 93:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`agno`](../systems/agno/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`simplemem`](../systems/simplemem/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*54 of 94:* [`acontext`](../systems/acontext/), [`adk-python`](../systems/adk-python/), [`agentmemory`](../systems/agentmemory/), [`agno`](../systems/agno/), [`ai-memory`](../systems/ai-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`basic-memory`](../systems/basic-memory/), [`buzz`](../systems/buzz/), [`claude-mem`](../systems/claude-mem/), [`cognee`](../systems/cognee/), [`core-memory`](../systems/core-memory/), [`cowagent`](../systems/cowagent/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`ecc`](../systems/ecc/), [`elastic-atlas`](../systems/elastic-atlas/), [`engram`](../systems/engram/), [`everos`](../systems/everos/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hindsight`](../systems/hindsight/), [`honcho`](../systems/honcho/), [`langmem`](../systems/langmem/), [`letta`](../systems/letta/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`magic-context`](../systems/magic-context/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`mateclaw`](../systems/mateclaw/), [`mem0`](../systems/mem0/), [`memanto`](../systems/memanto/), [`memmachine`](../systems/memmachine/), [`memobase`](../systems/memobase/), [`memori`](../systems/memori/), [`memory-engine`](../systems/memory-engine/), [`memos`](../systems/memos/), [`mempalace`](../systems/mempalace/), [`metaclaw`](../systems/metaclaw/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`nooa-memory`](../systems/nooa-memory/), [`openclaw`](../systems/openclaw/), [`openhuman`](../systems/openhuman/), [`openviking`](../systems/openviking/), [`openworker`](../systems/openworker/), [`powermem`](../systems/powermem/), [`pydantic-ai-harness`](../systems/pydantic-ai-harness/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`simplemem`](../systems/simplemem/), [`supermemory`](../systems/supermemory/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*11 of 93:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`simplemem`](../systems/simplemem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
+*11 of 94:* [`aukora-kernel`](../systems/aukora-kernel/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`magic-context`](../systems/magic-context/), [`memora`](../systems/memora/), [`memvid`](../systems/memvid/), [`neko`](../systems/neko/), [`optmem`](../systems/optmem/), [`simplemem`](../systems/simplemem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*16 of 93:* [`acontext`](../systems/acontext/), [`agno`](../systems/agno/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
+*16 of 94:* [`acontext`](../systems/acontext/), [`agno`](../systems/agno/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`engram`](../systems/engram/), [`hermes-agent`](../systems/hermes-agent/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`memanto`](../systems/memanto/), [`memora`](../systems/memora/), [`mercury-agent`](../systems/mercury-agent/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`verel`](../systems/verel/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
-*8 of 93:* [`agno`](../systems/agno/), [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`helm`](../systems/helm/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`verel`](../systems/verel/)
+*9 of 94:* [`agno`](../systems/agno/), [`aukora-kernel`](../systems/aukora-kernel/), [`everos`](../systems/everos/), [`helm`](../systems/helm/), [`mirix`](../systems/mirix/), [`neko`](../systems/neko/), [`open-cowork`](../systems/open-cowork/), [`pydantic-ai-harness`](../systems/pydantic-ai-harness/), [`verel`](../systems/verel/)
 <!-- END GENERATED CAPABILITIES -->
 
 Three observations follow from the counts, stated no more strongly than the
@@ -1014,7 +1032,7 @@ nothing here measures that.
 "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Eight repositories of ninety-three
+**Negative evidence is almost never tested.** Nine repositories of ninety-four
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says more
@@ -1035,7 +1053,7 @@ All three of those systems also hold `scope_enforced`. Their negative suites are
 therefore tests **of a capability the same system already claims** — which is
 worth having, and is not evidence about deletion or correction.
 
-**Five assert about content:** that particular material must not surface to
+**Six assert about content:** that particular material must not surface to
 anyone entitled to search, regardless of who is asking.
 [open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
 naming what a query must not return, scored as a penalty.
@@ -1048,11 +1066,18 @@ red-team finding that produced its tombstone. [Project N.E.K.O.](../systems/neko
 [Helm](../systems/helm/)'s supersede case asserts a replaced value no longer
 appears, and [Agno](../systems/agno/)'s `test_entity_supersession.py` does the
 same against a judged verdict — a retired fact absent from `live_facts()` while
-both rows remain in the record.
+both rows remain in the record. The [Pydantic AI
+Harness](../systems/pydantic-ai-harness/) asserts it about the *prompt*:
+`test_delete_existing_is_content_free` requires the deleted body to be absent
+from the tool result, one search test requires `all('secret' not in
+repr(match))` under a character budget, and two injection tests require a
+superseded line and a stale fact from an earlier history not to appear in the
+captured model context. That is the assertion aimed at where the damage happens
+rather than at where the row lives.
 
-**Only these five probe the question the atlas is actually asking.** A boundary
+**Only these six probe the question the atlas is actually asking.** A boundary
 test proves the filter works; a content test proves a value that was rejected,
-disputed or forbidden stays gone. Five of ninety-three is the real figure for the
+disputed or forbidden stays gone. Six of ninety-four is the real figure for the
 second kind, and the two newest are the cheap version of it: a *superseded*
 value is easy to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come back.
@@ -2634,7 +2659,7 @@ this atlas's warning against applying one half-life to every memory kind.
 Write your memory decisions down. `gini-agent` keeps ADRs recording the
 decision, its context, and the failure that motivated it — its per-agent
 isolation ADR states plainly that a coding agent's pinned memories were
-polluting a research agent's recall. Across ninety-three systems, almost none can
+polluting a research agent's recall. Across ninety-four systems, almost none can
 explain why they are shaped the way they are.
 
 Make scope structurally inseparable from the query. OpenClaw composes agent scope and user filter into a single predicate so an unscoped read is not expressible, and scopes deletes the same way. This is stronger than applying a scope filter somewhere in the read path, and it is the kind of guarantee that survives refactoring.
@@ -3512,6 +3537,7 @@ Privacy/deletion:
 - [`helm`](../systems/helm/)
 - [`agno`](../systems/agno/)
 - [`simplemem`](../systems/simplemem/)
+- [`pydantic-ai-harness`](../systems/pydantic-ai-harness/)
 
 ### Repos Inspected
 
@@ -3609,6 +3635,7 @@ Privacy/deletion:
 - [GOODMAN-PRO/helm](https://github.com/GOODMAN-PRO/helm) at [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73)
 - [agno-agi/agno](https://github.com/agno-agi/agno) at [`7c68873c1357321a5152397c8ab4fb8b3f587bba`](https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba)
 - [aiming-lab/SimpleMem](https://github.com/aiming-lab/SimpleMem) at [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299)
+- [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`39ee7e08101c54b1ddf9c1e3a7f603f09ae34555`](https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555)
 
 ### Commands Used
 
@@ -3710,7 +3737,7 @@ No internet sources were used for this report. The analysis is based on the chec
 - Nothing was run for the six systems added in this round. OptMem is reviewed **without a licence file** — all rights reserved by default — as a deliberate exception to the rule applied to `openyak` and others, because it carries mechanisms the atlas has not otherwise found; the exception covers reading it, not reusing it. MemAgent, HiAgent, Mi-Memory and langchain-ai/memory-agent were examined in the same round and have no reports: MemAgent and HiAgent are conversation-window management (MemAgent is discussed in the scope-boundary section), `Darwin-Agent/Mi-Memory` is a paper PDF and a landing page with no implementation, and `langchain-ai/memory-agent` is a 235-line LangGraph template whose substantive counterpart, LangMem, is already reviewed here.
 - **Framework-native memory layers not yet reviewed**, named because a reader looking for them should find the gap rather than infer coverage: **CrewAI**'s memory module, **Haystack**'s agent memory, **CAMEL-AI**'s `AgentMemory` blocks, and **Microsoft Agent Framework**, which succeeds both AutoGen and Semantic Kernel and whose memory is a pluggable contract over Foundry, Mem0, Redis and Neo4j. [Agno](../systems/agno/) was the largest omission on this side and is now reviewed. The atlas has read the adjacent contracts — [adk-python](../systems/adk-python/), [AutoGen](../systems/autogen/) and [LangMem](../systems/langmem/) — and CrewAI in particular is the most-cited omission on that side. These are reachable by this method, unlike the hosted products above; they are simply not done.
 - **MemGPT is here under its current name.** The project renamed to Letta, so the OS-style tiered-memory reference implementation is the [Letta report](../systems/letta/), and a reader searching this atlas for "MemGPT" will otherwise find only a passing mention in the correction discussion. Recorded because the rename makes the lineage hard to find, not because anything is missing.
-- `Cohexa-ai/agent-coherence` was examined and has no report. It is MESI cache-coherence for shared agent artifacts — single-writer ownership, commit-CAS, a read-generation fence, pinned snapshot sessions — and it stores no memory: `CCSStore._apply_put` serialises the value to an opaque JSON string and versions it, never parsing, ranking, scoping or correcting it. What it durably holds is coordination metadata. That is the guard-is-not-a-store shape and the operates-rather-than-believes shape at once, and naming `memory.json` as an example artifact does not change it. Recorded rather than dropped for two reasons. Its premise is a failure this atlas asks about in every report and finds answered in **two** of ninety-three — [Mastra](../systems/mastra-observational-memory/) prevents lost updates with per-scope locks, [Logseq](../systems/logseq/) is last-write-wins — so a whole library existing for it says something about the corpus. And its central claim does not hold: the README says *"every spec carries a documented mutant that must fail — the invariants are load-bearing, not decorative"*, the mutants are written out in the specs' comments, and nothing executes them. `make tla-check` asserts six invariants hold; no job asserts a mutated spec fails, which is the standard defence against an invariant passing vacuously. A repository with 60,163 lines of tests documented its negative cases in prose — and the contrast is internal, because its *performance* claim is committed, checksummed and CI-regression-checked: `benchmarks/results/canonical/SUMMARY.md` reproduces its paper's Table 1 with all four figures against tolerances, which is the inverse of the traceability failure this atlas records for Memvid, MemoryOS and FiFA. The same discipline was applied to the speed claim and not to the safety claim. Its paper ([arXiv:2603.15183](https://arxiv.org/abs/2603.15183), 16 March 2026) is also worth noting for selling a different thing than the repository does — the paper leads with simulated token savings and the repository leads with preventing silent clobbers, which on this atlas's terms is the better framing of the same mechanism. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md) for what is unusually honest about it, and for the read-generation fence, which is the one mechanism there that memory systems with restartable background passes appear to need and none here has.
+- `Cohexa-ai/agent-coherence` was examined and has no report. It is MESI cache-coherence for shared agent artifacts — single-writer ownership, commit-CAS, a read-generation fence, pinned snapshot sessions — and it stores no memory: `CCSStore._apply_put` serialises the value to an opaque JSON string and versions it, never parsing, ranking, scoping or correcting it. What it durably holds is coordination metadata. That is the guard-is-not-a-store shape and the operates-rather-than-believes shape at once, and naming `memory.json` as an example artifact does not change it. Recorded rather than dropped for two reasons. Its premise is a failure this atlas asks about in every report and finds answered in **three** of ninety-four — [Mastra](../systems/mastra-observational-memory/) prevents lost updates with per-scope locks, [Logseq](../systems/logseq/) is last-write-wins, and the [Pydantic AI Harness](../systems/pydantic-ai-harness/) adds an idempotency receipt so a retried write is a replay rather than a second append — so a whole library existing for it says something about the corpus. And its central claim does not hold: the README says *"every spec carries a documented mutant that must fail — the invariants are load-bearing, not decorative"*, the mutants are written out in the specs' comments, and nothing executes them. `make tla-check` asserts six invariants hold; no job asserts a mutated spec fails, which is the standard defence against an invariant passing vacuously. A repository with 60,163 lines of tests documented its negative cases in prose — and the contrast is internal, because its *performance* claim is committed, checksummed and CI-regression-checked: `benchmarks/results/canonical/SUMMARY.md` reproduces its paper's Table 1 with all four figures against tolerances, which is the inverse of the traceability failure this atlas records for Memvid, MemoryOS and FiFA. The same discipline was applied to the speed claim and not to the safety claim. Its paper ([arXiv:2603.15183](https://arxiv.org/abs/2603.15183), 16 March 2026) is also worth noting for selling a different thing than the repository does — the paper leads with simulated token savings and the repository leads with preventing silent clobbers, which on this atlas's terms is the better framing of the same mechanism. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a-coherence-coordinator-not-a-memory-system.md) for what is unusually honest about it, and for the read-generation fence, which is the one mechanism there that memory systems with restartable background passes appear to need and none here has.
 - Core Memory's grounding ceiling, Memanto's conflict-detection precision, Memory Engine's agent clamp, ai-memory's cross-harness continuity claim, ctx's disclosure reachability, and OptMem's cover loss are all directly testable and none was measured here.
 - Nothing was run for the four systems added in this round. `gastownhall/beads` and `VectorSpaceLab/general-agentic-memory` were examined and have no reports, for the reasons given in the scope section; GAM additionally has no licence file. `langchain-ai/memory-agent` and `akitaonrails/ai-memory` were re-submitted in this round and were already handled — the first rejected as a 235-line template, the second reviewed.
 - Memvid's headline figures ("+35% SOTA on LoCoMo", "+76% multi-hop", "+56% temporal") could not be traced to committed raw artifacts at the inspected commit and are recorded as claims. MemoryOS commits the LoCoMo dataset beside its harness but no scored results were found. Neither was run here.
