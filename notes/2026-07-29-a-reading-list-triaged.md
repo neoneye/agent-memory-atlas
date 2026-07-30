@@ -88,12 +88,20 @@ out of four.
   which this note originally dismissed in one line, and the only system report
   this round generated. See
   [the memorypapers note](2026-07-29-memorypapers-against-the-atlas.md).
-- **Substrate coverage in the deletion test.** The security survey's Verified
-  Forgetting enumerates raw logs, compressed summaries, vector indices, **and
-  propagated copies**. The atlas's deletion test does not cover the last, and
-  cross-agent propagation is a real deletion surface — the survey gives it a
-  whole lifecycle phase. This is the one concrete specification improvement
-  found in the round and it is not yet made.
+- ~~**Substrate coverage in the deletion test.**~~ **Made on 2026-07-30.** The
+  test now runs to thirteen steps: share, export or sync the memory to a second
+  scope *before* deleting it, delete the original, and assert it is not
+  retrievable from the second scope either. The section explains why this is a
+  different surface from step 9 rather than more of it — a derived artifact is
+  downstream of the original and can be invalidated by tracking what it came
+  from, while a propagated copy is a *peer* with its own identity and usually no
+  back-reference, so a deletion has nothing to follow. Three grounded instances
+  cover the range: SimpleMem's `share` mints a fresh uuid and copies the content
+  with no link to the source memory (the link exists only as a detail string in
+  an event log its own write path never consults), Cortex's `shared_context` is a
+  publication nobody owns, and NemoClaw's snapshot makes propagation
+  bidirectional — the deleted value comes back. On the atlas's current reading
+  nothing would pass steps 11–13.
 - **[arXiv:2606.15903](https://arxiv.org/abs/2606.15903)**, *Control-Plane
   Placement Shapes Forgetting: An Architectural Study of Agent Memory Across
   Thirteen System Configurations* — surfaced twice while chasing other things,

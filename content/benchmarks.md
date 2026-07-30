@@ -785,6 +785,10 @@ Not a QA benchmark. A state-machine test, run per system:
 9. assert it is absent from derived artifacts too — summaries,
    profiles, graph edges, embeddings, caches, exports, backups
 10. assert the deletion itself is auditable
+11. share / export / sync the memory to a second scope, agent,
+    tenant or hub BEFORE deleting it
+12. delete the original
+13. assert it is not retrievable from the second scope either
 ```
 
 Steps 7 and 9 are where the interesting failures live. Step 9 in particular:
@@ -807,6 +811,66 @@ sources.
 The conclusion the step was written to support survives intact: nothing
 *measures* this. RisuAI has no test asserting the behaviour, so the one system
 that passes step 9 would not be able to prove it.
+
+### Steps 11–13: the substrate this page used to miss
+
+The [OWASP security survey](https://arxiv.org/abs/2604.16548)'s Verified
+Forgetting enumerates four substrates a deletion has to reach — *"raw logs,
+compressed summaries, vector indices, and propagated copies"* — and until now
+this test covered three. Step 9 probes what a system **derives** from a memory
+inside its own store. Propagation is a different surface: what a system
+**copies out** of that store, to another scope, another agent, another tenant or
+a remote hub. The two fail differently. A derived artifact is downstream of the
+original and can be invalidated by tracking what it came from, the way RisuAI
+does. A propagated copy is a *peer* — it has its own identity, its own lifecycle,
+and frequently no back-reference at all, so there is nothing for a deletion to
+follow.
+
+The atlas has three grounded instances and they cover the range.
+
+**A copy with a new identity and no link home.**
+[SimpleMem](../systems/simplemem/)'s EvolveMem has a `share` operation that
+reads a memory, mints a fresh `uuid4`, and writes the same content, summary,
+entities, topics and embedding into a target scope at
+`confidence = max(source.confidence - 0.05, 0.5)`. The copy inherits the
+*session* provenance — `source_session_id`, `source_turn_start`,
+`source_turn_end` — and **not the id of the memory it was copied from**, so on
+inspection it is indistinguishable from a memory independently derived from the
+same conversation. The link exists only in the append-only event log, as a
+`share` row keyed on the *source's* id carrying `new_id=…` in a detail string.
+Deleting or archiving the original touches nothing in the target scope, and the
+only way to find the copy is to parse a log entry. Its `import_memories_json`
+does the same thing in bulk.
+
+**A shared store nobody owns.** [Cortex](../systems/cortex/)'s `shared_context`
+is a namespaced, versioned key/value table written to by any agent. What an agent
+puts there is not a copy of its memory so much as a *publication* of it, and
+deleting the agent's own episodic or semantic row has no relationship to the
+shared row at all.
+
+**A copy that comes back.** [NemoClaw](../systems/nemoclaw/), covered below,
+snapshots memory as an ordinary state directory and restores it verbatim — which
+makes propagation bidirectional. The deleted value does not merely survive
+elsewhere; it returns to the origin.
+
+Steps 11–13 are cheap to run and, on the atlas's current reading, nothing here
+would pass them. No system reviewed carries a deletion that follows a share, and
+only one — SimpleMem — even records that a share happened, in a log its own write
+path never consults.
+
+```mermaid
+flowchart LR
+    Orig["source memory<br/>DELETED ✓"]
+    Orig -- "share() before deletion" --> C1["copy in another scope<br/>NEW uuid · same content<br/>no back-reference"]
+    Orig -- "export / sync" --> C2["remote hub · another tenant"]
+    Orig -- "publish" --> C3["shared_context<br/>nobody owns the row"]
+    Orig -- "snapshot" --> C4["backup"]
+    C1 --> P["a prompt, somewhere else"]
+    C2 --> P
+    C3 --> P
+    C4 -- "restore" --> Orig
+    Orig -.->|"step 9 follows what was DERIVED<br/>steps 11-13 follow what was COPIED OUT"| Note["a derived artifact is downstream<br/>a propagated copy is a peer"]
+```
 
 ```mermaid
 flowchart LR

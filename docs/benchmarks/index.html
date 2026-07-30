@@ -1135,7 +1135,11 @@ benchmark would have to do</h3>
 8. assert it is still not retrievable  → almost everything fails here
 9. assert it is absent from derived artifacts too — summaries,
    profiles, graph edges, embeddings, caches, exports, backups
-10. assert the deletion itself is auditable</code></pre>
+10. assert the deletion itself is auditable
+11. share / export / sync the memory to a second scope, agent,
+    tenant or hub BEFORE deleting it
+12. delete the original
+13. assert it is not retrievable from the second scope either</code></pre>
 <p>Steps 7 and 9 are where the interesting failures live. Step 9 in
 particular: deleting a source memory that has already been folded into a
 summary, a user profile, or a graph edge leaves the value present in
@@ -1156,6 +1160,64 @@ link at all between a summary and its sources.</p>
 nothing <em>measures</em> this. RisuAI has no test asserting the
 behaviour, so the one system that passes step 9 would not be able to
 prove it.</p>
+<h3 id="steps-1113-the-substrate-this-page-used-to-miss">Steps 11–13:
+the substrate this page used to miss</h3>
+<p>The <a href="https://arxiv.org/abs/2604.16548">OWASP security
+survey</a>'s Verified Forgetting enumerates four substrates a deletion
+has to reach — <em>"raw logs, compressed summaries, vector indices, and
+propagated copies"</em> — and until now this test covered three. Step 9
+probes what a system <strong>derives</strong> from a memory inside its
+own store. Propagation is a different surface: what a system
+<strong>copies out</strong> of that store, to another scope, another
+agent, another tenant or a remote hub. The two fail differently. A
+derived artifact is downstream of the original and can be invalidated by
+tracking what it came from, the way RisuAI does. A propagated copy is a
+<em>peer</em> — it has its own identity, its own lifecycle, and
+frequently no back-reference at all, so there is nothing for a deletion
+to follow.</p>
+<p>The atlas has three grounded instances and they cover the range.</p>
+<p><strong>A copy with a new identity and no link home.</strong> <a
+href="../systems/simplemem/">SimpleMem</a>'s EvolveMem has a
+<code>share</code> operation that reads a memory, mints a fresh
+<code>uuid4</code>, and writes the same content, summary, entities,
+topics and embedding into a target scope at
+<code>confidence = max(source.confidence - 0.05, 0.5)</code>. The copy
+inherits the <em>session</em> provenance —
+<code>source_session_id</code>, <code>source_turn_start</code>,
+<code>source_turn_end</code> — and <strong>not the id of the memory it
+was copied from</strong>, so on inspection it is indistinguishable from
+a memory independently derived from the same conversation. The link
+exists only in the append-only event log, as a <code>share</code> row
+keyed on the <em>source's</em> id carrying <code>new_id=…</code> in a
+detail string. Deleting or archiving the original touches nothing in the
+target scope, and the only way to find the copy is to parse a log entry.
+Its <code>import_memories_json</code> does the same thing in bulk.</p>
+<p><strong>A shared store nobody owns.</strong> <a
+href="../systems/cortex/">Cortex</a>'s <code>shared_context</code> is a
+namespaced, versioned key/value table written to by any agent. What an
+agent puts there is not a copy of its memory so much as a
+<em>publication</em> of it, and deleting the agent's own episodic or
+semantic row has no relationship to the shared row at all.</p>
+<p><strong>A copy that comes back.</strong> <a
+href="../systems/nemoclaw/">NemoClaw</a>, covered below, snapshots
+memory as an ordinary state directory and restores it verbatim — which
+makes propagation bidirectional. The deleted value does not merely
+survive elsewhere; it returns to the origin.</p>
+<p>Steps 11–13 are cheap to run and, on the atlas's current reading,
+nothing here would pass them. No system reviewed carries a deletion that
+follows a share, and only one — SimpleMem — even records that a share
+happened, in a log its own write path never consults.</p>
+<pre class="mermaid"><code>flowchart LR
+    Orig[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
+    Orig -- &quot;share() before deletion&quot; --&gt; C1[&quot;copy in another scope&lt;br/&gt;NEW uuid · same content&lt;br/&gt;no back-reference&quot;]
+    Orig -- &quot;export / sync&quot; --&gt; C2[&quot;remote hub · another tenant&quot;]
+    Orig -- &quot;publish&quot; --&gt; C3[&quot;shared_context&lt;br/&gt;nobody owns the row&quot;]
+    Orig -- &quot;snapshot&quot; --&gt; C4[&quot;backup&quot;]
+    C1 --&gt; P[&quot;a prompt, somewhere else&quot;]
+    C2 --&gt; P
+    C3 --&gt; P
+    C4 -- &quot;restore&quot; --&gt; Orig
+    Orig -.-&gt;|&quot;step 9 follows what was DERIVED&lt;br/&gt;steps 11-13 follow what was COPIED OUT&quot;| Note[&quot;a derived artifact is downstream&lt;br/&gt;a propagated copy is a peer&quot;]</code></pre>
 <pre class="mermaid"><code>flowchart LR
     Raw[&quot;source memory&lt;br/&gt;DELETED ✓&quot;]
     Raw -. &quot;derived earlier&quot; .-&gt; Sum[&quot;session summary&lt;br/&gt;still contains it&quot;]
