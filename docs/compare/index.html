@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of
-ninety-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.">
+ninety-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of ninety-two agent memory architectures, their retrieval mechanics,
+of ninety-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of ninety-two agent memory architectures, their retrieval mechanics,
+of ninety-three agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,8 +78,8 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of
-ninety-two agent memory architectures, their retrieval mechanics, trust
-models, and operational tradeoffs.</p>
+ninety-three agent memory architectures, their retrieval mechanics,
+trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -157,8 +157,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 52 of
-92 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 53 of
+93 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Ninety-two systems do not fall into ninety-two categories. They
+<p>Ninety-three systems do not fall into ninety-three categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -637,7 +637,8 @@ the failures simpler systems discover in production.</p>
 <h3 id="research-lineage">Research lineage</h3>
 <p><code>generative-agents</code>, <code>voyager</code>,
 <code>hipporag</code>, <code>a-mem</code>, <code>memoryos</code>,
-<code>nooa-memory</code>, <code>second-me</code></p>
+<code>nooa-memory</code>, <code>second-me</code>,
+<code>simplemem</code></p>
 <p>Artifacts the practical systems are largely responses to.
 <strong>Generative Agents</strong> established the
 observation/reflection/planning stream and the
@@ -661,6 +662,28 @@ down as
 <code>alpha * N_visit + beta * L_interaction + gamma * R_recency</code>
 — and the coefficients left at 1, 1 and 1 with no ablation, so verbosity
 scores like importance.</p>
+<p><strong>SimpleMem is the family's most useful single idea and its
+sharpest warning.</strong> Its <code>MemoryEntry</code> carries a
+<code>lossless_restatement</code> built by two declared transforms —
+<code>Φ_coref</code>, resolving every pronoun, and <code>Φ_time</code>,
+absolutising every timestamp — so a stored unit is legible with no
+surrounding turn. That is context-independence bought once at write
+instead of reconstructed at every read, it is a prompt and a schema
+rather than an architecture, and it is portable into any extractor in
+this atlas. The warning is what surrounds it. The store holding those
+units offers <code>add_entries</code>, three searches and
+<code>clear()</code>: no delete, no update, and no scope key to delete
+by, so the pillar the papers and the packaged Claude skill are about
+cannot remove one memory. Its governance apparatus —
+<code>scope_id</code> on every read, an append-only
+<code>memory_events</code> log recording seven mutation kinds, a
+<code>scope_access</code> principal table — lives in EvolveMem, the
+newest and least tested of the repository's three pillars, and does not
+touch the benchmarked one. It also states its own inversion of the
+corpus: <code>MemoryEntry.timestamp</code> is when the described event
+happened, and nothing records when the system learned it, so SimpleMem
+has the validity clock almost everything here lacks and lacks the record
+clock almost everything here has.</p>
 <p>Tradeoff: the ideas are unusually legible because no production
 concern obscures them, and none of these has scope, correction,
 deletion, or a trust model. Voyager and Generative Agents have been
@@ -2913,6 +2936,40 @@ key logic; a budget with a cap</td>
 triggers make activation hard to predict</td>
 </tr>
 <tr>
+<td><code>simplemem</code></td>
+<td>A <code>MemoryEntry</code> — a lossless restatement with pronouns
+resolved and times absolute, plus keywords, timestamp, location,
+persons, entities and topic</td>
+<td>LanceDB behind a small vector-store wrapper for the text pillar; a
+separate SQLite schema with seven tables for EvolveMem</td>
+<td>Query analysis, then parallel semantic, keyword and structured
+searches, merged and deduplicated, then an LLM adequacy check that can
+fire further query rounds</td>
+<td>Windowed LLM extraction over dialogue batches, parallelised across
+workers; entries are added, never revised</td>
+<td>The text store has <code>add_entries</code>,
+<code>get_all_entries</code> and <code>clear()</code> — no delete, no
+update. EvolveMem adds <code>update_content</code>, archive, and a
+<code>superseded</code> status</td>
+<td>Absent from the text pillar entirely; <code>scope_id NOT NULL</code>
+on every EvolveMem read, with a <code>scope_access</code>
+principal/permission table beside it</td>
+<td>A CLI, an MCP server, an HTTP server with per-user API keys, a
+Claude skill, and a benchmark runner per pillar</td>
+<td>None on the text path. EvolveMem runs a closed-loop
+evaluate-diagnose-propose-guard cycle that rewrites retrieval
+configuration, not memories</td>
+<td>An <code>importance</code> and a <code>confidence</code> float on
+EvolveMem units, moved by thumbs-up/down feedback; the text pillar has
+no trust representation at all</td>
+<td>Memory units built to be context-independent — coreference resolved
+and time absolutised at write; an append-only event log recording seven
+mutation kinds</td>
+<td>Six headline benchmark figures and no committed result artifact for
+any of them; the pillar the papers are about cannot delete or correct a
+single memory</td>
+</tr>
+<tr>
 <td><code>skales</code></td>
 <td>An <code>ExtractedMemory</code> — id, category, content, source
 conversation id, extraction time, relevance keywords — plus tiered
@@ -3221,14 +3278,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 92:</em> <a
+<p><em>3 of 93:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 92:</em> <a
+<p><em>7 of 93:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3238,7 +3295,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>8 of 92:</em> <a
+<p><em>8 of 93:</em> <a
 href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3252,7 +3309,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>52 of 92:</em> <a
+<p><em>53 of 93:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
@@ -3302,14 +3359,15 @@ href="../systems/powermem/"><code>powermem</code></a>, <a
 href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
-<a href="../systems/supermemory/"><code>supermemory</code></a>, <a
+<a href="../systems/simplemem/"><code>simplemem</code></a>, <a
+href="../systems/supermemory/"><code>supermemory</code></a>, <a
 href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Append-only mutation audit</strong> — A named append-only
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>10 of 92:</em> <a
+<p><em>11 of 93:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -3318,12 +3376,13 @@ href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a>, <a
+href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>16 of 92:</em> <a
+<p><em>16 of 93:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3343,7 +3402,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>8 of 92:</em> <a href="../systems/agno/"><code>agno</code></a>,
+<p><em>8 of 93:</em> <a href="../systems/agno/"><code>agno</code></a>,
 <a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
@@ -3369,7 +3428,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Eight
-repositories of ninety-two assert that particular material must
+repositories of ninety-three assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -3412,10 +3471,11 @@ both rows remain in the record.</p>
 <p><strong>Only these five probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Five
-of ninety-two is the real figure for the second kind, and the two newest
-are the cheap version of it: a <em>superseded</em> value is easy to
-assert about, because the row is still there to filter on. The expensive
-assertion is that a value the system destroyed does not come back.</p>
+of ninety-three is the real figure for the second kind, and the two
+newest are the cheap version of it: a <em>superseded</em> value is easy
+to assert about, because the row is still there to filter on. The
+expensive assertion is that a value the system destroyed does not come
+back.</p>
 <p>Two further things the joint reading shows. The <strong>positive
 control</strong> — asserting that the denial is targeted rather than an
 empty result — appears in Aukora and EverOS and is absent from the rest,
@@ -6219,7 +6279,7 @@ half-life to every memory kind.</p>
 <p>Write your memory decisions down. <code>gini-agent</code> keeps ADRs
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
-memories were polluting a research agent's recall. Across ninety-two
+memories were polluting a research agent's recall. Across ninety-three
 systems, almost none can explain why they are shaped the way they
 are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
@@ -7680,6 +7740,7 @@ href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a></li>
 <li><a href="../systems/virtualwife/"><code>virtualwife</code></a></li>
 <li><a href="../systems/helm/"><code>helm</code></a></li>
 <li><a href="../systems/agno/"><code>agno</code></a></li>
+<li><a href="../systems/simplemem/"><code>simplemem</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8015,6 +8076,10 @@ at <a
 href="https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73"><code class="commit-id" title="f453eaa9683ea0a66b45c76275cb6576bcf14f73">f453eaa9…</code></a></li>
 <li><a href="https://github.com/agno-agi/agno">agno-agi/agno</a> at <a
 href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba"><code class="commit-id" title="7c68873c1357321a5152397c8ab4fb8b3f587bba">7c68873c…</code></a></li>
+<li><a
+href="https://github.com/aiming-lab/SimpleMem">aiming-lab/SimpleMem</a>
+at <a
+href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299"><code class="commit-id" title="db80b6a7c591e0ea730a058e9f5fc4eb06572299">db80b6a7…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -8325,7 +8390,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>two</strong> of ninety-two — <a
+<strong>two</strong> of ninety-three — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins — so a whole library existing for it says something
@@ -8371,6 +8436,19 @@ the second reviewed.</li>
 inspected commit and are recorded as claims. MemoryOS commits the LoCoMo
 dataset beside its harness but no scored results were found. Neither was
 run here.</li>
+<li>SimpleMem is the same finding at six figures rather than three. Its
+README claims a 26.4% average F1 gain and roughly 30× token reduction on
+LoCoMo, LoCoMo F1 = 0.613 and Mem-Gallery F1 = 0.810 for Omni-SimpleMem,
+and +25.7% on LoCoMo with +18.9% on MemBench for EvolveMem, and offers a
+benchmark runner per pillar. The repository contains <strong>no
+<code>.json</code>, <code>.jsonl</code> or <code>.csv</code> file of any
+kind</strong> at the inspected commit, so no scored result, prediction
+dump or metrics table backs any of the six. Nothing was run here either.
+Its 311 test functions were not executed, and the transforms carrying
+its contribution — coreference resolution and time absolutisation in the
+extraction prompt — have no test or metric anywhere in the repository,
+so how often they are correct is unknown and is the number the whole
+design rests on.</li>
 <li>OpenWorker's stated finding — that models without when-to-remember
 guidance "either never call <code>remember</code> or save noise" — is
 quoted from a source comment. Whether it was measured, and by how much
