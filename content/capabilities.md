@@ -68,7 +68,7 @@ scope, deletion and correction claim in this atlas ultimately rests on. Read tog
 rather than one at a time, they split cleanly in two, and the split says more
 than the count.
 
-**Three assert a boundary:** that a principal cannot retrieve another
+**Four assert a boundary:** that a principal cannot retrieve another
 principal's material. [MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`
 creates a memory under one scope, searches under another, and asserts the id is
 absent. [Aukora Kernel](../systems/aukora-kernel/) does it better — an unrelated
@@ -77,13 +77,17 @@ reads `ok: false`, and the owner reads `"the secret"` in the same block, so the
 denial is proved *targeted* rather than a blanket failure.
 [EverOS](../systems/everos/) does it at the endpoint: two owners, the same query
 string, `assert c_ids.isdisjoint(m_ids)` plus a positive control on each side,
-repeated for two agent owners sharing a keyword.
+repeated for two agent owners sharing a keyword. [CrewAI](../systems/crewai/)
+does it over a path hierarchy: three records under `/other/scope`,
+`/crew/crew-a/inner` and `/crew/crew-b/inner`, a `Memory` opened with
+`root_scope="/crew/crew-a"`, and an assertion that recall returns exactly one
+result and it is the rooted one.
 
-All three of those systems also hold `scope_enforced`. Their negative suites are
+All four of those systems also hold `scope_enforced`. Their negative suites are
 therefore tests **of a capability the same system already claims** — which is
 worth having, and is not evidence about deletion or correction.
 
-**Four assert about content:** that particular material must not surface to
+**Six assert about content:** that particular material must not surface to
 anyone entitled to search, regardless of who is asking.
 [open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
 naming what a query must not return, scored as a penalty.
@@ -100,8 +104,16 @@ and still readable through `history`, so this is a genuine read-path exclusion �
 but it covers *replacement* only. Helm's other two exits, `forget` and the
 confidence-floor prune, are hard deletes with nothing asserted about them,
 which is the case where a re-derivation would actually reinstate the value.
+[Agno](../systems/agno/) is the same shape against a judged verdict — a retired
+fact absent from `live_facts()` while both rows remain in the record. The
+[Pydantic AI Harness](../systems/pydantic-ai-harness/) is the sixth and asserts
+it about the *prompt* rather than the store:
+`test_delete_existing_is_content_free` requires a deleted body to be absent from
+the tool result, a search test requires `all('secret' not in repr(match))` under
+a character budget, and two injection tests require a superseded line and a
+stale fact not to appear in the captured model context.
 
-**Only these four probe the question the atlas is actually asking.** A boundary
+**Only these six probe the question the atlas is actually asking.** A boundary
 test proves the filter works; a content test proves a value that was rejected,
 disputed or forbidden stays gone. Six of ninety-seven is the real figure for the
 second kind, and the two newest raise a distinction the others do

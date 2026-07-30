@@ -62,7 +62,7 @@ A search of the repository at this commit returns **zero `.json`, `.jsonl` or
 `.csv` files of any kind**. Not a scored result, not a raw prediction dump, not
 a metrics table. The harness is committed and the results are not, which is the
 same traceability gap the atlas records for [Memvid](../memvid/),
-[MemoryOS](../memoryos/) and FiFA — here at six figures rather than one.
+[MemoryOS](../memoryos/) and FiFA — here at six figures rather than three.
 
 ## 2. Mental Model
 

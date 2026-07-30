@@ -155,7 +155,7 @@ repositories of ninety-seven assert that particular material must
 correction claim in this atlas ultimately rests on. Read together rather
 than one at a time, they split cleanly in two, and the split says more
 than the count.</p>
-<p><strong>Three assert a boundary:</strong> that a principal cannot
+<p><strong>Four assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
 creates a memory under one scope, searches under another, and asserts
@@ -167,12 +167,18 @@ the same block, so the denial is proved <em>targeted</em> rather than a
 blanket failure. <a href="../systems/everos/">EverOS</a> does it at the
 endpoint: two owners, the same query string,
 <code>assert c_ids.isdisjoint(m_ids)</code> plus a positive control on
-each side, repeated for two agent owners sharing a keyword.</p>
-<p>All three of those systems also hold <code>scope_enforced</code>.
+each side, repeated for two agent owners sharing a keyword. <a
+href="../systems/crewai/">CrewAI</a> does it over a path hierarchy:
+three records under <code>/other/scope</code>,
+<code>/crew/crew-a/inner</code> and <code>/crew/crew-b/inner</code>, a
+<code>Memory</code> opened with <code>root_scope="/crew/crew-a"</code>,
+and an assertion that recall returns exactly one result and it is the
+rooted one.</p>
+<p>All four of those systems also hold <code>scope_enforced</code>.
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
-<p><strong>Four assert about content:</strong> that particular material
+<p><strong>Six assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
 asking. <a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
@@ -193,8 +199,18 @@ one appears. The value is still in the table and still readable through
 covers <em>replacement</em> only. Helm's other two exits,
 <code>forget</code> and the confidence-floor prune, are hard deletes
 with nothing asserted about them, which is the case where a
-re-derivation would actually reinstate the value.</p>
-<p><strong>Only these four probe the question the atlas is actually
+re-derivation would actually reinstate the value. <a
+href="../systems/agno/">Agno</a> is the same shape against a judged
+verdict — a retired fact absent from <code>live_facts()</code> while
+both rows remain in the record. The <a
+href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> is the
+sixth and asserts it about the <em>prompt</em> rather than the store:
+<code>test_delete_existing_is_content_free</code> requires a deleted
+body to be absent from the tool result, a search test requires
+<code>all('secret' not in repr(match))</code> under a character budget,
+and two injection tests require a superseded line and a stale fact not
+to appear in the captured model context.</p>
+<p><strong>Only these six probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Six
 of ninety-seven is the real figure for the second kind, and the two

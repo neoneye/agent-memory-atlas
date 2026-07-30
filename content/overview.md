@@ -358,8 +358,20 @@ protocol or in any of its ChromaDB, Redis, Mem0 and canvas adapters, both of the
 first two backends supporting targeted deletion natively. Scope is missing from
 the contract too, present only on the Mem0 adapter, optional, and defaulting to
 `user_id or str(uuid.uuid4())` — so a forgotten principal is a silently orphaned
-store rather than an error. Two contracts of six now carry scope; none carries
-deletion, and one of them cannot. See
+store rather than an error.
+
+**That finding has now been refuted once, and by whose contract matters.** For
+six framework contracts the count held — two carried scope, none carried
+deletion, and AutoGen's could not express one. Of the nine now read, the
+[Pydantic AI Harness](../systems/pydantic-ai-harness/)'s `MemoryStore` Protocol
+declares `read`, `get_operation`, `write`, **`delete`** and `list_paths`, with
+search split into an optional `SearchableMemoryStore` extension. It is a
+targeted, addressed removal in the contract itself, and it is the only one. The
+three contracts added since — Agno's `LearningStore`, Microsoft's
+`ContextProvider`, and CAMEL's `AgentMemory`, whose only removal verb is `clear`
+— leave the shape unchanged. So the honest statement is no longer "nobody
+declares deletion" but **one of nine does**, which is the stronger claim: it
+proves the thing is expressible in a small protocol, and names who bothered. See
 [pluggable memory provider](../patterns/pluggable-memory-provider/).
 
 **Microsoft's next contract is the third from these two vendors and keeps the
@@ -2872,6 +2884,17 @@ Testing:
 Do not add background summarization before raw-evidence retrieval and correction semantics exist. Summaries are compressed belief; if the system cannot explain and repair a belief, summarization hides the problem.
 
 ## 9. Repo-by-Repo Verdicts
+
+**This section covers 64 of the 97 reports.** It was written when the
+corpus was small enough to enumerate and has not kept pace with it, so a system
+missing here has not been judged and found unremarkable — it has not been
+written up in this format. The [capability index](../capabilities/) and the
+comparative matrix above are generated from every report's frontmatter and are
+complete by construction; this section is hand-written and is not. Stated rather
+than left to be discovered, because the distinction between *assessed and
+carries nothing* and *nobody wrote the paragraph* is the same one the
+[rubric](../methodology/atlas-rubric/) enforces for capability marks, where the
+build fails if a report omits the key. No equivalent guard exists here.
 
 ### `mem0`
 
