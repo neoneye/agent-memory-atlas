@@ -148,6 +148,13 @@ useful detail.</li>
 early. Its output records the exact message or observation range it
 covers. Activation replaces only that covered range, preserving anything
 appended afterward.</p>
+<pre class="mermaid"><code>flowchart TB
+    Msgs[&quot;Raw messages&quot;] --&gt;|&quot;processor fires at a token threshold&quot;| Obs[(&quot;Dated observation group&quot;)]
+    Obs --&gt;|&quot;reflector compacts&quot;| Ref[(&quot;Reflected observation context&quot;)]
+    Ref --&gt; Ctx[&quot;Active observations&lt;br/&gt;+ a recent raw tail&quot;]
+    New[&quot;A reflection covering&lt;br/&gt;an earlier range&quot;] --&gt;|&quot;replaces only that range&quot;| Obs
+    Obs -.-&gt;|&quot;activation is buffered,&lt;br/&gt;so a write never blocks the turn&quot;| Ctx
+    Msgs -.-&gt;|&quot;raw messages retained&lt;br/&gt;beneath the derivation&quot;| Msgs</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The feature lives under
 <code>packages/memory/src/processors/observational-memory/</code>:</p>

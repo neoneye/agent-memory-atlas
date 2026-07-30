@@ -178,6 +178,21 @@ time from <code>evidence IS NULL</code> rather than stored as a status,
 so the mark is withheld and the near-miss is that the
 <em>presentation</em> layer carries an epistemic distinction the
 <em>schema</em> does not.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Cited: convention written WITH a citation&lt;br/&gt;(a file and line, a SHA, a trace id)
+    [*] --&gt; Uncited: convention written without&lt;br/&gt;(warns on write)
+    [*] --&gt; Exempt: preference, decision or learning&lt;br/&gt;never gated, never warns
+
+    Cited --&gt; Cited: superseded with fresh evidence&lt;br/&gt;citation replaced, silent
+    Cited --&gt; Stale: superseded with NO fresh evidence&lt;br/&gt;prior citation carried forward + warning
+    Cited --&gt; Uncited: superseded with empty evidence&lt;br/&gt;citation cleared
+
+    Uncited --&gt; Uncited: superseded, still uncited&lt;br/&gt;warns again
+    Uncited --&gt; Cited: evidence supplied
+
+    Cited --&gt; [*]: recalled plainly
+    Stale --&gt; [*]: recalled, staleness warned
+    Uncited --&gt; [*]: recalled as &quot;[unverified]&quot;&lt;br/&gt;in the text the model reads</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>One SQLite file and a Markdown file. <code>SCHEMA_VERSION = 4</code>
 is guarded in both directions — the constructor refuses a database

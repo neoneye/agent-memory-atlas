@@ -88,6 +88,18 @@ overflow replaced by a pointer telling the model to call `read_memory` or
 and can never silently occupy the whole context. That is a smaller claim than
 most systems here make and a much more defensible one.
 
+```mermaid
+flowchart TB
+    App["Application code"] -->|"namespace: str or Callable<br/>never a tool argument"| Scope["resolve_scope()<br/>{namespace}/{agent_name}"]
+    Model["Model"] -->|"write_memory / read_memory<br/>search_memory / delete_memory"| Tool["MemoryToolset"]
+    Scope --> Tool
+    Tool -->|"operation id = run + tool call"| Store[("MemoryStore<br/>file / SQLite / Postgres")]
+    Store -->|"returns paths"| Check{"every path<br/>inside the prefix?"}
+    Check -->|no| Raise["RuntimeError:<br/>backend returned a path<br/>outside the requested scope"]
+    Check -->|yes| Ctx["Bounded excerpt<br/>in a user-role part"]
+    Store -.->|"receipt already seen"| Replay["replayed: true<br/>not a second append"]
+```
+
 ## 3. Architecture
 
 There is nothing to operate. `Memory(FileStore('.agent-memory'))` is the whole

@@ -75,6 +75,20 @@ the corpus it is the mirror image of [RainBox](../rainbox/) or
 [Verel](../verel/), which govern what may be believed and say nothing about what
 happens when the store is overloaded.
 
+```mermaid
+flowchart TB
+    N["Neuron"] -->|recall| CS{"can_serve(query)?"}
+    CS -->|false| Skip["hosting Dendrite<br/>skips responding"]
+    CS -->|true| R["recall with deadline"]
+    R -.->|timeout| ET["EngramTimeout"]
+    R -.->|saturated| EO["EngramOverloaded"]
+    N -->|"imprint(op, entry, trace_id)"| W["write + journal the inverse"]
+    W --> J["_saga_journal<br/>a dict on the instance"]
+    J -->|"workflow FINAL"| Commit["commit(trace_id)<br/>discard journal"]
+    J -->|"workflow failed"| Comp["compensate(trace_id)<br/>replay inverses LIFO"]
+    J -.->|"worker dies"| Lost["journal gone<br/>provisional writes<br/>become permanent"]
+```
+
 ## 3. Architecture
 
 `Engram` is an ABC; `InMemoryEngram` (407 lines) is the dict-backed default for

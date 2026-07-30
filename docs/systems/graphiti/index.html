@@ -147,6 +147,15 @@ provide higher-level organization and summaries.</p>
 </ul>
 <p>That distinction makes backfilled and corrected history representable
 without pretending ingestion time equals event time.</p>
+<pre class="mermaid"><code>flowchart TB
+    Ep[&quot;Episode ingested&quot;] --&gt; Ext[&quot;Entity and edge extraction&quot;]
+    Ext --&gt; Res[&quot;Entity resolution&lt;br/&gt;against existing nodes&quot;]
+    Res --&gt; Edge[(&quot;Temporal relationship edge&lt;br/&gt;valid_at … invalid_at&quot;)]
+    New[&quot;A contradicting fact arrives&quot;] --&gt; Inv[&quot;Close the old interval:&lt;br/&gt;set invalid_at, keep the edge&quot;]
+    Inv --&gt; Edge
+    Edge --&gt; Q[&quot;BM25 + cosine + BFS over&lt;br/&gt;edges, nodes, episodes, communities&lt;br/&gt;→ RRF / MMR / cross-encoder&quot;]
+    Edge -.-&gt;|&quot;history retained, so &#39;what did we&lt;br/&gt;believe last March&#39; is answerable&quot;| Hist[&quot;the strongest temporal&lt;br/&gt;correction model in the atlas&quot;]
+    Edge -.-&gt;|&quot;and no claim is marked&lt;br/&gt;verified or rejected&quot;| Gap[&quot;no trust state&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core areas:</p>
 <ul>

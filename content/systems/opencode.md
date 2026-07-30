@@ -91,6 +91,19 @@ plugin seams        chat.message · chat.params · tool.execute.before/after
 Nothing here has an identity a correction could name. A memory plugin supplies
 that, entirely.
 
+```mermaid
+flowchart TB
+    subgraph Host["OpenCode — what it actually ships"]
+      S[("Sessions · messages · parts · todos")]
+      H1["System-prompt transform hook<br/>(experimental)"]
+      H2["Compaction hook<br/>(experimental)"]
+    end
+    Inst["AGENTS.md and friends"] -->|"resolved by nearest-ancestor lookup<br/>read, never stored"| Prompt["Prompt"]
+    Plug["A memory plugin"] -->|"no memory contract to implement"| Host
+    Plug -.->|"so it reads the SQLite<br/>session tables directly"| S
+    Host -.->|"seams without a contract do not avoid<br/>the design work — they relocate it<br/>into every plugin, in incompatible forms"| Note["no durable claim exists<br/>to correct"]
+```
+
 ## 3. Architecture
 
 Packages include `core`, `opencode`, `cli`, `tui`, `desktop`, `server`, `sdk`,

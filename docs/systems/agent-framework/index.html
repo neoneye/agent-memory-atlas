@@ -180,6 +180,20 @@ consolidation compress the topic, delete the topic if you no longer want
 it. Correction is compression — a bullet stops being true by being
 rewritten out of the file by an LLM, with no record that it was
 there.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Contract[&quot;ContextProvider — the whole contract&quot;]
+      BR[&quot;before_run()&quot;] --- AR[&quot;after_run()&quot;] --- SID[&quot;source_id&quot;]
+      Note[&quot;no add · no query · no delete · no scope&quot;]
+    end
+    Contract --&gt; Harness[&quot;Harness memory&lt;br/&gt;(what the contract declines to require)&quot;]
+    Harness --&gt; Owner{&quot;session.state[owner_key]&quot;}
+    Owner --&gt;|missing| E1[&quot;raise&quot;]
+    Owner --&gt;|&quot;contains .. or absolute&quot;| E2[&quot;raise&quot;]
+    Owner --&gt;|ok| Root[&quot;resolve per-owner root&quot;]
+    Root --&gt; Contain{&quot;is_relative_to(base)?&quot;}
+    Contain --&gt;|no| E3[&quot;raise: path escaped base_path&quot;]
+    Contain --&gt;|yes| Topics[(&quot;One markdown file per topic&lt;br/&gt;+ session_ids provenance&quot;)]
+    Topics --&gt;|&quot;sessions_since_consolidation&quot;| Consol[&quot;LLM rewrites the topic&lt;br/&gt;into a tighter form&lt;br/&gt;(no diff, no prior version)&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>For the file-backed case, nothing to run: a base path and a model.
 The tree is <code>{base}/{source}/{owner}/{kind}/</code> holding a

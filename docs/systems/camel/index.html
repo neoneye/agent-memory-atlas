@@ -172,6 +172,13 @@ it, and follows with the rest of the recent history. That ordering is a
 deliberate decision about where recalled material sits relative to the
 live conversation, and it is written in one line with no comment
 explaining it.</p>
+<pre class="mermaid"><code>flowchart TB
+    Msg[&quot;MemoryRecord&lt;br/&gt;message + role + uuid + agent_id&quot;] --&gt; W[&quot;write_records()&quot;]
+    W --&gt; KV[(&quot;ChatHistoryBlock&lt;br/&gt;key-value store&quot;)]
+    W --&gt; VDB[(&quot;VectorDBBlock&lt;br/&gt;Qdrant&quot;)]
+    KV --&gt;|&quot;storage.load()&lt;br/&gt;returns the whole store&quot;| Ctx[&quot;Context&quot;]
+    VDB --&gt;|&quot;VectorDBQuery(vector, top_k)&lt;br/&gt;NO filter argument&quot;| Ctx
+    Msg -.-&gt;|&quot;agent_id is written, serialised,&lt;br/&gt;printed — and read by no query&quot;| Gap[&quot;Isolation actually comes from&lt;br/&gt;giving each agent its own&lt;br/&gt;storage object&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing to run for the default case: <code>ChatHistoryMemory</code>
 with <code>InMemoryKeyValue Storage</code> needs no service, and

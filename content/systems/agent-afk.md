@@ -87,6 +87,24 @@ which is not a trust state — every fact starts fully confident. The
 than stored as a status, so the mark is withheld and the near-miss is that the
 *presentation* layer carries an epistemic distinction the *schema* does not.
 
+```mermaid
+stateDiagram-v2
+    [*] --> Cited: convention written WITH a citation<br/>(a file and line, a SHA, a trace id)
+    [*] --> Uncited: convention written without<br/>(warns on write)
+    [*] --> Exempt: preference, decision or learning<br/>never gated, never warns
+
+    Cited --> Cited: superseded with fresh evidence<br/>citation replaced, silent
+    Cited --> Stale: superseded with NO fresh evidence<br/>prior citation carried forward + warning
+    Cited --> Uncited: superseded with empty evidence<br/>citation cleared
+
+    Uncited --> Uncited: superseded, still uncited<br/>warns again
+    Uncited --> Cited: evidence supplied
+
+    Cited --> [*]: recalled plainly
+    Stale --> [*]: recalled, staleness warned
+    Uncited --> [*]: recalled as "[unverified]"<br/>in the text the model reads
+```
+
 ## 3. Architecture
 
 One SQLite file and a Markdown file. `SCHEMA_VERSION = 4` is guarded in both

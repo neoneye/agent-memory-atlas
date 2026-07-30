@@ -182,6 +182,17 @@ none" gives the model something to reason with instead of silent
 absence. It is attached only to <code>final_results[0]</code>, so a
 per-match field is carrying a per-query fact — a small structural oddity
 in an otherwise good idea.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Tree[&quot;Scope as a path&quot;]
+      A[&quot;/company&quot;] --&gt; B[&quot;/company/engineering&quot;] --&gt; C[&quot;/company/engineering/alice&quot;]
+    end
+    View[&quot;MemoryScope&lt;br/&gt;a view rooted at a subtree&lt;br/&gt;subscope() · read_only&quot;] -.-&gt;|&quot;held, not passed&quot;| Tree
+    New[&quot;New content&quot;] --&gt; Enc[&quot;Encoding flow&lt;br/&gt;batch embed → cosine dedup&lt;br/&gt;→ find similar → LLM analyse&quot;]
+    Enc --&gt; Plan{&quot;ConsolidationPlan&quot;}
+    Plan --&gt;|keep| Keep[&quot;existing row unchanged&quot;]
+    Plan --&gt;|update| Upd[&quot;existing row rewritten&quot;]
+    Plan --&gt;|delete| Del[&quot;existing row destroyed&lt;br/&gt;no tombstone · no audit · no review&quot;]
+    Plan --&gt;|insert_new| Ins[&quot;new row&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A vector store and an embedder, and that is the bill. LanceDB is the
 default and is embedded, so a local install needs no service;

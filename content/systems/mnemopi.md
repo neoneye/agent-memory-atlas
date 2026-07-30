@@ -86,6 +86,22 @@ rather than a curve. Mnemopi has the vocabulary for prospective memory —
 is the third arrangement of that category's three requirements and it satisfies
 none of them.
 
+```mermaid
+flowchart TB
+    In["remember()"] --> Ty["Regex type patterns<br/>→ one of 14 types + priority<br/>(no model call)"]
+    Ty --> Wb["Weibull curve per type<br/>profile k=0.3 η=8760<br/>fact k=0.8 η=720<br/>observation k=0.9 η=480"]
+    Ty --> Ver["Veracity weight<br/>stated 1.0 · unknown 0.8<br/>inferred 0.7 · imported 0.6 · tool 0.5"]
+    Wb --> Bank[("Bank = one SQLite file")]
+    Ver --> Bank
+    Bank --> P["Polyphonic recall"]
+    P --> V1["vector"] --> Comb["combinedScore<br/>+ voiceScores kept per voice"]
+    P --> V2["graph"] --> Comb
+    P --> V3["fact"] --> Comb
+    P --> V4["temporal"] --> Comb
+    Bank -.->|"sleep(dryRun)"| Sl["SHMR clustering<br/>similarity + harmony thresholds"]
+    Ver -.->|"unknown 0.8 outranks tool 0.5"| Inv["labelling provenance<br/>honestly lowers standing"]
+```
+
 ## 3. Architecture
 
 Bun's built-in SQLite, one database per **bank** under

@@ -77,6 +77,18 @@ Revision is `forget` then `remember`, so a corrected fact is a deletion and an
 insertion with a new date rather than an edit. The old text is gone; only the
 transcript remembers it existed.
 
+```mermaid
+flowchart TB
+    M["Model"] -->|"memory tool<br/>action: remember"| Add["append '- [YYYY-MM-DD] fact'"]
+    M -->|"action: forget<br/>match: substring"| Del["remove EVERY matching line<br/>no receipt of what went"]
+    Add --> F[("&lt;project&gt;/.juggler/MEMORY.md<br/>git-ignored: private to this checkout")]
+    Del --> F
+    F -->|"loose edit tidied back<br/>to canonical shape on next write"| F
+    F --> Ctx["Injected whole as a context item"]
+    User["User"] -->|"opens the file, or clicks<br/>a delete button per dated row"| F
+    Both["Every remember/forget<br/>appears in the transcript"] -.-> F
+```
+
 ## 3. Architecture
 
 Nothing to run. A Markdown file in a git-ignored directory, read as a context

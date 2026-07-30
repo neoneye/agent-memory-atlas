@@ -51,6 +51,16 @@ raw messages + recent observations
 
 With asynchronous buffering enabled, an observer or reflector runs early. Its output records the exact message or observation range it covers. Activation replaces only that covered range, preserving anything appended afterward.
 
+```mermaid
+flowchart TB
+    Msgs["Raw messages"] -->|"processor fires at a token threshold"| Obs[("Dated observation group")]
+    Obs -->|"reflector compacts"| Ref[("Reflected observation context")]
+    Ref --> Ctx["Active observations<br/>+ a recent raw tail"]
+    New["A reflection covering<br/>an earlier range"] -->|"replaces only that range"| Obs
+    Obs -.->|"activation is buffered,<br/>so a write never blocks the turn"| Ctx
+    Msgs -.->|"raw messages retained<br/>beneath the derivation"| Msgs
+```
+
 ## 3. Architecture
 
 The feature lives under `packages/memory/src/processors/observational-memory/`:

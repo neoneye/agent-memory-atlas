@@ -98,6 +98,19 @@ How a memory stops being current: a preference is superseded and its
 `valid_until` closes. Nothing else has a defined end state, and nothing records
 that a value was judged wrong.
 
+```mermaid
+flowchart TB
+    Turn["Conversation turn"] --> Cap["Capture"]
+    Cap --> GL["GLiNER extraction"]
+    GL --> G[("One Neo4j graph<br/>shared across agents, not per-agent silos")]
+    Trace["Reasoning trace<br/>recorded via a context manager"] --> G
+    Pref["Preference"] --> Sup["supersede_preference<br/>idempotent, valid_from … valid_until"]
+    Sup --> G
+    G --> Q["Graph queries over entities<br/>and relationships; embeddings;<br/>reasoning steps with parent context"]
+    G -.->|"multi-tenant mode raises when<br/>a user identifier is missing"| Scope["fail-closed tenancy"]
+    Sup -.->|"covers preferences only"| Gap["no value-level tombstone"]
+```
+
 ## 3. Architecture
 
 `src/neo4j_agent_memory/` — `memory/long_term.py` (2,357), `__init__.py` (1,827),

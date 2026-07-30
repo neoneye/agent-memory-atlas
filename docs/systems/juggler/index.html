@@ -166,6 +166,15 @@ what the assistant is told.</p>
 corrected fact is a deletion and an insertion with a new date rather
 than an edit. The old text is gone; only the transcript remembers it
 existed.</p>
+<pre class="mermaid"><code>flowchart TB
+    M[&quot;Model&quot;] --&gt;|&quot;memory tool&lt;br/&gt;action: remember&quot;| Add[&quot;append &#39;- [YYYY-MM-DD] fact&#39;&quot;]
+    M --&gt;|&quot;action: forget&lt;br/&gt;match: substring&quot;| Del[&quot;remove EVERY matching line&lt;br/&gt;no receipt of what went&quot;]
+    Add --&gt; F[(&quot;&amp;lt;project&amp;gt;/.juggler/MEMORY.md&lt;br/&gt;git-ignored: private to this checkout&quot;)]
+    Del --&gt; F
+    F --&gt;|&quot;loose edit tidied back&lt;br/&gt;to canonical shape on next write&quot;| F
+    F --&gt; Ctx[&quot;Injected whole as a context item&quot;]
+    User[&quot;User&quot;] --&gt;|&quot;opens the file, or clicks&lt;br/&gt;a delete button per dated row&quot;| F
+    Both[&quot;Every remember/forget&lt;br/&gt;appears in the transcript&quot;] -.-&gt; F</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Nothing to run. A Markdown file in a git-ignored directory, read as a
 context item, written by one tool. No database, no embedding, no

@@ -185,6 +185,15 @@ factors.</p>
 gate of 0.4, so recall will return things the gate would not have
 admitted today. A threshold that moved should not orphan what it already
 wrote.</p>
+<pre class="mermaid"><code>flowchart TB
+    Perc[&quot;Perception this tick&quot;] --&gt; WM[(&quot;Working memory&lt;br/&gt;Redis list · 6h TTL · 50 entries&quot;)]
+    WM --&gt;|&quot;tick end&quot;| Cons[&quot;Consolidation&lt;br/&gt;importance = 0.35·emotion + 0.30·relationship&lt;br/&gt;+ 0.20·goal + 0.15·rarity&quot;]
+    Cons --&gt; Ep[(&quot;Episodic = the event store&lt;br/&gt;PERMANENT ORIGINAL&lt;br/&gt;source_event_ids minItems 1&quot;)]
+    Cons --&gt;|&quot;importance ≥ 0.4&quot;| Sem[(&quot;Semantic · Qdrant&lt;br/&gt;decay_at = 1 day … 30 days&quot;)]
+    Sem --&gt;|&quot;filter: actor_id, importance ≥ 0.3, decay_at &gt; now&quot;| Recall[&quot;Recall&quot;]
+    Sem -.-&gt;|&quot;forgetting happens only here&quot;| Gone[&quot;expires&quot;]
+    Ep -.-&gt;|&quot;never erased&quot;| Ep
+    Cons -.-&gt;|&quot;factors stored, not just the total&quot;| Tune[&quot;material for offline&lt;br/&gt;coefficient tuning by replay&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Redis, Qdrant, an event store, and the tick services.
 <code>engine/</code> splits into <code>actor</code>,

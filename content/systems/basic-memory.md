@@ -51,6 +51,16 @@ human editor / MCP tool
 
 The direction also works in reverse: a file watcher parses external edits and reconciles projections. Database state is not allowed to silently outrank the file.
 
+```mermaid
+flowchart TB
+    H["Human editor"] -->|"edits the file directly"| F[("Canonical Markdown note<br/>the source of truth")]
+    A["Agent via MCP/API"] -->|"create · replace · edit · move · delete<br/>each a distinct operation"| F
+    F -->|"file watcher reconciles<br/>out-of-band edits"| Idx[("Index: entity · observation · relation")]
+    Idx --> R["FTS5 / tsvector<br/>+ optional semantic chunks<br/>+ graph context, score-fused"]
+    Idx -.->|"stable id survives a move"| Idx
+    F -.->|"correction is a file edit,<br/>then a transactional reindex"| Idx
+```
+
 ## 3. Architecture
 
 Basic Memory has API, MCP, and CLI entrypoints, each with a composition root. Only those roots read global configuration; downstream services receive explicit dependencies.

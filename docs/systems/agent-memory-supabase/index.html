@@ -170,6 +170,17 @@ this one says so in four words.</p>
 <p>There is no trust state. <code>importance</code> is 1–10 and feeds
 ranking; <code>active</code> is a soft-delete flag. Nothing withholds a
 row from being treated as true.</p>
+<pre class="mermaid"><code>flowchart TB
+    Q[&quot;Query&quot;] --&gt; V[&quot;Vector lane&lt;br/&gt;HNSW top 50&quot;]
+    Q --&gt; T[&quot;Text lane&lt;br/&gt;tsvector top 30&lt;br/&gt;floored at min_similarity&quot;]
+    Q --&gt; E[&quot;Entity lane&lt;br/&gt;boost_entities top 12&quot;]
+    V --&gt; RRF[&quot;RRF k=60&quot;]
+    T --&gt; RRF
+    E --&gt; RRF
+    RRF --&gt; Blend[&quot;× recency × importance × usage&lt;br/&gt;(corrections and preferences exempt:&lt;br/&gt;&#39;still the law until superseded&#39;)&quot;]
+    Blend --&gt; Out[&quot;similarity = real cosine (safe to show)&lt;br/&gt;final_rank = ordering, NOT a score&quot;]
+    Row[(&quot;memories row&quot;)] -.-&gt;|&quot;created_at / updated_at = record time&quot;| Clocks
+    Row -.-&gt;|&quot;valid_from / valid_until = when it was TRUE&quot;| Clocks[&quot;two clocks&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Supabase, <code>pgvector</code> and <code>pg_trgm</code>. That is the
 whole bill, and the schema is idempotent throughout —

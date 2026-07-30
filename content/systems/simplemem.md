@@ -91,6 +91,16 @@ the `confidence` default of 0.7 is never revised by corroboration. No
 `trust_state` mark, and the near-miss is that the field exists and answers a
 different question.
 
+```mermaid
+flowchart TB
+    Dlg["Dialogue window"] --> Ext["LLM extraction<br/>Φ_coref: pronouns resolved<br/>Φ_time: timestamps absolutised"]
+    Ext --> Entry["MemoryEntry<br/>semantic + lexical + symbolic layers<br/>timestamp = when it HAPPENED"]
+    Entry --> Store[("LanceDB<br/>add_entries only")]
+    Store --> Recall["Query analysis → parallel search<br/>→ adequacy check → more rounds"]
+    Store -.->|"the only removal verb"| Clear["clear()<br/>wipes everything"]
+    Entry -.->|"no user id, no scope key,<br/>so nothing to delete BY"| Store
+```
+
 ## 3. Architecture
 
 The text pillar needs a vector database and a model provider. `VectorStore`

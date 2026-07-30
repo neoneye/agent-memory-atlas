@@ -177,6 +177,19 @@ vocabulary for prospective memory — <code>COMMITMENT</code> and
 href="../nooa-memory/">NOOA</a> and <a href="../gobii/">Gobii</a> give
 them an open/done state. It is the third arrangement of that category's
 three requirements and it satisfies none of them.</p>
+<pre class="mermaid"><code>flowchart TB
+    In[&quot;remember()&quot;] --&gt; Ty[&quot;Regex type patterns&lt;br/&gt;→ one of 14 types + priority&lt;br/&gt;(no model call)&quot;]
+    Ty --&gt; Wb[&quot;Weibull curve per type&lt;br/&gt;profile k=0.3 η=8760&lt;br/&gt;fact k=0.8 η=720&lt;br/&gt;observation k=0.9 η=480&quot;]
+    Ty --&gt; Ver[&quot;Veracity weight&lt;br/&gt;stated 1.0 · unknown 0.8&lt;br/&gt;inferred 0.7 · imported 0.6 · tool 0.5&quot;]
+    Wb --&gt; Bank[(&quot;Bank = one SQLite file&quot;)]
+    Ver --&gt; Bank
+    Bank --&gt; P[&quot;Polyphonic recall&quot;]
+    P --&gt; V1[&quot;vector&quot;] --&gt; Comb[&quot;combinedScore&lt;br/&gt;+ voiceScores kept per voice&quot;]
+    P --&gt; V2[&quot;graph&quot;] --&gt; Comb
+    P --&gt; V3[&quot;fact&quot;] --&gt; Comb
+    P --&gt; V4[&quot;temporal&quot;] --&gt; Comb
+    Bank -.-&gt;|&quot;sleep(dryRun)&quot;| Sl[&quot;SHMR clustering&lt;br/&gt;similarity + harmony thresholds&quot;]
+    Ver -.-&gt;|&quot;unknown 0.8 outranks tool 0.5&quot;| Inv[&quot;labelling provenance&lt;br/&gt;honestly lowers standing&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Bun's built-in SQLite, one database per <strong>bank</strong> under
 <code>~/.hermes/mnemopi/data/banks/</code>, selected by

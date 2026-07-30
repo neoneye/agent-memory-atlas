@@ -83,7 +83,9 @@ Read `content/methodology/per-repo-report-format.md` completely and fill every s
 14. Open Questions
 15. Appendix: File Index
 
-Make the report opinionated but fair. Explain what makes the design good, what makes it weak, and for which use cases those tradeoffs matter. Include a Mermaid diagram only when it clarifies components or lifecycle.
+Make the report opinionated but fair. Explain what makes the design good, what makes it weak, and for which use cases those tradeoffs matter.
+
+**Every report carries a Mermaid diagram.** Put it at the end of section 2, before `## 3. Architecture`, and draw the mechanism the report is actually about — the epistemic state machine where there is one, the write-to-recall path where there is not, and the place the design fails where that is the finding. A generic boxes-and-arrows of components is worse than none: it takes a reader's attention and returns nothing the prose did not already say. `scripts/check_mermaid.py` fails the build on a report without one, and separately on labels that break the renderer, so quote any label containing `[](){}"` and avoid a second `:` in a stateDiagram transition.
 
 Before integration, verify:
 

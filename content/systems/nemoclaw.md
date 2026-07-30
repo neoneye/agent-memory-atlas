@@ -95,6 +95,20 @@ A memory's lifecycle at this layer is: exists in a directory, is copied, is
 copied back, or is wiped with everything else. There is no record, no identity,
 and no correction.
 
+```mermaid
+flowchart TB
+    subgraph Wrapped["A wrapped agent — Hermes, OpenClaw"]
+      Mem[("Its own memory<br/>NemoClaw never reads or writes it")]
+    end
+    NC["NemoClaw"] -->|"declares, per agent, which<br/>state directories exist"| Wrapped
+    NC --> Snap["snapshot"] --> Bkp[("Backup")]
+    Bkp --> Rest["restore"] --> Wrapped
+    NC --> Des["destroy — wipes declared dirs"]
+    Cred["Credentials"] -.->|"sanitized field by field on backup"| Bkp
+    Mem -.->|"copied whole, no sanitization"| Bkp
+    Rest -.->|"a careful deletion above is<br/>undone by an ordinary restore below"| Mem
+```
+
 ## 3. Architecture
 
 TypeScript under `src/`, with `src/lib/shields/` as the security surface —

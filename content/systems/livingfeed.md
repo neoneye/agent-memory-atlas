@@ -90,6 +90,18 @@ below the consolidation gate of 0.4, so recall will return things the gate would
 not have admitted today. A threshold that moved should not orphan what it
 already wrote.
 
+```mermaid
+flowchart TB
+    Perc["Perception this tick"] --> WM[("Working memory<br/>Redis list · 6h TTL · 50 entries")]
+    WM -->|"tick end"| Cons["Consolidation<br/>importance = 0.35·emotion + 0.30·relationship<br/>+ 0.20·goal + 0.15·rarity"]
+    Cons --> Ep[("Episodic = the event store<br/>PERMANENT ORIGINAL<br/>source_event_ids minItems 1")]
+    Cons -->|"importance ≥ 0.4"| Sem[("Semantic · Qdrant<br/>decay_at = 1 day … 30 days")]
+    Sem -->|"filter: actor_id, importance ≥ 0.3, decay_at > now"| Recall["Recall"]
+    Sem -.->|"forgetting happens only here"| Gone["expires"]
+    Ep -.->|"never erased"| Ep
+    Cons -.->|"factors stored, not just the total"| Tune["material for offline<br/>coefficient tuning by replay"]
+```
+
 ## 3. Architecture
 
 Redis, Qdrant, an event store, and the tick services. `engine/` splits into

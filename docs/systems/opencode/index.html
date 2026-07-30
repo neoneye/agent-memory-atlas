@@ -166,6 +166,16 @@ plugin seams        chat.message · chat.params · tool.execute.before/after
                     experimental.compaction.autocontinue</code></pre>
 <p>Nothing here has an identity a correction could name. A memory plugin
 supplies that, entirely.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Host[&quot;OpenCode — what it actually ships&quot;]
+      S[(&quot;Sessions · messages · parts · todos&quot;)]
+      H1[&quot;System-prompt transform hook&lt;br/&gt;(experimental)&quot;]
+      H2[&quot;Compaction hook&lt;br/&gt;(experimental)&quot;]
+    end
+    Inst[&quot;AGENTS.md and friends&quot;] --&gt;|&quot;resolved by nearest-ancestor lookup&lt;br/&gt;read, never stored&quot;| Prompt[&quot;Prompt&quot;]
+    Plug[&quot;A memory plugin&quot;] --&gt;|&quot;no memory contract to implement&quot;| Host
+    Plug -.-&gt;|&quot;so it reads the SQLite&lt;br/&gt;session tables directly&quot;| S
+    Host -.-&gt;|&quot;seams without a contract do not avoid&lt;br/&gt;the design work — they relocate it&lt;br/&gt;into every plugin, in incompatible forms&quot;| Note[&quot;no durable claim exists&lt;br/&gt;to correct&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Packages include <code>core</code>, <code>opencode</code>,
 <code>cli</code>, <code>tui</code>, <code>desktop</code>,

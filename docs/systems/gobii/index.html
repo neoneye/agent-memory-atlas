@@ -175,6 +175,16 @@ relational database is the most <em>queryable</em> memory in this atlas
 — an agent can compute over its own history in ways a vector store
 cannot. It is also the least <em>legible from outside</em>, because the
 shape is discovered rather than declared.</p>
+<pre class="mermaid"><code>flowchart TB
+    S3[(&quot;zstd SQLite&lt;br/&gt;one file per agent&quot;)] --&gt;|&quot;restore in a subprocess&lt;br/&gt;120s timeout + validate&quot;| DB[&quot;Agent database&quot;]
+    Plat[&quot;Platform state&quot;] --&gt;|&quot;mounted as 8 tables&quot;| Eph[&quot;__messages · __files · __contacts&lt;br/&gt;__agent_config · __agent_schedules&lt;br/&gt;__agent_skills · __tool_results · __kanban_cards&quot;]
+    Eph --&gt; DB
+    DB --&gt; Prompt[&quot;Schema prompt ≤30,000 bytes, ≤25 tables&lt;br/&gt;each built-in labelled&lt;br/&gt;&#39;ephemeral (dropped before persistence)&#39;&quot;]
+    Prompt --&gt; Model[&quot;Model writes SQL&quot;]
+    Model --&gt;|&quot;authorizer denies ATTACH, DETACH,&lt;br/&gt;load_extension, readfile, writefile&quot;| DB
+    DB --&gt; Drop[&quot;_drop_ephemeral_tables()&lt;br/&gt;DROP all 8&quot;]
+    Drop --&gt; S3
+    Drop -.-&gt;|&quot;what survives is only&lt;br/&gt;what the agent CREATE TABLEd&quot;| Own[&quot;Model-authored schema:&lt;br/&gt;no shape an operator&lt;br/&gt;can write an erasure against&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The platform needs Postgres, Redis, Celery and blob storage; the
 memory path needs the last of those.

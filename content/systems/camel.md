@@ -79,6 +79,16 @@ rest of the recent history. That ordering is a deliberate decision about where
 recalled material sits relative to the live conversation, and it is written in
 one line with no comment explaining it.
 
+```mermaid
+flowchart TB
+    Msg["MemoryRecord<br/>message + role + uuid + agent_id"] --> W["write_records()"]
+    W --> KV[("ChatHistoryBlock<br/>key-value store")]
+    W --> VDB[("VectorDBBlock<br/>Qdrant")]
+    KV -->|"storage.load()<br/>returns the whole store"| Ctx["Context"]
+    VDB -->|"VectorDBQuery(vector, top_k)<br/>NO filter argument"| Ctx
+    Msg -.->|"agent_id is written, serialised,<br/>printed — and read by no query"| Gap["Isolation actually comes from<br/>giving each agent its own<br/>storage object"]
+```
+
 ## 3. Architecture
 
 Nothing to run for the default case: `ChatHistoryMemory` with `InMemoryKeyValue

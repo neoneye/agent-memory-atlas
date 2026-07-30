@@ -146,6 +146,19 @@ related · part_of            associative, compositional
 `contradicts` as an edge between two memories puts this with
 [Memora](../memora/) rather than with the systems that flag one row.
 
+```mermaid
+flowchart TB
+    Skill["Authoring via a memory skill"] --> M[("Memory: typed info · skill · episode<br/>intent · todo · reflection · scratch<br/>with typed edges")]
+    Ep["Episodes"] -->|"reflection distils"| Gist["Gists"] --> M
+    Q["Query"] --> Act["ACT-R activation<br/>relevance + base-level recency<br/>+ importance"]
+    Act --> Spread["Spreading activation<br/>over k hops of typed edges"]
+    M --> Act
+    Spread --> Out["Recall"]
+    M -->|"retention decays"| Below{"below threshold?"}
+    Below -->|yes| Arch["archived flag<br/>record-keyed, not value-keyed"]
+    M -.->|"intent = when X occurs, do Y<br/>todo = open/done lifecycle"| Pros["prospective memory:<br/>a category almost nothing else models"]
+```
+
 ## 3. Architecture
 
 `packages/nooa-memory/src/nooa_memory/` — `manager.py` (933), `store.py` (487),

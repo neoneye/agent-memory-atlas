@@ -80,6 +80,19 @@ database is the most *queryable* memory in this atlas — an agent can compute
 over its own history in ways a vector store cannot. It is also the least
 *legible from outside*, because the shape is discovered rather than declared.
 
+```mermaid
+flowchart TB
+    S3[("zstd SQLite<br/>one file per agent")] -->|"restore in a subprocess<br/>120s timeout + validate"| DB["Agent database"]
+    Plat["Platform state"] -->|"mounted as 8 tables"| Eph["__messages · __files · __contacts<br/>__agent_config · __agent_schedules<br/>__agent_skills · __tool_results · __kanban_cards"]
+    Eph --> DB
+    DB --> Prompt["Schema prompt ≤30,000 bytes, ≤25 tables<br/>each built-in labelled<br/>'ephemeral (dropped before persistence)'"]
+    Prompt --> Model["Model writes SQL"]
+    Model -->|"authorizer denies ATTACH, DETACH,<br/>load_extension, readfile, writefile"| DB
+    DB --> Drop["_drop_ephemeral_tables()<br/>DROP all 8"]
+    Drop --> S3
+    Drop -.->|"what survives is only<br/>what the agent CREATE TABLEd"| Own["Model-authored schema:<br/>no shape an operator<br/>can write an erasure against"]
+```
+
 ## 3. Architecture
 
 The platform needs Postgres, Redis, Celery and blob storage; the memory path

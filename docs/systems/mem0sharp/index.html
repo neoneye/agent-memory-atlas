@@ -167,6 +167,15 @@ text survives. In a design whose central risk is an extractor
 overwriting a good memory with a worse paraphrase, being able to read
 what was there before is a meaningful partial answer, and it is
 available by query rather than by log-grepping.</p>
+<pre class="mermaid"><code>flowchart TB
+    In[&quot;Conversation&quot;] --&gt; Ex[&quot;LlmMemoryExtractor&quot;]
+    Ex --&gt; Cand[&quot;Candidate memories&quot;]
+    Cand --&gt; Res[&quot;LLM conflict resolver&lt;br/&gt;vs existing rows&quot;]
+    Res --&gt; Apply[(&quot;memories&lt;br/&gt;user_id NOT NULL · agent_id · run_id · scope&quot;)]
+    Apply --&gt; Hist[(&quot;{table}_history&lt;br/&gt;INSERT only&lt;br/&gt;event · old_memory · new_memory&quot;)]
+    Q[&quot;Search&quot;] --&gt;|&quot;WHERE built from the scope columns&quot;| Apply
+    Apply --&gt;|&quot;cosine ORDER BY distance&quot;| Hits[&quot;Hits → optional LlmReranker&quot;]
+    Hist -.-&gt;|&quot;the record of what was removed exists&lt;br/&gt;and the write path never reads it&quot;| Gap[&quot;no tombstone&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Postgres with pgvector for real deployments, an 80-line in-memory
 store for tests, and a <code>PostgresRelationshipStores</code> (250

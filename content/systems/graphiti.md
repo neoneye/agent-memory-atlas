@@ -53,6 +53,18 @@ Two clocks answer two different questions:
 
 That distinction makes backfilled and corrected history representable without pretending ingestion time equals event time.
 
+```mermaid
+flowchart TB
+    Ep["Episode ingested"] --> Ext["Entity and edge extraction"]
+    Ext --> Res["Entity resolution<br/>against existing nodes"]
+    Res --> Edge[("Temporal relationship edge<br/>valid_at … invalid_at")]
+    New["A contradicting fact arrives"] --> Inv["Close the old interval:<br/>set invalid_at, keep the edge"]
+    Inv --> Edge
+    Edge --> Q["BM25 + cosine + BFS over<br/>edges, nodes, episodes, communities<br/>→ RRF / MMR / cross-encoder"]
+    Edge -.->|"history retained, so 'what did we<br/>believe last March' is answerable"| Hist["the strongest temporal<br/>correction model in the atlas"]
+    Edge -.->|"and no claim is marked<br/>verified or rejected"| Gap["no trust state"]
+```
+
 ## 3. Architecture
 
 Core areas:

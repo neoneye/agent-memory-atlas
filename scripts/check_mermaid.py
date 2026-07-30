@@ -54,6 +54,31 @@ def main(content_dir: str) -> int:
                             f"{path}: unquoted {''.join(bad)} in a node label\n"
                             f"    {line.strip()}"
                         )
+    # Every system report carries a diagram. This started as a convention and
+    # drifted: twenty-five reports shipped without one, and nobody noticed until
+    # a reader walked the published pages in order and found where the pictures
+    # stopped. A convention a build does not check is a convention that decays
+    # from the newest end, which is the end a reader arrives at first.
+    missing = sorted(
+        path.stem
+        for path in sorted((Path(content_dir) / "systems").glob("*.md"))
+        if "```mermaid" not in path.read_text(encoding="utf-8")
+    )
+    if missing:
+        print(
+            f"System reports with no mermaid diagram ({len(missing)}):",
+            file=sys.stderr,
+        )
+        for slug in missing:
+            print(f"    {slug}", file=sys.stderr)
+        print(
+            "Every report gets one. Put it at the end of section 2 (Mental "
+            "Model), before '## 3. Architecture', and draw the mechanism the "
+            "report is actually about — not a generic box diagram.",
+            file=sys.stderr,
+        )
+        return 1
+
     if problems:
         print("Mermaid labels that will fail to render:", file=sys.stderr)
         for p in dict.fromkeys(problems):

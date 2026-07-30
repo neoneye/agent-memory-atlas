@@ -75,6 +75,20 @@ plot, and this one says so in four words.
 There is no trust state. `importance` is 1–10 and feeds ranking; `active` is a
 soft-delete flag. Nothing withholds a row from being treated as true.
 
+```mermaid
+flowchart TB
+    Q["Query"] --> V["Vector lane<br/>HNSW top 50"]
+    Q --> T["Text lane<br/>tsvector top 30<br/>floored at min_similarity"]
+    Q --> E["Entity lane<br/>boost_entities top 12"]
+    V --> RRF["RRF k=60"]
+    T --> RRF
+    E --> RRF
+    RRF --> Blend["× recency × importance × usage<br/>(corrections and preferences exempt:<br/>'still the law until superseded')"]
+    Blend --> Out["similarity = real cosine (safe to show)<br/>final_rank = ordering, NOT a score"]
+    Row[("memories row")] -.->|"created_at / updated_at = record time"| Clocks
+    Row -.->|"valid_from / valid_until = when it was TRUE"| Clocks["two clocks"]
+```
+
 ## 3. Architecture
 
 Supabase, `pgvector` and `pg_trgm`. That is the whole bill, and the schema is

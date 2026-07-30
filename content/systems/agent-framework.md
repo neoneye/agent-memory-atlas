@@ -80,6 +80,23 @@ compress the topic, delete the topic if you no longer want it. Correction is
 compression — a bullet stops being true by being rewritten out of the file by an
 LLM, with no record that it was there.
 
+```mermaid
+flowchart TB
+    subgraph Contract["ContextProvider — the whole contract"]
+      BR["before_run()"] --- AR["after_run()"] --- SID["source_id"]
+      Note["no add · no query · no delete · no scope"]
+    end
+    Contract --> Harness["Harness memory<br/>(what the contract declines to require)"]
+    Harness --> Owner{"session.state[owner_key]"}
+    Owner -->|missing| E1["raise"]
+    Owner -->|"contains .. or absolute"| E2["raise"]
+    Owner -->|ok| Root["resolve per-owner root"]
+    Root --> Contain{"is_relative_to(base)?"}
+    Contain -->|no| E3["raise: path escaped base_path"]
+    Contain -->|yes| Topics[("One markdown file per topic<br/>+ session_ids provenance")]
+    Topics -->|"sessions_since_consolidation"| Consol["LLM rewrites the topic<br/>into a tighter form<br/>(no diff, no prior version)"]
+```
+
 ## 3. Architecture
 
 For the file-backed case, nothing to run: a base path and a model. The tree is

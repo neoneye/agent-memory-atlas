@@ -74,6 +74,17 @@ memory.
 "not now" gets answered carelessly, and the loop treats deferral as a distinct
 outcome in its statistics rather than as a skip.
 
+```mermaid
+stateDiagram-v2
+    [*] --> pending_approval: background extraction<br/>from conversation
+    pending_approval --> human_approved: reviewer presses a
+    pending_approval --> human_approved: reviewer presses e<br/>edits the text first
+    pending_approval --> human_rejected: reviewer presses r
+    pending_approval --> pending_approval: skip or defer<br/>asked again next session
+    human_approved --> [*]: the ONLY status<br/>build_context reads
+    human_rejected --> [*]: recorded, and never<br/>consulted by extraction again
+```
+
 ## 3. Architecture
 
 A JSON-backed store per directory plus a knowledge graph, and no service to run.

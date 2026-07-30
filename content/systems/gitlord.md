@@ -78,6 +78,18 @@ a forked branch may still hold them. "Delete what the agent learned about me" is
 a git history rewrite across every branch, which is a category of operation
 rather than a call.
 
+```mermaid
+flowchart TB
+    U["User turn"] --> C["_commit_turn()"]
+    A["Assistant turn"] --> C
+    T["Tool call turn"] --> C
+    C --> G[("Git repository<br/>session = branch<br/>turn = commit of JSON")]
+    G -->|"rebuild_from_log()"| Idx["DedupIndex<br/>a PROJECTION, regenerable"]
+    Idx --> Asm["ContextAssembler<br/>token-bounded"]
+    G -->|"re-parent a chain"| Fork["Fork: replay onto<br/>a different history"]
+    G -.->|"records what HAPPENED"| Note["a correction and the mistake<br/>are both in the log, in order,<br/>with nothing preferring either"]
+```
+
 ## 3. Architecture
 
 A git repository, `litellm` for model access (imported behind a `HAS_LITELLM`

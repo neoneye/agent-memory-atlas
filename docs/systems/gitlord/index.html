@@ -163,6 +163,15 @@ different form: a rewritten chain leaves the old commits reachable until
 garbage collection, and a forked branch may still hold them. "Delete
 what the agent learned about me" is a git history rewrite across every
 branch, which is a category of operation rather than a call.</p>
+<pre class="mermaid"><code>flowchart TB
+    U[&quot;User turn&quot;] --&gt; C[&quot;_commit_turn()&quot;]
+    A[&quot;Assistant turn&quot;] --&gt; C
+    T[&quot;Tool call turn&quot;] --&gt; C
+    C --&gt; G[(&quot;Git repository&lt;br/&gt;session = branch&lt;br/&gt;turn = commit of JSON&quot;)]
+    G --&gt;|&quot;rebuild_from_log()&quot;| Idx[&quot;DedupIndex&lt;br/&gt;a PROJECTION, regenerable&quot;]
+    Idx --&gt; Asm[&quot;ContextAssembler&lt;br/&gt;token-bounded&quot;]
+    G --&gt;|&quot;re-parent a chain&quot;| Fork[&quot;Fork: replay onto&lt;br/&gt;a different history&quot;]
+    G -.-&gt;|&quot;records what HAPPENED&quot;| Note[&quot;a correction and the mistake&lt;br/&gt;are both in the log, in order,&lt;br/&gt;with nothing preferring either&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A git repository, <code>litellm</code> for model access (imported
 behind a <code>HAS_LITELLM</code> guard so the package works without

@@ -82,6 +82,21 @@ change between them, and a memory whose sensitivity was misjudged at write is
 re-judged on the way out — which is the safer direction, and means the stored
 column is doing less than it appears.
 
+```mermaid
+flowchart TB
+    Q["memory_search"] --> Ret["retrieve: vector + lexical<br/>optional AND em.session_id = ?"]
+    Ret --> Tier["Tier filter<br/>(NOTE: reflection and graph<br/>both return semantic)"]
+    Tier --> Cls["classifyContent(hit texts)<br/>public · normal · sensitive · secret"]
+    Cls -->|requiresSupervisor| Sup{"requestSupervisorDecision"}
+    Sup -->|denied| D1["Access denied: reason"]
+    Sup -->|allowed| Hum{"requiresHuman?"}
+    Hum -->|"yes — SECRET"| App{"approvalGate or<br/>requestHumanApproval"}
+    App -->|no| D2["Access denied by human approval"]
+    App -->|yes| Out["Results returned"]
+    Hum -->|no| Out
+    Priv["MemoryPrivacyPolicy<br/>allowedTiers · piiRedaction<br/>maxRetentionDays = 90"] -.->|"exported from mod.ts<br/>and called by NOTHING"| Dead["no tier is filtered<br/>nothing expires at 90 days"]
+```
+
 ## 3. Architecture
 
 libSQL/SQLite through `db/client.ts`, embeddings stored as blobs with

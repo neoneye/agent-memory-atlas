@@ -76,6 +76,18 @@ a design whose central risk is an extractor overwriting a good memory with a
 worse paraphrase, being able to read what was there before is a meaningful
 partial answer, and it is available by query rather than by log-grepping.
 
+```mermaid
+flowchart TB
+    In["Conversation"] --> Ex["LlmMemoryExtractor"]
+    Ex --> Cand["Candidate memories"]
+    Cand --> Res["LLM conflict resolver<br/>vs existing rows"]
+    Res --> Apply[("memories<br/>user_id NOT NULL · agent_id · run_id · scope")]
+    Apply --> Hist[("{table}_history<br/>INSERT only<br/>event · old_memory · new_memory")]
+    Q["Search"] -->|"WHERE built from the scope columns"| Apply
+    Apply -->|"cosine ORDER BY distance"| Hits["Hits → optional LlmReranker"]
+    Hist -.->|"the record of what was removed exists<br/>and the write path never reads it"| Gap["no tombstone"]
+```
+
 ## 3. Architecture
 
 Postgres with pgvector for real deployments, an 80-line in-memory store for

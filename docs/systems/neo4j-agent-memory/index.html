@@ -200,6 +200,16 @@ being a single brain rather than silos.</p>
 <p>How a memory stops being current: a preference is superseded and its
 <code>valid_until</code> closes. Nothing else has a defined end state,
 and nothing records that a value was judged wrong.</p>
+<pre class="mermaid"><code>flowchart TB
+    Turn[&quot;Conversation turn&quot;] --&gt; Cap[&quot;Capture&quot;]
+    Cap --&gt; GL[&quot;GLiNER extraction&quot;]
+    GL --&gt; G[(&quot;One Neo4j graph&lt;br/&gt;shared across agents, not per-agent silos&quot;)]
+    Trace[&quot;Reasoning trace&lt;br/&gt;recorded via a context manager&quot;] --&gt; G
+    Pref[&quot;Preference&quot;] --&gt; Sup[&quot;supersede_preference&lt;br/&gt;idempotent, valid_from … valid_until&quot;]
+    Sup --&gt; G
+    G --&gt; Q[&quot;Graph queries over entities&lt;br/&gt;and relationships; embeddings;&lt;br/&gt;reasoning steps with parent context&quot;]
+    G -.-&gt;|&quot;multi-tenant mode raises when&lt;br/&gt;a user identifier is missing&quot;| Scope[&quot;fail-closed tenancy&quot;]
+    Sup -.-&gt;|&quot;covers preferences only&quot;| Gap[&quot;no value-level tombstone&quot;]</code></pre>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/neo4j_agent_memory/</code> —
 <code>memory/long_term.py</code> (2,357), <code>__init__.py</code>
