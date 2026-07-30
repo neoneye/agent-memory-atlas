@@ -9585,6 +9585,42 @@ the repository measures. Its two memory subsystems —
 <code>agno/memory/</code> and <code>agno/learn/</code> — overlap, and
 which one a given deployment is using was not established beyond noting
 that the AgentOS HTTP routes serve the older one.</li>
+<li><strong>Seven repositories submitted together on 2026-07-30 were
+examined and every one is out of scope — the first batch this round to
+produce no report, and instructive for why.</strong> Three of the seven
+have "memory" in a file path and none of the three is agent memory. <a
+href="https://github.com/huggingface/smolagents">smolagents</a>'
+<code>src/smolagents/memory.py</code> defines <code>AgentMemory</code>
+as a <code>system_prompt</code> plus a
+<code>list[TaskStep | ActionStep | PlanningStep]</code> with
+<code>reset()</code> and <code>replay()</code> — an in-process run trace
+with no persistence layer, which is the call already made for <a
+href="../systems/pi/">Pi</a>, OpenAI's <code>SQLiteSession</code> and
+LlamaIndex's <code>ChatMemoryBuffer</code> family. It is named here
+rather than passed over silently because it is Hugging Face's framework
+and a reader searching this atlas for it deserves to find why it is
+absent. <code>Elumenotion/GuideAnts</code> exposes a
+<code>MemoryTools</code> class documented as <em>"static semantic-memory
+tools"</em>, and its three operations are
+<code>SearchProjectContent</code>, <code>SearchLocalContent</code> and
+<code>WebSearch</code> — document and web retrieval with no store of
+agent belief behind it. <code>genepattern/module-toolkit</code>'s
+<code>test_memory_spec.py</code> validates that a manifest's
+<code>job.memory</code> field reads like <code>8Gb</code> or
+<code>4Mb</code>: RAM allocation, the same false positive already
+recorded for the FRDCSA repositories. The remaining four have no memory
+concept at all — <code>F-loat/panerelay</code> relays a browser to
+agents, <code>ringlochid/banksia</code> runs multi-agent teams over a
+<code>flows</code> table with no <code>recall</code>,
+<code>remember</code> or long-term anything in the package,
+<code>hamish-mackie/sloop</code> gives each ticket a git worktree and an
+agent, and <code>TheArtOfSound/qev-desktop</code> is an encrypted vault
+format whose envelopes can hold <em>"AI output receipts"</em> — adjacent
+to <a href="../systems/lethe/">Lethe</a>'s signed purge receipts in
+intent, and a container format rather than a memory system. <strong>The
+pattern is the point:</strong> the word <em>memory</em> in a path
+predicted the wrong answer three times out of three, which is the whole
+argument for reading code instead of file listings.</li>
 <li>Six repositories submitted alongside TokenMizer and ZeroStack were
 examined and have no reports. <code>Bino5150/lumina</code>'s memory
 module opens with <em>"persistent memory across sessions via SQLite.
