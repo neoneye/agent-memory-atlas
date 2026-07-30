@@ -66,18 +66,23 @@ Each chunk holds its text and embedding directly. The "knowledge graph" is a sep
 
 Lifecycle:
 
-```text
-MCP add_knowledge
--> choose Leiden or fallback chunking
--> annotate and embed chunks
--> add within-source and cross-source edges
--> extract facts and close conflicting ones
--> rewrite chunks/edges/sources/facts (JSON, or SQLite past 5k chunks)
--> later hybrid search
--> optional directed graph walk
--> best chunk per source
--> MCP result
+```mermaid
+flowchart TB
+    A["MCP add_knowledge"] --> B["choose Leiden<br/>or fallback chunking"]
+    B --> C["annotate and embed chunks"]
+    C --> D["add within-source<br/>and cross-source edges"]
+    D --> E["extract facts,<br/>close conflicting ones"]
+    E --> F[("rewrite chunks, edges,<br/>sources, facts<br/><i>JSON, or SQLite past 5k chunks</i>")]
+    F --> G["hybrid search"]
+    G --> H["optional directed graph walk"]
+    H --> I["best chunk per source"]
+    I --> J["MCP result"]
+
+    style E fill:#f4e2bd,stroke:#b8860b
 ```
+
+The highlighted step is the one worth noting: conflicting facts are *closed* on
+the write path rather than left for a reader to reconcile.
 
 Memory is agent-controlled. `CLAUDE.md`, `SKILL.md`, and MCP descriptions instruct the model to save proactively and call `get_context` at session start. The backend does not observe conversations or inject memory automatically.
 

@@ -157,16 +157,22 @@ rooms/wings.</li>
 SQLite.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="text"><code>files / conversations / manual MCP writes
--&gt; normalize and chunk verbatim text
--&gt; assign wing + room + metadata
--&gt; deterministic drawer IDs
--&gt; batch upsert into backend
--&gt; emit closet pointer lines
--&gt; optional graph / hallway / tunnel computation
--&gt; search drawers directly
--&gt; boost/rerank with BM25 + closets + metadata + recency
--&gt; return verbatim drawer context</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    SRC[&quot;files, conversations,&lt;br/&gt;manual MCP writes&quot;] --&gt; N[&quot;normalize and chunk&lt;br/&gt;&lt;i&gt;verbatim text&lt;/i&gt;&quot;]
+    N --&gt; W[&quot;assign wing + room + metadata&quot;]
+    W --&gt; ID[&quot;deterministic drawer IDs&quot;]
+    ID --&gt; UP[(&quot;batch upsert into backend&quot;)]
+    UP --&gt; CL[&quot;emit closet pointer lines&quot;]
+    CL --&gt; GR[&quot;optional graph,&lt;br/&gt;hallway, tunnel computation&quot;]
+    UP --&gt; S[&quot;search drawers directly&quot;]
+    S --&gt; RR[&quot;boost and rerank:&lt;br/&gt;BM25 + closets + metadata + recency&quot;]
+    RR --&gt; OUT[&quot;return verbatim drawer context&quot;]
+
+    style N fill:#e7efe9,stroke:#3d6b59
+    style OUT fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Verbatim in, verbatim out — the two highlighted ends are the same
+commitment. Nothing between them rewrites the text, so retrieval returns
+what was stored rather than a model's account of it.</p>
 <p>The system's answer to "what should be remembered?" is conservative:
 remember the original content first, then let retrieval decide what
 matters later.</p>

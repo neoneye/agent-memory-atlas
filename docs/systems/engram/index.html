@@ -144,13 +144,26 @@ observations.</li>
 <li>Sync mutation: durable local change journal.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="text"><code>agent decides something -&gt; mem_save -&gt; AddObservation
--&gt; topic_key upsert OR dedupe OR insert
--&gt; FTS5 index trigger
--&gt; sync mutation
--&gt; conflict candidate detection
--&gt; optional mem_judge relation
--&gt; later mem_search / mem_context / mem_timeline</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[&quot;agent decides something&quot;] --&gt; B[&quot;mem_save&quot;]
+    B --&gt; C[&quot;AddObservation&quot;]
+    C --&gt; D{&quot;topic_key present?&quot;}
+    D --&gt;|yes| U[&quot;upsert&quot;]
+    D --&gt;|no| DD{&quot;duplicate?&quot;}
+    DD --&gt;|yes| DEDUPE[&quot;dedupe&quot;]
+    DD --&gt;|no| INS[&quot;insert&quot;]
+    U --&gt; FTS[&quot;FTS5 index trigger&quot;]
+    DEDUPE --&gt; FTS
+    INS --&gt; FTS
+    FTS --&gt; SY[&quot;sync mutation&quot;]
+    SY --&gt; CC[&quot;conflict candidate detection&quot;]
+    CC --&gt; J[&quot;optional mem_judge relation&quot;]
+    J --&gt; R[&quot;mem_search / mem_context / mem_timeline&quot;]
+
+    style CC fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Conflict detection is a step, and <code>mem_judge</code> is
+<em>optional</em> — so a conflict is surfaced and then usually left
+standing.</p>
 <p>The memory is intentionally not a general transcript database. It is
 curated observations from coding sessions.</p>
 <h2 id="3-architecture">3. Architecture</h2>

@@ -185,16 +185,21 @@ graph" is a separate list of directed edges between chunk IDs:</p>
 <li><code>cross_session</code>.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="text"><code>MCP add_knowledge
--&gt; choose Leiden or fallback chunking
--&gt; annotate and embed chunks
--&gt; add within-source and cross-source edges
--&gt; extract facts and close conflicting ones
--&gt; rewrite chunks/edges/sources/facts (JSON, or SQLite past 5k chunks)
--&gt; later hybrid search
--&gt; optional directed graph walk
--&gt; best chunk per source
--&gt; MCP result</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[&quot;MCP add_knowledge&quot;] --&gt; B[&quot;choose Leiden&lt;br/&gt;or fallback chunking&quot;]
+    B --&gt; C[&quot;annotate and embed chunks&quot;]
+    C --&gt; D[&quot;add within-source&lt;br/&gt;and cross-source edges&quot;]
+    D --&gt; E[&quot;extract facts,&lt;br/&gt;close conflicting ones&quot;]
+    E --&gt; F[(&quot;rewrite chunks, edges,&lt;br/&gt;sources, facts&lt;br/&gt;&lt;i&gt;JSON, or SQLite past 5k chunks&lt;/i&gt;&quot;)]
+    F --&gt; G[&quot;hybrid search&quot;]
+    G --&gt; H[&quot;optional directed graph walk&quot;]
+    H --&gt; I[&quot;best chunk per source&quot;]
+    I --&gt; J[&quot;MCP result&quot;]
+
+    style E fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The highlighted step is the one worth noting: conflicting facts are
+<em>closed</em> on the write path rather than left for a reader to
+reconcile.</p>
 <p>Memory is agent-controlled. <code>CLAUDE.md</code>,
 <code>SKILL.md</code>, and MCP descriptions instruct the model to save
 proactively and call <code>get_context</code> at session start. The

@@ -53,15 +53,28 @@ Engram memory units:
 
 Lifecycle:
 
-```text
-agent decides something -> mem_save -> AddObservation
--> topic_key upsert OR dedupe OR insert
--> FTS5 index trigger
--> sync mutation
--> conflict candidate detection
--> optional mem_judge relation
--> later mem_search / mem_context / mem_timeline
+```mermaid
+flowchart TB
+    A["agent decides something"] --> B["mem_save"]
+    B --> C["AddObservation"]
+    C --> D{"topic_key present?"}
+    D -->|yes| U["upsert"]
+    D -->|no| DD{"duplicate?"}
+    DD -->|yes| DEDUPE["dedupe"]
+    DD -->|no| INS["insert"]
+    U --> FTS["FTS5 index trigger"]
+    DEDUPE --> FTS
+    INS --> FTS
+    FTS --> SY["sync mutation"]
+    SY --> CC["conflict candidate detection"]
+    CC --> J["optional mem_judge relation"]
+    J --> R["mem_search / mem_context / mem_timeline"]
+
+    style CC fill:#f4e2bd,stroke:#b8860b
 ```
+
+Conflict detection is a step, and `mem_judge` is *optional* — so a conflict is
+surfaced and then usually left standing.
 
 The memory is intentionally not a general transcript database. It is curated observations from coding sessions.
 

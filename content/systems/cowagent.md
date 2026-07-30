@@ -28,10 +28,10 @@ matrix:
 
 CowAgent is a conversational agent from zhayujie (the author of `chatgpt-on-wechat`), with a ~5,300-line memory subsystem under `agent/memory/`. Its design is the clearest **time-boxed distillation pipeline** in the atlas:
 
-```text
-conversation context (short-term)
-  → memory/YYYY-MM-DD.md (daily, mid-term)
-  → MEMORY.md (long-term, ~30 entries)
+```mermaid
+flowchart LR
+    ST["conversation context<br/><i>short-term</i>"] --> MID[("memory/YYYY-MM-DD.md<br/><i>daily, mid-term</i>")]
+    MID --> LT[("MEMORY.md<br/><i>long-term, about 30 entries</i>")]
 ```
 
 Two things distinguish it from the other file-backed systems here.
@@ -70,21 +70,30 @@ CREATE TABLE chunks (
 
 Lifecycle:
 
-```text
-Stage 1 — conversation → daily memory
-  triggers: context trimming (turn/token limit), 23:55 schedule, API-overflow emergency save
-  LLM summarizes into key events -> memory/YYYY-MM-DD.md
+```mermaid
+flowchart TB
+    subgraph S1["Stage 1 — conversation to daily memory"]
+        TR["triggers: context trimming on turn or token limit,<br/>a 23:55 schedule, an API-overflow emergency save"]
+        TR --> SUM["LLM summarizes into key events"]
+        SUM --> DAILY[("memory/YYYY-MM-DD.md")]
+    end
+    subgraph S2["Stage 2 — Deep Dream distillation"]
+        RD["read MEMORY.md + today's daily file"]
+        RD --> OPS["LLM applies: merge and refine, extract new,<br/>conflict update (newer wins),<br/>clean invalid, remove redundancy"]
+        OPS --> OW["overwrite MEMORY.md<br/><i>target: about 30 entries</i>"]
+        OPS --> DD[("dream diary<br/>what the consolidation found")]
+    end
+    DAILY --> RD
+    OW --> INJ["Stage 3 — MEMORY.md goes into the system prompt<br/>for every conversation"]
 
-Stage 2 — Deep Dream distillation (after the daily summary)
-  read MEMORY.md + today's daily file
-  LLM applies: merge & refine | extract new | conflict update (newer wins)
-              | clean invalid | remove redundancy
-  overwrite MEMORY.md   (target: <= ~30 entries)
-  write a "dream diary" recording what the consolidation found
-
-Stage 3 — injection
-  MEMORY.md goes into the system prompt for every conversation
+    style OW fill:#f4e2bd,stroke:#b8860b
 ```
+
+The highlighted step is the risk this system is the atlas's clearest example of.
+`MEMORY.md` is **overwritten** from itself plus one day's file, nightly, forever —
+so anything the distillation does not carry forward is gone, and the daily files
+it read are the only remaining evidence. The dream diary records what the pass
+*found*, not what it dropped.
 
 ## 3. Architecture
 

@@ -56,18 +56,25 @@ Primary units:
 
 Lifecycle:
 
-```text
-files / conversations / manual MCP writes
--> normalize and chunk verbatim text
--> assign wing + room + metadata
--> deterministic drawer IDs
--> batch upsert into backend
--> emit closet pointer lines
--> optional graph / hallway / tunnel computation
--> search drawers directly
--> boost/rerank with BM25 + closets + metadata + recency
--> return verbatim drawer context
+```mermaid
+flowchart TB
+    SRC["files, conversations,<br/>manual MCP writes"] --> N["normalize and chunk<br/><i>verbatim text</i>"]
+    N --> W["assign wing + room + metadata"]
+    W --> ID["deterministic drawer IDs"]
+    ID --> UP[("batch upsert into backend")]
+    UP --> CL["emit closet pointer lines"]
+    CL --> GR["optional graph,<br/>hallway, tunnel computation"]
+    UP --> S["search drawers directly"]
+    S --> RR["boost and rerank:<br/>BM25 + closets + metadata + recency"]
+    RR --> OUT["return verbatim drawer context"]
+
+    style N fill:#e7efe9,stroke:#3d6b59
+    style OUT fill:#e7efe9,stroke:#3d6b59
 ```
+
+Verbatim in, verbatim out — the two highlighted ends are the same commitment.
+Nothing between them rewrites the text, so retrieval returns what was stored
+rather than a model's account of it.
 
 The system's answer to "what should be remembered?" is conservative: remember the original content first, then let retrieval decide what matters later.
 

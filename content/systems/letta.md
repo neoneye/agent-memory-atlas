@@ -49,13 +49,20 @@ Letta memory layers:
 
 Lifecycle:
 
-```text
-agent receives prompt -> system prompt includes compiled core memory
--> agent calls memory tools
--> core tool executor mutates AgentState.memory or inserts/searches passages
--> AgentManager persists changed memory and rebuilds system prompt
--> future LLM calls see updated core memory
+```mermaid
+flowchart TB
+    P["agent receives prompt"] --> SP["system prompt includes<br/>compiled core memory"]
+    SP --> T["agent calls memory tools"]
+    T --> EX["core tool executor:<br/>mutate AgentState.memory,<br/>or insert / search passages"]
+    EX --> AM["AgentManager persists the change<br/>and rebuilds the system prompt"]
+    AM --> SP
+
+    style SP fill:#e7efe9,stroke:#3d6b59
 ```
+
+The loop is the design. Core memory is not retrieved — it is **compiled into the
+system prompt**, so a write changes the prompt itself and the next call sees the
+new text without any search step.
 
 Letta is memory-as-agent-state, not just memory-as-RAG.
 

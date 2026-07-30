@@ -47,34 +47,43 @@ The notable gap is epistemic rather than operational: memory types are cognitive
 
 Two stores with different lifetimes:
 
-```text
-Working memory   (Redis, session-scoped, TTL-expired)
-  messages[]  — with created_at, persisted_at, discrete_memory_extracted flag
-  structured state, context percentage
-        |
-        |  promote_working_memory_to_long_term()  [background]
-        v
-Long-term memory (indexed vector records, namespace-scoped)
-  MemoryRecord(
-      id, text, memory_type: episodic|semantic|message,
-      namespace, user_id, session_id, topics, entities,
-      created_at, last_accessed, pinned, ...
-  )
-```
+| | Working memory | Long-term memory |
+| --- | --- | --- |
+| Store | Redis | indexed vector records |
+| Scope | session | namespace |
+| Lifetime | TTL-expired | until forgotten or deleted |
+| Holds | `messages[]` with `created_at`, `persisted_at` and a `discrete_memory_extracted` flag; structured state; context percentage | `MemoryRecord`: `id`, `text`, `memory_type`, `namespace`, `user_id`, `session_id`, `topics`, `entities`, `created_at`, `last_accessed`, `pinned` |
+
+`promote_working_memory_to_long_term()` moves material from the left column to the
+right, in the background. The `discrete_memory_extracted` flag is what keeps the
+promotion idempotent — the session records that it has already been mined, so a
+re-run does not duplicate.
 
 `MemoryTypeEnum` is a cognitive taxonomy — `EPISODIC` (things that happened), `SEMANTIC` (facts), `MESSAGE` (raw turns) — rather than a trust or provenance taxonomy.
 
 Lifecycle:
 
-```text
-client writes messages -> working memory (TTL)
--> should_extract_session_thread()? -> debounce -> schedule_trailing_extraction()
--> run_delayed_extraction() -> strategy.extract() -> MemoryRecords
--> deduplicate_by_hash -> deduplicate_by_id -> deduplicate_by_semantic_search
--> index_long_term_memories()
--> search_long_term_memories() with recency reranking; update_last_accessed()
--> periodic: compact_long_term_memories(), select_ids_for_forgetting() -> delete
+```mermaid
+flowchart TB
+    C["client writes messages"] --> WM[("working memory<br/>Redis, TTL-expired")]
+    WM --> Q{"should_extract_session_thread()?"}
+    Q -->|yes| DB["debounce →<br/>schedule_trailing_extraction()"]
+    DB --> RUN["run_delayed_extraction()<br/>strategy.extract()"]
+    RUN --> MR["MemoryRecords"]
+    MR --> D1["deduplicate_by_hash"] --> D2["deduplicate_by_id"] --> D3["deduplicate_by_semantic_search"]
+    D3 --> IDX["index_long_term_memories()"]
+    IDX --> LT[("long-term memory<br/>namespace-scoped vector records")]
+    LT --> SR["search_long_term_memories()<br/>recency reranking, update_last_accessed()"]
+    LT --> PER["periodic: compact_long_term_memories(),<br/>select_ids_for_forgetting() → delete"]
+    PER --> LT
+
+    style PER fill:#f4e2bd,stroke:#b8860b
 ```
+
+Three dedup passes in series — hash, then id, then semantic — is the most
+thorough dedup chain in the atlas. The highlighted loop is the other half: this is
+one of very few systems here with a *scheduled* forgetting pass rather than only
+an on-demand delete.
 
 ## 3. Architecture
 

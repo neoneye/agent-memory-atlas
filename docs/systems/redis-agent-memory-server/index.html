@@ -160,30 +160,72 @@ from the same conversation on the next pass with nothing to prevent
 it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two stores with different lifetimes:</p>
-<pre class="text"><code>Working memory   (Redis, session-scoped, TTL-expired)
-  messages[]  — with created_at, persisted_at, discrete_memory_extracted flag
-  structured state, context percentage
-        |
-        |  promote_working_memory_to_long_term()  [background]
-        v
-Long-term memory (indexed vector records, namespace-scoped)
-  MemoryRecord(
-      id, text, memory_type: episodic|semantic|message,
-      namespace, user_id, session_id, topics, entities,
-      created_at, last_accessed, pinned, ...
-  )</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Working memory</th>
+<th>Long-term memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Store</td>
+<td>Redis</td>
+<td>indexed vector records</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>session</td>
+<td>namespace</td>
+</tr>
+<tr>
+<td>Lifetime</td>
+<td>TTL-expired</td>
+<td>until forgotten or deleted</td>
+</tr>
+<tr>
+<td>Holds</td>
+<td><code>messages[]</code> with <code>created_at</code>,
+<code>persisted_at</code> and a <code>discrete_memory_extracted</code>
+flag; structured state; context percentage</td>
+<td><code>MemoryRecord</code>: <code>id</code>, <code>text</code>,
+<code>memory_type</code>, <code>namespace</code>, <code>user_id</code>,
+<code>session_id</code>, <code>topics</code>, <code>entities</code>,
+<code>created_at</code>, <code>last_accessed</code>,
+<code>pinned</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>promote_working_memory_to_long_term()</code> moves material
+from the left column to the right, in the background. The
+<code>discrete_memory_extracted</code> flag is what keeps the promotion
+idempotent — the session records that it has already been mined, so a
+re-run does not duplicate.</p>
 <p><code>MemoryTypeEnum</code> is a cognitive taxonomy —
 <code>EPISODIC</code> (things that happened), <code>SEMANTIC</code>
 (facts), <code>MESSAGE</code> (raw turns) — rather than a trust or
 provenance taxonomy.</p>
 <p>Lifecycle:</p>
-<pre class="text"><code>client writes messages -&gt; working memory (TTL)
--&gt; should_extract_session_thread()? -&gt; debounce -&gt; schedule_trailing_extraction()
--&gt; run_delayed_extraction() -&gt; strategy.extract() -&gt; MemoryRecords
--&gt; deduplicate_by_hash -&gt; deduplicate_by_id -&gt; deduplicate_by_semantic_search
--&gt; index_long_term_memories()
--&gt; search_long_term_memories() with recency reranking; update_last_accessed()
--&gt; periodic: compact_long_term_memories(), select_ids_for_forgetting() -&gt; delete</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;client writes messages&quot;] --&gt; WM[(&quot;working memory&lt;br/&gt;Redis, TTL-expired&quot;)]
+    WM --&gt; Q{&quot;should_extract_session_thread()?&quot;}
+    Q --&gt;|yes| DB[&quot;debounce →&lt;br/&gt;schedule_trailing_extraction()&quot;]
+    DB --&gt; RUN[&quot;run_delayed_extraction()&lt;br/&gt;strategy.extract()&quot;]
+    RUN --&gt; MR[&quot;MemoryRecords&quot;]
+    MR --&gt; D1[&quot;deduplicate_by_hash&quot;] --&gt; D2[&quot;deduplicate_by_id&quot;] --&gt; D3[&quot;deduplicate_by_semantic_search&quot;]
+    D3 --&gt; IDX[&quot;index_long_term_memories()&quot;]
+    IDX --&gt; LT[(&quot;long-term memory&lt;br/&gt;namespace-scoped vector records&quot;)]
+    LT --&gt; SR[&quot;search_long_term_memories()&lt;br/&gt;recency reranking, update_last_accessed()&quot;]
+    LT --&gt; PER[&quot;periodic: compact_long_term_memories(),&lt;br/&gt;select_ids_for_forgetting() → delete&quot;]
+    PER --&gt; LT
+
+    style PER fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Three dedup passes in series — hash, then id, then semantic — is the
+most thorough dedup chain in the atlas. The highlighted loop is the
+other half: this is one of very few systems here with a
+<em>scheduled</em> forgetting pass rather than only an on-demand
+delete.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Largest modules under <code>V0/agent_memory_server/</code>:</p>
 <ul>

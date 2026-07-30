@@ -77,15 +77,22 @@ The comments document the legacy migration explicitly — `valid_from = legacy.u
 
 Lifecycle:
 
-```text
-session → consolidator clusters related material
-        → ONE LLM call per cluster emits a lesson AND (optionally) a procedure
-          [invariant 21: ≤ 1 call per cluster even when both are produced]
-        → links generated between surfaced ids only
-        → reflection (vote-aware) on a separate prompt slot
-        → vote_events appended; vote_score derived
-        → deprecation flips status; the row is retained
+```mermaid
+flowchart TB
+    S["session"] --> CL["consolidator clusters<br/>related material"]
+    CL --> ONE["ONE LLM call per cluster<br/>emits a lesson and, optionally, a procedure"]
+    ONE --> LK["links generated between<br/><i>surfaced ids only</i>"]
+    LK --> RF["reflection, vote-aware,<br/>on a separate prompt slot"]
+    RF --> VE["vote_events appended<br/>vote_score derived"]
+    VE --> DEP["deprecation flips status<br/><i>the row is retained</i>"]
+
+    style ONE fill:#f4e2bd,stroke:#b8860b
 ```
+
+The highlighted step is invariant 21, cited by number in the source: **at most one
+model call per cluster even when it produces both a lesson and a procedure.** The
+cost bound is written down as a rule rather than left to whoever edits the
+consolidator next.
 
 ## 3. Architecture
 

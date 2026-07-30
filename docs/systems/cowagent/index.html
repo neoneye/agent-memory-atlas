@@ -113,9 +113,9 @@ pass, over a self-healing chunk index with hybrid search.</p>
 <code>chatgpt-on-wechat</code>), with a ~5,300-line memory subsystem
 under <code>agent/memory/</code>. Its design is the clearest
 <strong>time-boxed distillation pipeline</strong> in the atlas:</p>
-<pre class="text"><code>conversation context (short-term)
-  → memory/YYYY-MM-DD.md (daily, mid-term)
-  → MEMORY.md (long-term, ~30 entries)</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    ST[&quot;conversation context&lt;br/&gt;&lt;i&gt;short-term&lt;/i&gt;&quot;] --&gt; MID[(&quot;memory/YYYY-MM-DD.md&lt;br/&gt;&lt;i&gt;daily, mid-term&lt;/i&gt;&quot;)]
+    MID --&gt; LT[(&quot;MEMORY.md&lt;br/&gt;&lt;i&gt;long-term, about 30 entries&lt;/i&gt;&quot;)]</code></pre>
 <p>Two things distinguish it from the other file-backed systems
 here.</p>
 <p><strong>Memory is bucketed by day before it is distilled.</strong>
@@ -167,19 +167,28 @@ them.</p>
 means chunks point back into the source Markdown at line granularity —
 the retrieval layer can always show where a result came from.</p>
 <p>Lifecycle:</p>
-<pre class="text"><code>Stage 1 — conversation → daily memory
-  triggers: context trimming (turn/token limit), 23:55 schedule, API-overflow emergency save
-  LLM summarizes into key events -&gt; memory/YYYY-MM-DD.md
+<pre class="mermaid"><code>flowchart TB
+    subgraph S1[&quot;Stage 1 — conversation to daily memory&quot;]
+        TR[&quot;triggers: context trimming on turn or token limit,&lt;br/&gt;a 23:55 schedule, an API-overflow emergency save&quot;]
+        TR --&gt; SUM[&quot;LLM summarizes into key events&quot;]
+        SUM --&gt; DAILY[(&quot;memory/YYYY-MM-DD.md&quot;)]
+    end
+    subgraph S2[&quot;Stage 2 — Deep Dream distillation&quot;]
+        RD[&quot;read MEMORY.md + today&#39;s daily file&quot;]
+        RD --&gt; OPS[&quot;LLM applies: merge and refine, extract new,&lt;br/&gt;conflict update (newer wins),&lt;br/&gt;clean invalid, remove redundancy&quot;]
+        OPS --&gt; OW[&quot;overwrite MEMORY.md&lt;br/&gt;&lt;i&gt;target: about 30 entries&lt;/i&gt;&quot;]
+        OPS --&gt; DD[(&quot;dream diary&lt;br/&gt;what the consolidation found&quot;)]
+    end
+    DAILY --&gt; RD
+    OW --&gt; INJ[&quot;Stage 3 — MEMORY.md goes into the system prompt&lt;br/&gt;for every conversation&quot;]
 
-Stage 2 — Deep Dream distillation (after the daily summary)
-  read MEMORY.md + today&#39;s daily file
-  LLM applies: merge &amp; refine | extract new | conflict update (newer wins)
-              | clean invalid | remove redundancy
-  overwrite MEMORY.md   (target: &lt;= ~30 entries)
-  write a &quot;dream diary&quot; recording what the consolidation found
-
-Stage 3 — injection
-  MEMORY.md goes into the system prompt for every conversation</code></pre>
+    style OW fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The highlighted step is the risk this system is the atlas's clearest
+example of. <code>MEMORY.md</code> is <strong>overwritten</strong> from
+itself plus one day's file, nightly, forever — so anything the
+distillation does not carry forward is gone, and the daily files it read
+are the only remaining evidence. The dream diary records what the pass
+<em>found</em>, not what it dropped.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>agent/memory/</code> (~5,300 lines):</p>
 <ul>

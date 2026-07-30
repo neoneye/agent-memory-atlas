@@ -150,12 +150,24 @@ architecture decision, bug, or workflow.</li>
 profiles: additional projections over the same activity.</li>
 </ul>
 <p>Typical lifecycle:</p>
-<pre class="text"><code>agent hook -&gt; mem::observe -&gt; raw observation + indexes
-                         -&gt; optional compression
-explicit fact -&gt; mem::remember -&gt; versioned memory + indexes
-session evidence -&gt; consolidation -&gt; memory / semantic / procedural layers
-query -&gt; BM25 + vector + graph -&gt; RRF -&gt; compact results
-selected IDs -&gt; expand -&gt; context for the agent</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    H[&quot;agent hook&quot;] --&gt;|&quot;mem::observe&quot;| RO[&quot;raw observation + indexes&quot;]
+    RO -.-&gt;|optional| CMP[&quot;compression&quot;]
+    F[&quot;explicit fact&quot;] --&gt;|&quot;mem::remember&quot;| VM[&quot;versioned memory + indexes&quot;]
+    SE[&quot;session evidence&quot;] --&gt; CN[&quot;consolidation&quot;]
+    CN --&gt; L[(&quot;memory / semantic /&lt;br/&gt;procedural layers&quot;)]
+    RO --&gt; L
+    VM --&gt; L
+    L --&gt; Q[&quot;query: BM25 + vector + graph&quot;]
+    Q --&gt; RRF[&quot;RRF&quot;]
+    RRF --&gt; CR[&quot;compact results&quot;]
+    CR --&gt;|&quot;selected ids&quot;| EXP[&quot;expand&quot;]
+    EXP --&gt; CTX[&quot;context for the agent&quot;]
+
+    style CR fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Retrieval returns <em>compact</em> results and expands only the ids
+the caller selects, so the cost of reading a memory in full is paid on
+demand rather than for every hit.</p>
 <p>Most hook capture is deliberately cheap. Unless automatic compression
 is enabled, <code>mem::observe</code> creates a synthetic structured
 observation rather than calling an LLM for every event.</p>

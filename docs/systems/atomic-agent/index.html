@@ -198,13 +198,19 @@ chain:</p>
 bi-temporality was retrofitted is recoverable rather than silently
 assumed.</p>
 <p>Lifecycle:</p>
-<pre class="text"><code>session → consolidator clusters related material
-        → ONE LLM call per cluster emits a lesson AND (optionally) a procedure
-          [invariant 21: ≤ 1 call per cluster even when both are produced]
-        → links generated between surfaced ids only
-        → reflection (vote-aware) on a separate prompt slot
-        → vote_events appended; vote_score derived
-        → deprecation flips status; the row is retained</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    S[&quot;session&quot;] --&gt; CL[&quot;consolidator clusters&lt;br/&gt;related material&quot;]
+    CL --&gt; ONE[&quot;ONE LLM call per cluster&lt;br/&gt;emits a lesson and, optionally, a procedure&quot;]
+    ONE --&gt; LK[&quot;links generated between&lt;br/&gt;&lt;i&gt;surfaced ids only&lt;/i&gt;&quot;]
+    LK --&gt; RF[&quot;reflection, vote-aware,&lt;br/&gt;on a separate prompt slot&quot;]
+    RF --&gt; VE[&quot;vote_events appended&lt;br/&gt;vote_score derived&quot;]
+    VE --&gt; DEP[&quot;deprecation flips status&lt;br/&gt;&lt;i&gt;the row is retained&lt;/i&gt;&quot;]
+
+    style ONE fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The highlighted step is invariant 21, cited by number in the source:
+<strong>at most one model call per cluster even when it produces both a
+lesson and a procedure.</strong> The cost bound is written down as a
+rule rather than left to whoever edits the consolidator next.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/memory/</code> (~14,000 lines):</p>
 <ul>

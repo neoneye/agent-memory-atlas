@@ -65,14 +65,27 @@ The central distinction is between captured evidence and synthesized memory:
 
 Typical lifecycle:
 
-```text
-agent hook -> mem::observe -> raw observation + indexes
-                         -> optional compression
-explicit fact -> mem::remember -> versioned memory + indexes
-session evidence -> consolidation -> memory / semantic / procedural layers
-query -> BM25 + vector + graph -> RRF -> compact results
-selected IDs -> expand -> context for the agent
+```mermaid
+flowchart TB
+    H["agent hook"] -->|"mem::observe"| RO["raw observation + indexes"]
+    RO -.->|optional| CMP["compression"]
+    F["explicit fact"] -->|"mem::remember"| VM["versioned memory + indexes"]
+    SE["session evidence"] --> CN["consolidation"]
+    CN --> L[("memory / semantic /<br/>procedural layers")]
+    RO --> L
+    VM --> L
+    L --> Q["query: BM25 + vector + graph"]
+    Q --> RRF["RRF"]
+    RRF --> CR["compact results"]
+    CR -->|"selected ids"| EXP["expand"]
+    EXP --> CTX["context for the agent"]
+
+    style CR fill:#e7efe9,stroke:#3d6b59
 ```
+
+Retrieval returns *compact* results and expands only the ids the caller selects,
+so the cost of reading a memory in full is paid on demand rather than for every
+hit.
 
 Most hook capture is deliberately cheap. Unless automatic compression is
 enabled, `mem::observe` creates a synthetic structured observation rather than
