@@ -187,7 +187,19 @@ that no amount of automation removes.
 
 ## Known limits
 
-- **Marks are assigned by one reviewer** reading code, not by running it.
+- **Marks are assigned by one reviewer** reading code, not by running it — and
+  that reviewer is a language model working from the repository, directed and
+  reviewed by one person who commits the result. This was not stated here until
+  30 July 2026, when an outside reader inferred it correctly from the reports and
+  the atlas noticed it had never said so. It belongs on this page because it
+  changes how a mark should be weighed: the reading is fast, consistent about
+  applying a definition, and prone to a specific failure — producing something
+  *plausible* where the code says something adjacent. Three instances from a
+  single day are recorded in the
+  [methodology hazards note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-methodology-hazards.md),
+  including one wrong mark that survived two months. The countermeasure is the
+  same one this page already demands of everyone else: a claim names a file and a
+  symbol, so it can be checked without trusting whoever made it.
 - **Strictness cuts both ways.** A system with a nearly-complete mechanism reads
   the same as one with nothing, which is why the near-misses are named in prose.
 - **The scope mark is the shallowest**, for the reason given above.

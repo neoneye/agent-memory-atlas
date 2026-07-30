@@ -51,6 +51,44 @@ and confirm the check notices. This is now done for `check_homepage.py`,
 `check_anchors.py` and the capability drift check; it was not done for the first
 freshness implementation, which is why that one shipped wrong.
 
+## 2b. The reviewer is a language model
+
+**Stated late.** The reports are written by an LLM reading repositories, directed
+by one person who reviews and commits. The rubric said "one reviewer reading
+code" and left the rest to inference until 30 July 2026, when an outside reviewer
+inferred it correctly and the omission became obvious. A project that refuses
+claims unsupported by artifacts should not have left its own method to be guessed.
+
+The failure mode is specific and worth naming precisely, because it is *not*
+carelessness: the output is fluent, structurally correct, and adjacent to the
+truth. Three instances from 30 July alone:
+
+- **A fabricated commit id, twice.** A triage table held abbreviated SHAs; the
+  report frontmatter needed full ones, and plausible forty-character strings were
+  produced rather than the real ones. Both caught before publishing, by running
+  `git log -1 --format=%H`. Nothing about the invented SHAs looked wrong.
+- **A bug that was not there.** Cortex's `shared_context` insert names nine
+  columns and binds eight values, which reads as a parameter-shift defect. The
+  `VALUES` clause hardcodes `version` to `1`. It was one line further on, and the
+  finding was one keystroke from being published.
+- **A mark that was wrong for two months.** Mem0's `history` table plainly earns
+  `audit_log` and the report carried only `scope_enforced`. This one was not
+  caught by checking; it surfaced because an independent C# reimplementation of
+  the same design was reviewed and marked differently, and the divergence was
+  written down rather than resolved. A false *negative* leaves no trace to notice.
+
+**Pattern:** the first two are caught by the discipline this atlas already
+imposes — cite a file and a symbol, then go read it. The third is not, and no
+amount of care at write time would have found it. It was found by coverage: the
+corpus happened to contain one system twice.
+
+**Mitigation, in order of how much they help.** Every claim names a file and a
+symbol, so a reader can check without trusting the reviewer — this is the whole
+reason the format demands it. Verify before asserting, particularly anything
+shaped like a defect. And treat re-review of already-marked systems as a real
+activity rather than a backlog item, because a wrong mark is invisible from
+inside the report that carries it.
+
 ## 3. A single reviewer assigning every mark
 
 **Standing.** Every capability mark, every "Best idea", every "Main risk" is one
