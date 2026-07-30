@@ -85,28 +85,42 @@ ContextData {
 
 Curation lifecycle — the part worth studying:
 
-```text
-agent proposes curated content for an existing knowledge file
--> parse existing file -> ContextData(existing)
--> detectStructuralLoss(existing, proposed)
-     counts lostSnippets, lostRelations, lostNarrativeFields,
-            lostRawConceptFields, lostArrayItems
--> deriveImpactFromLoss(loss) -> 'high' | 'low'
--> if loss.hasLoss: resolveStructuralLoss()
-     arrays  -> union merge with dedup
-     scalars -> proposed wins, existing preserved when proposed is empty
--> write repaired content
+```mermaid
+flowchart TB
+    P["agent proposes curated content<br/>for an existing knowledge file"] --> PAR["parse existing file<br/>ContextData(existing)"]
+    PAR --> DET["detectStructuralLoss(existing, proposed)<br/><i>counts lostSnippets, lostRelations,<br/>lostNarrativeFields, lostRawConceptFields,<br/>lostArrayItems</i>"]
+    DET --> IMP["deriveImpactFromLoss(loss)<br/>high or low"]
+    IMP --> HAS{"loss.hasLoss?"}
+    HAS -->|yes| RES["resolveStructuralLoss()<br/><i>arrays: union merge with dedup<br/>scalars: proposed wins, existing kept<br/>when proposed is empty</i>"]
+    HAS -->|no| W
+    RES --> W["write repaired content"]
+
+    style DET fill:#e7efe9,stroke:#3d6b59
+    style RES fill:#e7efe9,stroke:#3d6b59
 ```
+
+This is the atlas's only instance of a system **measuring what a model's rewrite
+would destroy before accepting it**, and then repairing rather than refusing. Most
+systems here take a proposed rewrite on trust; this one counts the losses by
+category and merges the pieces back.
 
 Memory write lifecycle:
 
-```text
-agent extracts DraftMemory[] (content, category, tags)
--> MemoryDeduplicator.deduplicate(drafts, existing)   [LLM, concurrency 4]
-     -> CREATE | MERGE(targetId, mergedContent) | SKIP
-     -> DECISIONS category: always CREATE (immutable log)
--> persist to .byterover/cipher/memories
+```mermaid
+flowchart TB
+    E["agent extracts DraftMemory[]<br/><i>content, category, tags</i>"] --> D["MemoryDeduplicator.deduplicate(drafts, existing)<br/><i>LLM, concurrency 4</i>"]
+    D --> CAT{"category == DECISIONS?"}
+    CAT -->|yes| CRE["always CREATE<br/><i>an immutable log</i>"]
+    CAT -->|no| VERD["CREATE, MERGE(targetId, mergedContent),<br/>or SKIP"]
+    CRE --> ST[("persist to<br/>.byterover/cipher/memories")]
+    VERD --> ST
+
+    style CRE fill:#e7efe9,stroke:#3d6b59
 ```
+
+One category is exempt from dedup by rule. `DECISIONS` always creates, so the
+record of *what was decided* is append-only even though everything else can be
+merged away — a per-kind lifecycle rather than one policy for the whole store.
 
 ## 3. Architecture
 

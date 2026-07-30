@@ -210,24 +210,54 @@ columns are schema groundwork that the Tier-1 ranker does not yet use
     last_hit_at=...
 )</code></pre>
 <p>Write lifecycle:</p>
-<pre class="text"><code>explicit human command / assistant remember / review UI
--&gt; record_belief(actor, …)  [advisory lock: dedupe → tombstone → conflict → create]
--&gt; MemoryClaim (active if human actor; candidate if model actor)
--&gt; MemoryEvidence
--&gt; refresh MemoryEmbedding (active and candidate)</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    IN[&quot;explicit human command,&lt;br/&gt;assistant remember,&lt;br/&gt;or the review UI&quot;] --&gt; RB[&quot;record_belief(actor, …)&quot;]
+    RB --&gt; LOCK[&quot;under an advisory lock:&lt;br/&gt;dedupe → tombstone → conflict → create&quot;]
+    LOCK --&gt; WHO{&quot;actor?&quot;}
+    WHO --&gt;|human| ACT[&quot;MemoryClaim: active&quot;]
+    WHO --&gt;|model| CAND[&quot;MemoryClaim: candidate&quot;]
+    ACT --&gt; EV[&quot;MemoryEvidence&quot;]
+    CAND --&gt; EV
+    EV --&gt; EMB[&quot;refresh MemoryEmbedding&lt;br/&gt;&lt;i&gt;active and candidate&lt;/i&gt;&quot;]
+
+    style WHO fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Who wrote it decides its starting trust. A human's claim lands
+<strong>active</strong>; a model's lands <strong>candidate</strong> — so
+the same call produces different standing depending on the actor, and
+nothing a model says is believed on arrival.</p>
 <p>Correction lifecycle:</p>
-<pre class="text"><code>correct that OLD -&gt; NEW  /  /memory UI correct action
--&gt; correct_belief(old_uuid, new_text, actor, evidence)
-   [advisory lock on old + new keys; supersede old + tombstone; record_belief replacement]
--&gt; active replacement; old claim superseded and tombstoned</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;correct that OLD to NEW,&lt;br/&gt;or the /memory UI correct action&quot;] --&gt; CB[&quot;correct_belief(old_uuid, new_text,&lt;br/&gt;actor, evidence)&quot;]
+    CB --&gt; L[&quot;advisory lock on both the old and new keys&quot;]
+    L --&gt; SUP[&quot;supersede the old claim&quot;]
+    L --&gt; TOMB[&quot;write a tombstone&quot;]
+    L --&gt; NEW[&quot;record_belief writes the replacement&quot;]
+    SUP --&gt; R[&quot;old claim superseded and tombstoned;&lt;br/&gt;replacement is active&quot;]
+    TOMB --&gt; R
+    NEW --&gt; R
+
+    style TOMB fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Correction takes <strong>both</strong> locks and does three things
+atomically. The tombstone is the highlighted one: superseding alone
+would leave the old value re-assertable, which is the failure this atlas
+is organised around.</p>
 <p>Retrieval lifecycle:</p>
-<pre class="text"><code>user turn / assistant action
--&gt; build query
--&gt; hard_filtered_claims: active, non-expired, allowed sensitivity, matching scope
--&gt; rank by vector + full-text + subject/object entity boost (retrieve_memories_hybrid)
--&gt; fence_recalled_memory: wrap in &lt;recalled_memory …&gt; fence, neutralize angle brackets
--&gt; inject into chat prompt or assistant action observation
--&gt; write RetrievalEvent and/or debug-memory row</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    T[&quot;user turn or assistant action&quot;] --&gt; Q[&quot;build query&quot;]
+    Q --&gt; HF[&quot;hard_filtered_claims:&lt;br/&gt;active, non-expired,&lt;br/&gt;allowed sensitivity, matching scope&quot;]
+    HF --&gt; RK[&quot;retrieve_memories_hybrid:&lt;br/&gt;vector + full-text&lt;br/&gt;+ subject/object entity boost&quot;]
+    RK --&gt; FEN[&quot;fence_recalled_memory:&lt;br/&gt;wrap in a recalled-memory fence,&lt;br/&gt;neutralize angle brackets&quot;]
+    FEN --&gt; INJ[&quot;inject into the chat prompt&lt;br/&gt;or an action observation&quot;]
+    INJ --&gt; LOG[(&quot;RetrievalEvent&lt;br/&gt;and/or a debug-memory row&quot;)]
+
+    style HF fill:#e7efe9,stroke:#3d6b59
+    style FEN fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Two highlighted steps, both about containment. Filtering happens
+<strong>before</strong> ranking, so excluded material is never scored.
+And retrieved text is <strong>fenced</strong> with angle brackets
+neutralized before it reaches the prompt — memory is treated as
+untrusted input to the model, which almost nothing else in this atlas
+does.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core files:</p>
 <ul>

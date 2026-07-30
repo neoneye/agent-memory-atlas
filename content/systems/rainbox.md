@@ -109,34 +109,63 @@ MemoryRejectedValue(
 
 Write lifecycle:
 
-```text
-explicit human command / assistant remember / review UI
--> record_belief(actor, …)  [advisory lock: dedupe → tombstone → conflict → create]
--> MemoryClaim (active if human actor; candidate if model actor)
--> MemoryEvidence
--> refresh MemoryEmbedding (active and candidate)
+```mermaid
+flowchart TB
+    IN["explicit human command,<br/>assistant remember,<br/>or the review UI"] --> RB["record_belief(actor, …)"]
+    RB --> LOCK["under an advisory lock:<br/>dedupe → tombstone → conflict → create"]
+    LOCK --> WHO{"actor?"}
+    WHO -->|human| ACT["MemoryClaim: active"]
+    WHO -->|model| CAND["MemoryClaim: candidate"]
+    ACT --> EV["MemoryEvidence"]
+    CAND --> EV
+    EV --> EMB["refresh MemoryEmbedding<br/><i>active and candidate</i>"]
+
+    style WHO fill:#e7efe9,stroke:#3d6b59
 ```
+
+Who wrote it decides its starting trust. A human's claim lands **active**; a
+model's lands **candidate** — so the same call produces different standing
+depending on the actor, and nothing a model says is believed on arrival.
 
 Correction lifecycle:
 
-```text
-correct that OLD -> NEW  /  /memory UI correct action
--> correct_belief(old_uuid, new_text, actor, evidence)
-   [advisory lock on old + new keys; supersede old + tombstone; record_belief replacement]
--> active replacement; old claim superseded and tombstoned
+```mermaid
+flowchart TB
+    C["correct that OLD to NEW,<br/>or the /memory UI correct action"] --> CB["correct_belief(old_uuid, new_text,<br/>actor, evidence)"]
+    CB --> L["advisory lock on both the old and new keys"]
+    L --> SUP["supersede the old claim"]
+    L --> TOMB["write a tombstone"]
+    L --> NEW["record_belief writes the replacement"]
+    SUP --> R["old claim superseded and tombstoned;<br/>replacement is active"]
+    TOMB --> R
+    NEW --> R
+
+    style TOMB fill:#f4e2bd,stroke:#b8860b
 ```
+
+Correction takes **both** locks and does three things atomically. The tombstone is
+the highlighted one: superseding alone would leave the old value re-assertable,
+which is the failure this atlas is organised around.
 
 Retrieval lifecycle:
 
-```text
-user turn / assistant action
--> build query
--> hard_filtered_claims: active, non-expired, allowed sensitivity, matching scope
--> rank by vector + full-text + subject/object entity boost (retrieve_memories_hybrid)
--> fence_recalled_memory: wrap in <recalled_memory …> fence, neutralize angle brackets
--> inject into chat prompt or assistant action observation
--> write RetrievalEvent and/or debug-memory row
+```mermaid
+flowchart TB
+    T["user turn or assistant action"] --> Q["build query"]
+    Q --> HF["hard_filtered_claims:<br/>active, non-expired,<br/>allowed sensitivity, matching scope"]
+    HF --> RK["retrieve_memories_hybrid:<br/>vector + full-text<br/>+ subject/object entity boost"]
+    RK --> FEN["fence_recalled_memory:<br/>wrap in a recalled-memory fence,<br/>neutralize angle brackets"]
+    FEN --> INJ["inject into the chat prompt<br/>or an action observation"]
+    INJ --> LOG[("RetrievalEvent<br/>and/or a debug-memory row")]
+
+    style HF fill:#e7efe9,stroke:#3d6b59
+    style FEN fill:#e7efe9,stroke:#3d6b59
 ```
+
+Two highlighted steps, both about containment. Filtering happens **before**
+ranking, so excluded material is never scored. And retrieved text is **fenced**
+with angle brackets neutralized before it reaches the prompt — memory is treated
+as untrusted input to the model, which almost nothing else in this atlas does.
 
 ## 3. Architecture
 

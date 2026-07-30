@@ -219,13 +219,27 @@ are model-independent."</p>
 </tbody>
 </table></div>
 <p>Write lifecycle:</p>
-<pre class="text"><code>memory(action=add|replace|remove, target=memory|user, ...)
--&gt; write gate (allow | block | stage for human approval)
--&gt; threat scan (strict pattern set)
--&gt; file lock -&gt; re-read from disk -&gt; drift check -&gt; budget check
--&gt; refuse-and-demand-consolidation, or append/replace/remove
--&gt; atomic_replace to disk        [system prompt unchanged this session]
--&gt; next session start: frozen snapshot re-rendered into system prompt</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[&quot;memory(action = add, replace or remove,&lt;br/&gt;target = memory or user)&quot;] --&gt; G{&quot;write gate&quot;}
+    G --&gt;|block| B[&quot;refused&quot;]
+    G --&gt;|stage| H[&quot;held for human approval&quot;]
+    G --&gt;|allow| TS[&quot;threat scan&lt;br/&gt;&lt;i&gt;strict pattern set&lt;/i&gt;&quot;]
+    TS --&gt; LK[&quot;file lock → re-read from disk&lt;br/&gt;→ drift check → budget check&quot;]
+    LK --&gt; BUD{&quot;within budget?&quot;}
+    BUD --&gt;|no| REF[&quot;refuse and demand consolidation&quot;]
+    BUD --&gt;|yes| WR[&quot;append, replace or remove&quot;]
+    WR --&gt; AT[&quot;atomic_replace to disk&quot;]
+    AT --&gt; SESS[&quot;system prompt unchanged&lt;br/&gt;&lt;b&gt;this&lt;/b&gt; session&quot;]
+    SESS --&gt; NEXT[&quot;next session start: the frozen snapshot&lt;br/&gt;is re-rendered into the system prompt&quot;]
+
+    style REF fill:#e7efe9,stroke:#3d6b59
+    style SESS fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Two things this diagram makes plain. The budget is a <strong>hard
+refusal</strong> — a write that would overflow is rejected and
+consolidation demanded, rather than the file being silently trimmed. And
+a write does not change what the model can see until the <em>next</em>
+session, because the prompt holds a frozen snapshot — so within a
+session the agent's memory and its context disagree, by design.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <ul>
 <li><code>tools/memory_tool.py</code> (1,258 lines):

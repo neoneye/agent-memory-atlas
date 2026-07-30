@@ -184,22 +184,36 @@ documents parsed into <code>ContextData</code>:</p>
   rawConcept: { author, flow, task, timestamp, changes[], files[], patterns }
 }</code></pre>
 <p>Curation lifecycle — the part worth studying:</p>
-<pre class="text"><code>agent proposes curated content for an existing knowledge file
--&gt; parse existing file -&gt; ContextData(existing)
--&gt; detectStructuralLoss(existing, proposed)
-     counts lostSnippets, lostRelations, lostNarrativeFields,
-            lostRawConceptFields, lostArrayItems
--&gt; deriveImpactFromLoss(loss) -&gt; &#39;high&#39; | &#39;low&#39;
--&gt; if loss.hasLoss: resolveStructuralLoss()
-     arrays  -&gt; union merge with dedup
-     scalars -&gt; proposed wins, existing preserved when proposed is empty
--&gt; write repaired content</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    P[&quot;agent proposes curated content&lt;br/&gt;for an existing knowledge file&quot;] --&gt; PAR[&quot;parse existing file&lt;br/&gt;ContextData(existing)&quot;]
+    PAR --&gt; DET[&quot;detectStructuralLoss(existing, proposed)&lt;br/&gt;&lt;i&gt;counts lostSnippets, lostRelations,&lt;br/&gt;lostNarrativeFields, lostRawConceptFields,&lt;br/&gt;lostArrayItems&lt;/i&gt;&quot;]
+    DET --&gt; IMP[&quot;deriveImpactFromLoss(loss)&lt;br/&gt;high or low&quot;]
+    IMP --&gt; HAS{&quot;loss.hasLoss?&quot;}
+    HAS --&gt;|yes| RES[&quot;resolveStructuralLoss()&lt;br/&gt;&lt;i&gt;arrays: union merge with dedup&lt;br/&gt;scalars: proposed wins, existing kept&lt;br/&gt;when proposed is empty&lt;/i&gt;&quot;]
+    HAS --&gt;|no| W
+    RES --&gt; W[&quot;write repaired content&quot;]
+
+    style DET fill:#e7efe9,stroke:#3d6b59
+    style RES fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>This is the atlas's only instance of a system <strong>measuring what
+a model's rewrite would destroy before accepting it</strong>, and then
+repairing rather than refusing. Most systems here take a proposed
+rewrite on trust; this one counts the losses by category and merges the
+pieces back.</p>
 <p>Memory write lifecycle:</p>
-<pre class="text"><code>agent extracts DraftMemory[] (content, category, tags)
--&gt; MemoryDeduplicator.deduplicate(drafts, existing)   [LLM, concurrency 4]
-     -&gt; CREATE | MERGE(targetId, mergedContent) | SKIP
-     -&gt; DECISIONS category: always CREATE (immutable log)
--&gt; persist to .byterover/cipher/memories</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    E[&quot;agent extracts DraftMemory[]&lt;br/&gt;&lt;i&gt;content, category, tags&lt;/i&gt;&quot;] --&gt; D[&quot;MemoryDeduplicator.deduplicate(drafts, existing)&lt;br/&gt;&lt;i&gt;LLM, concurrency 4&lt;/i&gt;&quot;]
+    D --&gt; CAT{&quot;category == DECISIONS?&quot;}
+    CAT --&gt;|yes| CRE[&quot;always CREATE&lt;br/&gt;&lt;i&gt;an immutable log&lt;/i&gt;&quot;]
+    CAT --&gt;|no| VERD[&quot;CREATE, MERGE(targetId, mergedContent),&lt;br/&gt;or SKIP&quot;]
+    CRE --&gt; ST[(&quot;persist to&lt;br/&gt;.byterover/cipher/memories&quot;)]
+    VERD --&gt; ST
+
+    style CRE fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>One category is exempt from dedup by rule. <code>DECISIONS</code>
+always creates, so the record of <em>what was decided</em> is
+append-only even though everything else can be merged away — a per-kind
+lifecycle rather than one policy for the whole store.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The repository is a TypeScript CLI and server, roughly 1,168
 <code>.ts</code> files under <code>src/</code>, organized as

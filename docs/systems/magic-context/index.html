@@ -201,16 +201,26 @@ and <code>dreamer</code> are the background subagents and
 instinct as RainBox's five-actor model.</li>
 </ul>
 <p>Verification lifecycle — the distinctive path:</p>
-<pre class="text"><code>memory created (agent, user, historian, or dreamer)
--&gt; map-memories backfill assigns backing files      [unmapped -&gt; mapped, verified_at = 0]
--&gt; partitionVerifyScope():
-      never verified (verified_at = 0)                       -&gt; in scope
-      any mapped file changed since THAT memory&#39;s verified_at -&gt; in scope
-         (git committed change-time, uncommitted edit, or deletion)
-      no-file sentinel (file-independent)                    -&gt; excluded, curate + age decay own it
-      forceBroad (&quot;verify-broad&quot;)                            -&gt; whole mapped pool, drift catching
--&gt; dreamer verify task -&gt; verificationStatus + verified_at written per memory
-   (partial progress persists; a timed-out run banks what it checked)</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;memory created&lt;br/&gt;&lt;i&gt;agent, user, historian or dreamer&lt;/i&gt;&quot;] --&gt; MAP[&quot;map-memories backfill&lt;br/&gt;assigns backing files&lt;br/&gt;&lt;i&gt;unmapped to mapped, verified_at = 0&lt;/i&gt;&quot;]
+    MAP --&gt; PART[&quot;partitionVerifyScope()&quot;]
+    PART --&gt; N1[&quot;never verified&lt;br/&gt;verified_at = 0&quot;] --&gt; IN
+    PART --&gt; N2[&quot;a mapped file changed since&lt;br/&gt;&lt;b&gt;that memory&#39;s&lt;/b&gt; verified_at&lt;br/&gt;&lt;i&gt;committed change, uncommitted edit,&lt;br/&gt;or deletion&lt;/i&gt;&quot;] --&gt; IN
+    PART --&gt; N3[&quot;forceBroad, verify-broad:&lt;br/&gt;the whole mapped pool&quot;] --&gt; IN
+    PART --&gt; N4[&quot;no-file sentinel,&lt;br/&gt;file-independent&quot;] --&gt; OUT[&quot;excluded — curate&lt;br/&gt;and age decay own it&quot;]
+    IN[&quot;in scope&quot;] --&gt; V[&quot;dreamer verify task&quot;]
+    V --&gt; WR[&quot;verificationStatus + verified_at&lt;br/&gt;written &lt;b&gt;per memory&lt;/b&gt;&quot;]
+
+    style N2 fill:#e7efe9,stroke:#3d6b59
+    style WR fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Both highlighted boxes are the same lesson, learned the hard way and
+recorded in the source: verification state is <strong>per
+memory</strong>, not a global watermark. An earlier version used one
+commit watermark with all-or-nothing coverage, so a timed-out run banked
+nothing. Per-memory timestamps make partial progress worth keeping, and
+the exclusion of file-independent memories is stated rather than papered
+over — they cannot be checked against local code, so something else has
+to own them.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>The core lives in
 <code>packages/plugin/src/features/magic-context/</code>, with harness

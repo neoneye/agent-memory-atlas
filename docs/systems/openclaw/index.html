@@ -179,19 +179,33 @@ MemoryConfig = {
   storageOptions?: Record&lt;string, string&gt;
 }</code></pre>
 <p>Capture lifecycle:</p>
-<pre class="text"><code>inbound platform message (wrapped in OpenClaw envelope)
--&gt; extractUserTextContent() / extractLatestUserText()
--&gt; sanitizeForMemoryCapture(): drop media notes, ctx markers, history/current
-   markers, bracketed prefixes, reply lines, sender prefixes, timestamps
--&gt; looksLikeEnvelopeSludge()? -&gt; reject
--&gt; truncate to captureMaxChars (500)
--&gt; embed -&gt; store(agentId, entry)
--&gt; AutoCaptureCursor { nextIndex, lastMessageFingerprint } advances</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    M[&quot;inbound platform message&lt;br/&gt;&lt;i&gt;wrapped in an OpenClaw envelope&lt;/i&gt;&quot;] --&gt; X[&quot;extractUserTextContent()&lt;br/&gt;extractLatestUserText()&quot;]
+    X --&gt; SAN[&quot;sanitizeForMemoryCapture()&lt;br/&gt;&lt;i&gt;drop media notes, ctx markers, history and&lt;br/&gt;current markers, bracketed prefixes,&lt;br/&gt;reply lines, sender prefixes, timestamps&lt;/i&gt;&quot;]
+    SAN --&gt; SLU{&quot;looksLikeEnvelopeSludge()?&quot;}
+    SLU --&gt;|yes| REJ[&quot;reject&quot;]
+    SLU --&gt;|no| TR[&quot;truncate to captureMaxChars, 500&quot;]
+    TR --&gt; EM[&quot;embed&quot;]
+    EM --&gt; ST[(&quot;store(agentId, entry)&quot;)]
+    ST --&gt; CUR[&quot;AutoCaptureCursor advances&lt;br/&gt;&lt;i&gt;nextIndex, lastMessageFingerprint&lt;/i&gt;&quot;]
+
+    style SLU fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Most of this path is subtraction. The envelope wraps real user text
+in platform scaffolding, and the sanitizer strips seven kinds of it
+before a sludge check rejects whatever is still mostly wrapper — capture
+quality here is a filtering problem, not an extraction one.</p>
 <p>Recall lifecycle:</p>
-<pre class="text"><code>latest user text -&gt; normalizeRecallQuery() (collapse whitespace, cap at 1000 chars)
--&gt; embed -&gt; LanceDB vector search
--&gt; scopedPredicate(agentId, filter)  [single predicate — scope cannot be dropped]
--&gt; results injected into context</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    T[&quot;latest user text&quot;] --&gt; N[&quot;normalizeRecallQuery()&lt;br/&gt;&lt;i&gt;collapse whitespace, cap at 1000 chars&lt;/i&gt;&quot;]
+    N --&gt; E[&quot;embed&quot;] --&gt; V[&quot;LanceDB vector search&quot;]
+    V --&gt; SP[&quot;scopedPredicate(agentId, filter)&quot;]
+    SP --&gt; I[&quot;injected into context&quot;]
+
+    style SP fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p><code>scopedPredicate</code> builds scope and caller filter as a
+<strong>single</strong> predicate, so there is no code path that applies
+one without the other — the scope cannot be dropped by a caller who
+forgets it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Memory-relevant code lives entirely in extensions:</p>
 <ul>

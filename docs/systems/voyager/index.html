@@ -157,26 +157,62 @@ description:</p>
     &quot;description&quot;: skill_description # LLM-generated summary, used as the retrieval key
 }</code></pre>
 <p>Persisted across three stores that must agree:</p>
-<pre class="text"><code>ckpt/skill/code/&lt;name&gt;.js          the executable
-ckpt/skill/description/&lt;name&gt;.txt  the retrieval key
-ckpt/skill/skills.json             the authoritative map
-ckpt/skill/vectordb/               Chroma index over descriptions</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ckpt/skill/code/&lt;name&gt;.js</code></td>
+<td>the executable</td>
+</tr>
+<tr>
+<td><code>ckpt/skill/description/&lt;name&gt;.txt</code></td>
+<td>the retrieval key</td>
+</tr>
+<tr>
+<td><code>ckpt/skill/skills.json</code></td>
+<td>the authoritative map</td>
+</tr>
+<tr>
+<td><code>ckpt/skill/vectordb/</code></td>
+<td>Chroma index over descriptions</td>
+</tr>
+</tbody>
+</table></div>
 <p>Write lifecycle — note where the gate sits:</p>
-<pre class="text"><code>curriculum proposes task
--&gt; action agent writes code (given retrieved skills as context)
--&gt; execute in environment
--&gt; critic agent inspects resulting environment state -&gt; success | critique
--&gt; if NOT success: feed critique back, retry (no memory write)
--&gt; if success: add_new_skill()
-      -&gt; LLM generates description from code
-      -&gt; embed description into Chroma under program_name
-      -&gt; write code + description + skills.json, persist vectordb</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;curriculum proposes a task&quot;] --&gt; A[&quot;action agent writes code&lt;br/&gt;&lt;i&gt;retrieved skills as context&lt;/i&gt;&quot;]
+    A --&gt; E[&quot;execute in the environment&quot;]
+    E --&gt; CR[&quot;critic agent inspects&lt;br/&gt;the resulting environment state&quot;]
+    CR --&gt; G{&quot;success?&quot;}
+    G --&gt;|no| RETRY[&quot;feed the critique back and retry&lt;br/&gt;&lt;b&gt;no memory write&lt;/b&gt;&quot;]
+    RETRY --&gt; A
+    G --&gt;|yes| ADD[&quot;add_new_skill()&quot;]
+    ADD --&gt; D[&quot;LLM generates a description&lt;br/&gt;from the code&quot;]
+    D --&gt; EM[&quot;embed the description into Chroma&lt;br/&gt;under program_name&quot;]
+    EM --&gt; W[(&quot;write code + description&lt;br/&gt;+ skills.json, persist vectordb&quot;)]
+
+    style G fill:#e7efe9,stroke:#3d6b59
+    style RETRY fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The gate is the whole design. <strong>Nothing is written until the
+environment agrees</strong> — the critic inspects world state rather
+than judging the text, and a failure retries without leaving anything
+behind. Voyager is the atlas's clearest instance of memory validated by
+execution rather than by adjudication.</p>
 <p>Read lifecycle:</p>
-<pre class="text"><code>task context
--&gt; retrieve_skills(query=context)
--&gt; Chroma similarity_search_with_score over descriptions, k = min(count, 5)
--&gt; return the CODE of the top-k matches
--&gt; injected into the action agent&#39;s prompt as callable functions</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    T[&quot;task context&quot;] --&gt; R[&quot;retrieve_skills(query=context)&quot;]
+    R --&gt; S[&quot;Chroma similarity_search_with_score&lt;br/&gt;over &lt;i&gt;descriptions&lt;/i&gt;, k = min(count, 5)&quot;]
+    S --&gt; C[&quot;return the &lt;b&gt;code&lt;/b&gt; of the top-k matches&quot;]
+    C --&gt; I[&quot;injected as callable functions&lt;br/&gt;in the action agent&#39;s prompt&quot;]</code></pre>
+<p>Search runs over descriptions and returns code. The description is a
+retrieval key written by a model <em>about</em> the artifact, which
+keeps the thing being matched in natural language and the thing being
+used executable.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Voyager is small — about 1,459 lines across five agent modules — and
 the memory piece is smaller still:</p>

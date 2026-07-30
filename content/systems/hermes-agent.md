@@ -73,15 +73,29 @@ Four memory kinds coexist with very different guarantees:
 
 Write lifecycle:
 
-```text
-memory(action=add|replace|remove, target=memory|user, ...)
--> write gate (allow | block | stage for human approval)
--> threat scan (strict pattern set)
--> file lock -> re-read from disk -> drift check -> budget check
--> refuse-and-demand-consolidation, or append/replace/remove
--> atomic_replace to disk        [system prompt unchanged this session]
--> next session start: frozen snapshot re-rendered into system prompt
+```mermaid
+flowchart TB
+    A["memory(action = add, replace or remove,<br/>target = memory or user)"] --> G{"write gate"}
+    G -->|block| B["refused"]
+    G -->|stage| H["held for human approval"]
+    G -->|allow| TS["threat scan<br/><i>strict pattern set</i>"]
+    TS --> LK["file lock → re-read from disk<br/>→ drift check → budget check"]
+    LK --> BUD{"within budget?"}
+    BUD -->|no| REF["refuse and demand consolidation"]
+    BUD -->|yes| WR["append, replace or remove"]
+    WR --> AT["atomic_replace to disk"]
+    AT --> SESS["system prompt unchanged<br/><b>this</b> session"]
+    SESS --> NEXT["next session start: the frozen snapshot<br/>is re-rendered into the system prompt"]
+
+    style REF fill:#e7efe9,stroke:#3d6b59
+    style SESS fill:#f4e2bd,stroke:#b8860b
 ```
+
+Two things this diagram makes plain. The budget is a **hard refusal** — a write
+that would overflow is rejected and consolidation demanded, rather than the file
+being silently trimmed. And a write does not change what the model can see until
+the *next* session, because the prompt holds a frozen snapshot — so within a
+session the agent's memory and its context disagree, by design.
 
 ## 3. Architecture
 

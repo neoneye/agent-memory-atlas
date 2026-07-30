@@ -89,21 +89,39 @@ unbind(fact_vector, bind(entity, ROLE_ENTITY)) ≈ content_vector
 
 Write lifecycle:
 
-```text
-fact_store(action="add")  or  on_memory_write mirror  or  on_session_end regex extraction
--> add_fact(): INSERT (UNIQUE content) -> regex entity extraction -> entity resolve/link
--> _compute_hrr_vector() -> _rebuild_bank(category)   # full category re-bundle, every write
+```mermaid
+flowchart TB
+    A["fact_store(action=add)"] --> AF
+    B["on_memory_write mirror"] --> AF
+    C["on_session_end regex extraction"] --> AF
+    AF["add_fact(): INSERT, UNIQUE content"] --> RE["regex entity extraction"]
+    RE --> EL["entity resolve and link"]
+    EL --> HRR["_compute_hrr_vector()"]
+    HRR --> RB["_rebuild_bank(category)<br/><i>full category re-bundle, on every write</i>"]
+
+    style RB fill:#f4e2bd,stroke:#b8860b
 ```
+
+The highlighted step is the cost of the algebra: because a category bank is one
+bundled vector, adding a single fact re-bundles the **whole category**, so write
+cost grows with the category rather than with the write.
 
 Retrieval lifecycle:
 
-```text
-fact_store(action=search|probe|related|reason|contradict)  or  prefetch(query)
--> FTS5 candidates (limit*3, sanitized OR-query, trust >= min_trust)
--> rerank: 0.4*fts + 0.3*jaccard + 0.3*hrr_similarity
--> score = relevance * trust_score  [* optional temporal decay]
--> top-k, injected unfenced into the prompt as "- [0.5] <content>"
+```mermaid
+flowchart TB
+    Q["fact_store(action = search, probe, related,<br/>reason or contradict), or prefetch(query)"] --> F["FTS5 candidates<br/><i>limit×3, sanitized OR-query, trust ≥ min_trust</i>"]
+    F --> RR["rerank:<br/>0.4 × fts + 0.3 × jaccard + 0.3 × hrr_similarity"]
+    RR --> SC["score = relevance × trust_score<br/><i>× optional temporal decay</i>"]
+    SC --> TK["top-k, injected <b>unfenced</b> into the prompt"]
+
+    style TK fill:#f4e2bd,stroke:#b8860b
 ```
+
+Trust multiplies relevance rather than gating it, so a low-trust fact is ranked
+down and never excluded. And the result is injected **unfenced** — compare
+[RainBox](../rainbox/), which wraps recalled memory and neutralizes angle brackets
+before the model sees it.
 
 ## 3. Architecture
 

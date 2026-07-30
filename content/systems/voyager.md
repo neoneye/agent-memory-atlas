@@ -58,36 +58,50 @@ skills[program_name] = {
 
 Persisted across three stores that must agree:
 
-```text
-ckpt/skill/code/<name>.js          the executable
-ckpt/skill/description/<name>.txt  the retrieval key
-ckpt/skill/skills.json             the authoritative map
-ckpt/skill/vectordb/               Chroma index over descriptions
-```
+| Path | Role |
+| --- | --- |
+| `ckpt/skill/code/<name>.js` | the executable |
+| `ckpt/skill/description/<name>.txt` | the retrieval key |
+| `ckpt/skill/skills.json` | the authoritative map |
+| `ckpt/skill/vectordb/` | Chroma index over descriptions |
 
 Write lifecycle — note where the gate sits:
 
-```text
-curriculum proposes task
--> action agent writes code (given retrieved skills as context)
--> execute in environment
--> critic agent inspects resulting environment state -> success | critique
--> if NOT success: feed critique back, retry (no memory write)
--> if success: add_new_skill()
-      -> LLM generates description from code
-      -> embed description into Chroma under program_name
-      -> write code + description + skills.json, persist vectordb
+```mermaid
+flowchart TB
+    C["curriculum proposes a task"] --> A["action agent writes code<br/><i>retrieved skills as context</i>"]
+    A --> E["execute in the environment"]
+    E --> CR["critic agent inspects<br/>the resulting environment state"]
+    CR --> G{"success?"}
+    G -->|no| RETRY["feed the critique back and retry<br/><b>no memory write</b>"]
+    RETRY --> A
+    G -->|yes| ADD["add_new_skill()"]
+    ADD --> D["LLM generates a description<br/>from the code"]
+    D --> EM["embed the description into Chroma<br/>under program_name"]
+    EM --> W[("write code + description<br/>+ skills.json, persist vectordb")]
+
+    style G fill:#e7efe9,stroke:#3d6b59
+    style RETRY fill:#f4e2bd,stroke:#b8860b
 ```
+
+The gate is the whole design. **Nothing is written until the environment agrees**
+— the critic inspects world state rather than judging the text, and a failure
+retries without leaving anything behind. Voyager is the atlas's clearest instance
+of memory validated by execution rather than by adjudication.
 
 Read lifecycle:
 
-```text
-task context
--> retrieve_skills(query=context)
--> Chroma similarity_search_with_score over descriptions, k = min(count, 5)
--> return the CODE of the top-k matches
--> injected into the action agent's prompt as callable functions
+```mermaid
+flowchart LR
+    T["task context"] --> R["retrieve_skills(query=context)"]
+    R --> S["Chroma similarity_search_with_score<br/>over <i>descriptions</i>, k = min(count, 5)"]
+    S --> C["return the <b>code</b> of the top-k matches"]
+    C --> I["injected as callable functions<br/>in the action agent's prompt"]
 ```
+
+Search runs over descriptions and returns code. The description is a retrieval key
+written by a model *about* the artifact, which keeps the thing being matched in
+natural language and the thing being used executable.
 
 ## 3. Architecture
 

@@ -72,18 +72,28 @@ Four things are worth calling out against the rest of the atlas:
 
 Verification lifecycle — the distinctive path:
 
-```text
-memory created (agent, user, historian, or dreamer)
--> map-memories backfill assigns backing files      [unmapped -> mapped, verified_at = 0]
--> partitionVerifyScope():
-      never verified (verified_at = 0)                       -> in scope
-      any mapped file changed since THAT memory's verified_at -> in scope
-         (git committed change-time, uncommitted edit, or deletion)
-      no-file sentinel (file-independent)                    -> excluded, curate + age decay own it
-      forceBroad ("verify-broad")                            -> whole mapped pool, drift catching
--> dreamer verify task -> verificationStatus + verified_at written per memory
-   (partial progress persists; a timed-out run banks what it checked)
+```mermaid
+flowchart TB
+    C["memory created<br/><i>agent, user, historian or dreamer</i>"] --> MAP["map-memories backfill<br/>assigns backing files<br/><i>unmapped to mapped, verified_at = 0</i>"]
+    MAP --> PART["partitionVerifyScope()"]
+    PART --> N1["never verified<br/>verified_at = 0"] --> IN
+    PART --> N2["a mapped file changed since<br/><b>that memory's</b> verified_at<br/><i>committed change, uncommitted edit,<br/>or deletion</i>"] --> IN
+    PART --> N3["forceBroad, verify-broad:<br/>the whole mapped pool"] --> IN
+    PART --> N4["no-file sentinel,<br/>file-independent"] --> OUT["excluded — curate<br/>and age decay own it"]
+    IN["in scope"] --> V["dreamer verify task"]
+    V --> WR["verificationStatus + verified_at<br/>written <b>per memory</b>"]
+
+    style N2 fill:#e7efe9,stroke:#3d6b59
+    style WR fill:#e7efe9,stroke:#3d6b59
 ```
+
+Both highlighted boxes are the same lesson, learned the hard way and recorded in
+the source: verification state is **per memory**, not a global watermark. An
+earlier version used one commit watermark with all-or-nothing coverage, so a
+timed-out run banked nothing. Per-memory timestamps make partial progress
+worth keeping, and the exclusion of file-independent memories is stated rather
+than papered over — they cannot be checked against local code, so something else
+has to own them.
 
 ## 3. Architecture
 

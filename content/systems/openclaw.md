@@ -67,25 +67,40 @@ MemoryConfig = {
 
 Capture lifecycle:
 
-```text
-inbound platform message (wrapped in OpenClaw envelope)
--> extractUserTextContent() / extractLatestUserText()
--> sanitizeForMemoryCapture(): drop media notes, ctx markers, history/current
-   markers, bracketed prefixes, reply lines, sender prefixes, timestamps
--> looksLikeEnvelopeSludge()? -> reject
--> truncate to captureMaxChars (500)
--> embed -> store(agentId, entry)
--> AutoCaptureCursor { nextIndex, lastMessageFingerprint } advances
+```mermaid
+flowchart TB
+    M["inbound platform message<br/><i>wrapped in an OpenClaw envelope</i>"] --> X["extractUserTextContent()<br/>extractLatestUserText()"]
+    X --> SAN["sanitizeForMemoryCapture()<br/><i>drop media notes, ctx markers, history and<br/>current markers, bracketed prefixes,<br/>reply lines, sender prefixes, timestamps</i>"]
+    SAN --> SLU{"looksLikeEnvelopeSludge()?"}
+    SLU -->|yes| REJ["reject"]
+    SLU -->|no| TR["truncate to captureMaxChars, 500"]
+    TR --> EM["embed"]
+    EM --> ST[("store(agentId, entry)")]
+    ST --> CUR["AutoCaptureCursor advances<br/><i>nextIndex, lastMessageFingerprint</i>"]
+
+    style SLU fill:#e7efe9,stroke:#3d6b59
 ```
+
+Most of this path is subtraction. The envelope wraps real user text in platform
+scaffolding, and the sanitizer strips seven kinds of it before a sludge check
+rejects whatever is still mostly wrapper — capture quality here is a filtering
+problem, not an extraction one.
 
 Recall lifecycle:
 
-```text
-latest user text -> normalizeRecallQuery() (collapse whitespace, cap at 1000 chars)
--> embed -> LanceDB vector search
--> scopedPredicate(agentId, filter)  [single predicate — scope cannot be dropped]
--> results injected into context
+```mermaid
+flowchart LR
+    T["latest user text"] --> N["normalizeRecallQuery()<br/><i>collapse whitespace, cap at 1000 chars</i>"]
+    N --> E["embed"] --> V["LanceDB vector search"]
+    V --> SP["scopedPredicate(agentId, filter)"]
+    SP --> I["injected into context"]
+
+    style SP fill:#e7efe9,stroke:#3d6b59
 ```
+
+`scopedPredicate` builds scope and caller filter as a **single** predicate, so
+there is no code path that applies one without the other — the scope cannot be
+dropped by a caller who forgets it.
 
 ## 3. Architecture
 

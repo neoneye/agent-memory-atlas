@@ -179,18 +179,46 @@ separately under peer directories.
 definitions at runtime.</p>
 <p>Scoping is a path convention backed by request-level
 authorization:</p>
-<pre class="text"><code>&lt;user_space&gt;/...                      # memory about the user
-&lt;user_space&gt;/peers/&lt;peer_id&gt;/...      # memory about another participant
-                                      # peer_id &quot;__self&quot; maps back to user_space</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;user_space&gt;/...</code></td>
+<td>memory about the user</td>
+</tr>
+<tr>
+<td><code>&lt;user_space&gt;/peers/&lt;peer_id&gt;/...</code></td>
+<td>memory about another participant</td>
+</tr>
+</tbody>
+</table></div>
+<p>The <code>peer_id</code> <code>__self</code> maps back to
+<code>user_space</code>, so "about me" and "about a peer" are one
+addressing scheme rather than two code paths.</p>
 <p>Retrieval lifecycle:</p>
-<pre class="text"><code>TypedQuery + RequestContext (tenant, permissions)
--&gt; resolve start directories (explicit target_dirs or defaults by context_type)
--&gt; embed query once (dense + optional sparse)
--&gt; recursive directory walk, QUICK or THINKING mode (THINKING adds rerank)
--&gt; level filter (0=L0 / 1=L1 / 2=L2), scope_dsl FilterExpr constraints
--&gt; per-type quota recall
--&gt; blend semantic score with hotness (frequency x recency)
--&gt; QueryResult(matched_contexts, searched_directories)</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    Q[&quot;TypedQuery + RequestContext&lt;br/&gt;&lt;i&gt;tenant, permissions&lt;/i&gt;&quot;] --&gt; DIR[&quot;resolve start directories&lt;br/&gt;&lt;i&gt;explicit target_dirs, or defaults by context_type&lt;/i&gt;&quot;]
+    DIR --&gt; EMB[&quot;embed the query &lt;b&gt;once&lt;/b&gt;&lt;br/&gt;&lt;i&gt;dense + optional sparse&lt;/i&gt;&quot;]
+    EMB --&gt; WALK[&quot;recursive directory walk&lt;br/&gt;QUICK or THINKING&lt;br/&gt;&lt;i&gt;THINKING adds a rerank&lt;/i&gt;&quot;]
+    WALK --&gt; FIL[&quot;level filter L0 / L1 / L2,&lt;br/&gt;scope_dsl FilterExpr constraints&quot;]
+    FIL --&gt; QUO[&quot;per-type quota recall&quot;]
+    QUO --&gt; BL[&quot;blend semantic score with hotness&lt;br/&gt;&lt;i&gt;frequency × recency&lt;/i&gt;&quot;]
+    BL --&gt; R[&quot;QueryResult&lt;br/&gt;&lt;i&gt;matched_contexts, searched_directories&lt;/i&gt;&quot;]
+
+    style QUO fill:#e7efe9,stroke:#3d6b59
+    style R fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Two details worth taking. <strong>Per-type quotas</strong> stop one
+memory kind from filling the budget, which is the same problem <a
+href="../../patterns/source-diverse-context/">source-diverse context</a>
+solves for sources. And the result reports
+<code>searched_directories</code> alongside the matches, so a caller can
+see where recall <em>looked</em> and not only what it found — an
+explainability affordance almost nothing else here offers.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Selected modules under <code>openviking/</code>:</p>
 <ul>

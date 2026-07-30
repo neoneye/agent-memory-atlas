@@ -62,24 +62,36 @@ Memory *types* are themselves data. `MemoryTypeSchema` carries a `filename_templ
 
 Scoping is a path convention backed by request-level authorization:
 
-```text
-<user_space>/...                      # memory about the user
-<user_space>/peers/<peer_id>/...      # memory about another participant
-                                      # peer_id "__self" maps back to user_space
-```
+| Path | Holds |
+| --- | --- |
+| `<user_space>/...` | memory about the user |
+| `<user_space>/peers/<peer_id>/...` | memory about another participant |
+
+The `peer_id` `__self` maps back to `user_space`, so "about me" and "about a peer"
+are one addressing scheme rather than two code paths.
 
 Retrieval lifecycle:
 
-```text
-TypedQuery + RequestContext (tenant, permissions)
--> resolve start directories (explicit target_dirs or defaults by context_type)
--> embed query once (dense + optional sparse)
--> recursive directory walk, QUICK or THINKING mode (THINKING adds rerank)
--> level filter (0=L0 / 1=L1 / 2=L2), scope_dsl FilterExpr constraints
--> per-type quota recall
--> blend semantic score with hotness (frequency x recency)
--> QueryResult(matched_contexts, searched_directories)
+```mermaid
+flowchart TB
+    Q["TypedQuery + RequestContext<br/><i>tenant, permissions</i>"] --> DIR["resolve start directories<br/><i>explicit target_dirs, or defaults by context_type</i>"]
+    DIR --> EMB["embed the query <b>once</b><br/><i>dense + optional sparse</i>"]
+    EMB --> WALK["recursive directory walk<br/>QUICK or THINKING<br/><i>THINKING adds a rerank</i>"]
+    WALK --> FIL["level filter L0 / L1 / L2,<br/>scope_dsl FilterExpr constraints"]
+    FIL --> QUO["per-type quota recall"]
+    QUO --> BL["blend semantic score with hotness<br/><i>frequency × recency</i>"]
+    BL --> R["QueryResult<br/><i>matched_contexts, searched_directories</i>"]
+
+    style QUO fill:#e7efe9,stroke:#3d6b59
+    style R fill:#e7efe9,stroke:#3d6b59
 ```
+
+Two details worth taking. **Per-type quotas** stop one memory kind from filling the
+budget, which is the same problem
+[source-diverse context](../../patterns/source-diverse-context/) solves for
+sources. And the result reports `searched_directories` alongside the matches, so a
+caller can see where recall *looked* and not only what it found — an explainability
+affordance almost nothing else here offers.
 
 ## 3. Architecture
 
