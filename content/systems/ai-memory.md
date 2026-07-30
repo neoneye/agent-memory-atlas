@@ -87,23 +87,25 @@ for a system whose distinctive idea is a few hundred lines.
 
 ## 2. Mental Model
 
-```text
-harness lifecycle hooks
-  SessionStart · UserPrompt · PreToolUse · PostToolUse
-  PreCompact · PostCompaction · Notification · Stop · SessionEnd
-        │
-        ▼
-  observations (raw, captured without an LLM call)
-        │  opt-in consolidation
-        ▼
-  Markdown pages in git  ── human source of truth, editable, diffable
-        │  derived
-        ▼
-  SQLite index + state ── tiers, authority ranking, retention score
+```mermaid
+flowchart TB
+    H["harness lifecycle hooks<br/><i>SessionStart, UserPrompt, PreToolUse, PostToolUse,<br/>PreCompact, PostCompaction, Notification, Stop, SessionEnd</i>"]
+    H --> OB["observations<br/><i>raw, captured without an LLM call</i>"]
+    OB -->|"opt-in consolidation"| MD[("Markdown pages in git<br/><b>the human source of truth</b><br/><i>editable, diffable</i>")]
+    MD -->|derived| SQ[("SQLite index + state<br/><i>tiers, authority ranking, retention score</i>")]
 
-  handoff ── open ──▶ accepted        (a later session picks it up)
-              └────▶ expired          (nobody did)
+    HO["handoff"] --> OPEN["open"]
+    OPEN --> ACC["accepted<br/><i>a later session picks it up</i>"]
+    OPEN --> EXP["expired<br/><i>nobody did</i>"]
+
+    style MD fill:#e7efe9,stroke:#3d6b59
+    style HO fill:#f4e2bd,stroke:#b8860b
 ```
+
+The Markdown is the source of truth and SQLite is a **projection** of it, so the
+index can be rebuilt and the human-editable layer is the authority. The handoff is
+the atlas's rare instance of prospective memory: an `open` commitment that a later
+session either accepts or lets expire.
 
 ## 3. Architecture
 

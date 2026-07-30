@@ -170,19 +170,30 @@ keep them small.</p>
     ├── .dream_cursor    # Dream consumption cursor
     └── .git/            # version history for the durable files</code></pre>
 <p>Two stages, deliberately separated:</p>
-<pre class="text"><code>Stage 1 — Consolidator (pressure-driven)
-  context window under pressure
-  -&gt; summarize the oldest safe slice
-  -&gt; append one JSON line to history.jsonl
-     {&quot;cursor&quot;: 42, &quot;timestamp&quot;: &quot;...&quot;, &quot;content&quot;: &quot;- User prefers dark mode\n- Decided to use PostgreSQL&quot;}
-  -&gt; advance .cursor
+<pre class="mermaid"><code>flowchart TB
+    subgraph S1[&quot;Stage 1 — Consolidator, pressure-driven&quot;]
+        P[&quot;context window under pressure&quot;] --&gt; SL[&quot;summarize the oldest safe slice&quot;]
+        SL --&gt; AP[&quot;append one JSON line&lt;br/&gt;to history.jsonl&quot;]
+        AP --&gt; C1[&quot;advance .cursor&quot;]
+    end
+    subgraph S2[&quot;Stage 2 — Dream, cron-driven or manual&quot;]
+        RD[&quot;read new history.jsonl entries&lt;br/&gt;since .dream_cursor&quot;] --&gt; ED
+        DUR[&quot;current SOUL.md, USER.md, MEMORY.md&lt;br/&gt;&lt;i&gt;each capped at 8,000 chars in-prompt&lt;/i&gt;&quot;] --&gt; ED
+        ED[&quot;edit the durable files&lt;br/&gt;surgically, in one pass&quot;] --&gt; GC[&quot;git commit, message grounded in&lt;br/&gt;the actual working-tree delta&quot;]
+        GC --&gt; C2{&quot;any tool errors?&quot;}
+        C2 --&gt;|no| ADV[&quot;advance .dream_cursor&quot;]
+        C2 --&gt;|yes| HOLD[&quot;leave .dream_cursor where it is&quot;]
+    end
+    C1 --&gt; RD
 
-Stage 2 — Dream (cron-driven, or manual)
-  read new history.jsonl entries since .dream_cursor
-  + current SOUL.md, USER.md, memory/MEMORY.md   (each capped at 8,000 chars in-prompt)
-  -&gt; edit the durable files surgically in one pass
-  -&gt; git commit, message grounded in the actual working-tree delta
-  -&gt; advance .dream_cursor ONLY if no tool errors occurred</code></pre>
+    style C2 fill:#e7efe9,stroke:#3d6b59
+    style HOLD fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Two cursors, and the second one is the interesting piece.
+<code>.dream_cursor</code> advances <strong>only if the pass had no tool
+errors</strong>, so a run that half-worked is retried rather than banked
+— the <a href="../../patterns/recoverable-background-work/">recoverable
+background work</a> pattern, with the cursor as the unit of
+progress.</p>
 <p>The documentation is explicit that <code>history.jsonl</code> "is not
 the final memory. It is the material from which final memory is shaped"
 — evidence and belief kept in separate files, which is the <a

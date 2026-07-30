@@ -76,17 +76,21 @@ remember, and what must be true of it" is configuration, not code.
 The state machine is the shortest in this atlas, because there is no epistemic
 machinery at all:
 
-```text
-   a human types, or an agent calls upsertNodes
-        │
-        ▼
-   node exists in the graph ─── indexed into FTS5 (trigger)
-        │                  └── embedded into the vector index (batched)
-        │
-        ├── :add / :edit ──► the value is simply replaced
-        │
-        └── :db/retractEntity ──► gone, plus orphaned-page cleanup
+```mermaid
+flowchart TB
+    IN["a human types,<br/>or an agent calls upsertNodes"] --> N["node exists in the graph"]
+    N --> FTS["indexed into FTS5<br/><i>by trigger</i>"]
+    N --> VEC["embedded into the vector index<br/><i>batched</i>"]
+    N -->|":add / :edit"| REP["the value is simply replaced"]
+    N -->|":db/retractEntity"| DEL["gone, plus orphaned-page cleanup"]
+
+    style REP fill:#f4e2bd,stroke:#b8860b
 ```
+
+A human and an agent enter through the same door, which is the whole point of an
+editor that acquired an agent rather than the reverse. The highlighted transition
+is the cost: an edit **replaces** the value with no record of what it said, so
+correction and vandalism are the same operation.
 
 Nothing is a candidate. Nothing is verified. Nothing decays, expires, is
 superseded with a record, or is marked rejected. A node is in the graph or it is

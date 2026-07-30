@@ -53,11 +53,11 @@ implementation of an idea, not as a maintained system.
 
 There are two memories, and neither one holds a fact.
 
-```text
-memory_stream          [ MemoryItem(entity, date), ... ]      append-only
-entity_knowledge_store [ KnowledgeMemoryItem(entity, count, date), ... ]
-knowledge graph        triplets, via LlamaIndex
-```
+| Store | Holds | Notes |
+| --- | --- | --- |
+| `memory_stream` | `MemoryItem(entity, date)` | append-only |
+| `entity_knowledge_store` | `KnowledgeMemoryItem(entity, count, date)` | |
+| knowledge graph | triplets | via LlamaIndex |
 
 A `MemoryItem` is *"this entity was mentioned at this time"*. A
 `KnowledgeMemoryItem` is *"this entity has been mentioned this many times, most
@@ -71,11 +71,17 @@ about" in different places.
 
 The state machine is one transition wide:
 
-```text
-entity mentioned ──► count += 1, date = now
-                          │
-                          └──► (nothing else; count never decreases)
+```mermaid
+flowchart LR
+    E["entity mentioned"] --> C["count += 1<br/>date = now"]
+    C --> N["nothing else —<br/><b>count never decreases</b>"]
+
+    style N fill:#f4e2bd,stroke:#b8860b
 ```
+
+The counter is monotonic, so an entity that mattered once keeps its weight
+forever. There is no decay and no way to say a topic has stopped being
+relevant.
 
 `remove_old_memory(days)` filters the *mention stream* by cutoff date, and
 `remove_memory_by_index` / `clear_memory` operate on the in-process lists. None

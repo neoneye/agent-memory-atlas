@@ -162,13 +162,38 @@ re-running on an already-superseded preference is a" no-op.</p>
 tombstone; and the reasoning tier's value depends on retrieval surfacing
 past failures at the moment they would help, which was not traced.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="text"><code>short-term    conversation turns, recent context
-long-term     entities, relationships, preferences
-                preference: valid_from ─────── valid_until
-                supersede_preference(old, new)  — idempotent
-reasoning     trace ── steps ── tool calls
-                with-block: on exit, success OR the exception becomes the outcome
-                TraceOutcome{success, summary, error kind, entities, metrics}</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>short-term</td>
+<td>conversation turns, recent context</td>
+</tr>
+<tr>
+<td>long-term</td>
+<td>entities, relationships, preferences — a preference carries
+<code>valid_from</code> and <code>valid_until</code>, and
+<code>supersede_preference(old, new)</code> is
+<strong>idempotent</strong></td>
+</tr>
+<tr>
+<td>reasoning</td>
+<td>a trace of steps and tool calls; the with-block makes success
+<em>or</em> the raised exception the outcome on exit, recorded as
+<code>TraceOutcome{success, summary, error kind, entities, metrics}</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Two details worth taking. Preferences are the only thing here with
+validity time, and an idempotent supersede means a retried write cannot
+double-supersede. And the reasoning trace cannot silently succeed:
+leaving the block always records an outcome, including the
+exception.</p>
 <p>All three live in <strong>one Neo4j instance shared across
 agents</strong> rather than in per-agent stores — the stated position
 being a single brain rather than silos.</p>

@@ -146,16 +146,25 @@ scores.</p>
 <p>A memory is a <strong>chunk of text with a key</strong>.
 <code>add_text</code> returns a <code>TextKeyType</code>; every
 subsequent operation on that memory takes the key back.</p>
-<pre class="text"><code>   add_text(text, metadata, rewrite=False) ──► text_key
-        │
-        │  (rewrite=True routes the text through an LLM first)
-        ▼
-   chunk queue ──► embeddings ──► simple vector db
-        │
-        ├── retrieve(query, k, rewrite=False) ──► [RetrievedMemory]
-        ├── get_text(text_key)               ──► the text, or None
-        ├── replace_text(text_key, new_text) ──► same key, new content
-        └── delete_text(text_key)            ──► gone</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    ADD[&quot;add_text(text, metadata, rewrite=False)&quot;] --&gt;|&quot;returns&quot;| K([&quot;text_key&quot;])
+    ADD -.-&gt;|&quot;rewrite=True routes&lt;br/&gt;the text through an LLM first&quot;| CQ
+    ADD --&gt; CQ[&quot;chunk queue&quot;] --&gt; EMB[&quot;embeddings&quot;] --&gt; DB[(&quot;simple vector db&quot;)]
+    K --&gt; OPS
+    DB --&gt; OPS{&quot;every later operation&lt;br/&gt;takes the key back&quot;}
+    OPS --&gt; R1[&quot;retrieve(query, k) → RetrievedMemory[]&quot;]
+    OPS --&gt; R2[&quot;get_text(text_key) → the text, or None&quot;]
+    OPS --&gt; R3[&quot;replace_text(text_key, new_text)&lt;br/&gt;→ same key, new content&quot;]
+    OPS --&gt; R4[&quot;delete_text(text_key) → gone&quot;]
+
+    style K fill:#e7efe9,stroke:#3d6b59
+    style R3 fill:#f4e2bd,stroke:#b8860b
+    style R4 fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The <code>text_key</code> is the whole interface: a write hands one
+back and every later operation takes one. The two highlighted operations
+are the state machine — <code>replace_text</code> overwrites and
+<code>delete_text</code> removes, both <strong>without
+trace</strong>.</p>
 <p>The state machine has one state. A memory exists, may be replaced in
 place, and may be deleted. There is no candidate, no verified, no
 superseded-with-a-record and no rejected: <code>replace_text</code>

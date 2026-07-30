@@ -143,18 +143,41 @@ usually irrelevant here, and why it is not for this.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Three layers, and the atlas's usual vocabulary only reaches the first
 two.</p>
-<pre class="text"><code>L0   document(raw_content, insight, summary, keywords) + chunk
-       │  retained; the source of everything below
-       ▼
-L1   l1_versions(version, status, description)
-       ├─ l1_bios          content + summary, first and third person
-       ├─ l1_shades        named aspects of the person
-       ├─ l1_clusters      memory_ids + cluster_center
-       └─ l1_chunk_topics  topic + tags
-       │  a numbered generation, regenerable from L0
-       ▼
-L2   LoRA SFT → DPO → merged weights → GGUF
-       │  memory as parameters; nothing is retrieved</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Holds</th>
+<th>Standing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L0</strong></td>
+<td><code>document(raw_content, insight, summary, keywords)</code> plus
+chunks</td>
+<td>retained — the source of everything below</td>
+</tr>
+<tr>
+<td><strong>L1</strong></td>
+<td><code>l1_versions(version, status, description)</code>, over
+<code>l1_bios</code> (content and summary, first and third person),
+<code>l1_shades</code> (named aspects of the person),
+<code>l1_clusters</code> (<code>memory_ids</code> +
+<code>cluster_center</code>), <code>l1_chunk_topics</code> (topic +
+tags)</td>
+<td>a numbered generation, regenerable from L0</td>
+</tr>
+<tr>
+<td><strong>L2</strong></td>
+<td>LoRA SFT → DPO → merged weights → GGUF</td>
+<td>memory as parameters; nothing is retrieved</td>
+</tr>
+</tbody>
+</table></div>
+<p>L1 being <em>numbered and regenerable</em> is the useful part: a bad
+generation is replaced by building another from L0 rather than repaired
+in place.</p>
 <p><strong>L1 being versioned is the best idea in the system.</strong>
 Every derived table carries a <code>version</code> foreign key into
 <code>l1_versions</code>, so the whole biography is a numbered

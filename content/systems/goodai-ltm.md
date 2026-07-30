@@ -67,18 +67,26 @@ prospective memory and theory of mind, committed result reports, and seven
 A memory is a **chunk of text with a key**. `add_text` returns a `TextKeyType`;
 every subsequent operation on that memory takes the key back.
 
-```text
-   add_text(text, metadata, rewrite=False) ──► text_key
-        │
-        │  (rewrite=True routes the text through an LLM first)
-        ▼
-   chunk queue ──► embeddings ──► simple vector db
-        │
-        ├── retrieve(query, k, rewrite=False) ──► [RetrievedMemory]
-        ├── get_text(text_key)               ──► the text, or None
-        ├── replace_text(text_key, new_text) ──► same key, new content
-        └── delete_text(text_key)            ──► gone
+```mermaid
+flowchart TB
+    ADD["add_text(text, metadata, rewrite=False)"] -->|"returns"| K(["text_key"])
+    ADD -.->|"rewrite=True routes<br/>the text through an LLM first"| CQ
+    ADD --> CQ["chunk queue"] --> EMB["embeddings"] --> DB[("simple vector db")]
+    K --> OPS
+    DB --> OPS{"every later operation<br/>takes the key back"}
+    OPS --> R1["retrieve(query, k) → RetrievedMemory[]"]
+    OPS --> R2["get_text(text_key) → the text, or None"]
+    OPS --> R3["replace_text(text_key, new_text)<br/>→ same key, new content"]
+    OPS --> R4["delete_text(text_key) → gone"]
+
+    style K fill:#e7efe9,stroke:#3d6b59
+    style R3 fill:#f4e2bd,stroke:#b8860b
+    style R4 fill:#f4e2bd,stroke:#b8860b
 ```
+
+The `text_key` is the whole interface: a write hands one back and every later
+operation takes one. The two highlighted operations are the state machine —
+`replace_text` overwrites and `delete_text` removes, both **without trace**.
 
 The state machine has one state. A memory exists, may be replaced in place, and
 may be deleted. There is no candidate, no verified, no superseded-with-a-record

@@ -60,21 +60,32 @@ workspace/
 
 Two stages, deliberately separated:
 
-```text
-Stage 1 — Consolidator (pressure-driven)
-  context window under pressure
-  -> summarize the oldest safe slice
-  -> append one JSON line to history.jsonl
-     {"cursor": 42, "timestamp": "...", "content": "- User prefers dark mode\n- Decided to use PostgreSQL"}
-  -> advance .cursor
+```mermaid
+flowchart TB
+    subgraph S1["Stage 1 — Consolidator, pressure-driven"]
+        P["context window under pressure"] --> SL["summarize the oldest safe slice"]
+        SL --> AP["append one JSON line<br/>to history.jsonl"]
+        AP --> C1["advance .cursor"]
+    end
+    subgraph S2["Stage 2 — Dream, cron-driven or manual"]
+        RD["read new history.jsonl entries<br/>since .dream_cursor"] --> ED
+        DUR["current SOUL.md, USER.md, MEMORY.md<br/><i>each capped at 8,000 chars in-prompt</i>"] --> ED
+        ED["edit the durable files<br/>surgically, in one pass"] --> GC["git commit, message grounded in<br/>the actual working-tree delta"]
+        GC --> C2{"any tool errors?"}
+        C2 -->|no| ADV["advance .dream_cursor"]
+        C2 -->|yes| HOLD["leave .dream_cursor where it is"]
+    end
+    C1 --> RD
 
-Stage 2 — Dream (cron-driven, or manual)
-  read new history.jsonl entries since .dream_cursor
-  + current SOUL.md, USER.md, memory/MEMORY.md   (each capped at 8,000 chars in-prompt)
-  -> edit the durable files surgically in one pass
-  -> git commit, message grounded in the actual working-tree delta
-  -> advance .dream_cursor ONLY if no tool errors occurred
+    style C2 fill:#e7efe9,stroke:#3d6b59
+    style HOLD fill:#e7efe9,stroke:#3d6b59
 ```
+
+Two cursors, and the second one is the interesting piece. `.dream_cursor` advances
+**only if the pass had no tool errors**, so a run that half-worked is retried
+rather than banked — the
+[recoverable background work](../../patterns/recoverable-background-work/)
+pattern, with the cursor as the unit of progress.
 
 The documentation is explicit that `history.jsonl` "is not the final memory. It is the material from which final memory is shaped" — evidence and belief kept in separate files, which is the [evidence before belief](../../patterns/evidence-before-belief/) pattern expressed as a directory layout.
 

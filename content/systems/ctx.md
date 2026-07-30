@@ -75,29 +75,31 @@ wrong. And the surface is very large for what it does, with 61,000 lines of CLI.
 
 ## 2. Mental Model
 
-```text
-staging ── entries land here first, undigested
-   │
-   │  ctx names a theme:  AddTheme folds a gist bullet into the
-   │  root's ## Themes region, creating the region if absent.
-   │  "Nothing moves out of staging — this is how a theme is
-   │   named before any entries are digested into it."
-   ▼
-root document
-   ## Themes
-   ## <region per theme>   ── entries digested into place
+```mermaid
+flowchart TB
+    ST[("staging<br/><i>entries land here first, undigested</i>")]
+    ST -->|"AddTheme folds a gist bullet into the root's<br/>Themes region, creating it if absent —<br/><b>nothing moves out of staging</b>"| RD[("root document<br/><i>Themes, then a region per theme;<br/>entries digested into place</i>")]
 
-dream (background):
-   scan ──▶ proposals ──▶ schema gate (provenance required)
-                            │ invalid → rejected, not admitted
-                            ▼
-                        write-scope guard
-                            dreams/ · ideas/          allowed
-                            specs/                    only on promote
-                            anything else             refused, with a reason
-                            ▼
-                        apply ──▶ ledger (resumable)
+    SC["dream, background: scan"] --> PR["proposals"]
+    PR --> SG{"schema gate<br/>provenance required"}
+    SG -->|invalid| REJ["rejected, not admitted"]
+    SG -->|valid| WG{"write-scope guard"}
+    WG -->|"dreams/ · ideas/"| OK["allowed"]
+    WG -->|"specs/"| PROM["only on promote"]
+    WG -->|"anything else"| NO["refused, with a reason"]
+    OK --> AP["apply"]
+    PROM --> AP
+    AP --> LG[("ledger, resumable")]
+
+    style SG fill:#e7efe9,stroke:#3d6b59
+    style WG fill:#e7efe9,stroke:#3d6b59
 ```
+
+Two gates in series, both highlighted, and they check different things. The schema
+gate requires **provenance** before a proposal is admitted at all; the write-scope
+guard then decides *where* it may land, refusing with a reason rather than
+silently dropping. Naming a theme is deliberately separate from digesting entries
+into it — a theme can exist before anything has moved.
 
 ## 3. Architecture
 

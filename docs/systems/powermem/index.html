@@ -145,23 +145,45 @@ memory changes memory.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is an <strong>extracted assertion with a retention
 score</strong>. Above it sit two distilled layers:</p>
-<pre class="text"><code>memory      LLM-extracted text + embedding + retention metadata
-  ▲
-experience  distilled from interactions
-  ▲
-skill       a reusable workflow           ← OceanBase-only store</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>memory</td>
+<td>LLM-extracted text, an embedding, and retention metadata</td>
+</tr>
+<tr>
+<td>experience</td>
+<td>distilled from interactions</td>
+</tr>
+<tr>
+<td>skill</td>
+<td>a reusable workflow — <strong>OceanBase-only store</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The layers distil upward, and the top one is only available on one
+backend.</p>
 <p>The state machine is entirely quantitative, and this is the design's
 defining choice:</p>
-<pre class="text"><code>                     reinforce()            should_promote()
-   memory ──retrieved──► retention ↑ ──────────► promoted
-      │                     │
-      │  time passes        │ should_archive()
-      ▼                     ▼
-  R = e^(-t/S)          archived
-      │
-      │ should_forget()
-      ▼
-   unreachable</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    M[&quot;memory&quot;] --&gt;|&quot;retrieved → reinforce()&quot;| RET[&quot;retention rises&quot;]
+    RET --&gt;|&quot;should_promote()&quot;| PRO[&quot;promoted&quot;]
+    RET --&gt;|&quot;should_archive()&quot;| ARC[&quot;archived&quot;]
+    M --&gt;|&quot;time passes&quot;| DEC[&quot;R = e^(−t/S)&quot;]
+    DEC --&gt;|&quot;should_forget()&quot;| UNR[&quot;unreachable&quot;]
+
+    style DEC fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Retrieval and time pull in opposite directions on one number — the <a
+href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> pattern, with an explicit exponential rather than a
+hand-tuned counter. Note what the three <code>should_*</code> predicates
+decide: reachability, never truth.</p>
 <p><code>calculate_decay</code> implements <code>R = e^(-t/S)</code>
 directly —
 <code>decay_factor = math.exp(-hours_elapsed / (24 * rate))</code> —

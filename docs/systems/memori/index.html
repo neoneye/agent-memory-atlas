@@ -156,14 +156,19 @@ is a running agent, and it accumulates its own attributes alongside the
 entity's facts. Few systems here model the agent as a memory subject in
 its own right.</p>
 <p>The lifecycle is two states and no transitions between them:</p>
-<pre class="text"><code>turn captured ──► conversation + messages stored (durable, no model involved)
-                        │
-                        └─► augmentation (hosted) ──► fact upserted
-                                                        │
-                        seen again ─────────────────────┤ num_times += 1
-                                                        │ content unchanged
-                                                        ▼
-                                          delete_entity_memories()  ← all or nothing</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    T[&quot;turn captured&quot;] --&gt; C[(&quot;conversation + messages stored&lt;br/&gt;&lt;i&gt;durable, no model involved&lt;/i&gt;&quot;)]
+    C --&gt; AUG[&quot;augmentation, hosted&quot;]
+    AUG --&gt; F[&quot;fact upserted&quot;]
+    SEEN[&quot;seen again&quot;] --&gt; INC[&quot;num_times += 1&lt;br/&gt;&lt;i&gt;content unchanged&lt;/i&gt;&quot;]
+    INC --&gt; F
+    F --&gt; DEL[&quot;delete_entity_memories()&lt;br/&gt;&lt;b&gt;all or nothing&lt;/b&gt;&quot;]
+
+    style INC fill:#e7efe9,stroke:#3d6b59
+    style DEL fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Seeing a fact again increments a counter and leaves the content
+alone, so repetition is recorded without rewriting. The only exit is
+entity-wide: there is no way to remove one fact.</p>
 <p>A fact is never superseded, corrected, contradicted, expired or
 rejected. It is created, counted, and eventually deleted along with
 everything else about that entity. The vocabulary for anything in

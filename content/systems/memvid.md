@@ -79,21 +79,24 @@ than value-keyed, and the ACL module is thin relative to the rest.
 
 How a thing becomes a belief, and how it stops being one:
 
-```text
-write ──▶ frame appended through the WAL, checksummed, committed
-          status = Active
-
-correct ─▶ a NEW frame is appended
-          old frame → Superseded, linked by superseded_by
-          nothing is edited in place, ever
-
-delete ──▶ FrameWalOp::Tombstone; status = Deleted
-          the frame remains in the file
-
-read ────▶ get_current(entity, slot)        what is believed now
-           get_at_time(entity, slot, t)     what was believed at t
-           replay session                   what the agent saw, in order
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Active: write — frame appended through the WAL,<br/>checksummed, committed
+    Active --> Superseded: correct — a NEW frame is appended,<br/>the old one linked by superseded_by
+    Active --> Deleted: delete — a Tombstone WAL op
+    Superseded --> Deleted: delete
+    note right of Deleted
+        The frame remains in the file.
+        Nothing is edited in place, ever.
+    end note
 ```
+
+Because nothing is overwritten, three different reads are possible:
+`get_current(entity, slot)` for what is believed now,
+`get_at_time(entity, slot, t)` for what was believed at `t`, and a session replay
+for what the agent actually saw, in order. The append-only file is what makes the
+second and third questions answerable at all.
 
 The consequence worth stating: **a correction here never destroys the thing it
 corrected.** Supersession is a link, not an overwrite, so the pre-correction

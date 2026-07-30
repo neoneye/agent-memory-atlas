@@ -77,19 +77,21 @@ memories, and nothing about whether they are true or whose they are.
 A memory becomes retrievable and stops being retrievable, and that is the whole
 state machine:
 
-```text
-commit_results ──▶ RecallFile (track: memory | skill)
-                   Resource   (track: workspace)
-                        │ sliced
-                        ▼
-                   RecallFileSegment ×n   ← the embed/search unit
-                        │
-progressive_retrieve ──▶ rank segments by vector, take file.top_k
-                        │ roll up
-                        ▼
-                   files, scored by max(segment score)
-                   + workspace resources ranked separately
+```mermaid
+flowchart TB
+    C["commit_results"] --> RF["RecallFile<br/><i>track: memory or skill</i>"]
+    C --> RS["Resource<br/><i>track: workspace</i>"]
+    RF -->|sliced| SEG["RecallFileSegment ×n<br/><b>the embed and search unit</b>"]
+    SEG --> PR["progressive_retrieve:<br/>rank segments by vector,<br/>take file.top_k"]
+    PR -->|"roll up"| FILES["files, scored by<br/>max(segment score)"]
+    RS --> WR["workspace resources,<br/>ranked separately"]
+
+    style SEG fill:#e7efe9,stroke:#3d6b59
 ```
+
+Segments are the search unit and files are the answer unit, with a file scored by
+its **best** segment rather than its average — so one strong passage surfaces a
+long file instead of being diluted by it.
 
 There is no supersession, no rejection and no expiry. Re-slicing a file drops
 and recreates its segments; the file itself is updated in place. Nothing records

@@ -159,18 +159,21 @@ reasons to be retrieved, and <code>handoff</code> being a first-class
 kind matches <a href="../ai-memory/">ai-memory</a>'s observation that an
 interrupted task leaves behind a specific shape.</p>
 <p>The state machine, as implemented:</p>
-<pre class="text"><code>   ecc memory add  /  memory_save
-        │
-        ▼
-   write ${id}.md into the scope&#39;s vault root
-   trust  = &quot;unreviewed&quot;     ← the only permitted value
-   status = &quot;active&quot;         ← the only value ever written
-        │
-        ├── index / search ──► filtered to status === &#39;active&#39;
-        │
-        ├── rejected    ─┐
-        └── superseded  ─┴─ validated by the schema, honoured on read,
-                            and set by nothing</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[&quot;ecc memory add&lt;br/&gt;memory_save&quot;] --&gt; W[&quot;write id.md into&lt;br/&gt;the scope&#39;s vault root&quot;]
+    W --&gt; T[&quot;trust = unreviewed&lt;br/&gt;&lt;i&gt;the only permitted value&lt;/i&gt;&quot;]
+    W --&gt; S[&quot;status = active&lt;br/&gt;&lt;i&gt;the only value ever written&lt;/i&gt;&quot;]
+    S --&gt; IDX[&quot;index and search&lt;br/&gt;&lt;i&gt;filtered to status === &#39;active&#39;&lt;/i&gt;&quot;]
+    S -.-&gt; REJ[&quot;rejected&quot;]
+    S -.-&gt; SUP[&quot;superseded&quot;]
+
+    style REJ fill:#f4e2bd,stroke:#b8860b
+    style SUP fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The dotted transitions are the finding: <code>rejected</code> and
+<code>superseded</code> are <strong>validated by the schema and honoured
+on the read path, and set by nothing</strong>. The vocabulary for
+correction exists and no code reaches it, so the read path filters for a
+state transition that never happens.</p>
 <p>Writes are <strong>create-only</strong>. There is no update verb and
 no delete verb; a memory is written once and read thereafter. Combined
 with the single-valued <code>trust</code>, that makes the vault an

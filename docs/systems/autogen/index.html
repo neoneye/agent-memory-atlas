@@ -149,16 +149,17 @@ cannot address, and treats scope as an adapter's business.</p>
 <code>Image</code>), a <code>MemoryMimeType</code>, and an optional
 <code>metadata</code> dict. That is the whole schema, and it is
 deliberately closer to "a piece of content" than to "a belief".</p>
-<pre class="text"><code>   application (or a sample&#39;s learning loop)
-        │  add(MemoryContent)
-        ▼
-   memory store  ─── query(q) ──────────► MemoryQueryResult
-        │
-        │  update_context(model_context)
-        ▼
-   the memory writes itself into the prompt
-        │
-        └── clear() ──► everything is gone</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    A[&quot;application, or a sample&#39;s learning loop&quot;] --&gt;|&quot;add(MemoryContent)&quot;| S[(&quot;memory store&quot;)]
+    S --&gt;|&quot;query(q)&quot;| R[&quot;MemoryQueryResult&quot;]
+    S --&gt;|&quot;update_context(model_context)&quot;| P[&quot;the memory writes itself&lt;br/&gt;into the prompt&quot;]
+    S --&gt;|&quot;clear()&quot;| G[&quot;everything is gone&quot;]
+
+    style G fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Four verbs, and the fourth is the only removal the protocol has.
+<code>MemoryContent</code> carries no identifier, so there is nothing
+for a targeted delete to name — which is why <code>clear()</code> is
+all-or-nothing rather than a convenience.</p>
 <p>There are no states. Nothing is a candidate, verified, superseded,
 expired or rejected. There is no supersession because there is no
 identity to supersede: two <code>add</code> calls with contradicting

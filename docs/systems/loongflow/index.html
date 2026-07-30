@@ -166,15 +166,26 @@ mechanism, not as a general memory design.</p>
                                                                     ▲
                                                             population diversity</code></pre>
 <p>Selection lifecycle:</p>
-<pre class="text"><code>population of scored solutions
-  → _calculate_diversity(sample 50 pairs) → 0 (identical) .. 1 (max diversity)
-  → _adaptive_temperature_by_diversity(current, min, max, base)
-       blends 20% of the current temperature for stability
-  → _boltzmann_selection_with_weights(scores, temperature)
-       low temperature  → nearly greedy, picks the best
-       high temperature → flatter, picks broadly
-  → selected parent informs the next attempt
-  → new solution appended with its score</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    P[&quot;population of scored solutions&quot;] --&gt; D[&quot;_calculate_diversity&lt;br/&gt;&lt;i&gt;samples 50 pairs → 0 identical .. 1 max&lt;/i&gt;&quot;]
+    D --&gt; T[&quot;_adaptive_temperature_by_diversity&lt;br/&gt;(current, min, max, base)&lt;br/&gt;&lt;i&gt;blends 20% of the current temperature&lt;br/&gt;for stability&lt;/i&gt;&quot;]
+    T --&gt; B[&quot;_boltzmann_selection_with_weights(scores, temperature)&quot;]
+    B --&gt;|&quot;low temperature&quot;| G[&quot;nearly greedy — picks the best&quot;]
+    B --&gt;|&quot;high temperature&quot;| F[&quot;flatter — picks broadly&quot;]
+    G --&gt; NX[&quot;the selected parent informs the next attempt&quot;]
+    F --&gt; NX
+    NX --&gt; AP[&quot;the new solution is appended with its score&quot;]
+    AP -.-&gt; P
+
+    style T fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>An explicit exploration/exploitation trade applied to recall, with no
+counterpart anywhere else in this atlas. Diversity drives temperature,
+temperature drives how greedily a parent is chosen, and the new
+temperature is <strong>blended</strong> with the old rather than
+replacing it — so the exploration rate moves smoothly instead of
+oscillating with each measurement. The dotted edge closes the loop: each
+selection changes the population its own diversity was measured
+from.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/loongflow/agentsdk/memory/</code>:</p>
 <ul>

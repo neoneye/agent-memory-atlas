@@ -60,29 +60,32 @@ background executor. Reading memory changes memory.
 A memory is an **extracted assertion with a retention score**. Above it sit two
 distilled layers:
 
-```text
-memory      LLM-extracted text + embedding + retention metadata
-  ▲
-experience  distilled from interactions
-  ▲
-skill       a reusable workflow           ← OceanBase-only store
-```
+| Layer | What it is |
+| --- | --- |
+| memory | LLM-extracted text, an embedding, and retention metadata |
+| experience | distilled from interactions |
+| skill | a reusable workflow — **OceanBase-only store** |
+
+The layers distil upward, and the top one is only available on one backend.
 
 The state machine is entirely quantitative, and this is the design's defining
 choice:
 
-```text
-                     reinforce()            should_promote()
-   memory ──retrieved──► retention ↑ ──────────► promoted
-      │                     │
-      │  time passes        │ should_archive()
-      ▼                     ▼
-  R = e^(-t/S)          archived
-      │
-      │ should_forget()
-      ▼
-   unreachable
+```mermaid
+flowchart TB
+    M["memory"] -->|"retrieved → reinforce()"| RET["retention rises"]
+    RET -->|"should_promote()"| PRO["promoted"]
+    RET -->|"should_archive()"| ARC["archived"]
+    M -->|"time passes"| DEC["R = e^(−t/S)"]
+    DEC -->|"should_forget()"| UNR["unreachable"]
+
+    style DEC fill:#e7efe9,stroke:#3d6b59
 ```
+
+Retrieval and time pull in opposite directions on one number — the
+[decay and reinforcement](../../patterns/decay-and-reinforcement/) pattern, with
+an explicit exponential rather than a hand-tuned counter. Note what the three
+`should_*` predicates decide: reachability, never truth.
 
 `calculate_decay` implements `R = e^(-t/S)` directly —
 `decay_factor = math.exp(-hours_elapsed / (24 * rate))` — with

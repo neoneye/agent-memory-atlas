@@ -74,16 +74,25 @@ Three axes are worth separating out.
 
 Recall:
 
-```text
-query
- ├─ semantic — cosine similarity vs query embedding            (Eqs. 9–10)
- ├─ bm25     — SQLite FTS5 MATCH against memory_units_fts      (Eq. 11)
- ├─ graph    — spreading activation seeded from top semantic
- │             hits; decay δ=0.5, per-channel multipliers      (Eq. 12)
- └─ temporal — query parsed for absolute/relative range; units
-               whose occurred window overlaps it
- → reciprocal rank fusion → rerank → agent_id filter applied throughout
+```mermaid
+flowchart LR
+    Q["query"] --> SEM["semantic<br/><i>cosine vs query embedding, Eqs. 9–10</i>"]
+    Q --> BM["bm25<br/><i>FTS5 MATCH on memory_units_fts, Eq. 11</i>"]
+    Q --> GR["graph<br/><i>spreading activation from top semantic hits,<br/>decay δ=0.5, per-channel multipliers, Eq. 12</i>"]
+    Q --> TM["temporal<br/><i>absolute or relative range parsed from the query;<br/>units whose occurred window overlaps it</i>"]
+    SEM --> RRF["reciprocal rank fusion"]
+    BM --> RRF
+    GR --> RRF
+    TM --> RRF
+    RRF --> RK["rerank"] --> OUT["results"]
+
+    style GR fill:#e7efe9,stroke:#3d6b59
 ```
+
+Four channels, and the `agent_id` filter applies throughout rather than at the
+end. The graph channel is the unusual one: it is **seeded from the top semantic
+hits** rather than run independently, so traversal starts where similarity already
+pointed.
 
 ## 3. Architecture
 

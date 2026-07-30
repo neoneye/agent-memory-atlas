@@ -69,20 +69,24 @@ atlas's terms.
 
 ## 2. Mental Model
 
-```text
-day's sessions ──▶ scheduled daily analysis
-                     ├─ AI summary
-                     └─ conflict pass (LLM, local)
-                          ↓
-                    ~/.memanto/conflicts/<date>.json
-                    [{type, title, old_memory_id, old_content,
-                      new_memory_id, new_content, description,
-                      recommendation}]
-                          ↓
-                    memanto conflicts   (CLI)   or the web UI
-                          ↓
-        keep_old │ keep_new │ keep_both │ remove_both │ manual(content)
+```mermaid
+flowchart TB
+    D["a day's sessions"] --> AN["scheduled daily analysis"]
+    AN --> SUM["AI summary"]
+    AN --> CP["conflict pass<br/><i>LLM, local</i>"]
+    CP --> F[("conflicts/&lt;date&gt;.json<br/><i>type, title, old_memory_id, old_content,<br/>new_memory_id, new_content,<br/>description, recommendation</i>")]
+    F --> UI["memanto conflicts CLI,<br/>or the web UI"]
+    UI --> V["keep_old · keep_new · keep_both<br/>remove_both · manual(content)"]
+
+    style F fill:#e7efe9,stroke:#3d6b59
+    style V fill:#e7efe9,stroke:#3d6b59
 ```
+
+The conflict pass **writes a file and stops.** Detection is automatic, the verdict
+is a person's, and the recommendation travels with the conflict rather than being
+applied — which is the
+[resolve, don't just detect](../../patterns/resolve-not-just-detect/) pattern with
+the resolution deliberately left to a human.
 
 The conflict vocabulary is four-way rather than binary:
 

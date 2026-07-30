@@ -70,24 +70,21 @@ The derived types are the model:
 - **Agent skill** — the reusable pattern distilled from repeated cases.
 - **Daily log** — a time-bucketed base handler.
 
-```text
-   Markdown in the memory root
-        │   watcher → scanner → worker
-        ▼
-   handlers: episode | atomic_fact | agent_case | agent_skill | daily_log
-        │
-        ▼
-   rows in SQLite + LanceDB, each carrying
-   owner_id, owner_type, app_id, project_id
-        │
-        ├── /search, /get ── base filter pins all four
-        │                    + deprecated_by IS NULL (user-owned tables)
-        │
-        └── reflection marks deprecated_by on a superseded row
-                 │
-                 └── the row stops being returned.
-                     The Markdown that produced it does not change.
+```mermaid
+flowchart TB
+    MD[("Markdown in the memory root")] -->|"watcher → scanner → worker"| H["handlers:<br/>episode, atomic_fact, agent_case,<br/>agent_skill, daily_log"]
+    H --> ROWS[("rows in SQLite + LanceDB<br/><i>each carrying owner_id, owner_type,<br/>app_id, project_id</i>")]
+    ROWS --> RD["/search and /get<br/><i>base filter pins all four,<br/>plus deprecated_by IS NULL</i>"]
+    ROWS --> REF["reflection marks deprecated_by<br/>on a superseded row"]
+    REF --> STOP["the row stops being returned"]
+    STOP -.->|"unchanged"| MD
+
+    style STOP fill:#f4e2bd,stroke:#b8860b
 ```
+
+The dotted edge back to the top is the gap. Deprecation reaches the *rows* and
+the Markdown that produced them is untouched — so the watcher can re-ingest a
+deprecated claim from a file that was never edited.
 
 Two states, and they are about validity rather than belief: a row is current or
 it is deprecated. Nothing is a candidate, nothing is verified, nothing is

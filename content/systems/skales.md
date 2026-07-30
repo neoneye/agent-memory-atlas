@@ -77,25 +77,32 @@ location | topic`. Those seven are a reasonable cut of what a personal assistant
 needs, and `action_item` is prospective-memory-shaped — a `don't forget to …`
 becomes a stored intention, though nothing surfaces it at a due time.
 
-```text
-   conversation files in .skales-data/sessions/
-        │
-        │  every 90 minutes, files with mtime > lastScanTimestamp
-        ▼
-   regex extraction — seven categories, no LLM
-        │
-        ▼
-   .skales-data/memories/{id}.json        ← provenance: source_conversation_id
-        │
-        ├── retrieval: keyword 0.70 + recency 0.20 + category 0.10, top 5
-        │              (synchronous, <100ms, inside agentDecide, 30s cache)
-        │
-        └── memory page ── delete ──► file removed, cache invalidated  ✓
+```mermaid
+flowchart TB
+    S[("conversation files in<br/>.skales-data/sessions/")]
+    S -->|"every 90 minutes,<br/>files with mtime > lastScanTimestamp"| EX["regex extraction<br/><i>seven categories, no LLM</i>"]
+    EX --> M[("memories/{id}.json<br/><i>provenance: source_conversation_id</i>")]
+    M --> R["retrieval: keyword 0.70 + recency 0.20<br/>+ category 0.10, top 5<br/><i>synchronous, under 100ms, inside<br/>agentDecide, 30s cache</i>"]
 
-   tiered files (short-term / long-term / episodic) ── delete ──►  ✓
-
-   soul.memory.knownFacts ── delete ──►  ✗  "ask in chat"  ──► no such verb
+    style EX fill:#e7efe9,stroke:#3d6b59
 ```
+
+Extraction uses no model at all — seven regex categories, which is the
+[zero-LLM capture](../../patterns/zero-llm-capture/) pattern taken to its
+cheapest end and the reason the whole pass fits in 90-minute sweeps.
+
+**Delete works on two of the three stores.** The memory page is one surface over
+three, and they do not agree:
+
+| Store | Delete from the memory page | What happens |
+| --- | --- | --- |
+| `memories/{id}.json` | yes | file removed, cache invalidated |
+| tiered files — short-term, long-term, episodic | yes | removed |
+| `soul.memory.knownFacts` | **no** | the UI says "ask in chat", and no such verb exists |
+
+The third row is a delete button that discards its own computation: the page
+knows which facts it is showing and tells the user to go somewhere that cannot
+act.
 
 Nothing has a state. No memory is a candidate, verified, superseded or rejected;
 `extracted_at` is the only temporal field, so nothing is bi-temporal. The scan

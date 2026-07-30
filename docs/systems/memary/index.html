@@ -134,9 +134,32 @@ removes anything from the graph afterwards.</p>
 reference implementation of an idea, not as a maintained system.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>There are two memories, and neither one holds a fact.</p>
-<pre class="text"><code>memory_stream          [ MemoryItem(entity, date), ... ]      append-only
-entity_knowledge_store [ KnowledgeMemoryItem(entity, count, date), ... ]
-knowledge graph        triplets, via LlamaIndex</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Holds</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory_stream</code></td>
+<td><code>MemoryItem(entity, date)</code></td>
+<td>append-only</td>
+</tr>
+<tr>
+<td><code>entity_knowledge_store</code></td>
+<td><code>KnowledgeMemoryItem(entity, count, date)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>knowledge graph</td>
+<td>triplets</td>
+<td>via LlamaIndex</td>
+</tr>
+</tbody>
+</table></div>
 <p>A <code>MemoryItem</code> is <em>"this entity was mentioned at this
 time"</em>. A <code>KnowledgeMemoryItem</code> is <em>"this entity has
 been mentioned this many times, most recently then"</em>. Neither says
@@ -147,9 +170,14 @@ currently salient — rather than a belief store.</p>
 several systems that conflate the two jobs. Memary keeps "what do I
 know" and "what am I thinking about" in different places.</p>
 <p>The state machine is one transition wide:</p>
-<pre class="text"><code>entity mentioned ──► count += 1, date = now
-                          │
-                          └──► (nothing else; count never decreases)</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    E[&quot;entity mentioned&quot;] --&gt; C[&quot;count += 1&lt;br/&gt;date = now&quot;]
+    C --&gt; N[&quot;nothing else —&lt;br/&gt;&lt;b&gt;count never decreases&lt;/b&gt;&quot;]
+
+    style N fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The counter is monotonic, so an entity that mattered once keeps its
+weight forever. There is no decay and no way to say a topic has stopped
+being relevant.</p>
 <p><code>remove_old_memory(days)</code> filters the <em>mention
 stream</em> by cutoff date, and <code>remove_memory_by_index</code> /
 <code>clear_memory</code> operate on the in-process lists. None of them

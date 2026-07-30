@@ -71,17 +71,27 @@ grade/                                  evolution/
 
 Selection lifecycle:
 
-```text
-population of scored solutions
-  → _calculate_diversity(sample 50 pairs) → 0 (identical) .. 1 (max diversity)
-  → _adaptive_temperature_by_diversity(current, min, max, base)
-       blends 20% of the current temperature for stability
-  → _boltzmann_selection_with_weights(scores, temperature)
-       low temperature  → nearly greedy, picks the best
-       high temperature → flatter, picks broadly
-  → selected parent informs the next attempt
-  → new solution appended with its score
+```mermaid
+flowchart TB
+    P["population of scored solutions"] --> D["_calculate_diversity<br/><i>samples 50 pairs → 0 identical .. 1 max</i>"]
+    D --> T["_adaptive_temperature_by_diversity<br/>(current, min, max, base)<br/><i>blends 20% of the current temperature<br/>for stability</i>"]
+    T --> B["_boltzmann_selection_with_weights(scores, temperature)"]
+    B -->|"low temperature"| G["nearly greedy — picks the best"]
+    B -->|"high temperature"| F["flatter — picks broadly"]
+    G --> NX["the selected parent informs the next attempt"]
+    F --> NX
+    NX --> AP["the new solution is appended with its score"]
+    AP -.-> P
+
+    style T fill:#e7efe9,stroke:#3d6b59
 ```
+
+An explicit exploration/exploitation trade applied to recall, with no counterpart
+anywhere else in this atlas. Diversity drives temperature, temperature drives how
+greedily a parent is chosen, and the new temperature is **blended** with the old
+rather than replacing it — so the exploration rate moves smoothly instead of
+oscillating with each measurement. The dotted edge closes the loop: each selection
+changes the population its own diversity was measured from.
 
 ## 3. Architecture
 

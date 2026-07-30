@@ -59,20 +59,14 @@ literature is usually irrelevant here, and why it is not for this.
 
 Three layers, and the atlas's usual vocabulary only reaches the first two.
 
-```text
-L0   document(raw_content, insight, summary, keywords) + chunk
-       │  retained; the source of everything below
-       ▼
-L1   l1_versions(version, status, description)
-       ├─ l1_bios          content + summary, first and third person
-       ├─ l1_shades        named aspects of the person
-       ├─ l1_clusters      memory_ids + cluster_center
-       └─ l1_chunk_topics  topic + tags
-       │  a numbered generation, regenerable from L0
-       ▼
-L2   LoRA SFT → DPO → merged weights → GGUF
-       │  memory as parameters; nothing is retrieved
-```
+| Layer | Holds | Standing |
+| --- | --- | --- |
+| **L0** | `document(raw_content, insight, summary, keywords)` plus chunks | retained — the source of everything below |
+| **L1** | `l1_versions(version, status, description)`, over `l1_bios` (content and summary, first and third person), `l1_shades` (named aspects of the person), `l1_clusters` (`memory_ids` + `cluster_center`), `l1_chunk_topics` (topic + tags) | a numbered generation, regenerable from L0 |
+| **L2** | LoRA SFT → DPO → merged weights → GGUF | memory as parameters; nothing is retrieved |
+
+L1 being *numbered and regenerable* is the useful part: a bad generation is
+replaced by building another from L0 rather than repaired in place.
 
 **L1 being versioned is the best idea in the system.** Every derived table carries
 a `version` foreign key into `l1_versions`, so the whole biography is a numbered

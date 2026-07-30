@@ -76,16 +76,22 @@ model the agent as a memory subject in its own right.
 
 The lifecycle is two states and no transitions between them:
 
-```text
-turn captured ──► conversation + messages stored (durable, no model involved)
-                        │
-                        └─► augmentation (hosted) ──► fact upserted
-                                                        │
-                        seen again ─────────────────────┤ num_times += 1
-                                                        │ content unchanged
-                                                        ▼
-                                          delete_entity_memories()  ← all or nothing
+```mermaid
+flowchart TB
+    T["turn captured"] --> C[("conversation + messages stored<br/><i>durable, no model involved</i>")]
+    C --> AUG["augmentation, hosted"]
+    AUG --> F["fact upserted"]
+    SEEN["seen again"] --> INC["num_times += 1<br/><i>content unchanged</i>"]
+    INC --> F
+    F --> DEL["delete_entity_memories()<br/><b>all or nothing</b>"]
+
+    style INC fill:#e7efe9,stroke:#3d6b59
+    style DEL fill:#f4e2bd,stroke:#b8860b
 ```
+
+Seeing a fact again increments a counter and leaves the content alone, so
+repetition is recorded without rewriting. The only exit is entity-wide: there is
+no way to remove one fact.
 
 A fact is never superseded, corrected, contradicted, expired or rejected. It is
 created, counted, and eventually deleted along with everything else about that

@@ -76,14 +76,19 @@ The life of a memo is a three-way decision made by one LLM call, and the
 vocabulary comes straight from
 `src/server/api/memobase_server/prompts/merge_profile.py`:
 
-```text
-new information about (topic, subtopic)
-        │
-        ▼
-   merge_profile ──► APPEND   the memo did not exist, or this is additive
-                 ──► UPDATE   rewrite the memo; old text ceases to exist
-                 ──► ABORT    discard the new information
+```mermaid
+flowchart TB
+    N["new information about<br/>(topic, subtopic)"] --> M{"merge_profile"}
+    M -->|APPEND| A["the memo did not exist,<br/>or this is additive"]
+    M -->|UPDATE| U["rewrite the memo —<br/><b>old text ceases to exist</b>"]
+    M -->|ABORT| AB["discard the new information"]
+
+    style U fill:#f4e2bd,stroke:#b8860b
 ```
+
+Three verdicts from one model call. `UPDATE` is the lossy one: the memo is
+rewritten and the previous wording is gone, so a wrong merge cannot be walked
+back.
 
 That is the entire epistemic model, and both of its ends are worth naming. `ABORT`
 discards *incoming* information with no record that it was seen — so a fact the

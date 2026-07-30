@@ -157,12 +157,16 @@ BufferZone      blobs awaiting processing</code></pre>
 <p>The life of a memo is a three-way decision made by one LLM call, and
 the vocabulary comes straight from
 <code>src/server/api/memobase_server/prompts/merge_profile.py</code>:</p>
-<pre class="text"><code>new information about (topic, subtopic)
-        │
-        ▼
-   merge_profile ──► APPEND   the memo did not exist, or this is additive
-                 ──► UPDATE   rewrite the memo; old text ceases to exist
-                 ──► ABORT    discard the new information</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    N[&quot;new information about&lt;br/&gt;(topic, subtopic)&quot;] --&gt; M{&quot;merge_profile&quot;}
+    M --&gt;|APPEND| A[&quot;the memo did not exist,&lt;br/&gt;or this is additive&quot;]
+    M --&gt;|UPDATE| U[&quot;rewrite the memo —&lt;br/&gt;&lt;b&gt;old text ceases to exist&lt;/b&gt;&quot;]
+    M --&gt;|ABORT| AB[&quot;discard the new information&quot;]
+
+    style U fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Three verdicts from one model call. <code>UPDATE</code> is the lossy
+one: the memo is rewritten and the previous wording is gone, so a wrong
+merge cannot be walked back.</p>
 <p>That is the entire epistemic model, and both of its ends are worth
 naming. <code>ABORT</code> discards <em>incoming</em> information with
 no record that it was seen — so a fact the extractor judged valueless

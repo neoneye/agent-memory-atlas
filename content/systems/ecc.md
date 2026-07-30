@@ -73,20 +73,23 @@ specific shape.
 
 The state machine, as implemented:
 
-```text
-   ecc memory add  /  memory_save
-        │
-        ▼
-   write ${id}.md into the scope's vault root
-   trust  = "unreviewed"     ← the only permitted value
-   status = "active"         ← the only value ever written
-        │
-        ├── index / search ──► filtered to status === 'active'
-        │
-        ├── rejected    ─┐
-        └── superseded  ─┴─ validated by the schema, honoured on read,
-                            and set by nothing
+```mermaid
+flowchart TB
+    A["ecc memory add<br/>memory_save"] --> W["write id.md into<br/>the scope's vault root"]
+    W --> T["trust = unreviewed<br/><i>the only permitted value</i>"]
+    W --> S["status = active<br/><i>the only value ever written</i>"]
+    S --> IDX["index and search<br/><i>filtered to status === 'active'</i>"]
+    S -.-> REJ["rejected"]
+    S -.-> SUP["superseded"]
+
+    style REJ fill:#f4e2bd,stroke:#b8860b
+    style SUP fill:#f4e2bd,stroke:#b8860b
 ```
+
+The dotted transitions are the finding: `rejected` and `superseded` are **validated
+by the schema and honoured on the read path, and set by nothing**. The vocabulary
+for correction exists and no code reaches it, so the read path filters for a state
+transition that never happens.
 
 Writes are **create-only**. There is no update verb and no delete verb; a memory
 is written once and read thereafter. Combined with the single-valued `trust`,

@@ -63,15 +63,15 @@ review path. And a confidence integer is doing the work a trust state would.
 A memory is a **typed context**, and the type is a claim about what kind of thing
 was learned:
 
-```text
-ENTITY_CONTEXT      who or what an entity is
-ACTIVITY_CONTEXT    behavioural trajectories, completed tasks
-INTENT_CONTEXT      future plans, goals, action intentions
-SEMANTIC_CONTEXT    knowledge, concepts, principles
-PROCEDURAL_CONTEXT  operation patterns and task procedures
-STATE_CONTEXT       current status, progress, indicators
-KNOWLEDGE_CONTEXT   file-derived context
-```
+| Context type | Holds |
+| --- | --- |
+| `ENTITY_CONTEXT` | who or what an entity is |
+| `ACTIVITY_CONTEXT` | behavioural trajectories, completed tasks |
+| `INTENT_CONTEXT` | future plans, goals, action intentions |
+| `SEMANTIC_CONTEXT` | knowledge, concepts, principles |
+| `PROCEDURAL_CONTEXT` | operation patterns and task procedures |
+| `STATE_CONTEXT` | current status, progress, indicators |
+| `KNOWLEDGE_CONTEXT` | file-derived context |
 
 Each type carries a written `purpose` in `ContextSimpleDescriptions` and a longer
 `ContextDescriptions` entry with `key_indicators` used to classify. Making the

@@ -74,15 +74,20 @@ material rather than over anything a person actually said.
 
 ## 2. Mental Model
 
-```text
-turn ──▶ episodic event      "what happened"   atlas_memory_episodic
-              │
-              │ consolidation: one model pass
-              ├──▶ semantic fact  "what's true"  atlas_memory_semantic   (deduped)
-              └──▶ procedural playbook "what works"  atlas_memory_procedural (updated)
+```mermaid
+flowchart TB
+    T["turn"] --> EP[("episodic event — <i>what happened</i><br/>atlas_memory_episodic")]
+    EP -->|"consolidation: one model pass"| SE[("semantic fact — <i>what's true</i><br/>atlas_memory_semantic, deduped")]
+    EP -->|"consolidation: one model pass"| PR[("procedural playbook — <i>what works</i><br/>atlas_memory_procedural, updated")]
+    SE --> RC["recall: RRF over BM25 and semantic,<br/>filtered by user_id"]
+    EP --> RC
 
-recall ──▶ RRF( BM25 , semantic ) filtered by user_id
+    style EP fill:#e7efe9,stroke:#3d6b59
 ```
+
+One model pass produces both derived kinds, and the episodic event it came from is
+kept — so the three tables are what happened, what is true, and what works, with
+the first remaining the evidence for the other two.
 
 Three indices rather than three types in one index is the structural choice, and
 it buys per-type lifecycle rules and per-type retrieval weighting at the cost of

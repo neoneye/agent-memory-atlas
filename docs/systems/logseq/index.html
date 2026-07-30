@@ -164,15 +164,19 @@ can I remember, and what must be true of it" is configuration, not
 code.</p>
 <p>The state machine is the shortest in this atlas, because there is no
 epistemic machinery at all:</p>
-<pre class="text"><code>   a human types, or an agent calls upsertNodes
-        │
-        ▼
-   node exists in the graph ─── indexed into FTS5 (trigger)
-        │                  └── embedded into the vector index (batched)
-        │
-        ├── :add / :edit ──► the value is simply replaced
-        │
-        └── :db/retractEntity ──► gone, plus orphaned-page cleanup</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    IN[&quot;a human types,&lt;br/&gt;or an agent calls upsertNodes&quot;] --&gt; N[&quot;node exists in the graph&quot;]
+    N --&gt; FTS[&quot;indexed into FTS5&lt;br/&gt;&lt;i&gt;by trigger&lt;/i&gt;&quot;]
+    N --&gt; VEC[&quot;embedded into the vector index&lt;br/&gt;&lt;i&gt;batched&lt;/i&gt;&quot;]
+    N --&gt;|&quot;:add / :edit&quot;| REP[&quot;the value is simply replaced&quot;]
+    N --&gt;|&quot;:db/retractEntity&quot;| DEL[&quot;gone, plus orphaned-page cleanup&quot;]
+
+    style REP fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>A human and an agent enter through the same door, which is the whole
+point of an editor that acquired an agent rather than the reverse. The
+highlighted transition is the cost: an edit <strong>replaces</strong>
+the value with no record of what it said, so correction and vandalism
+are the same operation.</p>
 <p>Nothing is a candidate. Nothing is verified. Nothing decays, expires,
 is superseded with a record, or is marked rejected. A node is in the
 graph or it is not, and its current value is the whole of what the

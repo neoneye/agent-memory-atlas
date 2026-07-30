@@ -158,15 +158,18 @@ memory was retired, and nothing detects when the model ignores the
 guidance. Retrieval is a filtered list with no ranking. And
 <code>memory_forget</code> is a hard delete with no trace.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="text"><code>remember(content, scope) ──▶ row in memories(scope, key, content,
-                                            workspace, session_id, created_at)
+<pre class="mermaid"><code>flowchart TB
+    R[&quot;remember(content, scope)&quot;] --&gt; ROW[(&quot;memories(scope, key, content,&lt;br/&gt;workspace, session_id, created_at)&quot;)]
+    ROW --&gt; LS[&quot;list(scope?, workspace?)&lt;br/&gt;&lt;i&gt;scope is GLOBAL, WORKSPACE or SESSION,&lt;br/&gt;applied when listing&lt;/i&gt;&quot;]
+    LS --&gt; FM[&quot;format_memories() into the prompt&quot;]
+    ROW --&gt;|&quot;memory_update(id, content)&quot;| UP[&quot;content replaced in place&quot;]
+    ROW --&gt;|&quot;memory_forget(id)&quot;| FG[&quot;row deleted&quot;]
 
-scope ∈ { GLOBAL, WORKSPACE, SESSION }   applied when listing
-
-memory_update(id, content) ──▶ content replaced in place
-memory_forget(id)          ──▶ row deleted
-
-read ──▶ list(scope?, workspace?) ──▶ format_memories() into the prompt</code></pre>
+    style UP fill:#f4e2bd,stroke:#b8860b
+    style FG fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Four verbs and a scope enum. Both mutating verbs are destructive —
+replaced in place, or deleted — so nothing records that a value was ever
+different.</p>
 <p>There are no states. A memory exists or it does not, and the
 transition between those is a tool call the model decides to make on the
 strength of a paragraph of guidance.</p>

@@ -197,14 +197,22 @@ validity</a> — the pattern the atlas credits to <a
 href="../graphiti/">Graphiti</a>, implemented here as ordinary
 columns.</p>
 <p>Recall:</p>
-<pre class="text"><code>query
- ├─ semantic — cosine similarity vs query embedding            (Eqs. 9–10)
- ├─ bm25     — SQLite FTS5 MATCH against memory_units_fts      (Eq. 11)
- ├─ graph    — spreading activation seeded from top semantic
- │             hits; decay δ=0.5, per-channel multipliers      (Eq. 12)
- └─ temporal — query parsed for absolute/relative range; units
-               whose occurred window overlaps it
- → reciprocal rank fusion → rerank → agent_id filter applied throughout</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    Q[&quot;query&quot;] --&gt; SEM[&quot;semantic&lt;br/&gt;&lt;i&gt;cosine vs query embedding, Eqs. 9–10&lt;/i&gt;&quot;]
+    Q --&gt; BM[&quot;bm25&lt;br/&gt;&lt;i&gt;FTS5 MATCH on memory_units_fts, Eq. 11&lt;/i&gt;&quot;]
+    Q --&gt; GR[&quot;graph&lt;br/&gt;&lt;i&gt;spreading activation from top semantic hits,&lt;br/&gt;decay δ=0.5, per-channel multipliers, Eq. 12&lt;/i&gt;&quot;]
+    Q --&gt; TM[&quot;temporal&lt;br/&gt;&lt;i&gt;absolute or relative range parsed from the query;&lt;br/&gt;units whose occurred window overlaps it&lt;/i&gt;&quot;]
+    SEM --&gt; RRF[&quot;reciprocal rank fusion&quot;]
+    BM --&gt; RRF
+    GR --&gt; RRF
+    TM --&gt; RRF
+    RRF --&gt; RK[&quot;rerank&quot;] --&gt; OUT[&quot;results&quot;]
+
+    style GR fill:#e7efe9,stroke:#3d6b59</code></pre>
+<p>Four channels, and the <code>agent_id</code> filter applies
+throughout rather than at the end. The graph channel is the unusual one:
+it is <strong>seeded from the top semantic hits</strong> rather than run
+independently, so traversal starts where similarity already pointed.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <ul>
 <li><code>packages/runtime/src/memory/</code> — <code>retain.ts</code>,

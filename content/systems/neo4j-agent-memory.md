@@ -80,15 +80,16 @@ which was not traced.
 
 ## 2. Mental Model
 
-```text
-short-term    conversation turns, recent context
-long-term     entities, relationships, preferences
-                preference: valid_from ─────── valid_until
-                supersede_preference(old, new)  — idempotent
-reasoning     trace ── steps ── tool calls
-                with-block: on exit, success OR the exception becomes the outcome
-                TraceOutcome{success, summary, error kind, entities, metrics}
-```
+| Store | Holds |
+| --- | --- |
+| short-term | conversation turns, recent context |
+| long-term | entities, relationships, preferences — a preference carries `valid_from` and `valid_until`, and `supersede_preference(old, new)` is **idempotent** |
+| reasoning | a trace of steps and tool calls; the with-block makes success *or* the raised exception the outcome on exit, recorded as `TraceOutcome{success, summary, error kind, entities, metrics}` |
+
+Two details worth taking. Preferences are the only thing here with validity time,
+and an idempotent supersede means a retried write cannot double-supersede. And the
+reasoning trace cannot silently succeed: leaving the block always records an
+outcome, including the exception.
 
 All three live in **one Neo4j instance shared across agents** rather than in
 per-agent stores — the stated position being a single brain rather than silos.

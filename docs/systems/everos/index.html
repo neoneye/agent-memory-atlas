@@ -156,22 +156,19 @@ plus the <code>approach</code> taken.</li>
 repeated cases.</li>
 <li><strong>Daily log</strong> — a time-bucketed base handler.</li>
 </ul>
-<pre class="text"><code>   Markdown in the memory root
-        │   watcher → scanner → worker
-        ▼
-   handlers: episode | atomic_fact | agent_case | agent_skill | daily_log
-        │
-        ▼
-   rows in SQLite + LanceDB, each carrying
-   owner_id, owner_type, app_id, project_id
-        │
-        ├── /search, /get ── base filter pins all four
-        │                    + deprecated_by IS NULL (user-owned tables)
-        │
-        └── reflection marks deprecated_by on a superseded row
-                 │
-                 └── the row stops being returned.
-                     The Markdown that produced it does not change.</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    MD[(&quot;Markdown in the memory root&quot;)] --&gt;|&quot;watcher → scanner → worker&quot;| H[&quot;handlers:&lt;br/&gt;episode, atomic_fact, agent_case,&lt;br/&gt;agent_skill, daily_log&quot;]
+    H --&gt; ROWS[(&quot;rows in SQLite + LanceDB&lt;br/&gt;&lt;i&gt;each carrying owner_id, owner_type,&lt;br/&gt;app_id, project_id&lt;/i&gt;&quot;)]
+    ROWS --&gt; RD[&quot;/search and /get&lt;br/&gt;&lt;i&gt;base filter pins all four,&lt;br/&gt;plus deprecated_by IS NULL&lt;/i&gt;&quot;]
+    ROWS --&gt; REF[&quot;reflection marks deprecated_by&lt;br/&gt;on a superseded row&quot;]
+    REF --&gt; STOP[&quot;the row stops being returned&quot;]
+    STOP -.-&gt;|&quot;unchanged&quot;| MD
+
+    style STOP fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The dotted edge back to the top is the gap. Deprecation reaches the
+<em>rows</em> and the Markdown that produced them is untouched — so the
+watcher can re-ingest a deprecated claim from a file that was never
+edited.</p>
 <p>Two states, and they are about validity rather than belief: a row is
 current or it is deprecated. Nothing is a candidate, nothing is
 verified, nothing is rejected. <code>confidence</code> appears on some

@@ -74,17 +74,20 @@ list with no ranking. And `memory_forget` is a hard delete with no trace.
 
 ## 2. Mental Model
 
-```text
-remember(content, scope) ──▶ row in memories(scope, key, content,
-                                            workspace, session_id, created_at)
+```mermaid
+flowchart TB
+    R["remember(content, scope)"] --> ROW[("memories(scope, key, content,<br/>workspace, session_id, created_at)")]
+    ROW --> LS["list(scope?, workspace?)<br/><i>scope is GLOBAL, WORKSPACE or SESSION,<br/>applied when listing</i>"]
+    LS --> FM["format_memories() into the prompt"]
+    ROW -->|"memory_update(id, content)"| UP["content replaced in place"]
+    ROW -->|"memory_forget(id)"| FG["row deleted"]
 
-scope ∈ { GLOBAL, WORKSPACE, SESSION }   applied when listing
-
-memory_update(id, content) ──▶ content replaced in place
-memory_forget(id)          ──▶ row deleted
-
-read ──▶ list(scope?, workspace?) ──▶ format_memories() into the prompt
+    style UP fill:#f4e2bd,stroke:#b8860b
+    style FG fill:#f4e2bd,stroke:#b8860b
 ```
+
+Four verbs and a scope enum. Both mutating verbs are destructive — replaced in
+place, or deleted — so nothing records that a value was ever different.
 
 There are no states. A memory exists or it does not, and the transition between
 those is a tool call the model decides to make on the strength of a paragraph of

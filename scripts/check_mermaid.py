@@ -27,12 +27,26 @@ LABEL = re.compile(
 BREAKERS = "[]{}"
 
 
+# In a stateDiagram, `A --> B: label` delimits the label with a colon, so a second
+# colon inside it ends the parse. `FrameWalOp::Tombstone` shipped this way once and
+# only the renderer knew. Node labels are unaffected — this is transitions only.
+STATE_EDGE = re.compile(r"^\s*[\w\[\]*]+\s*-->\s*[\w\[\]*]+\s*:(?P<label>.*)$")
+
+
 def main(content_dir: str) -> int:
     problems = []
     for path in sorted(Path(content_dir).rglob("*.md")):
         text = path.read_text(encoding="utf-8")
         for block in re.findall(r"```mermaid\n(.*?)```", text, re.S):
+            is_state = block.lstrip().startswith("stateDiagram")
             for line in block.split("\n"):
+                if is_state:
+                    edge = STATE_EDGE.match(line)
+                    if edge and ":" in edge.group("label"):
+                        problems.append(
+                            f"{path}: a second ':' inside a stateDiagram "
+                            f"transition label ends the parse\n    {line.strip()}"
+                        )
                 for body in LABEL.findall(line):
                     bad = sorted({c for c in BREAKERS if c in body})
                     if bad:
@@ -45,7 +59,9 @@ def main(content_dir: str) -> int:
         for p in dict.fromkeys(problems):
             print(p, file=sys.stderr)
         print(
-            'Wrap the label in quotes: id["a[b]c"] instead of id[a[b]c].',
+            'For a node label, wrap it in quotes: id["a[b]c"] not id[a[b]c].\n'
+            "For a stateDiagram transition, remove the second colon — reword, or "
+            "move the detail into a note.",
             file=sys.stderr,
         )
         return 1

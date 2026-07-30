@@ -81,20 +81,20 @@ operational memory layer, and it reads as one.
 
 ## 2. Mental Model
 
-```text
-short term   FIFO of dialogue QA pairs
-   │ capacity reached
-   ▼
-mid term     LLM segments dialogue into topic sessions
-             each session carries: N_visit, L_interaction,
-                                   last_visit_time, R_recency, H_segment
-             heap ordered by -H_segment (hottest first)
-             at capacity → evict_lfu() by access_frequency
-   │ hot enough
-   ▼
-long term    user_profiles[user_id] = one merged string
-             knowledge entries in bounded deques
+```mermaid
+flowchart TB
+    ST["short term<br/><i>FIFO of dialogue QA pairs</i>"] -->|"capacity reached"| MT
+    MT["mid term<br/><i>LLM segments dialogue into topic sessions,<br/>each carrying N_visit, L_interaction,<br/>last_visit_time, R_recency, H_segment</i>"]
+    MT --> HEAP["heap ordered by −H_segment<br/><i>hottest first</i>"]
+    HEAP -->|"at capacity"| EV["evict_lfu() by access_frequency"]
+    MT -->|"hot enough"| LT["long term<br/><i>user_profiles[user_id] = one merged string;<br/>knowledge entries in bounded deques</i>"]
+
+    style LT fill:#f4e2bd,stroke:#b8860b
 ```
+
+Promotion is driven by heat, and the destination is the problem: a user's profile
+is **one merged string**, so everything that gets hot enough is folded into a blob
+with no per-fact identity left to correct.
 
 How a memory dies: it is evicted by LFU when mid-term is full, or falls off the
 end of a bounded deque in long term, or is overwritten when a profile is merged.

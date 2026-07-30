@@ -70,27 +70,32 @@ several partially-landed efforts.
 
 ## 2. Mental Model
 
-```text
-tiers        user/      project/      team/  ← committed to the repository
-                                        │
-                                        └─ every write path-checked;
-                                           secrets refused, flag or no flag
+Three tiers, and only one of them leaves the machine:
 
-types        user | feedback | project | reference
+| Tier | Notes |
+| --- | --- |
+| `user/` | local |
+| `project/` | local |
+| `team/` | **committed to the repository** — every write is path-checked, and secrets are refused with or without a flag |
 
-session ──▶ extraction (cursor: sessionId + processedOffset)
-              records: updated | noop, touched topics, session id
-              │
-              ▼
-            entries ──▶ dream (consolidation)
-                          records: updated | noop, recentSessionIdsSinceDream
-              │
-              ▼
-            recall ──▶ relevance selector ──▶ context file
+Entry types are `user`, `feedback`, `project` and `reference`.
 
-forget ──▶ by candidate selection | by match | by entry
-           (nothing keyed on the rejected value)
+```mermaid
+flowchart TB
+    S["session"] --> EX["extraction<br/><i>cursor: sessionId + processedOffset</i>"]
+    EX --> R1["records: updated or noop,<br/>touched topics, session id"]
+    R1 --> E[("entries")]
+    E --> DR["dream, consolidation"]
+    DR --> R2["records: updated or noop,<br/>recentSessionIdsSinceDream"]
+    E --> RC["recall"] --> RS["relevance selector"] --> CF["context file"]
+    E --> FG["forget: by candidate selection,<br/>by match, or by entry"]
+    FG --> NK["nothing keyed on<br/>the rejected value"]
+
+    style NK fill:#f4e2bd,stroke:#b8860b
 ```
+
+Three ways to forget and none of them records *what* was rejected, so the next
+extraction can re-derive it from the same session.
 
 ## 3. Architecture
 

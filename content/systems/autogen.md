@@ -64,18 +64,19 @@ A memory is a `MemoryContent`: a payload (`str`, `bytes`, `dict` or `Image`), a
 `MemoryMimeType`, and an optional `metadata` dict. That is the whole schema, and
 it is deliberately closer to "a piece of content" than to "a belief".
 
-```text
-   application (or a sample's learning loop)
-        │  add(MemoryContent)
-        ▼
-   memory store  ─── query(q) ──────────► MemoryQueryResult
-        │
-        │  update_context(model_context)
-        ▼
-   the memory writes itself into the prompt
-        │
-        └── clear() ──► everything is gone
+```mermaid
+flowchart TB
+    A["application, or a sample's learning loop"] -->|"add(MemoryContent)"| S[("memory store")]
+    S -->|"query(q)"| R["MemoryQueryResult"]
+    S -->|"update_context(model_context)"| P["the memory writes itself<br/>into the prompt"]
+    S -->|"clear()"| G["everything is gone"]
+
+    style G fill:#f4e2bd,stroke:#b8860b
 ```
+
+Four verbs, and the fourth is the only removal the protocol has. `MemoryContent`
+carries no identifier, so there is nothing for a targeted delete to name — which
+is why `clear()` is all-or-nothing rather than a convenience.
 
 There are no states. Nothing is a candidate, verified, superseded, expired or
 rejected. There is no supersession because there is no identity to supersede: two
