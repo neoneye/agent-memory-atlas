@@ -9459,11 +9459,26 @@ the memory bank is resolved per invocation from the agent spec, falling
 back to the run identity, so a single declaration isolates memory per
 agent. <code>opsyhq/wolli</code> (233 lines of session memory storage)
 and <code>fischerf/aar</code> (a 165-line session store) are both too
-small to carry a mechanism. <code>Fagoon-AI/upgrade</code> was sized and
-not read: roughly 1,272 lines of memory-named Python plus alembic
-migrations adding agentic-memory and RAG vector tables, inside a 195 MB
-application. It is a borderline candidate left undone rather than
-judged.</li>
+small to carry a mechanism. <code>Fagoon-AI/upgrade</code> was read at
+<code>f027d614</code> and falls outside the inclusion test. Its
+<code>WorkflowMemory</code> is a message row — <code>workflow_id</code>,
+<code>conversation_id</code>, <code>role</code> from a five-value set,
+<code>content</code>, metadata, an estimated token count and a TTL — and
+its <code>MemoryNode</code> offers exactly six operations: add, get all,
+get, delete, prune and stats. <strong>There is no embedding, no vector,
+no similarity and no search anywhere in either file</strong>; the vector
+tables that migration creates belong to <code>knowledgedocument</code>,
+the RAG side, not to memory. So what survives a run is the transcript,
+listed by conversation rather than retrieved, and the
+<code>conversation_id</code> field defaults to the execution id — one
+run. That is the call already made for <a href="../systems/pi/">Pi</a>,
+for LlamaIndex's <code>ChatMemoryBuffer</code> family, and for OpenAI's
+<code>SQLiteSession</code>. The comparison worth recording is with <a
+href="../systems/camel/">CAMEL</a>, which <em>did</em> earn a report on
+a similar-looking message store: CAMEL's <code>VectorDBMemory</code>
+embeds messages and recalls them by similarity across sessions, which is
+retrieval; this lists them by key, which is storage. The line between
+the two is one index.</li>
 <li>Three repositories submitted in the same round were examined and
 have no reports. <code>ahmadvh/octochains</code> (4,406 lines,
 <strong>no licence file</strong>) is a framework for <em>parallel
