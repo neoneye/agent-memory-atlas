@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and one agent memory architectures, their retrieval mechanics,
+hundred and five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and one agent memory architectures, their retrieval
+of one hundred and five agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and one agent memory architectures, their retrieval
+of one hundred and five agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and one agent memory architectures, their retrieval mechanics,
+hundred and five agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -157,8 +157,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 59 of
-101 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 60 of
+105 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and one systems do not fall into one hundred and one
+<p>One hundred and five systems do not fall into one hundred and five
 categories. They cluster around eight architectural commitments, and
 most systems belong to more than one — a coding-agent memory can also be
 verification-first, and a host runtime's plugin can also be a hosted
@@ -190,7 +190,8 @@ own.</p>
 <code>cognee</code>, <code>a-mem</code>, <code>memori</code>,
 <code>goodai-ltm</code>, <code>pydantic-ai-harness</code>,
 <code>camel</code>, <code>crewai</code>,
-<code>agent-memory-supabase</code>, <code>cosmonapse</code></p>
+<code>agent-memory-supabase</code>, <code>cosmonapse</code>,
+<code>mem0sharp</code></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>GoodAI LTM is the family's cautionary comparison, and it
@@ -354,6 +355,7 @@ managed-platform-only.</p>
 <h3 id="agent-runtime-memory">Agent-runtime memory</h3>
 <p><code>letta</code>, <code>rainbox</code>, <code>memos</code>,
 <code>mastra-observational-memory</code>, <code>claude-mem</code>,
+<code>npcpy</code>, <code>juggler</code>, <code>gitlord</code>,
 <code>agentmemory</code>, <code>tencentdb-agent-memory</code>,
 <code>nanobot</code>, <code>cowagent</code>, <code>genericagent</code>,
 <code>mercury-agent</code>, <code>atomic-agent</code>,
@@ -385,6 +387,52 @@ match. <strong>LoongFlow</strong> carries two unrelated memories in one
 package — a conventional short/medium/long tier stack, and a population
 of scored solutions recalled by Boltzmann sampling whose temperature is
 driven by the population's measured diversity.</p>
+<p><strong>npcpy is the corpus's most literal answer to "who
+decides".</strong> Extracted memories are written with
+<code>status = "pending_approval"</code> and a terminal loop walks them
+one at a time — approve, reject, <strong>edit</strong>, skip, defer,
+approve-all — with each decision stamped <code>human-approved</code> or
+<code>human-rejected</code>. The gate is not advisory:
+<code>build_context</code> calls
+<code>get_memories(status="human-approved")</code>, so a candidate
+nobody has said yes to reaches no prompt, and the row keeps the initial
+text beside the human-edited final one, which almost nothing else here
+does. Its failure is the exact inverse of its strength —
+<code>human-rejected</code> is a status on a row that the extraction
+path never consults, so the same sentence extracted again arrives as a
+fresh candidate and the user is asked the same question. A system that
+goes to the trouble of asking a human throws the answer away when the
+answer is no.</p>
+<p><strong>Juggler makes the opposite storage choice from every other
+notebook here.</strong> Its memory is
+<code>&lt;project&gt;/.juggler/MEMORY.md</code> and
+<code>.juggler/</code> is <strong>git-ignored on purpose</strong> —
+private to the checkout, never committed, per-machine — where <a
+href="../systems/basic-memory/">Basic Memory</a>, <a
+href="../systems/claude-mem/">claude-mem</a> and <a
+href="../systems/tigrimosr/">TigrimOSR</a> all keep the file somewhere a
+team could share it and several treat git history as the audit trail. It
+forgoes that provenance so an assistant's notes about a codebase never
+reach a colleague's review. Its documentation also states the
+distinction this atlas's fifth divergence is about: the instructions
+file is what <em>you</em> write for the assistant, memory is the notes
+the <em>assistant</em> keeps for itself. The sharp edge is
+<code>forget</code>, which removes every entry matching a
+case-insensitive substring and returns no list of what it took.</p>
+<p><strong>GitLord is the strongest instance of the mechanism the rubric
+deliberately excludes.</strong> Every turn is a git commit, every
+session a branch, and <code>DedupIndex.rebuild_from_log</code>
+regenerates the retrieval index by walking the log — the log is the
+authority and the index is a projection, which is <a
+href="../systems/core-memory/">Core Memory</a>'s arrangement obtained
+for free by making the authority a repository. It carries no capability
+marks and the reason is a category difference rather than a deficiency:
+it durably records <em>what happened</em> and has no representation of
+<em>what is believed</em>, so a user's correction and the mistake it
+corrects are both in the log, in order, with nothing preferring either.
+Git history is not this atlas's append-only audit column — the rubric
+says so — and this is the clearest case of why that is a different
+mechanism rather than a weaker one.</p>
 <p><strong>Helm is the family's floor, and it shows how little a working
 epistemic model costs.</strong> One SQLite file opened through Node's
 built-in <code>node:sqlite</code>, no service, no key required to store
@@ -2068,6 +2116,30 @@ decisions kept as ADRs</td>
 tombstone</td>
 </tr>
 <tr>
+<td><code>gitlord</code></td>
+<td>A turn — user, assistant or tool call — committed as JSON on a
+branch, addressed by commit sha and path</td>
+<td>A git repository. Sessions are branches; the commit graph is the
+durable record</td>
+<td>A <code>ContextAssembler</code> over the turn history with a dedup
+index and a per-branch context cache, plus a RAG module</td>
+<td><code>append_turn</code> and its typed variants commit;
+<code>_commit_turn</code> can rebuild a chain onto a new parent</td>
+<td>Git's own semantics — a rewritten chain is a new set of commits, and
+the old objects remain until they are collected</td>
+<td>A branch per session; nothing composes a scope key into a retrieval
+predicate</td>
+<td>A CLI, an MCP server, and a LiteLLM-backed model layer with a
+tool-schema translator</td>
+<td>None</td>
+<td>None. A turn is what happened; there is no claim, status or
+confidence anywhere</td>
+<td>A durable log that is inspectable, forkable and replayable by
+construction, with the derived index rebuildable from it</td>
+<td>It stores what was said rather than what is believed, so nothing
+distinguishes a fact from a correction of it</td>
+</tr>
+<tr>
 <td><code>gobii</code></td>
 <td>A row in a table the agent invented. There is no framework-defined
 memory record — the schema is whatever the model wrote
@@ -2260,6 +2332,33 @@ message search with windows</td>
 <td>Strong event-to-representation pipeline</td>
 <td>Operational complexity; LLM-derived observations still need trust
 policy</td>
+</tr>
+<tr>
+<td><code>juggler</code></td>
+<td>One dated bullet — <code>- [YYYY-MM-DD] one fact</code> — in a flat
+list under a single heading, order preserved as written</td>
+<td><code>&lt;project&gt;/.juggler/MEMORY.md</code>, a plain Markdown
+file, git-ignored so it never leaves the checkout</td>
+<td>The whole file is a context item on each conversation; there is no
+search, ranking or selection</td>
+<td>One <code>memory</code> tool with two actions, <code>remember</code>
+and <code>forget</code>; the assistant is prompted to use it only for
+facts that outlive the session</td>
+<td><code>forget</code> removes every entry matching a case-insensitive
+substring; revision is forget-then-remember</td>
+<td>One file per project checkout, per machine — partition rather than a
+filter</td>
+<td>A context item in the Juggler UI, plus a seeded system prompt; every
+write appears in the conversation transcript</td>
+<td>None</td>
+<td>None. A bullet is a fact because the assistant wrote it or the user
+left it there</td>
+<td>A canonical format the writer re-tidies, a per-fact delete control
+in the UI, and 43 committed test cases against 772 lines of
+implementation</td>
+<td><code>forget</code> matches by substring, so one careless match
+string removes more than it names, and nothing records what it
+removed</td>
 </tr>
 <tr>
 <td><code>langmem</code></td>
@@ -2491,6 +2590,36 @@ filters</td>
 <td>Attribution metadata, history; weak epistemic trust</td>
 <td>Practical SDK, pluggable stores, hybrid search</td>
 <td>LLM facts can become durable claims without verification</td>
+</tr>
+<tr>
+<td><code>mem0sharp</code></td>
+<td>A row with text, <code>user_id</code>, <code>agent_id</code>,
+<code>run_id</code>, a <code>scope</code>, metadata, an embedding,
+timestamps, an expiry and a content hash</td>
+<td>Postgres with pgvector as the real backend, plus an in-memory store;
+a separate relationship store for the graph</td>
+<td>Cosine nearest-neighbour over the embedding with the scope predicate
+applied, ordered by distance and capped by top-k; an optional LLM
+reranker</td>
+<td>LLM extraction into candidate memories, then an LLM conflict
+resolver deciding what happens to existing rows, with a hash column for
+dedup</td>
+<td>Delete by id and delete by scope predicate; every mutation writes a
+history row carrying the old and the new text</td>
+<td><code>user_id text NOT NULL</code> plus optional
+<code>agent_id</code>, <code>run_id</code> and <code>scope</code>,
+composed into a <code>WHERE</code> clause on every read</td>
+<td>A .NET library with an MCP server, a telemetry decorator, and clean
+Application/Infrastructure/Intelligence layering</td>
+<td>None</td>
+<td>None on the row. Conflict resolution is an LLM decision taken at
+write time and not recorded as a state</td>
+<td>An append-only <code>_history</code> table storing old and new text
+per event, and a required user scope in the schema rather than in a
+convention</td>
+<td>2,333 lines reimplementing a design whose extraction and
+conflict-resolution quality are the whole product, with no evaluation of
+either</td>
 </tr>
 <tr>
 <td><code>memanto</code></td>
@@ -2988,6 +3117,35 @@ components retained</td>
 record itself</td>
 <td>Archival is record-keyed, and the access log is capped, so both
 history and correction are bounded</td>
+</tr>
+<tr>
+<td><code>npcpy</code></td>
+<td>A <code>MemoryItem</code> — content plus context, tied to a message,
+conversation, npc, team and directory, carrying an initial and a final
+text and a status</td>
+<td>A JSON-backed knowledge store per directory, a knowledge graph with
+concepts and links, and a separate index</td>
+<td><code>build_context</code> takes only <code>human-approved</code>
+memories, capped; the knowledge graph and index are searched
+separately</td>
+<td>A background processor extracts candidates from conversation, then a
+terminal review loop decides each one</td>
+<td><code>update_memory(mem_id, status, final_memory)</code> — approval,
+rejection and edit all move the same row</td>
+<td>npc, team and directory are recorded on every item and none of them
+filters <code>build_context</code></td>
+<td>A CLI-first agent framework with NPCs, teams, jinxes and a set of
+knowledge skills</td>
+<td>A threaded queue extracts memory candidates without blocking the
+conversation</td>
+<td><code>pending_approval</code>, <code>auto-extracted</code>,
+<code>human-approved</code>, <code>human-rejected</code> — a stored
+status, and only one of them is retrievable</td>
+<td>A five-way review loop with edit and defer, and a retrieval path
+that reads approved memories only, so an unreviewed extraction cannot
+reach a prompt</td>
+<td>A rejection is a status on a row; re-extraction of the same content
+produces a fresh candidate with nothing consulting the earlier no</td>
 </tr>
 <tr>
 <td><code>open-cowork</code></td>
@@ -3752,24 +3910,25 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 101:</em> <a
+<p><em>3 of 105:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>7 of 101:</em> <a
+<p><em>8 of 105:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
+href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 101:</em> <a
+<p><em>9 of 105:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3784,7 +3943,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>59 of 101:</em> <a
+<p><em>60 of 105:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -3819,6 +3978,7 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,
 <a href="../systems/mateclaw/"><code>mateclaw</code></a>, <a
 href="../systems/mem0/"><code>mem0</code></a>, <a
+href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memmachine/"><code>memmachine</code></a>, <a
 href="../systems/memobase/"><code>memobase</code></a>, <a
@@ -3848,11 +4008,12 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>11 of 101:</em> <a
+<p><em>12 of 105:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
+href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
@@ -3863,17 +4024,19 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>16 of 101:</em> <a
+<p><em>18 of 105:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
+href="../systems/juggler/"><code>juggler</code></a>, <a
 href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a>, <a
+href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/qwen-code/"><code>qwen-code</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/risuai/"><code>risuai</code></a>, <a
@@ -3883,7 +4046,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>10 of 101:</em> <a href="../systems/agno/"><code>agno</code></a>,
+<p><em>10 of 105:</em> <a href="../systems/agno/"><code>agno</code></a>,
 <a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
@@ -3911,8 +4074,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Ten
-repositories of one hundred and one assert that particular material must
-<em>not</em> be retrieved — the assertion every scope, deletion and
+repositories of one hundred and five assert that particular material
+must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
 more than the count.</p>
@@ -3970,7 +4133,7 @@ row lives.</p>
 <p><strong>Only these six probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. Six
-of one hundred and one is the real figure for the second kind, and the
+of one hundred and five is the real figure for the second kind, and the
 two newest are the cheap version of it: a <em>superseded</em> value is
 easy to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come
@@ -6779,7 +6942,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and one systems, almost none can explain why they are shaped the way
+and five systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -8263,6 +8426,10 @@ href="../systems/agent-framework/"><code>agent-framework</code></a></li>
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a></li>
 <li><a href="../systems/livingfeed/"><code>livingfeed</code></a></li>
 <li><a href="../systems/cosmonapse/"><code>cosmonapse</code></a></li>
+<li><a href="../systems/npcpy/"><code>npcpy</code></a></li>
+<li><a href="../systems/juggler/"><code>juggler</code></a></li>
+<li><a href="../systems/mem0sharp/"><code>mem0sharp</code></a></li>
+<li><a href="../systems/gitlord/"><code>gitlord</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8631,6 +8798,22 @@ href="https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4
 href="https://github.com/Cosmonapse/cosmonapse-core">Cosmonapse/cosmonapse-core</a>
 at <a
 href="https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf"><code class="commit-id" title="16997d577596750e139f3eb83fd5c4b1c3c740bf">16997d57…</code></a></li>
+<li><a
+href="https://github.com/npc-worldwide/npcpy">npc-worldwide/npcpy</a> at
+<a
+href="https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707"><code class="commit-id" title="a31ba52203062f7a586a901f6870176bf3961707">a31ba522…</code></a></li>
+<li><a
+href="https://github.com/juggler-ai/juggler">juggler-ai/juggler</a> at
+<a
+href="https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa"><code class="commit-id" title="bf81e61087a6e6af24e5ffd225d66c74135a4faa">bf81e610…</code></a></li>
+<li><a
+href="https://github.com/jihadkhawaja/mem0sharp">jihadkhawaja/mem0sharp</a>
+at <a
+href="https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf376d4dc6683f057"><code class="commit-id" title="ebf832c17f65815dfbfa65bcf376d4dc6683f057">ebf832c1…</code></a></li>
+<li><a
+href="https://github.com/yashneil75/gitlord">yashneil75/gitlord</a> at
+<a
+href="https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1"><code class="commit-id" title="42b0bab151777c1ee38ced7ab2805b0699e7a8a1">42b0bab1…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -8954,7 +9137,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and one — <a
+<strong>three</strong> of one hundred and five — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
@@ -9082,6 +9265,32 @@ the repository measures. Its two memory subsystems —
 <code>agno/memory/</code> and <code>agno/learn/</code> — overlap, and
 which one a given deployment is using was not established beyond noting
 that the AgentOS HTTP routes serve the older one.</li>
+<li>Three repositories submitted in the same round were examined and
+have no reports. <code>ahmadvh/octochains</code> (4,406 lines,
+<strong>no licence file</strong>) is a framework for <em>parallel
+isolated</em> multi-agent reasoning whose stated premise is that shared
+chat history contaminates independent judgement — it has no memory
+concept because avoiding one is the design, which makes it the most
+pointed out-of-scope entry the atlas has recorded.
+<code>aleloro-dev/ago</code> is a 1,313-line zero-dependency Go agent
+library with <strong>no licence file</strong> and no persistence of any
+kind. <code>Gitlawb/zero</code> was re-examined at
+<code>d37de9214b</code> after growing to roughly 332,000 lines of Go
+since the earlier pass, and the earlier conclusion holds:
+<code>internal/background</code> and <code>internal/swarm</code>
+coordinate work, and there is still no memory module.</li>
+<li><strong>A mark that needs re-checking.</strong> <a
+href="../systems/mem0sharp/">Mem0Sharp</a> earns <code>audit_log</code>
+for a <code>{table}_history</code> table written only by
+<code>INSERT</code>, carrying <code>event</code>,
+<code>old_memory</code> and <code>new_memory</code> per memory id. The
+atlas's <a href="../systems/mem0/">Mem0</a> report describes a SQLite
+history store and carries only <code>scope_enforced</code>. Either that
+mark was withheld for a reason not visible from the C# reimplementation,
+or the Python original is under-marked. The divergence is recorded
+rather than resolved, because resolving it means re-reading
+<code>mem0/mem0/memory/storage.py</code> and that was not done
+here.</li>
 <li><code>unibaseio/membase</code> was examined and has no report. Its
 memory is roughly 1,400 lines of conversation-keyed message buffers with
 LLM summarisation into a long-term memory and a profile, plus Chroma

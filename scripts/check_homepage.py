@@ -75,6 +75,12 @@ def _number_words(lo: int, hi: int) -> dict[str, int]:
 
 WORDS = _number_words(16, 999)
 
+#: Alternation order matters: regex alternation is first-match-wins, so a short
+#: form that prefixes a longer one wins and mis-reads it. Without this, "one
+#: hundred and five" matches the "one hundred" branch and is reported stale
+#: against a live 105 — the check accusing a correct count of being wrong.
+WORDS_BY_LENGTH = sorted(WORDS, key=len, reverse=True)
+
 
 def stale_number_words(root: Path, live: set[int]) -> list[str]:
     """Spelled-out counts of atlas nouns that no longer match anything live.
@@ -90,12 +96,12 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     nouns = r"(?:memory )?(?:systems|reports|repositories|patterns|design patterns)"
     patterns = [
         # "fifty-eight systems" — the number qualifies the noun.
-        re.compile(rf"\b({'|'.join(WORDS)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I),
+        re.compile(rf"\b({'|'.join(WORDS_BY_LENGTH)})\b(?!-)(?:\s+\w+){{0,3}}?\s+{nouns}\b", re.I),
         # "two systems of fifty-eight" — the number is the DENOMINATOR, and sits
         # after the noun. The first version of this check only looked forward, so
         # it read straight past three of these and an outside reviewer quoted the
         # stale figure back at the atlas.
-        re.compile(rf"\bof\s+({'|'.join(WORDS)})\b(?!-)", re.I),
+        re.compile(rf"\bof\s+({'|'.join(WORDS_BY_LENGTH)})\b(?!-)", re.I),
     ]
     # "1 of 58" in digits. Bounded to denominators of forty or more because the
     # only atlas count that large is the system total, which keeps this away from

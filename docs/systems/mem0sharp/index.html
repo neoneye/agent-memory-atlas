@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A from-scratch .NET implementation
+of the Mem0 design — extraction, conflict resolution, graph
+relationships, Postgres and MCP in 2,333 lines — carrying an append-only
+history table that records old and new text for every mutation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mem0Sharp — Agent Memory Atlas">
+    <meta property="og:description" content="A from-scratch .NET
+implementation of the Mem0 design — extraction, conflict resolution,
+graph relationships, Postgres and MCP in 2,333 lines — carrying an
+append-only history table that records old and new text for every
+mutation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mem0Sharp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A from-scratch .NET
+implementation of the Mem0 design — extraction, conflict resolution,
+graph relationships, Postgres and MCP in 2,333 lines — carrying an
+append-only history table that records old and new text for every
+mutation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mem0Sharp — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Mem0's architecture, rebuilt in C#</p>
+          <h1>Mem0Sharp</h1>
+          <p class="document-deck">A from-scratch .NET implementation of
+the Mem0 design — extraction, conflict resolution, graph relationships,
+Postgres and MCP in 2,333 lines — carrying an append-only history table
+that records old and new text for every mutation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jihadkhawaja/mem0sharp">
+              <span>Source</span>
+              <strong>jihadkhawaja/mem0sharp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf376d4dc6683f057" title="ebf832c17f65815dfbfa65bcf376d4dc6683f057">
+              <span>Analyzed revision</span>
+              <code>ebf832c1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (72%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mem0Sharp is a <strong>reimplementation</strong> rather than a
+client. Apache-2.0, 2,333 lines of C# across <code>Application</code>,
+<code>Infrastructure</code>, <code>Intelligence</code>,
+<code>Transports</code> and <code>Telemetry</code>, it builds the <a
+href="../mem0/">Mem0</a> architecture — LLM extraction, LLM conflict
+resolution, vector storage, graph relationships — on .NET, with a
+Postgres/pgvector store, an in-memory store, an MCP server, and a
+decorator that wraps the service in telemetry.</p>
+<p>That makes it useful to this atlas in a way a port usually is not:
+the same design, read twice, in two languages, by two teams. And the
+second reading has something the first did not.</p>
+<p><strong>It earns <code>audit_log</code>, which the atlas's Mem0
+report does not.</strong> <code>PostgresMemoryStore</code> creates a
+<code>{table}_history</code> table beside the memory table, indexed on
+<code>(memory_id, created_at)</code>, and writes rows through a single
+<code>INSERT INTO {historyTable} (id, memory_id, event, old_memory, new_memory, created_at)</code>.
+There is no <code>UPDATE</code> and no targeted <code>DELETE</code>
+against it anywhere in the file — the only statement that removes
+history is a <code>TRUNCATE</code> of both tables together, which is a
+reset rather than an edit. So every mutation leaves a durable record of
+what the text was and what it became, keyed on the memory, in the
+system's own store.</p>
+<p><strong>A caveat this report has to state rather than
+resolve.</strong> The atlas's Mem0 report describes "SQLite history and
+recent-message store" and carries only <code>scope_enforced</code>, so
+either that mark was withheld for a reason this reviewer cannot see from
+a different repository, or it is under-marked. Mem0Sharp's mark rests on
+code read here at this commit; whether the Python original earns the
+same is a re-check that has not been done, and it is recorded in the
+overview's limitations rather than quietly resolved in one
+direction.</p>
+<p>Scope is the other mark and it is enforced at the schema:
+<code>user_id text NOT NULL</code> with <code>agent_id</code>,
+<code>run_id</code> and <code>scope</code> beside it, composed into a
+<code>WHERE</code> clause that travels into the get, list and
+vector-search queries alike. A NOT NULL user column is a stronger
+commitment than most of this corpus manages — it makes an unscoped row
+unwritable rather than merely discouraged.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Inherited from Mem0, and the atlas's criticism of the original
+transfers intact: facts are LLM-extracted and stored as plain text with
+no representation of uncertainty. There is no status, no confidence and
+no provenance chain on a row. What decides whether an existing memory is
+kept, updated or removed is an LLM conflict resolver run at write time,
+and its verdict is applied rather than recorded — the history table
+captures that a change happened and what the text was, not why the model
+thought it should.</p>
+<p>The one thing the history table changes is that the <em>previous</em>
+text survives. In a design whose central risk is an extractor
+overwriting a good memory with a worse paraphrase, being able to read
+what was there before is a meaningful partial answer, and it is
+available by query rather than by log-grepping.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Postgres with pgvector for real deployments, an 80-line in-memory
+store for tests, and a <code>PostgresRelationshipStores</code> (250
+lines) for the graph side. The layering is conventional .NET and clean:
+<code>Application/MemoryService.cs</code> (417 lines) holds the
+orchestration, <code>Infrastructure/</code> the stores,
+<code>Intelligence/</code> the four LLM-facing pieces —
+<code>LlmMemoryIntelligence</code> (82), <code>LlmReranker</code> (41),
+<code>LlmGraphMemoryExtractor</code> (26),
+<code>LlmMemoryExtractor</code> (24) — and
+<code>Transports/Mcp/MemoryMcpServer.cs</code> (205) exposes it over
+MCP.</p>
+<p><code>TelemetryMemoryService</code> (74 lines) is a decorator around
+the service rather than instrumentation threaded through it, which is
+the same discipline <a href="../mateclaw/">MateClaw</a> applies to retry
+and metrics and which most systems here skip.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/Mem0Sharp/Application/MemoryService.cs</code> (417) — add,
+search, update, delete, and the conflict path.</li>
+<li><code>src/Mem0Sharp/Infrastructure/Postgres/PostgresMemoryStore.cs</code>
+(326) — the schema, the scope predicate, the history writes.</li>
+<li><code>src/Mem0Sharp/Infrastructure/Postgres/PostgresRelationshipStores.cs</code>
+(250).</li>
+<li><code>src/Mem0Sharp/Transports/Mcp/MemoryMcpServer.cs</code>
+(205).</li>
+<li><code>src/Mem0Sharp/Intelligence/</code> — extraction, graph
+extraction, reranking.</li>
+<li><code>tests/Mem0Sharp.Tests/</code> —
+<code>MemoryServiceTests</code>,
+<code>LlmMemoryConflictResolverTests</code>,
+<code>MemoryMcpServerTests</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>id</code>, <code>text_value</code>, <code>user_id</code> (NOT
+NULL), <code>agent_id</code>, <code>run_id</code>, <code>scope</code>,
+<code>metadata</code>, <code>embedding</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>expires_at</code>,
+<code>hash_value</code>.</p>
+<p>Four scope-ish columns is more than most, and they are hierarchical
+in intent — a user owns agents, an agent has runs — though nothing in
+the schema enforces the hierarchy. <code>hash_value</code> is the dedup
+key and <code>expires_at</code> is a TTL. Both timestamps are record
+time, so no bi-temporality.</p>
+<p>The history row is <code>id</code>, <code>memory_id</code>,
+<code>event</code>, <code>old_memory</code>, <code>new_memory</code>,
+<code>created_at</code> — the event vocabulary plus the before and
+after, which is exactly what an audit of a text-overwriting system
+needs.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>SELECT ... 1 - (m.embedding &lt;=&gt; $1::vector) AS score ... ORDER BY m.embedding &lt;=&gt; $1::vector LIMIT $topK</code>,
+with the scope predicate ANDed in and a guard that rows without
+embeddings are excluded. Cosine nearest neighbour, nothing fused, with
+an optional <code>LlmReranker</code> above it — one model call to
+reorder, which is the expensive way to buy relevance and the only one on
+offer here.</p>
+<p>Scope is applied on every read path traced: get-by-id, list, and
+vector search each build from the same <code>where</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block. Extraction produces candidates, the conflict resolver
+decides what to do about existing rows, the store applies it, and each
+application writes its history row. Deletion exists in two forms — by
+id, and by the scope predicate, which makes "forget everything for this
+user" a single statement. That is more than <a
+href="../mem0/">Mem0</a>'s reviewed contract offers and considerably
+more than <a href="../adk-python/">ADK</a> or <a
+href="../autogen/">AutoGen</a> can express.</p>
+<p>Nothing runs in the background; there is no consolidation sweep and
+no decay.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server and a .NET library. For the .NET ecosystem specifically
+this is the gap it fills — the memory systems in this atlas are
+overwhelmingly Python and TypeScript, and a C# agent wanting Mem0's
+shape previously had a REST client or nothing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Two marks, as above.</p>
+<p><strong>No tombstone.</strong> <code>hash_value</code> is a dedup
+key, not a rejection record: a deleted memory's hash is deleted with it,
+so the same text re-extracted inserts cleanly. The history table knows
+the text was removed and nothing consults the history table on the write
+path. That is the closest near-miss in this report — the durable record
+of a removed value exists, and the extraction path does not read it.</p>
+<p><strong>No trust state</strong>, so the conflict resolver's decisions
+are irreversible in kind: a memory it chose to overwrite is overwritten,
+and the recovery path is a human reading <code>_history</code> and
+re-inserting by hand.</p>
+<p><strong>No bi-temporality and no human review surface.</strong></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Three test classes were found — <code>MemoryServiceTests</code>,
+<code>LlmMemoryConflictResolverTests</code>,
+<code>MemoryMcpServerTests</code> — and none were run. That there is a
+dedicated test class for the conflict resolver is the right instinct,
+since its precision is the product.</p>
+<p>No benchmark, no retrieval-quality measurement and no published
+numbers, which also means none of the Mem0 figures this atlas has
+previously had to treat as claims are restated here. A port that does
+not inherit the original's benchmark claims is a port making no claims,
+which is the correct default.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write an <code>event, old_memory, new_memory</code> row on
+every mutation.</strong> Six columns, one insert, and it is the
+difference between an overwrite you can investigate and one you can only
+regret. In a design where an LLM decides what to overwrite, this is not
+optional.</li>
+<li><strong>Make the owner column <code>NOT NULL</code>.</strong> A
+scope enforced by the schema cannot be forgotten by a caller, which is
+the failure mode this atlas keeps finding.</li>
+<li><strong>Support delete-by-scope, not just delete-by-id.</strong>
+"Forget this user" is the request that arrives, and it should be one
+statement.</li>
+<li><strong>Wrap the service in a telemetry decorator.</strong>
+Instrumentation threaded through business logic rots; a decorator does
+not.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keeping a history nobody reads on the write path.</strong>
+The record of what was deleted is right there, in the same database,
+indexed by memory. Consulting it before re-inserting the same text is
+the whole tombstone mechanism.</li>
+<li><strong>Porting an architecture without porting an
+evaluation.</strong> The extraction and conflict-resolution quality are
+the product, and neither the original nor this reimplementation measures
+them.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>If you are building .NET agents and want Mem0's shape, this is the
+only implementation in the atlas that gives it to you natively, and it
+is better instrumented and better audited than a thin REST client would
+be. The Postgres schema is sound and the MCP surface makes it reachable
+from non-.NET agents too.</p>
+<p>Do not take it expecting the epistemics the original also lacks. It
+stores LLM-extracted text as fact, resolves conflicts with another LLM
+call, and offers no way to mark a memory doubtful — the history table is
+a forensic tool, not a trust model.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does the Python Mem0 earn <code>audit_log</code>
+too?</strong> Its report records a SQLite history store and carries only
+<code>scope_enforced</code>. This was not re-checked and the divergence
+is recorded rather than resolved.</li>
+<li><strong>How good is the conflict resolver?</strong> There is a test
+class for it and no measurement of its precision, which is the same gap
+the atlas records for Memanto's conflict detection.</li>
+<li><strong>Is the scope hierarchy enforced anywhere?</strong>
+<code>user_id</code>, <code>agent_id</code> and <code>run_id</code>
+imply containment that the schema does not express.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/Mem0Sharp/Application/MemoryService.cs</code></td>
+<td>417</td>
+<td>Orchestration, conflict path</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Infrastructure/Postgres/PostgresMemoryStore.cs</code></td>
+<td>326</td>
+<td>Schema, scope predicate, history writes</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Infrastructure/Postgres/PostgresRelationshipStores.cs</code></td>
+<td>250</td>
+<td>Graph side</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Transports/Mcp/MemoryMcpServer.cs</code></td>
+<td>205</td>
+<td>MCP surface</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Intelligence/LlmMemoryIntelligence.cs</code></td>
+<td>82</td>
+<td>Extraction and conflict orchestration</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Infrastructure/InMemory/InMemoryStore.cs</code></td>
+<td>80</td>
+<td>Test backend</td>
+</tr>
+<tr>
+<td><code>src/Mem0Sharp/Telemetry/TelemetryMemoryService.cs</code></td>
+<td>74</td>
+<td>Decorator</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
