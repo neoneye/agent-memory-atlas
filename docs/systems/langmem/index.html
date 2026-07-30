@@ -132,14 +132,33 @@ engine.</p>
 usually:</p>
 <pre class="python"><code>{&quot;content&quot;: &lt;string or JSON-serializable structured object&gt;}</code></pre>
 <p>The memory lifecycle has two main modes:</p>
-<pre class="text"><code>hot path:
-agent -&gt; manage_memory tool -&gt; BaseStore.put/delete
-agent -&gt; search_memory tool -&gt; BaseStore.search
+<pre class="mermaid"><code>flowchart LR
+    A[&quot;agent&quot;] --&gt;|&quot;manage_memory tool&quot;| PUT[&quot;put / delete&quot;]
+    A --&gt;|&quot;search_memory tool&quot;| SRCH[&quot;search&quot;]
+    PUT --&gt; ST
+    ST --&gt; SRCH
 
-background:
-conversation -&gt; MemoryManager/trustcall extractor -&gt; extracted memories
--&gt; create_memory_store_manager persists results to BaseStore
--&gt; ReflectionExecutor schedules async/local/remote reflection</code></pre>
+    C[&quot;conversation&quot;] --&gt; MM[&quot;MemoryManager&lt;br/&gt;trustcall extractor&quot;]
+    MM --&gt; CM[&quot;create_memory_store_manager&quot;]
+    CM --&gt; ST
+    RE[&quot;ReflectionExecutor&quot;] -.-&gt;|&quot;schedules a later pass&quot;| MM
+    CM --&gt; RE
+
+    ST[(&quot;BaseStore&lt;br/&gt;namespaced by tuple&quot;)]
+
+    style A fill:#e7efe9,stroke:#3d6b59
+    style MM fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Two owners, one store. The <strong>agent</strong> decides in the hot
+path and a <strong>model</strong> decides in the background, both
+writing through the same <code>BaseStore</code> with nothing arbitrating
+between them — which is where a background extraction can restate
+something the agent deleted through its tool. The
+<code>ReflectionExecutor</code> loop makes it recurring rather than
+one-shot.</p>
+<p>The two modes write to the same store and answer to different owners:
+the agent decides in the hot path, a model decides in the background.
+Nothing arbitrates between them, which is where a background extraction
+can quietly restate something the agent deleted through the tool.</p>
 <p>Memory is agent-controlled in the tool path and LLM-managed in the
 background manager path.</p>
 <h2 id="3-architecture">3. Architecture</h2>

@@ -53,13 +53,31 @@ The primary memory unit is a text fact stored as a vector-store payload:
 
 The lifecycle is:
 
-```text
-messages -> parse/vision handling -> retrieve nearby existing memories -> LLM additive extraction
--> embed extracted memories -> hash dedupe -> vector insert -> SQLite history -> entity extraction/linking
--> search via semantic/BM25/entity fusion -> optional rerank -> result formatting
+```mermaid
+flowchart TB
+    M["messages"] --> P["parse, vision handling"]
+    P --> N["retrieve nearby existing memories"]
+    N --> X["LLM additive extraction"]
+    X --> E["embed extracted memories"]
+    E --> D["hash dedupe"]
+    D --> V[("vector store")]
+    D --> H[("SQLite history")]
+    V --> L["entity extraction and linking"]
+    L --> S["search: semantic / BM25 / entity fusion"]
+    S --> R["optional rerank"]
+    R --> F["result formatting"]
+
+    style X fill:#f4e2bd,stroke:#b8860b
 ```
 
-The V3 path is append-oriented. Updates and deletes still exist as explicit APIs, but the default `add(..., infer=True)` pipeline no longer asks the extractor to rewrite existing facts.
+The highlighted step is where the V3 change lands. Extraction is **additive**: it
+proposes new facts given the nearby ones, and the default
+`add(..., infer=True)` no longer asks the extractor to rewrite what it found.
+Update and delete remain as explicit APIs, so correction moves from something the
+pipeline does to something a caller must ask for.
+
+The V3 path is append-oriented, which is the single most consequential fact about
+this system's correction story and is picked up in section 7.
 
 ## 3. Architecture
 

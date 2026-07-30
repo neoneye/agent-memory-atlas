@@ -144,15 +144,25 @@ from an observer's perspective.</li>
 deductive observations.</li>
 </ul>
 <p>Lifecycle:</p>
-<pre class="text"><code>session.add_messages -&gt; messages table + optional pending embeddings
--&gt; enqueue representation tasks
--&gt; deriver batches messages
--&gt; LLM extracts PromptRepresentation
--&gt; RepresentationManager embeds observations
--&gt; documents table / vector store
--&gt; query via representation/session/search/chat/context endpoints</code></pre>
-<p>The peer-centric idea matters: a collection is not merely "Alice's
-memory"; it can be "observer X's representation of observed Y".</p>
+<pre class="mermaid"><code>flowchart TB
+    ADD[&quot;session.add_messages&quot;] --&gt; MT[(&quot;messages table&quot;)]
+    ADD -.-&gt;|optional| PE[&quot;pending embeddings&quot;]
+    MT --&gt; ENQ[&quot;enqueue representation tasks&quot;]
+    ENQ --&gt; DER[&quot;deriver batches messages&quot;]
+    DER --&gt; LLM[&quot;LLM extracts&lt;br/&gt;PromptRepresentation&quot;]
+    LLM --&gt; RM[&quot;RepresentationManager&lt;br/&gt;embeds observations&quot;]
+    RM --&gt; DOC[(&quot;documents table&lt;br/&gt;+ vector store&quot;)]
+    DOC --&gt; QRY[&quot;query: representation, session,&lt;br/&gt;search, chat, context endpoints&quot;]
+    PE --&gt; ME[(&quot;message embeddings&quot;)]
+    ME --&gt; QRY</code></pre>
+<p>Two paths reach a query and they hold different things. The messages
+table plus its embeddings is what was <em>said</em>; the documents table
+is what was <em>inferred about a peer by another peer</em>. A collection
+is not "Alice's memory" but "observer X's representation of observed Y",
+so the same message can produce different observations in different
+collections and nothing reconciles them — which is correct for the model
+and means there is no single answer to "what does Honcho believe about
+Alice".</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core files:</p>
 <ul>

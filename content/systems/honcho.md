@@ -52,17 +52,28 @@ Honcho's memory model:
 
 Lifecycle:
 
-```text
-session.add_messages -> messages table + optional pending embeddings
--> enqueue representation tasks
--> deriver batches messages
--> LLM extracts PromptRepresentation
--> RepresentationManager embeds observations
--> documents table / vector store
--> query via representation/session/search/chat/context endpoints
+```mermaid
+flowchart TB
+    ADD["session.add_messages"] --> MT[("messages table")]
+    ADD -.->|optional| PE["pending embeddings"]
+    MT --> ENQ["enqueue representation tasks"]
+    ENQ --> DER["deriver batches messages"]
+    DER --> LLM["LLM extracts<br/>PromptRepresentation"]
+    LLM --> RM["RepresentationManager<br/>embeds observations"]
+    RM --> DOC[("documents table<br/>+ vector store")]
+    DOC --> QRY["query: representation, session,<br/>search, chat, context endpoints"]
+    PE --> ME[("message embeddings")]
+    ME --> QRY
 ```
 
-The peer-centric idea matters: a collection is not merely "Alice's memory"; it can be "observer X's representation of observed Y".
+Two paths reach a query and they hold different things. The messages table plus
+its embeddings is what was *said*; the documents table is what was *inferred about
+a peer by another peer*. A collection is not "Alice's memory" but "observer X's
+representation of observed Y", so the same message can produce different
+observations in different collections and nothing reconciles them — which is
+correct for the model and means there is no single answer to "what does Honcho
+believe about Alice".
+
 
 ## 3. Architecture
 

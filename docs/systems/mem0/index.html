@@ -153,12 +153,29 @@ session/entity scope.</li>
 <code>expiration_date</code>.</li>
 </ul>
 <p>The lifecycle is:</p>
-<pre class="text"><code>messages -&gt; parse/vision handling -&gt; retrieve nearby existing memories -&gt; LLM additive extraction
--&gt; embed extracted memories -&gt; hash dedupe -&gt; vector insert -&gt; SQLite history -&gt; entity extraction/linking
--&gt; search via semantic/BM25/entity fusion -&gt; optional rerank -&gt; result formatting</code></pre>
-<p>The V3 path is append-oriented. Updates and deletes still exist as
-explicit APIs, but the default <code>add(..., infer=True)</code>
-pipeline no longer asks the extractor to rewrite existing facts.</p>
+<pre class="mermaid"><code>flowchart TB
+    M[&quot;messages&quot;] --&gt; P[&quot;parse, vision handling&quot;]
+    P --&gt; N[&quot;retrieve nearby existing memories&quot;]
+    N --&gt; X[&quot;LLM additive extraction&quot;]
+    X --&gt; E[&quot;embed extracted memories&quot;]
+    E --&gt; D[&quot;hash dedupe&quot;]
+    D --&gt; V[(&quot;vector store&quot;)]
+    D --&gt; H[(&quot;SQLite history&quot;)]
+    V --&gt; L[&quot;entity extraction and linking&quot;]
+    L --&gt; S[&quot;search: semantic / BM25 / entity fusion&quot;]
+    S --&gt; R[&quot;optional rerank&quot;]
+    R --&gt; F[&quot;result formatting&quot;]
+
+    style X fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The highlighted step is where the V3 change lands. Extraction is
+<strong>additive</strong>: it proposes new facts given the nearby ones,
+and the default <code>add(..., infer=True)</code> no longer asks the
+extractor to rewrite what it found. Update and delete remain as explicit
+APIs, so correction moves from something the pipeline does to something
+a caller must ask for.</p>
+<p>The V3 path is append-oriented, which is the single most
+consequential fact about this system's correction story and is picked up
+in section 7.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Core files:</p>
 <ul>

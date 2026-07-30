@@ -47,16 +47,35 @@ LangMem treats memory as an item in a LangGraph `BaseStore`, namespaced by a tup
 
 The memory lifecycle has two main modes:
 
-```text
-hot path:
-agent -> manage_memory tool -> BaseStore.put/delete
-agent -> search_memory tool -> BaseStore.search
+```mermaid
+flowchart LR
+    A["agent"] -->|"manage_memory tool"| PUT["put / delete"]
+    A -->|"search_memory tool"| SRCH["search"]
+    PUT --> ST
+    ST --> SRCH
 
-background:
-conversation -> MemoryManager/trustcall extractor -> extracted memories
--> create_memory_store_manager persists results to BaseStore
--> ReflectionExecutor schedules async/local/remote reflection
+    C["conversation"] --> MM["MemoryManager<br/>trustcall extractor"]
+    MM --> CM["create_memory_store_manager"]
+    CM --> ST
+    RE["ReflectionExecutor"] -.->|"schedules a later pass"| MM
+    CM --> RE
+
+    ST[("BaseStore<br/>namespaced by tuple")]
+
+    style A fill:#e7efe9,stroke:#3d6b59
+    style MM fill:#f4e2bd,stroke:#b8860b
 ```
+
+Two owners, one store. The **agent** decides in the hot path and a **model**
+decides in the background, both writing through the same `BaseStore` with nothing
+arbitrating between them — which is where a background extraction can restate
+something the agent deleted through its tool. The `ReflectionExecutor` loop makes
+it recurring rather than one-shot.
+
+The two modes write to the same store and answer to different owners: the agent
+decides in the hot path, a model decides in the background. Nothing arbitrates
+between them, which is where a background extraction can quietly restate
+something the agent deleted through the tool.
 
 Memory is agent-controlled in the tool path and LLM-managed in the background manager path.
 
