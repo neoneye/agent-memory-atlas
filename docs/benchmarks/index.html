@@ -118,13 +118,29 @@ test finds the input that breaks one. You need both, and the second is
 cheaper.</li>
 <li><strong>Cost and latency are barely measured.</strong> One system in
 this atlas records token volume in its harness. One measures retrieval
-latency. None reports bytes on disk per memory.</li>
+latency. None reports bytes on disk per memory. The exception is a
+<em>benchmark</em> rather than a system: <a
+href="#forgeteval--the-benchmark-this-page-said-did-not-exist">ForgetEval</a>
+puts both in its abstract — <code>$0.17</code> per 385-case run, and 2.3
+s per case for the LLM mutation hook against 64–191 ms per case for the
+deterministic configurations — which is the shape of reporting this
+bullet is asking for, arriving from the measurement side rather than the
+implementation side.</li>
 <li><strong>The lag between writing a memory and being able to recall it
 is measured nowhere</strong>, even though several systems here
 deliberately delay extraction by minutes or by a batch boundary.</li>
-<li><strong>There is no forgetting benchmark.</strong> Nothing in this
-atlas, and nothing in the published benchmarks it uses, tests whether a
-deleted memory stays deleted after the next background pass. <a
+<li><strong>There was no forgetting benchmark until 2026-06, and there
+is now one.</strong> <a
+href="#forgeteval--the-benchmark-this-page-said-did-not-exist">ForgetEval</a>
+scores <code>supersede</code>, <code>release</code> and
+<code>purge</code> across thirteen system configurations and is released
+under MIT — so the flat version of this claim, which this page carried
+for five months, is retired. What survives is narrower and still true:
+no benchmark tests whether a deleted memory stays deleted <strong>after
+the next background pass</strong>, which is steps 5–8 of the test below
+and the part ForgetEval does not reach. The rest of this bullet is the
+state of things before that arrived, and is kept because the gap it
+describes is mostly still open. <a
 href="#persistbench-asks-a-different-question-and-answers-it-well">PersistBench</a>
 is titled as though it were the exception and is not — it asks whether a
 model <em>applies</em> a memory it should not, which is a good question
@@ -1066,6 +1082,23 @@ supersession, negation, temporal qualifiers, shared attributes, compound
 facts, identifier obfuscation, cross-lingual identifiers and recursive
 supersession. The cases and their labels are committed; the scored
 results are not, living in a README table.</p>
+<p><strong>Three things in the paper that the repository does not show,
+added 2026-07-31.</strong> The 385 adversarial cases are the
+<em>second</em> layer — the abstract describes <em>"a 1000-case
+templated suite plus a 385-case adversarial layer"</em>, and this page
+had recorded only the adversarial half. Case admission is backed by
+labelling provenance no other benchmark on this page reports:
+<em>"Admission is corroborated by 10-annotator IAA (Fleiss' kappa =
+0.958)"</em>. And the paper carries <em>"a 77-case external-authored
+subset (four blind contributors) that replicates the canonicalization
+asymmetry"</em> — an independent replication of the headline finding by
+people who did not write the benchmark, which is the single strongest
+construct-validity move any benchmark in this atlas makes and which
+nothing in the repository would have surfaced.</p>
+<p>The comparison unit is also thirteen <strong>configurations</strong>,
+not six systems. Six adapters times three placement regimes is what the
+title means by <em>placement</em>, and the six-adapter framing above
+describes the surface rather than the experiment.</p>
 <p><strong>Two things about how it reports.</strong> The three
 deterministic systems land in a 63–68% band the README reads as
 <em>"mutually overlapping Wilson CIs — the bench reads the trade-off,

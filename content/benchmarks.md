@@ -22,13 +22,25 @@ Six things are worth knowing before reading further.
    need both, and the second is cheaper.
 4. **Cost and latency are barely measured.** One system in this atlas records
    token volume in its harness. One measures retrieval latency. None reports
-   bytes on disk per memory.
+   bytes on disk per memory. The exception is a *benchmark* rather than a
+   system: [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist)
+   puts both in its abstract — `$0.17` per 385-case run, and 2.3 s per case for
+   the LLM mutation hook against 64–191 ms per case for the deterministic
+   configurations — which is the shape of reporting this bullet is asking for,
+   arriving from the measurement side rather than the implementation side.
 5. **The lag between writing a memory and being able to recall it is measured
    nowhere**, even though several systems here deliberately delay extraction by
    minutes or by a batch boundary.
-6. **There is no forgetting benchmark.** Nothing in this atlas, and nothing in
-   the published benchmarks it uses, tests whether a deleted memory stays
-   deleted after the next background pass.
+6. **There was no forgetting benchmark until 2026-06, and there is now one.**
+   [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist) scores
+   `supersede`, `release` and `purge` across thirteen system configurations and
+   is released under MIT — so the flat version of this claim, which this page
+   carried for five months, is retired. What survives is narrower and still
+   true: no benchmark tests whether a deleted memory stays deleted **after the
+   next background pass**, which is steps 5–8 of the test below and the part
+   ForgetEval does not reach. The rest of this bullet is the state of things
+   before that arrived, and is kept because the gap it describes is mostly
+   still open.
    [PersistBench](#persistbench-asks-a-different-question-and-answers-it-well)
    is titled as though it were the exception and is not — it asks whether a
    model *applies* a memory it should not, which is a good question with real
@@ -705,6 +717,23 @@ collisions, paraphrase supersession, negation, temporal qualifiers, shared
 attributes, compound facts, identifier obfuscation, cross-lingual identifiers and
 recursive supersession. The cases and their labels are committed; the scored
 results are not, living in a README table.
+
+**Three things in the paper that the repository does not show, added
+2026-07-31.** The 385 adversarial cases are the *second* layer — the abstract
+describes *"a 1000-case templated suite plus a 385-case adversarial layer"*, and
+this page had recorded only the adversarial half. Case admission is backed by
+labelling provenance no other benchmark on this page reports: *"Admission is
+corroborated by 10-annotator IAA (Fleiss' kappa = 0.958)"*. And the paper carries
+*"a 77-case external-authored subset (four blind contributors) that replicates
+the canonicalization asymmetry"* — an independent replication of the headline
+finding by people who did not write the benchmark, which is the single strongest
+construct-validity move any benchmark in this atlas makes and which nothing in
+the repository would have surfaced.
+
+The comparison unit is also thirteen **configurations**, not six systems. Six
+adapters times three placement regimes is what the title means by *placement*,
+and the six-adapter framing above describes the surface rather than the
+experiment.
 
 **Two things about how it reports.** The three deterministic systems land in a
 63–68% band the README reads as *"mutually overlapping Wilson CIs — the bench

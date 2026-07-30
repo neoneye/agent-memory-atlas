@@ -167,3 +167,47 @@ survey of the field, and should stop describing them that way as adoption grows.
 **Watch for:** a second system implementing to the rubric; any system whose seven
 mechanisms all postdate the atlas; and the atlas quietly beginning to cite its own
 influence as evidence of anything.
+
+## 8. Reading the repository instead of the paper
+
+**Happened, 2026-07-31.** The atlas's core rule is that a claim must be found in
+code at a pinned commit. Applied to a *systems paper with released code*, that
+rule quietly inverted: [ForgetEval](../content/benchmarks.md) was read at
+`b6053b7b`, described in detail — six-method adapter protocol, ten attack
+categories, the 132/253 hand-crafted-to-LLM split, a wrong MemPalace row the
+paper's own harness produced — and four facts stated plainly in the abstract were
+never recorded.
+
+What was missed, all of it in [arXiv:2606.15903](https://arxiv.org/abs/2606.15903):
+
+- The 385 adversarial cases are one layer of *"a 1000-case templated suite plus a
+  385-case adversarial layer"*. The atlas recorded the smaller half as the whole.
+- *"Admission is corroborated by 10-annotator IAA (Fleiss' kappa = 0.958)"* —
+  labelling provenance no other benchmark on that page reports.
+- *"a 77-case external-authored subset (four blind contributors) that replicates
+  the canonicalization asymmetry"* — an independent replication of the headline
+  result.
+- Per-run cost and per-case latency, in the abstract, against a benchmarks page
+  whose fourth standing complaint is that cost and latency are barely measured.
+
+The last one is the sharp end. The page argued for five months that nobody
+reports operational cost, while linking a paper that reports it in its second
+sentence.
+
+**Why it is structural.** The rule exists because product claims outrun
+implementations, and it is right about that. But it encodes an assumption — that
+the document is marketing and the code is truth — which holds for a vendor README
+and fails for a peer-reviewed artifact paper, where the *methodology* claims
+(annotator agreement, external replication, cost) have no representation in the
+code at all. A harness cannot show you its own inter-annotator agreement. Reading
+only the repository guarantees those facts are invisible, and the more rigorous
+the paper, the more it loses.
+
+**Mitigation:** when a repository is the artifact behind a paper, read the
+abstract against the report before publishing, and treat any claim about *how the
+evaluation was built* as paper-only by default. The code-first rule stays for
+claims about behaviour; it was never the right instrument for claims about
+method.
+
+**Watch for:** any other atlas entry that cites an arXiv id — each is a place the
+same inversion could have happened, and the check is cheap.
