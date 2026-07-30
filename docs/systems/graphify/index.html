@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A deterministic work-memory layer
+that scores which sources helped, withholds a lesson until a second
+result corroborates it, and re-hashes the source file on every read to
+mark the lesson stale.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Graphify — Agent Memory Atlas">
+    <meta property="og:description" content="A deterministic work-memory
+layer that scores which sources helped, withholds a lesson until a
+second result corroborates it, and re-hashes the source file on every
+read to mark the lesson stale.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Graphify — Agent Memory Atlas">
+    <meta name="twitter:description" content="A deterministic
+work-memory layer that scores which sources helped, withholds a lesson
+until a second result corroborates it, and re-hashes the source file on
+every read to mark the lesson stale.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Graphify — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Work memory beside a code graph</p>
+          <h1>Graphify</h1>
+          <p class="document-deck">A deterministic work-memory layer
+that scores which sources helped, withholds a lesson until a second
+result corroborates it, and re-hashes the source file on every read to
+mark the lesson stale.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Graphify-Labs/graphify">
+              <span>Source</span>
+              <strong>Graphify-Labs/graphify</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4" title="4fe11092ccbe9f543608f140c790f68d5d83cae4">
+              <span>Analyzed revision</span>
+              <code>4fe11092…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (69%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Graphify is a <strong>code-and-document knowledge graph</strong> for
+AI coding assistants — tree-sitter AST extraction into a traversable
+graph, deliberately not a vector index. The memory system is a small
+layer bolted to the side of it, and it is the reason this report exists:
+roughly 1,000 lines out of 15,959, in <code>graphify/reflect.py</code>
+and one function in <code>graphify/ingest.py</code>.</p>
+<p>The loop is simple to state. An agent answers a question from the
+graph and calls <code>graphify save-result</code> with the question, the
+answer, the node labels it cited, and an <strong>outcome</strong> —
+<code>useful</code>, <code>dead_end</code>, or <code>corrected</code>.
+That writes one Markdown file into <code>graphify-out/memory/</code>.
+Later, <code>graphify reflect</code> reads every such file, scores each
+cited node with a signed, time-decayed weight, and emits two artifacts:
+a human-readable <code>LESSONS.md</code> for an agent to read at session
+start, and a machine-readable <code>.graphify_learning.json</code>
+sidecar that annotates the graph at query time.</p>
+<p>Three things make it worth the visit.</p>
+<p><strong>Corroboration is a gate, not a counter.</strong> A node cited
+by one useful answer is <code>tentative</code>; it becomes
+<code>preferred</code> only at two distinct results
+(<code>_DEFAULT_MIN_CORROBORATION = 2</code>). The module docstring
+states the intent directly — <em>"one save can't mint a trusted
+lesson."</em> The threshold is a parameter, and a committed test asserts
+it is honoured rather than hardcoded.</p>
+<p><strong>A lesson is re-checked against the file it is about.</strong>
+Each sidecar entry stores a <code>code_fingerprint</code>: the SHA-256
+of the cited node's <code>source_file</code>.
+<code>load_learning_overlay</code> recomputes that hash on <strong>every
+read</strong> and stamps <code>stale: bool</code> per entry. The hash is
+content-only with no path mixed in, so a sidecar committed to git stays
+valid across machines — this is designed to be shared, and the staleness
+bias is stated as a design choice: file-level hashing <em>"over-flags
+(any edit to the file marks every node in it stale) rather than
+under-flags, which is the safe direction for a re-verify hint."</em></p>
+<p><strong>It has the test the atlas keeps asking for.</strong>
+<code>test_lessons_artifact_cannot_be_globbed_back_into_memory</code> is
+a committed regression guard that the system's own generated
+<code>LESSONS.md</code> cannot re-enter as a memory doc. Beside it,
+<code>test_header_is_cautious</code> asserts the artifact's header
+contains <em>"verify before relying"</em> and does <strong>not</strong>
+contain <em>"reuse what worked"</em>. A test on the register of your own
+generated prose is not something this corpus has seen before.</p>
+<p>The weakest part is the one the design most advertises.
+<code>dead_end</code> is described in the agent-facing skill as <em>"the
+question/path led nowhere; don't re-derive it next time"</em> — and no
+code path consults it. Dead ends are rendered into
+<code>LESSONS.md</code> for a model to read and obey. A node cited
+<em>only</em> by dead ends is correctly excluded from the source lists,
+which is real; the question itself is advisory text. The second weakness
+is smaller and stranger: every memory doc is written with
+<code>contributor: "graphify"</code> hardcoded, so on a shared graph a
+correction has no author.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a record of how an answer turned
+out</strong>, not a fact. The unit is the Q&amp;A doc; the belief is
+derived from the whole set of them on every <code>reflect</code> run and
+is never stored as a claim about the world.</p>
+<p>That separation is deliberate and stated in the source. The derived
+experiential layer lives in <code>.graphify_learning.json</code>, a
+sidecar, with the comment: <em>"kept separate from the durable
+structural truth in <code>graph.json</code> — no <code>learning_*</code>
+fields are ever stamped into the graph itself."</em> The graph is what
+the code says; the sidecar is what happened when someone used it. Delete
+the sidecar and nothing about the project's structure is lost.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p><code>save_query_result</code> (<code>graphify/ingest.py:274</code>)
+writes one file with YAML frontmatter — <code>type</code>,
+<code>date</code>, <code>question</code>, <code>contributor</code>,
+optional <code>outcome</code>, optional <code>correction</code>, and up
+to ten <code>source_nodes</code>. The outcome is written
+<strong>twice</strong>: into the frontmatter, so <code>reflect</code>
+can aggregate it deterministically, and into an <code>## Outcome</code>
+body section, so the signal survives into the graph on the next semantic
+re-extraction. Two consumers, two representations, one write.</p>
+<p><code>aggregate_lessons</code> (<code>reflect.py:364</code>) then
+assigns each doc a sign — <code>+1</code> for <code>useful</code>,
+<code>−1</code> for <code>dead_end</code> and <code>corrected</code>,
+<code>0</code> for unmarked — and a weight from <code>_decay</code>, an
+exponential with a 30-day half-life. Each cited node accumulates
+<code>sign × weight</code>, plus separate counts of distinct positive
+and negative <em>results</em>. <code>_finalize_sources</code> splits
+them:</p>
+<ul>
+<li><strong>positive only, ≥ 2 results</strong> →
+<code>preferred</code></li>
+<li><strong>positive only, 1 result</strong> →
+<code>tentative</code></li>
+<li><strong>both signs</strong> → <code>contested</code>, carrying a
+verdict of <code>useful</code> / <code>dead end</code> /
+<code>even</code> taken from the sign of the decayed score</li>
+<li><strong>negative only</strong> → absent from all three lists</li>
+</ul>
+<p>The decay is what makes <code>contested</code> decidable: a fresh
+dead end outweighs a months-old useful, so the verdict is
+recency-weighted rather than a vote count. Scores are rounded to nine
+digits specifically so sort order and the contested verdict stay stable
+across platforms where <code>pow</code> differs in the last ULP.</p>
+<p>When a graph is available, nodes that no longer exist in it are
+dropped — existence in the artifact is a precondition for a lesson about
+it surviving.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>Four ways, and only two of them are mechanical.</p>
+<p><em>Decay.</em> Every signal's weight halves every 30 days. Nothing
+is deleted; an old <code>useful</code> simply stops outvoting
+anything.</p>
+<p><em>Contradiction.</em> One <code>dead_end</code> or
+<code>corrected</code> on a node that was <code>preferred</code> moves
+it to <code>contested</code> immediately — the classification is by the
+<em>presence</em> of both signs, not by the score. A reader sees
+<code>learning=contested</code> on that node from the next query
+onward.</p>
+<p><em>Staleness.</em> <code>_is_stale</code> re-hashes the node's
+source file and compares. Changed, vanished, or
+never-fingerprinted-but-has-a-file all return <code>True</code>. This
+does not remove the lesson; it annotates it <code>stale</code>, which
+surfaces as <code>learning=preferred:stale</code> in query output.</p>
+<p><em>Deletion.</em> There isn't any. No code path edits or removes a
+memory doc, and <code>reflect</code> regenerates both artifacts
+wholesale from whatever files are present. Forgetting means deleting a
+file by hand.</p>
+<p>Nothing keys on the <em>answer</em>. A <code>corrected</code> doc
+records the right answer in a <code>correction</code> field and demotes
+the nodes the wrong answer cited — but the wrong value itself is never
+registered as rejected, so nothing prevents the same answer being
+derived and saved again tomorrow. <code>dead_ends</code> come closest
+and are explicitly excluded from the sidecar overlay: <em>"those stay
+query-scoped, surfaced only in the report."</em></p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Doc: graphify save-result writes one Markdown file
+    Doc --&gt; Unmarked: no outcome flag supplied
+    Doc --&gt; Positive: outcome useful
+    Doc --&gt; Negative: outcome dead_end or corrected
+    Unmarked --&gt; [*]: counted in the summary, scores nothing
+    Positive --&gt; Tentative: one distinct result
+    Tentative --&gt; Preferred: a second distinct result corroborates it
+    Negative --&gt; DeadEnd: rendered into LESSONS.md for a model to obey
+    DeadEnd --&gt; [*]: no code path consults it
+    Positive --&gt; Contested: the node also carries a negative signal
+    Negative --&gt; Contested: the node also carries a positive signal
+    Contested --&gt; Annotated: verdict from the sign of the decayed score
+    Preferred --&gt; Annotated: reordered ahead of other exact matches
+    Tentative --&gt; Annotated: shown but not promoted
+    Annotated --&gt; Stale: source file hash no longer matches
+    Stale --&gt; Annotated: re-verified, or the file changes again</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Graphify is a <strong>Python CLI and a skill</strong>, with no
+server, no database and no network dependency on the memory path.
+<code>uv tool install graphifyy</code> then
+<code>graphify install</code> registers a slash command with the
+assistant.</p>
+<p>Everything lives in one directory beside the project:</p>
+<pre class="text"><code>graphify-out/
+├── graph.json                  the structural graph
+├── .graphify_analysis.json     community detection
+├── .graphify_learning.json     the work-memory sidecar
+├── memory/                     one Markdown file per saved Q&amp;A
+└── reflections/LESSONS.md      the derived artifact an agent reads</code></pre>
+<p><code>GRAPHIFY_OUT</code> relocates the whole tree, which is how
+worktrees and shared-output setups are handled.</p>
+<p><strong>Extraction</strong> is tree-sitter AST for code —
+deterministic, local, no model — with a semantic pass over docs, PDFs,
+images and video that does use the assistant's model. Every edge is
+tagged <code>EXTRACTED</code> or <code>INFERRED</code>, which is a
+provenance distinction on the <em>graph</em> rather than on memory, and
+a good one.</p>
+<p><strong>The memory layer touches no model at all.</strong>
+<code>reflect.py</code>'s docstring commits to it: <em>"It is
+deterministic: no LLM, stable sort orders, byte-stable output for a
+given input and a given <code>now</code>."</em> A committed test
+(<code>test_sidecar_is_byte_identical_across_runs</code>) holds it to
+that.</p>
+<p><strong>Background work</strong> is git hooks. A post-commit and a
+post-checkout hook rebuild the code graph and then, <em>"best-effort;
+never fails the hook"</em>, refresh <code>LESSONS.md</code> if any
+memory docs exist. Both are wrapped in
+<code>try/except Exception: pass</code> around the reflect call
+specifically, so a memory failure cannot break a commit. The rebuild
+itself takes a flock and a configurable timeout.</p>
+<p>There is a deliberate placement decision worth noting:
+<code>LESSONS.md</code> lands in <code>reflections/</code> rather than
+in the exported wiki, because <em>"<code>graphify export wiki</code>
+deletes every <code>wiki/*.md</code> on each run — a lessons file
+written there would be clobbered on the next export."</em></p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running. No database, no embedding server, no API
+key for the memory path — the code half is fully local, and only the
+semantic pass over non-code documents reaches a model. Install is one
+command; first run is <code>/graphify .</code> in the assistant.</p>
+<p>The store is <strong>entirely human-readable and repairable by
+hand</strong>: Markdown files you can edit or delete, and a JSON sidecar
+that is regenerated from them. The sidecar is designed to be committed —
+the content-only hash exists so it stays valid across checkouts — which
+makes the work memory shareable through the same mechanism as the
+code.</p>
+<p>The cost is that everything is per-directory. Two projects share
+nothing, and there is no way to ask a question across them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>graphify save-result</code> →
+<code>cli.py:1087</code> → <code>save_query_result</code>
+(<code>ingest.py:274</code>). Validates the outcome against
+<code>OUTCOMES</code>, slugs the question into a timestamped filename,
+hand-builds YAML frontmatter (no PyYAML dependency), writes the file.
+Never reads existing memory.</p>
+<p><strong>Aggregate.</strong> <code>reflect()</code>
+(<code>reflect.py:564</code>) → <code>load_memory_docs</code> →
+<code>parse_memory_doc</code> (a hand-written parser for the same YAML
+subset the writer emits, so foreign <code>.md</code> files are skipped
+cleanly) → <code>aggregate_lessons</code> (<code>reflect.py:364</code>)
+→ <code>_record_node</code> / <code>_finalize_sources</code>.</p>
+<p><strong>Render.</strong> <code>render_lessons_md</code>
+(<code>reflect.py:489</code>) → <code>reflections/LESSONS.md</code>,
+grouped by graph community when <code>.graphify_analysis.json</code> is
+present, flat otherwise.</p>
+<p><strong>Project.</strong> <code>build_learning_overlay</code>
+(<code>reflect.py:758</code>) resolves each cited label to exactly one
+canonical node id — ambiguous citations are skipped — attaches status,
+score, uses, <code>last</code>, <code>source_file</code>,
+<code>code_fingerprint</code> and up to five provenance entries, then
+<code>write_learning_sidecar</code> emits it with
+<code>sort_keys=True, indent=2</code>.</p>
+<p><strong>Read.</strong> <code>serve.py:52</code> loads the sidecar
+onto the graph at load time; <code>serve.py:927</code> appends
+<code>learning={status}{':stale'}</code> to each rendered node; and
+<code>serve.py:1128</code> moves a <code>preferred</code> node to the
+front of the exact-match list. That last line is the only place memory
+changes <em>ranking</em> rather than <em>presentation</em>.</p>
+<p><strong>Gate.</strong> <code>lessons_fresh</code>
+(<code>reflect.py:527</code>) compares the output's mtime against every
+input's, so <code>reflect --if-stale</code> is a no-op when the git hook
+already refreshed the file. Its docstring is careful about what it is
+claiming: <em>"it only gates whether to recompute, not what the
+recomputation produces (that stays deterministic)."</em></p>
+<p><strong>Hooks.</strong> <code>hooks.py:142</code> and
+<code>hooks.py:191</code> — the post-commit and post-checkout refresh,
+each in its own suppressed try block.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The stored record is a file. Frontmatter carries <code>type</code>,
+<code>date</code> (ISO 8601 UTC), <code>question</code>,
+<code>contributor</code>, and optionally <code>outcome</code>,
+<code>correction</code> and <code>source_nodes</code> (capped at ten).
+The body repeats the question, the answer, the outcome and the cited
+nodes as Markdown.</p>
+<p>The derived record is a sidecar entry keyed by canonical node id:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td><code>preferred</code> / <code>tentative</code> /
+<code>contested</code></td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td>signed, decayed, rounded to nine digits</td>
+</tr>
+<tr>
+<td><code>uses</code></td>
+<td>distinct positive results</td>
+</tr>
+<tr>
+<td><code>neg</code></td>
+<td>distinct negative results (contested only)</td>
+</tr>
+<tr>
+<td><code>verdict</code></td>
+<td><code>useful</code> / <code>dead end</code> / <code>even</code>
+(contested only)</td>
+</tr>
+<tr>
+<td><code>last</code></td>
+<td>most recent event date</td>
+</tr>
+<tr>
+<td><code>source_file</code></td>
+<td>the node's file, as recorded in the graph</td>
+</tr>
+<tr>
+<td><code>code_fingerprint</code></td>
+<td>SHA-256 of that file's content</td>
+</tr>
+<tr>
+<td><code>provenance</code></td>
+<td>up to five recent <code>{q, date, outcome}</code> entries</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Provenance is capped at five and is recent-first</strong>,
+which is an explicit trade: the trail exists to explain a current
+status, not to be an audit history. Only <code>useful</code> and
+<code>corrected</code> events are recorded in it — the comment calls
+this <em>"the experiential trail an agent cares about — what cited this
+node, and how it turned out."</em></p>
+<p><strong>Scoping is a directory.</strong> One
+<code>graphify-out/</code> per project. There is no user, team, agent or
+tenant key anywhere in the read path. <code>contributor</code> exists in
+the frontmatter and in <code>ingest()</code> for fetched URLs, but
+<code>save_query_result</code> <strong>hardcodes it to the literal
+<code>"graphify"</code></strong>, and no code filters on it. On a graph
+shared through git — which the content-only hash is explicitly designed
+to enable — every correction is anonymous.</p>
+<p><strong>Temporal modelling is record-time only.</strong>
+<code>date</code> is when the answer was saved. There is no notion of
+when a fact was true, and the decay function operates purely on the age
+of the record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two surfaces, and they work differently.</p>
+<p><strong><code>LESSONS.md</code> is read wholesale at session
+start.</strong> The skill instructs the agent to run
+<code>graphify reflect --if-stale</code> and then read the file, which
+lists preferred sources ("start there"), known dead ends ("skip them")
+and prior corrections. There is no query, no ranking against the current
+question, and no token budget — the whole artifact enters context. Its
+size is bounded only by a per-section <code>k</code> in
+<code>_render_bucket</code>.</p>
+<p><strong>The sidecar annotates query results inline.</strong> Every
+node in a query result carries a <code>learning=</code> suffix, and a
+<code>preferred</code> node that matches exactly is reordered to the
+front. This is the authority-over-similarity move: a node's standing
+comes from how it <em>performed</em>, not from how it scored against the
+query string.</p>
+<p>Failure modes worth naming:</p>
+<ul>
+<li><strong>The dead-end list is advisory.</strong> It reaches the model
+as prose in <code>LESSONS.md</code> and nothing enforces it. The skill
+says "skip them"; the code says nothing.</li>
+<li><strong>Citation resolution is by label, and ambiguity is dropped
+silently.</strong> <code>_resolve_canonical_id</code> returns
+<code>None</code> when a cited label maps to more than one node, and
+<code>_add</code> skips it. A lesson about a common function name may
+simply not appear.</li>
+<li><strong>File-level fingerprinting over-flags by design.</strong> Any
+edit anywhere in a file marks every lesson about every node in it stale.
+Stated as the safe direction, and it is — but on a large file it means
+the annotation is stale most of the time.</li>
+<li><strong><code>LESSONS.md</code> grows without a retention
+policy.</strong> Old memory docs are never pruned; decay reduces their
+weight to near-nothing while <code>reflect</code> still parses every one
+of them on every run.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>agent-invoked and synchronous</strong>, and cost
+one file write. There is no extraction, no embedding, no model call, and
+therefore no lag: a saved result is visible to the next
+<code>reflect</code>, and the next <code>reflect</code> is a full
+recomputation over a directory of small Markdown files.</p>
+<p>The outcome flag is <strong>optional</strong>, and this is the
+design's soft centre. The skill tells the agent to add one, but
+<code>save_query_result</code> accepts <code>None</code>, and an
+unmarked doc contributes to the counts and scores nothing. Nothing
+measures how often the flag is supplied in practice, and the whole trust
+layer is downstream of a model remembering to pass an argument.</p>
+<p>Deduplication is by question: <code>_dedupe_by_question</code>
+collapses repeated saves of the same Q&amp;A in the dead-ends and
+corrections lists, with a comment recording that the same Q&amp;A saved
+twice used to duplicate lines. Node scoring counts distinct
+<em>documents</em>, not citations —
+<code>test_corroboration_counts_distinct_docs_not_citations</code> pins
+it, which is the difference between two independent confirmations and
+one answer citing the same node twice.</p>
+<p>Conflict handling is the <code>contested</code> state and nothing
+more. There is no merge, no supersession pointer, and no way to mark one
+doc as replacing another.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing on the write path blocks on anything. <code>reflect</code> is
+O(all memory docs) and runs on a git hook or on demand; on a corpus of a
+few hundred saved answers that is milliseconds, and the
+<code>--if-stale</code> gate exists so a session-start run costs almost
+nothing when the hook already did it.</p>
+<p>The read cost is the honest one. <code>LESSONS.md</code> is injected
+in full at session start with no budget, which is the same
+unbounded-injection shape this atlas criticises elsewhere — the
+difference is that the artifact is small because the signal is sparse,
+not because anything caps it. And because the file is read at session
+start rather than per turn, it sits in the stable part of the prompt
+rather than invalidating a prefix cache on every request.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Graphify ships the same skill compiled into <strong>fourteen harness
+formats</strong> — <code>agents</code>, <code>amp</code>,
+<code>claude</code>, <code>claw</code>, <code>codex</code>,
+<code>copilot</code>, <code>droid</code>, <code>kilo</code>,
+<code>kiro</code>, <code>opencode</code>, <code>pi</code>,
+<code>trae</code>, <code>vscode</code>, <code>windows</code> — plus an
+always-on rules file for <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<code>GEMINI.md</code>, Kiro steering and VS Code instructions. The
+memory contract is therefore <em>prose in a skill file</em>: the agent
+is told to call <code>save-result</code> with an outcome, and told to
+read <code>LESSONS.md</code> first.</p>
+<p>The agent has complete agency and no obligation. It decides whether
+an answer is worth saving, which nodes it cited, and which outcome
+applies. Nothing validates the citation list against what the query
+actually returned.</p>
+<p>There is no MCP server for the memory layer. Integration into another
+harness means writing another skill file, which is a fifteen-minute job
+and the reason fourteen of them exist.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The trust states are real and they reach the reader.</strong>
+<code>preferred</code>, <code>tentative</code> and
+<code>contested</code> are stored fields, <code>tentative</code>
+genuinely withholds (the docstring: <em>"seen useful only once (not yet
+corroborated)"</em>), and both the status and the staleness flag are
+rendered next to the node in query output. The atlas grants
+<code>trust_state</code> on that basis.</p>
+<p><strong>Verification is against the artifact, not by
+judgement.</strong> The staleness check is a content hash, computed the
+same way by the writer and the reader — a comment explains that this is
+why a freshly-written verdict on unchanged code is never spuriously
+stale. No model adjudicates anything, anywhere in this layer.</p>
+<p><strong>The self-ingestion guard is the standout.</strong>
+<code>LESSONS.md</code> has no frontmatter, so
+<code>parse_memory_doc</code> rejects it and
+<code>load_memory_docs</code> skips it even if it lands inside
+<code>memory/</code> — and there is a committed test asserting exactly
+that, named for the failure it prevents. Two systems in this atlas had
+to fix this bug after shipping it; this one has a regression guard for
+it.</p>
+<p><strong>Prompt-injection exposure is real but narrow.</strong> Memory
+docs contain a model's own answer text, saved verbatim, and
+<code>LESSONS.md</code> is injected without fencing or a "this is data"
+wrapper. An answer that quoted a hostile document would carry that text
+into the next session's context. Against that, the content is the
+agent's own prose about its own project, and nothing in the store came
+from an untrusted third party by default.</p>
+<p><strong>Data-loss risks</strong> are mild by construction: files are
+append-only, never edited, and every derived artifact is rebuildable
+from them. The real risk is the opposite — nothing is ever removed, and
+there is no retention policy.</p>
+<p><strong>What it cannot represent:</strong> who said something (the
+hardcoded contributor), when a fact was true (record time only), and
+that a specific value must never come back (no tombstone).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large — <strong>3,308 test functions across 177 files,
+59,500 lines against 15,959 lines of source</strong>, a ratio near four
+to one. <code>tests/test_reflect.py</code> alone carries 58 tests over
+958 lines for a roughly 900-line memory layer.</p>
+<p>What is pinned, in the order I found it convincing:</p>
+<ul>
+<li><strong><code>test_lessons_artifact_cannot_be_globbed_back_into_memory</code></strong>
+— the generated artifact must not be re-ingestible as evidence, with a
+docstring naming it a regression guard.</li>
+<li><strong><code>test_header_is_cautious</code></strong> — asserts
+<code>"verify before relying"</code> is in the rendered header and
+<code>"reuse what worked"</code> is not. A test on the <em>register</em>
+of generated memory prose.</li>
+<li><strong><code>test_negative_only_node_absent_from_sources</code></strong>
+— a node carrying only negative signals must not appear in any source
+list. This is a committed negative-retrieval assertion, and it is why
+the atlas grants <code>negative_eval</code>.</li>
+<li><strong><code>test_corroboration_threshold_promotes_only_repeated_nodes</code></strong>
+and <code>test_min_corroboration_is_honored_not_hardcoded</code>.</li>
+<li><strong><code>test_recency_decides_contested_verdict</code></strong>
+and <code>test_half_life_actually_feeds_decay</code>.</li>
+<li><strong><code>test_node_existence_gate_drops_stale_nodes</code></strong>,
+end-to-end as well as at unit level.</li>
+<li><strong><code>test_loader_marks_entry_stale_when_source_file_changes</code></strong>,
+plus three tests for path-resolution edge cases that could produce a
+<em>spurious</em> stale.</li>
+<li><strong><code>test_sidecar_is_byte_identical_across_runs</code></strong>
+and
+<code>test_render_byte_stable_across_independent_aggregations</code>.</li>
+<li><strong><code>test_second_session_benefits_from_the_first</code></strong>
+— the loop as a whole.</li>
+</ul>
+<p><code>BENCHMARKS.md</code> exists and concerns graph extraction, not
+memory. There is no retrieval-quality evaluation of the lessons layer
+and no measurement of how often an outcome flag is actually supplied —
+which is the number that decides whether any of this fires in practice.
+I inspected these tests; I did not run the suite.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Withhold a lesson until a second, independent result confirms
+it.</strong> One positive signal makes something <code>tentative</code>
+and visible; two make it <code>preferred</code> and promoted in ranking.
+Counting <em>distinct results</em> rather than citations is the part
+that matters, and it is one <code>Counter</code> and one comparison.</p>
+<p><strong>Score signals signed and time-decayed, then let the sign
+settle contradiction.</strong> A 30-day half-life means a fresh dead end
+outweighs a months-old success without any explicit conflict-resolution
+logic. Round the score before comparing, so the verdict is stable across
+platforms — that is a two-line detail with a real bug behind it.</p>
+<p><strong>Hash the artifact a memory is about, and recompute it on
+read.</strong> Store the content hash with the memory; recompute at
+load; stamp <code>stale</code>. Content-only, no path, so a committed
+sidecar survives a different checkout. Bias the check toward
+over-flagging and say so in the comment.</p>
+<p><strong>Keep the derived experiential layer out of the structural
+store.</strong> A sidecar next to <code>graph.json</code> rather than
+fields inside it means the expensive artifact stays canonical and the
+cheap one can be deleted and rebuilt. It also makes "what does the code
+say" and "what happened when we used it" separately answerable.</p>
+<p><strong>Write a test that your own generated memory artifact cannot
+be re-ingested as evidence.</strong> It costs five lines. Two systems in
+this atlas shipped that bug and fixed it afterwards.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't ship a "don't re-derive this" list that no code path
+consults.</strong> If the only thing standing between a known dead end
+and a repeated dead end is a model reading a Markdown bullet and
+choosing to obey it, the mechanism is a prompt, not a memory. Either
+filter on it or describe it as advice.</p>
+<p><strong>Don't make the trust signal an optional argument.</strong>
+The entire epistemic layer here is downstream of an agent remembering to
+pass <code>--outcome</code>. If the signal is load-bearing, derive it
+from something observable or require it; an optional flag that a model
+supplies when it feels like it will be supplied unevenly, and nothing
+here measures how unevenly.</p>
+<p><strong>Don't hardcode the author field on a record you intend to
+share.</strong> A shared store where every entry claims the same
+contributor cannot answer "who decided this was wrong", which is the
+first question anyone asks of a correction.</p>
+<p><strong>Don't let a lessons file grow without a retention policy just
+because decay makes old entries cheap.</strong> Decay reduces an old
+signal's <em>weight</em>; it does not reduce the cost of parsing it, and
+it does not stop the artifact from growing.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>one developer, one repository, and an agent that
+answers questions from a code graph</strong> — which is a narrow target,
+and the memory layer is honestly scaled to it. Nine hundred lines, no
+service, no model, a store you can read in an editor, and a rebuild from
+scratch that costs milliseconds. If that is your situation, the
+corroboration gate and the staleness check are worth having and would
+take an afternoon to port.</p>
+<p>It is not a general agent memory system and does not present itself
+as one. The unit of memory is "how a graph query turned out", so it can
+remember that a module is a good place to look and cannot remember that
+you prefer tabs. Anyone looking for preferences, entities, a user
+profile, or memory that survives outside one project directory is in the
+wrong repository — and would be better served pairing this with
+something else than trying to widen it, because the narrowness is what
+keeps it deterministic.</p>
+<p>The team case is the interesting one and the least finished. The
+content-only hash and the committable sidecar say someone thought about
+sharing this through git; the hardcoded <code>contributor</code> and the
+absence of any scope key say nobody has yet had to answer what happens
+when two people disagree.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often is <code>--outcome</code> actually
+supplied?</strong> Everything here is downstream of it and nothing
+measures it. A count of marked versus unmarked docs in a real
+<code>memory/</code> directory would settle whether this is a working
+loop or a well-tested one.</li>
+<li><strong>Does the <code>learning=</code> annotation change model
+behaviour?</strong> The sidecar reaches the prompt as a suffix on a node
+line. Whether a model attends to <code>learning=contested:stale</code>
+is unmeasured, and would need a run rather than a read.</li>
+<li><strong>Was the dead-end list ever intended to be enforced?</strong>
+The skill's wording ("don't re-derive it next time") reads like a
+promise the code does not keep; the issue history would say whether that
+is a gap or a decision.</li>
+<li><strong>What happens on a shared graph when two contributors
+disagree?</strong> The mechanism resolves it by recency-weighted score
+with no notion of who, which may be intended or may simply not have come
+up.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Write path</strong> — <code>graphify/ingest.py</code>
+(<code>save_query_result</code>, <code>OUTCOMES</code>),
+<code>graphify/cli.py:1087</code>.</p>
+<p><strong>Aggregation and scoring</strong> —
+<code>graphify/reflect.py</code>: <code>parse_memory_doc</code>,
+<code>load_memory_docs</code>, <code>_decay</code>,
+<code>_record_node</code>, <code>_finalize_sources</code>,
+<code>aggregate_lessons</code>, <code>_dedupe_by_question</code>.</p>
+<p><strong>Derived artifacts</strong> —
+<code>graphify/reflect.py</code>: <code>render_lessons_md</code>,
+<code>build_learning_overlay</code>,
+<code>write_learning_sidecar</code>, <code>load_learning_overlay</code>,
+<code>_is_stale</code>, <code>_content_hash</code>,
+<code>_code_fingerprint</code>, <code>_provenance_for</code>.</p>
+<p><strong>Read path</strong> — <code>graphify/serve.py:52</code>
+(overlay load), <code>:927</code> (annotation), <code>:1128</code>
+(preferred reordering); <code>graphify/exporters/html.py:475</code>.</p>
+<p><strong>Gate and background</strong> —
+<code>graphify/reflect.py:527</code> (<code>lessons_fresh</code>),
+<code>graphify/hooks.py:142</code> and <code>:191</code> (post-commit /
+post-checkout refresh).</p>
+<p><strong>Agent surface</strong> —
+<code>graphify/skills/*/references/query.md</code> (fourteen harnesses),
+<code>graphify/always_on/*.md</code>.</p>
+<p><strong>Tests</strong> — <code>tests/test_reflect.py</code> (58
+tests, 958 lines).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

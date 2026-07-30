@@ -81,6 +81,11 @@ WORDS = _number_words(16, 999)
 #: against a live 105 — the check accusing a correct count of being wrong.
 WORDS_BY_LENGTH = sorted(WORDS, key=len, reverse=True)
 
+#: Matches the " of <number>" that turns a preceding count into the numerator of
+#: a subset claim ("Sixteen repositories of one hundred and thirteen"). Allows a
+#: line break, because these sentences wrap.
+SUBSET_TAIL = re.compile(rf"\s+of\s+(?:{'|'.join(WORDS_BY_LENGTH)}|\d+)\b", re.I)
+
 
 def stale_number_words(root: Path, live: set[int]) -> list[str]:
     """Spelled-out counts of atlas nouns that no longer match anything live.
@@ -122,6 +127,15 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
                 # the same floor the digit rule below already uses: only the
                 # system total is ever this large.
                 if index == 1 and value < 40:
+                    continue
+                # "Sixteen repositories of one hundred and thirteen" — the
+                # forward pattern reads the NUMERATOR of a subset claim, which is
+                # a true count of a subset and never equals a live total. Only
+                # the denominator is a claim about the corpus, and the second
+                # pattern already checks it. Skip the numerator when an "of
+                # <number>" follows, so a subset that grows past the dictionary
+                # floor of sixteen does not start failing the build.
+                if index == 0 and SUBSET_TAIL.match(text, match.end()):
                     continue
                 line = text[: match.start()].count("\n") + 1
                 found.append(

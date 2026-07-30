@@ -297,6 +297,33 @@ its own thought is worth interrupting the owner about reinforces every
 fact it touches on the way past. A read that writes should be documented
 as one — Helm's tool registry declares
 <code>"side_effects": "none"</code> for it.</p>
+<p><a href="../../systems/graphify/">Graphify</a> uses decay for
+something most instances here do not: <strong>deciding a
+contradiction.</strong> Each outcome contributes
+<code>sign × weight</code> where the sign is <code>+1</code> for
+<code>useful</code> and <code>−1</code> for <code>dead_end</code> or
+<code>corrected</code>, and the weight halves every 30 days. A source
+carrying both signs is classified <code>contested</code> by the presence
+of both — the classification is not a vote — and only then does the
+accumulated score decide whether it reads as "useful", "dead end" or
+"even". So a fresh dead end outweighs a months-old success without any
+conflict-resolution logic existing at all: the half-life <em>is</em> the
+resolution rule.</p>
+<p>The reason it stays honest is that decay here never touches epistemic
+standing. A decayed score cannot demote <code>preferred</code> to
+<code>tentative</code>, because that classification comes from a count
+of distinct results, not from the score. Age changes which contested
+source sorts first; it cannot make a corroborated source uncorroborated.
+That is the separation this pattern keeps asking for, achieved by
+computing the two things from different columns rather than by
+discipline.</p>
+<p>One implementation detail worth stealing outright: the score is
+rounded to nine digits before comparison, with a comment explaining that
+C's <code>pow</code> can differ in the last ULP across platforms and
+that the rounding is what keeps sort order and the contested verdict
+stable. A decay function whose output feeds a <em>classification</em>
+needs to be deterministic across machines in a way one that only feeds a
+ranking does not.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

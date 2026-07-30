@@ -212,6 +212,30 @@ owner about reinforces every fact it touches on the way past. A read that writes
 should be documented as one — Helm's tool registry declares
 `"side_effects": "none"` for it.
 
+[Graphify](../../systems/graphify/) uses decay for something most instances here
+do not: **deciding a contradiction.** Each outcome contributes `sign × weight`
+where the sign is `+1` for `useful` and `−1` for `dead_end` or `corrected`, and
+the weight halves every 30 days. A source carrying both signs is classified
+`contested` by the presence of both — the classification is not a vote — and only
+then does the accumulated score decide whether it reads as "useful", "dead end"
+or "even". So a fresh dead end outweighs a months-old success without any
+conflict-resolution logic existing at all: the half-life *is* the resolution
+rule.
+
+The reason it stays honest is that decay here never touches epistemic standing.
+A decayed score cannot demote `preferred` to `tentative`, because that
+classification comes from a count of distinct results, not from the score. Age
+changes which contested source sorts first; it cannot make a corroborated source
+uncorroborated. That is the separation this pattern keeps asking for, achieved by
+computing the two things from different columns rather than by discipline.
+
+One implementation detail worth stealing outright: the score is rounded to nine
+digits before comparison, with a comment explaining that C's `pow` can differ in
+the last ULP across platforms and that the rounding is what keeps sort order and
+the contested verdict stable. A decay function whose output feeds a *classification*
+needs to be deterministic across machines in a way one that only feeds a ranking
+does not.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

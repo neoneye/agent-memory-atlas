@@ -119,6 +119,28 @@ they are estimates rather than states that change with evidence.
 factual promotion state; [Claude-Mem](../../systems/claude-mem/) and
 [A-MEM](../../systems/a-mem/) activate generated content with none at all.
 
+[Graphify](../../systems/graphify/) is the cheapest working instance here and the
+one to copy if you are starting: three states — `preferred`, `tentative`,
+`contested` — none of them supplied by a model, all three *derived* on each run
+from a directory of outcome-tagged Q&A files. `tentative` is the state that earns
+the pattern: a source cited by one successful answer is recorded and shown but
+not promoted, and only a **second distinct result** moves it to `preferred`. The
+threshold is a parameter with a test asserting it is not hardcoded, and the
+docstring gives the reason in six words — *"one save can't mint a trusted
+lesson."* `contested` is entered by the mere presence of both a positive and a
+negative signal, then given a verdict by the sign of a 30-day-half-life score, so
+contradiction changes the state immediately while recency decides which way it
+reads.
+
+Two things generalize past it. The states are **stored on a derived sidecar and
+recomputed wholesale**, never written back into the structural store — so the
+trust layer is disposable and rebuildable, which is what makes changing the
+threshold or the half-life a safe experiment rather than a migration. And the
+state **reaches the model as a suffix on the thing it qualifies**
+(`learning=contested:stale` beside the node), rather than as a separate block a
+reader has to correlate. A trust state that a reader must join by hand is a trust
+state most readers will not use.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.
