@@ -99,7 +99,7 @@ that records old and new text for every mutation.</p>
               <strong>2026-07-30</strong>
             </div>
                       </div>
-                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (72%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (71%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -137,15 +137,19 @@ history is a <code>TRUNCATE</code> of both tables together, which is a
 reset rather than an edit. So every mutation leaves a durable record of
 what the text was and what it became, keyed on the memory, in the
 system's own store.</p>
-<p><strong>A caveat this report has to state rather than
-resolve.</strong> The atlas's Mem0 report describes "SQLite history and
-recent-message store" and carries only <code>scope_enforced</code>, so
-either that mark was withheld for a reason this reviewer cannot see from
-a different repository, or it is under-marked. Mem0Sharp's mark rests on
-code read here at this commit; whether the Python original earns the
-same is a re-check that has not been done, and it is recorded in the
-overview's limitations rather than quietly resolved in one
-direction.</p>
+<p><strong>A divergence this report raised and a later re-read
+settled.</strong> The atlas's <a href="../mem0/">Mem0</a> report carried
+only <code>scope_enforced</code> when this one was written, so either
+that mark had been withheld for a reason invisible from a different
+repository, or the original was under-marked. It was under-marked:
+re-reading <code>mem0/mem0/memory/storage.py</code> at its pinned commit
+found the same append-only history, written only by
+<code>add_history</code> and <code>batch_add_history</code>, with no
+<code>UPDATE</code> or <code>DELETE</code> against it — and richer than
+this one, since the Python table carries <code>actor_id</code> and
+<code>role</code> where the C# table does not. Mem0 now carries
+<code>audit_log</code> too. The port did not add the audit; it made a
+two-month-old omission visible.</p>
 <p>Scope is the other mark and it is enforced at the schema:
 <code>user_id text NOT NULL</code> with <code>agent_id</code>,
 <code>run_id</code> and <code>scope</code> beside it, composed into a
@@ -318,10 +322,9 @@ call, and offers no way to mark a memory doubtful — the history table is
 a forensic tool, not a trust model.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>Does the Python Mem0 earn <code>audit_log</code>
-too?</strong> Its report records a SQLite history store and carries only
-<code>scope_enforced</code>. This was not re-checked and the divergence
-is recorded rather than resolved.</li>
+<li><del><strong>Does the Python Mem0 earn <code>audit_log</code>
+too?</strong></del> Re-checked on 2026-07-30: yes, and its history table
+is the richer of the two. Mem0's mark was corrected.</li>
 <li><strong>How good is the conflict resolver?</strong> There is a test
 class for it and no measurement of its precision, which is the same gap
 the atlas records for Memanto's conflict detection.</li>

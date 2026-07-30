@@ -4258,11 +4258,12 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>13 of 110:</em> <a
+<p><em>14 of 110:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
+href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -9627,18 +9628,27 @@ kind. <code>Gitlawb/zero</code> was re-examined at
 since the earlier pass, and the earlier conclusion holds:
 <code>internal/background</code> and <code>internal/swarm</code>
 coordinate work, and there is still no memory module.</li>
-<li><strong>A mark that needs re-checking.</strong> <a
-href="../systems/mem0sharp/">Mem0Sharp</a> earns <code>audit_log</code>
-for a <code>{table}_history</code> table written only by
-<code>INSERT</code>, carrying <code>event</code>,
-<code>old_memory</code> and <code>new_memory</code> per memory id. The
-atlas's <a href="../systems/mem0/">Mem0</a> report describes a SQLite
-history store and carries only <code>scope_enforced</code>. Either that
-mark was withheld for a reason not visible from the C# reimplementation,
-or the Python original is under-marked. The divergence is recorded
-rather than resolved, because resolving it means re-reading
-<code>mem0/mem0/memory/storage.py</code> and that was not done
-here.</li>
+<li><strong>A mark that was wrong, and how it was found.</strong> <a
+href="../systems/mem0sharp/">Mem0Sharp</a> earned <code>audit_log</code>
+on 30 July for a history table written only by <code>INSERT</code>. The
+atlas's <a href="../systems/mem0/">Mem0</a> report, of the system that
+C# port reimplements, carried only <code>scope_enforced</code> — a
+divergence recorded the same day as a limitation rather than resolved.
+Re-reading <code>mem0/mem0/memory/storage.py</code> at the pinned commit
+settled it: Mem0's <code>history</code> table is <code>id</code>,
+<code>memory_id</code>, <code>old_memory</code>,
+<code>new_memory</code>, <code>event</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>is_deleted</code>, <code>actor_id</code>,
+<code>role</code>, written only by <code>add_history</code> and
+<code>batch_add_history</code>, with no <code>UPDATE</code> and no
+<code>DELETE</code> against it anywhere in the file. <strong>Mem0 was
+under-marked and now carries <code>audit_log</code>.</strong> Worth
+recording as a methodology note rather than a correction: the defect was
+invisible for two months and surfaced only because an independent
+reimplementation of the same design was reviewed and marked differently.
+A corpus wide enough to contain a system twice is a corpus that can
+check itself, and nothing in this atlas's process was doing that
+deliberately.</li>
 <li><code>unibaseio/membase</code> was examined and has no report. Its
 memory is roughly 1,400 lines of conversation-keyed message buffers with
 LLM summarisation into a long-term memory and a profile, plus Chroma

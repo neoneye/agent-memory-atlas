@@ -47,13 +47,15 @@ tables together, which is a reset rather than an edit. So every mutation leaves 
 durable record of what the text was and what it became, keyed on the memory, in
 the system's own store.
 
-**A caveat this report has to state rather than resolve.** The atlas's Mem0
-report describes "SQLite history and recent-message store" and carries only
-`scope_enforced`, so either that mark was withheld for a reason this reviewer
-cannot see from a different repository, or it is under-marked. Mem0Sharp's mark
-rests on code read here at this commit; whether the Python original earns the
-same is a re-check that has not been done, and it is recorded in the overview's
-limitations rather than quietly resolved in one direction.
+**A divergence this report raised and a later re-read settled.** The atlas's
+[Mem0](../mem0/) report carried only `scope_enforced` when this one was written,
+so either that mark had been withheld for a reason invisible from a different
+repository, or the original was under-marked. It was under-marked: re-reading
+`mem0/mem0/memory/storage.py` at its pinned commit found the same append-only
+history, written only by `add_history` and `batch_add_history`, with no `UPDATE`
+or `DELETE` against it — and richer than this one, since the Python table carries
+`actor_id` and `role` where the C# table does not. Mem0 now carries `audit_log`
+too. The port did not add the audit; it made a two-month-old omission visible.
 
 Scope is the other mark and it is enforced at the schema: `user_id text NOT NULL`
 with `agent_id`, `run_id` and `scope` beside it, composed into a `WHERE` clause
@@ -225,9 +227,8 @@ trust model.
 
 ## 12. Open Questions
 
-- **Does the Python Mem0 earn `audit_log` too?** Its report records a SQLite
-  history store and carries only `scope_enforced`. This was not re-checked and
-  the divergence is recorded rather than resolved.
+- ~~**Does the Python Mem0 earn `audit_log` too?**~~ Re-checked on 2026-07-30:
+  yes, and its history table is the richer of the two. Mem0's mark was corrected.
 - **How good is the conflict resolver?** There is a test class for it and no
   measurement of its precision, which is the same gap the atlas records for
   Memanto's conflict detection.

@@ -9,7 +9,7 @@ source_url: https://github.com/mem0ai/mem0
 revision: 31cec11a790868f88c9acafb8b70eb25071f2150
 revision_url: https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150
 analyzed_at: 2026-07-26
-capabilities: "scope_enforced"
+capabilities: "scope_enforced, audit_log"
 matrix:
   memory_unit: "Text fact in vector payload"
   storage: "Vector store plus SQLite history/messages"
@@ -137,6 +137,32 @@ Delete/update:
 - `Memory.update()`, `Memory.delete()`, `Memory.delete_all()`.
 - `_remove_memory_from_entity_store()` removes memory IDs from entity links.
 - `SQLiteManager.add_history()` records ADD/UPDATE/DELETE history.
+
+**The `history` table earns `audit_log`, and this report withheld the mark until
+2026-07-30.** The schema in `mem0/memory/storage.py` is `id`, `memory_id`,
+`old_memory`, `new_memory`, `event`, `created_at`, `updated_at`, `is_deleted`,
+`actor_id`, `role` — so every mutation is recorded with both the value before and
+the value after, attributed to an actor and a role. It is written only by
+`add_history` and `batch_add_history`, called at every mutation site in
+`main.py`; there is **no `UPDATE history` and no `DELETE FROM history` anywhere
+in the file**. The two statements that remove rows are a schema migration that
+copies the data forward into the replacement table first, and `reset()`, which
+drops both tables under a comment saying the caller is expected to replace the
+instance — a wipe, not an edit.
+
+That is a named append-only event record of memory mutations in the system's own
+store, which is the whole test. The mark was withheld here for two months and
+recovered by an accident of coverage: a from-scratch C# reimplementation,
+[Mem0Sharp](../mem0sharp/), was reviewed on 30 July, its narrower history table
+plainly qualified, and the divergence between a port and its original was
+recorded as a limitation rather than resolved. Re-reading `storage.py` settled
+it in the original's favour — Mem0's record is the richer of the two, since the
+C# table has no `actor_id` and no `role`.
+
+The mark does not soften the report's main risk. An audit of *what changed* is
+not a trust model: extracted facts are still stored as plain text with no
+representation of uncertainty, and the history table records that a value was
+replaced without any judgement about whether the replacement was right.
 
 Tests:
 
