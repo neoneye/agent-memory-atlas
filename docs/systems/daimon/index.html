@@ -112,72 +112,6 @@ stored.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<h2 id="0-re-review-30-july-2026">0. Re-review, 30 July 2026</h2>
-<p><strong>This report was rewritten in place after 29 commits landed on
-the pinned revision, all of them on axes this atlas measures.</strong>
-The previous pin, <a
-href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a"><code class="commit-id" title="ecb7fafefa817f0726f46b221ddd4c7f4400a30a">ecb7fafe…</code></a>,
-described a system whose tombstone was keyed on exact text and whose
-deletion guarantees were argued rather than executed. What follows
-describes <a
-href="https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0"><code class="commit-id" title="3f79a952cf8e7f96b7fbcaa322147a7236dd47d0">3f79a952…</code></a>.
-The mark count moves from five of seven to six, and only bi-temporality
-is now absent.</p>
-<p>Three things changed that would each have been worth a report on
-their own.</p>
-<p><strong>The deletion-durability protocol is now a committed,
-executable test.</strong>
-<code>plugin/tests/test_deletion_durability_protocol.py</code> walks a
-forgotten value through eleven steps — write, forget, <strong>re-feed
-the original source transcript through the real serializer</strong>,
-index rebuild, a subsequent carry, a team dual-write, the rendered brief
-string, recall's SQLite rows, the signed receipt, the audit trail, and a
-chunk-cache sink over the accumulated state — re-asserting absence at
-each. <strong>Every step is paired with a never-forgotten twin that must
-stay retrievable, so no negative assertion can pass vacuously.</strong>
-It runs deterministically on a canned <code>fake_chat</code> and a
-stubbed signer with a fixed clock, at zero model quota, and the
-compliance result is published in the lifecycle docs.</p>
-<p>That protocol is close to the one <a href="../../benchmarks/">this
-atlas specifies</a>, and <strong>it was arrived at
-independently</strong> — no reference to this project appears anywhere
-in the repository, and the steps are organised around Daimon's own issue
-numbers rather than the atlas's numbering. Its step 6, re-asserting
-absence in a teammate's remote copy after a team dual-write, covers the
-propagated-copy substrate that this atlas only added to its own
-specification on 30 July, a day after Daimon committed a test for
-it.</p>
-<p><strong>The tombstone became load-bearing on the write path.</strong>
-It is now appended <em>before</em> the rewrite and removes by value so
-sibling ids cannot survive (<code>d3556e1</code>); resolved by content
-key on rebuild so historical sessions cannot reintroduce a copy
-(<code>59271b6</code>); consulted by the supersede-candidate emitter,
-which skips values already in the forget ledger (<code>f60f2d9</code>);
-and extended to the serializer chunk cache, which is purged
-<strong>wholesale</strong> because entries are keyed by chunk text and
-selective removal is therefore impossible (<code>7f73080</code>). An
-adversarial test asserts an ungated <code>prev</code> cannot resurrect a
-forgotten value (<code>e8f104d</code>).</p>
-<p><strong>Corroboration was added as a separate axis, and the
-discipline around it is the best-argued thing in the
-repository.</strong> When a teammate's session independently restates a
-claim, a namespaced pointer row records <em>who agreed</em> — and the
-docstring is explicit that it carries <strong>no <code>item_text</code>,
-ever</strong>, because <em>"this log is append-only and never rewritten,
-so a value written here outlives every deletion the user can ask
-for"</em>. That single rule resolves the tension between an append-only
-audit and a right to erasure, which most systems in this atlas either
-ignore or discover late. Corroboration is a badge in the brief and is
-stated never to become a trust class, so independent agreement cannot
-launder an <code>inferred</code> item into <code>verbatim</code>.</p>
-<p>Two smaller fixes are worth naming because of what they admit. Quote
-verification <em>"no longer accepts daimon's own injected text as
-witness"</em> (<code>4710e17</code>) — the system was verifying model
-claims against a transcript that contained its own prior briefing, which
-is the self-citation hazard this atlas records about its own method. And
-two recall fixes carry measured numbers in their subjects: 37.9% of
-injections fired at prompts no human wrote, and cross-origin duplicates
-were 15.5% of injections.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Daimon is <strong>session-boundary memory for a coding
 agent</strong>. It is not a retrieval service and does not try to be
@@ -220,15 +154,14 @@ README refuses to publish figures the project did not measure
 itself.</p>
 <p>Weakest parts: the live working set is <strong>one checkpoint per
 project</strong>, so anything not carried forward is reachable only
-through a lexical FTS5 index with no semantic component; the tombstone
-is keyed on a SHA-1 of the item's exact text, so a reworded re-assertion
-walks straight past it; and the retrieval numbers the repo does commit
-are modest and small-sample. The codebase is mature by the measures that
-can be checked — tests outweigh source roughly two to one, every
-non-obvious invariant carries the issue number and the failure that
-forced it, and defeated approaches are written down as scar files rather
-than quietly deleted — but that maturity is concentrated on the trust
-half. The retrieval half is much less proven.</p>
+through a lexical FTS5 index with no semantic component; and the
+retrieval numbers the repo does commit are modest and small-sample. The
+codebase is mature by the measures that can be checked — tests outweigh
+source roughly two to one, every non-obvious invariant carries the issue
+number and the failure that forced it, and defeated approaches are
+written down as scar files rather than quietly deleted — but that
+maturity is concentrated on the trust half. The retrieval half is much
+less proven.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <strong>checkpoint item</strong>: a sentence of working
 state, classified into one of six fields, with a trust class and a
@@ -652,12 +585,27 @@ id across every historical checkpoint, including the FTS5
 contentless-delete dance. Because ids are content-derived, an identical
 re-extraction in a future session lands on the same id and is suppressed
 on every read path.</p>
-<p>That is a genuine rejected-value tombstone, and it has a sharp edge
-worth stating precisely: the key is a SHA-1 of the <em>exact</em> text.
-A model that re-asserts the same claim in different words produces a
-different id and walks straight through. Verel's tombstone normalizes
-the value and defends against look-alike characters; daimon's does not,
-and no committed test exercises re-assertion after a forget at all.</p>
+<p>That is a genuine rejected-value tombstone, and the key is canonical
+rather than literal. <code>normalize.canonical_text</code> folds NFKC,
+strips invisible characters, collapses whitespace, casefolds, and
+<strong>translates confusables</strong> through a substitution table;
+<code>content_key</code> then bounds the input length and truncates a
+SHA-256 digest, under a docstring that names the direction it fails in —
+<em>"a prefix collision over-blocks, the fail-safe direction for a
+deletion guarantee"</em>. A system that deliberately accepts
+over-blocking on a deletion key has thought about which error it would
+rather make.</p>
+<p>The ledger is consulted where it has to be to matter.
+<code>forget</code> appends the tombstone <strong>before</strong> the
+rewrite and removes by value, so a sibling id carrying the same text
+cannot survive; rebuild resolves forgotten items by content key, so a
+historical session cannot reintroduce a copy; and the
+supersede-candidate emitter skips values already in the ledger, which is
+the write path most systems in this atlas leave open. Deletion also
+reaches the serializer chunk cache, and the way it does is the honest
+version of a hard case: cache entries are keyed by chunk text and cannot
+be searched by value, so the cache is purged <strong>wholesale</strong>
+rather than selectively.</p>
 <p><strong>Noisy and malicious input.</strong> Secret redaction runs at
 capture over <code>text</code>, <code>quote</code>, <code>scene</code>,
 and link targets, with the pattern module shipped to the hook directory
@@ -717,6 +665,35 @@ full signature verification lives in an on-demand
 <code>verify-receipt</code>. When the cheap check fails, every
 <code>verbatim</code> label in the render is downgraded to
 <code>⚠ unverified (verbatim)</code> and a header note is prepended.</p>
+<p><strong>Corroboration is a separate axis, and the rule governing it
+is the best-argued thing in the repository.</strong> When a teammate's
+session independently restates a claim, a namespaced pointer row records
+<em>who agreed</em> — status
+<code>corroborated-by:&lt;session&gt;</code>, source
+<code>serializer</code>, and <strong>no <code>item_text</code>,
+ever</strong>. The docstring gives the reason: <em>"this log is
+append-only and never rewritten, so a value written here outlives every
+deletion the user can ask for"</em>. That single rule resolves the
+tension between an append-only audit and a right to erasure, which most
+systems in this atlas either ignore or discover late — the log holds
+pointers and witnesses, so there is nothing in it for a deletion to
+miss. Items under a value tombstone cannot be corroborated at all,
+idempotency is bound to every row ever written rather than to the rows
+that currently count (so a demotion cannot hand an existing witness a
+second vote), and the gates are documented as refusing in one direction:
+<em>"a missed corroboration costs a boost; a forged one costs the
+axis"</em>. It renders as a badge and is stated never to become a trust
+class, so independent agreement cannot launder an <code>inferred</code>
+item into <code>verbatim</code>.</p>
+<p><strong>Inbound team content is gated on read.</strong>
+<code>policy.admit_foreign</code> — described as the pure twin of the
+local admission check — runs wherever a teammate's synced checkpoint
+enters local surfaces, wired into <code>store.read_team</code> and
+<code>recall._scan_sources</code>, applying scope, redaction, the forget
+ledger and trust rules in memory without rewriting the sidecar files or
+the git layer. The propagated-copy problem is usually posed as chasing
+your data into someone else's store; this poses it the other way and
+filters what arrives against your own deletions.</p>
 <p><strong>Two append-only streams, kept separate on purpose.</strong>
 <code>events.jsonl</code> holds lifecycle facts;
 <code>verification.jsonl</code> holds one row per <em>rejection</em> the
@@ -906,15 +883,28 @@ arm — so the second row is my own arithmetic over the committed rows,
 not a figure the project publishes. It is the more meaningful of the
 two, and it is a modest number: roughly a third of questions never
 surface a gold session in the top five.</p>
-<p><strong>What I would want before trusting it.</strong> A re-assertion
-test — forget an item, extract the same sentence again, assert it stays
-suppressed — which is the single test the tombstone claim rests on and
-which does not exist. Committed negative-retrieval cases in the
-benchmark harness, of the kind <a
+<p><strong>The deletion claim is tested end to end</strong>, and the
+test is the most complete of its kind in this atlas.
+<code>plugin/tests/test_deletion_durability_protocol.py</code> walks a
+forgotten value through eleven steps: write it, forget it,
+<strong>re-feed the original source transcript through the real
+serializer</strong>, rebuild the recall index, run a subsequent carry,
+perform a team dual-write and check the remote copy, then probe four
+derived artifacts — the rendered brief string, recall's SQLite rows, the
+signed receipt, and the append-only audit trail, which must record the
+deletion while holding none of the forgotten text — and finally sweep
+the chunk cache over the accumulated state. <strong>Every step is paired
+with a never-forgotten twin that must stay retrievable</strong>, so no
+negative assertion can pass vacuously, and the whole thing runs
+deterministically on a canned model and a stubbed signer with a fixed
+clock, at zero model quota.</p>
+<p>The benchmark harness also scores a forbidden-hit dimension against
+the assembled brief, of the kind <a
 href="../open-cowork/">open-cowork</a>'s <code>forbiddenHits</code>
-provides. And a completed paired A/B on the 150-question sample, since
-the interim file exists precisely because that comparison is
-unfinished.</p>
+provides.</p>
+<p><strong>What I would still want</strong> is a completed paired A/B on
+the 150-question sample, since the interim file exists precisely because
+that comparison is unfinished.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -951,10 +941,12 @@ inverted decay rule buys a real behaviour.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>A tombstone keyed on exact text.</strong> If the key is a
-hash of the literal string, a paraphrase defeats it, and the guarantee
-you advertise is narrower than the one readers will assume. Normalize
-the value, or scope the claim.</li>
+<li><strong>A tombstone keyed on literal text.</strong> If the key is a
+hash of the raw string, a paraphrase defeats it and the guarantee you
+advertise is narrower than the one readers will assume. Canonicalize
+first — NFKC, invisibles, whitespace, case, confusables — and pick the
+collision direction on purpose: over-blocking is the safe error for a
+deletion key, and daimon's own docstring says so.</li>
 <li><strong>A single live pointer as the whole working set.</strong>
 Everything not carried forward depends on a lexical index to be findable
 again. That is a defensible trade for a briefing product, but it is a
@@ -989,11 +981,11 @@ into caring whether a memory is true. This one starts there, ships the
 gates, and then documents where they stop working.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>Does the tombstone actually block re-assertion end to
-end?</strong> The mechanism reads correct, but it depends on a future
-extraction producing byte-identical text, and no test exercises the
-path. Running two sessions around a <code>forget</code> would settle
-it.</li>
+<li><strong>How wide is the canonical key in practice?</strong>
+Confusable folding and casefolding defeat the obvious paraphrases; a
+genuine restatement in different words still produces a different key,
+and nothing measures how often a re-assertion arrives reworded rather
+than repeated.</li>
 <li><strong>What is recall quality at a real sample size?</strong> The
 paired A/B behind the 54-question interim file is unfinished; a
 completed 150-question run with both arms would replace the best
