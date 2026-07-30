@@ -70,6 +70,11 @@ when the work happens.
 - [2026-07-29-the-other-agent-memory-atlas.md](2026-07-29-the-other-agent-memory-atlas.md) —
   a different public project with the same name; a link check of its 122 sources
   and what a confidence score determined entirely by one other column is worth.
+- [2026-07-30-two-ai-reviews.md](2026-07-30-two-ai-reviews.md) —
+  every checkable claim in two favourable reviews held except the one given the
+  authority of a direct quotation, which is not in the atlas; plus the field's
+  most-cited survey, closed out, whose companion repository links no code and
+  whose first author's own memory library has no persistence layer.
 - [2026-07-30-twenty-suggestions-triaged.md](2026-07-30-twenty-suggestions-triaged.md) —
   a 20-item list of "missing" systems checked against the corpus; five already
   reviewed, five closed and unreachable for the third time, six new, and the two

@@ -608,6 +608,38 @@ commitment is a memory; an inferred commitment is a claim about someone's
 intentions, which is a stronger claim than any preference in this atlas and the
 one most costly to get wrong.
 
+**Why the category is nearly empty is a boundary dispute, not an oversight.**
+Ordinary software already has somewhere for future commitments to live — a
+scheduler, a job queue, a state machine — and on that division memory is the
+passive store and the queue is what acts. The reason that division does not
+survive contact with an agent is the *trigger*. "At 09:00 tomorrow" belongs in
+cron. "The next time we discuss project scope" does not, and cannot: matching it
+requires the incoming turn, the stored commitment, and something able to judge
+that the two are about the same thing. That is a retrieval operation, so the
+commitment has to sit where retrieval can reach it. What the field has built
+instead is retrieval tuned entirely for *what was*, which is why the two systems
+that got here arrived by extending a memory schema rather than by adding a
+scheduler.
+
+The gap is also visible from the other side, in systems that hold a future
+without committing to it. [ai-memory](../systems/ai-memory/)'s handoff is a typed
+record of unfinished work addressed from one harness to another, carrying open
+questions rather than conclusions — genuinely forward-looking, and a snapshot of
+an interruption rather than a durable obligation with a trigger and a lifecycle.
+The distance between those two things is the whole category.
+
+Three requirements follow from the two implementations, and no system here has
+all three: a **semantic trigger** that retrieval can evaluate rather than a
+timestamp a scheduler can fire; an enforced **lifecycle** on the commitment, so
+open, done and abandoned are distinguishable states rather than a derived
+guess; and — for anything that *infers* commitments — a way to
+[reject](../patterns/rejected-value-tombstone/) one, keyed on the commitment, so
+a hallucinated obligation the user disowns cannot be re-extracted from the same
+transcript on the next pass. MineContext infers and has no rejection surface,
+which is the combination this atlas would flag anywhere else in memory and which
+matters more here: a wrong preference bends an answer, and a wrong obligation
+makes the agent act.
+
 The nearest other neighbour is [ai-memory](../systems/ai-memory/)'s handoff with
 its `next_steps` list, and that is a record of an interrupted task rather than a
 trigger. Whether prospective memory belongs in a memory layer or in a scheduler

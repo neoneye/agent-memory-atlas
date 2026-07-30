@@ -111,6 +111,47 @@ slightly off.
 explicit correction of the tombstones-in-context misreading, both on the patterns
 index.
 
+## An "API-contract only" tier for the closed systems
+
+Proposed 30 July 2026 by an AI review, and it is the fourth arrival of the
+closed-source proposal and the first version that deserves a separate answer.
+The earlier versions asked for reports on OpenAI's, Claude's and Vertex's memory.
+This one concedes the internals are unreachable and asks for something narrower:
+a distinct tier that evaluates each hosted product's **published API surface**
+against the five divergences. Not "how does it store memories", but "does this
+API expose a way to reject a value, scope a read, or decline a retrieval".
+
+**The reasoning is good and the answer is still no**, for a reason worth writing
+down because it is not the reason the earlier versions were declined.
+
+An API surface answers a *different question* than the marks answer, and the two
+would sit in the same table. `tombstone` means the mechanism was found in code.
+"The API has no reject endpoint" means the vendor did not expose one — which is
+compatible with the mechanism existing, being used internally, and being absent
+from the docs; and "the API has a `DELETE /memories/{id}`" is compatible with a
+nightly extraction pass re-deriving the value the next morning, which is the
+exact failure the tombstone column exists to catch and the one thing an API
+surface can never show. So the tier would produce rows that look like marks,
+read like marks, and mean something weaker in both directions.
+
+There is also a maintenance argument the atlas has already made about itself. A
+mark is a claim about a commit, which makes it auditable and lets
+`check_freshness.py` report when it has aged. An API claim is a claim about a
+documentation page with no revision to pin, so nothing can tell a stale row from
+a current one.
+
+**Kept from the suggestion:** the observation that a decision-maker reaching this
+atlas will probably deploy a hosted product anyway. The scope section already
+says the absence is a gap in the atlas rather than a finding about the products;
+what it does not do is help that reader. The honest version of the help is a
+short list of *questions to ask a vendor*, phrased from the five divergences and
+carrying no marks — which is documentation of a method rather than an assessment
+of a system, and would not be mistaken for one.
+
+**Would change if** a hosted product publishes a conformance test rather than a
+feature list — something a reader could run against the live service. That is an
+artifact, and artifacts are reviewable.
+
 ## A separate antipatterns page
 
 Same review. Proposed "garbage dump vector store", "amnesia by overwrite",
