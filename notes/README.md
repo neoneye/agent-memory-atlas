@@ -83,6 +83,12 @@ when the work happens.
   a 20-item list of "missing" systems checked against the corpus; five already
   reviewed, five closed and unreachable for the third time, six new, and the two
   entries the list hedged hardest on were the two with the most to point at.
+- [2026-07-30-a-reddit-thread-triaged.md](2026-07-30-a-reddit-thread-triaged.md) —
+  the first external input that had not read the atlas, converging on the write
+  path anyway; one under-covered idea (authority as precedence, one
+  implementation), one gap with no occupant (failure-driven step repair), and a
+  star-velocity argument that is the best external case yet for the rule against
+  citing adoption as evidence.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
