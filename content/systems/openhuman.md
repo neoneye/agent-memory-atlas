@@ -81,16 +81,17 @@ turns it came from.
 
 Cutting across all three is the label that matters:
 
-```text
-                    ┌──────────────────────────────────┐
-   user typed it ──►│  MemoryTaint::Internal           │──► may drive
-                    │                                  │    external-effect tools
-                    └──────────────────────────────────┘
-                    ┌──────────────────────────────────┐
-   synced from  ───►│  MemoryTaint::ExternalSync       │──► subconscious gate
-   email/docs/MCP   │  (also: unknown, corrupt, legacy │    refuses external effects
-                    │   → fails closed to here)        │
-                    └──────────────────────────────────┘
+```mermaid
+flowchart LR
+    U["user typed it"] --> I["MemoryTaint::Internal"]
+    S["synced from email,<br/>docs, MCP"] --> E["MemoryTaint::ExternalSync"]
+    UNK["unknown, corrupt, legacy"] -.->|"fails closed"| E
+    I --> OK["may drive<br/>external-effect tools"]
+    E --> NO["subconscious gate<br/>refuses external effects"]
+
+    style I fill:#e7efe9,stroke:#3d6b59
+    style E fill:#f4e2bd,stroke:#b8860b
+    style NO fill:#f4e2bd,stroke:#b8860b
 ```
 
 Note what this state machine is *not*. It has no `Candidate`, no `Verified`, no

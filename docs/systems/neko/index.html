@@ -151,34 +151,68 @@ thing here to a tombstone — expire after three days.</p>
 <p>A memory is an entry whose standing is computed, not stored. Reading
 one calls <code>evidence_score(entry, now)</code>, and
 <code>derive_status</code> maps that to one of four tiers:</p>
-<pre class="text"><code>   score ≥ EVIDENCE_PROMOTED_THRESHOLD   → &quot;promoted&quot;
-   score ≥ EVIDENCE_CONFIRMED_THRESHOLD  → &quot;confirmed&quot;
-   score ≤ EVIDENCE_ARCHIVE_THRESHOLD    → &quot;archive_candidate&quot;
-   otherwise                             → &quot;pending&quot;</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Condition on <code>evidence_score(entry, now)</code></th>
+<th>Derived status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>score &gt;= EVIDENCE_PROMOTED_THRESHOLD</code></td>
+<td><code>promoted</code></td>
+</tr>
+<tr>
+<td><code>score &gt;= EVIDENCE_CONFIRMED_THRESHOLD</code></td>
+<td><code>confirmed</code></td>
+</tr>
+<tr>
+<td><code>score &lt;= EVIDENCE_ARCHIVE_THRESHOLD</code></td>
+<td><code>archive_candidate</code></td>
+</tr>
+<tr>
+<td>otherwise</td>
+<td><code>pending</code></td>
+</tr>
+</tbody>
+</table></div>
 <p>The docstring is careful that this is <em>"a DERIVED semantic label,
 not a storage field"</em>, and that archival additionally requires
 <code>sub_zero_days &gt;= EVIDENCE_ARCHIVE_DAYS</code> — an entry must
 stay negative for a sustained period, not merely dip.</p>
 <p>The lifecycle, with the two unusual things marked:</p>
-<pre class="text"><code>   utterance
-      │
-      ├── extraction ──► outbox ──► dedup ──► facts / reflections / persona
-      │                                            │
-      │                     every mutation ────────┴──► event_log (append-only)
-      │
-      ├── reinforcement signal ──► rein counter, own decay clock
-      ├── disputation signal ────► disp counter, own decay clock      ← separate
-      │
-      └── ban-topic directive (&quot;stop mentioning X&quot;)
-                │
-                └─► user_directives.json, keyed on (kind, term.casefold()),
-                    TTL 3 days, spliced into the system prompt at cold start
+<pre class="mermaid"><code>flowchart TB
+    U[&quot;utterance&quot;] --&gt; EX[&quot;extraction&quot;]
+    EX --&gt; OB[&quot;outbox&quot;] --&gt; DD[&quot;dedup&quot;] --&gt; ST[(&quot;facts / reflections / persona&quot;)]
+    ST --&gt;|&quot;every mutation&quot;| EL[(&quot;event_log&lt;br/&gt;append-only&quot;)]
 
-   recall:  scope filter ──► BM25 + cosine ──► RRF ──► hard filter ──► LLM rerank
-                │                                          │
-                │                                          └── drops score &lt; 0
-                │                                              and suppressed   ← tested
-                └── before ranking, never after</code></pre>
+    U --&gt; RS[&quot;reinforcement signal&quot;] --&gt; RC[&quot;rein counter&lt;br/&gt;&lt;i&gt;own decay clock&lt;/i&gt;&quot;]
+    U --&gt; DS[&quot;disputation signal&quot;] --&gt; DC[&quot;disp counter&lt;br/&gt;&lt;i&gt;own decay clock&lt;/i&gt;&quot;]
+
+    U --&gt; BT[&quot;ban-topic directive&lt;br/&gt;stop mentioning X&quot;]
+    BT --&gt; UD[(&quot;user_directives.json&lt;br/&gt;keyed on kind + term.casefold()&lt;br/&gt;TTL 3 days&quot;)]
+    UD --&gt;|&quot;spliced in at cold start&quot;| SP[&quot;system prompt&quot;]
+
+    style DC fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The two decay clocks are the point: reinforcement and disputation are
+separate counters, so "long confirmed, recently disputed" is a state
+this system can hold and a single confidence float cannot.</p>
+<p>Recall runs in one direction with two gates that both matter:</p>
+<pre class="mermaid"><code>flowchart LR
+    Q[&quot;query&quot;] --&gt; SF[&quot;scope filter&quot;]
+    SF --&gt; BM[&quot;BM25 + cosine&quot;] --&gt; RRF[&quot;RRF fusion&quot;] --&gt; HF[&quot;hard filter&quot;] --&gt; RR[&quot;LLM rerank&quot;]
+    SF -.- N1[&quot;before ranking,&lt;br/&gt;never after&quot;]
+    HF -.- N2[&quot;drops score &lt; 0&lt;br/&gt;and suppressed entries&quot;]
+
+    style HF fill:#f4e2bd,stroke:#b8860b
+    style N1 fill:#f7f4ec,stroke:#cfcfcf
+    style N2 fill:#f7f4ec,stroke:#cfcfcf</code></pre>
+<p>Scope filters <strong>before</strong> ranking, so excluded material
+is never ranked rather than ranked and hidden. The hard filter sits
+<strong>before</strong> the LLM rerank, so disputed material the model
+never sees cannot be talked back into relevance — and
+<code>test_hard_filter_drops_negative_score</code> asserts it.</p>
 <p><code>protected=True</code> entries — those from the character card —
 return <code>float('inf')</code> from <code>evidence_score</code> and
 are <em>"never evicted / archived / squeezed out by budget"</em>. So the

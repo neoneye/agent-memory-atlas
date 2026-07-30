@@ -69,17 +69,20 @@ A **memory** is what an application decided should outlive that session. Its
 unit is `MemoryEntry`: a `types.Content`, plus optional `id`, `author`,
 `timestamp` and `custom_metadata`. That is the whole schema.
 
-```text
-   session (events + state)  ── delete_session() ──►  gone
-        │
-        │  add_session_to_memory(session)
-        │  add_events_to_memory(app_name, user_id, events, session_id)
-        │  add_memory(app_name, user_id, memories)
-        ▼
-   memory ──────────────────────────────────────────►  no removal path exists
-        │
-        └── search_memory(app_name, user_id, query) ──► SearchMemoryResponse
+```mermaid
+flowchart TB
+    S["session<br/>events + state"] -->|"delete_session()"| G["gone"]
+    S -->|"add_session_to_memory<br/>add_events_to_memory<br/>add_memory"| M["memory"]
+    M -->|"search_memory(app_name, user_id, query)"| R["SearchMemoryResponse"]
+    M --> X["no removal path exists"]
+
+    style G fill:#e7efe9,stroke:#3d6b59
+    style X fill:#f4e2bd,stroke:#b8860b
 ```
+
+The asymmetry is the finding. A session has an explicit `delete_session()`; the
+memory derived from it has nothing — so the transient half of a user's data can
+be removed and the durable half cannot.
 
 There is no state machine beyond that. Nothing is a candidate, nothing is
 verified, nothing is superseded, nothing expires. A memory is present or was

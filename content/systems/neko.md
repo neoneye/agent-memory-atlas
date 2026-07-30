@@ -67,12 +67,12 @@ directives — the closest thing here to a tombstone — expire after three days
 A memory is an entry whose standing is computed, not stored. Reading one calls
 `evidence_score(entry, now)`, and `derive_status` maps that to one of four tiers:
 
-```text
-   score ≥ EVIDENCE_PROMOTED_THRESHOLD   → "promoted"
-   score ≥ EVIDENCE_CONFIRMED_THRESHOLD  → "confirmed"
-   score ≤ EVIDENCE_ARCHIVE_THRESHOLD    → "archive_candidate"
-   otherwise                             → "pending"
-```
+| Condition on `evidence_score(entry, now)` | Derived status |
+| --- | --- |
+| `score >= EVIDENCE_PROMOTED_THRESHOLD` | `promoted` |
+| `score >= EVIDENCE_CONFIRMED_THRESHOLD` | `confirmed` |
+| `score <= EVIDENCE_ARCHIVE_THRESHOLD` | `archive_candidate` |
+| otherwise | `pending` |
 
 The docstring is careful that this is *"a DERIVED semantic label, not a storage
 field"*, and that archival additionally requires
@@ -81,27 +81,44 @@ sustained period, not merely dip.
 
 The lifecycle, with the two unusual things marked:
 
-```text
-   utterance
-      │
-      ├── extraction ──► outbox ──► dedup ──► facts / reflections / persona
-      │                                            │
-      │                     every mutation ────────┴──► event_log (append-only)
-      │
-      ├── reinforcement signal ──► rein counter, own decay clock
-      ├── disputation signal ────► disp counter, own decay clock      ← separate
-      │
-      └── ban-topic directive ("stop mentioning X")
-                │
-                └─► user_directives.json, keyed on (kind, term.casefold()),
-                    TTL 3 days, spliced into the system prompt at cold start
+```mermaid
+flowchart TB
+    U["utterance"] --> EX["extraction"]
+    EX --> OB["outbox"] --> DD["dedup"] --> ST[("facts / reflections / persona")]
+    ST -->|"every mutation"| EL[("event_log<br/>append-only")]
 
-   recall:  scope filter ──► BM25 + cosine ──► RRF ──► hard filter ──► LLM rerank
-                │                                          │
-                │                                          └── drops score < 0
-                │                                              and suppressed   ← tested
-                └── before ranking, never after
+    U --> RS["reinforcement signal"] --> RC["rein counter<br/><i>own decay clock</i>"]
+    U --> DS["disputation signal"] --> DC["disp counter<br/><i>own decay clock</i>"]
+
+    U --> BT["ban-topic directive<br/>stop mentioning X"]
+    BT --> UD[("user_directives.json<br/>keyed on kind + term.casefold()<br/>TTL 3 days")]
+    UD -->|"spliced in at cold start"| SP["system prompt"]
+
+    style DC fill:#f4e2bd,stroke:#b8860b
 ```
+
+The two decay clocks are the point: reinforcement and disputation are separate
+counters, so "long confirmed, recently disputed" is a state this system can hold
+and a single confidence float cannot.
+
+Recall runs in one direction with two gates that both matter:
+
+```mermaid
+flowchart LR
+    Q["query"] --> SF["scope filter"]
+    SF --> BM["BM25 + cosine"] --> RRF["RRF fusion"] --> HF["hard filter"] --> RR["LLM rerank"]
+    SF -.- N1["before ranking,<br/>never after"]
+    HF -.- N2["drops score < 0<br/>and suppressed entries"]
+
+    style HF fill:#f4e2bd,stroke:#b8860b
+    style N1 fill:#f7f4ec,stroke:#cfcfcf
+    style N2 fill:#f7f4ec,stroke:#cfcfcf
+```
+
+Scope filters **before** ranking, so excluded material is never ranked rather than
+ranked and hidden. The hard filter sits **before** the LLM rerank, so disputed
+material the model never sees cannot be talked back into relevance — and
+`test_hard_filter_drops_negative_score` asserts it.
 
 `protected=True` entries — those from the character card — return `float('inf')`
 from `evidence_score` and are *"never evicted / archived / squeezed out by

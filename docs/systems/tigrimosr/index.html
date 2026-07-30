@@ -149,32 +149,54 @@ path consults past rejections. The same sessions produce the same
 proposal again.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two kinds of memory, with very different levels of care.</p>
-<pre class="text"><code>project.memory   one memory.md per project — a blob, injected whole
-skill            SKILL.md + registry row {enabled, review_status, auto_meta}
-                   auto_meta: {kind, based_on[], generated_at, model, rationale}
-chat sessions    persisted history, and the synthesizer&#39;s raw material</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project.memory</code></td>
+<td>One <code>memory.md</code> per project — a blob, injected whole</td>
+</tr>
+<tr>
+<td>skill</td>
+<td><code>SKILL.md</code> plus a registry row: <code>enabled</code>,
+<code>review_status</code>, <code>auto_meta</code> — and
+<code>auto_meta</code> carries <code>kind</code>, <code>based_on</code>,
+<code>generated_at</code>, <code>model</code>,
+<code>rationale</code></td>
+</tr>
+<tr>
+<td>chat sessions</td>
+<td>Persisted history, and the synthesizer's raw material</td>
+</tr>
+</tbody>
+</table></div>
 <p>The skill lifecycle is the interesting one:</p>
-<pre class="text"><code>finished sessions + user feedback + subagent traces
-        │  (scheduler → run_synthesis)
-        ▼
-   Proposal {kind: create|update, name, content, rationale, based_on}
-        │
-   ┌────┴───────────────────────────┐
-   │ require_approval = true (default; forced for source==&quot;custom&quot;)
-   ▼                                ▼  false
-create: SKILL.md written,     write straight through,
-        enabled=false,        review_status=&quot;approved&quot;
-        review_status=pending
-update: SKILL.md.proposed
-        beside the live file
-        │
-   ┌────┴────┐
-approve      reject
-   │            │
-rename to    delete .proposed;
-SKILL.md;    create → rm -rf the folder and drop the row
-enabled=true │
-             └─► nothing recorded, nothing remembered</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    SRC[&quot;finished sessions&lt;br/&gt;+ user feedback&lt;br/&gt;+ subagent traces&quot;]
+    SRC --&gt;|&quot;scheduler runs run_synthesis&quot;| PR[&quot;Proposal&lt;br/&gt;kind: create or update&lt;br/&gt;name, content, rationale, based_on&quot;]
+    PR --&gt; GATE{&quot;require_approval?&quot;}
+    GATE --&gt;|&quot;false&quot;| THRU[&quot;write straight through&lt;br/&gt;review_status = approved&quot;]
+    GATE --&gt;|&quot;true — the default,&lt;br/&gt;and forced when source is custom&quot;| STAGE
+    STAGE[&quot;create: SKILL.md written,&lt;br/&gt;enabled = false, review_status = pending&lt;br/&gt;update: SKILL.md.proposed beside the live file&quot;]
+    STAGE --&gt; AP[&quot;approve&quot;]
+    STAGE --&gt; RJ[&quot;reject&quot;]
+    AP --&gt; LIVE[&quot;rename to SKILL.md&lt;br/&gt;enabled = true&quot;]
+    RJ --&gt; DEL[&quot;delete .proposed;&lt;br/&gt;a create is removed outright&lt;br/&gt;and its row dropped&quot;]
+    DEL --&gt; NOTHING[&quot;nothing recorded,&lt;br/&gt;nothing remembered&quot;]
+
+    style THRU fill:#f4e2bd,stroke:#b8860b
+    style NOTHING fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Two highlighted boxes, two different gaps. Turning off
+<code>require_approval</code> writes a model-authored skill straight to
+<code>approved</code>, and a rejection leaves <strong>no trace at
+all</strong> — so the same proposal can be regenerated from the same
+sessions on the next synthesis run, and nothing knows it was already
+refused.</p>
 <p><code>review_status</code> is a persisted discrete state, and
 <code>pending</code> is coupled to <code>enabled: false</code>, so a
 pending skill exists on disk and is withheld from every run. That earns

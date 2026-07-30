@@ -63,38 +63,36 @@ the same proposal again.
 
 Two kinds of memory, with very different levels of care.
 
-```text
-project.memory   one memory.md per project — a blob, injected whole
-skill            SKILL.md + registry row {enabled, review_status, auto_meta}
-                   auto_meta: {kind, based_on[], generated_at, model, rationale}
-chat sessions    persisted history, and the synthesizer's raw material
-```
+| Kind | What it is |
+| --- | --- |
+| `project.memory` | One `memory.md` per project — a blob, injected whole |
+| skill | `SKILL.md` plus a registry row: `enabled`, `review_status`, `auto_meta` — and `auto_meta` carries `kind`, `based_on`, `generated_at`, `model`, `rationale` |
+| chat sessions | Persisted history, and the synthesizer's raw material |
 
 The skill lifecycle is the interesting one:
 
-```text
-finished sessions + user feedback + subagent traces
-        │  (scheduler → run_synthesis)
-        ▼
-   Proposal {kind: create|update, name, content, rationale, based_on}
-        │
-   ┌────┴───────────────────────────┐
-   │ require_approval = true (default; forced for source=="custom")
-   ▼                                ▼  false
-create: SKILL.md written,     write straight through,
-        enabled=false,        review_status="approved"
-        review_status=pending
-update: SKILL.md.proposed
-        beside the live file
-        │
-   ┌────┴────┐
-approve      reject
-   │            │
-rename to    delete .proposed;
-SKILL.md;    create → rm -rf the folder and drop the row
-enabled=true │
-             └─► nothing recorded, nothing remembered
+```mermaid
+flowchart TB
+    SRC["finished sessions<br/>+ user feedback<br/>+ subagent traces"]
+    SRC -->|"scheduler runs run_synthesis"| PR["Proposal<br/>kind: create or update<br/>name, content, rationale, based_on"]
+    PR --> GATE{"require_approval?"}
+    GATE -->|"false"| THRU["write straight through<br/>review_status = approved"]
+    GATE -->|"true — the default,<br/>and forced when source is custom"| STAGE
+    STAGE["create: SKILL.md written,<br/>enabled = false, review_status = pending<br/>update: SKILL.md.proposed beside the live file"]
+    STAGE --> AP["approve"]
+    STAGE --> RJ["reject"]
+    AP --> LIVE["rename to SKILL.md<br/>enabled = true"]
+    RJ --> DEL["delete .proposed;<br/>a create is removed outright<br/>and its row dropped"]
+    DEL --> NOTHING["nothing recorded,<br/>nothing remembered"]
+
+    style THRU fill:#f4e2bd,stroke:#b8860b
+    style NOTHING fill:#f4e2bd,stroke:#b8860b
 ```
+
+Two highlighted boxes, two different gaps. Turning off `require_approval` writes a
+model-authored skill straight to `approved`, and a rejection leaves **no trace at
+all** — so the same proposal can be regenerated from the same sessions on the next
+synthesis run, and nothing knows it was already refused.
 
 `review_status` is a persisted discrete state, and `pending` is coupled to
 `enabled: false`, so a pending skill exists on disk and is withheld from every

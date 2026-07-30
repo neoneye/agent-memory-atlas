@@ -151,20 +151,23 @@ and memory <em>policy</em> is left to the application. There is no trust
 state, no provenance, no correction path, and no scope key — the same
 limitation the atlas records for langmem.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<pre class="text"><code>                    token_limit
-   ┌──────────────────────────┴──────────────────────────┐
-   │ chat history (chat_history_token_ratio, default 0.7)│
-   │                                                      │
-   │   overflow → flush token_flush_size worth of msgs ───┼──┐
-   └──────────────────────────────────────────────────────┘  │
-   ┌──────────────────────────────────────────────────────┐  │
-   │ memory blocks (remaining budget, split among blocks) │◄─┘
-   │   StaticMemoryBlock    fixed content                 │
-   │   VectorMemoryBlock    retrieval over past messages  │
-   │   FactExtractionBlock  facts, capped at max_facts    │
-   └──────────────────────────────────────────────────────┘
-                    ↓ insert_method: SYSTEM | USER
-                       assembled prompt</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    TL([&quot;token_limit&quot;]) --- SPLIT{{&quot;split by chat_history_token_ratio&lt;br/&gt;default 0.7&quot;}}
+    SPLIT --&gt; CH[&quot;chat history&lt;br/&gt;&lt;i&gt;0.7 of the budget&lt;/i&gt;&quot;]
+    SPLIT --&gt; MB[&quot;memory blocks&lt;br/&gt;&lt;i&gt;the remaining budget, split among them&lt;/i&gt;&quot;]
+    CH --&gt;|&quot;overflow: flush token_flush_size worth of messages&quot;| MB
+    MB --&gt; SB[&quot;StaticMemoryBlock&lt;br/&gt;&lt;i&gt;fixed content&lt;/i&gt;&quot;]
+    MB --&gt; VB[&quot;VectorMemoryBlock&lt;br/&gt;&lt;i&gt;retrieval over past messages&lt;/i&gt;&quot;]
+    MB --&gt; FB[&quot;FactExtractionBlock&lt;br/&gt;&lt;i&gt;facts, capped at max_facts&lt;/i&gt;&quot;]
+    SB --&gt; ASM
+    VB --&gt; ASM
+    FB --&gt; ASM
+    CH --&gt; ASM[&quot;assembled prompt&lt;br/&gt;insert_method: SYSTEM or USER&quot;]</code></pre>
+<p>The arrow from chat history into the blocks is the design. One budget
+is divided by ratio, and messages evicted from the conversation half are
+<strong>handed to the blocks rather than discarded</strong> — so a block
+is not a separate store beside the history, it is where the history goes
+when it no longer fits.</p>
 <p>Block interface:</p>
 <pre class="python"><code>class BaseMemoryBlock(BaseModel, Generic[T]):
     async def aget(...) -&gt; T                 # contribute content

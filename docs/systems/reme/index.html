@@ -156,30 +156,54 @@ which is, precisely, what its own contradiction score measures.</p>
 <code>name</code> and <code>description</code> (and, per
 <code>FileFrontMatter</code>, any extra keys the author adds); the body
 is free-form; wikilinks make the corpus a graph.</p>
-<pre class="text"><code>FileNode        path, st_mtime, links[], chunk_ids[], front_matter
-FileChunk       an indexed span of a note
-FileLink        an outgoing wikilink, real or virtual
-DreamUnit       a cross-file abstraction: name, bucket, summary, source paths</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FileNode</code></td>
+<td><code>path</code>, <code>st_mtime</code>, <code>links</code>,
+<code>chunk_ids</code>, <code>front_matter</code></td>
+</tr>
+<tr>
+<td><code>FileChunk</code></td>
+<td>an indexed span of a note</td>
+</tr>
+<tr>
+<td><code>FileLink</code></td>
+<td>an outgoing wikilink, real or virtual</td>
+</tr>
+<tr>
+<td><code>DreamUnit</code></td>
+<td>a cross-file abstraction — <code>name</code>, <code>bucket</code>,
+<code>summary</code>, source paths</td>
+</tr>
+</tbody>
+</table></div>
 <p><code>DreamUnit.bucket</code> is
 <code>procedure | personal | wiki</code>, which is a real functional
 split — how to do something, what is true of this person, what is true
 in general — and each bucket gets its own integration prompt.</p>
 <p>The lifecycle is where the design is unusual:</p>
-<pre class="text"><code>conversation ──auto_memory──►  daily note
-resource     ──auto_resource─► daily note
-                                  │
-                          auto_dream: extract
-                                  │  cross-file DreamUnits with source paths
-                                  ▼
-                          auto_dream: integrate
-                                  │
-              ┌───────────┬───────┴────────┬─────────────┐
-           CREATE     CORROBORATE       REFINE        CORRECT
-           new node   append derived_from,  expand    annotate inline
-                      strengthen wording    a span    &quot;&gt; note: contradicted
-                                                        by [[path]]&quot;
-                                  │
-                          auto_dream: finish → checkpoint changed paths</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    C[&quot;conversation&quot;] --&gt;|auto_memory| DN[&quot;daily note&quot;]
+    R[&quot;resource&quot;] --&gt;|auto_resource| DN
+    DN --&gt; EX[&quot;auto_dream: extract&lt;br/&gt;&lt;i&gt;cross-file DreamUnits, with source paths&lt;/i&gt;&quot;]
+    EX --&gt; IN[&quot;auto_dream: integrate&quot;]
+    IN --&gt; CR[&quot;CREATE&lt;br/&gt;a new node&quot;]
+    IN --&gt; CO[&quot;CORROBORATE&lt;br/&gt;append derived_from,&lt;br/&gt;strengthen wording&quot;]
+    IN --&gt; RF[&quot;REFINE&lt;br/&gt;expand a span&quot;]
+    IN --&gt; CX[&quot;CORRECT&lt;br/&gt;annotate inline:&lt;br/&gt;note, contradicted by a path&quot;]
+    CR --&gt; FI[&quot;auto_dream: finish&lt;br/&gt;checkpoint changed paths&quot;]
+    CO --&gt; FI
+    RF --&gt; FI
+    CX --&gt; FI
+
+    style CX fill:#f4e2bd,stroke:#b8860b</code></pre>
 <p>Nothing is deleted by that path. Correction is an annotation that
 sits beside what it corrects, and the contradiction points at the note
 that caused it, so the disagreement remains legible in the corpus rather

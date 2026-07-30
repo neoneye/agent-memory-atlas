@@ -49,22 +49,25 @@ The reservation is the familiar framework one: these are primitives, and memory 
 
 ## 2. Mental Model
 
-```text
-                    token_limit
-   ┌──────────────────────────┴──────────────────────────┐
-   │ chat history (chat_history_token_ratio, default 0.7)│
-   │                                                      │
-   │   overflow → flush token_flush_size worth of msgs ───┼──┐
-   └──────────────────────────────────────────────────────┘  │
-   ┌──────────────────────────────────────────────────────┐  │
-   │ memory blocks (remaining budget, split among blocks) │◄─┘
-   │   StaticMemoryBlock    fixed content                 │
-   │   VectorMemoryBlock    retrieval over past messages  │
-   │   FactExtractionBlock  facts, capped at max_facts    │
-   └──────────────────────────────────────────────────────┘
-                    ↓ insert_method: SYSTEM | USER
-                       assembled prompt
+```mermaid
+flowchart TB
+    TL(["token_limit"]) --- SPLIT{{"split by chat_history_token_ratio<br/>default 0.7"}}
+    SPLIT --> CH["chat history<br/><i>0.7 of the budget</i>"]
+    SPLIT --> MB["memory blocks<br/><i>the remaining budget, split among them</i>"]
+    CH -->|"overflow: flush token_flush_size worth of messages"| MB
+    MB --> SB["StaticMemoryBlock<br/><i>fixed content</i>"]
+    MB --> VB["VectorMemoryBlock<br/><i>retrieval over past messages</i>"]
+    MB --> FB["FactExtractionBlock<br/><i>facts, capped at max_facts</i>"]
+    SB --> ASM
+    VB --> ASM
+    FB --> ASM
+    CH --> ASM["assembled prompt<br/>insert_method: SYSTEM or USER"]
 ```
+
+The arrow from chat history into the blocks is the design. One budget is divided
+by ratio, and messages evicted from the conversation half are **handed to the
+blocks rather than discarded** — so a block is not a separate store beside the
+history, it is where the history goes when it no longer fits.
 
 Block interface:
 

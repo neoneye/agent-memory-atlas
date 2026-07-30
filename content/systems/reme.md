@@ -68,12 +68,12 @@ A memory is a **Markdown note**. Frontmatter carries `name` and `description`
 (and, per `FileFrontMatter`, any extra keys the author adds); the body is
 free-form; wikilinks make the corpus a graph.
 
-```text
-FileNode        path, st_mtime, links[], chunk_ids[], front_matter
-FileChunk       an indexed span of a note
-FileLink        an outgoing wikilink, real or virtual
-DreamUnit       a cross-file abstraction: name, bucket, summary, source paths
-```
+| Type | Holds |
+| --- | --- |
+| `FileNode` | `path`, `st_mtime`, `links`, `chunk_ids`, `front_matter` |
+| `FileChunk` | an indexed span of a note |
+| `FileLink` | an outgoing wikilink, real or virtual |
+| `DreamUnit` | a cross-file abstraction — `name`, `bucket`, `summary`, source paths |
 
 `DreamUnit.bucket` is `procedure | personal | wiki`, which is a real functional
 split — how to do something, what is true of this person, what is true in general
@@ -81,22 +81,22 @@ split — how to do something, what is true of this person, what is true in gene
 
 The lifecycle is where the design is unusual:
 
-```text
-conversation ──auto_memory──►  daily note
-resource     ──auto_resource─► daily note
-                                  │
-                          auto_dream: extract
-                                  │  cross-file DreamUnits with source paths
-                                  ▼
-                          auto_dream: integrate
-                                  │
-              ┌───────────┬───────┴────────┬─────────────┐
-           CREATE     CORROBORATE       REFINE        CORRECT
-           new node   append derived_from,  expand    annotate inline
-                      strengthen wording    a span    "> note: contradicted
-                                                        by [[path]]"
-                                  │
-                          auto_dream: finish → checkpoint changed paths
+```mermaid
+flowchart TB
+    C["conversation"] -->|auto_memory| DN["daily note"]
+    R["resource"] -->|auto_resource| DN
+    DN --> EX["auto_dream: extract<br/><i>cross-file DreamUnits, with source paths</i>"]
+    EX --> IN["auto_dream: integrate"]
+    IN --> CR["CREATE<br/>a new node"]
+    IN --> CO["CORROBORATE<br/>append derived_from,<br/>strengthen wording"]
+    IN --> RF["REFINE<br/>expand a span"]
+    IN --> CX["CORRECT<br/>annotate inline:<br/>note, contradicted by a path"]
+    CR --> FI["auto_dream: finish<br/>checkpoint changed paths"]
+    CO --> FI
+    RF --> FI
+    CX --> FI
+
+    style CX fill:#f4e2bd,stroke:#b8860b
 ```
 
 Nothing is deleted by that path. Correction is an annotation that sits beside what
