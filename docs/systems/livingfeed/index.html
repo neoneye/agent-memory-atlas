@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-actor simulation whose
+memory rules are numbered in ADRs and cited from the code — where
+consolidation stores the components of its own importance score so the
+coefficients can be tuned by replay, and forgetting expires only the
+derived layer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LivingFeed — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-actor simulation
+whose memory rules are numbered in ADRs and cited from the code — where
+consolidation stores the components of its own importance score so the
+coefficients can be tuned by replay, and forgetting expires only the
+derived layer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LivingFeed — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-actor simulation
+whose memory rules are numbered in ADRs and cited from the code — where
+consolidation stores the components of its own importance score so the
+coefficients can be tuned by replay, and forgetting expires only the
+derived layer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LivingFeed — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Forgetting as a feature, in Korean</p>
+          <h1>LivingFeed</h1>
+          <p class="document-deck">A multi-actor simulation whose memory
+rules are numbered in ADRs and cited from the code — where consolidation
+stores the components of its own importance score so the coefficients
+can be tuned by replay, and forgetting expires only the derived
+layer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/showjihyun/livingfeed">
+              <span>Source</span>
+              <strong>showjihyun/livingfeed</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae" title="9bdd464d570a493ba9125636f4cf01b6cff78bae">
+              <span>Analyzed revision</span>
+              <code>9bdd464d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (73%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LivingFeed is a multi-actor social simulation — actors with emotions,
+goals and relationships posting to a feed, driven by a tick loop and a
+director — in a pnpm monorepo with about 19,200 lines of Python in
+<code>engine/</code> and 50,000 across the repository. MIT-licensed.
+<strong>Its documentation and code comments are in Korean</strong>, and
+the terms quoted below are the reviewer's translations with the
+originals given where they matter. It is the second such system in this
+atlas after <a href="../genericagent/">GenericAgent</a>, and like that
+one its design rules are numbered and cited.</p>
+<p>The memory design is a three-layer fabric, and the layer boundaries
+are where the interesting decisions are:</p>
+<ul>
+<li><strong>Working</strong> (<code>memory.py</code>, 44 lines) — a
+Redis list per <code>(world_id, actor_id)</code>, six-hour TTL, capped
+at 50 entries, most-recent-first.</li>
+<li><strong>Episodic</strong> — the event store itself. The schema for
+<code>actor.memory.consolidated</code> states it directly: <em>"the
+event store is the permanent original of the Episodic layer"</em>.</li>
+<li><strong>Semantic</strong> — Qdrant, embedded only when importance
+clears a gate, and documented as <em>"forgetting happens only in
+Semantic; the original is not erased"</em> (망각은 Semantic에서만
+일어나고 원본은 남는다).</li>
+</ul>
+<p>That last sentence is the atlas's second divergence — whether
+evidence outlives its derivations — written as a schema-level rule
+rather than discovered in the code. Forgetting is real and it is
+confined to the index.</p>
+<p><strong>The mechanism worth the visit is what consolidation stores
+about itself.</strong> Importance is
+<code>0.35·emotion + 0.30·relationship + 0.20·goal + 0.15·rarity</code>,
+and the event carries not only the total but a required
+<code>factors</code> object holding all four components, described as
+<em>"the material for coefficient tuning (offline replay
+evaluation)"</em>. This atlas has recorded the opposite twice: <a
+href="../generative-agents/">Generative Agents</a> ships
+<code>gw = [0.5, 3, 2]</code> as hand-tuned constants with no committed
+ablation, and <a href="../memoryos/">MemoryOS</a> leaves its promotion
+coefficients at 1, 1 and 1 with nothing measuring them. LivingFeed is
+the first system here that stores the <em>decomposition</em>
+specifically so the weights can be re-derived from replay rather than
+defended.</p>
+<p><code>source_event_ids</code> is <code>minItems: 1</code> — mandatory
+provenance from every memory back to the events that produced it, with
+the rule cited inline: <em>"any memory is audit-traceable (ADR-008 rule
+4)"</em>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A perception enters working memory as a sentence. At tick end,
+consolidation folds the tick's material into one episode and scores it.
+Above the gate it is embedded into the semantic index with a
+<code>decay_at</code>; below it, it exists only as the event that
+produced it. Recall reads the semantic index, filtered to the actor and
+to points that have not yet expired.</p>
+<p>So a memory's life is: <em>event</em> (permanent) → <em>episode</em>
+(permanent, in the event store) → <em>semantic point</em> (expiring).
+Nothing is ever updated and nothing is deleted; things stop being
+<em>findable</em>. There are no trust states and no corrections — an
+actor cannot be told it was wrong, only allowed to forget.</p>
+<p>The forgetting curve is one line:
+<code>decay_at = now + DECAY_MIN_S + (DECAY_MAX_S - DECAY_MIN_S) * importance</code>,
+one day at importance zero and thirty at importance one. The importance
+score therefore does two jobs — it decides whether a memory is indexed
+at all, and how long it survives — and both are tunable from the stored
+factors.</p>
+<p>One asymmetry is deliberate and documented:
+<code>RECALL_MIN_IMPORTANCE = 0.3</code> sits below the consolidation
+gate of 0.4, so recall will return things the gate would not have
+admitted today. A threshold that moved should not orphan what it already
+wrote.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Redis, Qdrant, an event store, and the tick services.
+<code>engine/</code> splits into <code>actor</code>,
+<code>director</code>, <code>emotion</code>, <code>feed</code>,
+<code>goal</code>, <code>relationship</code> and <code>tick</code>;
+<code>packages/</code> holds <code>eventstore</code>,
+<code>schemas</code>, <code>api-client</code> and <code>ui</code>, with
+JSON Schema as the source of truth and both Python and TypeScript types
+generated from it.</p>
+<p><strong>The embedding decision is an operational one worth
+naming.</strong> <code>semantic.py</code> uses a deterministic hash
+n-gram vector at 256 dimensions rather than a model, explicitly <em>"so
+that real similarity search works in dev/CI and replays reproduce"</em>,
+with model embeddings deferred to a later provider stage behind the same
+interface. Several systems in this atlas cannot be tested without an API
+key; this one made the embedding substitutable so that the harness runs
+everywhere and the replay is deterministic.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>engine/actor/src/lf_actor/phases.py</code> (1,707) — the tick
+phases.</li>
+<li><code>engine/actor/src/lf_actor/consolidation.py</code> — episode
+folding, action labels, perception sentences.</li>
+<li><code>engine/actor/src/lf_actor/semantic.py</code> — embedding,
+<code>decay_at</code>, scoped recall.</li>
+<li><code>engine/actor/src/lf_actor/memory.py</code> (44) — working
+memory.</li>
+<li><code>engine/actor/src/lf_actor/reflection.py</code> (234) and
+<code>relationship.py</code> (307).</li>
+<li><code>packages/schemas/events/actor.memory.consolidated.schema.json</code>
+— the unit.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The consolidated episode: <code>summary</code> (1–500 characters),
+<code>importance</code> (0–1), <code>factors</code> (emotion,
+relationship, goal, rarity — all four required, no additional
+properties), <code>source_event_ids</code> (at least one,
+ULID-patterned), and <code>tags</code> constrained to
+<code>^[a-z_]+$</code>.</p>
+<p>Two details show the same instinct. Actions are stored with a Korean
+label — work, rest, observe, speak, confront, confess, sever — because
+<em>"we do not leave machine vocabulary in a diary"</em>, with the raw
+<code>action_kind</code> kept only as a tag for search and aggregation.
+And perception sentences name actors by name rather than id where names
+are available, so <em>"a memory remains as a person, not an id"</em>.
+The unknown-kind path falls back to the raw string for forward
+compatibility, since <code>action_kind</code> is an open vocabulary in
+the schema.</p>
+<p>There is no validity time — every timestamp is record time — and no
+status field.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall</code> posts a vector search to
+<code>lf_semantic_{world_id}</code> with a <code>must</code> filter of
+three clauses: <code>actor_id</code> matches,
+<code>importance &gt;= min_importance</code>, and
+<code>decay_at &gt; now</code>. Scope is therefore enforced twice — a
+collection per world and a filter per actor — and expiry is a query
+predicate rather than a sweeper, so a forgotten memory needs no job to
+disappear.</p>
+<p>Working memory is a plain <code>LRANGE</code> of the most recent
+entries.</p>
+<p>There is no fusion, no lexical lane, no reranking, and no relevance
+measurement.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Consolidation runs at tick end and is synchronous with the tick, not
+with a user request. Summaries are <strong>template-first</strong>, with
+LLM summarisation reserved for high-importance episodes (ADR-008 rule 2)
+— so the common path costs nothing and the model is spent only where the
+score says it matters.</p>
+<p>Nothing rewrites the store. The semantic index gains points and lets
+them expire; the event store only appends.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is internal to the actor service. There is no external memory
+API, no MCP surface and no tool the actors call — remembering is
+something the tick does to them, which is the <a
+href="../generative-agents/">Generative Agents</a> lineage rather than
+the tool-calling one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>scope_enforced</code> is earned on the read path twice over, as
+above.</p>
+<p><strong>No tombstone, no trust state, no bi-temporality, no human
+review.</strong> The design has no concept of a memory being wrong —
+only of it mattering less, which is a coherent position for a simulation
+and would not be for an assistant.</p>
+<p><strong>No audit-log mark, and the near-miss is unusual.</strong>
+Every consolidated memory carries mandatory
+<code>source_event_ids</code> back to the events that produced it, and
+the event store is append-only — so provenance is complete in the
+direction that matters for rebuilding. What is absent is a record of
+memory <em>mutations</em>, because there are none: nothing is ever
+updated or deleted, so there is nothing for a mutation log to hold. The
+column is withheld on a technicality that is really a design
+property.</p>
+<p><strong>The risk is a swallowed failure.</strong> <code>recall</code>
+wraps its Qdrant call in a bare <code>except Exception</code>, logs
+<em>"recall failed (bypassing with empty recall)"</em> (회상 실패(빈
+회상으로 우회)), and returns <code>[]</code>. An unreachable or
+misconfigured index therefore produces an actor with no memories rather
+than an error, and the tick continues. In a simulation that degrades
+gracefully; it also means a total memory outage looks exactly like a
+world where nothing memorable happened, and nothing upstream
+distinguishes them.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>429 test functions across 40 files under <code>engine/</code>, none
+run here, including <code>test_memory_integration.py</code>,
+<code>test_semantic.py</code>, <code>test_phases.py</code> and
+integration suites for emotion, goal and relationship. That the
+deterministic embedder makes real similarity assertions possible in CI
+is what lets those tests be about behaviour rather than about mocks.</p>
+<p>No negative retrieval assertion was found, and no memory benchmark or
+retrieval-quality measurement exists. The importance coefficients are
+declared as configuration to be tuned by offline replay evaluation;
+<strong>no such evaluation is committed</strong>, so the apparatus for
+the tuning is present and the tuning is not — which is a much better
+position than the systems that hard-code the weights, and still short of
+the ablation the design describes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store the components of a composite score, not just the
+total.</strong> Four floats per memory turns "why is this weighted 0.35"
+from an argument into a regression you can run over replayed history.
+This is the cheapest answer to the hand-tuned-constants problem that
+runs through this whole atlas.</li>
+<li><strong>Confine forgetting to the derived layer.</strong> Expiry on
+the index, permanence in the event store, stated as a rule rather than
+left to be inferred. Recall gets narrower and nothing is destroyed.</li>
+<li><strong>Make expiry a query predicate.</strong>
+<code>decay_at &gt; now</code> in the filter needs no sweeper, no job,
+and no window where an expired memory is still returned.</li>
+<li><strong>Set the recall floor below the write gate.</strong> A
+threshold you raise later should not strand what it already
+admitted.</li>
+<li><strong>Use a deterministic embedder in dev and CI.</strong> Hash
+n-grams give you real similarity search with no key and reproducible
+replays, behind the interface the real model will use.</li>
+<li><strong>Write the human label, keep the machine one as a
+tag.</strong> A memory that reads as a diary entry and carries
+<code>action_kind</code> for aggregation serves both readers.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Returning <code>[]</code> on a retrieval failure.</strong>
+An amnesiac actor and a quiet world are indistinguishable to everything
+upstream. Degrade if you must, but say so in a signal something can
+count.</li>
+<li><strong>A memory model with no way to be wrong.</strong> Correct for
+a simulation, and the first thing to add if these actors ever talk to a
+real user about facts.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this if you are building a simulation, a companion, or anything
+where memory should fade rather than be corrected — it is the most
+carefully reasoned member of the Generative Agents lineage in this
+atlas, and the ADR-numbered rules cited from the code make the design
+legible in a way the original's hand-tuned constants are not.</p>
+<p>Do not take it as a factual memory layer. There is no correction
+path, no trust state and no deletion by identity, and the
+Korean-language documentation means the design rationale is only partly
+accessible to a non-Korean-reading team — the code is legible, the
+<em>reasons</em> are in the comments.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Has the replay tuning ever been run?</strong> The factors
+are stored for it and no evaluation is committed. It is the one
+measurable claim this design makes.</li>
+<li><strong>What is the recall failure rate in practice?</strong> The
+swallowed exception means the answer is a log line rather than a
+metric.</li>
+<li><strong>How do the two thresholds interact over a long
+world?</strong> A 0.4 write gate and a 0.3 recall floor with a
+one-to-thirty-day decay curve implies a steady-state index size nobody
+has computed here.</li>
+<li><strong>Do the relationship and reflection modules write
+memory?</strong> Both were read only far enough to place them; neither
+was traced into the memory path.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engine/actor/src/lf_actor/phases.py</code></td>
+<td>1,707</td>
+<td>Tick phases</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/context.py</code></td>
+<td>321</td>
+<td>Actor context assembly</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/relationship.py</code></td>
+<td>307</td>
+<td>Relationship state</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/reflection.py</code></td>
+<td>234</td>
+<td>Reflection pass</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/semantic.py</code></td>
+<td>—</td>
+<td>Embedding, <code>decay_at</code>, scoped recall</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/consolidation.py</code></td>
+<td>—</td>
+<td>Episode folding and importance</td>
+</tr>
+<tr>
+<td><code>engine/actor/src/lf_actor/memory.py</code></td>
+<td>44</td>
+<td>Redis working memory</td>
+</tr>
+<tr>
+<td><code>packages/schemas/events/actor.memory.consolidated.schema.json</code></td>
+<td>—</td>
+<td>The unit and its rules</td>
+</tr>
+<tr>
+<td><code>engine/**/tests</code></td>
+<td>429 tests</td>
+<td>Memory, semantic, phases, integration</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

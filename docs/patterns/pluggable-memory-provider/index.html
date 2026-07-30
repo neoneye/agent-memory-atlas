@@ -290,6 +290,33 @@ it. Agno's own <code>_filter_store_kwargs</code> exists to keep narrow
 third-party stores working when the framework adds context kwargs, which
 is thoughtful, and which also means a store that quietly drops the scope
 key is indistinguishable from one that never wanted it.</p>
+<p><strong><a href="../../systems/cosmonapse/">Cosmonapse</a>'s
+<code>Engram</code> is the only contract here with a failure vocabulary,
+and the omission is glaring once you have seen one.</strong> Every other
+interface on this page models the happy path: write, read, prefetch.
+This one ships five typed errors — <code>EngramTimeout</code> for an
+elapsed deadline, <code>EngramCancelled</code> for a task killed
+mid-call, <code>EngramNotBound</code> for storage nobody wired, and
+<code>EngramOverloaded</code> for a backend that <strong>shed
+load</strong> — and two methods that follow from taking failure
+seriously. <code>can_serve(query) -&gt; bool</code> lets a backend
+decline (the docstring's example is a BM25 engram asked for vector
+search, and the hosting Dendrite then skips responding), which is the
+only place in this atlas where "retrieval can return nothing" is a
+capability the contract can express. <code>compensate(trace_id)</code>
+reverses every journaled write for a trace, replaying inverses LIFO so
+nested overwrites unwind, with <code>commit(trace_id)</code> discarding
+the journal at the workflow's commit point.</p>
+<p>Two limits are documented rather than left to be found, which is the
+right way to ship a rollback: compensation is best-effort, so a failing
+inverse is logged and the rest still run, and only Engram state is
+reversed — external side effects are explicitly out of scope. The limit
+that is <em>not</em> documented is where the journal lives:
+<code>self._saga_journal</code> is a dictionary on the instance, so in a
+protocol whose transports include NATS and Kafka precisely because
+workers are disposable, the rollback guarantee lasts exactly as long as
+the process. It also carries <strong>no scope parameter</strong>, which
+makes four contracts on this page with that gap.</p>
 <p><a href="https://github.com/wanxingai/LightAgent">LightAgent</a>
 shows the pattern at its smallest — a 196-line
 <code>shared_memory.py</code> with swappable adapters shipped as

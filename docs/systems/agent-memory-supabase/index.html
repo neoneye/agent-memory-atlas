@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A 551-line Postgres schema
+carrying genuine bi-temporal validity, three-lane RRF recall, and an
+updated_at trigger that refuses to fire on a read — with the
+multi-tenant row-level security shipped commented out.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory on
+Supabase — Agent Memory Atlas">
+    <meta property="og:description" content="A 551-line Postgres schema
+carrying genuine bi-temporal validity, three-lane RRF recall, and an
+updated_at trigger that refuses to fire on a read — with the
+multi-tenant row-level security shipped commented out.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory on
+Supabase — Agent Memory Atlas">
+    <meta name="twitter:description" content="A 551-line Postgres schema
+carrying genuine bi-temporal validity, three-lane RRF recall, and an
+updated_at trigger that refuses to fire on a read — with the
+multi-tenant row-level security shipped commented out.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory on Supabase — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">One table, argued for</p>
+          <h1>Agent Memory on Supabase</h1>
+          <p class="document-deck">A 551-line Postgres schema carrying
+genuine bi-temporal validity, three-lane RRF recall, and an updated_at
+trigger that refuses to fire on a read — with the multi-tenant row-level
+security shipped commented out.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/reescalder/agent-memory-supabase">
+              <span>Source</span>
+              <strong>reescalder/agent-memory-supabase</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53" title="b711e6d76009d0713c5d5c211c2ab5c83d01ca53">
+              <span>Analyzed revision</span>
+              <code>b711e6d7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (73%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the smallest system in the atlas that earns two marks: 898
+lines total, of which 551 are SQL and 257 are a JavaScript client.
+MIT-licensed. There is one table, five functions, ten indexes, and a set
+of design decisions argued for in comments at a density most large
+systems never reach.</p>
+<p><strong>It has genuine bi-temporal validity</strong>, which eight of
+one hundred and one systems here do. <code>created_at</code> and
+<code>updated_at</code> are record time; <code>valid_from</code> and
+<code>valid_until</code> are when the fact was true;
+<code>expires_at</code> is a separate hard TTL for ephemeral rows.
+<code>memory_history()</code> returns all three alongside
+<code>superseded_by</code> and computes <code>is_current</code> as
+<code>active AND valid_until IS NULL</code>, so "what did we believe,
+and when was it true" are answerable as different questions.</p>
+<p><strong>The best small decision is a trigger that refuses to
+fire.</strong> Retrieval stats are stamped on read, and a naive
+<code>BEFORE UPDATE</code> trigger would let that bump
+<code>updated_at</code>. The comment states the consequence exactly —
+<em>"those touches must NOT bump updated_at, or 'content last changed'
+silently becomes 'last read'"</em> — and the function returns early when
+only <code>access_count</code> and <code>last_accessed_at</code> moved.
+A record clock that quietly becomes a usage clock is the kind of
+corruption that is invisible until you need the column, and this schema
+is the only one in the corpus that defends against it explicitly.</p>
+<p><strong>The gap is the boundary.</strong> <code>sql/rls.sql</code>
+offers two postures. Posture A is
+<code>ALTER TABLE memories ENABLE ROW LEVEL SECURITY</code> with no
+policies, so anon and authenticated roles see nothing and
+<code>service_role</code> bypasses — the enforced default is "the server
+sees everything, the browser sees nothing". Posture B is the per-user
+version, <code>owner uuid DEFAULT auth.uid()</code> with four policies
+scoped to <code>auth.uid() = owner</code>, and <strong>every line of it
+is commented out</strong>. Multi-tenancy is a suggestion in a file, and
+the <code>project</code> column that carries scope in the functions
+defaults to <code>NULL</code>, which means all projects.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a typed row that is true until something supersedes it or
+its validity window closes. The nine types — <code>fact</code>,
+<code>decision</code>, <code>event</code>, <code>preference</code>,
+<code>correction</code>, <code>conversation</code>,
+<code>pattern</code>, <code>learning</code>, <code>transcript</code> —
+are a <code>CHECK</code> constraint, so the taxonomy is enforced by the
+database rather than by convention, and <code>correction</code> being a
+<em>type</em> rather than a <em>state</em> is the central design choice.
+A correction is a new row of a particular kind, not a change to the row
+it corrects.</p>
+<p>That has a consequence the schema then acts on: corrections and
+preferences are exempted from recency decay, with the comment <em>"still
+the law until superseded"</em>. Everything else decays on a 180-day
+exponential floored at 0.75. A system that lets a user's stated
+preference fall down the ranking for being old has lost the plot, and
+this one says so in four words.</p>
+<p>There is no trust state. <code>importance</code> is 1–10 and feeds
+ranking; <code>active</code> is a soft-delete flag. Nothing withholds a
+row from being treated as true.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Supabase, <code>pgvector</code> and <code>pg_trgm</code>. That is the
+whole bill, and the schema is idempotent throughout —
+<code>IF NOT EXISTS</code> and <code>OR REPLACE</code> everywhere,
+documented as safe to re-run. Embeddings are 1536-dimensional with the
+model named in a comment and the two places to change it if you swap
+models.</p>
+<p>Ten indexes: HNSW on the embedding with
+<code>m = 16, ef_construction = 64</code>, GIN on the generated
+<code>content_tsv</code>, GIN on tags, GIN on <code>entities</code> with
+<code>jsonb_path_ops</code> and a partial predicate, GIN trigram on
+content, plus B-trees on project, type, created_at, importance, a
+partial index on <code>active</code>, and a partial composite on the
+validity window. For one table that is a considered index set rather
+than a reflexive one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>sql/schema.sql</code> (551) — the table, the trigger, and five
+functions: <code>search_memories</code>,
+<code>find_similar_memory</code>, <code>find_snapshot_duplicate</code>,
+<code>memory_timeline</code>, <code>search_by_entity</code>,
+<code>list_entity_names</code>, <code>memory_history</code>.</li>
+<li><code>sql/rls.sql</code> (36) — two postures, one of them commented
+out.</li>
+<li><code>src/client.js</code> (257) — <code>MemoryStore</code> with
+<code>embed</code>, <code>extractEntities</code>, <code>store</code>,
+<code>recall</code>, <code>timeline</code>, <code>history</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One row: <code>id</code>, <code>content</code>,
+<code>embedding</code>, <code>memory_type</code>, <code>project</code>,
+<code>tags</code>, <code>importance</code>, <code>source</code>,
+<code>entities</code> (JSONB <code>[{name, type}]</code> extracted at
+write time), <code>metadata</code>, the four timestamps,
+<code>expires_at</code>, <code>superseded_by</code> (self-referencing
+FK), <code>access_count</code>, <code>last_accessed_at</code>,
+<code>active</code>, and a <code>GENERATED ALWAYS AS ... STORED</code>
+tsvector so the full-text column cannot drift from content.</p>
+<p><code>entities</code> extracted at write and indexed with
+<code>jsonb_path_ops</code> is what makes the third retrieval lane
+possible, and <code>list_entity_names()</code> builds a vocabulary of
+proper-noun-ish names by mention count — filtered to person, project,
+tool, company and location, minimum three characters, minimum two
+mentions — to be fed back as <code>boost_entities</code>. The query side
+and the write side share a vocabulary that is derived from the data
+rather than configured.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search_memories</code> is the report's centrepiece and it is
+150 lines of carefully reasoned SQL.</p>
+<p>Three lanes. <strong>Vector</strong>: HNSW nearest neighbours, top
+50, gated by <code>min_similarity</code>. <strong>Text</strong>:
+<code>tsvector</code> match, top 30, with the tsquery built by replacing
+<code>&amp;</code> with <code>|</code> in <code>plainto_tsquery</code>
+output — the comment explains that ANDing terms is too strict for
+natural-language queries and ranking should handle precision.
+<strong>Entity</strong>: rows whose extracted entities match the
+lowercased <code>boost_entities</code>, ordered by importance, top 12,
+so identity facts surface when the wording does not match.</p>
+<p>They are fused by Reciprocal Rank Fusion with <code>k = 60</code>,
+and then the schema does something almost nothing else here does — it
+distinguishes the <em>score it shows</em> from the <em>score it ranks
+by</em>: <code>similarity</code> in the result is real cosine similarity
+and documented as safe to display, while ordering uses an internal
+<code>final_rank</code> documented as <strong>not</strong> a match
+score.</p>
+<p><strong>The best comment in the file guards the text lane.</strong>
+Rows the vector lane missed must still clear <code>min_similarity</code>
+before entering, because — quoting the reasoning — RRF is rank-based
+rather than score-based, so a lone weak lexical match on one shared
+stop-ish word otherwise receives full text-lane credit and can outrank a
+genuinely relevant memory. That is a specific, correct failure mode of
+RRF, diagnosed and fenced.</p>
+<p>Two switches complete it. <code>use_blended =&gt; false</code> forces
+every non-semantic factor to 1.0 for a pure RRF baseline, <em>"useful
+for evals/AB"</em>. <code>track_access</code> defaults to
+<strong>false</strong> so ad-hoc and eval queries do not pollute usage
+statistics — measurement hygiene built into the signature, which no
+other system in this atlas offers.</p>
+<p><code>project</code> is applied as a filter in every function. It is
+opt-in rather than mandatory, which is weaker than the systems that make
+the scope key a required argument, but it is genuinely applied on the
+read path and the mark follows.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The client embeds, extracts entities, then probes twice before
+inserting. <code>find_similar_memory</code> catches near-identical
+paraphrases at cosine 0.95 — <strong>within the same type</strong>,
+because, as the comment says, a <code>fact</code> must not overwrite a
+<code>decision</code>. <code>find_snapshot_duplicate</code> catches what
+embeddings miss: "same template, different values" tracker facts where
+the count changed but the structure did not, using pg_trgm at 0.65,
+restricted to <code>fact</code> and <code>pattern</code> types, rows
+over 50 characters, within 60 days.</p>
+<p>That second probe is the transferable idea. A memory that says "the
+queue has 412 items" and one that says "the queue has 903 items" are
+0.9-ish in embedding space and will both persist forever; trigram
+similarity sees them as the same sentence and collapses them.</p>
+<p>Nothing runs in the background. Decay is computed at query time from
+<code>created_at</code>, expiry is a <code>WHERE</code> clause, and
+there is no sweeper — an expired row stays on disk and is simply never
+returned.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None. <code>MemoryStore</code> is a class with six methods and no
+framework binding, no tool schema and no MCP surface. That is a
+deliberate position — the README's framing is that you own the SQL and
+the data — and it means the write policy, the extraction quality and the
+decision of when to remember are all the caller's.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Bi-temporality is real and the mark is earned.</strong>
+<code>valid_from</code>/<code>valid_until</code> against
+<code>created_at</code>/<code>updated_at</code>, with a partial index on
+the validity window and <code>memory_history()</code> returning the pair
+alongside the supersession pointer.</p>
+<p><strong>No tombstone.</strong> <code>superseded_by</code> is a
+foreign key to the replacing row, so the chain is keyed on the record. A
+later write of the same rejected content — from a fresh extraction, or a
+different agent — passes the 0.95 dedup probe only if the wording is
+nearly identical, and otherwise inserts cleanly with nothing to
+consult.</p>
+<p><strong>No audit log and no human review surface.</strong> The
+<code>updated_at</code> trigger knows which fields changed and could
+write a row saying so; it returns instead.</p>
+<p><strong>The RLS situation is the risk worth stating plainly.</strong>
+The file is honest — it warns that the table <em>"holds whatever your
+agent remembers, which is often sensitive"</em>, says never to expose it
+to anon or authenticated roles without policies, and notes that
+<code>service_role</code> bypasses RLS by design. But a reader who runs
+<code>rls.sql</code> as shipped gets Posture A, and the per-user
+isolation is 12 commented lines below it. For a schema whose
+distribution channel is "paste this into the Supabase SQL editor", the
+default posture is the one that ships.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There are none.</strong> No test directory, no fixtures, no
+eval harness, no benchmark, and no published numbers. For 898 lines that
+is defensible in a way it would not be at ten times the size — but the
+<code>use_blended</code> and <code>track_access</code> switches exist
+specifically to make evaluation clean, so the apparatus for evaluation
+is present and the evaluation is not.</p>
+<p>The absence is most costly at the two dedup thresholds. 0.95 cosine
+and 0.65 trigram are the numbers that decide whether a real distinction
+gets collapsed into an existing row, and nothing measures either.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep validity time and record time in the same row.</strong>
+Four columns and one partial index buys the answer to "what did we
+believe last March" that most of this atlas cannot give.</li>
+<li><strong>Make your <code>updated_at</code> trigger refuse to fire on
+reads.</strong> If you stamp access statistics, a naive trigger converts
+your content clock into a usage clock silently and permanently.</li>
+<li><strong>Separate the score you show from the score you rank
+by.</strong> Real cosine similarity in the result, RRF
+<code>final_rank</code> for ordering, both documented. A UI that
+displays a fusion rank as a confidence is lying.</li>
+<li><strong>Floor your rescue lane.</strong> If you fuse by rank, a weak
+match in a secondary lane gets full credit for its rank. Require it to
+clear a semantic threshold before it enters the pool.</li>
+<li><strong>Dedup by structure as well as by embedding.</strong> Trigram
+similarity catches the evolving-tracker duplicates that sit just under
+any embedding threshold.</li>
+<li><strong>Dedup within a type, never across.</strong> A fact
+overwriting a decision is a category error your similarity function
+cannot see.</li>
+<li><strong>Exempt corrections and preferences from decay.</strong> They
+are the law until superseded, and ranking them down by age is the wrong
+default.</li>
+<li><strong>Ship an eval switch.</strong>
+<code>use_blended =&gt; false</code> and
+<code>track_access =&gt; false</code> cost nothing and make an A/B
+honest.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping the multi-tenant policy commented out.</strong> The
+posture that runs is the posture that ships, and "server sees
+everything" is a real choice that should be made rather than defaulted
+into.</li>
+<li><strong>A scope column that defaults to NULL.</strong>
+<code>filter_project IS NULL OR ...</code> means an unscoped read is the
+easiest read to write.</li>
+<li><strong>Thresholds nobody measured.</strong> 0.95 and 0.65 decide
+what gets collapsed, and a schema with no tests cannot tell you when
+they are wrong.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is the right starting point if you are on Supabase, you want to
+own the SQL, and your memory is one project or one user. It is better
+reasoned per line than most of the frameworks in this atlas, and a
+competent engineer can read all of it in an hour — which is itself a
+governance property.</p>
+<p>It is the wrong choice as a multi-tenant service without first
+uncommenting and testing Posture B, and it is the wrong choice if you
+need to prove a deletion: soft delete plus supersession means the
+content is still in the table, and there is no record that a value was
+ever rejected.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often does the 0.65 trigram probe collapse two things
+that differed?</strong> It is restricted to <code>fact</code> and
+<code>pattern</code> and to 60 days, which suggests the author found it
+too aggressive somewhere and fenced it. Nothing records where.</li>
+<li><strong>Does anyone run Posture B?</strong> The commented block adds
+a column with a default of <code>auth.uid()</code>, which will be NULL
+for existing rows written by the service role — so enabling it on a live
+table silently orphans everything already stored.</li>
+<li><strong>What does the entity extractor cost and how good is
+it?</strong> It runs client side per write, and the third retrieval lane
+depends entirely on it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sql/schema.sql</code></td>
+<td>551</td>
+<td>The table, ten indexes, the trigger, seven functions</td>
+</tr>
+<tr>
+<td><code>src/client.js</code></td>
+<td>257</td>
+<td><code>MemoryStore</code> — embed, extract, store, recall, timeline,
+history</td>
+</tr>
+<tr>
+<td><code>examples/quickstart.js</code></td>
+<td>54</td>
+<td>The worked example</td>
+</tr>
+<tr>
+<td><code>sql/rls.sql</code></td>
+<td>36</td>
+<td>Posture A enabled, Posture B commented out</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -53,10 +53,27 @@ def _number_words(lo: int, hi: int) -> dict[str, int]:
             words[tens[t] + ("-" + units[u] if u else "")] = n
         elif n == 100:
             words["one hundred"] = n
+        else:
+            # Past one hundred the same failure waits: a range that stops
+            # where the corpus currently is stops checking the moment it is
+            # passed. "one hundred and one" and "one hundred one" are both
+            # written in practice, so accept both spellings.
+            h, rem = divmod(n, 100)
+            head = units[h] + " hundred"
+            if rem == 0:
+                words[head] = n
+            else:
+                if rem in teens:
+                    tail = teens[rem]
+                else:
+                    t, u = divmod(rem, 10)
+                    tail = units[u] if t == 0 else tens[t] + ("-" + units[u] if u else "")
+                words[f"{head} and {tail}"] = n
+                words[f"{head} {tail}"] = n
     return words
 
 
-WORDS = _number_words(16, 100)
+WORDS = _number_words(16, 999)
 
 
 def stale_number_words(root: Path, live: set[int]) -> list[str]:

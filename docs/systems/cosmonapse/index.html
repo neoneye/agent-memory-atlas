@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent-to-agent protocol whose
+Engram contract is the only one in the atlas that can decline a query,
+shed load, miss a deadline, and roll back its own writes — with a saga
+journal that lives in a process dictionary.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cosmonapse — Agent Memory Atlas">
+    <meta property="og:description" content="An agent-to-agent protocol
+whose Engram contract is the only one in the atlas that can decline a
+query, shed load, miss a deadline, and roll back its own writes — with a
+saga journal that lives in a process dictionary.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cosmonapse — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent-to-agent protocol
+whose Engram contract is the only one in the atlas that can decline a
+query, shed load, miss a deadline, and roll back its own writes — with a
+saga journal that lives in a process dictionary.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cosmonapse — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A memory contract with a failure
+vocabulary</p>
+          <h1>Cosmonapse</h1>
+          <p class="document-deck">An agent-to-agent protocol whose
+Engram contract is the only one in the atlas that can decline a query,
+shed load, miss a deadline, and roll back its own writes — with a saga
+journal that lives in a process dictionary.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Cosmonapse/cosmonapse-core">
+              <span>Source</span>
+              <strong>Cosmonapse/cosmonapse-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf" title="16997d577596750e139f3eb83fd5c4b1c3c740bf">
+              <span>Analyzed revision</span>
+              <code>16997d57…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-30</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (73%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cosmonapse is an event-driven agent-to-agent protocol — <em>"agents
+are plain functions, coordination is messages, there is no
+orchestrator"</em> — with Python and TypeScript SDKs, a
+<code>cosmo</code> CLI, and in-memory, TCP, NATS and Kafka transports.
+Apache-2.0, about 42,000 lines. Memory is one package inside it:
+<code>cosmonapse.engram</code>, 2,322 lines across an ABC, a client, and
+three backends.</p>
+<p><strong>Its contract is the only one in this atlas with a failure
+vocabulary.</strong> Every other provider interface here — <a
+href="../adk-python/">ADK</a>'s <code>BaseMemoryService</code>, <a
+href="../autogen/">AutoGen</a>'s <code>Memory</code>, <a
+href="../agent-framework/">Microsoft's</a> <code>ContextProvider</code>,
+<a href="../agno/">Agno</a>'s <code>LearningStore</code>, <a
+href="../camel/">CAMEL</a>'s <code>AgentMemory</code> — models the happy
+path and leaves everything else to exceptions the caller invents.
+<code>Engram</code> ships five typed errors: <code>EngramTimeout</code>
+(deadline elapsed), <code>EngramCancelled</code> (task terminated
+mid-call), <code>EngramNotBound</code> (a Neuron asked for unwired
+storage), <code>EngramOverloaded</code> (<strong>the backend shed
+load</strong>), and <code>EngramError</code> above them.</p>
+<p>Two methods follow from that stance and neither exists elsewhere
+here. <strong><code>can_serve(query) -&gt; bool</code></strong> lets a
+backend decline: the docstring's example is a BM25 engram asked for
+vector search, and <em>"the hosting Dendrite skips responding when this
+returns False"</em>. That is the atlas's fourth divergence — whether
+retrieval can decline — moved from a policy question into the interface.
+And <strong><code>compensate(trace_id) -&gt; int</code></strong>
+reverses every journaled write for a trace, replaying inverses in LIFO
+order <em>"so nested overwrites unwind to the original state"</em>, with
+<code>commit(trace_id)</code> discarding the journal at the workflow's
+commit point. Memory writes are saga participants.</p>
+<p><strong>The caveat is where the journal lives.</strong>
+<code>self._saga_journal</code> is a dictionary on the Engram instance.
+It is not in SQLite, not in Postgres, and not on the bus. A worker that
+dies between <code>imprint</code> and <code>commit</code> takes the
+inverses with it, and the writes it was holding provisionally become
+permanent with nothing recording that they were ever conditional. The
+compensation is real within a process and absent across a restart —
+which is the opposite of the durability guarantee the saga pattern
+exists to provide.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no epistemology at all. An entry has whatever shape the
+backend gives it; there is no status, confidence, provenance or validity
+anywhere in the contract or in the three implementations. What
+Cosmonapse models instead is <strong>the call</strong>: who may answer
+it, how long it may take, what happens when the backend is saturated,
+and how to undo it if the surrounding workflow fails.</p>
+<p>That is a coherent and unusual place to put the effort. Most memory
+systems in this atlas treat storage as reliable and belief as hard; this
+one treats belief as absent and the storage call as a
+distributed-systems problem. Read against the corpus it is the mirror
+image of <a href="../rainbox/">RainBox</a> or <a
+href="../verel/">Verel</a>, which govern what may be believed and say
+nothing about what happens when the store is overloaded.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>Engram</code> is an ABC; <code>InMemoryEngram</code> (407
+lines) is the dict-backed default for tests and dev,
+<code>SqliteEngram</code> (460) is a single stdlib <code>sqlite3</code>
+file, and <code>PostgresEngram</code> (426) is asyncpg, lazy-imported,
+described as the one for real deployments. <code>EngramBinding</code> is
+declarative wiring stored on an Axon, so which storage a Neuron reaches
+is configuration on the graph rather than a constructor argument, and
+<code>EngramNotBound</code> is what you get for asking for storage
+nobody wired.</p>
+<p><code>Engram.serve</code> is a decorator-native construction path:
+you can hand it
+<code>async def search(query, *, deadline_ms=None)</code> and
+<code>async def write(op, entry, *, merge_key=None)</code> and get a
+served Engram without subclassing, which keeps the smallest useful
+backend to two functions.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>packages/python-sdk/cosmonapse/engram/base.py</code> (675) —
+the ABC, the errors, <code>Hit</code>, <code>RecallResult</code>,
+<code>ImprintReceipt</code>, <code>EngramBinding</code>, the saga
+journal, <code>can_serve</code>, <code>serve</code>.</li>
+<li><code>.../engram/sqlite.py</code> (460),
+<code>.../engram/postgres.py</code> (426),
+<code>.../engram/memory.py</code> (407) — the backends.</li>
+<li><code>.../engram/client.py</code> (297) —
+<code>EngramClient</code>.</li>
+<li><code>design/ENGRAM_DESIGN.md</code> — the design document the
+package header points at.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Deliberately open. <code>Hit</code> is one search result,
+<code>RecallResult</code> is what <code>recall</code> returns,
+<code>ImprintReceipt</code> is what <code>imprint</code> returns — the
+contract types the <em>envelope</em> and leaves the payload to the
+backend, which is the right call for a protocol and means the atlas's
+content-level columns have nothing to attach to.</p>
+<p><code>merge_key</code> on the write path is the one content-shaped
+affordance: it lets a write target an existing entry rather than always
+appending, and it is what makes an inverse op expressible for
+compensation.</p>
+<p>No timestamps in the contract, so no bi-temporality and no record
+clock at the interface level.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall(...)</code> with a deadline, gated by
+<code>can_serve</code>. There is no ranking, fusion or reranking in the
+contract — those belong to whichever backend answered — and the atlas
+has no basis to judge retrieval quality here, because the interface
+deliberately declines to have any.</p>
+<p><strong>Scope is absent from the contract</strong>, which is now the
+fourth framework interface in this atlas with that property.
+<code>namespace</code> appears once, in a docstring about hosting more
+than one Engram, not as a parameter that travels with a query. A
+multi-tenant deployment therefore isolates by binding different Engrams
+to different Axons — partition rather than predicate — and nothing in
+the contract prevents a backend from serving everything to everyone. No
+mark.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>imprint(op, entry, merge_key=..., trace_id=...)</code> returns
+a receipt. When a <code>trace_id</code> is supplied the write journals
+its inverse; at the end of the workflow the trace either commits or
+compensates.</p>
+<p>Two honest limits are documented rather than discovered. Compensation
+is <strong>best-effort</strong>: <em>"a failing inverse is logged and
+the rest still run"</em>, so a partially-reversed trace is a reachable
+state and the return value — the count of inverses applied — is the only
+signal that it happened. And <em>"only Engram state is reversed;
+external side effects are out of scope"</em>, with a pointer to the
+envelope's stop-signal machinery. A memory system that says plainly what
+its rollback does not cover is rarer than one that rolls back.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Agents are functions on a bus. An Engram is bound to an Axon and
+reached through a Dendrite that hosts it, so memory participates in the
+same message graph as everything else and a storage backend is, from the
+protocol's point of view, another node that may or may not answer.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>No capability marks, and the shape of the absence is consistent: this
+is a transport-and-lifecycle contract, and the atlas's seven columns are
+all about content.</p>
+<p><strong>No tombstone</strong>, and <code>compensate</code> is worth
+distinguishing from one carefully. Compensation reverses writes
+<em>because the workflow failed</em>, not because the value was wrong —
+it is transactional rollback, not epistemic rejection. After a
+compensation the store is as if the write never happened, which is
+precisely the state in which a later extraction re-derives the same
+value with nothing to consult.</p>
+<p><strong>No trust state, no bi-temporality, no human review, no audit
+log.</strong> The saga journal is the closest thing to a mutation record
+and it is deliberately ephemeral — it exists to be discarded on
+commit.</p>
+<p><strong>The durability gap is the finding.</strong> A saga journal in
+a process dictionary means the rollback guarantee holds exactly as long
+as the process does. For a protocol whose transports include NATS and
+Kafka — chosen precisely because workers are expected to come and go —
+putting the compensation record in memory is the one design decision in
+the package that does not match its own premises.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests ship for both SDKs, including <code>test_dev_synapse.py</code>
+on the Python side and <code>synapse.test.ts</code> on the TypeScript
+side, and none were run here. No memory benchmark, no retrieval-quality
+measurement and no published numbers, which follows from a contract that
+does not define retrieval quality.</p>
+<p>No negative retrieval assertion was found. The one this package
+invites is specific and absent: kill the process between
+<code>imprint</code> and <code>commit</code>, restart, and assert what
+the store contains. That is the behaviour the journal's placement
+determines and nothing tests it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give your memory contract a failure vocabulary.</strong>
+Timeout, cancelled, not-bound, overloaded. Every interface in this atlas
+that omits these pushes them into each caller as untyped exceptions, and
+load shedding in particular cannot be handled if it cannot be
+named.</li>
+<li><strong>Let a backend decline.</strong>
+<code>can_serve(query) -&gt; bool</code> costs one method and means a
+BM25 store asked for vector search says so instead of returning its best
+nonsense. Retrieval that can return nothing is a capability, not a
+failure.</li>
+<li><strong>Put a deadline on recall.</strong> A memory lookup on a
+request path needs a budget, and the contract is the place to make
+callers supply one.</li>
+<li><strong>Journal the inverse when a write belongs to a
+workflow.</strong> Reversing in LIFO order so nested overwrites unwind
+correctly is the detail most hand-rolled rollbacks get wrong.</li>
+<li><strong>Document what your rollback does not cover.</strong> "Only
+Engram state is reversed; external side effects are out of scope" is one
+sentence that prevents a whole class of wrong assumption.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A saga journal in process memory.</strong> If the transports
+assume workers are disposable, the compensation record cannot live in a
+worker. Put it where the writes are.</li>
+<li><strong>Confusing compensation with correction.</strong> Undoing a
+write because a workflow failed leaves no trace that the value was
+wrong, so nothing stops the same value arriving again by the same
+path.</li>
+<li><strong>A provider contract with no scope parameter.</strong> Fourth
+time in this atlas; the consequence is always the same, which is that
+tenancy becomes each deployment's problem and each deployment solves it
+differently.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the Engram contract if you are building multi-agent systems
+where storage is one participant among many and the hard problems are
+saturation, deadlines and partial failure. The interface is small, the
+decorator path makes a backend two functions, and the error taxonomy is
+worth copying wholesale into a system that has better content
+semantics.</p>
+<p>Do not take it as a memory model. It has no opinion about what a
+memory is, which is a feature at the protocol layer and means every
+question this atlas asks — can it be corrected, can it be scoped, can it
+be shown to a person — is answered by whatever you bind underneath
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What happens to a trace whose worker died?</strong> The
+journal is gone and the writes remain. Whether anything upstream
+reconciles that was not established.</li>
+<li><strong>Do the SQLite and Postgres backends implement
+<code>compensate</code> durably, or inherit the in-memory
+journal?</strong> The base class holds <code>_saga_journal</code>;
+neither backend was traced far enough to show it overriding the storage
+of it.</li>
+<li><strong>Is <code>can_serve</code> used by any shipped
+backend?</strong> The default serves everything, and the capability is
+only as real as the backends that implement it.</li>
+<li><strong>What does <code>ENGRAM_DESIGN.md</code> commit to?</strong>
+The package header points at it; the design document was not read
+against the implementation here.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/python-sdk/cosmonapse/engram/base.py</code></td>
+<td>675</td>
+<td>The ABC, five errors, saga journal, <code>can_serve</code>,
+<code>serve</code></td>
+</tr>
+<tr>
+<td><code>packages/python-sdk/cosmonapse/engram/sqlite.py</code></td>
+<td>460</td>
+<td>Single-file stdlib backend</td>
+</tr>
+<tr>
+<td><code>packages/python-sdk/cosmonapse/engram/postgres.py</code></td>
+<td>426</td>
+<td>asyncpg backend, lazy-imported</td>
+</tr>
+<tr>
+<td><code>packages/python-sdk/cosmonapse/engram/memory.py</code></td>
+<td>407</td>
+<td>Dict backend for tests and dev</td>
+</tr>
+<tr>
+<td><code>packages/python-sdk/cosmonapse/engram/client.py</code></td>
+<td>297</td>
+<td><code>EngramClient</code></td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
