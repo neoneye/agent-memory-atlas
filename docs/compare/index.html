@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and five agent memory architectures, their retrieval mechanics,
+hundred and six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and five agent memory architectures, their retrieval
+of one hundred and six agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and five agent memory architectures, their retrieval
+of one hundred and six agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and five agent memory architectures, their retrieval mechanics,
+hundred and six agent memory architectures, their retrieval mechanics,
 trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -158,7 +158,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 60 of
-105 systems here have, and is what the mark means. A scope
+106 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,7 +177,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and five systems do not fall into one hundred and five
+<p>One hundred and six systems do not fall into one hundred and six
 categories. They cluster around eight architectural commitments, and
 most systems belong to more than one — a coding-agent memory can also be
 verification-first, and a host runtime's plugin can also be a hosted
@@ -433,6 +433,23 @@ corrects are both in the log, in order, with nothing preferring either.
 Git history is not this atlas's append-only audit column — the rubric
 says so — and this is the clearest case of why that is a different
 mechanism rather than a weaker one.</p>
+<p><strong>agent-afk answers the criticism this atlas ends the Helm
+report on.</strong> Helm computes a provisional-confidence cap, earns
+increases through corroboration, and then formats the surviving facts as
+<code>- (kind) key: value</code> under <em>"use these, never contradict
+them"</em> — the number stripped off before the model sees it. agent-afk
+does the cheap version and does not drop it: a <code>convention</code>
+fact written without a provenance citation is recalled with an
+<strong><code>[unverified]</code> marker in the text the model
+reads</strong>, and the write warns. The gate is category-aware —
+preferences never require file evidence, a <code>learning</code> is not
+treated as factual codebase knowledge — and supersession has four tested
+outcomes, including carrying a prior citation forward <em>with a
+staleness warning</em> when no fresh evidence is supplied. A system that
+computes trust and ships it as a string has closed the boundary this
+atlas keeps finding open. It is all behind
+<code>AFK_MEMORY_EVIDENCE_GATE=1</code>, so the default build carries
+the migrated column and none of the behaviour.</p>
 <p><strong>Helm is the family's floor, and it shows how little a working
 epistemic model costs.</strong> One SQLite file opened through Node's
 built-in <code>node:sqlite</code>, no service, no key required to store
@@ -1438,6 +1455,37 @@ or confidence anywhere</td>
 separated; 61 memory tests</td>
 <td>Deletion exists on the session service and not on the memory
 service, so the durable half of a user's data has no removal path</td>
+</tr>
+<tr>
+<td><code>agent-afk</code></td>
+<td>A fact — content, one of four CHECK-constrained categories, a source
+surface, a confidence float, an access count, a supersedes pointer and a
+nullable <code>evidence</code> citation</td>
+<td>SQLite with an FTS5 external-content index and porter tokenizer,
+plus a <code>HOT.md</code> working file under a token cap</td>
+<td><code>facts_fts MATCH</code> ranked by FTS rank, with optional
+category and since filters, and <code>superseded_by IS NULL</code>
+always appended</td>
+<td>Three agent tools — <code>memory_search</code>,
+<code>memory_update</code>, <code>procedure_write</code> — writing
+either hot memory or the durable fact archive</td>
+<td><code>supersedeFact</code> sets <code>superseded_by</code> under a
+<code>WHERE superseded_by IS NULL</code> guard, so a double supersede is
+a no-op</td>
+<td>None on the read path by design — the fact archive is deliberately
+cross-session</td>
+<td>A CLI agent with a hot working file and a durable archive behind
+three tools</td>
+<td>None; truncation of the hot file happens on write</td>
+<td>A <code>confidence</code> float, and a derived
+<code>[unverified]</code> marker applied at render time when a codebase
+fact has no citation</td>
+<td>An evidence gate that reaches the prompt text rather than being
+dropped before it, with a stale-citation warning on supersession and
+twelve committed cases</td>
+<td>The gate is behind <code>AFK_MEMORY_EVIDENCE_GATE=1</code>, so the
+default build stores codebase facts with no citation and marks
+nothing</td>
 </tr>
 <tr>
 <td><code>agent-framework</code></td>
@@ -3910,14 +3958,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 105:</em> <a
+<p><em>3 of 106:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>8 of 105:</em> <a
+<p><em>8 of 106:</em> <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -3928,7 +3976,7 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 105:</em> <a
+<p><em>9 of 106:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -3943,7 +3991,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>60 of 105:</em> <a
+<p><em>60 of 106:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4008,7 +4056,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>12 of 105:</em> <a
+<p><em>12 of 106:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -4024,7 +4072,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>18 of 105:</em> <a
+<p><em>18 of 106:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4046,8 +4094,10 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>10 of 105:</em> <a href="../systems/agno/"><code>agno</code></a>,
-<a href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
+<p><em>11 of 106:</em> <a
+href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
+href="../systems/agno/"><code>agno</code></a>, <a
+href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
@@ -4073,9 +4123,9 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Ten
-repositories of one hundred and five assert that particular material
-must <em>not</em> be retrieved — the assertion every scope, deletion and
+<p><strong>Negative evidence is almost never tested.</strong> Eleven
+repositories of one hundred and six assert that particular material must
+<em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
 more than the count.</p>
@@ -4103,7 +4153,7 @@ three lines.</p>
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
-<p><strong>Six assert about content:</strong> that particular material
+<p><strong>Seven assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
 asking. <a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
@@ -4117,8 +4167,10 @@ asserts that an entry the user <em>disputed</em> is dropped before the
 rerank, the docstring giving the reason: <em>"Stage-2 would either
 reinforce the dispute or, worse, cancel it."</em> <a
 href="../systems/helm/">Helm</a>'s supersede case asserts a replaced
-value no longer appears, and <a href="../systems/agno/">Agno</a>'s
-<code>test_entity_supersession.py</code> does the same against a judged
+value no longer appears, <a href="../systems/agent-afk/">agent-afk</a>'s
+<code>it('excludes superseded facts from search')</code> asserts the
+same about its FTS path, and <a href="../systems/agno/">Agno</a>'s
+<code>test_entity_supersession.py</code> does it against a judged
 verdict — a retired fact absent from <code>live_facts()</code> while
 both rows remain in the record. The <a
 href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> asserts
@@ -4130,14 +4182,14 @@ and two injection tests require a superseded line and a stale fact from
 an earlier history not to appear in the captured model context. That is
 the assertion aimed at where the damage happens rather than at where the
 row lives.</p>
-<p><strong>Only these six probe the question the atlas is actually
+<p><strong>Only these seven probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
-proves a value that was rejected, disputed or forbidden stays gone. Six
-of one hundred and five is the real figure for the second kind, and the
-two newest are the cheap version of it: a <em>superseded</em> value is
-easy to assert about, because the row is still there to filter on. The
-expensive assertion is that a value the system destroyed does not come
-back.</p>
+proves a value that was rejected, disputed or forbidden stays gone.
+Seven of one hundred and six is the real figure for the second kind, and
+the two newest are the cheap version of it: a <em>superseded</em> value
+is easy to assert about, because the row is still there to filter on.
+The expensive assertion is that a value the system destroyed does not
+come back.</p>
 <p>Two further things the joint reading shows. The <strong>positive
 control</strong> — asserting that the denial is targeted rather than an
 empty result — appears in Aukora and EverOS and is absent from the rest,
@@ -6942,7 +6994,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and five systems, almost none can explain why they are shaped the way
+and six systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -8430,6 +8482,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/juggler/"><code>juggler</code></a></li>
 <li><a href="../systems/mem0sharp/"><code>mem0sharp</code></a></li>
 <li><a href="../systems/gitlord/"><code>gitlord</code></a></li>
+<li><a href="../systems/agent-afk/"><code>agent-afk</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -8814,6 +8867,10 @@ href="https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf
 href="https://github.com/yashneil75/gitlord">yashneil75/gitlord</a> at
 <a
 href="https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1"><code class="commit-id" title="42b0bab151777c1ee38ced7ab2805b0699e7a8a1">42b0bab1…</code></a></li>
+<li><a
+href="https://github.com/griffinwork40/agent-afk">griffinwork40/agent-afk</a>
+at <a
+href="https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2"><code class="commit-id" title="e3d15fe2389602c2761954baadd495d8ebe7a6a2">e3d15fe2…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -9137,7 +9194,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and five — <a
+<strong>three</strong> of one hundred and six — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
