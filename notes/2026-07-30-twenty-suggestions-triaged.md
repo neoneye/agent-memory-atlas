@@ -1,6 +1,6 @@
 # Twenty suggested systems, triaged
 
-**Status:** triage recorded; no atlas content changed
+**Status:** done — five of the six became reports the same day; see the outcomes table
 **Origin:** a 20-item list of "agent memory systems missing from the atlas",
 produced by Grok and submitted on 2026-07-30. Checked against the 91 reports in
 `content/systems/` and against the two rules the atlas already publishes:
@@ -17,7 +17,7 @@ notes directory exists to avoid.
 | --- | --- | --- |
 | 1 | Zep (hosted) | Reviewed as [Graphiti](../content/systems/graphiti.md); the service is already named unreachable in the scope section |
 | 2 | Memvid | [Reviewed](../content/systems/memvid.md) |
-| 3 | Membase | **New.** `unibaseio/membase` is real and open; axis is on-chain verifiability, not memory mechanism. Low expected yield |
+| 3 | Membase | **New**, and the one that did not survive contact: no licence file at the pinned commit, and the axis is on-chain verifiability rather than memory mechanism |
 | 4 | Memory Store (memory.store) | Hosted, closed. Unreachable |
 | 5 | Graphlit | Hosted, closed. Unreachable |
 | 6 | CrewAI Memory | Already named as a known gap, [overview.md:3646](../content/overview.md) |
@@ -127,8 +127,9 @@ that can later be corrected.
    there means the record was not tampered with, not that the belief was ever
    true.
 
-Licences unchecked for all six; that is the first step of the
-`add-memory-system` skill and not a triage question.
+Licences unchecked for all six at the time of triage; that is the first step of
+the `add-memory-system` skill and not a triage question. It decided one of the
+six — see below.
 
 ## Two properties of the list itself
 
@@ -156,11 +157,38 @@ recoverable from discussion volume. That is the same
 [judge-code-not-popularity](2026-07-28-declined-proposals.md) instinct the
 declined-proposals note applies to leaderboards, arriving from the intake side.
 
-## Not done here
+## What the six turned into
 
-- The gap bullet at [overview.md:3646](../content/overview.md) still names only
-  CrewAI, Semantic Kernel and Haystack. Adding Agno, and replacing Semantic
-  Kernel with Microsoft Agent Framework, is a small published-content edit that
-  has not been made.
-- No repository in the six was cloned, pinned or read. This note is a triage of
-  a list, not a review of anything.
+All six were read on 2026-07-30, the same day this note was written. Five became
+reports and one did not; the corpus went from 91 to 96.
+
+| Candidate | Outcome |
+| --- | --- |
+| Agno | [Reviewed](../content/systems/agno.md). `LearningMode.PROPOSE` advertises human confirmation and is implemented as a different return value from `instructions()`; `save_learning` writes unconditionally. `optimize_memories` collapses every memory into one paragraph with `apply=True` by default |
+| SimpleMem | [Reviewed](../content/systems/simplemem.md). Six headline figures, a reproduce section, and no `.json`/`.jsonl`/`.csv` file in the repository. The store's only removal verb is `clear()` |
+| Pydantic AI Harness | [Reviewed](../content/systems/pydantic-ai-harness.md). The namespace is never a tool argument and the toolset raises if the backend returns a path outside the requested scope — the only scope *verification* in the atlas |
+| CAMEL | [Reviewed](../content/systems/camel.md). `agent_id` on every record, applied on no read path; isolation comes from remembering to give each agent its own storage object |
+| Microsoft Agent Framework | [Reviewed](../content/systems/agent-framework.md). `ContextProvider` declares no delete and no scope, a third contract from the same two vendors; the harness memory checks its owner boundary three ways |
+| Membase | **No report.** No licence file at the pinned commit while the README states MIT and links to it. Its memory is covered ground; its signer-derived ownership is cited in the overview instead |
+
+**The ranking held, and the reason it held is worth keeping.** Agno was ranked
+first and produced the sharpest finding; Membase was ranked last with "low
+expected yield" and produced no report. The ranking signal was not novelty or
+popularity but *how much inspectable mechanism the description implied* — and
+Membase's description implied a property of its backend rather than of its
+memory, which is what "verifiable" turned out to mean.
+
+**Five of the six ship two memory subsystems or none.** Agno has `memory/` and
+`learn/`; SimpleMem has the text pillar and EvolveMem; Microsoft has the
+contract and the harness memory. In each case the governance apparatus — the
+scope key, the status field, the audit trail — is in the subsystem that is *not*
+the one being benchmarked, packaged or documented. That pattern was not visible
+from any single report and is the round's most useful observation.
+
+## Still not done
+
+- **CrewAI** and **Haystack** remain the two named framework-native gaps, now
+  the only two left in that bullet.
+- Nothing was run for any of the five. No suite was executed and no benchmark
+  reproduced, including SimpleMem's, where the harness is committed and checking
+  one figure is a bounded job.
