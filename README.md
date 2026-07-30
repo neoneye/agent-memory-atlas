@@ -8,13 +8,17 @@ The atlas compares memory units, storage models, write paths, retrieval mechanic
 
 Visit [neoneye.github.io/agent-memory-atlas](https://neoneye.github.io/agent-memory-atlas/).
 
+## Discuss
+
+Questions, corrections, and systems worth adding are welcome on Discord: [neoneye.github.io/agent-memory-atlas/discord.html](https://neoneye.github.io/agent-memory-atlas/discord.html). That page redirects to the invite, so the invite code stays in one file and can be rotated without editing every place it has been shared.
+
 ## Repository structure
 
 - `content/systems/` — individual repository reports.
 - `content/patterns/` — reusable memory architecture pattern guides.
 - `content/overview.md` — cross-system comparative analysis.
 - `content/methodology/` — the review and synthesis formats.
-- `site/` — the designed homepage.
+- `site/` — the designed homepage and the `/discord.html` invite redirect.
 - `templates/` — the shared document-page template.
 - `assets/` — styles, behavior, and social-preview media.
 - `docs/` — generated static site published by GitHub Pages.

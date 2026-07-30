@@ -18,6 +18,9 @@ rm -rf "$output_dir"
 mkdir -p "$output_dir/assets" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 
 cp "$project_dir/site/index.html" "$output_dir/index.html"
+# /discord.html is a redirect in front of the Discord invite, so the invite code
+# lives in one file rather than in every place it has been shared.
+cp "$project_dir/site/discord.html" "$output_dir/discord.html"
 cp -R "$project_dir/assets/." "$output_dir/assets/"
 touch "$output_dir/.nojekyll"
 

@@ -16,6 +16,7 @@ required=(
   "$site_dir/patterns/zero-llm-capture/index.html"
   "$site_dir/assets/main.css"
   "$site_dir/assets/main.js"
+  "$site_dir/discord.html"
 )
 
 for path in "${required[@]}"; do
@@ -134,6 +135,22 @@ fi
 pattern_count="$(find "$site_dir/patterns" -mindepth 2 -maxdepth 2 -name index.html | wc -l | tr -d ' ')"
 if [[ "$pattern_count" != "$expected_patterns" ]]; then
   echo "Expected $expected_patterns rendered design patterns, found $pattern_count" >&2
+  exit 1
+fi
+
+# The Discord redirect repeats the invite URL four times — canonical, robots-free
+# meta refresh, script, and the visible fallback link. Rotating the invite by
+# editing three of the four leaves a page that sends most readers to a dead
+# invite and looks correct in the browser that honours the one that was updated.
+discord_urls="$(grep -o 'https://discord\.gg/[A-Za-z0-9]*' "$site_dir/discord.html" | sort -u)"
+if [[ "$(printf '%s\n' "$discord_urls" | wc -l | tr -d ' ')" != "1" ]]; then
+  echo "site/discord.html points at more than one invite:" >&2
+  echo "$discord_urls" >&2
+  exit 1
+fi
+if [[ "$(grep -c 'https://discord\.gg/' "$site_dir/discord.html" | tr -d ' ')" != "4" ]]; then
+  echo "site/discord.html should carry the invite in all four places (canonical," >&2
+  echo "meta refresh, script, fallback link); one of them is missing." >&2
   exit 1
 fi
 
