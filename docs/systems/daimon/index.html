@@ -167,12 +167,52 @@ half. The retrieval half is much less proven.</p>
 <p>A memory is a <strong>checkpoint item</strong>: a sentence of working
 state, classified into one of six fields, with a trust class and a
 provenance trail.</p>
-<pre class="text"><code>working_context.active_topic        (one, per-session, never carried)
-working_context.open_questions      (carried)
-working_context.recent_decisions    (carried)
-epistemic_snapshot.strong_beliefs   (not carried — &quot;beliefs regenerate cheaply&quot;)
-epistemic_snapshot.uncertainties    (carried)
-epistemic_snapshot.contradictions_flagged</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Carries</th>
+<th>Why not, where it does not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>working_context.active_topic</code></td>
+<td>no</td>
+<td>a singleton, <em>"per-session by definition"</em></td>
+</tr>
+<tr>
+<td><code>working_context.open_questions</code></td>
+<td><strong>yes</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>working_context.recent_decisions</code></td>
+<td><strong>yes</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>epistemic_snapshot.strong_beliefs</code></td>
+<td>no</td>
+<td><em>"beliefs regenerate cheaply"</em></td>
+</tr>
+<tr>
+<td><code>epistemic_snapshot.uncertainties</code></td>
+<td><strong>yes</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>epistemic_snapshot.contradictions_flagged</code></td>
+<td>no</td>
+<td>no dedicated scoring rules, and its item shape varies — it may be a
+bare string</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three of six carry, and the column is not decoration:
+<code>carries</code> is the last field of <code>ItemField</code> in
+<code>schema.py:42-48</code>, and <code>carry.merge</code> reads it
+rather than consulting a list of its own.</p>
 <p>Which fields carry is declared once, in
 <code>schema.ITEM_FIELDS</code>
 (<code>plugin/daimon_briefing/schema.py:41</code>), and every consumer —
@@ -180,29 +220,35 @@ store, serializer, recall, carry — derives its view from that table. The
 module docstring records why: the four hand-maintained copies had
 drifted, and one field was silently skipping first-seen stamping.</p>
 <h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
-<pre class="text"><code>                transcript span
-                      |
-        [LLM extraction, D-016 prompt]
-                      |
-              trust: verbatim + quote          trust: inferred
-                      |                              |
-        [sanitize_source_ids]  drop ids the transcript cannot vouch for
-                      |                              |
-        [pin_imperatives]  force-pin &quot;never/must/don&#39;t&quot; the model paraphrased away
-                      |                              |
-        [verify_quotes]  quote in transcript? ───no──&gt; DOWNGRADE to inferred
-                      | yes                           |
-              quote_verified: true                    |
-              last_verified: &lt;stamp&gt;                  |
-                      |                              |
-        [ground_outcomes]  asserts an outcome with no
-                      |    tool-result cited? ──yes──&gt; DOWNGRADE to inferred
-                      | no                            |
-                 grounded: true                  grounded: false
-                      |                              |
-                      +--------------+---------------+
-                                     |
-                            [redact, stamp id, write]</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    T[&quot;transcript span&quot;] --&gt; EX[&quot;LLM extraction, D-016 prompt&quot;]
+    EX --&gt;|&quot;claims verbatim + quote&quot;| S[&quot;sanitize_source_ids&lt;br/&gt;pin_imperatives&quot;]
+    EX --&gt;|&quot;claims inferred&quot;| INF[&quot;trust: inferred&lt;br/&gt;grounded: false&quot;]
+
+    S --&gt; Q{&quot;quote found&lt;br/&gt;in transcript?&quot;}
+    Q --&gt;|yes| QV[&quot;quote_verified: true&lt;br/&gt;last_verified: stamp&quot;]
+    QV --&gt; G{&quot;claims an outcome,&lt;br/&gt;cites no tool result?&quot;}
+    G --&gt;|no| GT[&quot;trust: verbatim&lt;br/&gt;grounded: true&quot;]
+
+    Q --&gt;|no| D[[&quot;DOWNGRADE&quot;]]
+    G --&gt;|yes| D
+    D --&gt; INF
+
+    GT --&gt; W[&quot;redact, stamp id, write&quot;]
+    INF --&gt; W
+
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p><code>sanitize_source_ids</code> drops message ids the transcript
+cannot vouch for; <code>pin_imperatives</code> force-pins a "never" or
+"must" the model paraphrased away. Neither can reject an item — they
+clean it. The two diamonds are where the design lives: <strong>the
+model's trust claim is the input to a test, not the verdict.</strong>
+Nothing promotes an item, the only movement between lanes is downward,
+and it is code that moves it.</p>
+<p>Read the two diamonds as the design: <strong>the model's own trust
+claim is the input to a test, not the verdict.</strong> Nothing promotes
+an item — the only movement between lanes is downward, and it is code
+that moves it.</p>
 <p>The item's identity is content-derived:
 <code>id = &lt;kind-initial&gt;-sha1("&lt;field&gt;:&lt;text&gt;")[:6]</code>
 (<code>store._stamp_item_ids</code>, <code>store.py:444</code>). Two

@@ -77,14 +77,18 @@ half is much less proven.
 A memory is a **checkpoint item**: a sentence of working state, classified into
 one of six fields, with a trust class and a provenance trail.
 
-```text
-working_context.active_topic        (one, per-session, never carried)
-working_context.open_questions      (carried)
-working_context.recent_decisions    (carried)
-epistemic_snapshot.strong_beliefs   (not carried — "beliefs regenerate cheaply")
-epistemic_snapshot.uncertainties    (carried)
-epistemic_snapshot.contradictions_flagged
-```
+| Field | Carries | Why not, where it does not |
+| --- | --- | --- |
+| `working_context.active_topic` | no | a singleton, *"per-session by definition"* |
+| `working_context.open_questions` | **yes** | |
+| `working_context.recent_decisions` | **yes** | |
+| `epistemic_snapshot.strong_beliefs` | no | *"beliefs regenerate cheaply"* |
+| `epistemic_snapshot.uncertainties` | **yes** | |
+| `epistemic_snapshot.contradictions_flagged` | no | no dedicated scoring rules, and its item shape varies — it may be a bare string |
+
+Three of six carry, and the column is not decoration: `carries` is the last field
+of `ItemField` in `schema.py:42-48`, and `carry.merge` reads it rather than
+consulting a list of its own.
 
 Which fields carry is declared once, in `schema.ITEM_FIELDS`
 (`plugin/daimon_briefing/schema.py:41`), and every consumer — store, serializer,
@@ -94,31 +98,37 @@ skipping first-seen stamping.
 
 ### How a thing becomes a belief
 
-```text
-                transcript span
-                      |
-        [LLM extraction, D-016 prompt]
-                      |
-              trust: verbatim + quote          trust: inferred
-                      |                              |
-        [sanitize_source_ids]  drop ids the transcript cannot vouch for
-                      |                              |
-        [pin_imperatives]  force-pin "never/must/don't" the model paraphrased away
-                      |                              |
-        [verify_quotes]  quote in transcript? ───no──> DOWNGRADE to inferred
-                      | yes                           |
-              quote_verified: true                    |
-              last_verified: <stamp>                  |
-                      |                              |
-        [ground_outcomes]  asserts an outcome with no
-                      |    tool-result cited? ──yes──> DOWNGRADE to inferred
-                      | no                            |
-                 grounded: true                  grounded: false
-                      |                              |
-                      +--------------+---------------+
-                                     |
-                            [redact, stamp id, write]
+```mermaid
+flowchart TB
+    T["transcript span"] --> EX["LLM extraction, D-016 prompt"]
+    EX -->|"claims verbatim + quote"| S["sanitize_source_ids<br/>pin_imperatives"]
+    EX -->|"claims inferred"| INF["trust: inferred<br/>grounded: false"]
+
+    S --> Q{"quote found<br/>in transcript?"}
+    Q -->|yes| QV["quote_verified: true<br/>last_verified: stamp"]
+    QV --> G{"claims an outcome,<br/>cites no tool result?"}
+    G -->|no| GT["trust: verbatim<br/>grounded: true"]
+
+    Q -->|no| D[["DOWNGRADE"]]
+    G -->|yes| D
+    D --> INF
+
+    GT --> W["redact, stamp id, write"]
+    INF --> W
+
+    style D fill:#f4e2bd,stroke:#b8860b
 ```
+
+`sanitize_source_ids` drops message ids the transcript cannot vouch for;
+`pin_imperatives` force-pins a "never" or "must" the model paraphrased away.
+Neither can reject an item — they clean it. The two diamonds are where the
+design lives: **the model's trust claim is the input to a test, not the verdict.**
+Nothing promotes an item, the only movement between lanes is downward, and it is
+code that moves it.
+
+Read the two diamonds as the design: **the model's own trust claim is the input
+to a test, not the verdict.** Nothing promotes an item — the only movement
+between lanes is downward, and it is code that moves it.
 
 The item's identity is content-derived: `id = <kind-initial>-sha1("<field>:<text>")[:6]`
 (`store._stamp_item_ids`, `store.py:444`). Two sessions that extract the same
