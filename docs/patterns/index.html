@@ -388,7 +388,8 @@ the field has, sitting in codebases the rest of the field does not read
 — which is worth stating plainly, because it was a reader pointing out
 the atlas had described these mechanisms six times without ever
 collecting them that produced both pages.</p>
-<h2 id="the-smallest-serious-stack">The smallest serious stack</h2>
+<h2 id="stacks-by-what-you-are-building">Stacks, by what you are
+building</h2>
 <p>Patterns are usually read one at a time, which hides the thing that
 actually breaks systems: <strong>they fail at the
 intersections.</strong> A rejected-value tombstone is decorative if
@@ -396,9 +397,66 @@ three ungoverned write paths bypass the check. Hybrid retrieval is
 actively dangerous without scope as a key, because better recall means a
 wider blast radius when the boundary is missing. An audit log is
 unreadable if the evidence it references was discarded.</p>
-<p>So there is a minimum coherent set. Four patterns close the three
-failure modes this atlas argues are the real ones, and each of the four
-exists to make one of the others enforceable:</p>
+<p>So the useful unit is a stack rather than a pattern. Which stack
+depends entirely on what breaks if your memory is wrong, and that is a
+product question this library cannot answer for you:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>If you are building</th>
+<th>Start with</th>
+<th>Because the failure that hurts is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A single-user tool</strong> — a coding assistant, a personal
+note agent</td>
+<td><a href="./scope-as-a-first-class-key/">scope</a> (project or
+session, not tenant) and <a
+href="./explicit-write-destination/">explicit write destination</a></td>
+<td>writing to the wrong project, not believing something false</td>
+</tr>
+<tr>
+<td><strong>Anything multi-tenant</strong></td>
+<td><a href="./scope-as-a-first-class-key/">scope</a> first and
+completely, then <a href="./hybrid-retrieval-fusion/">hybrid
+retrieval</a></td>
+<td>one tenant seeing another's memory, which better recall makes
+worse</td>
+</tr>
+<tr>
+<td><strong>A companion or roleplay agent</strong></td>
+<td><a href="./memory-as-an-editing-surface/">memory as an editing
+surface</a> and <a href="./retrieval-hysteresis/">retrieval
+hysteresis</a></td>
+<td>repeating yourself, or raising something the user asked you to
+drop</td>
+</tr>
+<tr>
+<td><strong>An autonomous agent that acts</strong></td>
+<td><a href="./governed-write-gateway/">governed write gateway</a>, <a
+href="./gate-the-expensive-path/">gate the expensive path</a>, <a
+href="./skills-as-procedural-memory/">skills as procedural
+memory</a></td>
+<td>acting on a memory nothing checked</td>
+</tr>
+<tr>
+<td><strong>Memory that must be correctable and defensible</strong></td>
+<td>the four below</td>
+<td>a correction that silently does not hold</td>
+</tr>
+</tbody>
+</table></div>
+<p>The last row is the one this atlas has the most to say about, so it
+gets the rest of this section. Read it as <strong>one stack among
+several</strong>, not as a bar the others fail to clear: a fast CRUD
+memory for a single user genuinely does not need a tombstone, and saying
+otherwise would be gatekeeping.</p>
+<h3 id="the-correctable-stack">The correctable stack</h3>
+<p>Four patterns close the three failure modes this atlas argues are the
+real ones, and each of the four exists to make one of the others
+enforceable:</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -454,6 +512,16 @@ bad product.</p>
 <p>No system in the atlas has all four. Filter the <a
 href="../#systems">homepage</a> by tombstone and scope to see how
 quickly the corpus thins out.</p>
+<p><strong>And be clear about what that thinning means.</strong> Three
+of ninety systems carry a tombstone, so this stack describes almost
+nobody. Two readings are available and this atlas cannot settle between
+them: either the field has not yet paid for a failure it will pay for
+later, or the cost genuinely exceeds the benefit for most products and
+the three holders are unusual rather than ahead. The <a
+href="#how-established-is-any-of-this">establishment section</a> says
+which patterns rest on how many instances; take the deferrals above
+seriously, and if none of the failure modes here is the one that would
+hurt you, build the smaller stack.</p>
 <p><strong>What the four cost together.</strong> Each page states its
 own cost; the compounded bill is what nobody budgets for, and it lands
 in two places.</p>
@@ -483,6 +551,49 @@ mechanism is misplaced. The one measured warning in this atlas about
 context cost points the other way — see <a
 href="./gate-the-expensive-path/">gate the expensive path</a>, where the
 expense is retrieving memory at all, not retrieving negative memory.</p>
+<h2 id="what-is-deliberately-not-a-pattern-here">What is deliberately
+not a pattern here</h2>
+<p>Three mechanisms a reader would reasonably expect are absent, and
+their absence is a position rather than an oversight. Stating it,
+because an unexplained gap in a pattern library reads as ignorance of
+the field.</p>
+<p><strong>Summarization and compaction.</strong> The single most common
+answer to context overflow, and this library treats it as an
+<strong>antipattern</strong> rather than a pattern: see <a
+href="../compare/#6-antipatterns-and-failure-modes">chained lossy
+summarization</a> in the comparative report. The reasoning is that a
+summary which replaces its source has no per-fact identity, so nothing
+in it can be corrected, scoped or deleted — and the atlas's evidence for
+that is not theoretical. <a href="../systems/cowagent/">CowAgent</a>
+rewrites its long-term file nightly from itself plus one day's notes; <a
+href="../systems/risuai/">RisuAI</a> summarizes its own summaries and
+its team replaced that design twice. Compaction is a real and necessary
+technique; the position here is that it belongs to the context window
+rather than to the memory layer, which is also why <a
+href="../compare/#not-in-scope-conversation-window-management">conversation-window
+management</a> is outside this atlas's scope test. <strong><a
+href="./evidence-before-belief/">Evidence before belief</a> is the
+pattern that makes compaction safe</strong> — summarize freely once the
+source survives the summary.</p>
+<p><strong>Working-versus-long-term as an architectural split.</strong>
+Nearly every system here has tiers, so a pattern saying "have tiers"
+would report a fact rather than a choice. <a
+href="./promotion-between-tiers/">Promotion between tiers</a> exists
+instead, because the discriminating question is not whether the tiers
+exist but what moves a memory up one — and far fewer systems can answer
+that.</p>
+<p><strong>Context-window pruning and prompt-cache
+preservation.</strong> Genuinely important, and genuinely a
+prompt-assembly concern rather than a memory-lifecycle one. The atlas
+records the interaction where it bites — an injection that changes every
+turn invalidates a provider's prefix cache, which several reports note —
+and <a href="./gate-the-expensive-path/">gate the expensive path</a>
+covers the decision not to retrieve at all. A pruning pattern would be
+about token budgets, and this library is about what survives a session
+with an identity.</p>
+<p>If you think one of these is misfiled, the disagreement is about the
+scope test rather than about the mechanism, and that test is stated at
+the top of the <a href="../compare/">comparative report</a>.</p>
 <h2 id="composing-them">Composing them</h2>
 <p>The patterns compose. A serious memory layer normally needs several,
 but each additional mechanism has operational and cognitive cost. Every

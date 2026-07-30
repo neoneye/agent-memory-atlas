@@ -236,7 +236,7 @@ in codebases the rest of the field does not read — which is worth stating plai
 because it was a reader pointing out the atlas had described these mechanisms six
 times without ever collecting them that produced both pages.
 
-## The smallest serious stack
+## Stacks, by what you are building
 
 Patterns are usually read one at a time, which hides the thing that actually
 breaks systems: **they fail at the intersections.** A rejected-value tombstone is
@@ -245,9 +245,27 @@ actively dangerous without scope as a key, because better recall means a wider
 blast radius when the boundary is missing. An audit log is unreadable if the
 evidence it references was discarded.
 
-So there is a minimum coherent set. Four patterns close the three failure modes
-this atlas argues are the real ones, and each of the four exists to make one of
-the others enforceable:
+So the useful unit is a stack rather than a pattern. Which stack depends entirely
+on what breaks if your memory is wrong, and that is a product question this
+library cannot answer for you:
+
+| If you are building | Start with | Because the failure that hurts is |
+| --- | --- | --- |
+| **A single-user tool** — a coding assistant, a personal note agent | [scope](./scope-as-a-first-class-key/) (project or session, not tenant) and [explicit write destination](./explicit-write-destination/) | writing to the wrong project, not believing something false |
+| **Anything multi-tenant** | [scope](./scope-as-a-first-class-key/) first and completely, then [hybrid retrieval](./hybrid-retrieval-fusion/) | one tenant seeing another's memory, which better recall makes worse |
+| **A companion or roleplay agent** | [memory as an editing surface](./memory-as-an-editing-surface/) and [retrieval hysteresis](./retrieval-hysteresis/) | repeating yourself, or raising something the user asked you to drop |
+| **An autonomous agent that acts** | [governed write gateway](./governed-write-gateway/), [gate the expensive path](./gate-the-expensive-path/), [skills as procedural memory](./skills-as-procedural-memory/) | acting on a memory nothing checked |
+| **Memory that must be correctable and defensible** | the four below | a correction that silently does not hold |
+
+The last row is the one this atlas has the most to say about, so it gets the rest
+of this section. Read it as **one stack among several**, not as a bar the others
+fail to clear: a fast CRUD memory for a single user genuinely does not need a
+tombstone, and saying otherwise would be gatekeeping.
+
+### The correctable stack
+
+Four patterns close the three failure modes this atlas argues are the real ones,
+and each of the four exists to make one of the others enforceable:
 
 | Pattern | Closes | Depends on |
 | --- | --- | --- |
@@ -278,6 +296,15 @@ No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
 
+**And be clear about what that thinning means.** Three of ninety systems carry a
+tombstone, so this stack describes almost nobody. Two readings are available and
+this atlas cannot settle between them: either the field has not yet paid for a
+failure it will pay for later, or the cost genuinely exceeds the benefit for most
+products and the three holders are unusual rather than ahead. The
+[establishment section](#how-established-is-any-of-this) says which patterns rest
+on how many instances; take the deferrals above seriously, and if none of the
+failure modes here is the one that would hurt you, build the smaller stack.
+
 **What the four cost together.** Each page states its own cost; the compounded
 bill is what nobody budgets for, and it lands in two places.
 
@@ -305,6 +332,46 @@ entirely. If rejected values are reaching your prompt, the mechanism is
 misplaced. The one measured warning in this atlas about context cost points the
 other way — see [gate the expensive path](./gate-the-expensive-path/), where the
 expense is retrieving memory at all, not retrieving negative memory.
+
+## What is deliberately not a pattern here
+
+Three mechanisms a reader would reasonably expect are absent, and their absence is
+a position rather than an oversight. Stating it, because an unexplained gap in a
+pattern library reads as ignorance of the field.
+
+**Summarization and compaction.** The single most common answer to context
+overflow, and this library treats it as an **antipattern** rather than a pattern:
+see [chained lossy summarization](../compare/#6-antipatterns-and-failure-modes)
+in the comparative report. The reasoning is that a summary which replaces its
+source has no per-fact identity, so nothing in it can be corrected, scoped or
+deleted — and the atlas's evidence for that is not theoretical.
+[CowAgent](../systems/cowagent/) rewrites its long-term file nightly from itself
+plus one day's notes; [RisuAI](../systems/risuai/) summarizes its own summaries
+and its team replaced that design twice. Compaction is a real and necessary
+technique; the position here is that it belongs to the context window rather than
+to the memory layer, which is also why
+[conversation-window management](../compare/#not-in-scope-conversation-window-management)
+is outside this atlas's scope test. **[Evidence before
+belief](./evidence-before-belief/) is the pattern that makes compaction safe** —
+summarize freely once the source survives the summary.
+
+**Working-versus-long-term as an architectural split.** Nearly every system here
+has tiers, so a pattern saying "have tiers" would report a fact rather than a
+choice. [Promotion between tiers](./promotion-between-tiers/) exists instead,
+because the discriminating question is not whether the tiers exist but what moves
+a memory up one — and far fewer systems can answer that.
+
+**Context-window pruning and prompt-cache preservation.** Genuinely important, and
+genuinely a prompt-assembly concern rather than a memory-lifecycle one. The atlas
+records the interaction where it bites — an injection that changes every turn
+invalidates a provider's prefix cache, which several reports note — and
+[gate the expensive path](./gate-the-expensive-path/) covers the decision not to
+retrieve at all. A pruning pattern would be about token budgets, and this library
+is about what survives a session with an identity.
+
+If you think one of these is misfiled, the disagreement is about the scope test
+rather than about the mechanism, and that test is stated at the top of the
+[comparative report](../compare/).
 
 ## Composing them
 

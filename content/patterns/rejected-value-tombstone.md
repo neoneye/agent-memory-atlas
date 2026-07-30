@@ -17,6 +17,29 @@ page_kind: pattern
 
 Remember not only what the system currently believes, but also which values were deliberately rejected. Use that negative knowledge during future writes.
 
+### The name collides with two others, and the difference is the whole pattern
+
+A reader arriving from distributed systems or from ordinary CRUD will recognise
+the word and read the wrong thing, so it is worth separating three mechanisms
+that share it:
+
+| | Keyed on | Lifetime | Purpose |
+| --- | --- | --- | --- |
+| **Cassandra-style tombstone** | a row or cell | until compaction garbage-collects it | propagate a delete across replicas |
+| **Soft delete** | a row, via `deleted_at` | usually forever, but invisible to queries | hide a row while keeping it recoverable |
+| **Rejected-value tombstone** | the **value**, normalised | outlives the row it came from | refuse the value when something tries to write it *again* |
+
+The first two are keyed on a **record** and exist to make a deletion take effect.
+This one is keyed on the **content** and exists to make a deletion *stay* in
+effect against a writer that has never seen the old row — a re-extraction from a
+retained transcript, a sync from an unchanged upstream file, a model rediscovering
+the claim in a later conversation. Deleting the row does not help there, because
+the new write creates a different row saying the same wrong thing.
+
+If a better name exists, this atlas has not found it, and the term is used here
+with that collision acknowledged rather than hidden. What matters is the key, not
+the word.
+
 ## The problem
 
 Deleting or superseding a wrong memory removes it from normal recall, but it does not stop the same value from returning. A later conversation, stale document, model extraction, or synchronization pass can rediscover the old claim and create it as if it were new.

@@ -22,6 +22,16 @@ Skipping all processing has its own cost: raw events are noisy, private, and
 hard to retrieve. The pattern is therefore not “never use an LLM.” It is “do
 not require one to preserve the event.”
 
+**Which means the name overstates it**, and the more standard term for the shape
+is *asynchronous enrichment* or a *decoupled write path*. The reason this page
+keeps a narrower name is that the standard terms describe a *scheduling* choice —
+do the expensive work later — while the load-bearing property here is an
+*availability* one: the durable write must be able to complete when no model is
+reachable at all. A system with async enrichment that still needs one model call
+before anything is persisted has adopted the scheduling and not the guarantee,
+which is the failure this page exists to prevent. Read the name as "zero LLM on
+the path that must not fail".
+
 ## The pattern
 
 Write a deterministic event envelope first:
