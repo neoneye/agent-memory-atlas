@@ -141,6 +141,38 @@ state **reaches the model as a suffix on the thing it qualifies**
 reader has to correlate. A trust state that a reader must join by hand is a trust
 state most readers will not use.
 
+[CLIO](../../systems/clio/) shows what full enforcement looks like, and then what
+happens when the input to it is wrong. Its two states — `unverified` and
+`trusted` — cost an entry something in **three independent channels**: a `0.3x`
+multiplier in the ranking function, a literal `[UNVERIFIED]` badge appended to
+the entry as it is rendered into the system prompt, and a halved age-out with
+doubled confidence decay in the consolidation pass. Scoring, presentation and
+lifetime. Most implementations here pick one, and picking one is how a trust
+state becomes decorative: a tier that only filters is invisible to the model, and
+a tier that only badges is invisible to the ranker.
+
+Its promotion rule is the strictest in the atlas — two corroborations from
+**distinct** `agent:session` pairs, with the source *identities* stored as an
+array rather than a count so independence is checkable, and the unconditional
+override withheld from the model's tool list and wired only to a human slash
+command. Automatic path with a threshold, manual path behind a person, and the
+model able to reach neither directly. That is the shape.
+
+**And it cannot fire.** Both identity components default to `'unknown'` from
+environment variables that nothing in the repository ever assigns, so every
+corroboration produces the same source key, the sybil dedup rejects the second
+one as a duplicate, and the counter stops at one. Every entry stays `unverified`
+at `0.3x` — a uniform penalty, which reorders nothing. No test covers it.
+
+Three lessons, in descending order of how often they apply. **A trust threshold
+is only as good as the identity it counts**: if independence is the property, the
+identity must come from the runtime, not from a default and not from a caller-supplied
+argument. **A silent fallback converts missing configuration into a
+policy change** — `// 'unknown'` is the whole defect. And **test the property,
+not the functions**: every function in CLIO's tier system is correct in
+isolation, and one test asserting that two corroborations promote an entry would
+have failed on the first run.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

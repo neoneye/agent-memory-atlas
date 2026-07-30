@@ -239,6 +239,41 @@ the model as a suffix on the thing it qualifies</strong>
 (<code>learning=contested:stale</code> beside the node), rather than as
 a separate block a reader has to correlate. A trust state that a reader
 must join by hand is a trust state most readers will not use.</p>
+<p><a href="../../systems/clio/">CLIO</a> shows what full enforcement
+looks like, and then what happens when the input to it is wrong. Its two
+states — <code>unverified</code> and <code>trusted</code> — cost an
+entry something in <strong>three independent channels</strong>: a
+<code>0.3x</code> multiplier in the ranking function, a literal
+<code>[UNVERIFIED]</code> badge appended to the entry as it is rendered
+into the system prompt, and a halved age-out with doubled confidence
+decay in the consolidation pass. Scoring, presentation and lifetime.
+Most implementations here pick one, and picking one is how a trust state
+becomes decorative: a tier that only filters is invisible to the model,
+and a tier that only badges is invisible to the ranker.</p>
+<p>Its promotion rule is the strictest in the atlas — two corroborations
+from <strong>distinct</strong> <code>agent:session</code> pairs, with
+the source <em>identities</em> stored as an array rather than a count so
+independence is checkable, and the unconditional override withheld from
+the model's tool list and wired only to a human slash command. Automatic
+path with a threshold, manual path behind a person, and the model able
+to reach neither directly. That is the shape.</p>
+<p><strong>And it cannot fire.</strong> Both identity components default
+to <code>'unknown'</code> from environment variables that nothing in the
+repository ever assigns, so every corroboration produces the same source
+key, the sybil dedup rejects the second one as a duplicate, and the
+counter stops at one. Every entry stays <code>unverified</code> at
+<code>0.3x</code> — a uniform penalty, which reorders nothing. No test
+covers it.</p>
+<p>Three lessons, in descending order of how often they apply. <strong>A
+trust threshold is only as good as the identity it counts</strong>: if
+independence is the property, the identity must come from the runtime,
+not from a default and not from a caller-supplied argument. <strong>A
+silent fallback converts missing configuration into a policy
+change</strong> — <code>// 'unknown'</code> is the whole defect. And
+<strong>test the property, not the functions</strong>: every function in
+CLIO's tier system is correct in isolation, and one test asserting that
+two corroborations promote an entry would have failed on the first
+run.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

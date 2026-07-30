@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and fourteen agent memory architectures, their retrieval
+hundred and fifteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and fourteen agent memory architectures, their retrieval
+of one hundred and fifteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and fourteen agent memory architectures, their retrieval
+of one hundred and fifteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -78,7 +78,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and fourteen agent memory architectures, their retrieval
+hundred and fifteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -158,7 +158,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 63 of
-114 systems here have, and is what the mark means. A scope
+115 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -177,11 +177,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and thirteen systems do not fall into one hundred and
-fourteen categories. They cluster around eight architectural
-commitments, and most systems belong to more than one — a coding-agent
-memory can also be verification-first, and a host runtime's plugin can
-also be a hosted service. The families below are lenses, not bins.</p>
+<p>One hundred and fifteen systems do not fall into one hundred and
+fifteen categories. They cluster around eight architectural commitments,
+and most systems belong to more than one — a coding-agent memory can
+also be verification-first, and a host runtime's plugin can also be a
+hosted service. The families below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -748,7 +748,7 @@ instructing a behaviour and enforcing one.</p>
 <code>openworker</code>, <code>qwen-code</code>, <code>daimon</code>,
 <code>reme</code>, <code>acontext</code>, <code>logseq</code>,
 <code>everos</code>, <code>ecc</code>, <code>skales</code>,
-<code>csm</code>, <code>graphify</code></p>
+<code>csm</code>, <code>graphify</code>, <code>clio</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -862,6 +862,32 @@ own skill promises: <code>dead_end</code> is documented to the agent as
 <em>"don't re-derive it next time"</em>, and no code path consults the
 dead-end list. It is prose in a generated Markdown file that a model is
 expected to obey.</p>
+<p><strong>CLIO is the family's one Perl entry and carries its
+best-wired trust state.</strong> Pure Perl, no CPAN, 160 modules — so
+there is no vector index and no embedding call anywhere, and long-term
+memory is <code>.clio/ltm.json</code> plus arithmetic. Each entry holds
+a <code>tier</code> of <code>unverified</code> or <code>trusted</code>,
+and the tier costs something in three places at once: a
+<code>0.3x</code> multiplier in <code>score_entry</code>, a literal
+<code>[UNVERIFIED]</code> badge appended to the entry when it is
+rendered into the system prompt, and a halved age-out (30 days against
+90) with doubled confidence decay in <code>consolidate</code>. Promotion
+requires two corroborations from <em>distinct</em>
+<code>agent:session</code> pairs, deduplicated so one source cannot
+vouch twice, and the unconditional override is absent from the model's
+tool list and reachable only from the <code>/memory promote</code> slash
+command. The threat model is named in the docs: memory poisoning.</p>
+<p>Then the input fails. The source key defaults to
+<code>$ENV{CLIO_AGENT_ID} // 'unknown'</code> and
+<code>$ENV{CLIO_SESSION_ID} // 'unknown'</code>, and <strong>neither
+variable is assigned anywhere in the repository</strong> — so every
+corroboration computes <code>unknown:unknown</code>, the sybil dedup
+skips the second one, and no entry can reach the threshold of two.
+Nothing errors; every entry stays <code>[UNVERIFIED]</code> at
+<code>0.3x</code> forever, which is a uniform penalty and therefore
+reorders nothing. No test covers the mechanism, and one asserting that
+two corroborations promote an entry would have failed. It is the atlas's
+sharpest case of a correct design defeated by an unset variable.</p>
 <p><strong>ECC makes the honest declaration the rest of this family
 avoids</strong>, and reading it next to CSM is the point of putting them
 together. Its vault schema gives <code>trust</code> an enum of exactly
@@ -1995,6 +2021,39 @@ claims have no trust state</td>
 <td>Reliable non-blocking capture and bounded cross-session context</td>
 <td>Ordinary search is not fused hybrid; generated observations activate
 automatically; dual schema transition</td>
+</tr>
+<tr>
+<td><code>clio</code></td>
+<td>A typed LTM entry — discovery, problem-solution, code pattern,
+workflow or failure — with confidence, tier and corroboration
+sources</td>
+<td><code>.clio/ltm.json</code> per project, plus a YaRN conversation
+archive and a session key-value store; pure Perl, no CPAN, no
+database</td>
+<td>No query on the injection path — every entry is scored and the top
+slice rendered into the system prompt under a 12,000-character
+budget</td>
+<td>Agent-invoked <code>memory_operations</code> calls; no LLM
+extraction, no automatic capture (the AutoCapture test is disabled and
+its module is absent)</td>
+<td>Confidence decay, tier-differentiated age-out and Jaccard dedup in
+<code>consolidate</code>; a flat <code>prune</code>; no record of what
+was removed</td>
+<td>One store per working directory — a filesystem boundary, not a
+stored key</td>
+<td>A terminal-native Perl agent with slash commands, sub-agents, and an
+MCP client; memory reaches the model through prompt injection and one
+tool</td>
+<td><code>maybe_consolidate</code> runs inline on the prompt-build path,
+gated at 24 hours and 20 entries</td>
+<td><code>unverified</code> until two distinct
+<code>agent:session</code> sources corroborate — 0.3x score,
+<code>[UNVERIFIED]</code> badge, 30-day age-out, doubled decay</td>
+<td>A trust tier that reaches scoring, the rendered prompt and the decay
+schedule at once, with a promotion override only a human can call</td>
+<td><code>CLIO_AGENT_ID</code> and <code>CLIO_SESSION_ID</code> are
+never assigned, so both sources collapse to <code>unknown:unknown</code>
+and the dedup blocks the second corroboration</td>
 </tr>
 <tr>
 <td><code>cognee</code></td>
@@ -4355,15 +4414,15 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 114:</em> <a
+<p><em>3 of 115:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>10 of 114:</em> <a
-href="../systems/core-memory/"><code>core-memory</code></a>, <a
+<p><em>11 of 115:</em> <a href="../systems/clio/"><code>clio</code></a>,
+<a href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphify/"><code>graphify</code></a>, <a
@@ -4375,7 +4434,7 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 114:</em> <a
+<p><em>9 of 115:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4390,7 +4449,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>63 of 114:</em> <a
+<p><em>63 of 115:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4458,7 +4517,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>17 of 114:</em> <a
+<p><em>17 of 115:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
@@ -4479,9 +4538,10 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>20 of 114:</em> <a
+<p><em>21 of 115:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
+href="../systems/clio/"><code>clio</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cortex/"><code>cortex</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
@@ -4503,7 +4563,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>16 of 114:</em> <a
+<p><em>16 of 115:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4538,7 +4598,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Sixteen
-repositories of one hundred and fourteen assert that particular material
+repositories of one hundred and fifteen assert that particular material
 must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -4610,7 +4670,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of one hundred and fourteen is the real figure for the second
+Eleven of one hundred and fifteen is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -5898,6 +5958,11 @@ derived sidecar shape in <code>build_learning_overlay</code>
 generated FTS), <code>00003_archive.sql</code>,
 <code>00010_audit_log.sql</code>,
 <code>00030_memory_ttl.sql</code>.</li>
+<li><code>clio</code>: <code>.clio/ltm.json</code> written by
+<code>lib/CLIO/Memory/LongTerm.pm</code> — five typed arrays with
+<code>confidence</code>, <code>tier</code> and
+<code>corroboration_sources</code> per entry; no schema, no
+database.</li>
 </ul>
 <h3 id="addwrite-path">Add/Write Path</h3>
 <ul>
@@ -6042,6 +6107,10 @@ answered question, outcome written to both frontmatter and body.</li>
 <code>packages/mcp-core/src/tools/write.ts</code> into the
 <code>memory_write</code> RPC — an upsert on the partial unique index,
 with <code>xmax</code> deciding create versus update.</li>
+<li><code>clio</code>: <code>lib/CLIO/Tools/MemoryOperations.pm</code>
+dispatching into <code>LongTerm.pm:117</code>–<code>:440</code>;
+corroboration and tier promotion at <code>:471</code> and
+<code>:537</code>.</li>
 </ul>
 <h3 id="searchretrieve-path">Search/Retrieve Path</h3>
 <ul>
@@ -6174,6 +6243,11 @@ the read-side annotation and preferred-first reordering in
 and <code>search.ts</code> — exact scope equality plus
 <code>websearch_to_tsquery</code>, each applying the archive and expiry
 filters.</li>
+<li><code>clio</code>: no query on the injection path —
+<code>score_entry</code> (<code>LongTerm.pm:852</code>) ranks everything
+and <code>render_budgeted_section</code> (<code>:945</code>) takes the
+top slice; substring matching in <code>search_entries</code>
+(<code>:755</code>).</li>
 </ul>
 <h3 id="context-assembly">Context Assembly</h3>
 <ul>
@@ -6286,6 +6360,10 @@ skill in <code>graphify/skills/*/references/query.md</code>.</li>
 hooks call <code>memory.list</code>, and the narrow-to-broad ladder
 lives in
 <code>packages/cli/skill/lorekit-memory/references/scope-resolution.md</code>.</li>
+<li><code>clio</code>: <code>PromptManager.pm:1566</code> renders the
+LTM section into the system prompt at session start under a
+12,000-character budget, gated by <code>PromptBuilder.pm:119</code> for
+<code>--no-ltm</code> and <code>--incognito</code>.</li>
 </ul>
 <h3 id="background-workers">Background Workers</h3>
 <ul>
@@ -6393,6 +6471,9 @@ the lessons doc best-effort, gated by <code>lessons_fresh()</code>.</li>
 <code>purge_archived_memories</code> and
 <code>purge_expired_memories</code> are RPCs the migration suggests
 running under pg_cron.</li>
+<li><code>clio</code>: no worker — <code>maybe_consolidate</code>
+(<code>LongTerm.pm:1372</code>) runs inline on prompt build behind a
+24-hour and 20-entry gate.</li>
 </ul>
 <h3 id="mcpapisdk-surfaces">MCP/API/SDK Surfaces</h3>
 <ul>
@@ -6494,6 +6575,10 @@ compiled into fourteen harness formats under
 (<code>supabase/functions/mcp/</code>) with logic shared from
 <code>packages/mcp-core</code>, plus a CLI and Claude/Cursor/Codex
 plugins.</li>
+<li><code>clio</code>: the agent is the host — one
+<code>memory_operations</code> tool with thirteen operations, plus a
+<code>/memory</code> slash command carrying the human-only
+<code>promote</code>.</li>
 </ul>
 <h3 id="evalstests">Evals/Tests</h3>
 <p>What these harnesses do and do not measure — and why a bad benchmark
@@ -6675,6 +6760,9 @@ memory layer, including the self-ingestion regression guard.</li>
 scope, TTL, tokens, org permissions and the archive lifecycle;
 <code>edge-parity.spec.ts</code> guards the two MCP implementations
 against drift.</li>
+<li><code>clio</code>: 3,434 assertions across 213 files, including
+<code>test_ltm_budget.pl</code> on scoring and budgeted rendering — and
+nothing at all on the tier or corroboration system.</li>
 </ul>
 <h2 id="5-design-patterns-that-recur">5. Design Patterns That Recur</h2>
 <p>These recurring moves are also documented as standalone
@@ -7666,8 +7754,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and fourteen systems, almost none can explain why they are shaped the
-way they are.</p>
+and fifteen systems, almost none can explain why they are shaped the way
+they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -9013,6 +9101,33 @@ are the multi-user parts), or your problem is deciding which lesson to
 trust — LoreKit is an excellent filing cabinet with an excellent lock
 and no opinion about the contents.</li>
 </ul>
+<h3 id="clio"><code>clio</code></h3>
+<ul>
+<li>Best idea: a trust tier that costs an entry something in three
+channels at once — a 0.3x ranking multiplier, an
+<code>[UNVERIFIED]</code> badge in the rendered prompt, and a halved
+age-out — rather than only filtering.</li>
+<li>Biggest risk: the corroboration counter behind that tier reads two
+environment variables the repository never assigns, so both sources
+collapse to <code>unknown:unknown</code>, the sybil dedup rejects the
+second, and nothing can ever promote.</li>
+<li>Most reusable component: <code>corroboration_sources</code> as an
+array of <code>agent:session</code> identities rather than a count — the
+only place in this atlas where "two independent sources" is checkable
+rather than assertable.</li>
+<li>Maturity impression: 102,862 lines of pure Perl with no CPAN
+dependency, 3,434 test assertions, atomic writes throughout, a stated
+memory-poisoning threat model — and zero tests on the mechanism that
+threat model names.</li>
+<li>Study when: you want the best-shaped answer here to "how do I stop
+my agent believing something it made up once", and a short lesson in
+what an unset variable does to it.</li>
+<li>Do not copy when: more than one person shares the store (there is no
+scope key and every entry is stamped
+<code>source_agent: 'unknown'</code>), or you need memory that survives
+being wrong — decay, age-out, dedup and prune all delete without a
+record.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -9250,6 +9365,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/csm/"><code>csm</code></a></li>
 <li><a href="../systems/graphify/"><code>graphify</code></a></li>
 <li><a href="../systems/lorekit/"><code>lorekit</code></a></li>
+<li><a href="../systems/clio/"><code>clio</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -9665,6 +9781,10 @@ href="https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c
 <li><a href="https://github.com/mthines/lorekit">mthines/lorekit</a> at
 <a
 href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f"><code class="commit-id" title="08e3065b3f77dffa8ec313c25e6b38cbab77b67f">08e3065b…</code></a></li>
+<li><a
+href="https://github.com/SyntheticAutonomicMind/CLIO">SyntheticAutonomicMind/CLIO</a>
+at <a
+href="https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb6161304579123ce1e291d1ac4b0eb86"><code class="commit-id" title="1c84ed9cb6161304579123ce1e291d1ac4b0eb86">1c84ed9c…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -9988,7 +10108,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and fourteen — <a
+<strong>three</strong> of one hundred and fifteen — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
