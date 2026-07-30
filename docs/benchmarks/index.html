@@ -1023,16 +1023,79 @@ runs. The memory pool is handed to the model in the prompt, so there is
 no retrieval layer to fail and no store to resurrect anything from. A
 system could pass PersistBench perfectly and still restore every deleted
 memory on its next nightly distillation.</p>
-<p>So this page's claim stands, and narrows usefully: <strong>nothing
-measures whether a deleted memory stays deleted.</strong> But the
-adjacent claim — that negative retrieval assertions barely exist — now
-needs qualifying. PersistBench is a negative-<em>use</em> benchmark with
-a positive control, released, and running inside a standard harness. It
-is the shape <a href="../systems/open-cowork/">open-cowork</a>'s
+<p>So this page's claim stood for five months, and no longer does — see
+<strong>ForgetEval</strong> below, read on 30 July 2026. Against
+PersistBench specifically the narrowing is still right:
+<strong>PersistBench does not measure whether a deleted memory stays
+deleted.</strong> But the adjacent claim — that negative retrieval
+assertions barely exist — now needs qualifying. PersistBench is a
+negative-<em>use</em> benchmark with a positive control, released, and
+running inside a standard harness. It is the shape <a
+href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> has at repository scale, executed one layer
 up and published. A forgetting benchmark could borrow its structure
 wholesale and change only what sits between the memory and the
 model.</p>
+<h3
+id="forgeteval--the-benchmark-this-page-said-did-not-exist">ForgetEval —
+the benchmark this page said did not exist</h3>
+<p><strong>Read 2026-07-30 at <a
+href="https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495"><code class="commit-id" title="b6053b7bdacc78a91b9ea4bb25f32edad278c495">b6053b7b…</code></a>,
+MIT.</strong> ForgetEval ships inside <a
+href="../systems/lethe/">Lethe</a>, as the artifact behind
+<em>Control-Plane Placement Shapes Forgetting</em> (<a
+href="https://arxiv.org/abs/2606.15903">arXiv:2606.15903</a>, June
+2026). It is the first released benchmark this page has found that
+scores the <strong>control plane</strong> — <code>supersede</code>,
+<code>release</code>, <code>purge</code> — rather than recall, and its
+framing is this page's own argument in the paper's words: recall is
+<em>"extensively benchmarked"</em> and the operations that mutate memory
+are <em>"largely untested"</em>.</p>
+<p><strong>Shape.</strong> An <code>Adapter</code> Protocol of six
+methods — <code>reset</code>, <code>inscribe</code>,
+<code>recall_texts</code>, <code>supersede(old_query, new_text)</code>,
+<code>release(query)</code>, <code>purge(query)</code> — with
+implementations for six systems, five of which this atlas reviews:
+Lethe, <a href="../systems/mem0/">Mem0</a>, LangGraph, <a
+href="../systems/cognee/">Cognee</a>, <a
+href="../systems/a-mem/">A-MEM</a> and <a
+href="../systems/mempalace/">MemPalace</a>. The adversarial layer is 385
+cases — 132 hand-crafted, 253 LLM-drafted and oracle-validated — across
+ten attack categories: substring traps, prefix collisions, paraphrase
+supersession, negation, temporal qualifiers, shared attributes, compound
+facts, identifier obfuscation, cross-lingual identifiers and recursive
+supersession. The cases and their labels are committed; the scored
+results are not, living in a README table.</p>
+<p><strong>Two things about how it reports.</strong> The three
+deterministic systems land in a 63–68% band the README reads as
+<em>"mutually overlapping Wilson CIs — the bench reads the trade-off,
+not a winner"</em> — and <strong>the author's own system places third of
+the three</strong>, at 63.4% against Mem0's 68.3%. A benchmark whose
+author loses it, reported with confidence intervals and an explicit
+refusal to declare a winner, is the opposite of the vendor-run
+comparisons this atlas has had to discount. Its headline finding is
+about <em>placement</em> rather than storage: moving an LLM to the
+mutation hook lifts both Lethe and LangGraph by roughly 28 points, so
+the gain travels across backends.</p>
+<p><strong>And one row is wrong.</strong> MemPalace scores 0/385, and
+the adapter's docstring says <em>"MemPalace is verbatim-everything: it
+does NOT support delete, update, or supersede"</em>, raising
+<code>NotImplementedError</code> for all three. At MemPalace's own
+pinned commit its MCP server exposes <code>delete_drawer</code>,
+<code>delete_by_source</code> and <code>delete_hallway</code>. The
+primitives exist; what does not exist is a <em>content-addressed</em>
+one, because ForgetEval's contract is <code>purge(query)</code> and
+MemPalace deletes by drawer id and by source file — so wiring it needs a
+search-then-delete bridge. That is a real impedance mismatch and it is a
+different claim from the one the docstring makes. Read the 0 as <em>not
+wired</em>, not as <em>cannot delete</em>.</p>
+<p><strong>What it does not cover.</strong> Steps 5–8 of <a
+href="#what-a-forgetting-benchmark-would-have-to-do">the test below</a>
+— re-feeding the source material and running the background jobs — and
+steps 11–13, the propagated copies. ForgetEval measures whether a
+mutation <em>takes effect against an adversarial query</em>, which is
+the half nobody had measured; it does not measure whether the next
+consolidation pass undoes it.</p>
 <h3 id="fifa-the-one-proposal-that-scores-deletion-compliance">FiFA, the
 one proposal that scores deletion compliance</h3>
 <p><em>Forgetful but Faithful: A Cognitive Memory Architecture and

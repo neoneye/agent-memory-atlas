@@ -672,14 +672,66 @@ is handed to the model in the prompt, so there is no retrieval layer to fail and
 no store to resurrect anything from. A system could pass PersistBench perfectly
 and still restore every deleted memory on its next nightly distillation.
 
-So this page's claim stands, and narrows usefully: **nothing measures whether a
-deleted memory stays deleted.** But the adjacent claim — that negative
+So this page's claim stood for five months, and no longer does — see
+**ForgetEval** below, read on 30 July 2026. Against PersistBench specifically the
+narrowing is still right: **PersistBench does not measure whether a deleted
+memory stays deleted.** But the adjacent claim — that negative
 retrieval assertions barely exist — now needs qualifying. PersistBench is a
 negative-*use* benchmark with a positive control, released, and running inside a
 standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
 `forbiddenHits` has at repository scale, executed one layer up and published.
 A forgetting benchmark could borrow its structure wholesale and change only what
 sits between the memory and the model.
+
+### ForgetEval — the benchmark this page said did not exist
+
+**Read 2026-07-30 at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495), MIT.**
+ForgetEval ships inside [Lethe](../systems/lethe/), as the artifact behind
+*Control-Plane Placement Shapes Forgetting*
+([arXiv:2606.15903](https://arxiv.org/abs/2606.15903), June 2026). It is the
+first released benchmark this page has found that scores the **control plane** —
+`supersede`, `release`, `purge` — rather than recall, and its framing is this
+page's own argument in the paper's words: recall is *"extensively benchmarked"*
+and the operations that mutate memory are *"largely untested"*.
+
+**Shape.** An `Adapter` Protocol of six methods — `reset`, `inscribe`,
+`recall_texts`, `supersede(old_query, new_text)`, `release(query)`,
+`purge(query)` — with implementations for six systems, five of which this atlas
+reviews: Lethe, [Mem0](../systems/mem0/), LangGraph, [Cognee](../systems/cognee/),
+[A-MEM](../systems/a-mem/) and [MemPalace](../systems/mempalace/). The
+adversarial layer is 385 cases — 132 hand-crafted, 253 LLM-drafted and
+oracle-validated — across ten attack categories: substring traps, prefix
+collisions, paraphrase supersession, negation, temporal qualifiers, shared
+attributes, compound facts, identifier obfuscation, cross-lingual identifiers and
+recursive supersession. The cases and their labels are committed; the scored
+results are not, living in a README table.
+
+**Two things about how it reports.** The three deterministic systems land in a
+63–68% band the README reads as *"mutually overlapping Wilson CIs — the bench
+reads the trade-off, not a winner"* — and **the author's own system places third
+of the three**, at 63.4% against Mem0's 68.3%. A benchmark whose author loses it,
+reported with confidence intervals and an explicit refusal to declare a winner,
+is the opposite of the vendor-run comparisons this atlas has had to discount.
+Its headline finding is about *placement* rather than storage: moving an LLM to
+the mutation hook lifts both Lethe and LangGraph by roughly 28 points, so the
+gain travels across backends.
+
+**And one row is wrong.** MemPalace scores 0/385, and the adapter's docstring
+says *"MemPalace is verbatim-everything: it does NOT support delete, update, or
+supersede"*, raising `NotImplementedError` for all three. At MemPalace's own
+pinned commit its MCP server exposes `delete_drawer`, `delete_by_source` and
+`delete_hallway`. The primitives exist; what does not exist is a
+*content-addressed* one, because ForgetEval's contract is `purge(query)` and
+MemPalace deletes by drawer id and by source file — so wiring it needs a
+search-then-delete bridge. That is a real impedance mismatch and it is a
+different claim from the one the docstring makes. Read the 0 as *not wired*,
+not as *cannot delete*.
+
+**What it does not cover.** Steps 5–8 of [the test below](#what-a-forgetting-benchmark-would-have-to-do)
+— re-feeding the source material and running the background jobs — and steps
+11–13, the propagated copies. ForgetEval measures whether a mutation *takes
+effect against an adversarial query*, which is the half nobody had measured; it
+does not measure whether the next consolidation pass undoes it.
 
 ### FiFA, the one proposal that scores deletion compliance
 

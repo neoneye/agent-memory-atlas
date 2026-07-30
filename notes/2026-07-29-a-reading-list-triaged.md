@@ -102,13 +102,38 @@ out of four.
   publication nobody owns, and NemoClaw's snapshot makes propagation
   bidirectional — the deleted value comes back. On the atlas's current reading
   nothing would pass steps 11–13.
-- **[arXiv:2606.15903](https://arxiv.org/abs/2606.15903)**, *Control-Plane
-  Placement Shapes Forgetting: An Architectural Study of Agent Memory Across
-  Thirteen System Configurations* — surfaced twice while chasing other things,
-  and describes an experiment this atlas has been running by hand across 73
-  reports. Not read.
-- **Minerva** ([arXiv:2502.03358](https://arxiv.org/abs/2502.03358)) — the only
-  entry across ~90 catalogued benchmarks whose description mentions memory
-  *write* operations rather than question answering. Not read.
+- ~~**[arXiv:2606.15903](https://arxiv.org/abs/2606.15903)**~~ — **read
+  2026-07-30, and it was the highest-yield item on any list this project has
+  triaged.** It releases code under MIT, which none of the nine items in this
+  note's ledger did. The artifact is two things at once: a memory system,
+  [Lethe](../content/systems/lethe.md), built around the control plane instead
+  of the recall plane and able to issue an Ed25519 receipt over a Merkle root of
+  its event log — Verified Forgetting implemented, which the security survey had
+  marked *"no existing literature"* — and **ForgetEval**, 385 adversarial cases
+  scoring `supersede`, `release` and `purge` across six systems, five of them
+  already in the atlas. The benchmarks page had said for five months that nothing
+  measures whether a deleted memory stays deleted; that claim is now dated and
+  narrowed. Checking it also found one wrong row: ForgetEval scores MemPalace
+  0/385 on a docstring asserting it "does NOT support delete", and MemPalace's
+  MCP server exposes `delete_drawer`, `delete_by_source` and `delete_hallway` at
+  its pinned commit.
+
+  The lesson for this ledger is worth keeping. The rule the note derived — that
+  surveys and reading lists have almost no intersection with inspectable code —
+  held for nine of nine items and then failed on the tenth, which was a *systems*
+  paper filed among them. The discriminator was never "paper versus repository";
+  it was whether the artifact section names a licence.
+- ~~**Minerva** ([arXiv:2502.03358](https://arxiv.org/abs/2502.03358))~~ —
+  **read 2026-07-30, and out of scope.** *Minerva: A Programmable Memory Test
+  Benchmark for Language Models* (Xia, Ruehle, Rajmohan, Shokri; Microsoft and
+  NUS, Feb 2025) automatically generates tests for how well a **model** uses its
+  context: searching, recalling, editing, matching, comparing, operating on
+  structured blocks, and maintaining state. The "write operations" that put it on
+  this list are edits *within a prompt*, not mutations of a durable store — there
+  is no memory system under test, no retrieval layer and nothing that survives a
+  session. It is a context-manipulation benchmark for LLMs, which is a real and
+  useful thing and not what this atlas's benchmarks page is about. No repository
+  URL was found on the abstract page. The catalogue entry that flagged it
+  described it accurately; the word *editing* was doing the misleading.
 - **Parametric memory** remains one report deep, and Titans is now named in the
   scope section as the architecture-level case rather than left implicit.
