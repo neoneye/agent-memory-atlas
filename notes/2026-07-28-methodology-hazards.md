@@ -247,6 +247,38 @@ be findable in the paper. If it came from the README, attribute it to the README
 — which is usually the more interesting sentence anyway, because it says what the
 project wants to be known for.
 
-**Watch for:** the five remaining arXiv ids cited in `content/overview.md`
-(2501.00663, 2510.02373, 2512.13564, 2603.15183, 2604.16548), which were not
-checked in this pass.
+**Checked 2026-07-31.** The five arXiv ids in `content/overview.md` were worked
+through. Four verified cleanly against their abstracts and pages:
+
+| Paper | Atlas claim | Result |
+| --- | --- | --- |
+| 2501.00663 *Titans* | a neural long-term memory module learning at inference; **no official implementation** | holds |
+| 2510.02373 *A-MemGuard* | three quoted phrases — *"stored as precedent"*, *"amplifies the initial error"*, *"progressively lowers the threshold"* | all three verbatim |
+| 2512.13564 *Memory in the Age of AI Agents* | v2, 13 January 2026; a survey with an open-source framework table | exact |
+| 2603.15183 *Token Coherence* | the paper leads with simulated token savings; four figures reproduced | holds — 95.0 / 92.3 / 88.3 / 84.2% across four workload configurations |
+
+No new repositories came out of it. Titans has no official implementation,
+A-MemGuard's was already read at a pinned commit, the Token Coherence repository
+was already examined and excluded, and both surveys release no code — so the
+"analyze the repos" half of this pass was already done.
+
+**The fifth is a verification limit, not a finding.** For
+[2604.16548](https://arxiv.org/abs/2604.16548) the five VMG primitive names and
+the formal Verified Forgetting definition both verified exactly. The
+*"no existing literature"* status line did not — but the atlas's own note sources
+it to **Figure 3**, *"a dependency tower with deployment maturity per layer"*,
+and a text fetch cannot read words rendered inside a figure. This environment has
+no PDF rendering (`pdftoppm` absent), so the claim can be neither confirmed nor
+refuted here.
+
+That distinction is the point worth keeping. Two fetches returned "not found",
+and treating that as a refutation would have produced a confident correction to a
+claim that is probably right — the note records all five per-primitive maturity
+labels, which is the kind of detail you only have if you looked at the figure.
+**Absence of evidence from a tool that cannot see the medium is not evidence of
+absence**, and the failure mode of a verification pass is to generate false
+positives when it forgets what its instrument cannot read.
+
+**Watch for:** anything else in the atlas quoted from a figure or table image.
+Those are unverifiable by fetch and should carry the figure number, as this one
+does.
