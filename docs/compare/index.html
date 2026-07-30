@@ -2114,8 +2114,9 @@ index</td>
 <code>recall</code>, ranked by importance x decay</td>
 <td>Detached LLM extraction at session end, then deterministic quote and
 outcome gates</td>
-<td>Append-only events; <code>forget</code> writes a content-hashed
-tombstone that deletes index rows</td>
+<td>A value-keyed tombstone appended before the rewrite, consulted by
+the supersede-candidate emitter, resolved by content key on rebuild, and
+reaching the serializer chunk cache</td>
 <td>Per-project bucket applied on the read path; cross-project reads
 only by explicit slug</td>
 <td>Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only
@@ -2123,9 +2124,13 @@ stdio MCP</td>
 <td>Detached serialize child, retry ledger with self-heal, index
 rebuild</td>
 <td>verbatim vs inferred as a stored field, verified by code against the
-transcript</td>
-<td>The model's trust claims are checked by code, not believed</td>
-<td>One live checkpoint per project; tombstone keyed on exact text</td>
+transcript — with corroboration as a separate axis that can never become
+a trust class</td>
+<td>The model's trust claims are checked by code; an eleven-step
+deletion-durability protocol committed as one deterministic test, every
+step paired with a never-forgotten twin</td>
+<td>One live checkpoint per project; the chunk cache is purged wholesale
+because it is keyed by chunk text and cannot be searched by value</td>
 </tr>
 <tr>
 <td><code>ecc</code></td>
@@ -4327,11 +4332,12 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>13 of 111:</em> <a
+<p><em>14 of 111:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
+href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
 href="../systems/lethe/"><code>lethe</code></a>, <a
@@ -4358,7 +4364,7 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Thirteen
+<p><strong>Negative evidence is almost never tested.</strong> Fourteen
 repositories of one hundred and eleven assert that particular material
 must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
@@ -4388,7 +4394,7 @@ three lines.</p>
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
-<p><strong>Eight assert about content:</strong> that particular material
+<p><strong>Nine assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
 asking. <a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
@@ -4417,9 +4423,9 @@ and two injection tests require a superseded line and a stale fact from
 an earlier history not to appear in the captured model context. That is
 the assertion aimed at where the damage happens rather than at where the
 row lives.</p>
-<p><strong>Only these eight probe the question the atlas is actually
+<p><strong>Only these nine probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
-proves a value that was rejected, disputed or forbidden stays gone. Nine
+proves a value that was rejected, disputed or forbidden stays gone. Ten
 of one hundred and eleven is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.

@@ -470,7 +470,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Thirteen of one hundred and eleven. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Fourteen of one hundred and eleven. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -905,7 +905,21 @@ snapshots memory as an ordinary state directory and restores it verbatim — whi
 makes propagation bidirectional. The deleted value does not merely survive
 elsewhere; it returns to the origin.
 
-Steps 11–13 are cheap to run and, on the atlas's current reading, nothing here
+**One system now runs a protocol of this shape, and built it independently.**
+[Daimon](../systems/daimon/) committed
+`plugin/tests/test_deletion_durability_protocol.py` on 29 July 2026 — eleven
+steps walking a forgotten value through re-feeding the original source
+transcript, an index rebuild, a subsequent carry, **a team dual-write**, the
+rendered brief string, the SQLite rows, the signed receipt, the audit trail and a
+chunk-cache sink over the accumulated state. Every step is paired with a
+never-forgotten twin that must stay retrievable, so no negative assertion can
+pass vacuously; it runs deterministically on a canned model and a stubbed signer
+at zero quota. Its step 6 covers the propagated-copy substrate this page added on
+30 July, a day later. Nothing in the repository references this atlas, and the
+steps are numbered against Daimon's own issues — so read it as convergent
+arrival, not adoption.
+
+Steps 11–13 are cheap to run and, with that one exception, nothing else here
 would pass them. No system reviewed carries a deletion that follows a share, and
 only one — SimpleMem — even records that a share happened, in a log its own write
 path never consults.

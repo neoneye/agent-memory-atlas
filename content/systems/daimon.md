@@ -6,23 +6,85 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: ecb7fafefa817f0726f46b221ddd4c7f4400a30a
-revision_url: https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a
+revision: 3f79a952cf8e7f96b7fbcaa322147a7236dd47d0
+revision_url: https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0
 analyzed_at: 2026-07-30
-capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review"
+capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
   storage: "Per-project JSON checkpoints plus a disposable SQLite FTS5 index"
   retrieval: "Automatic session-start injection; FTS5/BM25 for `recall`, ranked by importance x decay"
   write: "Detached LLM extraction at session end, then deterministic quote and outcome gates"
-  update_delete: "Append-only events; `forget` writes a content-hashed tombstone that deletes index rows"
+  update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache"
   scoping: "Per-project bucket applied on the read path; cross-project reads only by explicit slug"
   integration: "Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only stdio MCP"
   background: "Detached serialize child, retry ledger with self-heal, index rebuild"
-  trust: "verbatim vs inferred as a stored field, verified by code against the transcript"
-  strengths: "The model's trust claims are checked by code, not believed"
-  risks: "One live checkpoint per project; tombstone keyed on exact text"
+  trust: "verbatim vs inferred as a stored field, verified by code against the transcript — with corroboration as a separate axis that can never become a trust class"
+  strengths: "The model's trust claims are checked by code; an eleven-step deletion-durability protocol committed as one deterministic test, every step paired with a never-forgotten twin"
+  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value"
 ---
+
+## 0. Re-review, 30 July 2026
+
+**This report was rewritten in place after 29 commits landed on the pinned
+revision, all of them on axes this atlas measures.** The previous pin,
+[`ecb7fafefa817f0726f46b221ddd4c7f4400a30a`](https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a),
+described a system whose tombstone was keyed on exact text and whose deletion
+guarantees were argued rather than executed. What follows describes
+[`3f79a952cf8e7f96b7fbcaa322147a7236dd47d0`](https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0).
+The mark count moves from five of seven to six, and only bi-temporality is now
+absent.
+
+Three things changed that would each have been worth a report on their own.
+
+**The deletion-durability protocol is now a committed, executable test.**
+`plugin/tests/test_deletion_durability_protocol.py` walks a forgotten value
+through eleven steps — write, forget, **re-feed the original source transcript
+through the real serializer**, index rebuild, a subsequent carry, a team
+dual-write, the rendered brief string, recall's SQLite rows, the signed receipt,
+the audit trail, and a chunk-cache sink over the accumulated state — re-asserting
+absence at each. **Every step is paired with a never-forgotten twin that must
+stay retrievable, so no negative assertion can pass vacuously.** It runs
+deterministically on a canned `fake_chat` and a stubbed signer with a fixed
+clock, at zero model quota, and the compliance result is published in the
+lifecycle docs.
+
+That protocol is close to the one [this atlas specifies](../../benchmarks/), and
+**it was arrived at independently** — no reference to this project appears
+anywhere in the repository, and the steps are organised around Daimon's own
+issue numbers rather than the atlas's numbering. Its step 6, re-asserting absence
+in a teammate's remote copy after a team dual-write, covers the propagated-copy
+substrate that this atlas only added to its own specification on 30 July, a day
+after Daimon committed a test for it.
+
+**The tombstone became load-bearing on the write path.** It is now appended
+*before* the rewrite and removes by value so sibling ids cannot survive
+(`d3556e1`); resolved by content key on rebuild so historical sessions cannot
+reintroduce a copy (`59271b6`); consulted by the supersede-candidate emitter,
+which skips values already in the forget ledger (`f60f2d9`); and extended to the
+serializer chunk cache, which is purged **wholesale** because entries are keyed
+by chunk text and selective removal is therefore impossible (`7f73080`). An
+adversarial test asserts an ungated `prev` cannot resurrect a forgotten value
+(`e8f104d`).
+
+**Corroboration was added as a separate axis, and the discipline around it is the
+best-argued thing in the repository.** When a teammate's session independently
+restates a claim, a namespaced pointer row records *who agreed* — and the
+docstring is explicit that it carries **no `item_text`, ever**, because *"this log
+is append-only and never rewritten, so a value written here outlives every
+deletion the user can ask for"*. That single rule resolves the tension between an
+append-only audit and a right to erasure, which most systems in this atlas either
+ignore or discover late. Corroboration is a badge in the brief and is stated
+never to become a trust class, so independent agreement cannot launder an
+`inferred` item into `verbatim`.
+
+Two smaller fixes are worth naming because of what they admit. Quote verification
+*"no longer accepts daimon's own injected text as witness"* (`4710e17`) — the
+system was verifying model claims against a transcript that contained its own
+prior briefing, which is the self-citation hazard this atlas records about its own
+method. And two recall fixes carry measured numbers in their subjects: 37.9% of
+injections fired at prompts no human wrote, and cross-origin duplicates were 15.5%
+of injections.
 
 ## 1. Executive Summary
 
