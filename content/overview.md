@@ -4451,6 +4451,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 3,271 test cases across 100 files with eight memory-specific suites, a browser with a bulk cleanup queue, and supersession correctly filtered on the read path.
 - Study when: your memory is about a codebase and you want relevance signals the repository already contains.
 - Do not copy when: a correction has to stick, or you need tenancy — scope is global-or-project on a local SQLite file, and the BSL restricts production use until the change date.
+- Reported but not reviewed: the maintainer has extracted the memory layer into a private `packages/memory/` workspace and reports the content-hash resurrection closed there, plus a committed retrieval benchmark with a CI floor gate ([PR #2](https://github.com/neoneye/agent-memory-atlas/pull/2)). The public repository is unchanged at `e6b5885d` and does not contain that tree, so the verdict below still describes what is readable.
 - Renamed: this was published as `soulforge` and the project is now **Empryo** (`proxysoul/Empryo`). The refacing commit predates the analysis — the atlas took the name from the repository URL rather than from the README, which already said so. The pinned commit and every finding are unchanged, and `/systems/soulforge/` redirects.
 
 ### `dexto`

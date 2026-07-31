@@ -31,6 +31,17 @@ Empryo is a terminal coding agent, and its memory layer is 4,159 lines under
 atlas, and the one most thoroughly shaped by the fact that its subject is a
 codebase.
 
+**This report describes the public tree, and the project has moved past it.**
+The maintainer reports that the memory layer has been extracted from
+`src/core/memory/` into a standalone `packages/memory/` workspace package, that
+the content-hash resurrection described in section 7 is closed there, and that a
+retrieval-quality benchmark now exists with a CI floor gate. None of that is in
+`proxysoul/Empryo`: at the time of writing the public repository is still at
+`e6b5885d`, `packages/memory/` does not exist in it, and the commits named for
+the fix are not present. Everything below was read at the pinned commit and
+resolves against it. Treat the newer work as reported rather than reviewed until
+it can be read.
+
 **It was called SoulForge until 12 July 2026.** The refacing commit is
 `ea9278e`, the README at the analyzed commit reads *"Empryo — previously
 SoulForge"*, and the app ships a one-time announcement modal to match. The
