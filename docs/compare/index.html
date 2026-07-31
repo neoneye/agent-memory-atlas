@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 69 of the 115 reports.</strong> It was
+<p><strong>This section covers 74 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9158,6 +9158,120 @@ search writes to the store by design, and that is not a flag you can
 disable without losing the retention model — or a memory has to be
 evidence, since a decay score is not a record that something was
 wrong.</li>
+</ul>
+<h3 id="acontext"><code>acontext</code></h3>
+<ul>
+<li>Best idea: the write is gated on a terminal outcome — a CHECK
+constraint on the status vocabulary, an enqueue that fires only on
+<code>success</code> or <code>failed</code>, and three committed tests
+asserting the other cases write nothing. It is the difference between a
+skill library and a transcript summary.</li>
+<li>Biggest risk: retrieval depends entirely on the agent choosing to
+look. There is no automatic injection, so recall rests on names,
+descriptions and willingness — three things that are hard to measure and
+easy to get quietly wrong.</li>
+<li>Most reusable component: the trigger tests in
+<code>core/tests/llm/</code> — the gate is cheap to copy and the tests
+are what keep it implemented.</li>
+<li>Maturity impression: 43 test files aimed at the learning machinery
+rather than the plumbing, an end-to-end pipeline suite, and Markdown
+skills exportable as a ZIP so the memory outlives the vendor.</li>
+<li>Study when: your agents run repeatable tasks with a status you can
+trust, and you want the accumulated know-how greppable rather than
+embedded.</li>
+<li>Do not copy when: your tasks end ambiguously — the gate never fires
+and you have deployed a queue, a sandbox and a Postgres for nothing — or
+you need conversational or preference memory, which it has no unit
+for.</li>
+</ul>
+<h3 id="adk-python"><code>adk-python</code></h3>
+<ul>
+<li>Best idea: scope in the signature rather than in the query.
+<code>app_name</code> and <code>user_id</code> are required keyword
+arguments on every read and write, so a scope bug is a
+<code>TypeError</code> rather than a leak.</li>
+<li>Biggest risk: the contract has no removal method. Every application
+written against it inherits the gap, and no provider can fix it — only a
+breaking interface change can.</li>
+<li>Most reusable component: the <code>BaseMemoryService</code>
+signature itself, minus the omissions. It is the interface most agents
+are written against and the one to diff your own against.</li>
+<li>Maturity impression: 61 memory test functions across three service
+implementations, a default in-memory service whose docstring says
+"prototyping purpose only", and an <code>add_memory</code> that raises
+<code>NotImplementedError</code> naming the alternatives rather than
+faking it.</li>
+<li>Study when: you are designing a provider interface and want the
+scope handling to copy verbatim.</li>
+<li>Do not copy when: deletion is a compliance requirement — at this
+commit the framework will not help, and the answer will be
+provider-specific code that outlives your abstraction.</li>
+</ul>
+<h3 id="agent-afk"><code>agent-afk</code></h3>
+<ul>
+<li>Best idea: the verification status is in the string the model reads.
+A fact arrives either with a citation or tagged
+<code>[unverified]</code>, and a supersession carries the old citation
+forward with a warning that it may be stale.</li>
+<li>Biggest risk: the gate is behind
+<code>AFK_MEMORY_EVIDENCE_GATE=1</code>, so the default build stores
+codebase facts with no citation and marks nothing. The best mechanism in
+the system is off unless you find the flag.</li>
+<li>Most reusable component: about two hundred lines of evidence gate
+that fits in SQLite, with the category taxonomy that makes it tolerable
+in daily use.</li>
+<li>Maturity impression: 129 test cases unusually well aimed — a
+333-line suite covering all four supersession outcomes across all four
+categories, plus the UNIQUE-collision duplicate path and the not-found
+throw.</li>
+<li>Study when: you are building a coding agent and want provenance
+without a graph.</li>
+<li>Do not copy when: two people share the database — the archive is
+cross-session with no scope filter, which is right for one developer and
+wrong immediately after that.</li>
+</ul>
+<h3 id="agent-framework"><code>agent-framework</code></h3>
+<ul>
+<li>Best idea: fail-closed owner scoping checked three ways, with a
+post-resolve containment assertion — the best filesystem scoping in this
+atlas — and <code>session_ids</code> provenance recorded on every
+topic.</li>
+<li>Biggest risk: the provider contract declares neither deletion nor
+scope, so a third-party provider inherits AutoGen's gap, and compression
+is the only correction path.</li>
+<li>Most reusable component: organising durable memory by topic rather
+than by time, with the index split from the content.</li>
+<li>Maturity impression: about 1,357 lines of tests on the harness
+memory alone, aimed at state round-trips, consolidation scheduling,
+disk-full and misconfigured-client failures, and the scope
+boundary.</li>
+<li>Study when: you are in the Microsoft stack and want the
+context-provider seam, or you want a per-user assistant whose correction
+need is "rewrite the topic".</li>
+<li>Do not copy when: you need to prove a deletion, hold a claim you are
+unsure about, or answer what the system believed last month — there is
+no unit below the topic file to attach any of that to.</li>
+</ul>
+<h3 id="agent-memory-supabase"><code>agent-memory-supabase</code></h3>
+<ul>
+<li>Best idea: validity time and record time in the same row, with an
+<code>updated_at</code> trigger that refuses to fire on access-stat
+touches so a read cannot masquerade as an edit.</li>
+<li>Biggest risk: the per-user RLS policies are commented out, so the
+only enforced posture is server-sees-everything — and there are no tests
+at all to notice.</li>
+<li>Most reusable component: the similarity floor on the text lane, with
+the RRF failure it prevents written into the comment beside it.</li>
+<li>Maturity impression: 898 lines, better reasoned per line than most
+frameworks here and readable in an hour — with no test directory, no
+fixtures and no harness, despite <code>use_blended</code> and
+<code>track_access</code> existing to make evaluation clean.</li>
+<li>Study when: you are on Supabase, want to own the SQL, and your
+memory is one project or one user.</li>
+<li>Do not copy when: you are multi-tenant before uncommenting and
+testing Posture B, or you need to prove a deletion — soft delete plus
+supersession leaves the content in the table with no record that a value
+was rejected.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
