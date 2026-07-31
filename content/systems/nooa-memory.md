@@ -480,9 +480,7 @@ nothing about whether it was ever right.
   Loop section) and Appendix C (*"Memory-System Details"*), the ARC-AGI-3
   ablation in §4.4 (*"Advancing the score–cost Pareto frontier on ARC-AGI-3"*)
   and Figure 7, operational statistics and reproduction run ids in Appendix D
-  (§D.4, *"Memory-system usage during play"*). Section references verified
-  against the paper on 2026-07-31; the earlier "§3" was the parent section, not
-  the memory one.
+  (§D.4, *"Memory-system usage during play"*).
 - Blog: [Six agent harness capabilities for higher model performance](https://developer.nvidia.com/blog/six-agent-harness-capabilities-for-higher-model-performance/).
 
 Claims taken from these are attributed in the text. The RHAE figures and the

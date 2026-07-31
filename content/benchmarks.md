@@ -718,22 +718,21 @@ attributes, compound facts, identifier obfuscation, cross-lingual identifiers an
 recursive supersession. The cases and their labels are committed; the scored
 results are not, living in a README table.
 
-**Three things in the paper that the repository does not show, added
-2026-07-31.** The 385 adversarial cases are the *second* layer — the abstract
-describes *"a 1000-case templated suite plus a 385-case adversarial layer"*, and
-this page had recorded only the adversarial half. Case admission is backed by
-labelling provenance no other benchmark on this page reports: *"Admission is
-corroborated by 10-annotator IAA (Fleiss' kappa = 0.958)"*. And the paper carries
-*"a 77-case external-authored subset (four blind contributors) that replicates
-the canonicalization asymmetry"* — an independent replication of the headline
-finding by people who did not write the benchmark, which is the single strongest
-construct-validity move any benchmark in this atlas makes and which nothing in
-the repository would have surfaced.
+**Three things live only in the paper.** The 385 adversarial cases are the
+*second* layer of two — the abstract describes *"a 1000-case templated suite plus
+a 385-case adversarial layer"*. Case admission is backed by labelling provenance
+no other benchmark on this page reports: *"Admission is corroborated by
+10-annotator IAA (Fleiss' kappa = 0.958)"*. And there is *"a 77-case
+external-authored subset (four blind contributors) that replicates the
+canonicalization asymmetry"* — an independent replication of the headline finding
+by people who did not write the benchmark, which is the single strongest
+construct-validity move any benchmark in this atlas makes. None of the three has
+any representation in the harness: a repository cannot show you its own
+inter-annotator agreement.
 
-The comparison unit is also thirteen **configurations**, not six systems. Six
-adapters times three placement regimes is what the title means by *placement*,
-and the six-adapter framing above describes the surface rather than the
-experiment.
+The comparison unit is thirteen **configurations**, not six systems. Six adapters
+times three placement regimes is what the title means by *placement*; the
+six-adapter framing above describes the surface rather than the experiment.
 
 **Two things about how it reports.** The three deterministic systems land in a
 63–68% band the README reads as *"mutually overlapping Wilson CIs — the bench
