@@ -99,7 +99,9 @@ def main() -> int:
 
     lines = [
         "---",
-        "title: Every System, A to Z",
+        # Non-breaking spaces: "A to Z" is one token to a reader, and a
+        # break inside it strands a letter on its own line.
+        "title: Every System, A\u00a0to\u00a0Z",
         "eyebrow: Index",
         "description: A flat alphabetical index of every system report in the "
         "atlas, generated from the reports themselves.",

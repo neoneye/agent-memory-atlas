@@ -1,5 +1,5 @@
 ---
-title: Every System, A to Z
+title: Every System, A to Z
 eyebrow: Index
 description: A flat alphabetical index of every system report in the atlas, generated from the reports themselves.
 root: ..
