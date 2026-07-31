@@ -103,15 +103,33 @@ enough.
 
 ## Seen in the atlas
 
-**Three systems in the atlas have this.** That is the most striking
+**Five systems in the atlas have this.** That is the most striking
 negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
 mechanism and protects rejected states from ordinary pruning.
 [RainBox](../../systems/rainbox/) stores `MemoryRejectedValue` rows when claims
 are rejected or superseded, and model writes check them before asserting.
-[Daimon](../../systems/daimon/) is the third and the weakest, and it is
+[Universal Memory Engine](../../systems/universal-memory-engine/) carries a
+suppression table its write gate consults at four points.
+[Daimon](../../systems/daimon/) is the weakest of the five, and it is
 instructive precisely because of *how* it is weaker.
+
+[Empryo](../../systems/empryo/) is the cheapest variant on this page and shows
+where the floor is. It keys the tombstone on a **content hash of the memory
+text**, and a write whose hash collides with a soft-deleted row returns a no-op
+carrying `hiddenCollision` rather than clearing the hidden flag. No extra table,
+no ledger, no verdict field — the uniqueness constraint that already enforced
+dedup does the work, and it qualifies because the *write path consults it and
+refuses*, which is the line between this pattern and a soft-delete flag that
+only hides on read. The cost is exactly the normalization tradeoff this page
+opens with, in its most severe form: the key is the text, so a *reworded*
+statement of the same rejected claim hashes differently and enters as a fresh
+memory. It blocks the identical sentence, not the identical belief, and its own
+report names its model-authored distillation pass as the component most likely
+to produce that reword. A hash tombstone is worth building when the alternative
+is nothing; it is not worth mistaking for Verel's. Note the mark rests on a
+private tree — see the report's source-availability caveat.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
