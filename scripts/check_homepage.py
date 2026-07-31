@@ -17,7 +17,13 @@ from pathlib import Path
 CARD = re.compile(r'href="\./systems/([^/"]+)/"')
 ARTICLE = re.compile(r'<article class="system-card[^"]*"[^>]*>.*?</article>', re.S)
 CAPS_ATTR = re.compile(r'data-capabilities="([^"]*)"')
-TRACED = re.compile(r"<strong>(\d+)</strong><span>repositories traced</span>")
+#: The headline stat carries both numbers, because they differ and a reader who
+#: sees only one of them reads the other as an off-by-one. Reports is the bold
+#: figure; distinct repositories is the tail, since two reports can cover
+#: different subsystems of one repository.
+TRACED = re.compile(
+    r"<strong>(\d+)</strong><span>reports, over (\d+) repositories</span>"
+)
 PATTERNS = re.compile(r"<strong>(\d+)</strong><span>reusable design patterns</span>")
 SOURCE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 
@@ -178,12 +184,14 @@ def main() -> int:
     }
     traced = TRACED.search(homepage)
     if traced is None:
-        problems.append('homepage is missing the "repositories traced" figure')
-    elif int(traced.group(1)) != len(sources):
-        problems.append(
-            f'homepage says {traced.group(1)} repositories traced; '
-            f"{len(sources)} distinct source_url values across {len(reports)} reports"
-        )
+        problems.append('homepage is missing the "N reports, over M repositories" figure')
+    else:
+        said_reports, said_repos = int(traced.group(1)), int(traced.group(2))
+        if said_reports != len(reports) or said_repos != len(sources):
+            problems.append(
+                f"homepage says {said_reports} reports over {said_repos} repositories; "
+                f"content has {len(reports)} reports over {len(sources)} distinct source_url values"
+            )
 
     # The capability filter reads data-capabilities off each card, so a card
     # whose attribute drifts from its report silently filters wrong.

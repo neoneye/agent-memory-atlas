@@ -8,6 +8,15 @@ page_kind: comparison
 
 ## Reading This Report
 
+**Looking for the table?** It is [section 2, the comparative
+matrix](#2-comparative-matrix) — every system as a row, with eleven columns
+covering memory unit, storage, retrieval, write, update/delete, scoping,
+integration, background work and trust model. The
+[capability index](../capabilities/) is the same corpus filtered by mechanism,
+and the [A–Z](../a-z/) is every report by slug. This page is the argument that
+sits behind them; the tables are generated from the same frontmatter the reports
+carry, so they cannot drift from what the atlas holds.
+
 **What is in the atlas.** A system qualifies if something it stores **survives
 the session with an identity that can later be corrected**. That single test
 does the work: it admits a 300-line Markdown file with stable entry IDs and
@@ -15,6 +24,12 @@ excludes a sophisticated chat-buffer compactor, however good the compaction is.
 Systems reviewed and excluded on this basis, or on licence grounds, are named in
 the limitations at the end rather than quietly dropped — the exclusions are part
 of the evidence.
+
+**Why the two counts differ.** The atlas holds **125 reports across 124
+repositories**: `NousResearch/hermes-agent` carries two distinct memory systems
+and is reviewed twice, as [Hermes Agent](../systems/hermes-agent/) and
+[Holographic](../systems/holographic/). Counts of *systems* are 125 and counts of
+*repositories* are 124; neither is a rounding error.
 
 **How systems were selected.** Opportunistically: repositories encountered,
 suggested, or found while looking for the ones already here. This is not a
@@ -25,8 +40,13 @@ not evidence of anything.
 
 **What an absence claim means.** "There is no trust state", "no tombstone was
 found", "no benchmark exists" all mean the same thing: *not found in the
-inspected code at the pinned commit*. Every claim here is static review — code
-read, not run — and the reports are opinionated by design. Where the code is
+inspected code at the pinned commit*. The default method is static
+review: code read at a pinned commit, not run. Where a suite *was* executed the
+report says so in the first person and names what passed — CLIO's
+`test_ltm_corroboration.pl` (92 assertions) and Aura's `tests/test_audit_chain.py`
+(16 tests) are the current cases — and where it was not, the report says that
+too rather than leaving the reader to guess. **A report that does not claim a run
+did not do one.** The reports are opinionated by design. Where the code is
 partly closed, or a capability is documented but managed-platform-only, the
 reports say so at that point rather than hedging every sentence.
 
