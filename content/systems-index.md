@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **128 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **129 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -163,6 +163,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## T
 
 - [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/) **TencentDB Agent Memory** — Layered symbolic memory · `TencentCloud/tencentdb-agent-memory`
+- [`terse-memory`](../systems/terse-memory/) **TERSE Memory** — A linter where the verbs should be · `terse-lang/terse` · Trust state
 - [`tigrimosr`](../systems/tigrimosr/) **TigrimOSR** — Proposed skills, staged on disk · `Sompote/TigrimOSR` · Trust state, Scope enforced, Human review
 - [`tokenmizer`](../systems/tokenmizer/) **TokenMizer** — A status for not knowing · `Shweta-Mishra-ai/tokenmizer` · Trust state, Mutation audit
 ## U

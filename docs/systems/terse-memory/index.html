@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A typed memory store in a
+token-efficient state format, whose capture, recall and forget are
+instructions to the model and whose enforcement is four lint rules —
+with the two that would police staleness and duplication deferred.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TERSE
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A typed memory store in a
+token-efficient state format, whose capture, recall and forget are
+instructions to the model and whose enforcement is four lint rules —
+with the two that would police staleness and duplication deferred.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TERSE
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A typed memory store in a
+token-efficient state format, whose capture, recall and forget are
+instructions to the model and whose enforcement is four lint rules —
+with the two that would police staleness and duplication deferred.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TERSE Memory — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A linter where the verbs should be</p>
+          <h1>TERSE Memory</h1>
+          <p class="document-deck">A typed memory store in a
+token-efficient state format, whose capture, recall and forget are
+instructions to the model and whose enforcement is four lint rules —
+with the two that would police staleness and duplication deferred.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/terse-lang/terse">
+              <span>Source</span>
+              <strong>terse-lang/terse</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b" title="637140a3a749f56a981cdb58d943f4fc1515c53b">
+              <span>Analyzed revision</span>
+              <code>637140a3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (66%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TERSE is a state format — <em>"Token-Efficient Representation
+Semantically Expressed"</em> — with a query and command syntax,
+Apache-2.0, three commits, HEAD 24 July 2026. This report is about
+<code>apps/terse-memory/</code>, the memory application built on it:
+1,710 lines of Python beside a 480-line <code>SPEC.md</code>, inside a
+44,000-line monorepo that also holds the parser, an MCP server and two
+other apps.</p>
+<p><strong>Read the package listing before the spec.</strong>
+<code>terse_memory/</code> contains <code>cli.py</code>,
+<code>config.py</code>, <code>init.py</code>,
+<strong><code>lint.py</code></strong>, <code>report.py</code>,
+<code>seed.py</code>, <code>stats.py</code> and <code>wire.py</code>.
+There is no <code>capture.py</code>, no <code>recall.py</code>, no
+<code>forget.py</code> and no <code>consolidate.py</code> — the four
+verbs the spec is organised around are not functions in this package.
+The largest module is the linter. Memory operations are performed by the
+agent, following <code>skills/using-terse-memory/SKILL.md</code> and
+issuing <code>terse-py</code> queries against a plain file.</p>
+<p>That is a legitimate architecture and this atlas has seen it twice
+this week — <a href="../memex-zero-rag/">MeMex Zero-RAG</a> makes the
+same bet. What distinguishes TERSE Memory is that its checker is real.
+<code>lint.py</code> implements four named rules:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>What it catches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MEM-A dangling-ref</code></td>
+<td>an <code>@</code> reference that resolves to nothing in the
+store</td>
+</tr>
+<tr>
+<td><code>MEM-B schema-violation</code></td>
+<td>an object missing an attribute its kind declares
+<code>required:</code></td>
+</tr>
+<tr>
+<td><code>MEM-F secret-leak</code></td>
+<td>AWS keys, GitHub PATs, Slack tokens, OpenAI/Anthropic/XAI keys, PEM
+headers</td>
+</tr>
+<tr>
+<td><code>MEM-G hot-buttons-bloat</code></td>
+<td>the always-loaded tier growing past 20 objects</td>
+</tr>
+</tbody>
+</table></div>
+<p>And three are <strong>deferred to v0.2, named in the module
+docstring</strong>: <code>MEM-C stale</code>,
+<code>MEM-D consolidation-due</code>, <code>MEM-E duplicate</code>. Read
+that split carefully, because it is the report's finding. The
+implemented rules police <em>hygiene</em> — does the store parse, does
+an object have its required fields, is a credential in it, is the
+always-loaded tier too big. The deferred rules police
+<em>epistemics</em> — is this memory out of date, is consolidation
+overdue, is this a duplicate of something already held. The checker that
+exists is the one that keeps the file well-formed; the one that would
+keep it true is scheduled.</p>
+<p><strong>The idea worth taking is the <code>## Don't</code>
+tier.</strong> <code># Hot buttons</code> is always loaded into context
+and splits into <code>## Do</code> and <code>## Don't</code>, and the
+spec's example is <em>"never remember anything about my health"</em>
+becoming a new object under <code>## Don't</code>, <em>"effective
+immediately and visible at every orientation"</em>. A user-authored
+prohibition that is present at every single turn is a different
+mechanism from a filter applied at write time: it cannot be forgotten by
+a retrieval that failed to surface it, because it is not retrieved.
+<code>MEM-G</code> exists precisely to keep that tier small enough to
+stay unconditional, which is the detail that makes it work.</p>
+<p><strong>The second is a stated trust boundary on capture.</strong>
+<em>"Only the user's own words are trusted source material. Anything
+originating from web pages or tool output is stored only on explicit
+user ask and carries <code>src: web</code> / <code>src: tool</code>;
+recall surfaces that provenance. Auto-capture from untrusted content is
+a protocol violation, full stop."</em> That is the prompt-injection
+answer most systems in this atlas do not attempt, written as policy —
+and, like the verbs, it is enforced by the agent honouring it rather
+than by a code path.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a typed object in a tree. The schema is declared in the
+store itself under <code># Schema.Kinds</code>, and the kinds carry
+required attributes:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Preference</code>, <code>Fact</code>, <code>Person</code>,
+<code>Pattern</code></td>
+<td><code>as-of</code></td>
+</tr>
+<tr>
+<td><code>Decision</code></td>
+<td><code>as-of</code>, <code>status</code></td>
+</tr>
+<tr>
+<td><code>OpenQuestion</code></td>
+<td><code>status</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>as-of</code> on nearly everything is the good decision: a fact
+without a date is a fact you cannot age, and making it required at the
+schema level means <code>MEM-B</code> catches its absence rather than a
+human noticing later.</p>
+<p>The status vocabulary is
+<code>accepted | superseded | open | stale</code>, and it earns
+<code>trust_state</code> on <code>stale</code> and
+<code>superseded</code> — both withhold a claim from being treated as
+current, and both are discrete fields rather than scores. Two caveats
+belong with the mark. Status is required on only two of the six kinds,
+so a <code>Fact</code> has no status at all and ages only through
+<code>as-of</code>. And <code>stale</code> is a state nothing sets,
+because <code>MEM-C stale</code> is the deferred rule.</p>
+<pre class="mermaid"><code>flowchart TD
+    U[&quot;user says something&quot;] --&gt; A[&quot;agent follows SKILL.md&quot;]
+    A --&gt; HB{&quot;does # Hot buttons ## Don&#39;t forbid it?&quot;}
+    HB --&gt;|&quot;the agent must check&quot;| SKIP[&quot;not captured&quot;]
+    HB --&gt;|&quot;no&quot;| W[&quot;write a typed object with as-of, src:&quot;]
+    W --&gt; F[(&quot;one .terse file&quot;)]
+    F --&gt; R[&quot;recall: CONTAINS / path queries&quot;]
+    F --&gt; HOT[&quot;# Hot buttons: always loaded, never retrieved&quot;]
+    L[&quot;terse-memory lint&quot;] -.-&gt;|&quot;A dangling-ref, B schema, F secrets, G bloat&quot;| F
+    L2[&quot;MEM-C stale, MEM-D consolidation-due, MEM-E duplicate&quot;] -.-&gt;|&quot;deferred to v0.2&quot;| F
+    style HOT fill:#14532d,color:#fff
+    style L2 fill:#7c5c1e,color:#fff</code></pre>
+<p>Green is the mechanism that does not depend on retrieval working.
+Amber is the half of the checker that is not built yet.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One file, one CLI, one parser. <code>terse-py</code> provides the
+object model and query engine; <code>terse_memory</code> provides
+<code>init</code> (scaffold a store), <code>seed</code> (a starter
+template), <code>lint</code>, <code>stats</code>, <code>report</code>
+and <code>wire</code> (installing the skill and MCP plumbing).
+<code>terse-mcp</code> in the same monorepo exposes TERSE over MCP, and
+the spec asks it for one feature — <em>primer addenda</em>, so the
+always-loaded tier can be injected at orientation.</p>
+<p>Storage is a <code>.terse</code> file the operator can open, diff and
+edit with the same CLI the agent uses, which the spec calls out as a
+feature: <em>"memory disputes end with <code>terse-py query</code>, not
+a support ticket."</em> That is the file-canonical property <a
+href="../basic-memory/">Basic Memory</a> has, arrived at through a
+format rather than through Markdown.</p>
+<p>Containers give the scoping: <code>Profile</code>,
+<code>Projects</code>, <code>Sessions</code>, with a
+<code>session:</code> attribute stamped at write time. The spec's
+session-forget path — drop today's bucket, then everything matching
+<code>[CONTAINS "session: &lt;today&gt;"]</code> — works <em>"because
+provenance was paid for at write time"</em>, which is the right
+reasoning and the right place to pay the cost.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The four implemented lint rules, and the three deferred</td>
+<td><code>apps/terse-memory/terse_memory/lint.py:1</code></td>
+</tr>
+<tr>
+<td>Hot-buttons bloat check</td>
+<td><code>apps/terse-memory/terse_memory/lint.py:339</code></td>
+</tr>
+<tr>
+<td>Secret patterns</td>
+<td><code>apps/terse-memory/terse_memory/lint.py</code> (MEM-F)</td>
+</tr>
+<tr>
+<td>Kinds, required attributes, statuses</td>
+<td><code>apps/terse-memory/SPEC.md:166</code></td>
+</tr>
+<tr>
+<td>Forgetting, hot buttons, poisoning defence</td>
+<td><code>apps/terse-memory/SPEC.md:280</code></td>
+</tr>
+<tr>
+<td>Skill carrying the operating procedure</td>
+<td><code>apps/terse-memory/terse_memory/skills/using-terse-memory/SKILL.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The store is a TERSE tree: roots (<code># Profile</code>,
+<code># Hot buttons</code>, <code># Schema</code>), containers
+(<code>## Preferences</code>, <code>## Facts</code>,
+<code>## People</code>), and objects with attributes. Kinds are routed
+by container-name convention — <code>Preferences → Preference</code>,
+<code>Facts → Fact</code>, <code>People → Person</code> — which
+<code>MEM-B</code> uses to decide which required-attribute list applies.
+That convention is doing real work and it is the kind of thing that
+breaks quietly when someone adds a container with an unexpected plural;
+the rule catches the missing attribute, not the mis-routing.</p>
+<p><code>src:</code> is the provenance attribute and it carries the
+trust boundary from section 1: <code>src: web</code> and
+<code>src: tool</code> mark material that did not come from the user.
+Recall is specified to surface it, so the model sees where a claim came
+from rather than being asked to trust the store uniformly.</p>
+<p>There is no tombstone. Forgetting writes <code>[REMOVED]</code>, and
+the spec is explicit that decisions should prefer
+<code>status: superseded</code> while <em>"explicit 'forget' always
+deletes"</em> — so the user's strongest instruction is the one that
+leaves the least behind, and nothing records that the removed value was
+rejected. The <code>## Don't</code> tier is the closest thing, and it is
+a prohibition on a <em>topic</em> rather than a record of a rejected
+value, which is why the mark is withheld.</p>
+<p>Nothing separates validity time from record time: <code>as-of</code>
+is when the fact was recorded as current, so <code>bitemporal</code> is
+withheld too.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>CONTAINS</code> and path queries over the tree, to any depth —
+the format's own query syntax rather than a search engine. There are no
+embeddings and no ranking, which for a single-user profile store of a
+few hundred objects is the same defensible choice <a
+href="../memex-zero-rag/">MeMex</a> makes, with one important
+difference: TERSE queries are structural, so a query is precise about
+<em>where</em> it looks rather than scanning for a substring
+anywhere.</p>
+<p>The <code># Hot buttons</code> tier is the part that matters most and
+it does not go through retrieval at all. Always-loaded, capped by
+<code>MEM-G</code> at twenty objects, containing the user's standing
+instructions. A rule that must never be missed should not be subject to
+a query returning it, and this is the cleanest expression of that idea
+in the atlas.</p>
+<p><code>scope_enforced</code> is withheld. Containers and the
+<code>session:</code> attribute are real and make session-scoped
+deletion precise, but they are organisational structure in a single-user
+file rather than a scope key applied as a filter on a read path; there
+is no tenancy and no query that must pass a scope.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes. <code>SKILL.md</code> carries the procedure,
+<code>terse-py</code> performs the mutation, and
+<code>terse-memory lint</code> checks the result when someone runs it.
+There is no write function in the package to describe, no gate, and no
+queue.</p>
+<p>The consequences are the ones this atlas has recorded for every
+convention-enforced design, and they are worth stating once more because
+this one is honest about them. Section 11 of the spec is titled
+<em>"Non-goals and honest limits"</em>. The <code>## Don't</code> tier
+is <em>"effective immediately"</em> only in the sense that it is in
+context — the model still has to honour it. The poisoning rule is a
+<em>"protocol violation, full stop"</em> and nothing detects the
+violation. Consolidation is specified in detail under the heading
+<em>"dreaming"</em> and its lint rule is deferred.</p>
+<p>What raises this above the pattern is that the deferrals are
+declared. The lint module names the three unbuilt rules in its docstring
+and points at the spec section that owns them. A reader can tell exactly
+which half is real, which is more than most projects at three commits
+manage.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server in the same monorepo, and a skill installed by
+<code>wire.py</code>. The one feature the memory app asks of
+<code>terse-mcp</code> is <em>primer addenda</em> — a hook for injecting
+the always-loaded tier at orientation — which is a small, specific ask
+and the right one, since the design's best mechanism depends on that
+injection happening.</p>
+<p><code>human_review</code> is withheld. The store is a file a person
+edits with the same CLI the agent uses, and the spec makes a point of
+it; the mark asks for a surface where a person inspects or adjudicates
+memory content, and "open it in an editor" is repairability rather than
+review. <code>stats</code> and <code>report</code> are reporting
+commands, not queues.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The safety thinking here is above the median for the corpus and it is
+concentrated in three places. Secrets get a deterministic scanner as an
+explicit <em>"backstop behind the policy rule"</em> — the policy being
+that credentials should never be captured, and <code>MEM-F</code>
+catching it when the policy fails. Untrusted content gets a stated
+capture boundary and a <code>src:</code> attribute so recall can surface
+the difference. And the always-loaded prohibition tier means a user's
+"never store this" does not depend on a retrieval finding it.</p>
+<p>Against that, every one of the three is enforced by the agent except
+the secret scanner, and the secret scanner is a pattern list — it
+catches the shapes it knows and nothing else, which its own docstring
+calls "best-effort".</p>
+<p>The store being one readable file is the strongest reliability
+property: there is no index to corrupt, no projection to rebuild, and a
+bad memory is fixed by editing a line.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>89 tests across ten files — <code>test_lint</code>,
+<code>test_wire</code>, <code>test_cli</code>, <code>test_init</code>,
+<code>test_doctor</code>, <code>test_scaffold</code>,
+<code>test_setup</code>, <code>test_skill</code>,
+<code>test_stats</code>. <strong>I ran them: 89 passed</strong> in 0.40s
+on Python 3.14 after
+<code>pip install -e terse-py -e apps/terse-memory</code>. Twenty of
+those are the lint suite.</p>
+<p>That is real coverage of what the package does, and it is worth being
+precise about what it therefore covers: the linter, the scaffolder and
+the wiring. There is no test of capture, recall or forgetting, because
+those are not in the package. No eval, no benchmark, no
+retrieval-quality measurement — appropriate for a structural query
+engine, and it means the spec's claims about recall quality are
+unmeasured.</p>
+<p><code>negative_eval</code> is withheld: no committed case asserts
+that particular material must not be retrieved. The
+<code>## Don't</code> tier is the natural subject of one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Put standing prohibitions in an always-loaded tier and cap
+its size.</strong> <code>## Don't</code> under
+<code># Hot buttons</code>, present at every orientation, with a lint
+rule warning past twenty objects. A rule that must never be missed
+should not depend on a retrieval returning it, and the cap is what keeps
+that affordable. This is the best small idea in the report.</p>
+<p><strong>Make <code>as-of</code> required at the schema
+level.</strong> A fact you cannot date is a fact you cannot age, and a
+schema rule catches its absence at lint time rather than at the moment
+someone asks how old a memory is.</p>
+<p><strong>Pay for provenance at write time so deletion can be
+precise.</strong> The <code>session:</code> attribute is what makes
+"forget this conversation" resolvable to a query rather than a guess,
+and the spec says exactly that.</p>
+<p><strong>State your capture trust boundary.</strong> <em>"Only the
+user's own words are trusted source material… auto-capture from
+untrusted content is a protocol violation."</em> Most systems in this
+atlas have no position on this at all.</p>
+<p><strong>Name the checks you have not built.</strong> The lint
+docstring lists MEM-C, MEM-D and MEM-E as deferred and points at the
+spec section. A reader can size the gap in one paragraph.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let the hygiene checks ship while the epistemic ones
+wait.</strong> Dangling references, schema violations, secrets and bloat
+are all real, and none of them is why a memory system goes wrong. Stale
+and duplicate are, and both are v0.2.</p>
+<p><strong>Do not make the strongest user instruction the most
+destructive one.</strong> <em>"Explicit 'forget' always deletes"</em>
+means the clearest signal a user can send leaves the least evidence, and
+nothing prevents the same fact being captured again tomorrow.</p>
+<p><strong>Do not describe an operation the package does not implement
+in the same register as one it does.</strong> SPEC.md moves between
+"here is the store shape" and "here is how consolidation works" without
+a change of voice; the module docstring is where the distinction
+actually lives.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you want a typed, diffable, single-file memory for one
+user and you are comfortable that the agent is the runtime. The format
+is genuinely token-efficient, the query syntax is structural rather than
+fuzzy, and the always-loaded prohibition tier is worth copying
+regardless of what you store it in.</p>
+<p>Do not take it as a system with capture, recall and forgetting
+implemented — at this commit those are a specification and a skill. And
+note the age: three commits, HEAD 24 July 2026, spec sections marked
+pre-release. The design is the contribution.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>No capture, recall, forget or consolidate function</strong>
+in the package; the spec's four verbs are the model's job.</li>
+<li><strong>The three deferred lint rules are the epistemic
+ones</strong> — stale, duplicate, consolidation-due.</li>
+<li><strong>Explicit forget deletes</strong> and leaves no record that
+the value was rejected.</li>
+<li><strong>The poisoning rule is a protocol violation with no
+detector.</strong></li>
+<li><strong>Status is required on only two of six kinds</strong>, so a
+<code>Fact</code> has no epistemic state.</li>
+<li><strong><code>stale</code> is a status nothing sets</strong>,
+pending MEM-C.</li>
+<li><strong>Kind routing is by container-name convention</strong>, which
+<code>MEM-B</code> does not police.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the hot-buttons tier and its size cap — twenty lines of idea,
+and it solves the problem that a prohibition retrieved is a prohibition
+that can be missed. Borrow required <code>as-of</code> and the
+<code>session:</code> provenance attribute; both are schema decisions
+that make later operations possible rather than heroic.</p>
+<p>Build the verbs. The distance between this and a working memory
+system is the three deferred lint rules plus a capture path that applies
+<code>## Don't</code> before writing rather than asking the model to.
+The spec already says what each should do, which is most of the
+work.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>What sets <code>stale</code>?</strong> The status exists in
+the vocabulary and MEM-C, the rule that would detect it, is
+deferred.</li>
+<li><strong>Is the poisoning rule detectable at all?</strong>
+Distinguishing the user's words from tool output at capture time
+requires the capture path to know the difference, and there is no
+capture path.</li>
+<li><strong>Will <code>## Don't</code> gate capture, or only inform
+it?</strong> As specified it is context; as a mechanism it would be a
+filter.</li>
+<li><strong>Does anything run <code>lint</code> automatically?</strong>
+No hook or CI wiring was found, so the four working rules run when
+someone asks.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/terse-memory/SPEC.md</code></td>
+<td>The design: kinds, statuses, capture, recall, forgetting,
+consolidation</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/terse_memory/lint.py</code></td>
+<td>Four implemented rules, three declared deferred</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/terse_memory/wire.py</code></td>
+<td>Installs the skill and MCP plumbing</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/terse_memory/init.py</code>,
+<code>seed.py</code></td>
+<td>Scaffold and starter store</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/terse_memory/stats.py</code>,
+<code>report.py</code></td>
+<td>Reporting commands</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/terse_memory/skills/using-terse-memory/SKILL.md</code></td>
+<td>The operating procedure the agent follows</td>
+</tr>
+<tr>
+<td><code>terse-py/</code>, <code>terse-mcp/</code></td>
+<td>Parser and object model; MCP exposure</td>
+</tr>
+<tr>
+<td><code>apps/terse-memory/tests/</code></td>
+<td>89 tests, run and passing</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
