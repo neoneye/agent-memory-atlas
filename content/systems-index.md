@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **116 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **119 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -46,6 +46,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## D
 
 - [`daimon`](../systems/daimon/) **Daimon** — Session-boundary checkpoint memory · `Daily-Nerd/daimon` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
+- [`dexto`](../systems/dexto/) **Dexto** — CRUD, and no retrieval on purpose · `truffle-ai/dexto` · Human review
 ## E
 
 - [`ecc`](../systems/ecc/) **ECC** — A vault that stays unreviewed · `affaan-m/ECC` · Scope enforced
@@ -130,6 +131,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
+- [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
 - [`pydantic-ai-harness`](../systems/pydantic-ai-harness/) **Pydantic AI Harness** — Markdown notebook with database discipline · `pydantic/pydantic-ai-harness` · Scope enforced, Negative evals
 ## Q
 
@@ -147,6 +149,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
 - [`soul-of-waifu`](../systems/soul-of-waifu/) **Soul of Waifu** — Rollback that nothing calls · `jofizcd/Soul-of-Waifu` · Mutation audit
+- [`soulforge`](../systems/soulforge/) **SoulForge** — Retrieval that reads the repo · `proxysoul/soulforge` · Scope enforced, Human review
 - [`supermemory`](../systems/supermemory/) **Supermemory** — Hosted memory product · `supermemoryai/supermemory` · Scope enforced
 - [`swafra`](../systems/swafra/) **Swafra** — Compact local graph-RAG · `kunal12203/swafra`
 ## T

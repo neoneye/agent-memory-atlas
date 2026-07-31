@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A memory contract with real update
+and delete by id, no search of any kind, and a system-prompt contributor
+that loads either everything or only what a person pinned.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Dexto — Agent Memory Atlas">
+    <meta property="og:description" content="A memory contract with real
+update and delete by id, no search of any kind, and a system-prompt
+contributor that loads either everything or only what a person pinned.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dexto — Agent Memory Atlas">
+    <meta name="twitter:description" content="A memory contract with
+real update and delete by id, no search of any kind, and a system-prompt
+contributor that loads either everything or only what a person pinned.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Dexto — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">CRUD, and no retrieval on purpose</p>
+          <h1>Dexto</h1>
+          <p class="document-deck">A memory contract with real update
+and delete by id, no search of any kind, and a system-prompt contributor
+that loads either everything or only what a person pinned.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/truffle-ai/dexto">
+              <span>Source</span>
+              <strong>truffle-ai/dexto</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2fe44b4b9d5" title="4108a9c730425f43602bce6c8720e2fe44b4b9d5">
+              <span>Analyzed revision</span>
+              <code>4108a9c7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (67%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Dexto is an agent framework, and its memory layer is 1,129 lines
+under <code>packages/core/src/memory/</code> — of which 524 are tests.
+It is the smallest complete memory in this atlas that still does the
+thing most frameworks here omit: it gives a memory an
+<strong>id</strong> and lets you update and delete it.</p>
+<p><strong>Licensing note.</strong> The repository is under the
+<strong>Elastic License 2.0</strong>, which is not an OSI-approved
+open-source licence — it forbids providing the software to third parties
+as a hosted or managed service. The same position this atlas records for
+<a href="../byterover/">ByteRover</a> and <a
+href="../agentswarms/">AgentSwarms</a>. Read it for the design; check
+the terms before adopting it.</p>
+<p><strong>There is no retrieval.</strong> Not weak retrieval — none.
+<code>list()</code> takes tags, a source and a pinned flag, filters in
+memory, sorts by <code>updatedAt</code> descending and paginates. There
+is no query parameter anywhere in the <code>MemoryStore</code>
+interface, which is five methods long: <code>create</code>,
+<code>get</code>, <code>update</code>, <code>delete</code>,
+<code>list</code>.</p>
+<p>That is a design, not an omission, and the injection path is what
+makes it coherent. <code>MemoryContributor</code> in
+<code>systemPrompt/contributors.ts</code> renders memories into a
+<code>## User Memories</code> block, and takes <code>pinnedOnly</code> —
+described in the option comment as <em>"for hybrid approach"</em>. So
+the intended shape is: keep a small curated set, pin the ones that
+should always be present, and let a person decide relevance instead of a
+ranker.</p>
+<p>What that buys is that nothing can be wrong. There is no embedding to
+drift, no threshold to tune, no keyword floor to trip over. What it
+costs is that relevance is entirely manual and the block grows linearly
+with the store — <code>limit</code> exists on the contributor and
+defaults to undefined, so the shipped behaviour is <em>load
+everything</em>.</p>
+<p>The rest is unusually disciplined for its size. Every input is a Zod
+schema with stated bounds — content to 10,000 characters, at most ten
+tags of at most fifty characters each — every failure raises a typed
+<code>MemoryError</code> with a code from a 19-line enum, and the
+manager's own docstring says where the design stops:</p>
+<blockquote>
+<p>TODO: Expand to support multi-scope memories (user, agent, entity,
+session) with namespaced keys (e.g.
+<code>memory:user:{userId}:item:{id}</code>) and context-aware
+retrieval.</p>
+</blockquote>
+<p>That is the right way to have a gap. The atlas withholds
+<code>scope_enforced</code> because there is no scope key on any read
+path; it does not treat the absence as a claim, because the code does
+not make one.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a piece of text a person or the system decided to
+keep, with an address</strong>. Content, timestamps, tags, and a
+metadata object carrying <code>source</code> (<code>user</code> or
+<code>system</code>) and <code>pinned</code>.</p>
+<p>There is no candidate state, no confidence, no verification and no
+expiry. A memory exists or it does not, and it is either pinned or
+not.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p><code>create()</code> validates the input against
+<code>CreateMemoryInputSchema</code>, generates an id, stamps
+<code>createdAt</code> and <code>updatedAt</code>, and writes. It is
+called from agent tools and from the web UI's create modal. Nothing
+extracts, so nothing arrives that a person or the model did not
+deliberately write.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p><code>update(id)</code> rewrites content, tags or metadata in place
+and bumps <code>updatedAt</code>. <code>delete(id)</code> removes the
+row. Both raise <code>Memory not found</code> when the id is unknown,
+and there are tests for both cases.</p>
+<p>That is the whole lifecycle, and it is a hard delete with no history
+— the previous content of an updated memory is gone. For a store this
+small, curated by hand, that is a defensible trade rather than an
+oversight; the memory a person edits is one they are looking at.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Stored: a person or a tool calls create with validated content
+    Stored --&gt; Stored: update rewrites in place and bumps updatedAt
+    Stored --&gt; Pinned: a person pins it
+    Pinned --&gt; Stored: unpinned
+    Stored --&gt; Injected: the contributor loads everything, unless pinnedOnly
+    Pinned --&gt; Injected: loaded even when pinnedOnly is set
+    Stored --&gt; [*]: delete by id, no history kept
+    note right of Injected
+        There is no query. What reaches the prompt
+        is a filter and a sort, never a match.
+    end note</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library inside a framework. <code>MemoryManager</code> wraps a
+<code>MemoryStore</code>, and two implementations ship:
+<code>DatabaseBackedMemoryStore</code> and
+<code>InMemoryMemoryStore</code>. Nothing else is required — no vector
+service, no embedding provider, no model on any memory path.</p>
+<p>The interface is deliberately five methods. That is the whole
+portability surface, and it is small enough that a third-party store is
+an afternoon — which is the same virtue this atlas credits in <a
+href="../camel/">CAMEL</a>'s three-part contract, with the crucial
+difference that Dexto's includes <code>delete</code> and
+<code>update</code> by id.</p>
+<p>There is no background work of any kind.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to run beyond the framework. The in-memory store makes the
+memory layer testable with no fixtures, and the database-backed one uses
+whatever storage the framework is already configured with.</p>
+<p>The store is addressable and the web UI exposes it, so repair is a
+click.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Contract</strong> —
+<code>packages/core/src/storage/memories/types.ts</code> (five
+methods).</p>
+<p><strong>Manager</strong> —
+<code>packages/core/src/memory/manager.ts</code>: <code>create</code>
+(<code>:43</code>), <code>get</code> (<code>:78</code>),
+<code>update</code> (<code>:106</code>), <code>delete</code>
+(<code>:152</code>), <code>list</code> (<code>:174</code>),
+<code>has</code>, <code>count</code>.</p>
+<p><strong>Validation</strong> —
+<code>packages/core/src/memory/schemas.ts</code>: bounds and
+descriptions on every field.</p>
+<p><strong>Errors</strong> —
+<code>packages/core/src/memory/errors.ts</code> and
+<code>error-codes.ts</code>.</p>
+<p><strong>Injection</strong> —
+<code>packages/core/src/systemPrompt/contributors.ts:188</code>
+(<code>MemoryContributor.getContent</code>), wired in
+<code>systemPrompt/manager.ts:51</code>.</p>
+<p><strong>Stores</strong> —
+<code>packages/core/src/storage/stores/backend.ts:358</code>,
+<code>stores/in-memory.ts:210</code>.</p>
+<p><strong>Human surface</strong> —
+<code>packages/webui/components/MemoryPanel.tsx</code>,
+<code>CreateMemoryModal.tsx</code>,
+<code>hooks/useMemories.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> is
+<code>{ id, content, createdAt, updatedAt, tags?, metadata? }</code>
+with <code>.strict()</code> — unknown top-level fields are rejected —
+while <code>MemoryMetadataSchema</code> is <code>.passthrough()</code>,
+so callers may attach their own keys beside <code>source</code> and
+<code>pinned</code>. Strict where the shape matters, open where
+extension is expected, and the choice is visible in two lines.</p>
+<p><strong>Timestamps are record time</strong>, as Unix milliseconds,
+validated as positive integers.</p>
+<p><strong>There is no scope key</strong>, and the docstring says so.
+There is also no provenance beyond <code>source: user | system</code>,
+no link to the session or message a memory came from, and no way to ask
+which agent wrote it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is nothing to describe, which is the point of the section.</p>
+<p><code>list()</code> applies three filters — tags (any-overlap),
+source (equality), pinned (equality) — sorts by <code>updatedAt</code>
+descending, and slices by offset and limit. The contributor calls it
+with an optional limit and an optional <code>pinnedOnly</code>.</p>
+<p>The failure modes are the ones a no-retrieval design has:</p>
+<ul>
+<li><strong>The prompt cost grows with the store.</strong> With no
+<code>limit</code> configured, every memory is rendered into every
+request. At ten memories that is right; at four hundred it is the whole
+context budget.</li>
+<li><strong>Pinning is the only relevance signal</strong>, and it is a
+person's job. A memory that matters only for one kind of task is either
+always present or never.</li>
+<li><strong>Tags are the only structure</strong>, capped at ten, matched
+by overlap and never ranked.</li>
+</ul>
+<p>Against that: nothing here can silently return the wrong thing, and
+that is not nothing. Several systems in this atlas have retrieval that
+is worse than useless because a threshold is mistuned; this one has
+none, and says so.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous, validated, no model. <code>create</code> and
+<code>update</code> both run the Zod schema before touching the store
+and raise a typed error on failure rather than a string.</p>
+<p><strong>There is no deduplication.</strong> Two identical memories
+are two rows, and the only guard is that a person is writing them.</p>
+<p><strong>There is no conflict handling.</strong> Two contradictory
+memories both render into the block, in <code>updatedAt</code>
+order.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory tools for the agent plus a system-prompt contributor, which is
+the right split: the model can write, and the injection is configured
+rather than model-driven.</p>
+<p>The web UI is the notable half. <code>MemoryPanel</code> lists
+memories with a delete dialog and a create modal behind
+<code>useMemories</code> — a person inspecting, adding and removing
+memory content, which is the atlas's <code>human_review</code> mark. In
+a design where pinning is the relevance mechanism, that surface is not a
+convenience; it is the mechanism.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Typed failure is the strength.</strong> A 19-code enum, a
+<code>MemoryError</code> class with factory methods per case, and tests
+asserting that an unknown id, an empty id and a storage failure each
+raise the right one. Very few systems this size distinguish "not found"
+from "invalid" from "storage error" at all.</p>
+<p><strong>There is no trust model and no audit.</strong>
+<code>source: user | system</code> is recorded and never read on any
+path that matters; nothing logs a mutation; nothing marks a memory
+doubtful.</p>
+<p><strong>Prompt-injection exposure is low by construction</strong> —
+nothing is extracted, so content arrives only from a tool call or a
+person. It is not zero: an agent tool can write whatever the model was
+persuaded to write, and it lands unmarked in the next system prompt.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>25 test cases across a unit suite and an integration
+suite</strong>, against 605 lines of implementation — a ratio just under
+one to one, and the content is aimed at the error paths: unknown id on
+<code>get</code>, <code>update</code> and <code>delete</code>; empty id;
+storage failure surfaced as <code>Memory storage error</code>;
+validation rejection on oversized content.</p>
+<p>What is missing is any assertion about the <em>contributor</em>:
+nothing tests that <code>pinnedOnly</code> actually excludes unpinned
+memories from the rendered block, which is the single behavioural claim
+the injection design rests on. <code>negative_eval</code> is withheld on
+that basis — the suite asserts that bad calls fail, not that particular
+material stays out of the prompt.</p>
+<p>No benchmark, and none would mean much: with no retrieval there is
+nothing to score. I inspected these tests; I did not run them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Give a memory an id, and put <code>update</code> and
+<code>delete</code> in the interface.</strong> This is the whole reason
+Dexto earns a report where several larger frameworks do not. <a
+href="../autogen/">AutoGen</a>'s <code>MemoryContent</code> has no
+identifier and <a href="../adk-python/">Google ADK</a>'s contract has no
+removal method; both gaps are permanent for every application written
+against them. Five methods is enough, and two of them are the ones
+people forget.</p>
+<p><strong>Raise typed errors with codes, and test each one.</strong>
+"Memory not found" and "invalid memory id" are different failures for a
+caller, and a string comparison is not an API.</p>
+<p><strong>Be strict on the record and open on the metadata.</strong>
+<code>.strict()</code> on the memory, <code>.passthrough()</code> on its
+metadata, is a two-line statement about which parts are yours and which
+are the caller's.</p>
+<p><strong>Write the TODO where the gap is.</strong> The manager's
+docstring names multi-scope keys and context-aware retrieval as future
+work. A reader knows in ten seconds what this does not do, which is
+worth more than a design that leaves them to find out.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not default an injection to unbounded.</strong> The
+contributor's <code>limit</code> is optional and unset by default, so
+the shipped behaviour renders the entire store into every system prompt.
+A cap with a documented default costs nothing and is the difference
+between a design that degrades and one that stops.</p>
+<p><strong>Do not let pinning be the only relevance mechanism without
+saying so loudly.</strong> It works at ten memories and silently stops
+working at two hundred, and nothing in the system will tell you when you
+crossed over.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you are building on Dexto and your memory is a short,
+hand-curated list — project conventions, user preferences, standing
+instructions — that a person maintains through the panel. Within that
+brief it is well built, and the absence of retrieval is a feature:
+nothing to tune, nothing to drift.</p>
+<p>Look elsewhere the moment the store is meant to <em>accumulate</em>.
+There is no scope key, no ranking, no cap by default, and no extraction
+— so a memory that grows unattended will either overflow the prompt or
+require someone to prune it by hand. The contract is the part to copy;
+the retrieval is a decision to make yourself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is <code>pinnedOnly</code> the intended production
+configuration?</strong> The option comment calls it a <em>"hybrid
+approach"</em>, which implies pinned-plus-something; nothing in the
+repository supplies the something.</li>
+<li><strong>What does the database-backed store do at scale?</strong>
+<code>list()</code> fetches every memory and filters in application
+memory, so the cost of a tag query is the cost of reading the
+store.</li>
+<li><strong>Will the multi-scope TODO land as namespaced keys?</strong>
+The example in the docstring puts the scope in the key rather than in a
+column, which is a decision with consequences for every filter that
+follows.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Contract</strong> —
+<code>packages/core/src/storage/memories/types.ts</code>.</p>
+<p><strong>Manager and validation</strong> —
+<code>packages/core/src/memory/manager.ts</code>,
+<code>schemas.ts</code>, <code>types.ts</code>, <code>errors.ts</code>,
+<code>error-codes.ts</code>.</p>
+<p><strong>Stores</strong> —
+<code>packages/core/src/storage/stores/backend.ts</code>,
+<code>stores/in-memory.ts</code>.</p>
+<p><strong>Injection</strong> —
+<code>packages/core/src/systemPrompt/contributors.ts</code>,
+<code>systemPrompt/manager.ts</code>.</p>
+<p><strong>Human surface</strong> —
+<code>packages/webui/components/MemoryPanel.tsx</code>,
+<code>CreateMemoryModal.tsx</code>,
+<code>hooks/useMemories.ts</code>.</p>
+<p><strong>Tests</strong> —
+<code>packages/core/src/memory/manager.test.ts</code>,
+<code>manager.integration.test.ts</code>.</p>
+<p><strong>Licence</strong> — <code>LICENSE</code> (Elastic License
+2.0).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
