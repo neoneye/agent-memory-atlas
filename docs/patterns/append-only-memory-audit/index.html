@@ -157,6 +157,40 @@ path, or a test.</p>
 <p><strong>Skip it if</strong> you already have durable evidence records
 and git history. Two audit trails that disagree are worse than one.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong><a href="../../systems/aura/">Aura</a> is the only one that
+is tamper-evident, and it is the upper bound of this pattern.</strong>
+Every audit on this page is append-only by file handle: opened
+<code>O_APPEND</code>, never rewritten by the code that owns it, and
+completely silent about an edit made by anything else. Aura keeps a
+SHA-256 hash chain beside its receipt store, one JSONL line per
+receipt:</p>
+<pre class="text"><code>seq:           monotonically increasing per-store
+content_hash:  SHA-256 of the canonical JSON of the receipt body
+prev_hash:     entry_hash of the previous entry (genesis is all zeros)
+entry_hash:    SHA-256 over the canonical concatenation of the above</code></pre>
+<p>Verification walks from genesis, recomputes the entry hashes
+<em>and</em> re-hashes the receipt bodies on disk. The module states
+what that buys: deletion shows up as a sequence gap, insertion as a
+broken link, because <code>entry_hash</code> covers
+<code>prev_hash</code>. A modified body fails because the recomputed
+<code>content_hash</code> no longer matches.
+<code>tests/test_audit_chain.py</code> asserts each of those cases
+separately and passes — 16 tests, run at the pinned commit.</p>
+<p>Two design choices go with it and both are worth copying. The chain
+is a <strong>sidecar</strong>: only <code>emit</code> is extended, and
+existing callers see nothing, so tamper-evidence can be added to an
+audit log that already exists. And when the receipt body is durable but
+the chain append fails, the runtime records a degradation reading
+<em>"receipt body persisted but audit-chain append failed; verify_chain
+will fail"</em> — it does not roll back. For a sidecar that is correct:
+the discrepancy stays detectable instead of being papered over, which is
+the opposite of the right answer for Palazzo's inline WAL below.</p>
+<p>The pattern's ceiling is worth stating plainly. A hash chain proves
+the log has not been edited; it does not prove the log is complete,
+because a writer that never emitted a receipt leaves nothing to break.
+Aura closes that on its strictest path — the memory write gateway rolls
+the write back when the receipt cannot be emitted — and not on the
+others.</p>
 <p><strong><a href="../../systems/palazzo/">Palazzo</a> is the only
 implementation here where the log entry is a precondition rather than a
 consequence.</strong> Every other audit on this page is written because

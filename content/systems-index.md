@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **124 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **125 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -24,6 +24,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`ai-memory`](../systems/ai-memory/) **ai-memory** — Cross-harness handoff · `akitaonrails/ai-memory` · Scope enforced
 - [`atomic-agent`](../systems/atomic-agent/) **Atomic Agent** — Evaluated memory fabric · `AtomicBot-ai/atomic-agent` · Bi-temporal
 - [`aukora-kernel`](../systems/aukora-kernel/) **Aukora Kernel** — Receipted memory · `aumara-xyz/aukora-kernel` · Scope enforced, Mutation audit, Negative evals
+- [`aura`](../systems/aura/) **Aura** — Receipts that chain, beliefs that don't survive · `youngbryan97/aura` · Trust state, Mutation audit
 - [`autogen`](../systems/autogen/) **AutoGen** — Memory without identity · `microsoft/autogen`
 ## B
 

@@ -72,6 +72,41 @@ audit trails that disagree are worse than one.
 
 ## Seen in the atlas
 
+**[Aura](../../systems/aura/) is the only one that is tamper-evident, and it is
+the upper bound of this pattern.** Every audit on this page is append-only by
+file handle: opened `O_APPEND`, never rewritten by the code that owns it, and
+completely silent about an edit made by anything else. Aura keeps a SHA-256 hash
+chain beside its receipt store, one JSONL line per receipt:
+
+```text
+seq:           monotonically increasing per-store
+content_hash:  SHA-256 of the canonical JSON of the receipt body
+prev_hash:     entry_hash of the previous entry (genesis is all zeros)
+entry_hash:    SHA-256 over the canonical concatenation of the above
+```
+
+Verification walks from genesis, recomputes the entry hashes *and* re-hashes the
+receipt bodies on disk. The module states what that buys: deletion shows up as a
+sequence gap, insertion as a broken link, because `entry_hash` covers
+`prev_hash`. A modified body fails because the recomputed `content_hash` no
+longer matches. `tests/test_audit_chain.py` asserts each of those cases
+separately and passes — 16 tests, run at the pinned commit.
+
+Two design choices go with it and both are worth copying. The chain is a
+**sidecar**: only `emit` is extended, and existing callers see nothing, so
+tamper-evidence can be added to an audit log that already exists. And when the
+receipt body is durable but the chain append fails, the runtime records a
+degradation reading *"receipt body persisted but audit-chain append failed;
+verify_chain will fail"* — it does not roll back. For a sidecar that is correct:
+the discrepancy stays detectable instead of being papered over, which is the
+opposite of the right answer for Palazzo's inline WAL below.
+
+The pattern's ceiling is worth stating plainly. A hash chain proves the log has
+not been edited; it does not prove the log is complete, because a writer that
+never emitted a receipt leaves nothing to break. Aura closes that on its
+strictest path — the memory write gateway rolls the write back when the receipt
+cannot be emitted — and not on the others.
+
 **[Palazzo](../../systems/palazzo/) is the only implementation here where the
 log entry is a precondition rather than a consequence.** Every other audit on
 this page is written because a mutation happened. Palazzo's write-ahead log has
