@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 64 of the 97 reports.** It was written when the
+**This section covers 69 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -3962,6 +3962,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 102,862 lines of pure Perl with no CPAN dependency, 3,434 test assertions, atomic writes throughout, a stated memory-poisoning threat model — and zero tests on the mechanism that threat model names.
 - Study when: you want the best-shaped answer here to "how do I stop my agent believing something it made up once", and a short lesson in what an unset variable does to it.
 - Do not copy when: more than one person shares the store (there is no scope key and every entry is stamped `source_agent: 'unknown'`), or you need memory that survives being wrong — decay, age-out, dedup and prune all delete without a record.
+
+### `powermem`
+
+- Best idea: forgetting split into four separate predicates — `should_promote`, `should_forget`, `should_archive` and `reinforce`, each with its own threshold — so archival is a different decision from forgetting rather than the same score crossing a second line.
+- Biggest risk: a `history` table with `old_memory`, `new_memory` and `actor_id`, maintained by migrations and written by nothing in the repository. A schema that implies an audit trail will be read as one, including by any capability matrix built from migrations.
+- Most reusable component: `_get_decay_rate_for_type` and `_build_db_filters` — a per-type decay rate is a few lines for a large gain in realism, and pushing the scope keys into the backend's own query is the difference between a boundary and a convention.
+- Maturity impression: 128 test files across storage backends, FTS, MCP and the CLI installer, a broad integration surface (Python SDK, HTTP server, MCP, CLI, VS Code, Claude Code), and the atlas's most complete forgetting-curve implementation — beside an unwired history table and a rotating file log with `backupCount=5`.
+- Study when: you want retention to be a tunable model rather than a TTL, or you want to see decay, reinforcement, promotion and archival separated into decisions you can measure independently.
+- Do not copy when: you need read replicas or deterministic reads — search writes to the store by design, and that is not a flag you can disable without losing the retention model — or a memory has to be evidence, since a decay score is not a record that something was wrong.
 
 ## 10. Practical Checklist for Your Own System
 

@@ -111,7 +111,11 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     # "1 of 58" in digits. Bounded to denominators of forty or more because the
     # only atlas count that large is the system total, which keeps this away from
     # ordinary prose like "two of five backends".
-    digits = re.compile(r"\b\d+\s+of\s+(\d{2,3})\b")
+    #
+    # The optional "the" is load-bearing: the verdicts section opened with "64 of
+    # the 97 reports" and drifted to 115 reports unnoticed, because the article
+    # broke the match. Any determiner between the two numbers hides a count.
+    digits = re.compile(r"\b\d+\s+of\s+(?:the\s+)?(\d{2,3})\b")
 
     found: list[str] = []
     for source in [root / "site" / "index.html"] + sorted((root / "content").rglob("*.md")):

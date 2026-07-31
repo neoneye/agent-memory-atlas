@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 64 of the 97 reports.</strong> It was
+<p><strong>This section covers 69 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9127,6 +9127,37 @@ scope key and every entry is stamped
 <code>source_agent: 'unknown'</code>), or you need memory that survives
 being wrong — decay, age-out, dedup and prune all delete without a
 record.</li>
+</ul>
+<h3 id="powermem"><code>powermem</code></h3>
+<ul>
+<li>Best idea: forgetting split into four separate predicates —
+<code>should_promote</code>, <code>should_forget</code>,
+<code>should_archive</code> and <code>reinforce</code>, each with its
+own threshold — so archival is a different decision from forgetting
+rather than the same score crossing a second line.</li>
+<li>Biggest risk: a <code>history</code> table with
+<code>old_memory</code>, <code>new_memory</code> and
+<code>actor_id</code>, maintained by migrations and written by nothing
+in the repository. A schema that implies an audit trail will be read as
+one, including by any capability matrix built from migrations.</li>
+<li>Most reusable component: <code>_get_decay_rate_for_type</code> and
+<code>_build_db_filters</code> — a per-type decay rate is a few lines
+for a large gain in realism, and pushing the scope keys into the
+backend's own query is the difference between a boundary and a
+convention.</li>
+<li>Maturity impression: 128 test files across storage backends, FTS,
+MCP and the CLI installer, a broad integration surface (Python SDK, HTTP
+server, MCP, CLI, VS Code, Claude Code), and the atlas's most complete
+forgetting-curve implementation — beside an unwired history table and a
+rotating file log with <code>backupCount=5</code>.</li>
+<li>Study when: you want retention to be a tunable model rather than a
+TTL, or you want to see decay, reinforcement, promotion and archival
+separated into decisions you can measure independently.</li>
+<li>Do not copy when: you need read replicas or deterministic reads —
+search writes to the store by design, and that is not a flag you can
+disable without losing the retention model — or a memory has to be
+evidence, since a decay score is not a record that something was
+wrong.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
