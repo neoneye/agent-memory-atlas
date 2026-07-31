@@ -3338,16 +3338,20 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 111 of the 115 reports.** It was written when the
-corpus was small enough to enumerate and has not kept pace with it, so a system
-missing here has not been judged and found unremarkable — it has not been
-written up in this format. The [capability index](../capabilities/) and the
-comparative matrix above are generated from every report's frontmatter and are
-complete by construction; this section is hand-written and is not. Stated rather
-than left to be discovered, because the distinction between *assessed and
-carries nothing* and *nobody wrote the paragraph* is the same one the
+**This section covers all 115 reports.** Six judgements each: the best idea,
+the biggest risk, the most reusable component, an impression of maturity, and
+the two that matter most to a reader deciding — when to study it and when to
+walk away.
+
+It is hand-written, unlike the [capability index](../capabilities/) and the
+comparative matrix above, which are generated from every report's frontmatter
+and complete by construction. So completeness here is a fact about today rather
+than a guarantee: nothing fails the build if the next report arrives without an
+entry, and `scripts/check_homepage.py` only notices the count in the sentence
+above going stale. A verdict missing in future means nobody wrote the paragraph,
+not that a system was judged and found unremarkable — the same distinction the
 [rubric](../methodology/atlas-rubric/) enforces for capability marks, where the
-build fails if a report omits the key. No equivalent guard exists here.
+build *does* fail if a report omits the key.
 
 ### `mem0`
 
@@ -4349,6 +4353,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 62 inline Rust tests concentrated on the agent loop and tool config rather than memory, with nothing exercising the propose/approve/reject cycle.
 - Study when: you want a self-contained agent platform that asks before changing what it has learned, or you want the promotion mechanism on its own.
 - Do not copy when: memory must be correctable. It is one blob per project plus a skill library, thin by design, and read-modify-write over whole JSON files is the persistence model.
+
+### `tokenmizer`
+
+- Best idea: a status for *unresolved ambiguity* that keeps both candidate decisions visible instead of guessing between them — the atlas's only state that means "I do not know which of these is in force".
+- Biggest risk: the redaction functions are unit-tested in isolation and nothing asserts a secret fails to reach the rendered context block.
+- Most reusable component: the status model and its transition table, worth copying even if you never run the tool; and storing the *argument* for a correction rather than only the fact of it.
+- Maturity impression: 440 cases in 38 files with the most informative names in the corpus — `memory_accuracy/test_retention`, `chaos/test_recovery`, `test_contested_decisions`, `test_decay_idempotence` — and a committed ground-truth measurement of extraction recall.
+- Study when: your memory is a coding session and your hardest problem is knowing which of two plausible decisions still holds.
+- Do not copy when: you need multi-tenant or long-horizon personal memory. Scope is a cache key, every clock is a record clock, and the graph is built around one project's session history.
+
+### `virtualwife`
+
+- Best idea: the storage contract. `BaseStorage` puts `owner` on every method including a scoped clear, and is a good small answer to "what must a memory backend do".
+- Biggest risk: `normalize_scores` sums three quantities on different scales without normalising any of them, so the Generative Agents retrieval function does not do what its name says.
+- Most reusable component: the contract, with the implementations discarded — and decay by wall-clock hours rather than by turns.
+- Maturity impression: one test file, covering a livestream API. **Nothing tests memory**, and the tests that would have caught what this report found are unusually direct.
+- Study when: you want a minimal backend contract to copy, or a worked example of a scoring bug that a single assertion would have caught.
+- Do not copy when: you want the system. It is dormant, needs Milvus for the interesting half, disables that half by default, and is a last-N-messages window without it.
+
+### `z-waif`
+
+- Best idea: capping how much the character's own output contributes to its own retrieval query — a feedback loop most companion systems have and none of the others here noticed.
+- Biggest risk: a three-message window score is computed and never used, an initial best-score of zero sits over a scorer that returns negatives, and the retrieval cannot return nothing.
+- Most reusable component: the scoring function — forty lines containing three of BM25's five ideas plus two the literature does not emphasise, rewritable over a proper store in an afternoon.
+- Maturity impression: no tests of any kind, for a system whose entire behaviour is arithmetic over lists — the most avoidable gap in this atlas, since every property is a pure function of data.
+- Study when: you want a long-running local companion on a machine with no GPU budget, and the best worked example here of how far plain arithmetic gets you.
+- Do not copy when: you would take the code. The licence is source-available with a discretionary field-of-use clause and a royalty, and the data model cannot maintain its own invariants.
+
+### `zerostack`
+
+- Best idea: atomic write-then-rename with the reason in the comment, and a `.bak` whose extension deliberately keeps it out of the `.md` listing and out of search — a backup that cannot become a search result.
+- Biggest risk: a destructive default on a missing argument, and a one-deep undo presented as safety.
+- Most reusable component: the global-versus-project split and the atomic-write-plus-backup pair, liftable wholesale into any notebook system in any language.
+- Maturity impression: 65 test functions in 1,203 lines — a ratio just under one to one — with a separate permission-path suite including `check_perm_skipped_when_permission_is_none`, which asserts the gate is a gate.
+- Study when: you want a Markdown memory in a Rust agent and care more about not corrupting a file than about recalling the right line.
+- Do not copy when: memory has to hold claims. There is nothing to mark uncertain, nothing to supersede, and no record that anything changed beyond one overwritable `.bak`.
 
 ## 10. Practical Checklist for Your Own System
 

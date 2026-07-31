@@ -7915,18 +7915,21 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 111 of the 115 reports.</strong> It was
-written when the corpus was small enough to enumerate and has not kept
-pace with it, so a system missing here has not been judged and found
-unremarkable — it has not been written up in this format. The <a
-href="../capabilities/">capability index</a> and the comparative matrix
-above are generated from every report's frontmatter and are complete by
-construction; this section is hand-written and is not. Stated rather
-than left to be discovered, because the distinction between <em>assessed
-and carries nothing</em> and <em>nobody wrote the paragraph</em> is the
-same one the <a href="../methodology/atlas-rubric/">rubric</a> enforces
-for capability marks, where the build fails if a report omits the key.
-No equivalent guard exists here.</p>
+<p><strong>This section covers all 115 reports.</strong> Six judgements
+each: the best idea, the biggest risk, the most reusable component, an
+impression of maturity, and the two that matter most to a reader
+deciding — when to study it and when to walk away.</p>
+<p>It is hand-written, unlike the <a href="../capabilities/">capability
+index</a> and the comparative matrix above, which are generated from
+every report's frontmatter and complete by construction. So completeness
+here is a fact about today rather than a guarantee: nothing fails the
+build if the next report arrives without an entry, and
+<code>scripts/check_homepage.py</code> only notices the count in the
+sentence above going stale. A verdict missing in future means nobody
+wrote the paragraph, not that a system was judged and found unremarkable
+— the same distinction the <a
+href="../methodology/atlas-rubric/">rubric</a> enforces for capability
+marks, where the build <em>does</em> fail if a report omits the key.</p>
 <h3 id="mem0"><code>mem0</code></h3>
 <ul>
 <li>Best idea: pragmatic additive extraction plus hybrid
@@ -10077,6 +10080,90 @@ on its own.</li>
 <li>Do not copy when: memory must be correctable. It is one blob per
 project plus a skill library, thin by design, and read-modify-write over
 whole JSON files is the persistence model.</li>
+</ul>
+<h3 id="tokenmizer"><code>tokenmizer</code></h3>
+<ul>
+<li>Best idea: a status for <em>unresolved ambiguity</em> that keeps
+both candidate decisions visible instead of guessing between them — the
+atlas's only state that means "I do not know which of these is in
+force".</li>
+<li>Biggest risk: the redaction functions are unit-tested in isolation
+and nothing asserts a secret fails to reach the rendered context
+block.</li>
+<li>Most reusable component: the status model and its transition table,
+worth copying even if you never run the tool; and storing the
+<em>argument</em> for a correction rather than only the fact of it.</li>
+<li>Maturity impression: 440 cases in 38 files with the most informative
+names in the corpus — <code>memory_accuracy/test_retention</code>,
+<code>chaos/test_recovery</code>, <code>test_contested_decisions</code>,
+<code>test_decay_idempotence</code> — and a committed ground-truth
+measurement of extraction recall.</li>
+<li>Study when: your memory is a coding session and your hardest problem
+is knowing which of two plausible decisions still holds.</li>
+<li>Do not copy when: you need multi-tenant or long-horizon personal
+memory. Scope is a cache key, every clock is a record clock, and the
+graph is built around one project's session history.</li>
+</ul>
+<h3 id="virtualwife"><code>virtualwife</code></h3>
+<ul>
+<li>Best idea: the storage contract. <code>BaseStorage</code> puts
+<code>owner</code> on every method including a scoped clear, and is a
+good small answer to "what must a memory backend do".</li>
+<li>Biggest risk: <code>normalize_scores</code> sums three quantities on
+different scales without normalising any of them, so the Generative
+Agents retrieval function does not do what its name says.</li>
+<li>Most reusable component: the contract, with the implementations
+discarded — and decay by wall-clock hours rather than by turns.</li>
+<li>Maturity impression: one test file, covering a livestream API.
+<strong>Nothing tests memory</strong>, and the tests that would have
+caught what this report found are unusually direct.</li>
+<li>Study when: you want a minimal backend contract to copy, or a worked
+example of a scoring bug that a single assertion would have caught.</li>
+<li>Do not copy when: you want the system. It is dormant, needs Milvus
+for the interesting half, disables that half by default, and is a
+last-N-messages window without it.</li>
+</ul>
+<h3 id="z-waif"><code>z-waif</code></h3>
+<ul>
+<li>Best idea: capping how much the character's own output contributes
+to its own retrieval query — a feedback loop most companion systems have
+and none of the others here noticed.</li>
+<li>Biggest risk: a three-message window score is computed and never
+used, an initial best-score of zero sits over a scorer that returns
+negatives, and the retrieval cannot return nothing.</li>
+<li>Most reusable component: the scoring function — forty lines
+containing three of BM25's five ideas plus two the literature does not
+emphasise, rewritable over a proper store in an afternoon.</li>
+<li>Maturity impression: no tests of any kind, for a system whose entire
+behaviour is arithmetic over lists — the most avoidable gap in this
+atlas, since every property is a pure function of data.</li>
+<li>Study when: you want a long-running local companion on a machine
+with no GPU budget, and the best worked example here of how far plain
+arithmetic gets you.</li>
+<li>Do not copy when: you would take the code. The licence is
+source-available with a discretionary field-of-use clause and a royalty,
+and the data model cannot maintain its own invariants.</li>
+</ul>
+<h3 id="zerostack"><code>zerostack</code></h3>
+<ul>
+<li>Best idea: atomic write-then-rename with the reason in the comment,
+and a <code>.bak</code> whose extension deliberately keeps it out of the
+<code>.md</code> listing and out of search — a backup that cannot become
+a search result.</li>
+<li>Biggest risk: a destructive default on a missing argument, and a
+one-deep undo presented as safety.</li>
+<li>Most reusable component: the global-versus-project split and the
+atomic-write-plus-backup pair, liftable wholesale into any notebook
+system in any language.</li>
+<li>Maturity impression: 65 test functions in 1,203 lines — a ratio just
+under one to one — with a separate permission-path suite including
+<code>check_perm_skipped_when_permission_is_none</code>, which asserts
+the gate is a gate.</li>
+<li>Study when: you want a Markdown memory in a Rust agent and care more
+about not corrupting a file than about recalling the right line.</li>
+<li>Do not copy when: memory has to hold claims. There is nothing to
+mark uncertain, nothing to supersede, and no record that anything
+changed beyond one overwritable <code>.bak</code>.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
