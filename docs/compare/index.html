@@ -1338,6 +1338,44 @@ agent volunteering a declined mortgage or a CRM summary asking after a
 late spouse. And the editing surface is the cheapest correction
 mechanism in this atlas: one click, no model, no trust-state machine,
 fixing a fact the user knows and the extractor guessed.</p>
+<h3 id="not-in-scope-the-kv-cache">Not in scope: the KV cache</h3>
+<p>The other naming collision, and the one that catches technically
+careful readers, is between <em>agent memory</em> and the <strong>KV
+cache an inference server keeps for a conversation</strong>. Both are
+state reused across an agent's turns; only one of them holds anything
+the agent believes.</p>
+<p><a
+href="https://github.com/ThunderAgent-org/ThunderAgent">ThunderAgent</a>
+is the clean example, examined on 2026-07-31 at <a
+href="https://github.com/ThunderAgent-org/ThunderAgent/commit/7ddc8610270e56d3b109eed8796b3a4360fc67c9"><code class="commit-id" title="7ddc8610270e56d3b109eed8796b3a4360fc67c9">7ddc8610…</code></a>.
+It is MIT-licensed, an ICML 2026 Spotlight, integrated into NVIDIA
+Dynamo and SkyRL, and reports 1.5–3.6x agentic inference throughput. Its
+contribution is a <strong>program abstraction as a scheduling
+unit</strong>: a <code>program_id</code> on the API call, and a router
+that keeps an agent's successive requests on the worker that already
+holds its prefix, pausing a program when it goes off-GPU to run a tool
+and resuming it afterwards.</p>
+<p>The check takes one command. Across its 3,360 lines of Python the
+word <em>memory</em> appears three times, all three in
+<code>backend/sglang_metrics.py</code> reading <code>memory_usage</code>
+and <code>token_capacity</code> off a worker to balance load — GPU
+capacity telemetry. There is no <code>sqlite</code>, no file write, no
+vector store, no embedding call, no <code>remember</code>,
+<code>recall</code>, <code>forget</code> or <code>persist</code>
+anywhere in the package. The <code>Program</code> record is a dataclass
+holding a backend URL, a two-value status (<code>REASONING</code> on
+GPU, <code>ACTING</code> off it), a context length and step counts,
+living in a process-local dict that is discarded when the program
+terminates.</p>
+<p>So nothing survives the process, let alone the session, and the
+inclusion test is not close. It is worth naming rather than passing over
+because the confusion runs the other way from the chat-buffer case: this
+really is a system whose entire value is <em>not recomputing state
+across an agent's turns</em>, which is what memory sounds like it should
+mean. The distinction the atlas draws is that a KV cache is an
+optimisation whose loss costs latency, and a memory is a claim whose
+loss costs correctness. Deleting a cache entry is free; deleting a
+memory is the hardest problem on this page.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
 <p>Most agent frameworks ship something called "memory" that is a
@@ -12246,6 +12284,15 @@ reimplementation of the same design was reviewed and marked differently.
 A corpus wide enough to contain a system twice is a corpus that can
 check itself, and nothing in this atlas's process was doing that
 deliberately.</li>
+<li><code>ThunderAgent-org/ThunderAgent</code> was examined on
+2026-07-31 at <code>7ddc8610</code> and is out of scope: it is an
+agentic <em>inference</em> scheduler, not agent memory. Three
+occurrences of the word <em>memory</em> in 3,360 lines, all three GPU
+capacity telemetry; no persistence primitive of any kind. It is filed
+under the KV-cache scope boundary above rather than dismissed, because
+it is the clearest instance of that particular collision — an ICML
+Spotlight whose whole purpose is reusing an agent's state across turns,
+and which stores nothing.</li>
 <li><code>unibaseio/membase</code> was excluded here on licence grounds
 and has since been reviewed — see <a
 href="../systems/membase/">Membase</a>. Its licence position is
