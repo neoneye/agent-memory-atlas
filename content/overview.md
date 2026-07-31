@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 107 of the 115 reports.** It was written when the
+**This section covers 111 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4313,6 +4313,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a mature, long-lived client with a real editing surface — and the one subsystem this atlas came for is the one without a fixture.
 - Study when: your memory is small, curated, and matters more than it scales — a character, a world, a domain glossary, a set of standing instructions.
 - Do not copy when: memory must *learn*. Its own users demonstrate the gap: the summarize extension exists because a hand-authored lorebook cannot remember what happened.
+
+### `simplemem`
+
+- Best idea: coreference resolved and time absolutised **at write**, so a stored unit reads "Alice discussed the marketing strategy with Bob at Starbucks on November 15, 2025" rather than "she told him about it there". Almost everything else here stores the second kind and hopes retrieval supplies the context.
+- Biggest risk: six headline benchmark figures with no committed result artifact for any of them — and the pillar the papers are about cannot delete, scope or correct a single memory.
+- Most reusable component: the restatement transform, which is a prompt and a schema and will improve any retrieval you already have; plus one `_log_event` helper called at every mutation site.
+- Maturity impression: 311 test functions across roughly twenty files for 114,000 lines and three products, with the governed pillar (EvolveMem) also the newest, least documented and least tested.
+- Study when: you want one very good write-time idea to take into your own extractor.
+- Do not copy when: you would deploy the text pillar behind a user-facing agent. The first support request you cannot answer is "remove what it learned about me".
+
+### `skales`
+
+- Best idea: zero-LLM capture and retrieval that are both cheap and legible — regex capture on a 90-minute watermarked scan, retrieval scored `0.70 / 0.20 / 0.10` under a stated sub-100ms budget, with provenance on every extracted row.
+- Biggest risk: the documented deletion path for a fact is a chat phrase nothing implements — and that phrase is bound to *capture* and *retrieval* instead, so asking it to forget can store a new memory.
+- Most reusable component: stating the retrieval budget in the file header, and invalidating the read cache inside the delete action rather than beside it.
+- Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings — the cheapest gap in the atlas to close.
+- Study when: you want a local assistant that quietly remembers preferences without shipping conversations to a vendor.
+- Do not copy when: you need a system of record, or you intend to reuse the implementation — the **BSL 1.1** licence makes this source-available rather than open source.
+
+### `soul-of-waifu`
+
+- Best idea: a length floor on any LLM-generated overwrite, so a short or empty rewrite is rejected rather than stored — the clearest small example here of how to make a full-rewrite memory safe.
+- Biggest risk: the backup, restore and inspection API has no caller anywhere in the application, and only one of the two files written by the same call is backed up.
+- Most reusable component: having the model fill a schema and letting your code render the document, plus giving append-only and rewritable memory different files.
+- Maturity impression: no test suite exists — no `tests/` directory, no `test_*.py`, nothing.
+- Study when: you want to see the guards that make a rewrite-the-whole-document memory survivable.
+- Do not copy when: users will ask "what did I tell you about X". There is no retrieval over history, no provenance and no deletion, and the index forgets by omission.
+
+### `tigrimosr`
+
+- Best idea: the skill synthesizer stages a proposed skill as `SKILL.md.proposed` beside the live file, keeps the rationale and the sessions it came from, waits for a person, and promotes by rename — forcing review when the target was authored by a human rather than by the automation.
+- Biggest risk: approval is durable and rejection is ephemeral, with review state held in process memory — so a user who says "no, don't remember that" is answered and then forgotten.
+- Most reusable component: propose-stage-approve by rename, which is worth copying into systems whose memory model is far richer than this one's.
+- Maturity impression: 62 inline Rust tests concentrated on the agent loop and tool config rather than memory, with nothing exercising the propose/approve/reject cycle.
+- Study when: you want a self-contained agent platform that asks before changing what it has learned, or you want the promotion mechanism on its own.
+- Do not copy when: memory must be correctable. It is one blob per project plus a skill library, thin by design, and read-modify-write over whole JSON files is the persistence model.
 
 ## 10. Practical Checklist for Your Own System
 
