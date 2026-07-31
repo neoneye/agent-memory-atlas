@@ -2113,12 +2113,13 @@ tool</td>
 gated at 24 hours and 20 entries</td>
 <td><code>unverified</code> until two distinct
 <code>agent:session</code> sources corroborate — 0.3x score,
-<code>[UNVERIFIED]</code> badge, 30-day age-out, doubled decay</td>
+<code>[UNVERIFIED]</code> badge, 30-day age-out, doubled decay; a
+session restart is a distinct source</td>
 <td>A trust tier that reaches scoring, the rendered prompt and the decay
 schedule at once, with a promotion override only a human can call</td>
-<td><code>CLIO_AGENT_ID</code> and <code>CLIO_SESSION_ID</code> are
-never assigned, so both sources collapse to <code>unknown:unknown</code>
-and the dedup blocks the second corroboration</td>
+<td>The library still collapses to <code>unknown:unknown</code> when the
+two env vars are unset, so only the two shipped entry points get working
+promotion; and one agent restarted twice can self-corroborate</td>
 </tr>
 <tr>
 <td><code>cognee</code></td>
@@ -9389,18 +9390,20 @@ and no opinion about the contents.</li>
 channels at once — a 0.3x ranking multiplier, an
 <code>[UNVERIFIED]</code> badge in the rendered prompt, and a halved
 age-out — rather than only filtering.</li>
-<li>Biggest risk: the corroboration counter behind that tier reads two
-environment variables the repository never assigns, so both sources
-collapse to <code>unknown:unknown</code>, the sybil dedup rejects the
-second, and nothing can ever promote.</li>
+<li>Biggest risk: the sybil boundary is <code>agent:session</code> and a
+session restart mints a new session, so one agent running twice supplies
+both votes. The library also still defaults to
+<code>unknown:unknown</code> when the identity vars are unset — the fix
+lives in the two shipped entry points, not in <code>LongTerm.pm</code>,
+and a test pins the default as intended.</li>
 <li>Most reusable component: <code>corroboration_sources</code> as an
 array of <code>agent:session</code> identities rather than a count — the
 only place in this atlas where "two independent sources" is checkable
 rather than assertable.</li>
 <li>Maturity impression: 102,862 lines of pure Perl with no CPAN
-dependency, 3,434 test assertions, atomic writes throughout, a stated
-memory-poisoning threat model — and zero tests on the mechanism that
-threat model names.</li>
+dependency, atomic writes throughout, a stated memory-poisoning threat
+model — and, since 31 July 2026, a 412-line regression file on the tier
+mechanism that had none. I ran it: 92 assertions, none failing.</li>
 <li>Study when: you want the best-shaped answer here to "how do I stop
 my agent believing something it made up once", and a short lesson in
 what an unset variable does to it.</li>
@@ -9409,6 +9412,18 @@ scope key and every entry is stamped
 <code>source_agent: 'unknown'</code>), or you need memory that survives
 being wrong — decay, age-out, dedup and prune all delete without a
 record.</li>
+<li>Re-read 2026-07-31 at <a
+href="https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca"><code class="commit-id" title="6f462b8a5a5d8c33c1d624824668aff8ab67ebca">6f462b8a…</code></a>:
+the unset-identity defect this entry reported is fixed in <a
+href="https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a"><code class="commit-id" title="7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a">7af1d1cf…</code></a>,
+whose test file cites this atlas as where it was flagged. The same
+commit fixed a second defect the atlas had missed and that was blocking
+the same mechanism from the other side: <code>add_corroboration</code>,
+<code>promote_entry</code> and <code>get_entry_tier</code> used the
+singular <code>entry_type</code> filter directly as the storage key
+while entries live under plural keys, so every type-filtered call
+returned "No entry matching". One defect was visible from a grep and the
+other only from running the property.</li>
 </ul>
 <h3 id="powermem"><code>powermem</code></h3>
 <ul>
@@ -11326,7 +11341,7 @@ href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cb
 <li><a
 href="https://github.com/SyntheticAutonomicMind/CLIO">SyntheticAutonomicMind/CLIO</a>
 at <a
-href="https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb6161304579123ce1e291d1ac4b0eb86"><code class="commit-id" title="1c84ed9cb6161304579123ce1e291d1ac4b0eb86">1c84ed9c…</code></a></li>
+href="https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca"><code class="commit-id" title="6f462b8a5a5d8c33c1d624824668aff8ab67ebca">6f462b8a…</code></a></li>
 <li><a
 href="https://github.com/AgentSwarms-fyi/agentswarms">AgentSwarms-fyi/agentswarms</a>
 at <a

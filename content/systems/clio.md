@@ -1,13 +1,13 @@
 ---
 title: "CLIO"
 eyebrow: "Corroboration tiers in pure Perl"
-description: "A long-term memory whose entries carry an unverified-or-trusted tier that penalises scoring, badges the prompt and halves the age-out — and whose promotion path counts corroborations by an identifier nothing in the repository ever sets."
+description: "A long-term memory whose entries carry an unverified-or-trusted tier that penalises scoring, badges the prompt and halves the age-out — with the identity bug that made promotion unreachable now fixed, tested, and traded for a weaker sybil boundary."
 root: ../..
 page_kind: system
 source_name: "SyntheticAutonomicMind/CLIO"
 source_url: https://github.com/SyntheticAutonomicMind/CLIO
-revision: 1c84ed9cb6161304579123ce1e291d1ac4b0eb86
-revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb6161304579123ce1e291d1ac4b0eb86
+revision: 6f462b8a5a5d8c33c1d624824668aff8ab67ebca
+revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca
 analyzed_at: 2026-07-31
 capabilities: "trust_state, human_review"
 matrix:
@@ -19,9 +19,9 @@ matrix:
   scoping: "One store per working directory — a filesystem boundary, not a stored key"
   integration: "A terminal-native Perl agent with slash commands, sub-agents, and an MCP client; memory reaches the model through prompt injection and one tool"
   background: "`maybe_consolidate` runs inline on the prompt-build path, gated at 24 hours and 20 entries"
-  trust: "`unverified` until two distinct `agent:session` sources corroborate — 0.3x score, `[UNVERIFIED]` badge, 30-day age-out, doubled decay"
+  trust: "`unverified` until two distinct `agent:session` sources corroborate — 0.3x score, `[UNVERIFIED]` badge, 30-day age-out, doubled decay; a session restart is a distinct source"
   strengths: "A trust tier that reaches scoring, the rendered prompt and the decay schedule at once, with a promotion override only a human can call"
-  risks: "`CLIO_AGENT_ID` and `CLIO_SESSION_ID` are never assigned, so both sources collapse to `unknown:unknown` and the dedup blocks the second corroboration"
+  risks: "The library still collapses to `unknown:unknown` when the two env vars are unset, so only the two shipped entry points get working promotion; and one agent restarted twice can self-corroborate"
 ---
 
 ## 1. Executive Summary
@@ -61,22 +61,55 @@ correspondingly careful: promotion requires two corroborations from **distinct**
 manual override `promote_entry` is wired only to the `/memory promote` slash
 command — a human at the keyboard, never the model.
 
-And it cannot work as shipped. The source key is
+It could not work as shipped, and now it can. The source key is
 `$source_agent:$source_session`, defaulting to
 `$ENV{CLIO_AGENT_ID} // 'unknown'` and `$ENV{CLIO_SESSION_ID} // 'unknown'`
-(`LongTerm.pm:474`). **Neither variable is assigned anywhere in the repository** —
-a grep for `$ENV{CLIO_*} =` across every `.pm`, `.pl`, `.sh` and the `clio`
-entrypoint returns log level, test flags and skill paths, and never these two. So
-every corroboration computes the same key, `unknown:unknown`, the sybil guard
-`next if grep { $_ eq $source_key }` skips the second one, `corroboration_count`
-stops at 1, and no entry ever reaches the threshold of 2. In a default install
-the only path to `trusted` is a person typing `/memory promote`.
+(`LongTerm.pm:474`). At the commit this report first covered, neither variable
+was assigned anywhere in the repository, so every corroboration computed the same
+key, the sybil guard `next if grep { $_ eq $source_key }` skipped the second one,
+`corroboration_count` stopped at 1, and no entry ever reached the threshold of 2.
+The failure was silent: nothing errored, every entry stayed `[UNVERIFIED]` at
+`0.3x` forever, and because the penalty was then uniform across the corpus it
+changed no relative ranking — the mechanism built to discriminate between
+corroborated and uncorroborated knowledge discriminated between nothing.
 
-The consequence is quiet rather than loud, which is what makes it worth naming.
-Nothing errors. Every entry stays `[UNVERIFIED]` at `0.3x` forever — and since
-the penalty is then uniform across the corpus it changes no relative ranking, so
-the mechanism designed to discriminate between corroborated and uncorroborated
-knowledge discriminates between nothing. No test covers any of it.
+**Fixed on 31 July 2026 in
+[`7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a`](https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a),
+which cites this atlas as where the bug was flagged.** Both entry points now
+stamp the identity before any tool runs: the `clio` script sets
+`CLIO_AGENT_ID` to the broker agent id or `main` and `CLIO_SESSION_ID` to the
+session id, and `SubAgent.pm` sets each child to its own broker agent id, which
+closes the spawn-path gap this report named separately.
+
+The same commit found a second bug the atlas had missed, and it was blocking the
+same mechanism from the other side. `add_corroboration`, `promote_entry` and
+`get_entry_tier` took an `entry_type` filter in the singular — `discovery`,
+`pattern` — and used it directly as the LTM hash key, while entries are stored
+under plural keys — `discoveries`, `code_patterns`. Every type-filtered call
+returned "No entry matching", always. A `%LTM_CATEGORY_MAP` now normalizes in all
+three. Two independent defects, both silent, both in the promotion path; the
+atlas found the one visible from a grep and not the one visible from a call.
+
+Two things the fix does not do, and both are now the report's live findings.
+
+**The default is still the trap, and it is asserted as such.** The identity is
+wired in the callers, not in the library. `LongTerm.pm` still falls back to
+`unknown:unknown`, and the first subtest of the new regression file pins that
+behaviour deliberately — *"default identity collapses to unknown:unknown and
+never promotes"*. That is the right call for a regression test and it means
+anything embedding `CLIO::Memory::LongTerm` without going through the `clio`
+script or `SubAgent.pm` inherits the original bug intact.
+
+**A session restart is now a vote.** The comment in `clio` states the identity
+model plainly: *"Two sessions of the same agent count as different sources… a
+session restart is a real barrier, not a free vote."* One person running
+`clio --new` twice therefore promotes any entry they corroborate in both
+sessions, without a second agent involved. Against an attacker who has already
+achieved prompt injection in a single agent, restarting a session is not much of
+a barrier. Stating the threat model in a comment beside the assignment is better
+practice than most of this atlas manages; the model chosen is the weaker of the
+two available, and `CLIO_AGENT_ID` is the field that would carry the stronger
+one.
 
 ## 2. Mental Model
 
@@ -326,6 +359,23 @@ Injection is bounded at ~3,000 tokens and lands in the system prompt at session
 start, not per turn, so it sits in the stable prefix rather than invalidating a
 cache on every request.
 
+That bound is a constant, and the rest of the context budget stopped being one in
+this round. `TokenEstimator::compute_prompt_budget` now derives the conversation
+budget from the model's declared `max_output_tokens` instead of reserving a flat
+25% — or 50% after a trim — of the context window, with the module's own example
+being a 1M-context model whose 128K output cap frees 172K of usable prompt that
+the percentage heuristic was holding back. Three trim paths use it
+(`ConversationManager`, `MessageValidator`, `ErrorHandler`) and it has a new
+68-assertion test.
+
+The memory slice did not move with it. `PromptManager.pm:1566` still calls
+`render_budgeted_section(max_chars => 12000)` with the number written at the call
+site, so a model with a million tokens of context and a model with eight thousand
+receive the same three thousand tokens of long-term memory. That is defensible as
+a default — more memory is not obviously better when the selection is a ranked
+dump with no query — but it is now the one part of the context calculation that
+does not know what model it is talking to.
+
 ## 8. Agent Integration
 
 CLIO *is* the agent, so there is no integration surface in the plugin sense —
@@ -348,9 +398,10 @@ promoted by corroboration and a few by hand, none are promoted by corroboration
 and only hand-promoted entries are ever trusted.
 
 Sub-agents can be spawned with file and git locks, which is what makes "two
-distinct agents corroborating" a coherent idea in the first place. That the spawn
-path does not set `CLIO_AGENT_ID` for the child is the gap between the idea and
-the wiring.
+distinct agents corroborating" a coherent idea in the first place, and the spawn
+path now stamps `CLIO_AGENT_ID` with the child's broker agent id
+(`SubAgent.pm:261`) so a parent and its sub-agent are genuinely distinct sources.
+That is the configuration the tier system was designed for.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -359,17 +410,22 @@ poisoning explicitly and describe the tier system as the defence, including the
 sybil concern in the phrase *"corroborations from the same `agent:session` pair
 are deduplicated."* Very few systems in this atlas name an adversary at all.
 
-**The defence has three real components and one broken input.** Scoring penalty,
-prompt badge and differential decay are all implemented and all reachable. The
-corroboration counter that drives them is fed by identifiers that default to a
-constant and are otherwise supplied by the caller.
+**The defence has three real components and, now, a working input.** Scoring
+penalty, prompt badge and differential decay are all implemented and all
+reachable, and the corroboration counter that drives them is fed by identifiers
+the two shipped entry points assign at startup. What remains is the strength of
+the boundary rather than its existence: an `agent:session` pair where a restart
+mints a new session means a single agent can supply both votes across two runs,
+so the sybil resistance holds against a second voice in the same session and not
+against the same voice twice.
 
 **The guidance to the model is unusually good.** Agents are instructed to *"trust
 but verify"* — to validate `[UNVERIFIED]` procedural patterns before acting on
 them, and to corroborate what they independently confirm. Putting the standing of
 a claim in the prompt beside the claim, rather than filtering silently, treats
-the model as a participant in the trust decision. Given that the badge currently
-reads `[UNVERIFIED]` on everything, the practical effect is a uniform hedge.
+the model as a participant in the trust decision. With promotion now reachable,
+the badge finally varies across entries, which is the condition under which that
+instruction means anything.
 
 **Secret redaction runs before content reaches the provider**, per the README,
 which is the right ordering and matches what the atlas expects.
@@ -398,14 +454,30 @@ old-low-confidence, solutions above discoveries at equal confidence),
 exclusions. `test_ltm_integration.pl` and `test_yarn_collaboration.pl` cover the
 round trip and the archive.
 
-**Nothing tests the tier system.** A grep across `tests/` for `corroborat`,
-`'trusted'`, `add_corroboration` or `promote_entry` returns nothing. The
-mechanism with a stated threat model, three enforcement points and a documented
-promotion threshold has no committed test — and a single test asserting that two
-corroborations promote an entry would have failed, and would have surfaced the
-unset environment variables immediately. This is the clearest case in the atlas
-of the specific value of a test on a *mechanism* rather than on a *function*: the
-functions here all work.
+**The tier system had no test, and that is how the bug survived.** At the
+previous pin a grep across `tests/` for `corroborat`, `'trusted'`,
+`add_corroboration` or `promote_entry` returned nothing: a mechanism with a
+stated threat model, three enforcement points and a documented promotion
+threshold, and no committed test. A single assertion that two corroborations
+promote an entry would have failed and surfaced the unset environment variables
+immediately. It remains the clearest case in the atlas of the specific value of a
+test on a *mechanism* rather than on a *function* — every function here worked.
+
+`tests/unit/test_ltm_corroboration.pl` now exists, 412 lines and thirteen
+subtests, and it is the test that was missing. **I ran it: 92 assertions, none
+failing**, on Perl 5.34 with `perl -Ilib`. It covers the default-identity trap,
+promotion from two distinct sources, same-agent-different-session, env-var
+identity, same-key dedup, the render badges, manual promote, save/load of
+`corroboration_sources`, all five categories, tier-differentiated age-out during
+consolidation, identity stamping by the `add_*` methods, explicit arguments
+overriding the env vars, and the singular-to-plural filter mapping.
+
+Two properties of it are worth separating from the fact that it passes. It
+asserts the *shape* of the mechanism, not just its parts — subtest 2 walks an
+entry from `unverified` to `trusted` by adding two corroborations under different
+identities, which is the property the design claims. And subtest 1 pins the
+broken default as intended behaviour, which is honest about where the fix lives:
+in the callers, not in the library.
 
 `tests/unit/test_ltm_autocapture.pl.disabled` tests a module that no longer
 exists. Renaming a test rather than deleting it is a reasonable habit; leaving it
@@ -413,8 +485,8 @@ alongside 213 live files with no note of why is how a reader concludes automatic
 capture exists when it does not.
 
 No retrieval-quality evaluation, and none is really available: with a ranked-dump
-injection and substring search there is nothing to score. I inspected these
-tests; I did not run the suite.
+injection and substring search there is nothing to score. Beyond
+`test_ltm_corroboration.pl` I inspected the tests rather than running them.
 
 ## 11. For Your Own Build
 
@@ -446,11 +518,13 @@ neither does a stale, tiny store.
 ### Avoid
 
 **Don't build a trust threshold on an identifier nothing assigns.** The whole
-mechanism here turns on `CLIO_AGENT_ID` and `CLIO_SESSION_ID`, which are read in
-seven places and written in none. If a security property depends on an
-environment variable, set it at the one place the process starts and assert it is
-set — a default of `'unknown'` converts a missing configuration into a silent
-policy change.
+mechanism here turned on `CLIO_AGENT_ID` and `CLIO_SESSION_ID`, which were read
+in seven places and written in none. Both entry points now set them at startup,
+and the library default of `'unknown'` survives — pinned by a test — so the
+lesson stands with a sharper edge: if a security property depends on an
+environment variable, set it where the process starts *and* make the library
+refuse rather than default, because a default of `'unknown'` converts a missing
+configuration into a silent policy change for the next caller who arrives.
 
 **Don't let the party you are defending against name its own witnesses.** Where
 the env fallback does not apply, `source_agent` and `source_session` arrive as
@@ -463,9 +537,13 @@ or do not claim the property.
 and the user-facing command calls the one that ignores the tier.
 
 **Test the mechanism, not just the functions.** Every function in CLIO's tier
-system behaves correctly in isolation. The property — *two corroborations promote
-an entry* — is the thing that is broken, and it is exactly the assertion nobody
-wrote.
+system behaved correctly in isolation. The property — *two corroborations promote
+an entry* — was the thing that was broken, and it was exactly the assertion
+nobody had written. Two independent defects were sitting in that gap, not one;
+the second, a singular filter key against plural storage, was invisible to
+inspection and would have failed the first time anyone asserted the property.
+`test_ltm_corroboration.pl` is now the shape to copy: subtest 2 walks an entry
+from `unverified` to `trusted` rather than checking that the pieces work.
 
 **Don't leave a `.disabled` test for a module you removed.** It is a claim about
 capability that outlives the capability.
@@ -492,14 +570,15 @@ fault is in two unset variables rather than in the idea.
 
 ## 12. Open Questions
 
-- **Are `CLIO_AGENT_ID` and `CLIO_SESSION_ID` set by something outside this
-  repository?** SAM and ALICE are named as sibling projects that CLIO is
-  developed alongside; if one of them exports these, the mechanism works in the
-  author's own environment and nowhere else. Nothing in this repository sets
-  them, and the install path does not mention them.
-- **Was the tier system ever exercised end to end?** The absence of any test, and
-  a defect that a single test would catch, suggests it was designed and wired but
-  not run through a two-agent scenario.
+- **Is a session restart the boundary the threat model wants?** The identity
+  comment argues it is. An attacker who can inject into one session can usually
+  reach the next one too, and `CLIO_AGENT_ID` already exists to express the
+  stronger rule. Whether the looser choice was made for the single-user case or
+  on the merits is not recorded anywhere in the tree.
+- **Will anything stop the library default returning?** The fix lives in two
+  callers and the fallback to `unknown:unknown` is still in `LongTerm.pm`, pinned
+  by a test as intended. A third entry point added later inherits the original
+  bug by default rather than by omission.
 - **What happened to `CLIO::Memory::AutoCapture`?** The disabled test implies an
   automatic-capture path was built. Whether it was removed for accuracy, cost or
   scope would say something about whether agent-initiated writes are a choice or
@@ -527,7 +606,8 @@ operations).
 **Injection** — `lib/CLIO/Core/PromptManager.pm:1551`–`:1576`,
 `lib/CLIO/Core/PromptBuilder.pm:119`.
 
-**Tests** — `tests/unit/test_ltm_budget.pl`,
+**Tests** — `tests/unit/test_ltm_corroboration.pl`,
+`tests/unit/test_ltm_budget.pl`, `tests/unit/test_prompt_budget.pl`,
 `tests/integration/test_ltm_integration.pl`,
 `tests/unit/test_yarn_collaboration.pl`,
 `tests/unit/test_ltm_autocapture.pl.disabled`.
