@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 95 of the 115 reports.** It was written when the
+**This section covers 99 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4205,6 +4205,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: server tests plus client suites in Python, TypeScript and Go — real coverage, but shallow on the parts that matter, exercising API shape and filter correctness rather than extraction quality.
 - Study when: you are building a personalized consumer application that wants a stable user description injected every turn at a predictable token cost, with one service and one database.
 - Do not copy when: the memory must be accountable. "Why do you believe that?", "where did that come from?" and "forget that permanently" have nowhere to stand — and that follows from the decision to keep the profile small, not from an oversight.
+
+### `memori`
+
+- Best idea: provenance as a real join table, so a fact resolves back to the conversations that produced it — and a capture path that survives extraction failure, because the durable write is required and the smart write optional.
+- Biggest risk: the dedupe key strips all non-ASCII, so facts in Chinese, Japanese, Korean, Arabic, Hebrew, Russian, Greek or Thai collide into one row.
+- Most reusable component: the required-durable/optional-smart write split, and giving the agent its own memory subject rather than filing everything under the user.
+- Maturity impression: 153 test files plus per-driver modules and a TypeScript suite — the largest suite of any system in its review round — with legible migrations and a Rust core behind three SDKs.
+- Study when: you want a portable, auditable schema across an unusual range of databases and are happy to depend on a vendor for extraction.
+- Do not copy when: your users write in non-Latin scripts. That is a statement about one function rather than the design — the fix is a few lines — but verify it against your own data before storing anything you would miss.
+
+### `minecontext`
+
+- Best idea: event time is separate from record time and **allowed to be in the future**, which is what makes prospective memory — a commitment you have not kept yet — expressible at all.
+- Biggest risk: commitments are inferred from screen capture and nothing reviews them. There are no tests in the Python package, no scope key and no tenancy model.
+- Most reusable component: keeping the raw properties as a list under the merged context, and checking historical completion before generating a new commitment.
+- Maturity impression: **no tests at all** — the only files matching "test" are unrelated frontend TypeScript — no eval harness, no benchmark directory and no committed results.
+- Study when: you want a passive, local, single-machine assistant that builds context from your own work, with the best ergonomics of the passive-capture systems here.
+- Do not copy when: you are building a component, or you are not willing to be told what you promised by a system with no test suite and no way to correct it.
+
+### `mirix`
+
+- Best idea: the scope key is in the *cache* query as well as the database query, and the boundary is tested by asserting exclusion rather than inclusion — a memory written under one scope, searched under another, asserted absent.
+- Biggest risk: `auto_dream` loads up to 500 items per type and lets an agent merge and rewrite them, with hard delete available — so a correction can be undone by an unsupervised pass.
+- Most reusable component: a raw-context table kept beside the typed ones, and read scope separated from write scope on the client.
+- Maturity impression: 33 test files with the emphasis on boundaries rather than recall — agent isolation, multi-scope access, scoped blocks, filter tags — above the atlas median for a tenancy-first design.
+- Study when: you are building a hosted, multi-tenant assistant on Postgres and Redis and want the tenancy model right from the start.
+- Do not copy when: memory must be repairable. No trust state, no tombstone, hard delete on the correction path, and a whole-store rewriting pass — a user's "no, that's wrong" does not outlive it.
+
+### `mnemopi`
+
+- Best idea: per-type forgetting curves — the most carefully modelled forgetting in the atlas — with a dry run on every destructive pass and deterministic fallbacks when no LLM is configured.
+- Biggest risk: a provenance scale on which "unknown" outranks "known", an exponential decay curve applied to a commitment, and fifty tuning constants with no evaluation behind them.
+- Most reusable component: making a temporal lane first-class rather than folding recency into one score.
+- Maturity impression: 420 test cases across 71 files with unusually diagnostic names — `consolidate-fact-concurrency`, `recall-precision-regressions`, and an issue-numbered reproduction file. A suite that names its concurrency hazard is a suite someone has been bitten by.
+- Study when: you want the best forgetting model here and can live without correction — a long-running personal assistant where the real failure is an old note crowding out a stable preference.
+- Do not copy when: memory must be correctable or provable. There is no supersession at the facade, no rejection, no audit, and the trust model grades where a memory came from rather than whether it holds.
 
 ## 10. Practical Checklist for Your Own System
 
