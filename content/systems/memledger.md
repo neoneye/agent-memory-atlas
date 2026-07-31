@@ -61,7 +61,7 @@ windows, the promotion rule (`impact >= 5 AND sessions_seen >= 3`) and the impac
 weights, and its header states the contract: *"This file is canonicalized (RFC
 8785) and hashed; the hash is recorded in every event it influenced. Edit freely:
 history is never rewritten, old events stay bound to the old hash."* Change the
-promotion threshold and yesterday's promotions still point at the rule that
+promotion threshold and every promotion already made still points at the rule that
 actually produced them. No other system here can tell you which version of its
 own policy made a decision.
 
