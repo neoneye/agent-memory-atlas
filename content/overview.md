@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 79 of the 115 reports.** It was written when the
+**This section covers 83 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4061,6 +4061,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 868 lines across four test files covering round-tripping, windowing and the `NotImplementedError` paths, with no negative retrieval assertion — which follows from having no scope filter to assert about.
 - Study when: you are already using CAMEL and your agents are short-lived, single-tenant, and their memory is genuinely their transcript.
 - Do not copy when: you are multi-tenant without adding a filter yourself, or a user can ask you to delete something.
+
+### `cortex`
+
+- Best idea: the gate is on the **read**, not the write. A secret-classified hit needs a supervisor decision and then a human yes, and a denial returns an error rather than a quietly redacted result.
+- Biggest risk: a complete `MemoryPrivacyPolicy` — allowed tiers, PII redaction, retention — lives in a process-local `Map` and is consulted by nothing.
+- Most reusable component: the injectable approval gate that fails closed on refusal, plus classifying with regexes before reaching for a model.
+- Maturity impression: a scheduled weekly benchmark that is real, sampled and expiring, beside a governance module with no callers and a tier filter that silently substitutes.
+- Study when: your agents handle material with real disclosure consequences and you want a person or a supervisor in the loop at retrieval time.
+- Do not copy when: you need to correct memory. There is no supersession, no tombstone and no trust state — the system can stop you seeing a memory and cannot record that one was wrong.
+
+### `cosmonapse`
+
+- Best idea: a memory contract with a **failure vocabulary** — refusal, overload, deadlines, rollback. It is the only interface here that lets a backend decline, and the error taxonomy is worth copying wholesale into a system with better content semantics.
+- Biggest risk: the saga journal is an in-process dict, so a worker that dies mid-workflow leaves provisional writes permanent and unmarked.
+- Most reusable component: journalling the inverse when a write belongs to a workflow, and putting a deadline on recall.
+- Maturity impression: SDKs and tests on both the Python and TypeScript sides, no memory benchmark and no retrieval measurement — which follows from a contract that does not define retrieval quality.
+- Study when: you are building multi-agent systems where storage is one participant among many and the hard problems are saturation, deadlines and partial failure.
+- Do not copy when: you want a memory model. It has no opinion about what a memory is, so every question this atlas asks is answered by whatever you bind underneath it.
+
+### `crewai`
+
+- Best idea: scope as a hierarchical path with subscope views, proved by a committed test that a rooted view cannot recall a sibling's records — and recall that reports what it looked for and did not find.
+- Biggest risk: an LLM on the write path is authorised to delete existing records, with no tombstone, no audit and no human in the loop.
+- Most reusable component: the rooted-view boundary test, and `match_reasons` on a result so a rank can say why it happened.
+- Maturity impression: 147 test functions across seven files, 63 of them in `test_memory_root_scope.py` alone, driving scoping through recall, listing, nesting and path normalisation.
+- Study when: your problem is organisational — several agents, several teams, one store, and a need for one agent's memories not to reach another's prompt.
+- Do not copy when: a wrong deletion is expensive. If you adopt it there, the first thing to build is a wrapper that logs `ConsolidationPlan` actions before they execute.
+
+### `ecc`
+
+- Best idea: the schema says out loud that its memory is never authoritative — `trust` is an enum of exactly one value, `unreviewed`, because verified knowledge is promoted into a governed artifact elsewhere rather than upgraded in place.
+- Biggest risk: the read path filters a status the write path cannot produce, so `rejected` and `superseded` are reachable only by hand-editing frontmatter.
+- Most reusable component: `sourceHarness` and `targetHarnesses` on every record, with scope enforced by path containment and every enum validated at load.
+- Maturity impression: four memory-specific test files inside a large repository-wide suite, the notable one asserting the shape of the unified memory surface.
+- Study when: you move between several agent harnesses and want one Markdown vault of deliberate notes all of them can read.
+- Do not copy when: you expect extraction, consolidation or correction. Treat it as a shared notebook with a schema, and expect to open a text editor when something in it turns out to be wrong.
 
 ## 10. Practical Checklist for Your Own System
 

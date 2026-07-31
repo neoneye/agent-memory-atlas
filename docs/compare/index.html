@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 79 of the 115 reports.</strong> It was
+<p><strong>This section covers 83 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9380,6 +9380,93 @@ short-lived, single-tenant, and their memory is genuinely their
 transcript.</li>
 <li>Do not copy when: you are multi-tenant without adding a filter
 yourself, or a user can ask you to delete something.</li>
+</ul>
+<h3 id="cortex"><code>cortex</code></h3>
+<ul>
+<li>Best idea: the gate is on the <strong>read</strong>, not the write.
+A secret-classified hit needs a supervisor decision and then a human
+yes, and a denial returns an error rather than a quietly redacted
+result.</li>
+<li>Biggest risk: a complete <code>MemoryPrivacyPolicy</code> — allowed
+tiers, PII redaction, retention — lives in a process-local
+<code>Map</code> and is consulted by nothing.</li>
+<li>Most reusable component: the injectable approval gate that fails
+closed on refusal, plus classifying with regexes before reaching for a
+model.</li>
+<li>Maturity impression: a scheduled weekly benchmark that is real,
+sampled and expiring, beside a governance module with no callers and a
+tier filter that silently substitutes.</li>
+<li>Study when: your agents handle material with real disclosure
+consequences and you want a person or a supervisor in the loop at
+retrieval time.</li>
+<li>Do not copy when: you need to correct memory. There is no
+supersession, no tombstone and no trust state — the system can stop you
+seeing a memory and cannot record that one was wrong.</li>
+</ul>
+<h3 id="cosmonapse"><code>cosmonapse</code></h3>
+<ul>
+<li>Best idea: a memory contract with a <strong>failure
+vocabulary</strong> — refusal, overload, deadlines, rollback. It is the
+only interface here that lets a backend decline, and the error taxonomy
+is worth copying wholesale into a system with better content
+semantics.</li>
+<li>Biggest risk: the saga journal is an in-process dict, so a worker
+that dies mid-workflow leaves provisional writes permanent and
+unmarked.</li>
+<li>Most reusable component: journalling the inverse when a write
+belongs to a workflow, and putting a deadline on recall.</li>
+<li>Maturity impression: SDKs and tests on both the Python and
+TypeScript sides, no memory benchmark and no retrieval measurement —
+which follows from a contract that does not define retrieval
+quality.</li>
+<li>Study when: you are building multi-agent systems where storage is
+one participant among many and the hard problems are saturation,
+deadlines and partial failure.</li>
+<li>Do not copy when: you want a memory model. It has no opinion about
+what a memory is, so every question this atlas asks is answered by
+whatever you bind underneath it.</li>
+</ul>
+<h3 id="crewai"><code>crewai</code></h3>
+<ul>
+<li>Best idea: scope as a hierarchical path with subscope views, proved
+by a committed test that a rooted view cannot recall a sibling's records
+— and recall that reports what it looked for and did not find.</li>
+<li>Biggest risk: an LLM on the write path is authorised to delete
+existing records, with no tombstone, no audit and no human in the
+loop.</li>
+<li>Most reusable component: the rooted-view boundary test, and
+<code>match_reasons</code> on a result so a rank can say why it
+happened.</li>
+<li>Maturity impression: 147 test functions across seven files, 63 of
+them in <code>test_memory_root_scope.py</code> alone, driving scoping
+through recall, listing, nesting and path normalisation.</li>
+<li>Study when: your problem is organisational — several agents, several
+teams, one store, and a need for one agent's memories not to reach
+another's prompt.</li>
+<li>Do not copy when: a wrong deletion is expensive. If you adopt it
+there, the first thing to build is a wrapper that logs
+<code>ConsolidationPlan</code> actions before they execute.</li>
+</ul>
+<h3 id="ecc"><code>ecc</code></h3>
+<ul>
+<li>Best idea: the schema says out loud that its memory is never
+authoritative — <code>trust</code> is an enum of exactly one value,
+<code>unreviewed</code>, because verified knowledge is promoted into a
+governed artifact elsewhere rather than upgraded in place.</li>
+<li>Biggest risk: the read path filters a status the write path cannot
+produce, so <code>rejected</code> and <code>superseded</code> are
+reachable only by hand-editing frontmatter.</li>
+<li>Most reusable component: <code>sourceHarness</code> and
+<code>targetHarnesses</code> on every record, with scope enforced by
+path containment and every enum validated at load.</li>
+<li>Maturity impression: four memory-specific test files inside a large
+repository-wide suite, the notable one asserting the shape of the
+unified memory surface.</li>
+<li>Study when: you move between several agent harnesses and want one
+Markdown vault of deliberate notes all of them can read.</li>
+<li>Do not copy when: you expect extraction, consolidation or
+correction. Treat it as a shared notebook with a schema, and expect to
+open a text editor when something in it turns out to be wrong.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
