@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 99 of the 115 reports.</strong> It was
+<p><strong>This section covers 103 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9817,6 +9817,95 @@ failure is an old note crowding out a stable preference.</li>
 <li>Do not copy when: memory must be correctable or provable. There is
 no supersession at the facade, no rejection, no audit, and the trust
 model grades where a memory came from rather than whether it holds.</li>
+</ul>
+<h3 id="neko"><code>neko</code></h3>
+<ul>
+<li>Best idea: a <em>dispute</em> signal structurally separate from
+reinforcement, with a hard filter that drops disputed entries
+<strong>before</strong> the LLM rerank — the docstring giving the
+reason: stage two would either reinforce the dispute or, worse, cancel
+it.</li>
+<li>Biggest risk: status is derived from a score rather than stored, so
+no transitions are kept; and ban-topic directives expire after three
+days, which is a TTL on a suppression the user asked for.</li>
+<li>Most reusable component: the durable do-not-mention list keyed on
+the term, and stating the false-positive policy in the code where the
+suppression lives.</li>
+<li>Maturity impression: about 7,936 test functions repository-wide —
+the largest suite in this atlas — with a memory recall test that walks
+the pipeline phase by phase and several policy-contract files.</li>
+<li>Study when: a memory mistake will be <em>felt</em> rather than
+merely wrong — a companion, a therapy-adjacent tool, a long-running
+personal assistant.</li>
+<li>Do not copy when: you want a library. Memory is wired into a
+companion runtime with voice, vision and an avatar, and there is no API
+boundary to lift it out through. Take the designs, not the code.</li>
+</ul>
+<h3 id="npcpy"><code>npcpy</code></h3>
+<ul>
+<li>Best idea: approval is a state the <em>retriever</em> respects
+rather than a workflow step — an unreviewed extraction cannot reach a
+prompt, because the retrieval path reads approved memories only.</li>
+<li>Biggest risk: a rejection is a status on a row. Re-extracting the
+same content produces a fresh candidate with nothing consulting the
+earlier no.</li>
+<li>Most reusable component: offering <strong>edit</strong> and
+<strong>defer</strong> alongside approve and reject, and keeping the
+pre-edit text.</li>
+<li>Maturity impression: one memory-processor test file, no benchmark,
+and nothing asserting that an unapproved memory stays out of
+<code>build_context</code> — the single behavioural claim the whole
+design rests on.</li>
+<li>Study when: your memory is small, your user is present, and wrong
+facts are expensive — ten approved memories beating a thousand extracted
+ones.</li>
+<li>Do not copy when: memory must accumulate unattended, or the same
+facts recur often enough that answering the same question repeatedly
+becomes the product.</li>
+</ul>
+<h3 id="openhuman"><code>openhuman</code></h3>
+<ul>
+<li>Best idea: memories are labelled by <strong>what they may
+cause</strong>, not only by how sure the system is. A taint lattice
+governs consequence, and sanitization deliberately cannot launder
+provenance — a redacted memory keeps its taint.</li>
+<li>Biggest risk: taint is binary, assigned once and never re-evaluated;
+much of the core is re-exported from a separate crate that cannot be
+read here; and nothing records a rejected value.</li>
+<li>Most reusable component: failing closed on unknown enum values from
+the database, and two-tier extraction with a free first tier.</li>
+<li>Maturity impression: about 12,548 test functions repository-wide and
+1,278 inside the memory modules — the most heavily tested system in this
+atlas by count, pinning the fail-closed taint parser and wire-format
+round-trips rather than padding.</li>
+<li>Study when: you are building a desktop agent that ingests a user's
+real data and therefore has a genuine injection problem rather than a
+theoretical one.</li>
+<li>Do not copy when: your requirement is corrective memory, or you want
+a library — twelve modules, an unreadable companion crate, a Tauri shell
+and GPL-3.0 make this a codebase you join rather than a dependency you
+add.</li>
+</ul>
+<h3 id="pydantic-ai-harness"><code>pydantic-ai-harness</code></h3>
+<ul>
+<li>Best idea: an idempotency id derived from the run and the tool call,
+so a retried write is a replay rather than a second append — one of
+three answers to concurrent writes in the whole corpus.</li>
+<li>Biggest risk: the delete is content-free by design, and the only
+table recording mutations has its payload cleared — so the audit cannot
+answer what was removed.</li>
+<li>Most reusable component: budgeting the injection and degrading to a
+pointer, and returning <code>scanned</code> and <code>truncated</code>
+from search so a caller knows the answer was partial.</li>
+<li>Maturity impression: 2,498 lines of tests against 2,452 of
+implementation — the highest ratio in this atlas at this size — and the
+content is better than the ratio, because the suite asserts what must
+<strong>not</strong> happen.</li>
+<li>Study when: you are on Pydantic AI, your memory is notebook-shaped,
+and multi-tenant safety matters more than recall quality.</li>
+<li>Do not copy when: memory must hold <em>claims</em> you will later
+mark uncertain, correct with provenance, or prove you deleted. There is
+no unit below the file to attach that to.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
