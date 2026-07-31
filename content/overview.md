@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 83 of the 115 reports.** It was written when the
+**This section covers 87 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4097,6 +4097,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: four memory-specific test files inside a large repository-wide suite, the notable one asserting the shape of the unified memory surface.
 - Study when: you move between several agent harnesses and want one Markdown vault of deliberate notes all of them can read.
 - Do not copy when: you expect extraction, consolidation or correction. Treat it as a shared notebook with a schema, and expect to open a text editor when something in it turns out to be wrong.
+
+### `everos`
+
+- Best idea: one compile path for every read, with the four scope keys in its base — so there is a single place isolation can be got wrong, and an end-to-end test with a positive control that says it is not.
+- Biggest risk: supersession is excluded from reads but recorded on the row rather than the value, and the source Markdown stays watched — so a deprecated fact is re-derivable.
+- Most reusable component: Markdown canonical with rebuildable indexes, plus the Cases/Skills split bridged at query time.
+- Maturity impression: roughly 1,988 test functions, serious for a project this young, with the e2e layer testing owner isolation and the case-to-skill bridge rather than only the unit surface.
+- Study when: you want a local-first store you can open in an editor, with a scope model good enough to build a multi-user product on.
+- Do not copy when: your correction requirement is strong — making "forget this" durable means reaching into the Markdown tree, and the memory layer will not do it for you.
+
+### `gitlord`
+
+- Best idea: git *is* the memory. Turns are commits, sessions are branches, commit shas are addresses, and forking a conversation is a first-class operation because the substrate already supports it.
+- Biggest risk: it stores what was said rather than what is believed, so a correction and the mistake sit in the log in order with nothing preferring either.
+- Most reusable component: log-as-authority with the index as a projection you can rebuild, and per-branch context-cache invalidation.
+- Maturity impression: 233 test functions, no memory benchmark and no retrieval measurement — consistent with a system whose claim is durability rather than recall.
+- Study when: auditability and replay are the requirement — runs you must reconstruct exactly, experiments you want to fork.
+- Do not copy when: belief is the requirement, or you assume git gives you deletion. Pair it with something that has an opinion about what is true, and keep the evidence here.
+
+### `gobii`
+
+- Best idea: an explicit persistence contract — eight built-in tables declared ephemeral and dropped before save, with each one's mortality stated in the prompt the model reads, so the agent knows what survives.
+- Biggest risk: the schema is model-authored, so nobody can write a query to correct or erase a subject without first discovering what tables the agent invented.
+- Most reusable component: `sqlite3.set_authorizer` as a real sandbox if you let a model write SQL, and mounting the platform's own state as tables the agent can join against.
+- Maturity impression: 381 test functions across the SQLite suites alone, covering the schema prompt, digest, recovery, batch behaviour and cross-process coordination, plus an eval framework in the platform proper.
+- Study when: your agent's memory is genuinely tabular — scraped listings, tracked prices, pipelines — where the useful question is an aggregate and SQL beats every retrieval mechanism here.
+- Do not copy when: memory is a set of beliefs about a person that may turn out to be wrong. There is nowhere to record a rejection and no operator-level way to find a value an agent filed under a name only it chose.
+
+### `goodai-ltm`
+
+- Best idea: targeted update and delete on the interface itself. It is the cleanest demonstration in the atlas that a memory abstraction's first job is to give memories addresses, and the relevant part is two pages long.
+- Biggest risk: no commit since 28 February 2024, no scope key of any kind, and persistence by whole-state serialisation.
+- Most reusable component: `BaseTextMemory` as a diff target — set it beside ADK's `BaseMemoryService` and AutoGen's `Memory` and the missing methods are obvious in about ninety seconds.
+- Maturity impression: unit tests under `goodai/ltm/mem/tests/` with no negative retrieval assertion, and the interesting evaluation story living in a separate benchmark repository.
+- Study when: you are designing a provider contract and want to see what the frameworks dropped.
+- Do not copy when: you intend to run it. Choose something maintained — and then check whether its interface can say "delete that one", because the odds are it cannot.
 
 ## 10. Practical Checklist for Your Own System
 

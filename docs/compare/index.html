@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 83 of the 115 reports.</strong> It was
+<p><strong>This section covers 87 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9467,6 +9467,91 @@ Markdown vault of deliberate notes all of them can read.</li>
 <li>Do not copy when: you expect extraction, consolidation or
 correction. Treat it as a shared notebook with a schema, and expect to
 open a text editor when something in it turns out to be wrong.</li>
+</ul>
+<h3 id="everos"><code>everos</code></h3>
+<ul>
+<li>Best idea: one compile path for every read, with the four scope keys
+in its base — so there is a single place isolation can be got wrong, and
+an end-to-end test with a positive control that says it is not.</li>
+<li>Biggest risk: supersession is excluded from reads but recorded on
+the row rather than the value, and the source Markdown stays watched —
+so a deprecated fact is re-derivable.</li>
+<li>Most reusable component: Markdown canonical with rebuildable
+indexes, plus the Cases/Skills split bridged at query time.</li>
+<li>Maturity impression: roughly 1,988 test functions, serious for a
+project this young, with the e2e layer testing owner isolation and the
+case-to-skill bridge rather than only the unit surface.</li>
+<li>Study when: you want a local-first store you can open in an editor,
+with a scope model good enough to build a multi-user product on.</li>
+<li>Do not copy when: your correction requirement is strong — making
+"forget this" durable means reaching into the Markdown tree, and the
+memory layer will not do it for you.</li>
+</ul>
+<h3 id="gitlord"><code>gitlord</code></h3>
+<ul>
+<li>Best idea: git <em>is</em> the memory. Turns are commits, sessions
+are branches, commit shas are addresses, and forking a conversation is a
+first-class operation because the substrate already supports it.</li>
+<li>Biggest risk: it stores what was said rather than what is believed,
+so a correction and the mistake sit in the log in order with nothing
+preferring either.</li>
+<li>Most reusable component: log-as-authority with the index as a
+projection you can rebuild, and per-branch context-cache
+invalidation.</li>
+<li>Maturity impression: 233 test functions, no memory benchmark and no
+retrieval measurement — consistent with a system whose claim is
+durability rather than recall.</li>
+<li>Study when: auditability and replay are the requirement — runs you
+must reconstruct exactly, experiments you want to fork.</li>
+<li>Do not copy when: belief is the requirement, or you assume git gives
+you deletion. Pair it with something that has an opinion about what is
+true, and keep the evidence here.</li>
+</ul>
+<h3 id="gobii"><code>gobii</code></h3>
+<ul>
+<li>Best idea: an explicit persistence contract — eight built-in tables
+declared ephemeral and dropped before save, with each one's mortality
+stated in the prompt the model reads, so the agent knows what
+survives.</li>
+<li>Biggest risk: the schema is model-authored, so nobody can write a
+query to correct or erase a subject without first discovering what
+tables the agent invented.</li>
+<li>Most reusable component: <code>sqlite3.set_authorizer</code> as a
+real sandbox if you let a model write SQL, and mounting the platform's
+own state as tables the agent can join against.</li>
+<li>Maturity impression: 381 test functions across the SQLite suites
+alone, covering the schema prompt, digest, recovery, batch behaviour and
+cross-process coordination, plus an eval framework in the platform
+proper.</li>
+<li>Study when: your agent's memory is genuinely tabular — scraped
+listings, tracked prices, pipelines — where the useful question is an
+aggregate and SQL beats every retrieval mechanism here.</li>
+<li>Do not copy when: memory is a set of beliefs about a person that may
+turn out to be wrong. There is nowhere to record a rejection and no
+operator-level way to find a value an agent filed under a name only it
+chose.</li>
+</ul>
+<h3 id="goodai-ltm"><code>goodai-ltm</code></h3>
+<ul>
+<li>Best idea: targeted update and delete on the interface itself. It is
+the cleanest demonstration in the atlas that a memory abstraction's
+first job is to give memories addresses, and the relevant part is two
+pages long.</li>
+<li>Biggest risk: no commit since 28 February 2024, no scope key of any
+kind, and persistence by whole-state serialisation.</li>
+<li>Most reusable component: <code>BaseTextMemory</code> as a diff
+target — set it beside ADK's <code>BaseMemoryService</code> and
+AutoGen's <code>Memory</code> and the missing methods are obvious in
+about ninety seconds.</li>
+<li>Maturity impression: unit tests under
+<code>goodai/ltm/mem/tests/</code> with no negative retrieval assertion,
+and the interesting evaluation story living in a separate benchmark
+repository.</li>
+<li>Study when: you are designing a provider contract and want to see
+what the frameworks dropped.</li>
+<li>Do not copy when: you intend to run it. Choose something maintained
+— and then check whether its interface can say "delete that one",
+because the odds are it cannot.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
