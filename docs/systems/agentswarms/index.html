@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent memory built on a
+Postgres trigger that derives keywords from content and a GIN overlap
+query that ranks on them — with three lifecycle columns beside it that
+nothing writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentSwarms — Agent Memory Atlas">
+    <meta property="og:description" content="An agent memory built on a
+Postgres trigger that derives keywords from content and a GIN overlap
+query that ranks on them — with three lifecycle columns beside it that
+nothing writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentSwarms — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent memory built on a
+Postgres trigger that derives keywords from content and a GIN overlap
+query that ranks on them — with three lifecycle columns beside it that
+nothing writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentSwarms — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Keyword memory in a trigger</p>
+          <h1>AgentSwarms</h1>
+          <p class="document-deck">An agent memory built on a Postgres
+trigger that derives keywords from content and a GIN overlap query that
+ranks on them — with three lifecycle columns beside it that nothing
+writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AgentSwarms-fyi/agentswarms">
+              <span>Source</span>
+              <strong>AgentSwarms-fyi/agentswarms</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">
+              <span>Analyzed revision</span>
+              <code>cfde9169…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (67%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentSwarms is a self-hostable agent and business-intelligence
+platform — agent chat, a multi-agent swarm canvas, knowledge bases,
+dashboards, traces — of which the part this atlas cares about is 812
+lines under <code>src/utils/memory/</code>, against roughly 172,000
+lines of TypeScript overall.</p>
+<p><strong>Licensing note, because it decides what you can do with what
+you read.</strong> The repository is under the <strong>Elastic License
+2.0</strong>, which is not an OSI-approved open-source licence: it
+forbids providing the software to third parties as a hosted or managed
+service, and forbids circumventing licence-key functionality. The
+project describes itself as <em>"source-available"</em> and is accurate
+to do so. Read it for the design; check with counsel before vendoring
+it. That is the same position this atlas records for <a
+href="../byterover/">ByteRover</a>.</p>
+<p>The design is the simplest complete long-term memory in the corpus
+that is not a file. <code>gpt-4o-mini</code> reads each user/assistant
+turn and returns items typed <code>fact</code>, <code>preference</code>,
+<code>episodic</code> or <code>instruction</code>. They are inserted
+into <code>agent_memory_items</code>. <strong>A Postgres trigger then
+derives the retrieval index from the content itself</strong> —
+lowercase, strip everything that is not alphanumeric, drop tokens under
+four characters and a stop-list — into a <code>keywords</code> array
+with a GIN index over it. Recall tokenizes the incoming prompt with the
+same rules, runs a <code>&amp;&amp;</code> overlap query, and ranks the
+candidates by <code>overlap × 2 + score + recency × 0.5</code>.</p>
+<p>Deriving the index inside the database is the thing worth taking.
+There is no embedding call on the write path, no vector column, no model
+in the loop between storing a fact and being able to find it again, and
+the tokenizer exists twice — once in PL/pgSQL, once in TypeScript — with
+the same stop-list in both. For a platform that already runs pgvector
+for its knowledge bases, choosing <em>not</em> to use it for agent
+memory is a deliberate and defensible narrowing.</p>
+<p>Two things undercut it, and they are unusually easy to state.</p>
+<p><strong>Nothing dedups.</strong> <code>extractMemoriesFromTurn</code>
+builds its rows and calls <code>.insert(rows)</code>. Not an upsert, no
+content hash, no similarity check, no <code>dedup_key</code>. A user who
+mentions their timezone in ten conversations gets ten rows, all carrying
+the same keywords, all competing for the same top-twelve slots. The only
+thing standing between this and unbounded duplication is a 200-item cap
+enforced by a prune RPC.</p>
+<p><strong>Three columns look like a lifecycle and are inert.</strong>
+<code>score</code> is read by the ranker and by the prune ordering, is
+shown in the settings UI, and is written by no code path — it holds its
+<code>1.0</code> default forever, so it adds a constant to every
+candidate and orders nothing. <code>usage_count</code> is documented in
+the recall comment as <em>"this item helped"</em> feedback and displayed
+beside each item; the only writer passes
+<code>usage_count: undefined</code>, which the client drops from the
+request body, and the read-then-write its comment promises instead is
+the statement <code>void ids;</code>. <code>expires_at</code> exists on
+the table and is set and swept by nothing. The settings page tells the
+user that <em>"oldest low-score items"</em> are pruned on overflow;
+since no item ever has a low score, the prune is ordering by recency
+alone.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a sentence with a category and a bag of
+words</strong>. Not a claim with a status, not an observation with
+evidence — a row whose retrievability is entirely a function of which
+words survived the tokenizer.</p>
+<p>The four <code>kind</code> values are a taxonomy, not a trust ladder.
+<code>fact</code>, <code>preference</code>, <code>episodic</code> and
+<code>instruction</code> are enforced by a CHECK constraint, are shown
+to the model in the injected block as <code>(kind)</code> prefixes, and
+carry no differential weight in ranking, retention or eviction. A
+hallucinated <code>fact</code> and a stated <code>preference</code> are
+the same kind of object to every part of the system.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p>Two doors, and neither has a gate worth the name.</p>
+<p><strong>Extraction.</strong> After the assistant's reply has finished
+streaming, <code>extractMemoriesFromTurn</code> sends the user message
+and the reply to <code>gpt-4o-mini</code> under a prompt that asks for
+durable items and explicitly excludes greetings, restatements of the
+assistant's own answer, ephemeral context and <em>"redacted PII
+placeholders ([EMAIL], [PHONE], [SSN], [CARD])"</em>. Whatever comes
+back is inserted.</p>
+<p><strong>The tool.</strong>
+<code>memory_remember(content, kind)</code> is available to the model.
+It bounds content to 3–500 characters and refuses anything matching
+<code>/\[(EMAIL|PHONE|SSN|CARD|IP|ADDRESS)\]/i</code> — a real guard,
+and the only content check in the system. Then it inserts.</p>
+<p>Both paths write directly to the durable table. There is no candidate
+state, no review queue, no confidence, and nothing that could later say
+<em>this one is doubtful</em>.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>Three exits, all destructive, none recorded.</p>
+<p><em>Forget.</em> <code>memory_forget(id)</code> deletes the row. The
+agent can call it; the id comes from a prior
+<code>memory_recall</code>.</p>
+<p><em>A person deletes it.</em> The agent settings page lists up to 200
+items with a bin on each and a "clear all" behind a confirm. This is the
+atlas's <code>human_review</code> mark: a surface where a person
+inspects memory content and removes it.</p>
+<p><em>Eviction.</em> On every extraction the
+<code>prune_agent_memory_items</code> RPC keeps the top
+<code>ltm_max_items</code> rows ordered by
+<code>score DESC, COALESCE(last_used_at, created_at) DESC</code> and
+deletes the rest. With <code>score</code> constant this is
+least-recently-used eviction, and because nothing dedups, the rows most
+likely to be evicted are the oldest copies of facts that are still
+true.</p>
+<p>Nothing supersedes. Nothing records that a value was rejected. A
+memory a user deleted through the UI is one conversation away from being
+extracted again, and the system has no way to know it ever existed.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Item: gpt-4o-mini extracts a turn, or the agent calls memory_remember
+    Item --&gt; Keyworded: a Postgres trigger derives the keyword array from the content
+    Keyworded --&gt; Keyworded: the same fact next week inserts a second row beside it
+    Keyworded --&gt; Recalled: GIN overlap against the prompt, top twelve
+    Recalled --&gt; Keyworded: last_used_at is bumped, usage_count is not
+    Keyworded --&gt; Evicted: over the two hundred item cap, ordered by recency
+    Keyworded --&gt; Deleted: memory_forget, or a person clicks the bin
+    Evicted --&gt; [*]
+    Deleted --&gt; [*]
+    note right of Keyworded
+        score, usage_count and expires_at all live
+        on this row. Nothing writes any of them.
+    end note</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Supabase project and one Docker container. There is no separate
+memory service, no queue and no worker — the whole subsystem is server
+functions in a TanStack Start application talking to Postgres.</p>
+<p><strong>Three tables.</strong> <code>agent_memory_config</code> holds
+per-agent switches (short-term window size, whether to summarize,
+whether long-term memory is on at all, <code>ltm_max_items</code>,
+<code>ltm_recall_top_k</code>, <code>chat_retention_days</code>).
+<code>conversation_memory</code> holds one row per conversation: a
+rolling <code>summary</code>, a token estimate, the id of the last
+message folded in, and a JSONB <code>scratchpad</code>.
+<code>agent_memory_items</code> is the durable store.</p>
+<p><strong>Row-level security on all three</strong>, with the same
+shape: <code>auth.uid() = user_id</code> for both <code>USING</code> and
+<code>WITH CHECK</code>. The boundary is enforced by the database, not
+by a <code>WHERE</code> clause the application must remember — the
+stronger version of what <code>scope_enforced</code> certifies.</p>
+<p><strong>Long-term memory is off by default.</strong>
+<code>ltm_enabled</code> defaults to <code>false</code>; short-term
+summarization defaults to on. So the shipped configuration is a rolling
+summary per conversation and nothing durable, and a user opts in per
+agent.</p>
+<p><strong>Background work is one hourly pass</strong>,
+<code>chatRetention.server.ts</code>, and it does not touch long-term
+memory. It deletes chat messages older than the owning agent's
+<code>chat_retention_days</code> and the generated
+<code>.pptx</code>/<code>.docx</code>/<code>.xlsx</code> files those
+turns parked in a private storage bucket — <strong>removing the storage
+objects before the rows that reference them</strong>, on the stated
+reasoning that a crash mid-purge should leave recoverable orphaned rows
+rather than orphaned blobs. That ordering is the most careful thing in
+the memory area of this repository.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One Supabase project, one <code>docker compose up</code>, bring your
+own model keys. The memory subsystem needs nothing beyond the database
+that the rest of the platform already requires — no vector extension on
+this path, no embedding provider, no additional service.</p>
+<p>The store is a Postgres table you can query, and the settings UI
+exposes it directly. Repair is SQL or the bin icon.</p>
+<p>The one hard requirement is an LLM for both extraction and
+summarization, and the model is not yours to choose:
+<code>EXTRACT_MODEL</code> is the literal string
+<code>openai/gpt-4o-mini</code>, and the summarizer falls back to the
+same. In a platform whose headline is bring-your-own-everything across
+fifteen providers, the memory path is pinned to one model at one
+gateway.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Schema</strong> —
+<code>supabase/migrations/20260421221517_*.sql</code>: the three tables,
+the RLS policies, the <code>derive_memory_keywords()</code> trigger
+function, and the <code>prune_agent_memory_items</code> RPC.</p>
+<p><strong>Write</strong> —
+<code>src/utils/memory/extract.server.ts</code>:
+<code>callOpenRouterForExtraction</code> (the prompt and the JSON
+contract) then <code>extractMemoriesFromTurn</code> (insert, then
+prune).</p>
+<p><strong>Agent-invoked write</strong> —
+<code>src/utils/memory/tools.server.ts</code>:
+<code>runMemoryRemember</code> with the length bounds and the
+redaction-placeholder refusal.</p>
+<p><strong>Index</strong> — the <code>derive_memory_keywords()</code>
+trigger. The TypeScript twin is <code>tokenize()</code> in
+<code>recall.server.ts</code>, which must agree with it for overlap to
+work.</p>
+<p><strong>Read</strong> — <code>recallMemoryItems</code> in
+<code>recall.server.ts</code>: tokenize, <code>.overlaps()</code>,
+50-row candidate window ordered by <code>last_used_at</code>, score,
+slice to at most twelve, then the intended usage bump.</p>
+<p><strong>Injection</strong> — <code>buildLtmBlock</code> renders
+<code>=== WHAT YOU REMEMBER ABOUT THIS USER ===</code> with numbered
+<code>(kind) content</code> lines, and <code>composeSystemPrompt</code>
+(<code>memory.server.ts</code>) orders base prompt → long-term block →
+summary, on the comment's reasoning that the long-term block should sit
+higher in attention.</p>
+<p><strong>Short-term</strong> — <code>summarize.server.ts</code>: fold
+the messages that fell out of the window into the rolling summary,
+prepending the existing summary so it accumulates.</p>
+<p><strong>Orchestration</strong> — <code>loadMemoryContext</code> once
+per request; the post-turn work at
+<code>src/routes/api/chat.ts:552-580</code>.</p>
+<p><strong>Correction surface</strong> — <code>deleteMemoryItem</code>
+and <code>clearAllMemoryItems</code> in
+<code>src/components/agents/AgentForm.tsx</code>.</p>
+<p><strong>Retention</strong> —
+<code>src/utils/chatRetention.server.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>agent_memory_items</code> carries <code>id</code>,
+<code>user_id</code>, <code>agent_id</code>,
+<code>conversation_id</code>, <code>kind</code>, <code>content</code>,
+<code>keywords[]</code>, <code>score</code>, <code>usage_count</code>,
+<code>last_used_at</code>, <code>created_at</code> and
+<code>expires_at</code>, with two indexes: GIN over
+<code>keywords</code>, and
+<code>(user_id, agent_id, last_used_at DESC NULLS LAST)</code>.</p>
+<p><strong>Scoping is two keys and a policy.</strong> Every query
+filters <code>user_id</code> and <code>agent_id</code>; RLS enforces the
+first independently of the application. Memory does not cross agents —
+two agents owned by the same person share nothing — which is a stronger
+default than most of this atlas and is the right one for a platform
+where an agent is a configured persona.</p>
+<p>The swarm case adds a third option.
+<code>MemoryOverrides.ltm_scope</code> takes <code>agent</code>,
+<code>swarm</code> or <code>none</code>: under <code>swarm</code> the
+run id is used as the conversation id so short-term memory persists
+across nodes of one execution, and under <code>none</code> long-term
+memory is forced off for the run regardless of the agent's setting. A
+per-run switch that can disable durable memory is the same instinct as
+<a href="../clio/">CLIO</a>'s <code>--incognito</code>.</p>
+<p><strong>Provenance is one nullable column.</strong>
+<code>conversation_id</code> records which conversation produced an item
+and is never read back on any path — not in recall, not in the UI, not
+in prune. There is no source message id, no model id, no timestamp of
+the turn as distinct from the row, and no way to answer "where did this
+come from" beyond the conversation it was born in.</p>
+<p><strong>Temporal fields are record time.</strong>
+<code>created_at</code> and <code>last_used_at</code> describe the row.
+<code>expires_at</code> would have been the one lifecycle field with
+real semantics and is never set.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One lane, and it is lexical.</p>
+<p><code>tokenize()</code> lowercases, replaces every non-alphanumeric
+run with a space, splits, drops tokens shorter than four characters and
+drops a 34-word stop-list. The surviving set is matched against
+<code>keywords</code> with PostgREST's <code>.overlaps()</code>, which
+compiles to the array <code>&amp;&amp;</code> operator and uses the GIN
+index. The 50 most recently used matches come back and are scored in
+TypeScript:</p>
+<pre class="text"><code>matchScore = overlap × 2 + score + recencyBoost × 0.5</code></pre>
+<p>where <code>recencyBoost</code> decays linearly to zero over 30 days
+from <code>last_used_at</code>, and <code>score</code> is the constant
+described above. Ties are broken by the sort. The result is sliced to
+<code>min(topK, 12)</code>.</p>
+<p>The failure modes follow directly from the tokenizer:</p>
+<ul>
+<li><strong>Nothing under four characters is searchable.</strong> A
+memory about SQL, Go, Vue, npm, an API or a KPI cannot be retrieved by
+that word, because the trigger never stored it and <code>tokenize</code>
+would drop it from the query anyway.</li>
+<li><strong>No stemming and no synonyms.</strong> "deploying" does not
+match "deployment", and "invoice" does not match "billing". This is an
+exact-token intersection.</li>
+<li><strong>The 50-row candidate window is ordered by recency, not by
+relevance.</strong> On an agent at its 200-item cap, a memory that
+matches four query terms but has not been used in months can fall
+outside the window entirely and never be scored.</li>
+<li><strong>Duplicates crowd the result.</strong> With no dedup, the ten
+rows recording one fact all match, all score identically, and can occupy
+the whole top-twelve.</li>
+</ul>
+<p>Against that, the design is honest about what it is: cheap,
+deterministic, and free of the failure modes of a bad embedding. There
+is nothing to tune wrong.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous within the request, after the
+answer</strong>. The post-turn block at <code>chat.ts:552</code> is
+explicit about why: fire-and-forget promises would be killed by Worker
+runtimes once the response stream closes, so summarization and
+extraction are <code>await</code>ed before
+<code>controller.close()</code>.</p>
+<p>The consequence is worth stating plainly, because it is the cost this
+design actually charges. With both features on, a turn ends with the
+user's answer fully streamed and then up to <strong>two further
+<code>gpt-4o-mini</code> round trips</strong> — one to fold the summary,
+one to extract — before the connection closes. The answer is readable
+throughout; the request is not finished. Nothing in the repository
+measures that tail.</p>
+<p>Deduplication does not exist at any layer: not a unique index, not an
+upsert arbiter, not a content hash, not a similarity threshold.
+<code>memory_remember</code> does not check whether the same sentence is
+already stored, and the extractor does not either.</p>
+<p>Conflict handling does not exist. Two contradictory
+<code>preference</code> rows coexist, both match, and both are injected
+under a header that tells the model these are things it remembers about
+the user.</p>
+<p>The one real write gate is the redaction-placeholder refusal, and it
+is aimed well: it stops the system storing <code>[EMAIL]</code> as if it
+were a fact, which is what happens when a redaction layer runs upstream
+of an extractor that does not know about it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five tools: <code>memory_remember</code>, <code>memory_recall</code>,
+<code>memory_forget</code>, and <code>memory_set</code> /
+<code>memory_get</code> over the conversation scratchpad — a JSONB blob
+on <code>conversation_memory</code> keyed by an alphanumeric string,
+which is working memory for one conversation rather than anything
+durable.</p>
+<p>Injection is automatic and unbudgeted. The long-term block is built
+from at most twelve items and prepended to the system prompt on every
+request where recall returned anything; there is no character or token
+ceiling on the block, only the item count and the 500-character bound on
+tool-written content. Extracted content has no length bound at all.</p>
+<p>The header the model receives is worth quoting because it is doing
+trust work that the data model does not:</p>
+<blockquote>
+<p>These items were recalled from your long-term memory based on the
+current request. Use them when relevant; do not parrot them back unless
+asked.</p>
+</blockquote>
+<p>That is the only place the system expresses reservation about a
+memory, and it applies the same reservation to all of them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The tenancy boundary is real and enforced at the right
+layer.</strong> RLS on all three tables,
+<code>auth.uid() = user_id</code> on read and write, and agent-level
+partitioning above it.</p>
+<p><strong>The prune RPC is the shape this atlas has been asking
+for.</strong> <code>prune_agent_memory_items</code> is
+<code>SECURITY DEFINER</code> and opens with:</p>
+<pre class="sql"><code>IF auth.uid() IS NULL OR auth.uid() &lt;&gt; _user_id THEN
+  RAISE EXCEPTION &#39;not authorized&#39;;
+END IF;</code></pre>
+<p>— a caller-supplied user id checked against the session <em>inside
+the function body</em>, before anything is deleted. A later migration
+then revokes execute from <code>anon</code>, <code>authenticated</code>
+and <code>PUBLIC</code> entirely. Set that beside <a
+href="../lorekit/">LoreKit</a>, whose archive and purge RPCs are the
+same construct with the same caller-supplied parameter and no such
+check, and the pair is the clearest before-and-after of a
+<code>SECURITY DEFINER</code> hazard in the corpus.</p>
+<p><strong>There is no trust model.</strong> No status, no confidence
+that varies, no provenance that is read, no audit of any mutation. An
+item extracted by a small model from one ambiguous sentence and an item
+a person typed are indistinguishable downstream.</p>
+<p><strong>Prompt-injection exposure is direct and unfenced.</strong>
+The extractor reads the assistant's own reply as well as the user's
+message, so content the agent repeated from a tool result, a fetched
+page or a knowledge-base document can become a durable memory, and the
+injected block presents all of it as things the agent remembers about
+the user. The extraction prompt's instruction not to extract
+<em>"restatements of the assistant's own answer"</em> is the only
+barrier, and it is a sentence in a prompt.</p>
+<p><strong>Retention has a floor, not a ceiling.</strong>
+<code>chat_retention_days</code> defaults to 7 and
+<code>MIN_CHAT_RETENTION_DAYS</code> is 7, enforced in the type, in the
+purge job and by a database CHECK — the comment states that the setting
+<em>"only ever lengthens retention"</em>. A user who wants their chat
+history gone in 24 hours cannot ask for it. That is a defensible product
+decision and an unusual one to encode as a minimum.</p>
+<p><strong>And long-term memory is outside retention entirely.</strong>
+The hourly pass deletes chat; <code>agent_memory_items</code> is
+untouched by it and has no sweeper of its own. So the durable extraction
+of a conversation outlives the conversation, by design and without a
+stated lifetime.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There are none.</strong> No test file matching
+<code>*.test.ts</code> or <code>*.spec.ts</code> exists anywhere in the
+repository, for the memory subsystem or for anything else. No eval
+harness, no benchmark directory, no committed results.</p>
+<p>For this subsystem specifically the missing tests are unusually cheap
+and unusually pointed, because almost everything here is a pure function
+over strings or a single SQL statement:</p>
+<ul>
+<li><code>tokenize()</code> and <code>derive_memory_keywords()</code>
+must agree. They are two implementations of one tokenizer in two
+languages, and nothing checks that they produce the same set. A
+divergence would silently reduce recall to zero for the affected
+terms.</li>
+<li><code>usage_count</code> increments. One assertion would have caught
+the <code>undefined</code>.</li>
+<li>An archived-or-expired item does not surface. There is nothing to
+assert, because nothing expires.</li>
+<li>A memory written under one agent does not surface under
+another.</li>
+</ul>
+<p>The absence is not a judgement about the rest of the platform, which
+is large and evidently shipped. It does mean every behavioural claim in
+this report was read from source and none of it was executed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Derive the retrieval index in the database, in a trigger,
+from the content.</strong> <code>derive_memory_keywords()</code> means
+an application cannot insert a row that is unfindable, cannot forget to
+update the index, and cannot drift from it. A GIN array overlap is a
+legitimate retrieval mechanism for small per-agent stores, and it costs
+no model call and no vector extension.</p>
+<p><strong>Refuse to store a redaction placeholder.</strong> If anything
+upstream replaces PII with <code>[EMAIL]</code> or <code>[SSN]</code>,
+an extractor downstream will happily store the placeholder as a fact.
+Six characters of regex prevents a memory that is worse than
+useless.</p>
+<p><strong>Check the caller inside a <code>SECURITY DEFINER</code>
+function.</strong> Comparing the caller-supplied id against
+<code>auth.uid()</code> in the body, then revoking execute from every
+client role, is two lines and closes the hole the same construct opens
+elsewhere in this atlas.</p>
+<p><strong>Delete generated artifacts before the rows that point at
+them.</strong> The retention pass removes storage objects first so a
+crash leaves recoverable orphaned rows rather than unreferenced blobs.
+That ordering generalises to any purge that spans two stores.</p>
+<p><strong>Give a multi-agent run a memory scope selector.</strong>
+<code>agent | swarm | none</code> lets one execution share short-term
+state across nodes and lets an operator run a pass with durable memory
+switched off, without touching the agent's configuration.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not ship a column your code never writes.</strong> Three
+here — <code>score</code>, <code>usage_count</code>,
+<code>expires_at</code> — and each is worse than absent, because each is
+<em>surfaced</em>. The ranker reads <code>score</code>, the settings
+page displays <code>usage_count</code>, and the UI tells the user that
+low-score items are pruned first. A reader auditing the schema would
+conclude this system has reinforcement, decay and expiry. It has none of
+them. If a field is not wired, delete it or comment that it is
+reserved.</p>
+<p><strong>Do not insert where you mean upsert.</strong> Extraction with
+no dedup turns a frequently-mentioned fact into a block of identical
+rows that crowd out everything else in a top-twelve, and turns a memory
+cap into a duplicate cap. Content hashing is the cheapest fix and a
+unique index the most durable.</p>
+<p><strong>Do not let a tokenizer's floor decide what is
+memorable.</strong> Dropping tokens under four characters removes SQL,
+Go, npm, API, KPI and every other short identifier from the searchable
+vocabulary — in a developer-facing product. The rule is reasonable for
+prose and wrong for the domain.</p>
+<p><strong>Do not pin the model in a bring-your-own-model
+product.</strong> Fifteen providers are configurable everywhere else;
+memory extraction is a hardcoded string.</p>
+<p><strong>Do not implement a retention floor without asking whether a
+user might want less.</strong> A minimum retention prevents the request
+"delete my history tomorrow" from being expressible at all.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone self-hosting the platform who wants their agents
+to remember a modest number of stable facts about them, and who will
+turn long-term memory on per agent and glance at the list occasionally.
+Within that brief the design is proportionate: 200 items, keyword
+recall, a bin next to each row, and no infrastructure beyond the
+Postgres the platform already needs.</p>
+<p>It is not a memory layer to build on, and not because of the dead
+columns — those are a morning's work. It is that the data model has no
+place to put the things that make memory hard. There is no unit below
+the row to attach a status, a source or a correction to, so adding trust
+or provenance means changing the schema and everything that reads it.
+The one existing near-miss makes the point: <code>conversation_id</code>
+is stored on every item and read by nothing, so even the provenance the
+schema already collects has no consumer.</p>
+<p>And the licence decides the rest. Under ELv2 you may run it and
+modify it, and you may not offer it as a hosted service. If your
+interest is the design — the trigger-derived index, the
+<code>SECURITY DEFINER</code> check, the purge ordering — those travel
+as ideas without the code, and this report is written so they can.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Do the two tokenizers actually agree?</strong> PL/pgSQL and
+TypeScript implement the same rules against different regex engines, and
+nothing tests the equivalence. A single divergence in how a Unicode
+character or a digit run is handled would make a class of memories
+permanently unfindable, silently.</li>
+<li><strong>How large does an agent's item table get in practice, and
+how often does the cap bind?</strong> With no dedup, the cap is doing
+more work than a cap normally does, and whether it evicts useful rows
+depends on a duplication rate nobody measures.</li>
+<li><strong>How long is the post-answer tail?</strong> Two
+<code>gpt-4o-mini</code> calls are awaited before the connection closes.
+That is a user-visible latency in a streaming product, and nothing
+records it.</li>
+<li><strong>Were <code>score</code>, <code>usage_count</code> and
+<code>expires_at</code> intended for a design that was cut, or reserved
+for one not yet built?</strong> The prune ordering and the UI copy both
+assume <code>score</code> varies, which suggests a mechanism that
+existed or was planned.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema</strong> —
+<code>supabase/migrations/20260421221517_322b810d-b410-4523-a6ea-3189b21c4810.sql</code>
+(three tables, RLS, <code>derive_memory_keywords()</code>,
+<code>prune_agent_memory_items</code>);
+<code>supabase/migrations/20260523112408_*.sql</code> (the execute
+revocations).</p>
+<p><strong>Write</strong> —
+<code>src/utils/memory/extract.server.ts</code>,
+<code>src/utils/memory/tools.server.ts</code>.</p>
+<p><strong>Read</strong> —
+<code>src/utils/memory/recall.server.ts</code>,
+<code>src/utils/memory/memory.server.ts</code>.</p>
+<p><strong>Short-term</strong> —
+<code>src/utils/memory/summarize.server.ts</code>.</p>
+<p><strong>Types and defaults</strong> —
+<code>src/utils/memory/types.ts</code>.</p>
+<p><strong>Orchestration</strong> — <code>src/routes/api/chat.ts</code>
+(<code>loadMemoryContext</code> on the way in, the awaited post-turn
+block on the way out).</p>
+<p><strong>Human surface</strong> —
+<code>src/components/agents/AgentForm.tsx</code>
+(<code>refreshMemoryItems</code>, <code>deleteMemoryItem</code>,
+<code>clearAllMemoryItems</code>).</p>
+<p><strong>Retention</strong> —
+<code>src/utils/chatRetention.server.ts</code>.</p>
+<p><strong>Licence</strong> — <code>LICENSE</code> (Elastic License
+2.0).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

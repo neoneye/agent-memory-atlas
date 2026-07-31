@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and fifteen agent memory architectures, their retrieval
+hundred and sixteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and fifteen agent memory architectures, their retrieval
+of one hundred and sixteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and fifteen agent memory architectures, their retrieval
+of one hundred and sixteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -79,7 +79,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and fifteen agent memory architectures, their retrieval
+hundred and sixteen agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -158,8 +158,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 63 of
-115 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 64 of
+116 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -179,7 +179,7 @@ every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
 <p>One hundred and fifteen systems do not fall into one hundred and
-fifteen categories. They cluster around eight architectural commitments,
+sixteen categories. They cluster around eight architectural commitments,
 and most systems belong to more than one — a coding-agent memory can
 also be verification-first, and a host runtime's plugin can also be a
 hosted service. The families below are lenses, not bins.</p>
@@ -297,7 +297,7 @@ safely.</p>
 <code>memory-engine</code>, <code>memu</code>,
 <code>elastic-atlas</code>, <code>mirix</code>, <code>memobase</code>,
 <code>powermem</code>, <code>memmachine</code>, <code>gobii</code>,
-<code>cortex</code>, <code>lorekit</code></p>
+<code>cortex</code>, <code>lorekit</code>, <code>agentswarms</code></p>
 <p>Multi-user, API-first, with background derivation.
 <strong>Honcho</strong> models workspaces, peers, sessions, and derived
 representations rather than flat facts. <strong>Hindsight</strong> runs
@@ -324,15 +324,26 @@ levels, applied in the SQL and in the Redis index queries alike.
 <strong>Memobase</strong> goes further on the same axis by making scope
 structural: every primary key is <code>(id, project_id)</code> and every
 foreign key is composite, so a cross-tenant query is a schema error
-rather than a review failure. <strong>LoreKit</strong> takes the third
-position on that axis and the one most projects can actually reach: the
-boundary is neither a filter nor a composite key but Postgres row-level
-security, so every read is gated on <code>auth.uid()</code> or a
-matching <code>org_id</code> JWT claim by the database rather than by
-the query. Its <code>org_scope_bindings</code> table then routes a write
-on a bound scope to the organisation instead of the writer, checked
-through <code>lorekit_org_can</code> — which means a team's shared scope
-is not a naming convention. It is also the atlas's clearest case of
+rather than a review failure. <strong>AgentSwarms</strong> is the
+family's minimalist and the one that shows how far a platform can get
+without a vector on the memory path: a Postgres trigger derives a
+keyword array from each item's content, a GIN <code>&amp;&amp;</code>
+overlap ranks against it, and no embedding is called between storing a
+fact and finding it again — in a codebase that already runs pgvector for
+its knowledge bases, so the narrowing is a choice rather than a
+limitation. What it costs is visible in the same file: the tokenizer
+drops every token under four characters, so a memory about SQL, Go, npm
+or an API cannot be retrieved by that word in a developer-facing
+product.</p>
+<p><strong>LoreKit</strong> takes the third position on that axis and
+the one most projects can actually reach: the boundary is neither a
+filter nor a composite key but Postgres row-level security, so every
+read is gated on <code>auth.uid()</code> or a matching
+<code>org_id</code> JWT claim by the database rather than by the query.
+Its <code>org_scope_bindings</code> table then routes a write on a bound
+scope to the organisation instead of the writer, checked through
+<code>lorekit_org_can</code> — which means a team's shared scope is not
+a naming convention. It is also the atlas's clearest case of
 infrastructure outrunning epistemics: RLS, org roles, invites, token
 scopes, per-user caps, an append-only audit log — over a store whose
 memory model is a keyed slot with no status, no confidence and no
@@ -1762,6 +1773,37 @@ candidate/verified/rejected state</td>
 <td>Cheap synchronous capture and compact-first hybrid search</td>
 <td>Very broad surface; shared scope default; fuzzy supersession can
 hide conflicts</td>
+</tr>
+<tr>
+<td><code>agentswarms</code></td>
+<td>A row with a four-value <code>kind</code> — fact, preference,
+episodic, instruction — its content, and a trigger-derived keyword
+array</td>
+<td>Supabase Postgres, three tables, row-level security per user; no
+vector column anywhere on the memory path</td>
+<td>GIN <code>&amp;&amp;</code> overlap between prompt tokens and stored
+keywords, scored <code>overlap × 2 + score + recency × 0.5</code>,
+capped at twelve</td>
+<td><code>gpt-4o-mini</code> extracts up to four kinds per turn and
+plain-<code>INSERT</code>s them; no dedup, no upsert, no similarity
+check</td>
+<td>Hard delete only — <code>memory_forget(id)</code>, a per-item bin in
+the UI, and cap eviction by an RPC. No supersession, no tombstone</td>
+<td><code>user_id</code> and <code>agent_id</code> on every query plus
+RLS at the database; swarm runs pick agent, run or none</td>
+<td>Five tools — remember, recall, forget, and a conversation scratchpad
+set/get — inside a self-hosted agent and BI platform</td>
+<td>An hourly retention pass that deletes old chat and the documents
+those turns generated; nothing sweeps long-term memory</td>
+<td>None. <code>kind</code> is a category, not a status, and the
+confidence-shaped column is a constant</td>
+<td>A deterministic keyword index derived in the database itself, and a
+retention purge that removes generated files before the rows that point
+at them</td>
+<td><code>score</code>, <code>usage_count</code> and
+<code>expires_at</code> are read, surfaced or documented and written by
+nothing; extraction never dedups, so a repeated fact becomes many
+rows</td>
 </tr>
 <tr>
 <td><code>agno</code></td>
@@ -4415,14 +4457,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 115:</em> <a
+<p><em>3 of 116:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>11 of 115:</em> <a href="../systems/clio/"><code>clio</code></a>,
+<p><em>11 of 116:</em> <a href="../systems/clio/"><code>clio</code></a>,
 <a href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -4435,7 +4477,7 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 115:</em> <a
+<p><em>9 of 116:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4450,12 +4492,13 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>63 of 115:</em> <a
+<p><em>64 of 116:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
+href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4518,7 +4561,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>17 of 115:</em> <a
+<p><em>17 of 116:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
@@ -4539,8 +4582,9 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>21 of 115:</em> <a
+<p><em>22 of 116:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
+href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/clio/"><code>clio</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4564,7 +4608,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>16 of 115:</em> <a
+<p><em>16 of 116:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4599,7 +4643,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Sixteen
-repositories of one hundred and fifteen assert that particular material
+repositories of one hundred and sixteen assert that particular material
 must <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -4671,7 +4715,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of one hundred and fifteen is the real figure for the second
+Eleven of one hundred and sixteen is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -7755,7 +7799,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and fifteen systems, almost none can explain why they are shaped the way
+and sixteen systems, almost none can explain why they are shaped the way
 they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -7916,7 +7960,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers all 115 reports.</strong> Six judgements
+<p><strong>This section covers all 116 reports.</strong> Six judgements
 each: the best idea, the biggest risk, the most reusable component, an
 impression of maturity, and the two that matter most to a reader
 deciding — when to study it and when to walk away.</p>
@@ -10166,6 +10210,35 @@ about not corrupting a file than about recalling the right line.</li>
 mark uncertain, nothing to supersede, and no record that anything
 changed beyond one overwritable <code>.bak</code>.</li>
 </ul>
+<h3 id="agentswarms"><code>agentswarms</code></h3>
+<ul>
+<li>Best idea: the retrieval index is derived in the database by a
+trigger over the item's own content, so an application cannot insert a
+row that is unfindable or forget to update the index — and no model call
+sits between writing a fact and being able to recall it.</li>
+<li>Biggest risk: three columns that look like a lifecycle and are
+inert. <code>score</code> is read by the ranker and the prune ordering
+and never written; <code>usage_count</code> is displayed in the settings
+UI and never incremented; <code>expires_at</code> is never set or swept.
+The UI tells the user low-score items are pruned first, and no item ever
+has a low score.</li>
+<li>Most reusable component: <code>prune_agent_memory_items</code> — a
+<code>SECURITY DEFINER</code> function that compares its caller-supplied
+user id against <code>auth.uid()</code> before deleting anything, then
+has execute revoked from every client role. It is the same construct
+LoreKit leaves unchecked.</li>
+<li>Maturity impression: RLS on all three tables, a retention pass that
+deletes generated documents before the rows referencing them, and
+<strong>no tests anywhere in the repository</strong> — for a subsystem
+that is almost entirely pure functions over strings.</li>
+<li>Study when: you want the smallest complete long-term memory here
+that is not a file, or a worked example of lexical recall with no
+embedding and nothing to tune wrong.</li>
+<li>Do not copy when: you need memory to hold claims — there is no
+status, no provenance that is read, and no dedup, so a fact mentioned
+ten times becomes ten rows competing for the same twelve slots. And the
+Elastic License 2.0 forbids offering it as a hosted service.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -10404,6 +10477,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a href="../systems/graphify/"><code>graphify</code></a></li>
 <li><a href="../systems/lorekit/"><code>lorekit</code></a></li>
 <li><a href="../systems/clio/"><code>clio</code></a></li>
+<li><a href="../systems/agentswarms/"><code>agentswarms</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -10823,6 +10897,10 @@ href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cb
 href="https://github.com/SyntheticAutonomicMind/CLIO">SyntheticAutonomicMind/CLIO</a>
 at <a
 href="https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb6161304579123ce1e291d1ac4b0eb86"><code class="commit-id" title="1c84ed9cb6161304579123ce1e291d1ac4b0eb86">1c84ed9c…</code></a></li>
+<li><a
+href="https://github.com/AgentSwarms-fyi/agentswarms">AgentSwarms-fyi/agentswarms</a>
+at <a
+href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4"><code class="commit-id" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">cfde9169…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -11146,7 +11224,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and fifteen — <a
+<strong>three</strong> of one hundred and sixteen — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
@@ -11482,48 +11560,6 @@ files matching <em>remember</em> being the "don't ask again" permission
 rule. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-30-a-reddit-thread-triaged.md">the
 thread note</a> for the rest of that triage.</li>
-<li><code>AgentSwarms-fyi/agentswarms</code> was examined at <a
-href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4"><code class="commit-id" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">cfde9169…</code></a>
-and has no report. It carries the <strong>Elastic License 2.0</strong>,
-which is source-available rather than open source — the call already
-applied to <code>truffle-ai/dexto</code>, and the same test as the BSL
-exclusions: a licence exception is earned by a mechanism the atlas
-lacks, as <a href="../systems/optmem/">OptMem</a>'s was. This does not
-have one. The memory subsystem is 812 lines inside a 172,000-line
-platform: <code>gpt-4o-mini</code> extracts
-fact/preference/episodic/instruction items from each assistant turn
-under a prompt that excludes PII placeholders, a Postgres trigger
-derives a keyword array from the content (lowercase, punctuation
-stripped, tokens under four characters and a stop-list dropped), and
-recall is a GIN <code>&amp;&amp;</code> overlap over those keywords
-scored <code>overlap × 2 + score + recency × 0.5</code>, top-50
-candidates narrowed to at most twelve. Correction is
-<code>memory_forget(id)</code>, a hard delete. Competent and
-conventional; no supersession, no trust state, no tombstone. Two details
-are worth taking anyway, one in each direction. <strong>The good one is
-the shape LoreKit's equivalents miss</strong>:
-<code>prune_agent_memory_items</code> is <code>SECURITY DEFINER</code>
-and opens with
-<code>IF auth.uid() IS NULL OR auth.uid() &lt;&gt; _user_id THEN RAISE EXCEPTION 'not authorized'</code>,
-and a later migration revokes execute from <code>anon</code>,
-<code>authenticated</code> and <code>PUBLIC</code> — a caller-supplied
-user id checked against the session inside the function body, which is
-exactly what <a href="../systems/lorekit/">LoreKit</a>'s archive and
-purge RPCs do not do. <strong>The other is a fresh instance of a
-recurring shape.</strong> <code>usage_count</code> is documented in the
-recall comment as <em>"this item helped"</em> feedback, is selected into
-the agent settings UI, and is incremented by nothing: the only writer
-passes <code>usage_count: undefined</code>, which the client drops from
-the PATCH body, and the read-then-write the comment promises instead is
-<code>void ids;</code>. It reads zero forever. That is the same shape as
-<a href="../systems/csm/">CSM</a>'s beliefs layer, <a
-href="../systems/powermem/">PowerMem</a>'s history table and <a
-href="../systems/cortex/">Cortex</a>'s privacy policy — a column or
-module that exists, is surfaced, and is written by no code path — and it
-is the fourth time this atlas has found it in a month. Also worth noting
-for a platform whose pitch is bring-your-own-model: the extraction model
-is the string <code>openai/gpt-4o-mini</code>, hardcoded, and there are
-<strong>no tests anywhere in the repository</strong>.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>
