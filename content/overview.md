@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 103 of the 115 reports.** It was written when the
+**This section covers 107 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4277,6 +4277,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 2,498 lines of tests against 2,452 of implementation — the highest ratio in this atlas at this size — and the content is better than the ratio, because the suite asserts what must **not** happen.
 - Study when: you are on Pydantic AI, your memory is notebook-shaped, and multi-tenant safety matters more than recall quality.
 - Do not copy when: memory must hold *claims* you will later mark uncertain, correct with provenance, or prove you deleted. There is no unit below the file to attach that to.
+
+### `reme`
+
+- Best idea: correction gets a validated verb set — `CREATE | CORROBORATE | REFINE | CORRECT` — with contradictions written *into* the memory pointing at their cause, rather than resolved silently.
+- Biggest risk: the vocabulary is enforced as a returned label, not as a constraint on the edit, so a validated verb can accompany an unvalidated action.
+- Most reusable component: publishing the category you are worst at. ReMe commits per-category LongMemEval and BEAM tables including its own lowest score, which almost nothing else here does.
+- Maturity impression: integration suites running the pipelines end to end against a workspace fixture, and committed results rather than a harness with no numbers.
+- Study when: you want a personal knowledge base an agent maintains and a person can open in an editor, and you want to see what an honest benchmark report looks like.
+- Do not copy when: you need a multi-user service — the scope key, the read-path filter and the per-tenant index are all yours to add — or you are unwilling to have your correctness rules live in prompts.
+
+### `risuai`
+
+- Best idea: every derived summary carries the ids of the messages it came from, so deleting a source drops the summaries built on it — the cheapest correct answer to a problem most summarizers never notice.
+- Biggest risk: three generations of summarizer ship side by side behind a flag and none of them has a test.
+- Most reusable component: reserving retrieval budget in *bands* rather than ranking one list, including a band for a random draw so the unreachable middle stays reachable.
+- Maturity impression: roughly thirty test files covering the parser, the scripting language, storage, paging and the source map — a team that writes tests, aimed everywhere except the summarizers.
+- Study when: you are building for one person's long-running conversations on their own machine, or you want to watch a data model grow a field per problem across three generations.
+- Do not copy when: you need multiple principals, an audit trail, or a memory an agent can query. There is no scope key, no history and no API.
+
+### `second-me`
+
+- Best idea: L1 is a *numbered generation* over retained L0, so the derived layer is rebuildable and two generations can be compared instead of the latest being trusted.
+- Biggest risk: forgetting stops at the vector store. The trained model keeps what a deleted document taught it, and the deletion cascade that would catch the rest has no test.
+- Most reusable component: versioning the derived layer, and deleting the embeddings in a numbered sequence rather than hoping a cascade covers them.
+- Maturity impression: no tests over its own pipeline, no scope model, no correction path at L2, and a September 2025 commit at the analyzed revision.
+- Study when: you want to experiment with parametric personal memory and have a machine that can train — as a demonstration that the whole pipeline runs on a laptop it is convincing.
+- Do not copy when: you cannot tell your users that deleting a memory removes it from search and not from the model. If that sentence is unacceptable for your product, the architecture is wrong for you.
+
+### `sillytavern`
+
+- Best idea: the activation vocabulary — sticky, cooldown, delay, negative keys, bounded recursion — which are answers to problems extraction-based systems also have and mostly express as tuning constants, if at all.
+- Biggest risk: an intricate activation pipeline with no activation tests. Nothing asserts that a given chat and lorebook produce a given activation set.
+- Most reusable component: the interchange format, which lets a curated memory outlive the tool that authored it.
+- Maturity impression: a mature, long-lived client with a real editing surface — and the one subsystem this atlas came for is the one without a fixture.
+- Study when: your memory is small, curated, and matters more than it scales — a character, a world, a domain glossary, a set of standing instructions.
+- Do not copy when: memory must *learn*. Its own users demonstrate the gap: the summarize extension exists because a hand-authored lorebook cannot remember what happened.
 
 ## 10. Practical Checklist for Your Own System
 
