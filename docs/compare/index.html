@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and twenty agent memory architectures, their retrieval
+hundred and twenty-one agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,15 +13,15 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and twenty agent memory architectures, their retrieval
-mechanics, trust models, and operational tradeoffs.">
+of one hundred and twenty-one agent memory architectures, their
+retrieval mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and twenty agent memory architectures, their retrieval
-mechanics, trust models, and operational tradeoffs.">
+of one hundred and twenty-one agent memory architectures, their
+retrieval mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -79,7 +79,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and twenty agent memory architectures, their retrieval
+hundred and twenty-one agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -159,7 +159,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 66 of
-120 systems here have, and is what the mark means. A scope
+121 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -178,11 +178,11 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and twenty systems do not fall into one hundred and
-twenty categories. They cluster around eight architectural commitments,
-and most systems belong to more than one — a coding-agent memory can
-also be verification-first, and a host runtime's plugin can also be a
-hosted service. The families below are lenses, not bins.</p>
+<p>One hundred and twenty-one systems do not fall into one hundred and
+twenty-one categories. They cluster around eight architectural
+commitments, and most systems belong to more than one — a coding-agent
+memory can also be verification-first, and a host runtime's plugin can
+also be a hosted service. The families below are lenses, not bins.</p>
 <p>Where a system is the clearest instance of an idea, it is named in
 bold and characterized in place rather than given a category of its
 own.</p>
@@ -762,7 +762,7 @@ instructing a behaviour and enforcing one.</p>
 <code>everos</code>, <code>ecc</code>, <code>skales</code>,
 <code>csm</code>, <code>graphify</code>, <code>clio</code>,
 <code>soulforge</code>, <code>project-golem</code>,
-<code>openyak</code></p>
+<code>openyak</code>, <code>memento</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
@@ -1113,6 +1113,25 @@ types almost no other system in this atlas has: <code>intent</code> —
 "prospective: durable commitment with an open/done" lifecycle. Nearly
 everything else here remembers what <em>was</em>; these remember what
 the agent has undertaken to do.</p>
+<p><strong>A third occupant arrives from the other direction, and it is
+the one that completes the category.</strong> <a
+href="../systems/memento/">Memento</a> does not remember an intention;
+it makes <em>content</em> unreachable until a date. An entry can be
+recorded with <code>status = 'sealed'</code> and a
+<code>deliver_on</code> date, and a sealed entry is outside
+transcription, outside the full-text index and outside the timeline —
+every read path in the system keys off later statuses, so the memory
+genuinely cannot be retrieved. A worker pass then runs
+<code>UPDATE entries SET status = 'uploaded' WHERE status = 'sealed' AND deliver_on &lt;= current_date</code>,
+and the entry enters the normal pipeline as if it had just been
+recorded.</p>
+<p>Set beside the other two, that completes a shape worth naming. NOOA
+and MineContext remember <em>that something is to be done later</em>;
+Memento holds <em>something to be known later</em>. And its enforcement
+is the stronger kind: not a <code>WHERE deliver_on &lt;= now()</code>
+predicate every query must remember, but a state outside the pipeline,
+so an entry has no segments and no index row to leak through in the
+first place.</p>
 <p><strong>The second occupant differs in the way that matters.</strong>
 <a href="../systems/minecontext/">MineContext</a> has a
 <code>todo</code> table — <code>content</code>, <code>start_time</code>,
@@ -1534,20 +1553,9 @@ project's own design either</td>
 </tr>
 <tr>
 <td><a href="https://github.com/xD4O/memento">xD4O/memento</a></td>
-<td><strong>The reluctant one.</strong> A voice and video journal that
-is genuinely memory-shaped: <code>profile_facts</code>,
-<code>threads</code> and <code>pins</code> tables all soft-deleted
-through partial indexes, and a <code>deliver_on</code> column
-implementing <em>time capsules</em> — an entry sealed at record time
-whose <code>unseal_due_capsules</code> worker moves it to
-<code>uploaded</code> on its delivery date, so it enters indexing and
-retrieval only then. Memory deliberately unreachable until a future
-moment is a variant of prospective memory nothing else here has. It
-carries <strong>no licence file</strong>, which excluded GAM and
-MemEngine before it, and the OptMem exception was granted for mechanisms
-found nowhere else — a <code>deliver_on</code> date gating a status
-transition is a nice detail, not an architecture. Recorded so the
-decision can be revisited if a licence appears</td>
+<td><strong>Reviewed.</strong> A licence appeared — PolyForm
+Noncommercial 1.0.0 — and the decision was revisited as this row said it
+should be. See <a href="../systems/memento/">Memento</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -3157,6 +3165,33 @@ least-mentioned entities are the ones injected; the graph has no delete
 path</td>
 </tr>
 <tr>
+<td><code>memento</code></td>
+<td>A recorded entry with transcribed segments, plus derived profile
+facts, threads, pins and concepts above it</td>
+<td>Postgres — entries, segments with a GIN full-text index, concepts,
+threads, profile facts, pins, daily summaries</td>
+<td>Full-text over segments and category listings over the derived
+tables, with soft-deleted rows excluded by partial index</td>
+<td>A worker pipeline — upload, transcribe, index — then a reflection
+pass that derives facts, threads and pins from indexed entries</td>
+<td><code>deleted_at</code> everywhere, with every live index declared
+<code>WHERE deleted_at IS NULL</code>; status vocabularies for threads
+and pins</td>
+<td><code>user_id</code> on every table and in every partial index</td>
+<td>A Next.js journal app with a Python worker; the agent writes through
+annotation, pin and fact tools</td>
+<td>A worker loop that transcribes, indexes, unseals due capsules,
+compiles daily summaries and runs the reflection pass</td>
+<td><code>source</code> distinguishes agent from user on annotations,
+facts and pins; <code>source_entry_id</code> points a derived fact back
+at its recording</td>
+<td>Time capsules — a sealed entry is outside indexing and retrieval
+until its delivery date, then enters the normal pipeline</td>
+<td>PolyForm Noncommercial, so nothing here is usable in a product; and
+a fact's provenance link is <code>ON DELETE SET NULL</code>, so deleting
+the source silently orphans it</td>
+</tr>
+<tr>
 <td><code>memmachine</code></td>
 <td>Raw <code>Episode</code> (a conversation message) plus derived
 <code>SemanticFeature</code> — category, tag, feature name, value —
@@ -4568,14 +4603,14 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>3 of 120:</em> <a
+<p><em>3 of 121:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>11 of 120:</em> <a href="../systems/clio/"><code>clio</code></a>,
+<p><em>11 of 121:</em> <a href="../systems/clio/"><code>clio</code></a>,
 <a href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -4588,7 +4623,7 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 120:</em> <a
+<p><em>9 of 121:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4603,7 +4638,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>66 of 120:</em> <a
+<p><em>67 of 121:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4644,6 +4679,7 @@ href="../systems/mastra-observational-memory/"><code>mastra-observational-memory
 href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
+href="../systems/memento/"><code>memento</code></a>, <a
 href="../systems/memmachine/"><code>memmachine</code></a>, <a
 href="../systems/memobase/"><code>memobase</code></a>, <a
 href="../systems/memori/"><code>memori</code></a>, <a
@@ -4674,7 +4710,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>17 of 120:</em> <a
+<p><em>17 of 121:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
@@ -4695,7 +4731,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>25 of 120:</em> <a
+<p><em>25 of 121:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -4724,7 +4760,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>16 of 120:</em> <a
+<p><em>16 of 121:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4759,11 +4795,11 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Sixteen
-repositories of one hundred and twenty assert that particular material
-must <em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Read together
-rather than one at a time, they split cleanly in two, and the split says
-more than the count.</p>
+repositories of one hundred and twenty-one assert that particular
+material must <em>not</em> be retrieved — the assertion every scope,
+deletion and correction claim in this document ultimately rests on. Read
+together rather than one at a time, they split cleanly in two, and the
+split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -4831,11 +4867,11 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of one hundred and twenty is the real figure for the second kind,
-and the two newest are the cheap version of it: a <em>superseded</em>
-value is easy to assert about, because the row is still there to filter
-on. The expensive assertion is that a value the system destroyed does
-not come back.</p>
+Eleven of one hundred and twenty-one is the real figure for the second
+kind, and the two newest are the cheap version of it: a
+<em>superseded</em> value is easy to assert about, because the row is
+still there to filter on. The expensive assertion is that a value the
+system destroyed does not come back.</p>
 <p>Two further things the joint reading shows. The <strong>positive
 control</strong> — asserting that the denial is targeted rather than an
 empty result — appears in Aukora and EverOS and is absent from the rest,
@@ -7915,8 +7951,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and twenty systems, almost none can explain why they are shaped the way
-they are.</p>
+and twenty-one systems, almost none can explain why they are shaped the
+way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -10445,6 +10481,31 @@ concurrency in whole-document memory.</li>
 is no unit below the document, so there is nothing to supersede,
 attribute or reject.</li>
 </ul>
+<h3 id="memento"><code>memento</code></h3>
+<ul>
+<li>Best idea: a memory sealed until a date.
+<code>status = 'sealed'</code> with a <code>deliver_on</code> column
+puts an entry outside transcription, indexing and the timeline entirely,
+and a worker pass moves it into the normal pipeline when the date
+arrives — enforcement by state rather than by a predicate every query
+must remember.</li>
+<li>Biggest risk: <code>source_entry_id</code> is
+<code>ON DELETE SET NULL</code>, so deleting a recording leaves every
+fact derived from it in place with its provenance silently erased —
+indistinguishable from a fact that never had a source.</li>
+<li>Most reusable component: partial indexes that encode liveness —
+every live index declared <code>WHERE deleted_at IS NULL</code>, so the
+fast path and the correct path are the same object.</li>
+<li>Maturity impression: a 208-line schema with status vocabularies,
+soft delete everywhere and a worker that deletes a daily summary when
+its source entries are gone — beside no test suite at all.</li>
+<li>Study when: you need memory that becomes available rather than
+memory that fades, or you want the cleanest small example of provenance
+from a derived fact to its evidence.</li>
+<li>Do not copy when: you need it commercially — PolyForm Noncommercial
+forbids it — or you need a correction to survive, since a deleted
+profile fact can be re-derived by the next reflection pass.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -10689,6 +10750,7 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li><a
 href="../systems/project-golem/"><code>project-golem</code></a></li>
 <li><a href="../systems/openyak/"><code>openyak</code></a></li>
+<li><a href="../systems/memento/"><code>memento</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -11126,6 +11188,8 @@ href="https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875c
 <li><a href="https://github.com/openyak/openyak">openyak/openyak</a> at
 <a
 href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432"><code class="commit-id" title="bd88bff824c29fc48024eb19b7435cb2c065e432">bd88bff8…</code></a></li>
+<li><a href="https://github.com/xD4O/memento">xD4O/memento</a> at <a
+href="https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b"><code class="commit-id" title="f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b">f8e1dc14…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -11451,7 +11515,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and twenty — <a
+<strong>three</strong> of one hundred and twenty-one — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a
@@ -11687,15 +11751,18 @@ embeds messages and recalls them by similarity across sessions, which is
 retrieval; this lists them by key, which is storage. The line between
 the two is one index.</li>
 <li>Three repositories submitted in the same round were examined and
-have no reports. <code>ahmadvh/octochains</code> (4,406 lines,
-<strong>no licence file</strong>) is a framework for <em>parallel
-isolated</em> multi-agent reasoning whose stated premise is that shared
-chat history contaminates independent judgement — it has no memory
-concept because avoiding one is the design, which makes it the most
-pointed out-of-scope entry the atlas has recorded.
-<code>aleloro-dev/ago</code> is a 1,313-line zero-dependency Go agent
-library with <strong>no licence file</strong> and no persistence of any
-kind. <code>Gitlawb/zero</code> was re-examined at
+have no reports. <code>ahmadvh/octochains</code> is a framework for
+<em>parallel isolated</em> multi-agent reasoning whose stated premise is
+that shared chat history contaminates independent judgement — it has no
+memory concept because avoiding one is the design, which makes it the
+most pointed out-of-scope entry the atlas has recorded. Re-checked on
+2026-07-31: every occurrence of <em>memory</em> in it is a patient's
+memory loss in a sample medical report, a PDF parser reading from
+memory, or GPU VRAM. <code>aleloro-dev/ago</code> is a zero-dependency
+Go agent library with no <code>Memory</code> type, no file writes and no
+database — nothing survives a run. Both are out of scope on their
+merits; the licence was never the operative reason and should not have
+been cited as one. <code>Gitlawb/zero</code> was re-examined at
 <code>d37de9214b</code> after growing to roughly 332,000 lines of Go
 since the earlier pass, and the earlier conclusion holds:
 <code>internal/background</code> and <code>internal/swarm</code>
