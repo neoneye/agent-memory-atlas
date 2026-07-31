@@ -11482,6 +11482,48 @@ files matching <em>remember</em> being the "don't ask again" permission
 rule. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-30-a-reddit-thread-triaged.md">the
 thread note</a> for the rest of that triage.</li>
+<li><code>AgentSwarms-fyi/agentswarms</code> was examined at <a
+href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4"><code class="commit-id" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">cfde9169…</code></a>
+and has no report. It carries the <strong>Elastic License 2.0</strong>,
+which is source-available rather than open source — the call already
+applied to <code>truffle-ai/dexto</code>, and the same test as the BSL
+exclusions: a licence exception is earned by a mechanism the atlas
+lacks, as <a href="../systems/optmem/">OptMem</a>'s was. This does not
+have one. The memory subsystem is 812 lines inside a 172,000-line
+platform: <code>gpt-4o-mini</code> extracts
+fact/preference/episodic/instruction items from each assistant turn
+under a prompt that excludes PII placeholders, a Postgres trigger
+derives a keyword array from the content (lowercase, punctuation
+stripped, tokens under four characters and a stop-list dropped), and
+recall is a GIN <code>&amp;&amp;</code> overlap over those keywords
+scored <code>overlap × 2 + score + recency × 0.5</code>, top-50
+candidates narrowed to at most twelve. Correction is
+<code>memory_forget(id)</code>, a hard delete. Competent and
+conventional; no supersession, no trust state, no tombstone. Two details
+are worth taking anyway, one in each direction. <strong>The good one is
+the shape LoreKit's equivalents miss</strong>:
+<code>prune_agent_memory_items</code> is <code>SECURITY DEFINER</code>
+and opens with
+<code>IF auth.uid() IS NULL OR auth.uid() &lt;&gt; _user_id THEN RAISE EXCEPTION 'not authorized'</code>,
+and a later migration revokes execute from <code>anon</code>,
+<code>authenticated</code> and <code>PUBLIC</code> — a caller-supplied
+user id checked against the session inside the function body, which is
+exactly what <a href="../systems/lorekit/">LoreKit</a>'s archive and
+purge RPCs do not do. <strong>The other is a fresh instance of a
+recurring shape.</strong> <code>usage_count</code> is documented in the
+recall comment as <em>"this item helped"</em> feedback, is selected into
+the agent settings UI, and is incremented by nothing: the only writer
+passes <code>usage_count: undefined</code>, which the client drops from
+the PATCH body, and the read-then-write the comment promises instead is
+<code>void ids;</code>. It reads zero forever. That is the same shape as
+<a href="../systems/csm/">CSM</a>'s beliefs layer, <a
+href="../systems/powermem/">PowerMem</a>'s history table and <a
+href="../systems/cortex/">Cortex</a>'s privacy policy — a column or
+module that exists, is surfaced, and is written by no code path — and it
+is the fourth time this atlas has found it in a month. Also worth noting
+for a platform whose pitch is bring-your-own-model: the extraction model
+is the string <code>openai/gpt-4o-mini</code>, hardcoded, and there are
+<strong>no tests anywhere in the repository</strong>.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>
