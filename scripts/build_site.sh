@@ -14,8 +14,12 @@ fi
 # system never means editing a forty-row table by hand.
 python3 "$project_dir/scripts/generate_matrix.py"
 
+# The A–Z index is generated from the same frontmatter, so a report cannot exist
+# without appearing in it. See scripts/generate_index.py for why the page exists.
+python3 "$project_dir/scripts/generate_index.py"
+
 rm -rf "$output_dir"
-mkdir -p "$output_dir/assets" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
+mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 
 cp "$project_dir/site/index.html" "$output_dir/index.html"
 # /discord.html is a redirect in front of the Discord invite, so the invite code
@@ -72,6 +76,7 @@ render_document() {
 }
 
 render_document "$project_dir/content/overview.md" "$output_dir/compare/index.html"
+render_document "$project_dir/content/systems-index.md" "$output_dir/a-z/index.html"
 render_document "$project_dir/content/patterns/index.md" "$output_dir/patterns/index.html"
 render_document "$project_dir/content/benchmarks.md" "$output_dir/benchmarks/index.html"
 render_document "$project_dir/content/capabilities.md" "$output_dir/capabilities/index.html"
