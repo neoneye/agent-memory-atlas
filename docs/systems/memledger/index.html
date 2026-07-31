@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An event-sourced memory where
+every event names the policy hash that produced it and a derived one
+must name its sources — and where the delete it records perfectly is the
+one thing the write path refuses to consult.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemLedger — Agent Memory Atlas">
+    <meta property="og:description" content="An event-sourced memory
+where every event names the policy hash that produced it and a derived
+one must name its sources — and where the delete it records perfectly is
+the one thing the write path refuses to consult.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemLedger — Agent Memory Atlas">
+    <meta name="twitter:description" content="An event-sourced memory
+where every event names the policy hash that produced it and a derived
+one must name its sources — and where the delete it records perfectly is
+the one thing the write path refuses to consult.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemLedger — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Provenance that answers, and does not
+enforce</p>
+          <h1>MemLedger</h1>
+          <p class="document-deck">An event-sourced memory where every
+event names the policy hash that produced it and a derived one must name
+its sources — and where the delete it records perfectly is the one thing
+the write path refuses to consult.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/riktar/memledger">
+              <span>Source</span>
+              <strong>riktar/memledger</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341" title="27f67e436ec0910e50c4b1c41cdf96f7afb6b341">
+              <span>Analyzed revision</span>
+              <code>27f67e43…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (66%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemLedger is 6,356 lines of Python, MIT licensed, sixteen commits
+between 8 and 14 July 2026. It is event-sourced: memories are a
+projection over an append-only <code>events</code> table, and the pitch
+is debuggability — <em>"memory with the black box wide open"</em>, with
+a <code>memledger why</code> command that returns a fact's full chain of
+provenance.</p>
+<p><strong>The provenance model is the most rigorous in this atlas, and
+it is enforced by a validator rather than by convention.</strong> Every
+<code>Event</code> carries an <code>actor</code> from a closed set, a
+<code>cause</code> with a kind and a ref, and a required
+<code>policy_hash</code>. <code>Event.validate</code> refuses several
+things outright (<code>src/memledger/events.py:66</code>):</p>
+<pre class="python"><code>if self.actor == &quot;llm&quot; and self.llm is None:
+    raise ValueError(&quot;llm block is required when actor is llm&quot;)
+if self.actor != &quot;llm&quot; and self.llm is not None:
+    raise ValueError(&quot;llm block is only allowed when actor is llm&quot;)
+if self.type in DERIVED_EVENT_TYPES and not self.sources:
+    raise ValueError(f&quot;sources are required for derived event type {self.type}&quot;)
+if not self.policy_hash:
+    raise ValueError(&quot;policy_hash is required&quot;)</code></pre>
+<p>Read those four in order. You cannot record a model-made decision
+without the model block — which carries <code>model</code>,
+<code>model_digest</code>, <code>prompt_hash</code>,
+<code>input_hash</code>, <code>output_hash</code>,
+<code>cache_key</code>, <code>cache_hit</code> and token counts. You
+cannot attach model metadata to a decision a rule made. <strong>A
+derived fact must name what it was derived from.</strong> And nothing is
+recordable without the hash of the policy that produced it.</p>
+<p>That last one is the idea worth taking.
+<code>memory.policy.yaml</code> holds the retention windows, the
+promotion rule (<code>impact &gt;= 5 AND sessions_seen &gt;= 3</code>)
+and the impact weights, and its header states the contract: <em>"This
+file is canonicalized (RFC 8785) and hashed; the hash is recorded in
+every event it influenced. Edit freely: history is never rewritten, old
+events stay bound to the old hash."</em> Change the promotion threshold
+and yesterday's promotions still point at the rule that actually
+produced them. No other system here can tell you which version of its
+own policy made a decision.</p>
+<p><strong>The state machine is the second thing, and it is
+validated.</strong> <code>ALLOWED_STATUSES</code> is
+<code>{quarantined, active, superseded, deleted, expired}</code>, and
+<code>validate_state_transition</code> holds an explicit set of legal
+<code>(layer, status) → (layer, status)</code> moves
+(<code>src/memledger/projection.py:20</code>). Initial states are
+restricted to three. Promotion is the single cross-layer move,
+<code>episodic/active → instinct/active</code>.
+<strong><code>deleted</code> and <code>expired</code> are
+terminal</strong> — no transition leads out of either, so a record
+cannot be resurrected by a state change. Illegal moves raise
+<code>StateTransitionError</code> rather than being silently
+ignored.</p>
+<p><strong>And then the write path declines to use any of it.</strong>
+Deduplication looks up an incoming tuple by its key:</p>
+<pre class="sql"><code>SELECT data_json FROM records
+WHERE subject = ? AND relation = ? AND value_json = ? AND status != &#39;deleted&#39;</code></pre>
+<p>(<code>src/memledger/ledger.py:345</code>). The filter is deliberate
+— it stops a dead row absorbing a live write, which is the same defect
+<a href="../empryo/">Empryo</a> has and <a
+href="../palazzo/">Palazzo</a> avoids. But those two are filtering
+<em>superseded</em> rows. This one filters <code>deleted</code>, and the
+consequence is different in kind: a fact the user deleted is not found
+by the dedup lookup, so the next extraction that produces the same
+<code>(subject, relation, value)</code> creates a <strong>new active
+record</strong>. The deletion is in the ledger, keyed on the value,
+terminal, fully explainable by <code>why</code> — and the one code path
+that could act on it is written to skip it. This system can tell you
+exactly why a fact you deleted came back, and cannot stop it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a tuple, not a document: <code>subject</code>,
+<code>relation</code>, <code>value</code>, plus a <code>layer</code>, a
+<code>status</code>, an <code>impact</code> float and a
+<code>sessions_seen_count</code>. Layers are <code>episodic</code> (with
+retention and raw-retention windows) and <code>instinct</code> (capped
+at 30 items, promotion gated by the policy,
+<code>autonomous: false</code> by default).</p>
+<p>The status vocabulary is the epistemic model and it is unusually
+complete:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>quarantined</code></td>
+<td>recorded, withheld from recall</td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td>in use</td>
+</tr>
+<tr>
+<td><code>superseded</code></td>
+<td>replaced by a later record</td>
+</tr>
+<tr>
+<td><code>deleted</code></td>
+<td>removed by a decision, terminal</td>
+</tr>
+<tr>
+<td><code>expired</code></td>
+<td>aged out by policy, terminal</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>superseded</code>, <code>deleted</code> and
+<code>expired</code> are three different endings, and keeping them
+distinct is what lets <code>why</code> answer <em>"why did this
+vanish"</em> differently in each case. Most systems in this atlas can
+express one ending. <code>quarantined</code> as an initial state is the
+other good detail: a new fact can enter recorded but not yet usable,
+which is the state a candidate extraction should be in.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; quarantined
+    [*] --&gt; active
+    quarantined --&gt; active
+    quarantined --&gt; superseded
+    quarantined --&gt; deleted
+    quarantined --&gt; expired
+    active --&gt; superseded
+    active --&gt; deleted
+    active --&gt; expired
+    active --&gt; instinct
+    superseded --&gt; deleted
+    instinct --&gt; instinct_superseded
+    instinct --&gt; instinct_deleted
+    note right of deleted
+        terminal, and invisible
+        to the dedup lookup
+    end note</code></pre>
+<p>Every arrow is in a set literal the code checks against; anything
+else raises. The note is the finding: terminal in the state machine, and
+skipped by the query that would use it to refuse a re-write.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite file. <code>events</code> is the source of truth —
+<code>id</code>, <code>ts</code>, <code>session</code>,
+<code>type</code>, <code>actor</code>, <code>envelope_json</code> — and
+carries no <code>UPDATE</code> or <code>DELETE</code> anywhere in
+<code>ledger.py</code>. Everything else is a projection:
+<code>records</code>, a <code>vectors</code> table, an FTS5 virtual
+table, and an <code>llm_cache</code>. The
+<code>DELETE FROM records</code> at <code>ledger.py:458</code> is the
+rebuild path, which is the property event sourcing is for — the
+projection can be thrown away and recomputed from the log.</p>
+<p><code>Projection.apply_event</code> dispatches by
+<code>getattr(self, f"_apply_{event.type}")</code> and returns silently
+when there is no handler, so an unknown event type is skipped rather
+than failing the rebuild. That is a reasonable forward-compat choice and
+it is worth knowing: a projection rebuilt by an older binary will
+quietly drop the events it does not understand.</p>
+<p>There is no server, no external database and no scheduler. Retrieval
+is hybrid FTS plus vectors with an embeddings module behind an
+interface.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event validation: llm block, sources, policy hash</td>
+<td><code>src/memledger/events.py:66</code></td>
+</tr>
+<tr>
+<td>The <code>LLMCall</code> provenance block</td>
+<td><code>src/memledger/events.py:39</code></td>
+</tr>
+<tr>
+<td>Validated state transitions, terminal states</td>
+<td><code>src/memledger/projection.py:20</code></td>
+</tr>
+<tr>
+<td><code>why</code> — record, creator, sources, history</td>
+<td><code>src/memledger/projection.py:319</code></td>
+</tr>
+<tr>
+<td>Dedup skips deleted records</td>
+<td><code>src/memledger/ledger.py:345</code></td>
+</tr>
+<tr>
+<td>Append-only event store</td>
+<td><code>src/memledger/ledger.py:116</code>, <code>:168</code></td>
+</tr>
+<tr>
+<td>Projection rebuild</td>
+<td><code>src/memledger/ledger.py:458</code></td>
+</tr>
+<tr>
+<td>Policy hashed into every event</td>
+<td><code>memory.policy.yaml</code> header</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>records</code> table carries <code>layer</code>,
+<code>status</code>, <code>subject</code>, <code>relation</code>,
+<code>value_json</code>, <code>impact</code>,
+<code>sessions_seen_count</code>, <code>text_form</code>,
+<code>tainted</code>, <code>updated_ts</code> and
+<code>data_json</code>, indexed on <code>(layer, status)</code> and on
+<code>(subject, relation)</code>.</p>
+<p><code>impact</code> is computed by a named, versioned formula —
+<code>impact@v1</code> in the policy, with weights for
+<code>feedback</code>, <code>outcome</code>, <code>recall_used</code>
+and <code>repeated</code>, clamped to <code>[0, 20]</code>. Naming and
+versioning a scoring formula so that events can be bound to the version
+that produced them is a small thing that almost nothing here does; most
+scoring constants in this atlas are literals in a function with no way
+to tell which value was in force when a decision was made.</p>
+<p><code>tainted</code> is a flag on the record and the vocabulary
+around it is worth a reader checking against their own needs — it marks
+a record as suspect without changing its status, which is a second axis
+beside the state machine.</p>
+<p>There is no validity-time column: <code>updated_ts</code> and the
+event <code>ts</code> are both record time, so <code>bitemporal</code>
+is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid FTS5 and vector scoring over <code>records</code>, with
+<code>retrieval.py:84</code> excluding anything whose status is
+<code>deleted</code>, <code>superseded</code> or <code>expired</code>.
+So the read path respects the state machine fully — which makes the
+dedup gap in section 1 sharper rather than softer, because the same
+three statuses that correctly hide a record from recall are treated
+differently by the write path: superseded and expired records still
+block a duplicate write, and deleted ones do not.</p>
+<p><code>scope_enforced</code> is withheld. <code>user</code> and
+<code>session</code> are recorded on every event and are real
+provenance, but <code>records</code> has no user column and the record
+queries are unfiltered —
+<code>SELECT data_json FROM records WHERE status != 'deleted'</code>.
+One install is one store; the user key is history, not a boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous: build an event, validate it, append it, apply
+it to the projection. Because validation happens before the append, a
+malformed event cannot enter the log — the invariants in section 1 are
+enforced at the door rather than checked later.</p>
+<p><code>triage.py</code> and the <code>quarantined</code> initial state
+are the candidate path: a new fact can be recorded without being usable,
+and promoted to <code>active</code> by a legal transition. Promotion to
+<code>instinct</code> is gated by the policy expression
+<code>impact &gt;= 5 AND sessions_seen &gt;= 3</code>, with
+<code>autonomous: false</code> as the default — so the top layer does
+not fill itself without a human turning that on.</p>
+<p>The dedup lookup is described in section 1 and is the one place where
+the design does not follow through.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python library with an <code>api.py</code> facade and a CLI.
+<code>memledger why &lt;id&gt;</code> is the headline command and
+returns the record, the event that created it, the events it cites as
+sources, and the full history — a real answer to <em>"where did this
+come from"</em> rather than a timestamp and an author string.</p>
+<p><code>human_review</code> is withheld. <code>actor: dev</code> and
+<code>cause.kind: manual</code> exist and are exactly the right
+vocabulary for a human decision, and
+<code>instinct.autonomous: false</code> means promotion to the top layer
+waits for one. What is missing is a surface: no command lists
+quarantined records for approval, and the review the data model is
+clearly shaped for is not implemented at this commit.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The auditability story is genuinely strong and it is worth being
+precise about what it buys. Every event names its actor, its cause, the
+policy version in force, and — for derived events — its inputs. LLM-made
+events carry the model digest and hashes of prompt, input and output, so
+a decision can be traced to a specific model and a specific prompt, and
+the cache key tells you whether the call actually happened. That is
+enough to answer <em>why does the agent believe this</em> down to the
+model invocation, which is the question the README opens with and the
+one almost nothing else in this atlas can answer.</p>
+<p>The gap is that provenance is not enforcement. Nothing consults the
+history to refuse a write; the ledger's job is to explain, and the write
+path's job is to dedup, and the two do not meet at the
+<code>deleted</code> status. A user who deletes a fact, and whose agent
+re-extracts it the next session, gets a new record, an event explaining
+exactly where it came from, and no indication that they already said
+no.</p>
+<p><code>policy_hash</code> binding is the second-strongest safety
+property here and it has one limit worth naming: it proves which policy
+was in force, not that the policy was applied correctly. The hash is
+recorded by the code that also does the applying.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>37 test functions across <code>test_acceptance.py</code>,
+<code>test_hybrid_recall.py</code> and <code>test_locomo_eval.py</code>,
+plus an <code>evals/</code> directory with a LoCoMo runner
+(<code>run_locomo.py</code>), a regression runner
+(<code>run_regression.py</code>) and a
+<code>evals/regression/cases/default.yaml</code>. A project of sixteen
+commits with an acceptance suite, a public-benchmark runner and a
+regression case file is ahead of most of this atlas on process.</p>
+<p>I did not run them, and no committed result artifact was found — the
+runners are present and the numbers they produce are not in the
+repository, so nothing here is a measurement yet.</p>
+<p><code>negative_eval</code> is withheld: no committed case asserts
+that particular material must not be retrieved. The regression case file
+is the obvious home for one, and the deleted-record behaviour in section
+1 is the obvious case to write.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Hash your policy into every event it influenced.</strong>
+Canonicalise the config, hash it, record the hash. It costs a few lines
+and it converts <em>"why did the system do that"</em> from an
+archaeology problem into a lookup, because the rule that was in force at
+the time is identified rather than assumed to be the current one.</p>
+<p><strong>Validate provenance at the door, in both directions.</strong>
+An event whose actor is a model must carry the model block; an event
+whose actor is not must not. A derived event must name its sources.
+These are four <code>raise</code> statements and they make the audit
+trail structurally trustworthy instead of conventionally complete.</p>
+<p><strong>Write the legal state transitions down as a set and check
+against it.</strong> Five statuses, twelve legal moves, two terminal
+states, and an exception on anything else. Most systems here have an
+implicit state machine spread across the functions that mutate the
+field; this one can be read in twenty lines and argued with.</p>
+<p><strong>Distinguish your endings.</strong> <code>superseded</code>,
+<code>deleted</code> and <code>expired</code> answer three different
+questions, and collapsing them into one <code>is_active</code> boolean
+is what makes a memory system unable to explain a disappearance.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let the write path skip the status your read path
+respects.</strong> Retrieval excludes <code>deleted</code>,
+<code>superseded</code> and <code>expired</code>; dedup excludes only
+<code>deleted</code>, and the effect is that the one ending a user
+explicitly asked for is the one that does not prevent the fact
+returning. Whatever the intended reason, the fix is a second lookup:
+find the deleted record, and refuse or re-quarantine instead of creating
+a fresh active one.</p>
+<p><strong>Do not stop at explaining.</strong> A perfect audit trail
+that nothing consults is a debugging tool, not a correction mechanism.
+The distance between this system and a working tombstone is one
+query.</p>
+<p><strong>Do not silently skip unknown event types on rebuild.</strong>
+<code>Projection.apply_event</code> returns when no handler matches, so
+a downgrade drops events rather than failing loudly — which is the
+behaviour you want in production and the behaviour that quietly produces
+a wrong projection.</p>
+<h3 id="fit">Fit</h3>
+<p>Take MemLedger if the question you cannot currently answer is <em>why
+does my agent believe this</em>. The event model, the policy hash and
+the <code>why</code> command are a coherent answer, the whole thing is
+one SQLite file, and at 6,356 lines it is small enough to read in an
+afternoon.</p>
+<p>Do not take it yet as a correction mechanism. The states are right,
+the transitions are enforced, the endings are distinguishable — and a
+deleted fact comes back on the next extraction. It is also sixteen
+commits old with no committed eval results, so treat the design as the
+contribution and the implementation as early.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Dedup filters <code>status != deleted</code></strong>, so a
+deleted fact is re-created rather than refused.</li>
+<li><strong>Provenance is explanatory only</strong> — nothing consults
+history to block a write.</li>
+<li><strong>No user scope on the read path</strong>; <code>user</code>
+is on events, not on records.</li>
+<li><strong>No committed eval results</strong> despite two runners and a
+regression case file.</li>
+<li><strong>Unknown event types are skipped on rebuild</strong>, so an
+older binary produces a quietly incomplete projection.</li>
+<li><strong><code>policy_hash</code> is recorded by the code that
+applies the policy</strong>, so it attests which version was in force,
+not that it was honoured.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the event envelope. <code>actor</code>, <code>cause</code>,
+<code>policy_hash</code>, <code>sources</code>, and the
+<code>LLMCall</code> block with its four hashes are a specification for
+auditable agent memory that transfers to any store, and the validator
+that enforces them is shorter than this paragraph.</p>
+<p>Build the enforcement layer it is missing. This system already
+records everything a tombstone needs — a terminal status, keyed on
+<code>(subject, relation, value)</code>, with the reason and the actor
+attached. Making the write path read it would put MemLedger among the
+few systems in this atlas that can actually make a correction stick, and
+the change is one <code>SELECT</code>.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Is the <code>deleted</code> exclusion in dedup
+deliberate?</strong> The comment pattern elsewhere in this codebase is
+thorough, and this filter has none, so it reads as inherited from the
+superseded case rather than reasoned about.</li>
+<li><strong>What does <code>tainted</code> gate?</strong> It is a column
+on every record and a second trust axis beside <code>status</code>; what
+sets it and what reads it were not established.</li>
+<li><strong>Where do the eval numbers go?</strong> Two runners and a
+case file exist, and no result artifact is committed.</li>
+<li><strong>Is a review surface planned?</strong>
+<code>actor: dev</code>, <code>cause.kind: manual</code>,
+<code>quarantined</code> and <code>autonomous: false</code> all point at
+a human step that has no command.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memledger/events.py</code></td>
+<td><code>Event</code>, <code>Cause</code>, <code>LLMCall</code>, and
+the validator</td>
+</tr>
+<tr>
+<td><code>src/memledger/ledger.py</code></td>
+<td>SQLite append-only store, projections, dedup lookup</td>
+</tr>
+<tr>
+<td><code>src/memledger/projection.py</code></td>
+<td>State machine, transition table, <code>why</code></td>
+</tr>
+<tr>
+<td><code>src/memledger/retrieval.py</code></td>
+<td>Hybrid FTS and vector recall over active records</td>
+</tr>
+<tr>
+<td><code>src/memledger/policy.py</code>,
+<code>memory.policy.yaml</code></td>
+<td>The hashed policy and its expressions</td>
+</tr>
+<tr>
+<td><code>src/memledger/triage.py</code></td>
+<td>The candidate path into <code>quarantined</code></td>
+</tr>
+<tr>
+<td><code>evals/</code>, <code>tests/</code></td>
+<td>LoCoMo and regression runners, 37 test functions</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
