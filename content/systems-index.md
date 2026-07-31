@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **121 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **122 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -159,6 +159,9 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/) **TencentDB Agent Memory** — Layered symbolic memory · `TencentCloud/tencentdb-agent-memory`
 - [`tigrimosr`](../systems/tigrimosr/) **TigrimOSR** — Proposed skills, staged on disk · `Sompote/TigrimOSR` · Trust state, Scope enforced, Human review
 - [`tokenmizer`](../systems/tokenmizer/) **TokenMizer** — A status for not knowing · `Shweta-Mishra-ai/tokenmizer` · Trust state, Mutation audit
+## U
+
+- [`universal-memory-engine`](../systems/universal-memory-engine/) **Universal Memory Engine** — A suppression the write gate obeys · `12ziyad/universal-memory-engine` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 ## V
 
 - [`verel`](../systems/verel/) **Verel** — Verification-first memory · `amitpatole/verel` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
