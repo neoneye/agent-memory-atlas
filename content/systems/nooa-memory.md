@@ -295,6 +295,47 @@ Because `rec` is a sum over *all* retained access times rather than a single
 recently are distinguishable — which a single-timestamp recency term cannot do,
 and which is the entire point of the base-level equation.
 
+**`owner` gates the spread itself, not only the result set.** `_spread`
+(`packages/nooa-memory/src/nooa_memory/retrieval.py:246`) closes over a
+`_visible` predicate and calls it on every edge target at every hop, before
+either accumulator is written:
+
+```python
+for e in edges[: cfg.per_hop_fanout]:
+    if not _visible(e.target_id):
+        continue
+    ...
+    spread[e.target_id] = spread.get(e.target_id, 0.0) + contrib
+    nxt[e.target_id] = nxt.get(e.target_id, 0.0) + contrib
+```
+
+The placement is what makes it a real boundary rather than a post-filter. The
+`continue` fires before `nxt` is written as well as before `spread`, so an
+invisible memory never enters the next hop's frontier and cannot relay
+activation between two visible memories connected only through it. The docstring
+claims both halves — *"an edge must not leak — or amplify through — another
+agent's memory in an owner-scoped recall"* — and the control flow delivers both.
+This is the strong form of `scope_enforced`: most systems in this atlas that
+carry the mark apply the key to the rows they return, and a graph traversal that
+does that alone is still reading the foreign node to decide it should be dropped.
+
+Unowned memories stay visible under it, which is the intended behaviour and is
+easy to misread from the code. `_visible` requires `owner_of(mid) is not None`,
+but the column is `owner TEXT NOT NULL DEFAULT ''` (`store.py:71`), so an
+unowned row returns `""` and `owner_matches` accepts `""` against every scope
+(`schema.py:109`). The `is not None` clause is therefore about a *dangling edge
+target* — an edge pointing at a row that no longer exists — which it drops, and
+which is the right answer for that case too.
+
+Two committed tests cover the leak half: `test_spread_does_not_leak_foreign_memories`
+and `test_spread_confined_to_role` each build one edge across an owner boundary
+and assert the far node is absent from `recall`. Neither builds the three-node
+graph — own → foreign → own — that would assert the amplify half, so the relay
+property is delivered by the `continue`'s position and asserted nowhere.
+
+*Answered by [Jeriah Keith](https://github.com/Yeriahz) in
+[issue #1](https://github.com/neoneye/agent-memory-atlas/issues/1).*
+
 ## 7. Write Mechanics
 
 Authoring through the memory skill, with reflection distilling episodes into
@@ -463,8 +504,6 @@ nothing about whether it was ever right.
 - Have the six scoring constants been ablated? The subsystem has been measured
   end to end; the scorer has not been measured against itself, and the stored
   components make it cheap.
-- Does `owner` gate the graph spread, or can activation flow through a memory the
-  reader cannot see?
 - What prevents an archived memory being re-authored identically?
 - Is `intent` acted on by a scheduler, or does it only surface when retrieval
   happens to reach it? The paper reports the type unused in evaluation, so the

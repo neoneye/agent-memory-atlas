@@ -431,6 +431,50 @@ times rather than a single <code>last_accessed</code>, a memory read
 many times long ago and a memory read once recently are distinguishable
 — which a single-timestamp recency term cannot do, and which is the
 entire point of the base-level equation.</p>
+<p><strong><code>owner</code> gates the spread itself, not only the
+result set.</strong> <code>_spread</code>
+(<code>packages/nooa-memory/src/nooa_memory/retrieval.py:246</code>)
+closes over a <code>_visible</code> predicate and calls it on every edge
+target at every hop, before either accumulator is written:</p>
+<pre class="python"><code>for e in edges[: cfg.per_hop_fanout]:
+    if not _visible(e.target_id):
+        continue
+    ...
+    spread[e.target_id] = spread.get(e.target_id, 0.0) + contrib
+    nxt[e.target_id] = nxt.get(e.target_id, 0.0) + contrib</code></pre>
+<p>The placement is what makes it a real boundary rather than a
+post-filter. The <code>continue</code> fires before <code>nxt</code> is
+written as well as before <code>spread</code>, so an invisible memory
+never enters the next hop's frontier and cannot relay activation between
+two visible memories connected only through it. The docstring claims
+both halves — <em>"an edge must not leak — or amplify through — another
+agent's memory in an owner-scoped recall"</em> — and the control flow
+delivers both. This is the strong form of <code>scope_enforced</code>:
+most systems in this atlas that carry the mark apply the key to the rows
+they return, and a graph traversal that does that alone is still reading
+the foreign node to decide it should be dropped.</p>
+<p>Unowned memories stay visible under it, which is the intended
+behaviour and is easy to misread from the code. <code>_visible</code>
+requires <code>owner_of(mid) is not None</code>, but the column is
+<code>owner TEXT NOT NULL DEFAULT ''</code> (<code>store.py:71</code>),
+so an unowned row returns <code>""</code> and <code>owner_matches</code>
+accepts <code>""</code> against every scope
+(<code>schema.py:109</code>). The <code>is not None</code> clause is
+therefore about a <em>dangling edge target</em> — an edge pointing at a
+row that no longer exists — which it drops, and which is the right
+answer for that case too.</p>
+<p>Two committed tests cover the leak half:
+<code>test_spread_does_not_leak_foreign_memories</code> and
+<code>test_spread_confined_to_role</code> each build one edge across an
+owner boundary and assert the far node is absent from
+<code>recall</code>. Neither builds the three-node graph — own → foreign
+→ own — that would assert the amplify half, so the relay property is
+delivered by the <code>continue</code>'s position and asserted
+nowhere.</p>
+<p><em>Answered by <a href="https://github.com/Yeriahz">Jeriah Keith</a>
+in <a
+href="https://github.com/neoneye/agent-memory-atlas/issues/1">issue
+#1</a>.</em></p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Authoring through the memory skill, with reflection distilling
 episodes into <code>reflection</code>-type gists.
@@ -616,8 +660,6 @@ roll off?</li>
 <li>Have the six scoring constants been ablated? The subsystem has been
 measured end to end; the scorer has not been measured against itself,
 and the stored components make it cheap.</li>
-<li>Does <code>owner</code> gate the graph spread, or can activation
-flow through a memory the reader cannot see?</li>
 <li>What prevents an archived memory being re-authored identically?</li>
 <li>Is <code>intent</code> acted on by a scheduler, or does it only
 surface when retrieval happens to reach it? The paper reports the type
