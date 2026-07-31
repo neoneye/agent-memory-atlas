@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and twenty-three agent memory architectures, their retrieval
+hundred and twenty-four agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,14 +13,14 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and twenty-three agent memory architectures, their
+of one hundred and twenty-four agent memory architectures, their
 retrieval mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and twenty-three agent memory architectures, their
+of one hundred and twenty-four agent memory architectures, their
 retrieval mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
@@ -79,7 +79,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and twenty-three agent memory architectures, their retrieval
+hundred and twenty-four agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -178,8 +178,8 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and twenty-three systems do not fall into one hundred and
-twenty-three categories. They cluster around eight architectural
+<p>One hundred and twenty-four systems do not fall into one hundred and
+twenty-four categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
 also be a hosted service. The families below are lenses, not bins.</p>
@@ -774,22 +774,29 @@ instructing a behaviour and enforcing one.</p>
 <code>everos</code>, <code>ecc</code>, <code>skales</code>,
 <code>csm</code>, <code>graphify</code>, <code>clio</code>,
 <code>empryo</code>, <code>project-golem</code>, <code>openyak</code>,
-<code>memento</code></p>
+<code>memento</code>, <code>palazzo</code></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
-baseline over SQLite and FTS. <strong>MemPalace</strong> keeps verbatim
-drawers authoritative and treats extracted layers as navigation aids.
-<strong>Basic Memory</strong> makes human-editable Markdown canonical
-and every index a rebuildable projection. <strong>Moltis</strong>
-indexes a Markdown corpus that sanitized session transcripts are
-exported into, so conversations become searchable notes in the same
-substrate as curated ones. <strong>open-cowork</strong> separates core
-from experience memory and ships the atlas's most complete memory
-benchmark. <strong>ReMe</strong> is the one that publishes its
-<em>results</em> rather than its harness — per-category LongMemEval and
-BEAM tables committed to the repository, its worst score among them —
-and carries the atlas's only validated correction vocabulary outside
-Memanto: <code>CREATE | CORROBORATE | REFINE | CORRECT</code>, with an
+baseline over SQLite and FTS. <strong>Palazzo</strong> is MemPalace's
+stated minimum-viable flavour — the same wing/room/hall vocabulary over
+Qdrant in 5,500 lines of Rust — and it is the family's clearest instance
+of an idea the atlas keeps looking for: its write-ahead log gates the
+delete rather than recording it, so an audit entry that cannot be
+written aborts the destruction. It also committed the benchmark showing
+it losing to the system it cites, which nothing else here has done.
+<strong>MemPalace</strong> keeps verbatim drawers authoritative and
+treats extracted layers as navigation aids. <strong>Basic
+Memory</strong> makes human-editable Markdown canonical and every index
+a rebuildable projection. <strong>Moltis</strong> indexes a Markdown
+corpus that sanitized session transcripts are exported into, so
+conversations become searchable notes in the same substrate as curated
+ones. <strong>open-cowork</strong> separates core from experience memory
+and ships the atlas's most complete memory benchmark.
+<strong>ReMe</strong> is the one that publishes its <em>results</em>
+rather than its harness — per-category LongMemEval and BEAM tables
+committed to the repository, its worst score among them — and carries
+the atlas's only validated correction vocabulary outside Memanto:
+<code>CREATE | CORROBORATE | REFINE | CORRECT</code>, with an
 additive-only update rule that nothing checks. <strong>Acontext</strong>
 is the one that finally implements the gate this atlas has been asking
 for: a task's <code>status</code> is constrained to
@@ -3963,6 +3970,35 @@ behind your back</td>
 itself</td>
 </tr>
 <tr>
+<td><code>palazzo</code></td>
+<td>A verbatim text with four free-text taxonomy tags — category, wing,
+room, hall — and five temporal-validity columns</td>
+<td>One Qdrant collection of 768-dimension points, plus an append-only
+JSONL write-ahead log on local disk</td>
+<td>Cosine search with optional facet, time-range and author filters,
+and an opt-in <code>score × exp(-age/half_life)</code> re-rank</td>
+<td>Agent tool calls over MCP; a duplicate probe runs before every write
+and short-circuits only on an exact text match</td>
+<td><code>palace_supersede</code> stamps <code>valid_until</code> and
+<code>superseded_by</code> and the read path hides them; two hard-delete
+tools with a confirm flag and a count-echo guard</td>
+<td>None by default. One collection, one palace; <code>author</code> is
+an unverified optional facet and the taxonomy tags are categories, not
+tenancy</td>
+<td>An MCP server over stdio or streamable HTTP, eleven tools, no
+UI</td>
+<td>None. Every operation is synchronous inside the tool call</td>
+<td><code>author</code> is a claimed, unverified email the code itself
+calls provenance rather than proof; nothing grades a memory's
+content</td>
+<td>A destructive operation that aborts when its own audit entry cannot
+be written, and a dedup probe that deliberately refuses to match
+superseded points</td>
+<td>The README's stated differentiator — an enum-validated schema — does
+not exist; the duplicate probe and the writer apply different rules; the
+human approval is a sentence addressed to the model</td>
+</tr>
+<tr>
 <td><code>pi</code></td>
 <td>None — session-tree entry, not a memory record</td>
 <td>JSONL session tree (<code>id</code>/<code>parentId</code>),
@@ -4678,7 +4714,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>4 of 123:</em> <a
+<p><em>4 of 124:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -4686,7 +4722,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>12 of 123:</em> <a href="../systems/clio/"><code>clio</code></a>,
+<p><em>12 of 124:</em> <a href="../systems/clio/"><code>clio</code></a>,
 <a href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
@@ -4700,7 +4736,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 123:</em> <a
+<p><em>9 of 124:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -4715,7 +4751,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>69 of 123:</em> <a
+<p><em>69 of 124:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -4789,7 +4825,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>18 of 123:</em> <a
+<p><em>19 of 124:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx/"><code>ctx</code></a>, <a
@@ -4803,6 +4839,7 @@ href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a>, <a
+href="../systems/palazzo/"><code>palazzo</code></a>, <a
 href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
@@ -4811,7 +4848,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>26 of 123:</em> <a
+<p><em>26 of 124:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -4841,7 +4878,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>17 of 123:</em> <a
+<p><em>17 of 124:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -4878,7 +4915,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Sixteen
-repositories of one hundred and twenty-three assert that particular
+repositories of one hundred and twenty-four assert that particular
 material must <em>not</em> be retrieved — the assertion every scope,
 deletion and correction claim in this document ultimately rests on. Read
 together rather than one at a time, they split cleanly in two, and the
@@ -4950,7 +4987,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of one hundred and twenty-three is the real figure for the second
+Eleven of one hundred and twenty-four is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -8034,8 +8071,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and twenty-three systems, almost none can explain why they are shaped
-the way they are.</p>
+and twenty-four systems, almost none can explain why they are shaped the
+way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -10675,6 +10712,35 @@ both.</li>
 delete that retrieval reads, and one deletion also stalls long-term
 consolidation permanently by leaving a sixteen-message block short.</li>
 </ul>
+<h3 id="palazzo"><code>palazzo</code></h3>
+<ul>
+<li>Best idea: the write-ahead log is a <em>precondition</em> for a
+destructive operation, not a record of it. <code>log_strict</code> fails
+the delete when the audit entry cannot be durably appended, on the
+stated reasoning that the WAL is the only trail — and the entry carries
+a text preview, so it says what was removed.</li>
+<li>Biggest risk: the README's stated differentiator over the generic
+Qdrant server is an "enum-validated palace schema", and
+<code>src/schema.rs</code> says the four tags are "deliberately
+free-text… never enforced". <code>validate_tag</code> trims and
+length-caps; there is no enum in the crate.</li>
+<li>Most reusable component: <code>src/wal.rs</code> — 129 lines
+including its tests, no dependency on the rest of the crate, and the
+split between best-effort logging for writes and strict logging for
+destruction.</li>
+<li>Maturity impression: 63 inline Rust tests, CI running clippy at
+deny-warnings across two feature sets plus <code>cargo audit</code>, and
+a committed benchmark note reporting its own loss with Wilson intervals
+and a stopping rule.</li>
+<li>Study when: you want the audit-as-precondition variant, or an
+example of a duplicate probe that deliberately refuses to match
+superseded points — the collision <a
+href="../systems/empryo/">Empryo</a> resolves the other way.</li>
+<li>Do not copy when: recall is the requirement (its own pilot puts R@5
+at 36% against the 96.6% it cites as the bar, diagnosed as ranking
+rather than coverage), or more than one person shares the store — there
+is no tenancy, no verified identity and no default scope.</li>
+</ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>
 <p>Schema and scoping:</p>
@@ -10921,6 +10987,7 @@ href="../systems/project-golem/"><code>project-golem</code></a></li>
 <li><a href="../systems/openyak/"><code>openyak</code></a></li>
 <li><a href="../systems/memento/"><code>memento</code></a></li>
 <li><a href="../systems/membase/"><code>membase</code></a></li>
+<li><a href="../systems/palazzo/"><code>palazzo</code></a></li>
 <li><a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a></li>
 </ul>
@@ -11369,6 +11436,9 @@ href="https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c
 <li><a href="https://github.com/unibaseio/membase">unibaseio/membase</a>
 at <a
 href="https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603"><code class="commit-id" title="9e03b75a453118f4faf4ed3539279435e03bd603">9e03b75a…</code></a></li>
+<li><a href="https://github.com/calibrae/palazzo">calibrae/palazzo</a>
+at <a
+href="https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359"><code class="commit-id" title="9dd7228b8a502099522a900d647c57c99f127359">9dd7228b…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -11694,7 +11764,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>three</strong> of one hundred and twenty-three — <a
+<strong>three</strong> of one hundred and twenty-four — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, and the <a

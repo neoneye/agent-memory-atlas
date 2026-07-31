@@ -72,6 +72,40 @@ audit trails that disagree are worse than one.
 
 ## Seen in the atlas
 
+**[Palazzo](../../systems/palazzo/) is the only implementation here where the
+log entry is a precondition rather than a consequence.** Every other audit on
+this page is written because a mutation happened. Palazzo's write-ahead log has
+two methods, and the destructive paths call the second one:
+
+```rust
+/// Like `log`, but errors when the entry cannot be durably appended —
+/// including when no WAL path is configured at all. Destructive operations
+/// (palace_delete, palace_delete_by_filter) call this and abort before
+/// touching Qdrant: the WAL is their only audit trail, so a delete that
+/// can't be logged must not happen.
+pub fn log_strict<T: Serialize>(&self, operation: &str, params: &T) -> anyhow::Result<()>
+```
+
+The split is the design. Ordinary writes use best-effort `log`, which warns and
+continues; deletion uses `log_strict`, which fails the operation. A lost store
+line is an inconvenience; a lost delete line is the erasure of the record that
+the erasure happened, and that is the one case where continuing is worse than
+stopping. `delete_happy_path_wal_logs_then_deletes` pins the ordering.
+
+The second detail is what goes in the entry. Palazzo writes a text preview of
+every point before deleting it, so the log says what was removed. Compare
+[LoreKit](../../systems/lorekit/), whose audit rows carry `{scope, key}` and can
+therefore prove a change occurred without being able to show what it was. An
+audit that records only that something happened answers the compliance question
+and not the operational one.
+
+Both limits are worth stating with it, because they bound what this buys. The
+file is append-only by file handle, not by storage — nothing signs or chains it,
+so it defends against accident rather than against an adversary with disk access.
+And the log path defaults to `$HOME`, so a process without one has no log at all:
+deletes then fail loudly, which is correct, while stores go silently unlogged,
+which is not.
+
 [Atomic Agent](../../systems/atomic-agent/) is now the clearest implementation,
 and its shape is the one to copy:
 

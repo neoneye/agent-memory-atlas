@@ -555,6 +555,48 @@ and treats such figures as <strong>claims</strong>, not measurements. A
 harness you can run and a result you can reproduce are different things,
 and repositories routinely ship the first while the numbers in the
 README came from the second.</p>
+<h3 id="the-one-that-published-a-loss">The one that published a
+loss</h3>
+<p><a href="../systems/palazzo/">Palazzo</a> is the counter-example to
+the section above, and it is worth naming precisely because it is a
+counter-example of one.</p>
+<p>Its README cites <a href="../systems/mempalace/">MemPalace</a> as
+prior art and quotes MemPalace's claim of 96.6% R@5 on LongMemEval as
+the bar. It then committed
+<code>inbox/longmemeval-bench-2026-04-27.md</code>, reporting its own
+pilot at <strong>R@1 18.0%, R@5 36.0%, R@30 92.0%</strong> over 50
+questions — an order of magnitude off the number on its own landing
+page. The note carries a Wilson interval of [23.5%, 50.6%] at R@5 and
+says the ±14-point band is <em>"too coarse for any decision smaller than
+'is this an order-of-magnitude gap'"</em>. It records a stopping rule
+and the reason for it: the second arm was halted at 16 questions once
+the signal was clear, naming the compute it saved. It rules out its lead
+hypothesis — that the embedding model wanted task prefixes — with a
+control confirming the library was not applying them silently, so the
+two arms genuinely differed. It reads the R@30 figure correctly:
+<em>"the bottleneck is ranking discrimination, not coverage."</em> And
+it ends in a decision not to act, because both routes to closing the gap
+would either invalidate every stored vector or add the LLM dependency
+the project exists to avoid.</p>
+<p>Set that against what this page usually finds. The standard artifact
+is a harness you could run in principle and a README number you cannot
+trace. This is the inverse: a number nobody would publish for marketing,
+with the uncertainty attached and the decision it drove written down
+beside it.</p>
+<p>It fails this page's reproducibility test all the same, and the note
+says so itself. The harness lived at <code>/tmp/lme-direct.py</code> and
+is not committed — <em>"the script is small enough to recreate in 30
+minutes if needed"</em> — and the result files sit on a machine the note
+calls ephemeral. The 50 questions are all one type, because the dataset
+is ordered by type. So the finding is a self-reported pilot, not a
+measurement anyone else can check.</p>
+<p>Two things not to carry away from it. MemPalace's 96.6% is
+<strong>MemPalace's claim as relayed by palazzo</strong>, unverified
+here and not measured by this note. And the 36.0% comes from a direct
+fastembed-plus-numpy harness that bypasses palazzo's server, so it
+measures the shared embedding model at session granularity rather than
+either product — which is what makes its conclusion interesting, since
+it means the gap is not in the embedder.</p>
 <h3 id="the-benchmark-may-not-be-hard-enough-to-separate-systems">The
 benchmark may not be hard enough to separate systems</h3>
 <p>If a benchmark's conversations fit inside a modern context window, a
@@ -755,7 +797,7 @@ are retrieval-only, which is honest but partial</td>
 <tr>
 <td>Negative precision (forbidden hits)</td>
 <td>Whether the <em>wrong</em> memory stayed out</td>
-<td>Sixteen of one hundred and twenty-three. <a
+<td>Sixteen of one hundred and twenty-four. <a
 href="../systems/open-cowork/">open-cowork</a>, <a
 href="../systems/verel/">Verel</a>, <a href="../systems/neko/">Project
 N.E.K.O.</a>, <a href="../systems/helm/">Helm</a> and <a

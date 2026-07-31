@@ -308,6 +308,46 @@ measurements. A harness you can run and a result you can reproduce are
 different things, and repositories routinely ship the first while the numbers
 in the README came from the second.
 
+### The one that published a loss
+
+[Palazzo](../systems/palazzo/) is the counter-example to the section above, and
+it is worth naming precisely because it is a counter-example of one.
+
+Its README cites [MemPalace](../systems/mempalace/) as prior art and quotes
+MemPalace's claim of 96.6% R@5 on LongMemEval as the bar. It then committed
+`inbox/longmemeval-bench-2026-04-27.md`, reporting its own pilot at **R@1 18.0%,
+R@5 36.0%, R@30 92.0%** over 50 questions — an order of magnitude off the number
+on its own landing page. The note carries a Wilson interval of [23.5%, 50.6%] at
+R@5 and says the ±14-point band is *"too coarse for any decision smaller than
+'is this an order-of-magnitude gap'"*. It records a stopping rule and the reason
+for it: the second arm was halted at 16 questions once the signal was clear,
+naming the compute it saved. It rules out its lead hypothesis — that the
+embedding model wanted task prefixes — with a control confirming the library was
+not applying them silently, so the two arms genuinely differed. It reads the
+R@30 figure correctly: *"the bottleneck is ranking discrimination, not
+coverage."* And it ends in a decision not to act, because both routes to closing
+the gap would either invalidate every stored vector or add the LLM dependency
+the project exists to avoid.
+
+Set that against what this page usually finds. The standard artifact is a
+harness you could run in principle and a README number you cannot trace. This is
+the inverse: a number nobody would publish for marketing, with the uncertainty
+attached and the decision it drove written down beside it.
+
+It fails this page's reproducibility test all the same, and the note says so
+itself. The harness lived at `/tmp/lme-direct.py` and is not committed — *"the
+script is small enough to recreate in 30 minutes if needed"* — and the result
+files sit on a machine the note calls ephemeral. The 50 questions are all one
+type, because the dataset is ordered by type. So the finding is a self-reported
+pilot, not a measurement anyone else can check.
+
+Two things not to carry away from it. MemPalace's 96.6% is **MemPalace's claim
+as relayed by palazzo**, unverified here and not measured by this note. And the
+36.0% comes from a direct fastembed-plus-numpy harness that bypasses palazzo's
+server, so it measures the shared embedding model at session granularity rather
+than either product — which is what makes its conclusion interesting, since it
+means the gap is not in the embedder.
+
 ### The benchmark may not be hard enough to separate systems
 
 If a benchmark's conversations fit inside a modern context window, a system
@@ -478,7 +518,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixteen of one hundred and twenty-three. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixteen of one hundred and twenty-four. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |

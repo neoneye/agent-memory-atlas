@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **123 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **124 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -133,6 +133,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`optmem`](../systems/optmem/) **OptMem** — No background work · `VictorTaelin/OptMem` · Mutation audit
 ## P
 
+- [`palazzo`](../systems/palazzo/) **Palazzo** — An audit log that can refuse a delete · `calibrae/palazzo` · Mutation audit
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
 - [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`

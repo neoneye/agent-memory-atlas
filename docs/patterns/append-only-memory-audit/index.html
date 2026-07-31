@@ -157,6 +157,38 @@ path, or a test.</p>
 <p><strong>Skip it if</strong> you already have durable evidence records
 and git history. Two audit trails that disagree are worse than one.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<p><strong><a href="../../systems/palazzo/">Palazzo</a> is the only
+implementation here where the log entry is a precondition rather than a
+consequence.</strong> Every other audit on this page is written because
+a mutation happened. Palazzo's write-ahead log has two methods, and the
+destructive paths call the second one:</p>
+<pre class="rust"><code>/// Like `log`, but errors when the entry cannot be durably appended —
+/// including when no WAL path is configured at all. Destructive operations
+/// (palace_delete, palace_delete_by_filter) call this and abort before
+/// touching Qdrant: the WAL is their only audit trail, so a delete that
+/// can&#39;t be logged must not happen.
+pub fn log_strict&lt;T: Serialize&gt;(&amp;self, operation: &amp;str, params: &amp;T) -&gt; anyhow::Result&lt;()&gt;</code></pre>
+<p>The split is the design. Ordinary writes use best-effort
+<code>log</code>, which warns and continues; deletion uses
+<code>log_strict</code>, which fails the operation. A lost store line is
+an inconvenience; a lost delete line is the erasure of the record that
+the erasure happened, and that is the one case where continuing is worse
+than stopping. <code>delete_happy_path_wal_logs_then_deletes</code> pins
+the ordering.</p>
+<p>The second detail is what goes in the entry. Palazzo writes a text
+preview of every point before deleting it, so the log says what was
+removed. Compare <a href="../../systems/lorekit/">LoreKit</a>, whose
+audit rows carry <code>{scope, key}</code> and can therefore prove a
+change occurred without being able to show what it was. An audit that
+records only that something happened answers the compliance question and
+not the operational one.</p>
+<p>Both limits are worth stating with it, because they bound what this
+buys. The file is append-only by file handle, not by storage — nothing
+signs or chains it, so it defends against accident rather than against
+an adversary with disk access. And the log path defaults to
+<code>$HOME</code>, so a process without one has no log at all: deletes
+then fail loudly, which is correct, while stores go silently unlogged,
+which is not.</p>
 <p><a href="../../systems/atomic-agent/">Atomic Agent</a> is now the
 clearest implementation, and its shape is the one to copy:</p>
 <pre class="sql"><code>vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
