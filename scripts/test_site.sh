@@ -34,7 +34,10 @@ if [[ "$expected_systems" == "0" || "$expected_patterns" == "0" ]]; then
   exit 1
 fi
 
-system_count="$(find "$site_dir/systems" -mindepth 2 -maxdepth 2 -name index.html | wc -l | tr -d ' ')"
+# Redirect stubs left behind by a renamed project (site/redirects/*.html) also
+# land under systems/<slug>/index.html and are not reports. They carry
+# data-redirect-stub so this count stays "one rendered report per content file".
+system_count="$(find "$site_dir/systems" -mindepth 2 -maxdepth 2 -name index.html -exec grep -L 'data-redirect-stub' {} + | wc -l | tr -d ' ')"
 if [[ "$system_count" != "$expected_systems" ]]; then
   echo "Expected $expected_systems rendered system reports, found $system_count" >&2
   exit 1

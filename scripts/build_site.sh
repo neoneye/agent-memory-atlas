@@ -25,6 +25,15 @@ cp "$project_dir/site/index.html" "$output_dir/index.html"
 # /discord.html is a redirect in front of the Discord invite, so the invite code
 # lives in one file rather than in every place it has been shared.
 cp "$project_dir/site/discord.html" "$output_dir/discord.html"
+# A report whose upstream project renames itself gets a new slug and a stub at
+# the old URL, so links already published against the old name keep working.
+# site/redirects/<old-slug>.html becomes /systems/<old-slug>/index.html.
+for redirect in "$project_dir"/site/redirects/*.html; do
+  [[ -e "$redirect" ]] || continue
+  redirect_slug="$(basename "$redirect" .html)"
+  mkdir -p "$output_dir/systems/$redirect_slug"
+  cp "$redirect" "$output_dir/systems/$redirect_slug/index.html"
+done
 cp -R "$project_dir/assets/." "$output_dir/assets/"
 touch "$output_dir/.nojekyll"
 

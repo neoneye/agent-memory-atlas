@@ -1,13 +1,13 @@
 ---
-title: "SoulForge"
+title: "Empryo"
 eyebrow: "Retrieval that reads the repo"
 description: "A memory whose ranking signals come from the codebase — direct file affinity, git co-change neighbours, dependency blast radius — fused with a dependency-free hash-bag embedder that needs no model and no network."
 root: ../..
 page_kind: system
-source_name: "proxysoul/soulforge"
-source_url: https://github.com/proxysoul/soulforge
+source_name: "proxysoul/Empryo"
+source_url: https://github.com/proxysoul/Empryo
 revision: e6b5885db1232f35a52eb9faeae1023ab46d5685
-revision_url: https://github.com/proxysoul/soulforge/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685
+revision_url: https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced, human_review"
 matrix:
@@ -26,10 +26,21 @@ matrix:
 
 ## 1. Executive Summary
 
-SoulForge is a terminal coding agent, and its memory layer is 4,159 lines under
+Empryo is a terminal coding agent, and its memory layer is 4,159 lines under
 `src/core/memory/` — one of the more carefully built retrieval models in this
 atlas, and the one most thoroughly shaped by the fact that its subject is a
 codebase.
+
+**It was called SoulForge, and this report was first published under that
+name.** The repository is now `proxysoul/Empryo`; the refacing commit landed on
+12 July 2026 and the README at the analyzed commit already reads *"Empryo —
+previously SoulForge"*, with a one-time in-app announcement modal to match. The
+atlas took the old name from the repository URL rather than from the README and
+carried it for two days. The rename is not yet complete in code — `package.json`
+still declares `@proxysoul/soulforge`, and the licence, changelog and several
+docs still say SoulForge — so both names appear in the tree, and this report
+uses the one the project presents to its users. The pinned commit is unchanged
+and every finding below was read at it.
 
 **Licensing note, because it decides what you can do with what you read.** The
 repository is under the **Business Source License 1.1**, which is not an
@@ -317,7 +328,7 @@ result. I inspected these tests; I did not run them.
 **Use the repository as a ranking signal, not just the query.** File affinity is
 obvious once stated; **git co-change affinity** is not, and it surfaces a memory
 about a file you are not looking at but are about to break. Enter it into your
-fusion behind direct hits — SoulForge uses RRF rank 5 and says why.
+fusion behind direct hits — Empryo uses RRF rank 5 and says why.
 
 **Measure your embedder's range, then calibrate the score to it.** The docstring
 states where paraphrases, topical matches and unrelated text fall, and the

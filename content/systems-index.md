@@ -51,6 +51,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`ecc`](../systems/ecc/) **ECC** — A vault that stays unreviewed · `affaan-m/ECC` · Scope enforced
 - [`elastic-atlas`](../systems/elastic-atlas/) **Elastic Atlas** — Evaluated demo · `noamschwartz/atlas-memory-demo` · Scope enforced
+- [`empryo`](../systems/empryo/) **Empryo** — Retrieval that reads the repo · `proxysoul/Empryo` · Scope enforced, Human review
 - [`engram`](../systems/engram/) **Engram** — Coding-agent local memory · `Gentleman-Programming/engram` · Scope enforced, Human review
 - [`everos`](../systems/everos/) **EverOS** — Cases, skills and a cascade · `EverMind-AI/EverOS` · Scope enforced, Negative evals
 ## G
@@ -152,7 +153,6 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
 - [`soul-of-waifu`](../systems/soul-of-waifu/) **Soul of Waifu** — Rollback that nothing calls · `jofizcd/Soul-of-Waifu` · Mutation audit
-- [`soulforge`](../systems/soulforge/) **SoulForge** — Retrieval that reads the repo · `proxysoul/soulforge` · Scope enforced, Human review
 - [`supermemory`](../systems/supermemory/) **Supermemory** — Hosted memory product · `supermemoryai/supermemory` · Scope enforced
 - [`swafra`](../systems/swafra/) **Swafra** — Compact local graph-RAG · `kunal12203/swafra`
 ## T
