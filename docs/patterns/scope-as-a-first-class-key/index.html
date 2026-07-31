@@ -246,6 +246,26 @@ the intent: scope and user filter are composed into one predicate
 expressible, and deletes are scoped the same way. Most systems apply
 scope as a filter somewhere in the read path; making it structurally
 inseparable survives refactoring.</p>
+<p><strong><a href="../../systems/membase/">Membase</a> is the only
+system here whose scope key is authenticated rather than
+asserted.</strong> Every other scope on this page is a string the caller
+supplies and the store believes. Membase's account key is an Ethereum
+address, every call to its remote hub carries a secp256k1 signature over
+a timestamped digest, and the client will not file a memory under any
+owner but the one that signature recovers to:</p>
+<pre class="python"><code>signer = signer_address()
+if owner and owner.lower() != signer.lower():
+    logging.warning(
+        &quot;membase hub: overriding owner=%r with signer wallet %s ...&quot;, owner, signer)</code></pre>
+<p>The override is only half of it — the warning is what tells a caller
+relying on the old arbitrary-owner behaviour that it stopped working,
+instead of letting writes succeed against the wrong account. This is the
+<em>boundary</em> level of the three the <a
+href="../../overview/">comparison</a> distinguishes in its reading notes
+— tag, filter, boundary — and it costs an operator a key rather than an
+identity service. It is worth separating from the rest of that
+implementation, whose read path is the weakest the atlas has
+catalogued.</p>
 <p><a href="../../systems/mateclaw/">MateClaw</a> extends the idea
 across a plugin boundary: its <code>MemoryProvider</code> SPI declares
 <code>prefetch(agentId, query, ownerKey)</code> and

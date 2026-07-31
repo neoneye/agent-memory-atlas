@@ -159,6 +159,28 @@ predicate **so scope cannot be lost**. An unscoped read is not expressible, and
 deletes are scoped the same way. Most systems apply scope as a filter somewhere
 in the read path; making it structurally inseparable survives refactoring.
 
+**[Membase](../../systems/membase/) is the only system here whose scope key is
+authenticated rather than asserted.** Every other scope on this page is a string
+the caller supplies and the store believes. Membase's account key is an Ethereum
+address, every call to its remote hub carries a secp256k1 signature over a
+timestamped digest, and the client will not file a memory under any owner but the
+one that signature recovers to:
+
+```python
+signer = signer_address()
+if owner and owner.lower() != signer.lower():
+    logging.warning(
+        "membase hub: overriding owner=%r with signer wallet %s ...", owner, signer)
+```
+
+The override is only half of it — the warning is what tells a caller relying on
+the old arbitrary-owner behaviour that it stopped working, instead of letting
+writes succeed against the wrong account. This is the *boundary* level of the
+three the [comparison](../../overview/) distinguishes in its reading notes —
+tag, filter, boundary — and it costs an operator a key rather than an identity
+service. It is worth separating from the rest of that
+implementation, whose read path is the weakest the atlas has catalogued.
+
 [MateClaw](../../systems/mateclaw/) extends the idea across a plugin boundary:
 its `MemoryProvider` SPI declares `prefetch(agentId, query, ownerKey)` and
 `syncTurn(..., ownerKey)`, so scope crosses into third-party backends. It is the

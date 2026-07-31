@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Conversation-keyed message buffers
+summarised into long-term memory and a user profile, persisted to a hub
+where every write is signed with the caller's wallet key — behind a
+retrieval filter that reads a distance as a similarity.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Membase — Agent Memory Atlas">
+    <meta property="og:description" content="Conversation-keyed message
+buffers summarised into long-term memory and a user profile, persisted
+to a hub where every write is signed with the caller's wallet key —
+behind a retrieval filter that reads a distance as a similarity.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Membase — Agent Memory Atlas">
+    <meta name="twitter:description" content="Conversation-keyed message
+buffers summarised into long-term memory and a user profile, persisted
+to a hub where every write is signed with the caller's wallet key —
+behind a retrieval filter that reads a distance as a similarity.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Membase — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Signature-owned conversation memory</p>
+          <h1>Membase</h1>
+          <p class="document-deck">Conversation-keyed message buffers
+summarised into long-term memory and a user profile, persisted to a hub
+where every write is signed with the caller's wallet key — behind a
+retrieval filter that reads a distance as a similarity.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/unibaseio/membase">
+              <span>Source</span>
+              <strong>unibaseio/membase</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603" title="9e03b75a453118f4faf4ed3539279435e03bd603">
+              <span>Analyzed revision</span>
+              <code>9e03b75a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-07-31</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (67%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Membase is a decentralised memory layer for agents: conversation
+history and a vector knowledge base held locally and mirrored to a
+remote hub, with every hub call signed by the caller's Ethereum key.
+About 1,800 of its 5,800 Python lines are the memory package; a
+comparable amount is on-chain task coordination that has nothing to do
+with memory.</p>
+<p>The best idea in the repository is in
+<code>src/membase/storage/hub.py</code>. Every upload's
+<code>owner</code> field is forced to the address recovered from the
+caller's signing key, and a caller who passes some other owner gets a
+loud warning rather than a silent success, because the hub now
+<code>401</code>s when <code>owner != signer</code>
+(<code>_coerce_owner</code>,
+<code>src/membase/storage/hub.py:18</code>). Ownership is possession of
+a key, not a string in a payload. That is the same instinct as <a
+href="../aukora-kernel/">Aukora Kernel</a>'s reader proof-of-possession,
+applied to writes.</p>
+<p>The worst is one line away from being invisible.
+<code>ChromaKnowledgeBase.retrieve</code> reads Chroma's
+<code>distances</code> array into a variable named
+<code>similarity</code> and then drops every result below the caller's
+threshold (<code>src/membase/knowledge/chroma.py:315</code>). Chroma
+returns a <strong>distance</strong>, where smaller means closer. So
+raising <code>similarity_threshold</code> to demand better matches
+discards the closest documents and keeps the farthest. The same array is
+read correctly, as a distance, by <code>evaluate_document</code> a
+hundred lines further down the same file
+(<code>src/membase/knowledge/chroma.py:450</code>), where
+<code>score &lt; 0.2</code> means "near enough to be a duplicate". One
+file, one field, two opposite readings.</p>
+<p>A second line compounds it. When
+<code>similarity_threshold &gt; 0</code> and no content filter is set,
+<code>retrieve</code> adds
+<code>where_document: {"$contains": query}</code>
+(<code>src/membase/knowledge/chroma.py:306</code>). Asking for a quality
+bar therefore silently converts semantic search into a literal substring
+match on the entire query string, and then applies the inverted distance
+test to whatever survives. At the default of <code>0.0</code> — which is
+what <code>LTMemory.retrieve</code> passes unless a caller overrides it
+— neither path fires, and the search behaves as expected. The failure is
+opt-in, and it is opted into by the parameter whose documented purpose
+is to make results better.</p>
+<p>The third finding is about forgetting. <code>SqliteMemory.add</code>
+inserts each message into SQLite <em>and</em> into the Chroma collection
+(<code>src/membase/memory/sqlite_memory.py:97</code>).
+<code>SqliteMemory.delete</code> issues a <code>DELETE</code> against
+SQLite alone (<code>src/membase/memory/sqlite_memory.py:152</code>).
+<code>ChromaKnowledgeBase.delete_documents</code> exists and has a
+passing test (<code>tests/test_chroma.py:167</code>), and no memory
+class in the repository calls it. A deleted message vanishes from every
+listing and stays in the index that <code>LTMemory.retrieve</code>
+actually queries.</p>
+<p>One thing to know before installing: <code>README.md:271</code>
+states "MIT License. See <a href="./LICENSE">LICENSE</a> for details."
+and links to a file that is not in the repository at this commit. The
+licence is asserted and absent, which is a worse position for a reader
+than a licence merely missing, because the README gives a grant the
+repository does not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two memory stacks live in the same package and do not share a base
+class.</p>
+<p><strong>The buffered stack</strong> — <code>BufferedMemory</code> is
+a Python list, <code>MultiMemory</code> is a dictionary of them keyed by
+<code>conversation_id</code>. Nothing is summarised, nothing is
+retrieved by content; you read the last <em>n</em> messages or filter
+them with a predicate. Durability is the hub upload.</p>
+<p><strong>The SQLite stack</strong> — <code>SqliteMemory</code> is one
+table plus one Chroma collection under
+<code>~/.membase/&lt;account&gt;/</code>, and <code>LTMemory</code>
+wraps it with a background thread and a profile. This is the stack with
+an epistemic story, and it is a promotion ladder rather than a state
+machine. A message arrives as <code>stm</code>. Every sixteen
+consecutive <code>stm</code> messages are handed to an LLM that returns
+a summary, stored as one <code>ltm</code> message; the same block is
+handed to a second prompt that rewrites the account-wide
+<code>profile</code>. Nothing is ever demoted, contradicted or retired:
+<code>ltm</code> and <code>profile</code> rows accumulate, and reads
+take the most recent one (<code>LTMemory.get</code>,
+<code>src/membase/memory/lt_memory.py:93</code>).</p>
+<p>The summariser asks for far more structure than the system keeps. Its
+prompt demands a JSON object with a <code>summary</code>, three to eight
+<code>keywords</code>, a five-dimension <code>analysis</code>, and a
+<code>memory_level</code> from 1 (discard: small talk) to 5 (knowledge:
+principles and deep insight)
+(<code>src/membase/memory/lt_memory.py:380</code>). It closes by warning
+the model that output which cannot be parsed by <code>json.loads</code>
+"will be judged an invalid result"
+(<code>src/membase/memory/lt_memory.py:430</code>). Nothing judges it.
+The response is stripped of code fences and stored whole as the
+<code>content</code> of a <code>Message</code>
+(<code>src/membase/memory/lt_memory.py:360</code>);
+<code>memory_level</code> appears exactly twice in the repository, both
+times inside the prompt string. The grading exists as an instruction to
+a model and never as a field anything can filter on.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;agent calls add(msg)&quot;] --&gt; B[&quot;SQLite row: memory_index = MAX+1&quot;]
+    A --&gt; C[&quot;Chroma document, doc_id = msg.id&quot;]
+    B --&gt; D{&quot;16 new stm since last ltm?&quot;}
+    D --&gt;|&quot;yes&quot;| E[&quot;LLM summarise, every 60s&quot;]
+    E --&gt; F[&quot;ltm row + profile row&quot;]
+    D --&gt;|&quot;no, block has a gap&quot;| G[&quot;continue, forever&quot;]
+    C --&gt; H[&quot;LTMemory.retrieve&quot;]
+    H --&gt; I{&quot;similarity_threshold &gt; 0?&quot;}
+    I --&gt;|&quot;0.0, the default&quot;| J[&quot;nearest k returned&quot;]
+    I --&gt;|&quot;&gt; 0&quot;| K[&quot;substring filter, then keep the farthest&quot;]
+    L[&quot;delete(memory_index)&quot;] --&gt;|&quot;DELETE&quot;| B
+    L -.-&gt;|&quot;never called&quot;| C
+    style G fill:#7f1d1d,color:#fff
+    style K fill:#7f1d1d,color:#fff</code></pre>
+<p>The two red boxes are the report. The dotted edge is the third
+finding: delete reaches the record and not the index.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>An operator running the SQLite stack needs four things.</p>
+<p><strong>A wallet.</strong> <code>MEMBASE_ACCOUNT</code> is a
+<code>0x</code> address and <code>MEMBASE_SECRET_KEY</code> its 32-byte
+private key. <code>src/membase/storage/_auth.py</code> builds every hub
+header as <code>sha256(hash_label || uint64_be(unix_seconds))</code>
+signed over secp256k1, packed as compact JSON with the address,
+timestamp, digest and 65-byte signature. There is no nonce; freshness is
+the timestamp, so the replay window is whatever clock skew the hub
+tolerates — a server-side property this repository cannot answer.</p>
+<p><strong>An OpenAI key.</strong>
+<code>src/membase/memory/lt_memory.py:20</code> reads
+<code>OPENAI_API_KEY</code> at module scope and calls
+<code>exit(1)</code> when it is unset. That is a library module:
+<code>from membase.memory.lt_memory import LTMemory</code> terminates
+the importing process rather than raising something a caller could
+catch. The buffered stack does not have this problem, because it does
+not import OpenAI at all.</p>
+<p><strong>Local disk.</strong>
+<code>~/.membase/&lt;account&gt;/sql.db</code> and
+<code>~/.membase/&lt;account&gt;/rag</code>, created on construction.
+The Chroma collection is named <code>&lt;account&gt;_memory</code>, so
+one account is one embedding space regardless of how many conversations
+it holds.</p>
+<p><strong>A hub.</strong> <code>MEMBASE_HUB</code> defaults to
+<code>https://testnet.hub.membase.io</code>
+(<code>src/membase/storage/hub.py:273</code>). The default durable store
+for a memory system is a testnet endpoint, and a testnet endpoint is not
+a durability promise.</p>
+<p>The <code>chain/</code> package — roughly the same size as
+<code>memory/</code> — registers agents on an EVM chain and settles
+collaborative tasks. It shares the wallet with the hub auth and touches
+no memory path. A reader here can ignore it, which is worth saying
+plainly: the on-chain identity in the README's first feature bullet is
+not what scopes a memory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Owner forced to signer on every upload</td>
+<td><code>src/membase/storage/hub.py:18</code></td>
+</tr>
+<tr>
+<td>Signed auth header construction</td>
+<td><code>src/membase/storage/_auth.py</code></td>
+</tr>
+<tr>
+<td><code>exit(1)</code> at import when no OpenAI key</td>
+<td><code>src/membase/memory/lt_memory.py:20</code></td>
+</tr>
+<tr>
+<td>Background summarisation loop</td>
+<td><code>src/membase/memory/lt_memory.py:299</code></td>
+</tr>
+<tr>
+<td>Long-term memory prompt, <code>memory_level</code> 1–5</td>
+<td><code>src/membase/memory/lt_memory.py:380</code></td>
+</tr>
+<tr>
+<td>Row insert plus Chroma insert</td>
+<td><code>src/membase/memory/sqlite_memory.py:59</code></td>
+</tr>
+<tr>
+<td>Delete by index, SQLite only</td>
+<td><code>src/membase/memory/sqlite_memory.py:152</code></td>
+</tr>
+<tr>
+<td>Distance read as similarity</td>
+<td><code>src/membase/knowledge/chroma.py:315</code></td>
+</tr>
+<tr>
+<td>Threshold turns search into <code>$contains</code></td>
+<td><code>src/membase/knowledge/chroma.py:306</code></td>
+</tr>
+<tr>
+<td>Distance read as distance</td>
+<td><code>src/membase/knowledge/chroma.py:450</code></td>
+</tr>
+<tr>
+<td>Hub blob keyed on list position</td>
+<td><code>src/membase/memory/buffered_memory.py:104</code></td>
+</tr>
+<tr>
+<td><code>clear()</code> rotates the conversation id</td>
+<td><code>src/membase/memory/buffered_memory.py:284</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table carries everything
+(<code>src/membase/memory/sqlite_memory.py:46</code>):</p>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS memories (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT,
+    content TEXT,
+    memory_index INTEGER,
+    upload_status INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    memory_type TEXT
+)</code></pre>
+<p><code>content</code> is the entire serialised <code>Message</code> as
+JSON, so the columns are an index over a blob rather than a
+decomposition of it. <code>memory_type</code> is one of
+<code>stm</code>, <code>ltm</code>, <code>profile</code>, and
+<code>memory_index</code> is <code>MAX(memory_index) + 1</code> within a
+<code>(conversation_id, memory_type)</code> pair — a per-partition
+sequence, not a global one.</p>
+<p><code>created_at</code> is the only time in the schema and it is
+record time. When a fact was true is not represented anywhere, which is
+the ordinary answer in this corpus and the reason
+<code>bitemporal</code> is withheld.</p>
+<p>The insert is <code>INSERT OR REPLACE</code> on the primary key.
+Re-adding a <code>Message</code> with an id already present deletes the
+old row and writes a new one at the <em>end</em> of the sequence, so an
+identical id changes a memory's position in the ordering that the
+summariser reads by.</p>
+<p>There is no schema for correction. No status field, no supersession
+pointer, no record that a value was ever rejected — hence no
+<code>tombstone</code> and no <code>trust_state</code>. The nearest
+thing is <code>memory_level</code>, and as section 2 sets out, it is
+never parsed out of the summary text.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three read paths exist and only one of them is semantic.</p>
+<p><code>SqliteMemory.get(conversation_id, recent_n, filter_func, type)</code>
+orders by <code>created_at DESC</code>, applies <code>LIMIT</code>,
+reverses in Python, and then runs <code>filter_func</code> over the
+result (<code>src/membase/memory/sqlite_memory.py:129</code>). Note the
+order: the limit is applied in SQL and the predicate in Python, so
+<code>recent_n=1</code> with a filter can return nothing when a matching
+row exists two places back. The background summariser depends on this
+method's filter form to pull an index range.</p>
+<p><code>LTMemory.get(..., include_ltm, include_profile)</code> prepends
+the newest <code>ltm</code> and <code>profile</code> rows to the recent
+<code>stm</code> window
+(<code>src/membase/memory/lt_memory.py:93</code>). This is the assembly
+an agent would use: profile first, long-term summary second, then recent
+turns.</p>
+<p><code>LTMemory.retrieve</code> delegates to Chroma
+(<code>src/membase/memory/lt_memory.py:275</code>), and this is where
+the two defects in section 1 land. It is also the only path that crosses
+conversations: the collection is per account, and
+<code>metadata_filter</code> is optional, so the default
+<code>retrieve</code> returns matches from every conversation the
+account holds. The conversation key is present in metadata and applying
+it is the caller's responsibility.</p>
+<p>The <code>scope_enforced</code> mark rests on the account, not the
+conversation. Every hub read passes <code>self._membase_account</code>
+as the owner (<code>src/membase/memory/lt_memory.py:214</code>), and the
+local database path itself is <code>~/.membase/&lt;account&gt;/</code>,
+so the account key reaches the query on both storage tiers. Per the
+flag's definition, that certifies the key reaches the read — not that a
+caller cannot widen it, and here a caller plainly can, by passing a
+different owner to <code>hub_client.get_conversation</code>.</p>
+<p><code>find_optimal_threshold</code>
+(<code>src/membase/knowledge/chroma.py:381</code>) sweeps thresholds
+from 0.3 to 0.9 and recommends the one where the result <em>count</em>
+changes least between adjacent steps. Since it calls the same broken
+<code>retrieve</code>, the flattest region is typically where the
+substring filter has already emptied the result set, and the "balanced"
+recommendation is then the threshold at which nothing comes back twice
+in a row.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block the agent. <code>SqliteMemory.add</code> opens a
+connection, loops the messages, inserts each into SQLite and — unless
+the id is already present — embeds it into Chroma, commits, and then,
+when <code>auto_upload_to_hub</code> is set, opens a second connection
+and uploads each blob to the hub before returning
+(<code>src/membase/memory/sqlite_memory.py:59</code>). Embedding and a
+network round trip happen on the caller's thread. A memory is
+retrievable the instant <code>add</code> returns; there is no indexing
+lag because there is no queue.</p>
+<p>Long-term memory is the only asynchronous part. One daemon thread per
+<code>LTMemory</code> wakes every 60 seconds, and for each conversation
+compares the newest <code>stm</code> index against the newest
+<code>ltm</code> index. When a full block of sixteen has accumulated it
+pulls exactly that index range and summarises
+(<code>src/membase/memory/lt_memory.py:299</code>). Nothing rewrites the
+whole store; each pass appends one <code>ltm</code> row and one
+<code>profile</code> row.</p>
+<p>That block is fetched by index range and then checked:</p>
+<pre class="python"><code>if len(stm_list) &lt; stms_per_ltm:
+    print(f&quot;not enough stm to summarize ltm for {conv_id} at {last_ltm_index + 1}&quot;)
+    continue  # 理论上不会发生，保险起见</code></pre>
+<p>The comment says the branch cannot happen and is kept for safety. It
+can happen, and it is not safe. <code>delete</code> removes rows by
+<code>memory_index</code> without renumbering, and <code>add</code>
+continues from <code>MAX + 1</code>, so a single deletion inside a
+sixteen-message window leaves that block permanently short.
+<code>last_ltm_index</code> never advances past it, the same doomed
+range is re-fetched every 60 seconds, and long-term summarisation for
+that conversation stops for good — while short-term messages keep
+accumulating and the thread keeps looking busy. Deleting one message is
+enough to end a conversation's long-term memory.</p>
+<p><code>llm_summarize_ltm</code> returns <code>None</code> when the
+OpenAI call raises (<code>src/membase/memory/lt_memory.py:363</code>),
+and <code>SqliteMemory.add</code> returns early on <code>None</code>
+(<code>src/membase/memory/sqlite_memory.py:62</code>). A failed summary
+is therefore retried on the next tick, which is the right behaviour and
+appears to be accidental — the paired <code>llm_summarize_profile</code>
+has no <code>try</code> at all, so an exception there kills the daemon
+thread silently and leaves the process otherwise healthy.</p>
+<p>The buffered stack writes differently and worse. Its hub key is the
+message's <em>position</em> in the list:</p>
+<pre class="python"><code>memory_id = self._conversation_id + &quot;_&quot; + str(len(self._messages)-1)</code></pre>
+<p>(<code>src/membase/memory/buffered_memory.py:104</code>).
+<code>BufferedMemory.delete</code> compacts the list without touching
+the hub, so after deleting one message the next append computes a key
+that a still-live message already occupies, and the upload overwrites a
+different message's blob. Reload from the hub then resurrects the
+deleted message under its old key and loses the overwritten one. The
+SQLite stack avoids this exactly because <code>memory_index</code> comes
+from <code>MAX + 1</code> rather than from a length.</p>
+<p><code>BufferedMemory.clear</code> assigns itself a fresh UUID
+conversation id (<code>src/membase/memory/buffered_memory.py:284</code>)
+while <code>MultiMemory</code> keeps the buffer under the old dictionary
+key (<code>src/membase/memory/multi_memory.py:127</code>). After
+clearing a conversation, its local name and the name its uploads are
+filed under diverge, and <code>get_all_conversations</code> reports the
+name that is no longer being written to.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is none in this repository. No agent loop, no tool definitions,
+no MCP server, no prompt assembly beyond the two summarisation
+templates. Membase is a library an agent framework imports, and the
+composition — profile, then long-term summary, then recent turns — is
+available through
+<code>LTMemory.get(include_ltm=True, include_profile=True)</code> but is
+never performed here.</p>
+<p>That is a defensible boundary, and it means the integration column in
+the matrix is a statement about scope rather than a gap. It also means
+every claim in the README about agent behaviour is a claim about
+software that lives elsewhere.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Trust in Membase is about <em>who wrote a memory</em>, never about
+<em>whether it is true</em>.</p>
+<p>The who is handled unusually well. <code>_coerce_owner</code> will
+not let a caller file a memory under someone else's address; it
+overrides and logs a warning naming the legacy behaviour it is replacing
+(<code>src/membase/storage/hub.py:18</code>). Every request carries a
+signature over a timestamped digest. Compared with the common pattern in
+this atlas — a <code>user_id</code> string that any caller may set to
+any value — this is a real improvement, and it costs the operator a key
+rather than an identity service.</p>
+<p>The whether is absent. Nothing marks a memory as unverified,
+contradicted or withdrawn. The summariser is asked to grade importance
+1–5 and its grade is never read. Two <code>ltm</code> rows that
+contradict each other both persist, and the newer wins by recency
+alone.</p>
+<p>Two failures are worth an operator's attention beyond those already
+covered. <code>print</code> is used for operational logging throughout —
+<code>add memory:</code> prints every message's full content, and
+<code>ltm:</code> prints the entire generated summary
+(<code>src/membase/memory/sqlite_memory.py:70</code>,
+<code>src/membase/memory/lt_memory.py:359</code>). Conversation content
+lands on stdout regardless of log level. And
+<code>SqliteMemory.load</code> and <code>SqliteMemory.export</code> are
+inherited docstrings that were never adapted: both call
+<code>self.clear()</code>, <code>self.add(...)</code> and
+<code>self.get()</code> without the <code>conversation_id</code> those
+methods require (<code>src/membase/memory/sqlite_memory.py:203</code>),
+so both raise <code>TypeError</code> unconditionally. Export and import
+do not work on the stack that has the database.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There is no CI configuration in the repository. Nine test files
+exist; several require live network credentials —
+<code>test_ltm.py</code> needs an OpenAI key and a reachable hub,
+<code>test_trader.py</code> and <code>test_beeper.py</code> need a
+funded chain.</p>
+<p>The test for the whole long-term memory mechanism has no assertions.
+It inserts twenty question-and-answer pairs, sleeps 120 seconds, fetches
+the summary and the profile, prints them, and stops the thread
+(<code>tests/test_ltm.py:8</code>). Under pytest it passes when the
+summariser produces nothing at all, which — given
+<code>llm_summarize_ltm</code> swallows its exception and returns
+<code>None</code> — is a reachable outcome it cannot distinguish from
+success.</p>
+<p><code>tests/test_chroma.py:269</code> is the more instructive case.
+It exercises the broken threshold and passes:</p>
+<pre class="python"><code>results = kb.retrieve(&quot;quick brown&quot;, similarity_threshold=0.8)
+assert len(results) &lt;= 3  # Should only return very similar documents</code></pre>
+<p>The assertion is on the <em>number</em> of results, never on
+<em>which</em> documents came back, and <code>&lt;= 3</code> is
+satisfied by zero. A test written this way cannot fail when the filter
+selects the wrong end of the distance range, and the comment records an
+intent the code does not implement.</p>
+<p><code>tests/test_multi_memory.py:74</code> has the same shape for the
+conversation-id rotation: it clears a conversation and asserts
+<code>size(conv_id) == 0</code>, which passes precisely because the
+lookup still uses the stale key.</p>
+<p>No negative retrieval assertions exist anywhere, so
+<code>negative_eval</code> is withheld.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Force the owner to the signer, and warn when you had
+to.</strong> <code>_coerce_owner</code> is twelve lines and it converts
+ownership from a claim into a proof. The warning matters as much as the
+override: a caller who was relying on the old arbitrary-owner behaviour
+learns it stopped working, instead of watching writes succeed against
+the wrong account. Any system with a per-tenant store and a signing key
+already in hand can copy this directly.</p>
+<p><strong>Derive durable keys from a monotonic column, never from a
+length.</strong> The two stacks in this repository disagree on exactly
+this point, and the disagreement is the whole difference between
+deletion being safe and deletion silently overwriting a live record.
+<code>MAX(memory_index) + 1</code> scoped to a partition is the cheap
+correct version.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Naming a variable for the semantics you wanted.</strong>
+<code>similarity = results["distances"][0][i]</code> is the entire bug.
+Everything downstream reads correctly and does the opposite of what it
+says, and the same file proves the author knew the right semantics
+elsewhere. When a library returns a distance, carry the word "distance"
+all the way to the comparison, and convert explicitly at one named place
+if you want a similarity.</p>
+<p><strong>Changing the retrieval strategy inside a parameter that
+claims to tune it.</strong> Setting <code>similarity_threshold</code>
+swaps vector search for a substring filter. A caller reading the
+signature has no way to know that, and the failure looks like the
+embedding model performing badly rather than like the search having been
+replaced.</p>
+<p><strong>Deleting from the record store and not from the
+index.</strong> Once a message is in two places, delete has to reach
+both or it is not delete. The Chroma delete exists and is tested here;
+only the call is missing. That gap is invisible in every listing an
+operator would check, because listings read SQLite.</p>
+<p><strong>Sequence guards commented as unreachable.</strong> The
+<code>continue</code> at
+<code>src/membase/memory/lt_memory.py:333</code> is the difference
+between a stalled consolidation loop and a crash that would have been
+diagnosed in an hour. If a branch should be impossible, make it
+loud.</p>
+<h3 id="fit">Fit</h3>
+<p>Take the auth module and leave the memory.
+<code>src/membase/storage/_auth.py</code> and <code>_coerce_owner</code>
+are the parts worth reading, and they are eighty lines that transfer
+cleanly to any project already holding a wallet key.</p>
+<p>The memory layer is not something to depend on as it stands. The
+retrieval defect is silent and selects against relevance; deletion does
+not reach retrieval; long-term consolidation stops permanently after one
+deletion; import and export raise on the primary stack; and importing
+the long-term module without an OpenAI key ends the host process.
+Nothing in <code>src/membase/memory/</code> has changed since 24 July
+2025, while the repository's HEAD is 10 June 2026 — the memory package
+is the least active part of an otherwise moving project.</p>
+<p>Then there is the licence. The README grants MIT and the file it
+points to is not in the repository, so a reader who checks the README
+believes they have rights that nothing in the tree confers. That is a
+question for the maintainers rather than a defect in the code, and it is
+answerable in one commit.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Inverted retrieval filter.</strong>
+<code>similarity_threshold</code> keeps the farthest documents and drops
+the nearest (<code>src/membase/knowledge/chroma.py:315</code>).</li>
+<li><strong>Silent strategy swap.</strong> Any non-zero threshold adds
+<code>where_document: {"$contains": query}</code>
+(<code>src/membase/knowledge/chroma.py:306</code>).</li>
+<li><strong>Delete misses the index.</strong>
+<code>ChromaKnowledgeBase.delete_documents</code> is never called from
+any memory class; deleted messages stay retrievable.</li>
+<li><strong>Consolidation stalls after a delete.</strong> An index gap
+makes a sixteen-message block permanently short
+(<code>src/membase/memory/lt_memory.py:333</code>).</li>
+<li><strong><code>exit(1)</code> at import.</strong> Importing
+<code>lt_memory</code> without <code>OPENAI_API_KEY</code> terminates
+the process (<code>src/membase/memory/lt_memory.py:20</code>).</li>
+<li><strong>Positional hub keys.</strong> The buffered stack files blobs
+under list position, so delete-then-append overwrites a live record
+(<code>src/membase/memory/buffered_memory.py:104</code>).</li>
+<li><strong>Conversation id diverges on clear.</strong> The buffer
+renames itself; the dictionary key does not
+(<code>src/membase/memory/buffered_memory.py:284</code>).</li>
+<li><strong><code>load</code> and <code>export</code> raise
+unconditionally</strong> on <code>SqliteMemory</code>
+(<code>src/membase/memory/sqlite_memory.py:203</code>).</li>
+<li><strong>Message content printed to stdout</strong> on every write
+and every summary.</li>
+<li><strong>Licence asserted in the README, file absent from the
+tree.</strong></li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the eighty lines of signed ownership. Build the memory.</p>
+<p>The design sketch is sound and unremarkable: message rows, a
+block-wise summariser, a rolling profile, a vector index over the same
+content. Several systems in this atlas implement that shape well — <a
+href="../second-me/">Second Me</a> for the profile, <a
+href="../graphiti/">Graphiti</a> for the temporal model that Membase's
+single <code>created_at</code> cannot express. What separates this
+implementation from those is not architecture but the read path, and the
+read path is where a memory system is judged.</p>
+<p>For a reader building on a chain, the honest summary is that Membase
+solves the identity half convincingly and the memory half is a first
+draft that has been sitting untouched for a year.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Does the hub bound clock skew on the timestamp in the auth digest?
+There is no nonce, and the replay window is entirely a server-side
+property.</li>
+<li>Does the hub restrict <em>reads</em> by signer the way it restricts
+writes? <code>get_conversation(owner, conversation_id)</code> takes an
+arbitrary owner and signs with the caller's key; only the hub can say
+whether that combination is refused.</li>
+<li>Is the LICENSE file's absence an oversight or a deliberate change?
+The README text asserting MIT is unambiguous.</li>
+<li>Which stack is the intended one? <code>MultiMemory</code> and
+<code>LTMemory</code> are both exported, share no base class, and
+disagree about durable keys.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/membase/memory/memory.py</code></td>
+<td>Abstract base contract; <code>SqliteMemory</code> does not implement
+it</td>
+</tr>
+<tr>
+<td><code>src/membase/memory/buffered_memory.py</code></td>
+<td>In-process list with hub upload, positional keys</td>
+</tr>
+<tr>
+<td><code>src/membase/memory/multi_memory.py</code></td>
+<td>Dictionary of buffers keyed by conversation</td>
+</tr>
+<tr>
+<td><code>src/membase/memory/sqlite_memory.py</code></td>
+<td>SQLite table plus Chroma collection; the durable stack</td>
+</tr>
+<tr>
+<td><code>src/membase/memory/lt_memory.py</code></td>
+<td>Summarisation thread, profile, prompts, <code>retrieve</code></td>
+</tr>
+<tr>
+<td><code>src/membase/memory/message.py</code></td>
+<td>The <code>Message</code> unit and its serialisation</td>
+</tr>
+<tr>
+<td><code>src/membase/memory/serialize.py</code></td>
+<td>JSON round-trip with a type hook</td>
+</tr>
+<tr>
+<td><code>src/membase/knowledge/chroma.py</code></td>
+<td>Vector store wrapper; both retrieval defects live here</td>
+</tr>
+<tr>
+<td><code>src/membase/knowledge/document.py</code></td>
+<td>Document and metadata container</td>
+</tr>
+<tr>
+<td><code>src/membase/storage/hub.py</code></td>
+<td>Hub client, upload queue, <code>_coerce_owner</code></td>
+</tr>
+<tr>
+<td><code>src/membase/storage/_auth.py</code></td>
+<td>secp256k1 signed auth headers</td>
+</tr>
+<tr>
+<td><code>src/membase/chain/</code></td>
+<td>On-chain registration and task settlement; not memory</td>
+</tr>
+<tr>
+<td><code>tests/test_chroma.py</code></td>
+<td>Vector store tests, including the one that passes over the
+defect</td>
+</tr>
+<tr>
+<td><code>tests/test_ltm.py</code></td>
+<td>The long-term memory test, with no assertions</td>
+</tr>
+<tr>
+<td><code>tests/test_multi_memory.py</code></td>
+<td>Buffer dictionary tests</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

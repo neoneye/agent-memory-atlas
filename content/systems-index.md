@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **122 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **123 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -94,6 +94,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`mem0sharp`](../systems/mem0sharp/) **Mem0Sharp** — Mem0's architecture, rebuilt in C# · `jihadkhawaja/mem0sharp` · Scope enforced, Mutation audit
 - [`memanto`](../systems/memanto/) **Memanto** — Resolved conflict · `moorcheh-ai/memanto` · Scope enforced, Human review
 - [`memary`](../systems/memary/) **Memary** — Knowledge-graph agent memory · `kingjulio8238/Memary`
+- [`membase`](../systems/membase/) **Membase** — Signature-owned conversation memory · `unibaseio/membase` · Scope enforced
 - [`memento`](../systems/memento/) **Memento** — Memory sealed until a date · `xD4O/memento` · Scope enforced
 - [`memmachine`](../systems/memmachine/) **MemMachine** — Episode-preserving dual memory · `MemMachine/MemMachine` · Scope enforced
 - [`memobase`](../systems/memobase/) **Memobase** — Structured user profiles · `memodb-io/memobase` · Scope enforced
