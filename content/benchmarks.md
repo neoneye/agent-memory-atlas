@@ -31,16 +31,12 @@ Six things are worth knowing before reading further.
 5. **The lag between writing a memory and being able to recall it is measured
    nowhere**, even though several systems here deliberately delay extraction by
    minutes or by a batch boundary.
-6. **There was no forgetting benchmark until 2026-06, and there is now one.**
+6. **One benchmark scores forgetting, and it stops short of the hard part.**
    [ForgetEval](#forgeteval--the-benchmark-this-page-said-did-not-exist) scores
    `supersede`, `release` and `purge` across thirteen system configurations and
-   is released under MIT — so the flat version of this claim, which this page
-   carried for five months, is retired. What survives is narrower and still
-   true: no benchmark tests whether a deleted memory stays deleted **after the
-   next background pass**, which is steps 5–8 of the test below and the part
-   ForgetEval does not reach. The rest of this bullet is the state of things
-   before that arrived, and is kept because the gap it describes is mostly
-   still open.
+   is released under MIT. What it does not test is whether a deleted memory stays
+   deleted **after the next background pass** — steps 5–8 of the test below.
+   Everything named in the rest of this bullet remains uncovered.
    [PersistBench](#persistbench-asks-a-different-question-and-answers-it-well)
    is titled as though it were the exception and is not — it asks whether a
    model *applies* a memory it should not, which is a good question with real
@@ -684,10 +680,9 @@ is handed to the model in the prompt, so there is no retrieval layer to fail and
 no store to resurrect anything from. A system could pass PersistBench perfectly
 and still restore every deleted memory on its next nightly distillation.
 
-So this page's claim stood for five months, and no longer does — see
-**ForgetEval** below, read on 30 July 2026. Against PersistBench specifically the
-narrowing is still right: **PersistBench does not measure whether a deleted
-memory stays deleted.** But the adjacent claim — that negative
+A released benchmark does now score deletion — see **ForgetEval** below.
+Against PersistBench specifically the narrowing still holds: **PersistBench does
+not measure whether a deleted memory stays deleted.** But the adjacent claim — that negative
 retrieval assertions barely exist — now needs qualifying. PersistBench is a
 negative-*use* benchmark with a positive control, released, and running inside a
 standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
@@ -816,9 +811,8 @@ the serious ones.**
    nothing completed the task.
 
 The honest summary: **one paper has proposed the right question and has not yet
-answered it.** That is a better state than this page previously described, and
-it changes the recommendation — a reader building the deletion test below should
-start from FiFA's violation taxonomy rather than from nothing. It does not
+answered it.** A reader building the deletion test below should start from FiFA's
+violation taxonomy rather than from nothing. It does not
 change the conclusion, because a metric with no released artifact, no
 discriminating power, and an abstract at odds with its own table is a research
 direction rather than a measurement.

@@ -47,15 +47,14 @@ tables together, which is a reset rather than an edit. So every mutation leaves 
 durable record of what the text was and what it became, keyed on the memory, in
 the system's own store.
 
-**A divergence this report raised and a later re-read settled.** The atlas's
-[Mem0](../mem0/) report carried only `scope_enforced` when this one was written,
-so either that mark had been withheld for a reason invisible from a different
-repository, or the original was under-marked. It was under-marked: re-reading
-`mem0/mem0/memory/storage.py` at its pinned commit found the same append-only
-history, written only by `add_history` and `batch_add_history`, with no `UPDATE`
-or `DELETE` against it — and richer than this one, since the Python table carries
-`actor_id` and `role` where the C# table does not. Mem0 now carries `audit_log`
-too. The port did not add the audit; it made a two-month-old omission visible.
+**The audit is inherited, not added.** [Mem0](../mem0/)'s
+`mem0/mem0/memory/storage.py` carries the same append-only history at its pinned
+commit — written only by `add_history` and `batch_add_history`, with no `UPDATE`
+or `DELETE` against it — and it is the richer of the two, since the Python table
+records `actor_id` and `role` where the C# table does not. Both hold `audit_log`.
+What the port contributes is not the mechanism but a second reading of it: the
+same design expressed in another language, which is the cheapest way to find out
+whether a mark was earned by the design or by the implementation.
 
 Scope is the other mark and it is enforced at the schema: `user_id text NOT NULL`
 with `agent_id`, `run_id` and `scope` beside it, composed into a `WHERE` clause

@@ -137,19 +137,17 @@ history is a <code>TRUNCATE</code> of both tables together, which is a
 reset rather than an edit. So every mutation leaves a durable record of
 what the text was and what it became, keyed on the memory, in the
 system's own store.</p>
-<p><strong>A divergence this report raised and a later re-read
-settled.</strong> The atlas's <a href="../mem0/">Mem0</a> report carried
-only <code>scope_enforced</code> when this one was written, so either
-that mark had been withheld for a reason invisible from a different
-repository, or the original was under-marked. It was under-marked:
-re-reading <code>mem0/mem0/memory/storage.py</code> at its pinned commit
-found the same append-only history, written only by
-<code>add_history</code> and <code>batch_add_history</code>, with no
-<code>UPDATE</code> or <code>DELETE</code> against it — and richer than
-this one, since the Python table carries <code>actor_id</code> and
-<code>role</code> where the C# table does not. Mem0 now carries
-<code>audit_log</code> too. The port did not add the audit; it made a
-two-month-old omission visible.</p>
+<p><strong>The audit is inherited, not added.</strong> <a
+href="../mem0/">Mem0</a>'s <code>mem0/mem0/memory/storage.py</code>
+carries the same append-only history at its pinned commit — written only
+by <code>add_history</code> and <code>batch_add_history</code>, with no
+<code>UPDATE</code> or <code>DELETE</code> against it — and it is the
+richer of the two, since the Python table records <code>actor_id</code>
+and <code>role</code> where the C# table does not. Both hold
+<code>audit_log</code>. What the port contributes is not the mechanism
+but a second reading of it: the same design expressed in another
+language, which is the cheapest way to find out whether a mark was
+earned by the design or by the implementation.</p>
 <p>Scope is the other mark and it is enforced at the schema:
 <code>user_id text NOT NULL</code> with <code>agent_id</code>,
 <code>run_id</code> and <code>scope</code> beside it, composed into a
