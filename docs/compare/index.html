@@ -4398,7 +4398,8 @@ unsupported benchmark claims</td>
 rationale and the sessions it came from — plus one memory.md per
 project</td>
 <td>JSON files on disk (skills.json, projects.json, chat history) and
-SKILL.md directories</td>
+SKILL.md directories, resolved through a project-first overlay in CLI
+mode</td>
 <td>No search; the project's assigned skills and its memory.md are
 assembled into the system prompt</td>
 <td>A synthesizer reads finished sessions, user feedback and subagent
@@ -4406,17 +4407,20 @@ traces, then proposes create or update</td>
 <td>Proposals stage as SKILL.md.proposed and become live by rename on
 approval; rejection deletes the proposal and records nothing</td>
 <td>Project id selects the memory.md and filters the installed-skills
-block on the read path</td>
-<td>Native Rust desktop app, embedded web UI, MCP servers, plugins,
-Telegram and LINE bots</td>
-<td>A scheduler runs the skill synthesizer; compaction hooks track file
-reads and invoked skills</td>
+block; the CLI scopes instead by launch directory, with skills, persona,
+settings and history in a local .tigrimos</td>
+<td>Native Rust desktop app, embedded web UI, a folder-local
+<code>tigrim</code> CLI, MCP servers, plugins, Telegram and LINE
+bots</td>
+<td>A scheduler runs the skill synthesizer in the desktop and headless
+binaries only; compaction hooks track file reads and invoked skills</td>
 <td>review_status pending or approved, persisted, with pending coupled
 to enabled=false</td>
 <td>A staged proposal a person can diff before it takes effect, carrying
 its rationale and source sessions</td>
 <td>Proposal state is in-memory only, so a rejected skill can be
-re-proposed after a restart</td>
+re-proposed after a restart, and the CLI never starts the synthesizer
+that produces skills in the first place</td>
 </tr>
 <tr>
 <td><code>tokenmizer</code></td>
@@ -10348,7 +10352,18 @@ worth copying into systems whose memory model is far richer than this
 one's.</li>
 <li>Maturity impression: 62 inline Rust tests concentrated on the agent
 loop and tool config rather than memory, with nothing exercising the
-propose/approve/reject cycle.</li>
+propose/approve/reject cycle, and nothing at all on the new CLI or its
+path resolvers.</li>
+<li>Re-read 2026-07-31, fifteen commits on: every published claim still
+holds, and the project shipped a second binary. The <code>tigrim</code>
+CLI scopes skills, persona, settings and chat history to a
+<code>.tigrimos</code> folder in the launch directory — a cleaner
+boundary than the project-id filter — and never calls
+<code>skill_synthesizer::start_cron</code>, so the mechanism this entry
+exists for does not run there. The read path also gained a filter that
+drops assistant turns starting <code>"Error: "</code> from the model's
+view of history, because models were imitating a dead provider's quota
+message verbatim.</li>
 <li>Study when: you want a self-contained agent platform that asks
 before changing what it has learned, or you want the promotion mechanism
 on its own.</li>
@@ -11148,7 +11163,7 @@ href="https://github.com/mindverse/Second-Me">mindverse/Second-Me</a> at
 href="https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a"><code class="commit-id" title="d0e40251d9de61b3340b8d0d7d83150669f1885a">d0e40251…</code></a></li>
 <li><a href="https://github.com/Sompote/TigrimOSR">Sompote/TigrimOSR</a>
 at <a
-href="https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba3192ac49370d"><code class="commit-id" title="92e8867b63acfb8592d6ae3067ba3192ac49370d">92e8867b…</code></a></li>
+href="https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4"><code class="commit-id" title="0813f2eb9f28a07e9adb6231f3de4f09803b66b4">0813f2eb…</code></a></li>
 <li><a
 href="https://github.com/MemMachine/MemMachine">MemMachine/MemMachine</a>
 at <a
@@ -11772,6 +11787,20 @@ moved from five of seven to six. Two of the three stale claims were
 <em>criticisms</em> — the report faulted the system for gaps it had
 since closed — which is the failure direction a drifting pin produces
 most often and the one least likely to be reported by a reader.</li>
+<li>TigrimOSR was re-reviewed on 2026-07-31 at <a
+href="https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4"><code class="commit-id" title="0813f2eb9f28a07e9adb6231f3de4f09803b66b4">0813f2eb…</code></a>,
+fifteen commits past the previous pin, and <strong>nothing published
+about it had gone stale</strong> — the report was extended rather than
+corrected. Worth recording because it is the opposite outcome from
+Daimon below and the more common one: a pin drifts, the mechanism does
+not move, and what changed is elsewhere. Here the elsewhere was a whole
+second binary. The new <code>tigrim</code> CLI scopes skills, persona,
+settings and chat history to a <code>.tigrimos</code> directory in the
+folder it launches in, and never starts the skill synthesizer, so the
+propose-stage-approve mechanism this atlas reports on is absent from the
+mode a new user is most likely to try. A freshness check that compares
+commit ids would have flagged this repository; only reading it says
+which of the two outcomes it was.</li>
 <li>Verel was re-reviewed on 2026-07-28 at <code>5aa050fe</code>
 (v1.9.0) after its author reported the entry was out of date. The
 previous pin was not merely old but <strong>unreachable from any
