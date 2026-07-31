@@ -59,15 +59,14 @@ binary and there is no record that anything was ever proposed or refused, and
 nothing in the synthesis path consults past rejections. The same sessions produce
 the same proposal again.
 
-**Re-read on 31 July 2026, fifteen commits past the previous pin.** Everything
-above still holds line for line. What changed is that the project shipped a
-second way to run itself, and the mechanism this report exists for is not in it.
-`src/bin/tigrim.rs` is a new Claude-Code-style CLI that treats the directory it
-launches in as the workspace: `.tigrimos/` holds that folder's skills, persona,
-settings and chat history, and `data.rs` grew an overlay — `skills_root()`,
-`resolve_config_file`, `overlay_dirs`, and a `PROJECT_LOCAL_FILES` list — to
-route reads project-first. It is a cleaner scope boundary than the project-id
-filter the report already credited.
+**There are two ways to run TigrimOSR and the mechanism above is in only one of
+them.** `src/bin/tigrim.rs` is a Claude-Code-style CLI that treats the directory
+it launches in as the workspace: `.tigrimos/` holds that folder's skills,
+persona, settings and chat history, and `src/server/data.rs` carries an overlay —
+`skills_root()`, `resolve_config_file`, `overlay_dirs`, and a
+`PROJECT_LOCAL_FILES` list — that routes reads project-first. It is a cleaner
+scope boundary than the project-id filter, and it is four days old at this
+commit.
 
 The synthesizer does not run there. `skill_synthesizer::start_cron` is called
 twice, both times in `src/main.rs`, and `src/bin/tigrim.rs` calls neither. A CLI

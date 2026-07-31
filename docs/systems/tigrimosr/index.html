@@ -152,18 +152,16 @@ file and resets the status. Restart the binary and there is no record
 that anything was ever proposed or refused, and nothing in the synthesis
 path consults past rejections. The same sessions produce the same
 proposal again.</p>
-<p><strong>Re-read on 31 July 2026, fifteen commits past the previous
-pin.</strong> Everything above still holds line for line. What changed
-is that the project shipped a second way to run itself, and the
-mechanism this report exists for is not in it.
-<code>src/bin/tigrim.rs</code> is a new Claude-Code-style CLI that
-treats the directory it launches in as the workspace:
-<code>.tigrimos/</code> holds that folder's skills, persona, settings
-and chat history, and <code>data.rs</code> grew an overlay —
-<code>skills_root()</code>, <code>resolve_config_file</code>,
-<code>overlay_dirs</code>, and a <code>PROJECT_LOCAL_FILES</code> list —
-to route reads project-first. It is a cleaner scope boundary than the
-project-id filter the report already credited.</p>
+<p><strong>There are two ways to run TigrimOSR and the mechanism above
+is in only one of them.</strong> <code>src/bin/tigrim.rs</code> is a
+Claude-Code-style CLI that treats the directory it launches in as the
+workspace: <code>.tigrimos/</code> holds that folder's skills, persona,
+settings and chat history, and <code>src/server/data.rs</code> carries
+an overlay — <code>skills_root()</code>,
+<code>resolve_config_file</code>, <code>overlay_dirs</code>, and a
+<code>PROJECT_LOCAL_FILES</code> list — that routes reads project-first.
+It is a cleaner scope boundary than the project-id filter, and it is
+four days old at this commit.</p>
 <p>The synthesizer does not run there.
 <code>skill_synthesizer::start_cron</code> is called twice, both times
 in <code>src/main.rs</code>, and <code>src/bin/tigrim.rs</code> calls

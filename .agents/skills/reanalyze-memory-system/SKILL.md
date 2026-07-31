@@ -1,0 +1,184 @@
+---
+name: reanalyze-memory-system
+description: Re-read a repository Agent Memory Atlas already has a report for, at a newer commit, and fold what changed into the existing report. Use when asked to re-analyze, re-read, re-pin, refresh, or check for updates on a system already in the atlas, when an upstream project reports a fix, or when a freshness check flags a stale pin.
+---
+
+# Re-analyze Memory System
+
+The atlas pins every report to a commit. Upstream moves; the pin does not. This
+skill covers the second-most-common workflow in the repository: reading a system
+again at a newer commit and folding the result into the report that exists.
+
+It is not `add-memory-system`. There is no scaffolding, no new slug, no new
+homepage card. Read that skill for the report format, the capability
+definitions, the matrix rules and the build/validate loop — all of that still
+applies. This one covers what is different.
+
+## The rule that gets broken
+
+**Write the result, not the re-review.** The report describes the system at the
+pinned commit. It is not a changelog of the atlas's own understanding.
+
+Grep the repository's history for `Fold the .* re-review into the report instead
+of narrating it` and you will find the same correction applied more than once.
+The forms that keep appearing and must not:
+
+- "Re-read on <date>, N commits past the previous pin…"
+- "At the commit this report first covered…"
+- "This report previously said…" / "the atlas had missed…"
+- "The report was updated to reflect…"
+
+Check the finished report with:
+
+```sh
+rg -n -i 're-read|re-review|re-pin|previously (said|reported)|this report (first|named|called)|the atlas (found|missed|had)' content/systems/<slug>.md
+```
+
+Every hit is either a fact about the *subject system's* own history — which is
+allowed and often the point, e.g. "until 31 July 2026 neither variable was
+assigned anywhere in the repository" — or process narration, which is not. If a
+sentence would have to change when the atlas changes rather than when the system
+changes, it is the second kind.
+
+The one place a re-review *is* recorded is the known-limitations list near the
+end of `content/overview.md`, and a one-line `- Re-read <date> at <full sha>: …`
+bullet on the system's verdict in section 9. Those are the log. The report body
+is the state.
+
+## Establish what moved
+
+Read the existing report's frontmatter for `revision` and `analyzed_at`. Clone
+the upstream at `HEAD` — a full clone, not `--depth`, or the pinned commit may
+be unreachable and commit counts will be clone artifacts rather than facts about
+the project.
+
+```sh
+git log --oneline <pinned-sha>..HEAD
+git diff --stat <pinned-sha>..HEAD
+git diff --stat <pinned-sha>..HEAD -- <the memory paths the report's appendix names>
+```
+
+The appendix file index of the existing report is the map: it already names the
+files that carry the mechanism. Diff those first, then read the commit subjects
+for anything the appendix would not have listed — a new binary, a new entry
+point, a new package.
+
+If the upstream repository 404s, check for a rename before concluding it is
+gone: GitHub redirects renamed repositories, and the new name is in the redirect.
+See "A project that renamed itself" below.
+
+## Decide the shape, then write
+
+Three outcomes. Name which one you are in before editing, because they call for
+different work.
+
+**Nothing moved.** The mechanism is unchanged and no published claim is stale.
+Re-pin `revision`, `revision_url` and `analyzed_at`, update the commit in
+`content/overview.md`'s repositories-inspected list, and say so plainly in the
+known-limitations bullet. This is a real result and worth recording — it is the
+common case, and it is the one a commit-id comparison cannot distinguish from
+the others.
+
+**A published claim went stale.** The report asserts something that is no longer
+true at the new commit. Correct the body — do not append a correction beside the
+old text. Then check the *criticisms* specifically: the most common stale claim
+is a gap the project has since closed, which is the failure direction least
+likely to be reported by a reader. Re-check every capability mark, in both
+directions.
+
+**The mechanism is unchanged and the context is not.** The report's findings
+hold and something else has appeared — a second entry point, a new mode, a
+subsystem that bypasses the mechanism. Extend the report where the new material
+belongs and leave the rest alone.
+
+## What must be updated together
+
+- `revision`, `revision_url`, `analyzed_at` in the report frontmatter.
+- Any `matrix:` value the change touches, and `capabilities:` if a mark moved.
+- The system's verdict in `content/overview.md` section 9, including its
+  `- Re-read <date> at <full 40-char sha>: …` line.
+- The commit link in the repositories-inspected list in the appendix.
+- A bullet in the known-limitations list when a published claim was wrong,
+  saying what was wrong and in which direction.
+- The homepage card in `site/index.html` when the headline finding changed, and
+  its `data-search` terms when new mechanism names appeared.
+- Pattern pages citing this system as evidence, when the evidence changed.
+- Counts, if a mark moved — see the count discipline in `add-memory-system`.
+
+Line numbers in the existing report are pinned to the old commit and are the
+thing most likely to be silently wrong after a re-pin. Re-verify every one you
+keep:
+
+```sh
+for spec in path/to/file.rs:123 path/to/other.py:456; do
+  f=${spec%:*}; n=${spec#*:}; printf "%-44s %s\n" "$spec" "$(sed -n "${n}p" "$f")"
+done
+```
+
+## When an upstream fixes something the atlas reported
+
+State it as the system's history, not as the atlas's. "`<sha>` wired it" is a
+fact about the project; "the atlas was right" is not. If the upstream's own
+commit message or test file cites this atlas, that citation is a fact about
+their repository and can be reported as one.
+
+Then look for what the fix reveals rather than stopping at the fix:
+
+- Did it leave the original defect reachable by another path? A fix in the
+  callers leaves the library default intact for the next caller.
+- Did it trade the defect for a weaker property? A boundary that now exists may
+  be weaker than the one the design claimed.
+- Did the same commit fix something the atlas did not find? Say so, and say what
+  kind of reading would have caught it.
+- Is there now a test? Run it if the toolchain is present and the run is cheap,
+  and report what you ran and what passed. A report that says "nothing tests
+  this" is a claim with a date on it.
+
+## When a third party reports a finding
+
+Verify it yourself at the **atlas's pinned commit**, not only at the reporter's
+`main` — a report that answers a question at a different commit than it
+publishes creates the drift it was meant to remove. If the code differs between
+the two, say which one the answer applies to.
+
+Then add what the report cannot get from the claim alone: whether a committed
+test covers the property, whether the reporter's paraphrase matches the code
+they quoted, and what the adjacent unasserted case is. Credit the reporter in
+place, with a link to the issue. Remove the open question the finding answers.
+
+## A project that renamed itself
+
+The report's slug is the atlas's, not the project's, and changing it breaks a
+published URL. The repository has a convention for this:
+
+1. `git mv content/systems/<old>.md content/systems/<new>.md`.
+2. Update `title`, `source_name`, `source_url`, `revision_url`.
+3. State the rename in section 1, including whether it is complete in code —
+   package manifests, licence headers and changelogs usually lag the README.
+4. Add `site/redirects/<old-slug>.html`, copying an existing one. It is a
+   meta-refresh page carrying `data-redirect-stub` on its `<body>`.
+   `scripts/build_site.sh` copies every file in that directory to
+   `docs/systems/<slug>/index.html`, and `scripts/test_site.sh` excludes
+   stubs from its one-report-per-content-file count by looking for that
+   attribute.
+5. Sweep the old slug out of `content/overview.md`, `site/index.html` and any
+   pattern page. Generated files (the matrix, the capability grid, the A–Z
+   index, `content/systems-index.md`) rebuild themselves — do not hand-edit
+   them.
+
+Check whether the rename predates the atlas's own analysis. If the README at
+the pinned commit already carried the new name, the report was wrong when
+published rather than overtaken, and the known-limitations bullet should say so.
+
+## Build and validate
+
+Same as `add-memory-system`:
+
+```sh
+npm run build
+npm test
+```
+
+`npm test` will catch a matrix out of sync, a stale count, an abbreviated commit
+link, and a missing Mermaid diagram. It will not catch a line number that moved
+or a claim that is no longer true.

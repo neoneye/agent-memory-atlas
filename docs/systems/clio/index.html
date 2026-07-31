@@ -164,9 +164,9 @@ never the model.</p>
 <code>$source_agent:$source_session</code>, defaulting to
 <code>$ENV{CLIO_AGENT_ID} // 'unknown'</code> and
 <code>$ENV{CLIO_SESSION_ID} // 'unknown'</code>
-(<code>LongTerm.pm:474</code>). At the commit this report first covered,
-neither variable was assigned anywhere in the repository, so every
-corroboration computed the same key, the sybil guard
+(<code>LongTerm.pm:474</code>). Until 31 July 2026 neither variable was
+assigned anywhere in the repository, so every corroboration computed the
+same key, the sybil guard
 <code>next if grep { $_ eq $source_key }</code> skipped the second one,
 <code>corroboration_count</code> stopped at 1, and no entry ever reached
 the threshold of 2. The failure was silent: nothing errored, every entry
@@ -175,29 +175,26 @@ because the penalty was then uniform across the corpus it changed no
 relative ranking — the mechanism built to discriminate between
 corroborated and uncorroborated knowledge discriminated between
 nothing.</p>
-<p><strong>Fixed on 31 July 2026 in <a
-href="https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a"><code class="commit-id" title="7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a">7af1d1cf…</code></a>,
-which cites this atlas as where the bug was flagged.</strong> Both entry
-points now stamp the identity before any tool runs: the
-<code>clio</code> script sets <code>CLIO_AGENT_ID</code> to the broker
-agent id or <code>main</code> and <code>CLIO_SESSION_ID</code> to the
-session id, and <code>SubAgent.pm</code> sets each child to its own
-broker agent id, which closes the spawn-path gap this report named
-separately.</p>
-<p>The same commit found a second bug the atlas had missed, and it was
-blocking the same mechanism from the other side.
-<code>add_corroboration</code>, <code>promote_entry</code> and
-<code>get_entry_tier</code> took an <code>entry_type</code> filter in
-the singular — <code>discovery</code>, <code>pattern</code> — and used
-it directly as the LTM hash key, while entries are stored under plural
-keys — <code>discoveries</code>, <code>code_patterns</code>. Every
-type-filtered call returned "No entry matching", always. A
-<code>%LTM_CATEGORY_MAP</code> now normalizes in all three. Two
-independent defects, both silent, both in the promotion path; the atlas
-found the one visible from a grep and not the one visible from a
-call.</p>
-<p>Two things the fix does not do, and both are now the report's live
-findings.</p>
+<p><strong><a
+href="https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a"><code class="commit-id" title="7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a">7af1d1cf…</code></a>
+wired it, and its test file cites this atlas as where the bug was
+flagged.</strong> Both entry points now stamp the identity before any
+tool runs: the <code>clio</code> script sets <code>CLIO_AGENT_ID</code>
+to the broker agent id or <code>main</code> and
+<code>CLIO_SESSION_ID</code> to the session id, and
+<code>SubAgent.pm</code> gives each child its own broker agent id, so a
+parent and its sub-agents are genuinely distinct sources.</p>
+<p>A second defect went with it, blocking the same mechanism from the
+other side and invisible to a grep. <code>add_corroboration</code>,
+<code>promote_entry</code> and <code>get_entry_tier</code> took an
+<code>entry_type</code> filter in the singular — <code>discovery</code>,
+<code>pattern</code> — and used it directly as the LTM hash key, while
+entries are stored under plural keys — <code>discoveries</code>,
+<code>code_patterns</code>. Every type-filtered call returned "No entry
+matching", always. A <code>%LTM_CATEGORY_MAP</code> now normalizes in
+all three. Two independent silent defects in one promotion path, and
+only one of them was visible without running the property.</p>
+<p>Two things the fix does not do, and both are live.</p>
 <p><strong>The default is still the trap, and it is asserted as
 such.</strong> The identity is wired in the callers, not in the library.
 <code>LongTerm.pm</code> still falls back to

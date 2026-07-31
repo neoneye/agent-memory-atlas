@@ -31,16 +31,13 @@ Empryo is a terminal coding agent, and its memory layer is 4,159 lines under
 atlas, and the one most thoroughly shaped by the fact that its subject is a
 codebase.
 
-**It was called SoulForge, and this report was first published under that
-name.** The repository is now `proxysoul/Empryo`; the refacing commit landed on
-12 July 2026 and the README at the analyzed commit already reads *"Empryo —
-previously SoulForge"*, with a one-time in-app announcement modal to match. The
-atlas took the old name from the repository URL rather than from the README and
-carried it for two days. The rename is not yet complete in code — `package.json`
-still declares `@proxysoul/soulforge`, and the licence, changelog and several
-docs still say SoulForge — so both names appear in the tree, and this report
-uses the one the project presents to its users. The pinned commit is unchanged
-and every finding below was read at it.
+**It was called SoulForge until 12 July 2026.** The refacing commit is
+`ea9278e`, the README at the analyzed commit reads *"Empryo — previously
+SoulForge"*, and the app ships a one-time announcement modal to match. The
+rename is not complete in code: `package.json` still declares
+`@proxysoul/soulforge`, and the licence, changelog and several docs still say
+SoulForge, so both names appear in the tree. This report uses the one the
+project presents to its users. `/systems/soulforge/` redirects here.
 
 **Licensing note, because it decides what you can do with what you read.** The
 repository is under the **Business Source License 1.1**, which is not an

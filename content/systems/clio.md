@@ -64,33 +64,32 @@ command — a human at the keyboard, never the model.
 It could not work as shipped, and now it can. The source key is
 `$source_agent:$source_session`, defaulting to
 `$ENV{CLIO_AGENT_ID} // 'unknown'` and `$ENV{CLIO_SESSION_ID} // 'unknown'`
-(`LongTerm.pm:474`). At the commit this report first covered, neither variable
-was assigned anywhere in the repository, so every corroboration computed the same
-key, the sybil guard `next if grep { $_ eq $source_key }` skipped the second one,
+(`LongTerm.pm:474`). Until 31 July 2026 neither variable was assigned anywhere in
+the repository, so every corroboration computed the same key, the sybil guard
+`next if grep { $_ eq $source_key }` skipped the second one,
 `corroboration_count` stopped at 1, and no entry ever reached the threshold of 2.
 The failure was silent: nothing errored, every entry stayed `[UNVERIFIED]` at
 `0.3x` forever, and because the penalty was then uniform across the corpus it
 changed no relative ranking — the mechanism built to discriminate between
 corroborated and uncorroborated knowledge discriminated between nothing.
 
-**Fixed on 31 July 2026 in
-[`7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a`](https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a),
-which cites this atlas as where the bug was flagged.** Both entry points now
-stamp the identity before any tool runs: the `clio` script sets
+**[`7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a`](https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a)
+wired it, and its test file cites this atlas as where the bug was flagged.** Both
+entry points now stamp the identity before any tool runs: the `clio` script sets
 `CLIO_AGENT_ID` to the broker agent id or `main` and `CLIO_SESSION_ID` to the
-session id, and `SubAgent.pm` sets each child to its own broker agent id, which
-closes the spawn-path gap this report named separately.
+session id, and `SubAgent.pm` gives each child its own broker agent id, so a
+parent and its sub-agents are genuinely distinct sources.
 
-The same commit found a second bug the atlas had missed, and it was blocking the
-same mechanism from the other side. `add_corroboration`, `promote_entry` and
-`get_entry_tier` took an `entry_type` filter in the singular — `discovery`,
-`pattern` — and used it directly as the LTM hash key, while entries are stored
-under plural keys — `discoveries`, `code_patterns`. Every type-filtered call
-returned "No entry matching", always. A `%LTM_CATEGORY_MAP` now normalizes in all
-three. Two independent defects, both silent, both in the promotion path; the
-atlas found the one visible from a grep and not the one visible from a call.
+A second defect went with it, blocking the same mechanism from the other side and
+invisible to a grep. `add_corroboration`, `promote_entry` and `get_entry_tier`
+took an `entry_type` filter in the singular — `discovery`, `pattern` — and used
+it directly as the LTM hash key, while entries are stored under plural keys —
+`discoveries`, `code_patterns`. Every type-filtered call returned "No entry
+matching", always. A `%LTM_CATEGORY_MAP` now normalizes in all three. Two
+independent silent defects in one promotion path, and only one of them was
+visible without running the property.
 
-Two things the fix does not do, and both are now the report's live findings.
+Two things the fix does not do, and both are live.
 
 **The default is still the trap, and it is asserted as such.** The identity is
 wired in the callers, not in the library. `LongTerm.pm` still falls back to

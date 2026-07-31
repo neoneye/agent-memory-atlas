@@ -7,6 +7,14 @@ description: Research and integrate a new agent-memory repository into Agent Mem
 
 Add one memory system to the atlas as a code-grounded, commit-pinned analysis. Treat the individual report, comparative synthesis, homepage, and generated site as one change.
 
+If the atlas already has a report for this repository, this is the wrong skill — use `reanalyze-memory-system`, which covers re-pinning, deciding whether a published claim went stale, and the rename-and-redirect convention. Check first:
+
+```sh
+rg -l '^source_url:.*<owner>/<repo>' content/systems/
+```
+
+A renamed upstream will not match on name; search the pinned `revision` as well before concluding it is new.
+
 ## Establish the inputs
 
 Resolve these before writing:
@@ -20,6 +28,8 @@ Resolve these before writing:
 Prefer a local checkout because the report must trace implementation paths. Do not change the source repository. If only a URL is available, clone it to a temporary directory when network access and user authorization allow it.
 
 Confirm the system is in scope before writing. The atlas compares memory that outlives a session: something is stored, retrieved later, and can be scoped, corrected, or forgotten. A framework whose "memory" only decides which messages stay in the current context window is conversation-window management, not agent memory — see the "Not in scope" entry in `content/overview.md`. Such a system belongs in that section as a short example, not as a report with empty matrix columns. Compaction counts only when something survives the session with an identity that could later be corrected. Say so early if a candidate fails this bar, rather than padding a report.
+
+**Two things are not part of that bar, and both have been mistaken for it.** *Novelty is not a criterion* — a system whose memory is a well-covered shape still gets a report, because the atlas compares implementations and a competent instance of a common design is evidence about the design. Excluding something for being unoriginal is the error that cost this repository six reports before it was reversed. And a *source-available or restrictive licence is a caveat, not an exclusion* — BSL, ELv2, PolyForm and "all rights reserved" are stated in section 1 so a reader knows what they may do with what they read, and the mechanisms are still analysed. A licence asserted in a README whose file is absent from the tree is worth stating plainly for the same reason. The genuine exclusions are: nothing survives the session, the mechanism is closed-source behind an open wrapper, or there is no inspectable code at a pinned commit at all.
 
 Inspect repository-level instructions in both repositories before proceeding. Check the atlas worktree and preserve unrelated changes.
 
@@ -84,6 +94,8 @@ Read `content/methodology/per-repo-report-format.md` completely and fill every s
 15. Appendix: File Index
 
 Make the report opinionated but fair. Explain what makes the design good, what makes it weak, and for which use cases those tradeoffs matter.
+
+**Write about the system, not about the writing of the report.** The reader wants the state of the code at the pinned commit. Sentences about what the atlas noticed, corrected, previously believed, or was right about are process narration and do not belong in a report body — they have been removed from this repository more than once. A fact about the *subject's* own history is different and often the point: "until 31 July 2026 neither variable was assigned anywhere in the repository" describes the system. The test: if a sentence would have to change when the atlas changes rather than when the system changes, cut it. Corrections to previously published claims are logged in the known-limitations list at the end of `content/overview.md`, not narrated in place.
 
 **Every report carries a Mermaid diagram.** Put it at the end of section 2, before `## 3. Architecture`, and draw the mechanism the report is actually about — the epistemic state machine where there is one, the write-to-recall path where there is not, and the place the design fails where that is the finding. A generic boxes-and-arrows of components is worse than none: it takes a reader's attention and returns nothing the prose did not already say. `scripts/check_mermaid.py` fails the build on a report without one, and separately on labels that break the renderer, so quote any label containing `[](){}"` and avoid a second `:` in a stateDiagram transition.
 
@@ -188,7 +200,23 @@ rg -n "\\b${current_count}\\b|repositories traced|across all|Expected [0-9]+|Val
   README.md content site scripts templates
 ```
 
-Review every match and search for a spelled-out version of the current count. Do not mechanically change unrelated section numbers or commit IDs.
+The `rg` line above finds digits. It does not find the two forms that actually go stale, so sweep for both:
+
+```sh
+rg -n -i 'one hundred and [a-z-]+|of (the )?[0-9]{2,3}\b' README.md content site
+```
+
+Spelled-out counts ("one hundred and twenty-three") appear in prose across the homepage, the overview, the
+capability pages and several pattern pages, and they are case-sensitive — `One hundred` and `one hundred` are
+separate replacements. The `N of M` form ("69 of 123") is worse, because the numerator changes only when a
+mark moves and the denominator changes on every addition, so the two drift apart silently.
+
+**Never put a corpus count in a report body.** A sentence like "eighteen systems here carry `audit_log`" is
+stale the next time anything is added, and it makes an unrelated report a required edit forever. Write the
+comparison without the number — "in every other system here that carries `audit_log`…" — and let
+`content/patterns/index.md` hold the counts, where they are generated.
+
+Review every match. Do not mechanically change unrelated section numbers or commit IDs.
 
 `scripts/test_site.sh` derives its expected report and pattern counts from `content/`, so it needs no count edits; only touch it when adding a new required file or invariant.
 
