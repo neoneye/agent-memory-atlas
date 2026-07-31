@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 91 of the 115 reports.</strong> It was
+<p><strong>This section covers 95 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9647,6 +9647,89 @@ atlas.</li>
 key, no trust state, no authorship, no delete — and the AGPL makes
 embedding it in a proprietary product a licensing decision rather than a
 dependency choice.</li>
+</ul>
+<h3 id="mem0sharp"><code>mem0sharp</code></h3>
+<ul>
+<li>Best idea: an <code>event, old_memory, new_memory</code> row written
+on every mutation, in an append-only <code>_history</code> table with no
+<code>UPDATE</code> and no targeted <code>DELETE</code> against it — the
+audit most systems here document and do not build.</li>
+<li>Biggest risk: 2,333 lines reimplementing a design whose extraction
+and conflict-resolution <em>quality</em> are the whole product, with no
+evaluation of either.</li>
+<li>Most reusable component: the owner column as <code>NOT NULL</code>
+rather than a convention, and delete-by-scope beside delete-by-id.</li>
+<li>Maturity impression: three test classes including a dedicated one
+for the conflict resolver — the right instinct, since its precision is
+the product — and a telemetry decorator around the service.</li>
+<li>Study when: you are building .NET agents and want Mem0's shape
+natively rather than through a REST client.</li>
+<li>Do not copy when: you expect epistemics the original also lacks. It
+stores LLM-extracted text as fact and offers no way to mark a memory
+doubtful; the history table is a forensic tool, not a trust model.</li>
+</ul>
+<h3 id="memary"><code>memary</code></h3>
+<ul>
+<li>Best idea: separating "what I know" from "what I am attending to",
+with a salience model small enough to read in one sitting — the smallest
+legible instance of reinforcement-by-frequency in the atlas.</li>
+<li>Biggest risk: <code>_select_top_entities</code> sorts ascending, so
+the <em>least</em>-mentioned entities are the ones injected. The ranking
+signal has no test on its consumer.</li>
+<li>Most reusable component: the idea, not the code — capture without a
+model, and a two-store split you can reimplement in an afternoon.</li>
+<li>Maturity impression: the shipped package has no tests; the real ones
+live in a development sandbox and cover the serialization layer. Last
+commit October 2024, with Python pinned at ≤ 3.11.9.</li>
+<li>Study when: you are learning how a graph-backed agent memory fits
+together and want a clear, honest demonstration.</li>
+<li>Do not copy when: you need to answer for what the system believes. A
+wrong triplet cannot be removed, a wrong entity name cannot be merged,
+and the only quality signal counts mentions rather than accuracy.</li>
+</ul>
+<h3 id="memmachine"><code>memmachine</code></h3>
+<ul>
+<li>Best idea: provenance that actually resolves — the source is kept
+and cited, so a support engineer has something to look at when a user
+says the assistant believes something false.</li>
+<li>Biggest risk: deletion is acknowledged before it happens, and a
+duplicated method silently drops error handling on the delete path.</li>
+<li>Most reusable component: a one-way ingestion watermark, a
+constrained extractor vocabulary with a test on the constraint, and
+reserved metadata keys rejected by prefix.</li>
+<li>Maturity impression: 1,978 test functions across 112 files mirroring
+the source tree — among the most thoroughly tested repositories here —
+with migrations, four vector backends and incident-shaped HNSW
+tests.</li>
+<li>Study when: your obligation is to <em>explain</em> a memory rather
+than merely produce one. This is the strongest starting point in the
+atlas for that.</li>
+<li>Do not copy when: you want a library — the smallest useful
+deployment is a server, a database and a model provider — or your
+correctness bar includes "a deleted thing is provably gone".</li>
+</ul>
+<h3 id="memobase"><code>memobase</code></h3>
+<ul>
+<li>Best idea: scope made structural. Every primary key is
+<code>(id, project_id)</code> and every foreign key is composite, so a
+cross-tenant query is a schema error rather than a review failure — the
+best scoping in this atlas.</li>
+<li>Biggest risk: the source transcript is deleted after extraction, so
+the evidence behind a profile line is gone and correction is a rewrite
+of the only copy.</li>
+<li>Most reusable component: the composite-key discipline, which costs a
+migration and removes an entire class of bug.</li>
+<li>Maturity impression: server tests plus client suites in Python,
+TypeScript and Go — real coverage, but shallow on the parts that matter,
+exercising API shape and filter correctness rather than extraction
+quality.</li>
+<li>Study when: you are building a personalized consumer application
+that wants a stable user description injected every turn at a
+predictable token cost, with one service and one database.</li>
+<li>Do not copy when: the memory must be accountable. "Why do you
+believe that?", "where did that come from?" and "forget that
+permanently" have nowhere to stand — and that follows from the decision
+to keep the profile small, not from an oversight.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>

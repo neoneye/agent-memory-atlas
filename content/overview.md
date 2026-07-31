@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 91 of the 115 reports.** It was written when the
+**This section covers 95 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4169,6 +4169,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 245 test files aimed at what a knowledge base gets wrong — schema migration, malli validation of the property system, outliner tree operations, and substantial `db-sync` coverage.
 - Study when: you already keep your knowledge in Logseq and want an agent to work in it, or you want the best editing surface in the atlas.
 - Do not copy when: this is the agent's *own* memory. No scope key, no trust state, no authorship, no delete — and the AGPL makes embedding it in a proprietary product a licensing decision rather than a dependency choice.
+
+### `mem0sharp`
+
+- Best idea: an `event, old_memory, new_memory` row written on every mutation, in an append-only `_history` table with no `UPDATE` and no targeted `DELETE` against it — the audit most systems here document and do not build.
+- Biggest risk: 2,333 lines reimplementing a design whose extraction and conflict-resolution *quality* are the whole product, with no evaluation of either.
+- Most reusable component: the owner column as `NOT NULL` rather than a convention, and delete-by-scope beside delete-by-id.
+- Maturity impression: three test classes including a dedicated one for the conflict resolver — the right instinct, since its precision is the product — and a telemetry decorator around the service.
+- Study when: you are building .NET agents and want Mem0's shape natively rather than through a REST client.
+- Do not copy when: you expect epistemics the original also lacks. It stores LLM-extracted text as fact and offers no way to mark a memory doubtful; the history table is a forensic tool, not a trust model.
+
+### `memary`
+
+- Best idea: separating "what I know" from "what I am attending to", with a salience model small enough to read in one sitting — the smallest legible instance of reinforcement-by-frequency in the atlas.
+- Biggest risk: `_select_top_entities` sorts ascending, so the *least*-mentioned entities are the ones injected. The ranking signal has no test on its consumer.
+- Most reusable component: the idea, not the code — capture without a model, and a two-store split you can reimplement in an afternoon.
+- Maturity impression: the shipped package has no tests; the real ones live in a development sandbox and cover the serialization layer. Last commit October 2024, with Python pinned at ≤ 3.11.9.
+- Study when: you are learning how a graph-backed agent memory fits together and want a clear, honest demonstration.
+- Do not copy when: you need to answer for what the system believes. A wrong triplet cannot be removed, a wrong entity name cannot be merged, and the only quality signal counts mentions rather than accuracy.
+
+### `memmachine`
+
+- Best idea: provenance that actually resolves — the source is kept and cited, so a support engineer has something to look at when a user says the assistant believes something false.
+- Biggest risk: deletion is acknowledged before it happens, and a duplicated method silently drops error handling on the delete path.
+- Most reusable component: a one-way ingestion watermark, a constrained extractor vocabulary with a test on the constraint, and reserved metadata keys rejected by prefix.
+- Maturity impression: 1,978 test functions across 112 files mirroring the source tree — among the most thoroughly tested repositories here — with migrations, four vector backends and incident-shaped HNSW tests.
+- Study when: your obligation is to *explain* a memory rather than merely produce one. This is the strongest starting point in the atlas for that.
+- Do not copy when: you want a library — the smallest useful deployment is a server, a database and a model provider — or your correctness bar includes "a deleted thing is provably gone".
+
+### `memobase`
+
+- Best idea: scope made structural. Every primary key is `(id, project_id)` and every foreign key is composite, so a cross-tenant query is a schema error rather than a review failure — the best scoping in this atlas.
+- Biggest risk: the source transcript is deleted after extraction, so the evidence behind a profile line is gone and correction is a rewrite of the only copy.
+- Most reusable component: the composite-key discipline, which costs a migration and removes an entire class of bug.
+- Maturity impression: server tests plus client suites in Python, TypeScript and Go — real coverage, but shallow on the parts that matter, exercising API shape and filter correctness rather than extraction quality.
+- Study when: you are building a personalized consumer application that wants a stable user description injected every turn at a predictable token cost, with one service and one database.
+- Do not copy when: the memory must be accountable. "Why do you believe that?", "where did that come from?" and "forget that permanently" have nowhere to stand — and that follows from the decision to keep the profile small, not from an oversight.
 
 ## 10. Practical Checklist for Your Own System
 
