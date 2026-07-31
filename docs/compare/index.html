@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 74 of the 115 reports.</strong> It was
+<p><strong>This section covers 79 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9272,6 +9272,114 @@ memory is one project or one user.</li>
 testing Posture B, or you need to prove a deletion — soft delete plus
 supersession leaves the content in the table with no record that a value
 was rejected.</li>
+</ul>
+<h3 id="agno"><code>agno</code></h3>
+<ul>
+<li>Best idea: supersession that is <em>judged</em> rather than inferred
+from a key collision — thresholded, reversible, and tested, with the
+superseded row kept and what replaced it named.</li>
+<li>Biggest risk: <code>optimize_memories</code> defaults to
+<code>apply=True</code> and replaces every memory with one model-written
+paragraph. Decide who can reach <code>POST /memory/optimize</code>
+before someone finds the button.</li>
+<li>Most reusable component: the framework stamping time rather than the
+model, and the split between guidance and data with a test on the
+split.</li>
+<li>Maturity impression: 304 test functions across 17 files plus
+integration suites for the manager, agent memory, team storage and OS
+routes — and comments that document the corruptions that produced the
+code.</li>
+<li>Study when: your memory needs are typed and modest, correction is
+supersession, and you want an agent platform where the learning stores
+come as a good default.</li>
+<li>Do not copy when: you need retrieval quality — there is no ranking
+to tune and relevance costs an LLM call per search — or deletion has to
+be provable, since there is no audit and no tombstone.</li>
+</ul>
+<h3 id="aukora-kernel"><code>aukora-kernel</code></h3>
+<ul>
+<li>Best idea: the receipt is appended and fsynced <em>before</em> the
+row, and the chain hashes the content hash rather than the plaintext —
+so right-to-be-forgotten erases the plaintext without breaking the
+proof.</li>
+<li>Biggest risk: forget records a rejection it never consults, so the
+same content can be written again; and the declared tiers are never
+applied on the read path.</li>
+<li>Most reusable component: the write path alone — the authority gate,
+receipt-first ordering, chained hashes over content hashes, and
+RTBF-by-erasure — which transplants without the rest.</li>
+<li>Maturity impression: the best negative-assertion suite in the atlas
+after Verel's, testing authority rather than recall; and a project that
+says PROVEN-LAB in four places rather than letting you discover it.</li>
+<li>Study when: the provenance of a write matters more than recall
+quality — regulated work, audit-facing tooling, anywhere "prove this
+memory was authorized and unaltered" is a real question.</li>
+<li>Do not copy when: you need to find the relevant thing among fifty
+thousand. Chain-ordered retrieval and a whole-file rewrite per write put
+a low ceiling on corpus size, and the authors say so.</li>
+</ul>
+<h3 id="autogen"><code>autogen</code></h3>
+<ul>
+<li>Best idea: <code>update_context</code> as a first-class injection
+seam, in a protocol small enough to implement in an afternoon.</li>
+<li>Biggest risk: <code>MemoryContent</code> has no identifier, so
+targeted deletion is not expressible and <code>clear()</code> is the
+only removal verb. Scope is an adapter's option rather than the
+contract's.</li>
+<li>Most reusable component: the <code>update_context</code> seam
+itself, worth designing around even where the rest is not.</li>
+<li>Maturity impression: 56 memory test functions across the core and
+the ext adapters, proportionate for an interface package — with a
+default implementation that injects the entire store.</li>
+<li>Study when: you want the clearest demonstration in the atlas that an
+interface's omissions are permanent in a way an implementation's are
+not.</li>
+<li>Do not copy when: you are designing a provider interface. A better
+adapter cannot add an id to <code>MemoryContent</code>, and every agent
+written against the protocol inherits the ceiling.</li>
+</ul>
+<h3 id="buzz"><code>buzz</code></h3>
+<ul>
+<li>Best idea: the relay can neither read content nor correlate slugs,
+and a memory value is updated by compare-and-swap — with a careful
+distinction maintained between confirmed-absent and unknown.</li>
+<li>Biggest risk: there is no retrieval. The design works while an agent
+can hold its own namespace in mind, and there is no growth path that
+does not mean designing retrieval from scratch over ciphertext the relay
+cannot read.</li>
+<li>Most reusable component: the confirmed-absent-versus-unknown
+distinction, which most systems here collapse into an empty result.</li>
+<li>Maturity impression: 34 tests in <code>engram.rs</code> alone and
+they are the right ones — round-trip encryption, oversized bodies
+refused at build time, head selection with an event-id tiebreak, and
+eighteen cases pinning reference extraction.</li>
+<li>Study when: you want a small, legible, model-free memory layer with
+an unusually careful concurrency story and a spec you can
+reimplement.</li>
+<li>Do not copy when: memory has to scale, or you need to explain a
+memory's history or prove a correction stuck — the substrate threw the
+evidence away.</li>
+</ul>
+<h3 id="camel"><code>camel</code></h3>
+<ul>
+<li>Best idea: a three-part contract — block, memory, context creator —
+small enough that a custom store satisfies it in an afternoon, with the
+system message pinned through truncation.</li>
+<li>Biggest risk: the retrieval query is whatever the last user message
+happened to say, and <code>LongtermAgentMemory</code> cannot delete a
+single record from its vector store.</li>
+<li>Most reusable component: the <code>AgentMemory</code> ABC as a seam
+— swapping one of this atlas's fact-level systems in behind it is a
+day's work.</li>
+<li>Maturity impression: 868 lines across four test files covering
+round-tripping, windowing and the <code>NotImplementedError</code>
+paths, with no negative retrieval assertion — which follows from having
+no scope filter to assert about.</li>
+<li>Study when: you are already using CAMEL and your agents are
+short-lived, single-tenant, and their memory is genuinely their
+transcript.</li>
+<li>Do not copy when: you are multi-tenant without adding a filter
+yourself, or a user can ask you to delete something.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>

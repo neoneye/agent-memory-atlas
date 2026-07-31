@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 74 of the 115 reports.** It was written when the
+**This section covers 79 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4016,6 +4016,51 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 898 lines, better reasoned per line than most frameworks here and readable in an hour — with no test directory, no fixtures and no harness, despite `use_blended` and `track_access` existing to make evaluation clean.
 - Study when: you are on Supabase, want to own the SQL, and your memory is one project or one user.
 - Do not copy when: you are multi-tenant before uncommenting and testing Posture B, or you need to prove a deletion — soft delete plus supersession leaves the content in the table with no record that a value was rejected.
+
+### `agno`
+
+- Best idea: supersession that is *judged* rather than inferred from a key collision — thresholded, reversible, and tested, with the superseded row kept and what replaced it named.
+- Biggest risk: `optimize_memories` defaults to `apply=True` and replaces every memory with one model-written paragraph. Decide who can reach `POST /memory/optimize` before someone finds the button.
+- Most reusable component: the framework stamping time rather than the model, and the split between guidance and data with a test on the split.
+- Maturity impression: 304 test functions across 17 files plus integration suites for the manager, agent memory, team storage and OS routes — and comments that document the corruptions that produced the code.
+- Study when: your memory needs are typed and modest, correction is supersession, and you want an agent platform where the learning stores come as a good default.
+- Do not copy when: you need retrieval quality — there is no ranking to tune and relevance costs an LLM call per search — or deletion has to be provable, since there is no audit and no tombstone.
+
+### `aukora-kernel`
+
+- Best idea: the receipt is appended and fsynced *before* the row, and the chain hashes the content hash rather than the plaintext — so right-to-be-forgotten erases the plaintext without breaking the proof.
+- Biggest risk: forget records a rejection it never consults, so the same content can be written again; and the declared tiers are never applied on the read path.
+- Most reusable component: the write path alone — the authority gate, receipt-first ordering, chained hashes over content hashes, and RTBF-by-erasure — which transplants without the rest.
+- Maturity impression: the best negative-assertion suite in the atlas after Verel's, testing authority rather than recall; and a project that says PROVEN-LAB in four places rather than letting you discover it.
+- Study when: the provenance of a write matters more than recall quality — regulated work, audit-facing tooling, anywhere "prove this memory was authorized and unaltered" is a real question.
+- Do not copy when: you need to find the relevant thing among fifty thousand. Chain-ordered retrieval and a whole-file rewrite per write put a low ceiling on corpus size, and the authors say so.
+
+### `autogen`
+
+- Best idea: `update_context` as a first-class injection seam, in a protocol small enough to implement in an afternoon.
+- Biggest risk: `MemoryContent` has no identifier, so targeted deletion is not expressible and `clear()` is the only removal verb. Scope is an adapter's option rather than the contract's.
+- Most reusable component: the `update_context` seam itself, worth designing around even where the rest is not.
+- Maturity impression: 56 memory test functions across the core and the ext adapters, proportionate for an interface package — with a default implementation that injects the entire store.
+- Study when: you want the clearest demonstration in the atlas that an interface's omissions are permanent in a way an implementation's are not.
+- Do not copy when: you are designing a provider interface. A better adapter cannot add an id to `MemoryContent`, and every agent written against the protocol inherits the ceiling.
+
+### `buzz`
+
+- Best idea: the relay can neither read content nor correlate slugs, and a memory value is updated by compare-and-swap — with a careful distinction maintained between confirmed-absent and unknown.
+- Biggest risk: there is no retrieval. The design works while an agent can hold its own namespace in mind, and there is no growth path that does not mean designing retrieval from scratch over ciphertext the relay cannot read.
+- Most reusable component: the confirmed-absent-versus-unknown distinction, which most systems here collapse into an empty result.
+- Maturity impression: 34 tests in `engram.rs` alone and they are the right ones — round-trip encryption, oversized bodies refused at build time, head selection with an event-id tiebreak, and eighteen cases pinning reference extraction.
+- Study when: you want a small, legible, model-free memory layer with an unusually careful concurrency story and a spec you can reimplement.
+- Do not copy when: memory has to scale, or you need to explain a memory's history or prove a correction stuck — the substrate threw the evidence away.
+
+### `camel`
+
+- Best idea: a three-part contract — block, memory, context creator — small enough that a custom store satisfies it in an afternoon, with the system message pinned through truncation.
+- Biggest risk: the retrieval query is whatever the last user message happened to say, and `LongtermAgentMemory` cannot delete a single record from its vector store.
+- Most reusable component: the `AgentMemory` ABC as a seam — swapping one of this atlas's fact-level systems in behind it is a day's work.
+- Maturity impression: 868 lines across four test files covering round-tripping, windowing and the `NotImplementedError` paths, with no negative retrieval assertion — which follows from having no scope filter to assert about.
+- Study when: you are already using CAMEL and your agents are short-lived, single-tenant, and their memory is genuinely their transcript.
+- Do not copy when: you are multi-tenant without adding a filter yourself, or a user can ask you to delete something.
 
 ## 10. Practical Checklist for Your Own System
 
