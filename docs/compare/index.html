@@ -7915,7 +7915,7 @@ correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
-<p><strong>This section covers 87 of the 115 reports.</strong> It was
+<p><strong>This section covers 91 of the 115 reports.</strong> It was
 written when the corpus was small enough to enumerate and has not kept
 pace with it, so a system missing here has not been judged and found
 unremarkable — it has not been written up in this format. The <a
@@ -9552,6 +9552,101 @@ what the frameworks dropped.</li>
 <li>Do not copy when: you intend to run it. Choose something maintained
 — and then check whether its interface can say "delete that one",
 because the odds are it cannot.</li>
+</ul>
+<h3 id="juggler"><code>juggler</code></h3>
+<ul>
+<li>Best idea: separating the file the user writes from the file the
+assistant writes, with a canonical line format the writer re-tidies on
+every save — so the two never fight over formatting.</li>
+<li>Biggest risk: <code>forget</code> matches by substring, so one
+careless match string removes more than it names and nothing records
+what it removed.</li>
+<li>Most reusable component: a per-fact delete control in the UI, and
+showing every write in the transcript so the user sees the memory change
+as it happens.</li>
+<li>Maturity impression: 43 test cases against 772 lines, with separate
+suites for the item, the format, the seed and the <strong>system
+prompt</strong> — testing the text the model is told about a tool is
+rare here and exactly right for this design.</li>
+<li>Study when: you are building a single-developer coding assistant
+where memory is a handful of project conventions and the user is present
+to correct it.</li>
+<li>Do not copy when: memory must hold something you will need to prove
+you deleted, or something a second person should see — the store is
+gitignored and per-machine by design.</li>
+</ul>
+<h3 id="lethe"><code>lethe</code></h3>
+<ul>
+<li>Best idea: purge reaches the lexical and vector substrates <em>by
+construction</em> — the FTS5 index is deliberately not contentless so
+<code>DELETE</code> reaches it — and the deletion is signed, an Ed25519
+receipt over a Merkle root of the event log that a third party can
+verify.</li>
+<li>Biggest risk: a purged text can be inscribed again. The receipt
+records its hash for verification and no write path consults it.</li>
+<li>Most reusable component: retiring the id rather than only the row,
+and logging <code>before</code> and <code>after</code> on every
+mutation.</li>
+<li>Maturity impression: <code>tests/test_depth.py</code> plus
+ForgetEval — a released benchmark whose author's own system places third
+of three, reported with confidence intervals and an explicit refusal to
+declare a winner.</li>
+<li>Study when: deletion has to be provable — a right-to-erasure flow, a
+regulated store, anywhere "we removed it" must survive a challenge.</li>
+<li>Do not copy when: you need multi-tenancy, belief or scale. There is
+no scope key at all, no trust state, and the store is one SQLite file
+with an application-synced vector index.</li>
+</ul>
+<h3 id="livingfeed"><code>livingfeed</code></h3>
+<ul>
+<li>Best idea: storing the <em>components</em> of a composite importance
+score rather than only the total, so the coefficients can be tuned
+offline by replay instead of guessed.</li>
+<li>Biggest risk: a recall failure is caught and returned as an empty
+list, so an actor with an unreachable index is simply amnesiac and
+nothing upstream is told.</li>
+<li>Most reusable component: confining forgetting to the derived layer
+while keeping the source, with expiry expressed as a query
+predicate.</li>
+<li>Maturity impression: 429 test functions across 40 files, and a
+deterministic embedder in dev and CI that makes real similarity
+assertions possible rather than mocked ones.</li>
+<li>Study when: you are building a simulation or a companion where
+memory should fade rather than be corrected — it is the most carefully
+reasoned member of the Generative Agents lineage here.</li>
+<li>Do not copy when: you need factual memory. There is no correction
+path, no trust state and no deletion by identity — and the design
+rationale is in Korean-language comments, so the reasons are only partly
+accessible to a non-Korean-reading team.</li>
+</ul>
+<h3 id="logseq"><code>logseq</code></h3>
+<ul>
+<li>Best idea: the user defines the schema and the agent must write
+inside it. Properties carry a declared type and cardinality, tags are
+classes that extend other tags, and
+<code>listTags</code>/<code>listProperties</code> let a model discover
+the ontology before writing in it. Everywhere else the memory model is
+the vendor's; here it is the user's.</li>
+<li>Biggest risk: agent writes land live and <strong>unmarked</strong> —
+the schema defines a <code>created-by-ref</code> property the MCP write
+path never sets — so the store cannot answer "what did the agent
+change?", and the agent has no delete verb to correct itself.</li>
+<li>Most reusable component: the retrieval gating — exact title, FTS5
+over a trigram tokenizer, a <code>LIKE</code> arm for two-character
+queries, fuzzy, and a local vector arm fused by reciprocal rank, with
+the expensive arms skipped when the cheap ones already filled the
+limit.</li>
+<li>Maturity impression: 245 test files aimed at what a knowledge base
+gets wrong — schema migration, malli validation of the property system,
+outliner tree operations, and substantial <code>db-sync</code>
+coverage.</li>
+<li>Study when: you already keep your knowledge in Logseq and want an
+agent to work in it, or you want the best editing surface in the
+atlas.</li>
+<li>Do not copy when: this is the agent's <em>own</em> memory. No scope
+key, no trust state, no authorship, no delete — and the AGPL makes
+embedding it in a proprietary product a licensing decision rather than a
+dependency choice.</li>
 </ul>
 <h2 id="10-practical-checklist-for-your-own-system">10. Practical
 Checklist for Your Own System</h2>

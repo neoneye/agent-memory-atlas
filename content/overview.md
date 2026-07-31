@@ -3338,7 +3338,7 @@ Do not add background summarization before raw-evidence retrieval and correction
 
 ## 9. Repo-by-Repo Verdicts
 
-**This section covers 87 of the 115 reports.** It was written when the
+**This section covers 91 of the 115 reports.** It was written when the
 corpus was small enough to enumerate and has not kept pace with it, so a system
 missing here has not been judged and found unremarkable — it has not been
 written up in this format. The [capability index](../capabilities/) and the
@@ -4133,6 +4133,42 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: unit tests under `goodai/ltm/mem/tests/` with no negative retrieval assertion, and the interesting evaluation story living in a separate benchmark repository.
 - Study when: you are designing a provider contract and want to see what the frameworks dropped.
 - Do not copy when: you intend to run it. Choose something maintained — and then check whether its interface can say "delete that one", because the odds are it cannot.
+
+### `juggler`
+
+- Best idea: separating the file the user writes from the file the assistant writes, with a canonical line format the writer re-tidies on every save — so the two never fight over formatting.
+- Biggest risk: `forget` matches by substring, so one careless match string removes more than it names and nothing records what it removed.
+- Most reusable component: a per-fact delete control in the UI, and showing every write in the transcript so the user sees the memory change as it happens.
+- Maturity impression: 43 test cases against 772 lines, with separate suites for the item, the format, the seed and the **system prompt** — testing the text the model is told about a tool is rare here and exactly right for this design.
+- Study when: you are building a single-developer coding assistant where memory is a handful of project conventions and the user is present to correct it.
+- Do not copy when: memory must hold something you will need to prove you deleted, or something a second person should see — the store is gitignored and per-machine by design.
+
+### `lethe`
+
+- Best idea: purge reaches the lexical and vector substrates *by construction* — the FTS5 index is deliberately not contentless so `DELETE` reaches it — and the deletion is signed, an Ed25519 receipt over a Merkle root of the event log that a third party can verify.
+- Biggest risk: a purged text can be inscribed again. The receipt records its hash for verification and no write path consults it.
+- Most reusable component: retiring the id rather than only the row, and logging `before` and `after` on every mutation.
+- Maturity impression: `tests/test_depth.py` plus ForgetEval — a released benchmark whose author's own system places third of three, reported with confidence intervals and an explicit refusal to declare a winner.
+- Study when: deletion has to be provable — a right-to-erasure flow, a regulated store, anywhere "we removed it" must survive a challenge.
+- Do not copy when: you need multi-tenancy, belief or scale. There is no scope key at all, no trust state, and the store is one SQLite file with an application-synced vector index.
+
+### `livingfeed`
+
+- Best idea: storing the *components* of a composite importance score rather than only the total, so the coefficients can be tuned offline by replay instead of guessed.
+- Biggest risk: a recall failure is caught and returned as an empty list, so an actor with an unreachable index is simply amnesiac and nothing upstream is told.
+- Most reusable component: confining forgetting to the derived layer while keeping the source, with expiry expressed as a query predicate.
+- Maturity impression: 429 test functions across 40 files, and a deterministic embedder in dev and CI that makes real similarity assertions possible rather than mocked ones.
+- Study when: you are building a simulation or a companion where memory should fade rather than be corrected — it is the most carefully reasoned member of the Generative Agents lineage here.
+- Do not copy when: you need factual memory. There is no correction path, no trust state and no deletion by identity — and the design rationale is in Korean-language comments, so the reasons are only partly accessible to a non-Korean-reading team.
+
+### `logseq`
+
+- Best idea: the user defines the schema and the agent must write inside it. Properties carry a declared type and cardinality, tags are classes that extend other tags, and `listTags`/`listProperties` let a model discover the ontology before writing in it. Everywhere else the memory model is the vendor's; here it is the user's.
+- Biggest risk: agent writes land live and **unmarked** — the schema defines a `created-by-ref` property the MCP write path never sets — so the store cannot answer "what did the agent change?", and the agent has no delete verb to correct itself.
+- Most reusable component: the retrieval gating — exact title, FTS5 over a trigram tokenizer, a `LIKE` arm for two-character queries, fuzzy, and a local vector arm fused by reciprocal rank, with the expensive arms skipped when the cheap ones already filled the limit.
+- Maturity impression: 245 test files aimed at what a knowledge base gets wrong — schema migration, malli validation of the property system, outliner tree operations, and substantial `db-sync` coverage.
+- Study when: you already keep your knowledge in Logseq and want an agent to work in it, or you want the best editing surface in the atlas.
+- Do not copy when: this is the agent's *own* memory. No scope key, no trust state, no authorship, no delete — and the AGPL makes embedding it in a proprietary product a licensing decision rather than a dependency choice.
 
 ## 10. Practical Checklist for Your Own System
 
