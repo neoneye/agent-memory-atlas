@@ -468,13 +468,44 @@ answer for that case too.</p>
 <code>test_spread_confined_to_role</code> each build one edge across an
 owner boundary and assert the far node is absent from
 <code>recall</code>. Neither builds the three-node graph — own → foreign
-→ own — that would assert the amplify half, so the relay property is
-delivered by the <code>continue</code>'s position and asserted
-nowhere.</p>
+→ own — that would assert the amplify half, so at this commit the relay
+property is delivered by the <code>continue</code>'s position and
+asserted nowhere. A test for it is proposed upstream in <a
+href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/pull/73">labs-OO-Agents#73</a>,
+open at the time of writing.</p>
+<p><strong>Two things about that test are worth more than the
+test.</strong> It asserts against <code>_spread</code> rather than
+through <code>recall</code>, because the property is <em>not observable
+through the public API</em>: a relay target owned by a third party is
+gated on its own merits, and one owned by the reader is retrieved
+directly whether or not any edge exists. What a relay changes is
+activation, and therefore ranking — and ranking exists only inside
+<code>_spread</code>. A security property that can only be asserted
+against a private function is a real finding about the design, not a
+shortcut in the test.</p>
+<p>And the relay is not reachable at default configuration.
+<code>hops</code> defaults to <code>1</code>
+(<code>packages/nooa-memory/src/nooa_memory/config.py:34</code>, <em>"0
+= vector-only; 1 = +1 graph hop; 2+ = multi-hop"</em>), so the second
+hop a relay requires does not run unless an operator asks for it. The
+<code>continue</code>'s position is therefore a guard for the
+<code>hops: 2+</code> case rather than a live protection — which is the
+refactor risk stated precisely: the check looks incidental until someone
+moves it, and at defaults nothing would fail if they did.</p>
+<p>The reported activations reproduce from the committed constants
+without running anything. With <code>per_hop_decay = 0.6</code> and an
+associative edge weight of <code>0.6</code>, a unit seed gives
+<code>0.6 × 0.6 = 0.36</code> at the first hop and
+<code>0.36 × 0.36 × 0.6 = 0.07776</code> at the second — the two numbers
+the proposed test asserts unscoped before asserting the scoped result is
+empty. Note the margin: <code>activation_floor</code> is
+<code>0.05</code>, so a two-hop relay contributes <code>0.07776</code>
+and clears the floor by little. At defaults the amplify path matters
+only in a narrow band even when <code>hops</code> is raised.</p>
 <p><em>Answered by <a href="https://github.com/Yeriahz">Jeriah Keith</a>
 in <a
 href="https://github.com/neoneye/agent-memory-atlas/issues/1">issue
-#1</a>.</em></p>
+#1</a>, who then wrote the missing test upstream.</em></p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Authoring through the memory skill, with reflection distilling
 episodes into <code>reflection</code>-type gists.
