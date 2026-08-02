@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **132 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **133 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -93,6 +93,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`lorekit`](../systems/lorekit/) **LoreKit** — Multi-tenant lesson store · `mthines/lorekit` · Scope enforced, Mutation audit, Human review
 ## M
 
+- [`m-flow`](../systems/m-flow/) **M-flow** — Deterministic first, model second · `FlowElement-ai/m_flow`
 - [`magic-context`](../systems/magic-context/) **Magic Context** — Verified-against-code memory · `cortexkit/magic-context` · Trust state, Scope enforced, Mutation audit
 - [`mastra-observational-memory`](../systems/mastra-observational-memory/) **Mastra Observational Memory** — Observer–reflector context · `mastra-ai/mastra` · Scope enforced
 - [`mateclaw`](../systems/mateclaw/) **MateClaw** — Scoped provider SPI · `mateaix/mateclaw` · Scope enforced

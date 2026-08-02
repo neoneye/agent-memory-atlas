@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A path-cost graph memory whose
+procedural half puts a cheap deterministic check in front of every
+expensive one — worth-storing, conflict detection and retrieval
+triggering are each two-level, rules then a model.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="M-flow — Agent Memory Atlas">
+    <meta property="og:description" content="A path-cost graph memory
+whose procedural half puts a cheap deterministic check in front of every
+expensive one — worth-storing, conflict detection and retrieval
+triggering are each two-level, rules then a model.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="M-flow — Agent Memory Atlas">
+    <meta name="twitter:description" content="A path-cost graph memory
+whose procedural half puts a cheap deterministic check in front of every
+expensive one — worth-storing, conflict detection and retrieval
+triggering are each two-level, rules then a model.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>M-flow — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Deterministic first, model second</p>
+          <h1>M-flow</h1>
+          <p class="document-deck">A path-cost graph memory whose
+procedural half puts a cheap deterministic check in front of every
+expensive one — worth-storing, conflict detection and retrieval
+triggering are each two-level, rules then a model.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/FlowElement-ai/m_flow">
+              <span>Source</span>
+              <strong>FlowElement-ai/m_flow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022" title="da2766c5ebf45ff10440b419465c8ec0df674022">
+              <span>Analyzed revision</span>
+              <code>da2766c5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-02</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (66%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>M-flow is a graph memory engine: 149,142 lines of Python, Apache-2.0,
+204 commits since 4 April 2026, HEAD 2 June 2026. It ships a server, an
+MCP interface, a frontend, worker queues, a starter kit and an OpenClaw
+skill.</p>
+<p>The retrieval model is the reason to read it. A query lands on
+<strong>the most precise anchor it can find</strong> — an Entity, a
+Facet, a FacetPoint or an Episode — and evidence then spreads outward
+over typed edges, where <em>"each hop expands the semantic field, but
+each edge also adds cost. This means association is not a random graph
+walk: only paths with coherent, low-cost connections remain
+competitive."</em> The README's own illustration is a classmate who grew
+up in California opening a California neighbourhood, within which the
+Lakers become the next low-cost hop.</p>
+<p>That places M-flow as a third point on an axis this atlas already has
+two of. <a href="../nooa-memory/">NOOA Memory</a> implements ACT-R
+spreading activation with a fixed per-hop decay; <a
+href="../hipporag/">HippoRAG</a> replaces ranking with PageRank
+diffusion. M-flow scores <em>paths</em> rather than nodes, so the unit
+of competition is a chain of associations and its accumulated cost. Its
+stated corollary — <em>"one strong path is enough"</em> — is the
+design's whole bet, and it is the opposite of a system that requires
+corroboration from several directions.</p>
+<p><strong>The mechanism worth taking is a discipline rather than a
+component.</strong> Three separate places in the procedural half put a
+cheap deterministic check in front of an expensive model call, and say
+so in the docstring each time:</p>
+<ul>
+<li><code>retrieval/gating/procedural_trigger.py</code> — <em>"Two-layer
+trigger mechanism: Layer 1: Rule trigger (zero cost). Layer 2: LLM light
+classification (low cost, optional)."</em></li>
+<li><code>memory/procedural/versioning/conflict_detector.py</code> —
+<em>"Two-level conflict detection: Deterministic first, LLM
+fallback."</em></li>
+<li><code>memory/procedural/governance/worth_storing.py</code> — a
+<code>WorthSignal</code> screen that decides <em>"whether Procedure is
+worth storing and indexing"</em> before anything builds one.</li>
+</ul>
+<p>This atlas has a pattern page for exactly this (<a
+href="../../patterns/gate-the-expensive-path/">gate the expensive
+path</a>) and most implementations of it gate once. Doing it three
+times, at trigger, at conflict and at capture, with the cost tier named
+in the comment, is the thing to copy.</p>
+<p>The trigger module makes a second distinction worth naming. It
+separates <em>should we retrieve</em> from <em>should we inject</em>:
+<strong>"Triggers procedural retrieval if any condition is met (but
+whether injection is used is decided later)."</strong> Retrieval being
+cheap and injection being expensive — in tokens, and in the risk of
+polluting a prompt — is a real asymmetry, and almost nothing else here
+models it as two decisions.</p>
+<p><strong>What is missing is a number.</strong> For a system whose
+distinguishing claim is that path-cost propagation retrieves better than
+layered retrieval, no committed benchmark result was found. The claim is
+architectural, plausible, and unmeasured in its own repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two halves with different shapes.</p>
+<p><strong>Semantic and episodic memory is a typed graph.</strong>
+Entities carry Facets, Facets carry FacetPoints, Episodes anchor to all
+of them. The README's argument for the unified graph is against layered
+stores: <em>"Some memory systems keep separate layers for episodic
+memories, atomic facts, entities, or summaries. When these layers are
+queried separately, retrieval tends to work best when the user's query
+matches the selected layer."</em> Anchoring on whichever node type is
+most precise, then spreading, is meant to remove the layer-selection
+problem — which is a real problem, and one <a href="../memos/">MemOS</a>
+answers by mounting the layers and <a href="../mempalace/">MemPalace</a>
+by making one layer authoritative.</p>
+<p><strong>Procedural memory is versioned.</strong> A procedure is built
+from key points and context points (<code>ContextPointDraft</code>,
+<code>KeyPointDraft</code>, <code>ProcedureState</code>), screened by
+<code>worth_storing</code>, classified, and then governed:
+<code>conflict_detector</code> compares a new version against the
+existing one, <code>generate_version_diff</code> produces <em>"change
+descriptions between versions"</em>, and <code>reconcile_active</code>
+decides which version is live. <code>update_usage_stats</code> records
+use.</p>
+<pre class="mermaid"><code>flowchart TD
+    Q[&quot;query&quot;] --&gt; A[&quot;anchor on the most precise node&lt;br/&gt;Entity / Facet / FacetPoint / Episode&quot;]
+    A --&gt; P[&quot;path-cost propagation over typed edges&quot;]
+    P --&gt; R[&quot;low-cost coherent paths compete&quot;]
+    T[&quot;turn&quot;] --&gt; G1{&quot;Layer 1: rule trigger&lt;br/&gt;zero cost&quot;}
+    G1 --&gt;|&quot;no&quot;| STOP[&quot;no procedural retrieval&quot;]
+    G1 --&gt;|&quot;maybe&quot;| G2{&quot;Layer 2: LLM light&lt;br/&gt;classification, optional&quot;}
+    G2 --&gt; RET[&quot;retrieve procedures&quot;]
+    RET --&gt; INJ{&quot;inject? decided later&quot;}
+    W[&quot;new procedure&quot;] --&gt; WS{&quot;worth_storing screen&quot;}
+    WS --&gt;|&quot;no&quot;| DROP[&quot;not indexed&quot;]
+    WS --&gt;|&quot;yes&quot;| CD{&quot;conflict: deterministic first&quot;}
+    CD --&gt;|&quot;unclear&quot;| LLM[&quot;LLM fallback&quot;]
+    CD --&gt; V[&quot;version diff + reconcile_active&quot;]
+    style G1 fill:#14532d,color:#fff
+    style CD fill:#14532d,color:#fff
+    style WS fill:#14532d,color:#fff</code></pre>
+<p>The three green boxes are the same idea in three places: spend
+nothing before you spend something.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four deployable pieces — <code>m_flow</code> (the engine),
+<code>m_flow-mcp</code>, <code>m_flow-frontend</code>,
+<code>mflow_workers</code> — plus <code>m_flow-starter-kit</code>, an
+<code>openclaw-skill</code>, Alembic migrations, a Dockerfile and
+compose file, and quickstart scripts for shell and PowerShell. This is a
+product, not a library, and the operator cost is correspondingly higher
+than most of this atlas: a graph database, a worker queue, and a
+frontend.</p>
+<p><code>m_flow/retrieval/</code> alone is a substantial subsystem — a
+base graph retriever, a Cypher search retriever, lexical and Jaccard
+retrievers, an episodic bundle search, a unified triplet search, a
+memory orchestrator and registered community retrievers. The plurality
+is worth noting honestly: several retrieval strategies coexist, and
+which one runs for a given query is decided by the orchestrator rather
+than being a single documented path.</p>
+<p>Writes go through workers — <code>queued_add_memory_nodes.py</code>
+and <code>memory_node_saving_worker.py</code> — so node creation is
+queued and saved out of band. That is the right shape for a graph write
+under load and it means a memory is not immediately retrievable; the lag
+was not established.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Two-layer procedural trigger, cost tiers named</td>
+<td><code>m_flow/retrieval/gating/procedural_trigger.py</code></td>
+</tr>
+<tr>
+<td>Two-level conflict detection, deterministic then LLM</td>
+<td><code>m_flow/memory/procedural/versioning/conflict_detector.py</code></td>
+</tr>
+<tr>
+<td>Worth-storing screen before indexing</td>
+<td><code>m_flow/memory/procedural/governance/worth_storing.py</code></td>
+</tr>
+<tr>
+<td>Version diffs between procedures</td>
+<td><code>m_flow/memory/procedural/versioning/generate_version_diff.py</code></td>
+</tr>
+<tr>
+<td>Which version is live</td>
+<td><code>m_flow/memory/procedural/governance/reconcile_active.py</code></td>
+</tr>
+<tr>
+<td>Sensitivity screen on procedural content</td>
+<td><code>m_flow/memory/procedural/safety/sensitivity.py</code></td>
+</tr>
+<tr>
+<td>Retrieval strategies and the orchestrator</td>
+<td><code>m_flow/retrieval/</code></td>
+</tr>
+<tr>
+<td>Queued node writes</td>
+<td><code>mflow_workers/tasks/queued_add_memory_nodes.py</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The graph side is Entity / Facet / FacetPoint / Episode with typed
+edges, and the precision ordering matters: a FacetPoint is finer than a
+Facet, which is finer than an Entity, and the anchor step prefers the
+finest match. That is a deliberate inversion of the usual approach,
+which embeds a chunk and searches for neighbours.</p>
+<p>The procedural side is the one with lifecycle.
+<code>ProcedureState</code> holds <code>ExistingKeyPoint</code> and
+<code>ExistingContextPoint</code> records; drafts are built as
+<code>ContextPackDraft</code> and <code>KeyPointsPackDraft</code> before
+becoming a version. Versioning gives a procedure a history, a diff
+against its predecessor, and an active pointer — which is more
+correction machinery than most procedural memories in this atlas have,
+<a href="../tigrimosr/">TigrimOSR</a> being the closest with its staged
+proposal and human approval.</p>
+<p>No capability marks are claimed. There is no status field that
+withholds a memory from use, no record of a rejected value, no validity
+time separate from record time, and no scope key found applied as a
+filter on the retrieval path. <code>sensitivity.py</code> screens
+procedural content and is a safety filter rather than an epistemic
+state. A reader should treat the empty capability row as <em>assessed
+and none found at this commit</em> — this is a large system and the
+retrieval subsystem in particular has more surface than a static read
+fully covers.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Path-cost propagation, described in section 1. What can be said from
+the code is that the machinery is real and plural:
+<code>base_graph_retriever</code>, <code>cypher_search_retriever</code>,
+<code>unified_triplet_search</code>,
+<code>episodic/bundle_search</code>, <code>lexical_retriever</code>,
+<code>jaccard_retrival</code>, coordinated by
+<code>memory_orchestrator</code>.</p>
+<p>Two observations a reader should carry.</p>
+<p><strong>"One strong path is enough" is a precision bet, and the
+atlas's evidence runs both ways.</strong> A single coherent chain of
+associations is exactly how a useful recall often works, and it is also
+exactly how a confident wrong answer works. <a
+href="../graphify/">Graphify</a> requires two distinct corroborating
+results before a claim counts and <a href="../clio/">CLIO</a> requires
+two distinct sources; M-flow's position is the opposite and it is a
+defensible one for recall as opposed to belief. Which is right depends
+on whether the retrieved thing is treated as a lead or as a fact, and
+the graph does not distinguish.</p>
+<p><strong>Cost is the ranking signal and its calibration is not
+visible.</strong> The competitive property depends on the per-edge costs
+being right relative to each other; nothing in the repository measures
+them against a labelled set, so the weights are asserted.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Episodic capture first, then procedural extraction from episodes
+(<code>write_procedural_from_episodic.py</code>), screened by
+<code>worth_storing</code> and routed by <code>procedure_router</code>.
+Node writes are queued to workers, so the write path does not block the
+agent and the store is eventually consistent with the conversation.</p>
+<p>The governance sequence is the careful part and it reads in the right
+order: decide whether this is worth keeping at all, classify it, check
+it against what already exists deterministically, escalate to a model
+only when the deterministic check is inconclusive, produce a diff, then
+decide which version is active. Each step has a module and a name.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, an OpenClaw skill published to a plugin hub, a
+frontend, and a starter kit. The procedural trigger's separation of
+retrieval from injection is the integration-relevant idea: an agent can
+be told procedures exist without paying to put them in the prompt, and
+the decision to inject is made with more information than the decision
+to look.</p>
+<p>No human review surface was found — the frontend exists and what it
+exposes was not established, so <code>human_review</code> is withheld
+rather than denied.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>safety/sensitivity.py</code> screening procedural content
+before storage is the one explicit safety mechanism found, and screening
+<em>procedures</em> specifically is a sensible target: a stored
+procedure is an instruction the agent will follow later, which is a
+higher-consequence artifact than a stored fact.</p>
+<p>The versioning machinery is the reliability strength. A procedure
+that changes leaves a diff and a previous version, and
+<code>reconcile_active</code> makes which one is live an explicit
+decision rather than an implicit last-write-wins.</p>
+<p>Against that, there is no trust state, so nothing distinguishes a
+procedure the system is confident in from one extracted once from an
+ambiguous episode, and <code>update_usage_stats</code> records use
+without use gating anything.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There is a <code>conftest.py</code> at the root and integration tests
+under <code>m_flow/tests/integration/</code>. I did not run them — the
+system expects a graph database and a worker queue, which is beyond a
+proportional smoke test.</p>
+<p>No committed benchmark result, no eval fixture and no
+retrieval-quality artifact were found. That is the report's main
+reservation and it is specific: the architectural claim that
+distinguishes M-flow from a layered store is a
+<em>retrieval-quality</em> claim, and retrieval quality is the one thing
+a reader cannot check from the code. A committed comparison against the
+layered baseline the README argues with would be the most valuable thing
+this project could publish.</p>
+<p><code>negative_eval</code> is withheld; no committed case asserting
+that particular material must not be retrieved was found.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Front every expensive check with a cheap deterministic one,
+and name the tiers.</strong> Three modules do this — trigger, conflict
+detection, worth-storing — and each docstring states the cost of each
+layer. The pattern is common; stating the cost model in the comment is
+what makes it reviewable, because a reader can see immediately which
+path costs a model call.</p>
+<p><strong>Separate "should we retrieve" from "should we
+inject".</strong> Retrieval is cheap and reversible; injection spends
+tokens and changes what the model believes. Deciding them at different
+moments with different information is a distinction almost nothing else
+in this atlas draws.</p>
+<p><strong>Screen before you index, not after.</strong>
+<code>worth_storing</code> runs before a procedure is built and indexed,
+so the cost of a bad memory is avoided rather than cleaned up. Most
+systems here extract everything and prune later.</p>
+<p><strong>Version a procedure and generate the diff.</strong> A stored
+procedure is an instruction the agent will follow; being able to see
+what changed between versions, and which version is active, is the
+minimum for trusting it.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let "one strong path is enough" be the same rule for
+leads and for facts.</strong> A single low-cost chain is a good reason
+to look somewhere and a weak reason to believe something. If retrieved
+material is going to be stated as fact, the corroboration requirement
+has to live somewhere.</p>
+<p><strong>Do not ship a retrieval thesis without a retrieval
+number.</strong> The argument against layered stores is the reason to
+choose this system, and the repository does not contain a measurement of
+it.</p>
+<h3 id="fit">Fit</h3>
+<p>Take M-flow if you want graph memory with real procedural governance
+and you can operate a graph database, workers and a frontend. The
+versioning, the worth-storing screen and the tiered gates are the parts
+that transfer, and the first two are small enough to lift.</p>
+<p>Do not take it if you need to evaluate before adopting: 149,000 lines
+across four packages, several coexisting retrieval strategies, and no
+committed result means the only way to know whether the path-cost model
+works for your corpus is to run it on your corpus.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>No committed retrieval result</strong> for a system whose
+thesis is retrieval quality.</li>
+<li><strong>Edge costs are the ranking signal and are
+uncalibrated</strong> against any labelled set in the repository.</li>
+<li><strong>Several retrieval strategies coexist</strong>, and which
+runs when is an orchestrator decision rather than a documented
+path.</li>
+<li><strong>No trust state</strong>, so a once-extracted procedure and a
+well-established one are indistinguishable at read time.</li>
+<li><strong>Queued writes</strong> mean a lag between capture and
+retrievability that the repository does not quantify.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the three-gate discipline and the procedural versioning. Both
+are independent of the graph, both are a few hundred lines, and the gate
+pattern applies to any pipeline where a model call sits behind a
+decision a regex could often make.</p>
+<p>Build the evaluation. M-flow is arguing a specific, testable claim —
+anchor plus path cost beats layer selection — against a baseline it
+names. The experiment is well defined and the repository does not run
+it.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>What are the edge costs, and where did they come
+from?</strong> They are the ranking signal and no calibration was
+found.</li>
+<li><strong>Which retriever runs for which query?</strong> Seven coexist
+under an orchestrator.</li>
+<li><strong>What does the frontend expose?</strong> Whether it is a
+review surface or a viewer decides a capability mark.</li>
+<li><strong>How long between a queued node write and
+retrievability?</strong> The workers make this a real number and it is
+not stated.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m_flow/retrieval/</code></td>
+<td>Graph, Cypher, lexical, Jaccard and episodic retrievers, and the
+orchestrator</td>
+</tr>
+<tr>
+<td><code>m_flow/retrieval/gating/procedural_trigger.py</code></td>
+<td>Two-layer trigger, retrieval separated from injection</td>
+</tr>
+<tr>
+<td><code>m_flow/memory/procedural/governance/</code></td>
+<td><code>worth_storing</code>, classifier,
+<code>reconcile_active</code>, usage stats</td>
+</tr>
+<tr>
+<td><code>m_flow/memory/procedural/versioning/</code></td>
+<td>Conflict detection and version diffs</td>
+</tr>
+<tr>
+<td><code>m_flow/memory/procedural/safety/sensitivity.py</code></td>
+<td>Screening on procedural content</td>
+</tr>
+<tr>
+<td><code>m_flow/memory/episodic/</code></td>
+<td>Episodic capture and state</td>
+</tr>
+<tr>
+<td><code>mflow_workers/</code></td>
+<td>Queued node writes and the saving worker</td>
+</tr>
+<tr>
+<td><code>m_flow-mcp/</code>, <code>m_flow-frontend/</code>,
+<code>openclaw-skill/</code></td>
+<td>Interfaces</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
