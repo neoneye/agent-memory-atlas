@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A shared store across four coding
+CLIs whose central table records an error, the fix tried, and whether it
+worked — and returns the failed fixes anyway, one position lower.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="EAN
+AgentOS — Agent Memory Atlas">
+    <meta property="og:description" content="A shared store across four
+coding CLIs whose central table records an error, the fix tried, and
+whether it worked — and returns the failed fixes anyway, one position
+lower.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EAN
+AgentOS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A shared store across four
+coding CLIs whose central table records an error, the fix tried, and
+whether it worked — and returns the failed fixes anyway, one position
+lower.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>EAN AgentOS — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A fix that failed, ranked not removed</p>
+          <h1>EAN AgentOS</h1>
+          <p class="document-deck">A shared store across four coding
+CLIs whose central table records an error, the fix tried, and whether it
+worked — and returns the failed fixes anyway, one position lower.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/eanai-ro/ean-agentos">
+              <span>Source</span>
+              <strong>eanai-ro/ean-agentos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6" title="0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6">
+              <span>Analyzed revision</span>
+              <code>0c5e0ecf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-02</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (66%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>EAN AgentOS is a shared memory across four coding CLIs — Claude Code,
+Gemini CLI, Codex and Kimi — installed by merging hooks into each one's
+settings file. MIT licensed, 37,791 lines of Python, 51 commits between
+16 and 19 March 2026. It has not been touched since; read everything
+below as a snapshot of a four-day burst.</p>
+<p>The pitch is <em>"AI agents forget. AgentOS remembers"</em>, and the
+concrete version of that is the <code>errors_solutions</code> table:</p>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS errors_solutions (
+    error_type TEXT NOT NULL, error_message TEXT NOT NULL, stack_trace TEXT,
+    file_path TEXT, line_number INTEGER, language TEXT, framework TEXT,
+    solution TEXT, solution_code TEXT, solution_worked BOOLEAN,
+    attempts INTEGER DEFAULT 1, resolved_at TIMESTAMP, ...
+);</code></pre>
+<p>An error, where it happened, what was tried, whether it worked, and
+how many attempts it took. That is the right shape for the problem the
+project names — stop re-fixing the same bug — and very few systems in
+this atlas model the <em>attempt</em> rather than the conclusion.</p>
+<p><strong>And a fix that did not work is returned anyway.</strong> Both
+recall paths sort on the flag rather than filtering it:</p>
+<pre class="sql"><code>ORDER BY solution_worked DESC, resolved_at DESC LIMIT ?     -- scripts/error_db.py:52
+ORDER BY resolved DESC, solution_worked DESC LIMIT ?        -- scripts/universal_api.py:843</code></pre>
+<p>The only <code>WHERE solution_worked = ?</code> in the tree is in
+<code>scripts/web_server.py:498</code>, a filter on the human dashboard.
+So a failed fix is demoted one position and handed to the agent with the
+rest.</p>
+<p>That is defensible — <em>"we tried this and it did not work"</em> is
+genuinely useful, and often more useful than silence — and it is worth
+stating as a design choice rather than a defect. The risk is in the
+output shape, not the ordering: the result row carries
+<code>solution</code> and <code>solution_code</code> beside
+<code>solution_worked</code>, and nothing guarantees a model reads the
+boolean before copying the code. A system whose stated purpose is
+preventing repetition returns the thing to repeat, one row lower, in the
+same shape as the thing that worked.</p>
+<p><strong>The capture path is the part worth taking.</strong> Memories
+arrive from hooks, not from a model deciding what mattered: agent tool
+calls, bash commands with exit codes and durations, file versions, and a
+git <code>post-commit</code> hook that writes each commit into the
+store. Deterministic capture has a known failure mode — volume — and a
+known virtue: what is recorded does not depend on an extraction pass
+noticing. Most of this atlas pays an LLM to decide what to remember;
+this pays a hook.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There is no single memory unit. The schema is a set of tables for
+different kinds of durable trace, and the agent's context is assembled
+from several of them:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>errors_solutions</code></td>
+<td>an error, a fix, whether it worked, attempt count</td>
+</tr>
+<tr>
+<td><code>patterns</code></td>
+<td>reusable code with a <code>usage_count</code> and a
+<code>quality_score</code></td>
+</tr>
+<tr>
+<td><code>bash_history</code></td>
+<td>command, working directory, exit code, output, duration</td>
+</tr>
+<tr>
+<td><code>file_versions</code></td>
+<td>file state over time</td>
+</tr>
+<tr>
+<td><code>messages</code>, <code>tool_calls</code>,
+<code>sessions</code></td>
+<td>the raw trace</td>
+</tr>
+<tr>
+<td><code>content_summaries</code>, <code>session_summaries</code></td>
+<td>derived, by the summarizer</td>
+</tr>
+<tr>
+<td><code>embeddings</code></td>
+<td>vectors for the semantic path</td>
+</tr>
+</tbody>
+</table></div>
+<p>Fifteen migrations sit on top, including
+<code>012_memory_branches.sql</code> — <em>"Git-like branching for
+memory entities"</em>, with a branch registry carrying a
+<code>parent_branch</code> defaulting to <code>main</code> — and
+<code>014_cross_agent_learning.sql</code> and
+<code>015_memory_intelligence.sql</code>. Branching memory is an idea
+nothing else in this atlas has; whether it is wired to anything at this
+commit is in section 14.</p>
+<pre class="mermaid"><code>flowchart TD
+    H1[&quot;agent tool call hook&quot;] --&gt; DB[(&quot;SQLite&quot;)]
+    H2[&quot;bash command hook&quot;] --&gt; DB
+    H3[&quot;git post-commit hook&quot;] --&gt; DB
+    H4[&quot;error captured with a fix&quot;] --&gt; ES[(&quot;errors_solutions&lt;br/&gt;solution_worked, attempts&quot;)]
+    ES --&gt; DB
+    Q[&quot;agent hits a similar error&quot;] --&gt; S[&quot;LIKE over message / type / trace / tags&quot;]
+    S --&gt; ORD[&quot;ORDER BY solution_worked DESC&quot;]
+    ORD --&gt; OUT[&quot;rows: solution + solution_code + solution_worked&quot;]
+    OUT -.-&gt;|&quot;the failed fix is row two,&lt;br/&gt;in the same shape as row one&quot;| RISK[&quot;the model must read the flag&quot;]
+    style H3 fill:#14532d,color:#fff
+    style RISK fill:#7f1d1d,color:#fff</code></pre>
+<p>Green is deterministic capture. Red is the gap between demoting a
+failure and withholding it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite database, a local HTTP API on a fixed port, an MCP server,
+a web dashboard, and a memory daemon. <code>scripts/ean_memory.py</code>
+is 1,659 lines and is mostly an <em>installer</em>: it detects the
+environment, builds hook configurations for Claude and Gemini, merges
+them into the user's settings while marking its own entries so they can
+be removed again, and backs up the file first.</p>
+<p>That merge-and-mark discipline is worth noting on its own.
+<code>_is_our_hook</code> and <code>_is_our_gemini_hook</code> identify
+the entries this tool added, so <code>uninstall</code> removes exactly
+those and leaves a user's other hooks intact. Software that edits
+another program's config and can cleanly undo it is rarer than it should
+be.</p>
+<p>The rest of the moving parts: <code>memory_daemon.py</code> (2,128
+lines), <code>dashboard_api.py</code> (1,589),
+<code>transcript_reconciler.py</code> (1,349),
+<code>universal_api.py</code> (1,134),
+<code>context_builder_v2.py</code> (984). Comments and CLI output are
+largely in Romanian; the schema and API surface are in English.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The error/fix/outcome table</td>
+<td><code>scripts/init_db.py:145</code></td>
+</tr>
+<tr>
+<td>Error search, ordered not filtered</td>
+<td><code>scripts/error_db.py:41</code>–<code>:52</code></td>
+</tr>
+<tr>
+<td>The API's error search, same ordering</td>
+<td><code>scripts/universal_api.py:839</code>–<code>:843</code></td>
+</tr>
+<tr>
+<td>The one <code>WHERE solution_worked</code> — a dashboard filter</td>
+<td><code>scripts/web_server.py:498</code></td>
+</tr>
+<tr>
+<td>Reusable patterns with a quality score</td>
+<td><code>scripts/init_db.py:167</code></td>
+</tr>
+<tr>
+<td>Git commits captured by post-commit hook</td>
+<td><code>scripts/git_memory_hook.py</code></td>
+</tr>
+<tr>
+<td>Hook install, marked for clean removal</td>
+<td><code>scripts/ean_memory.py:257</code>, <code>:287</code></td>
+</tr>
+<tr>
+<td>Memory branching schema</td>
+<td><code>migrations/012_memory_branches.sql</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>errors_solutions</code> is described above. Two fields deserve
+attention beyond it.</p>
+<p><code>attempts INTEGER DEFAULT 1</code> records how many tries a fix
+took, which is the closest thing here to a difficulty signal and is
+stored by nothing else in this atlas. It is written and, as far as the
+recall paths go, never read.</p>
+<p><code>patterns.quality_score</code> is documented as <em>"0-100,
+based on successful uses"</em> and sits beside <code>usage_count</code>
+and <code>last_used_at</code>. It is the same shape as <a
+href="../agentic-context-engine/">Agentic Context Engine</a>'s outcome
+counters, and like those it is advisory: no retrieval path filters on
+it.</p>
+<p>There is no status field, no supersession pointer and no record of a
+rejected value, so <code>tombstone</code>, <code>trust_state</code> and
+<code>bitemporal</code> are all withheld. <code>solution_worked</code>
+is the nearest miss and it is a genuinely close one — a durable boolean
+recording that a specific fix failed, attached to the error it failed
+on. What it lacks is any read path that treats <code>false</code> as
+<em>withhold</em> rather than as <em>rank lower</em>, which is the whole
+distinction the <code>trust_state</code> definition turns on.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Error recall is <code>LIKE '%query%'</code> across
+<code>error_message</code>, <code>error_type</code>,
+<code>stack_trace</code> and <code>tags</code>, optionally narrowed by
+<code>language</code>, ordered by <code>solution_worked</code> then
+<code>resolved_at</code>, limited. There is an <code>embeddings</code>
+table and a <code>cognitive_search.py</code> for the semantic path, so
+substring matching is the error-specific route rather than the whole
+retrieval story.</p>
+<p>Substring matching over a stack trace is better than it sounds for
+this use case: error messages are near-verbatim across recurrences, so
+exact-ish matching has high precision where an embedding would blur two
+different failures with similar wording. The cost is the usual one — a
+rephrased or localised error message misses entirely.</p>
+<p><strong><code>scope_enforced</code> is granted.</strong>
+<code>project_path</code> and <code>session_id</code> appear on nearly
+every table, and the search and dashboard paths filter by project. It is
+a single-user local store, so the mark certifies what it says it
+certifies: the key reaches the query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are hook-driven and synchronous. Agent tool calls, bash
+commands and file edits are captured by the installed hooks; commits are
+captured by <code>git_memory_hook.py</code>, which can be installed
+globally at <code>~/.config/git/hooks/post-commit</code> or per project,
+and also exposes <code>save</code>, <code>list</code>,
+<code>search</code> and <code>stats</code> subcommands for manual
+use.</p>
+<p>Errors and their solutions are recorded explicitly —
+<code>error_db add --error ... --solution ...</code> is the documented
+path, and the CLI prints exactly that invitation when a search finds
+nothing. So the outcome signal that drives the ordering is
+human-entered, which is both its strength (a person knows whether the
+fix worked) and its ceiling (it is entered only when someone
+bothers).</p>
+<p><code>attempts</code> increments and <code>solution_worked</code> is
+set; nothing is ever retired, superseded or deleted from
+<code>errors_solutions</code>. The store only grows.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four CLIs through their own hook mechanisms, plus an MCP server
+(<code>mcp-server/kimi_memory_server.py</code> is Kimi-specific at 427
+lines) and a local HTTP API. The claim that matters is <em>"one shared
+memory, all agents, all sessions"</em>, and the schema supports it:
+<code>session_id</code> and <code>project_path</code> are on the rows,
+so a Codex session and a Claude session against the same project write
+into the same tables.</p>
+<p><code>human_review</code> is withheld. There is a web dashboard with
+an error browser and a <code>solution_worked</code> filter, which is
+inspection; nothing in it adjudicates a memory before or after it takes
+effect, and the dashboard's filter changes what a person sees rather
+than what the agent gets.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The deterministic capture path is the reliability story and it is a
+good one: what is in the store does not depend on a model having judged
+a moment important. The corresponding risk is <code>bash_history</code>,
+which stores <code>command</code>, <code>output</code> and
+<code>error_output</code> verbatim — a shell history with outputs is one
+of the more sensitive artifacts on a developer machine, and no secret
+scanning was found on the capture path.</p>
+<p>The hook installer's backup-and-mark behaviour is the other
+reliability strength: it backs up the settings file before editing,
+marks its own entries, and can remove exactly those.</p>
+<p>The store has no retention policy visible in the schema, no deletion
+path for errors, and no trust state, so it accumulates. Over months of
+hook-driven capture that is a real operational question the repository
+does not answer, and one the four-day development window would not have
+surfaced.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>59 test functions across files named by phase —
+<code>test_phase_10a</code>, <code>test_phase_11b</code>,
+<code>test_phase_12a</code> — plus
+<code>test_knowledge_extractor.py</code> and a
+<code>test_full.sh</code>. The README badge claims 48 passing. I did not
+run them; the suite expects a database and, in places, a running
+API.</p>
+<p>Phase-numbered test files are worth reading as a signal: they track a
+build sequence rather than a behaviour, so a reader cannot tell from the
+names which properties are guarded. There is no test named for the
+error/solution recall path that the product is built around.</p>
+<p>No benchmark, no eval, no committed retrieval result.
+<code>negative_eval</code> is withheld.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Capture from hooks, not from judgement.</strong> Commits,
+commands with exit codes, tool calls and file versions arrive because a
+hook fired, not because a model decided they mattered. That removes the
+most common silent failure in this atlas — an extraction pass that
+quietly captures nothing — and replaces it with a volume problem you can
+measure.</p>
+<p><strong>Model the attempt, not just the conclusion.</strong>
+<code>solution_worked</code> and <code>attempts</code> together say
+<em>what was tried, whether it worked, and how hard it was</em>. A store
+that only records successful fixes cannot tell you that the obvious fix
+has already failed twice.</p>
+<p><strong>Mark the config you inject so you can remove it.</strong>
+<code>_is_our_hook</code> identifies this tool's own entries in another
+program's settings, so uninstall is exact and a user's other hooks
+survive. Back the file up first, which it also does.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not rank a failure when you mean to withhold it.</strong>
+<code>ORDER BY solution_worked DESC</code> puts the failed fix second
+and hands it over in the same shape as the successful one. If the point
+is not repeating it, the read path has to say so — filter it, or return
+it under a different key so the model cannot mistake it for a
+recommendation.</p>
+<p><strong>Do not store shell output without scanning it.</strong>
+<code>bash_history</code> keeps <code>command</code>,
+<code>output</code> and <code>error_output</code> verbatim, and a
+developer's terminal is full of tokens.</p>
+<p><strong>Do not name test files after build phases.</strong>
+<code>test_phase_12b</code> guards something; a reader cannot tell what,
+and neither can the next contributor.</p>
+<h3 id="fit">Fit</h3>
+<p>Take the capture architecture: hooks into several CLIs, a git
+post-commit hook, one SQLite file, a schema that models errors and
+attempts rather than just outcomes. That combination is unusual and the
+parts are separable.</p>
+<p>Do not take it as maintained software. Fifty-one commits over four
+days in March 2026 and nothing since, a schema with fifteen migrations
+including features whose wiring is unclear, and no test named for the
+mechanism the product is about. Read it for the schema and the hook
+discipline.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Failed fixes are ordered, not filtered</strong>, and
+returned in the same shape as successful ones.</li>
+<li><strong><code>attempts</code> is written and never read</strong> on
+any recall path.</li>
+<li><strong><code>bash_history</code> stores command output
+verbatim</strong> with no secret scanning found.</li>
+<li><strong>No retention, no deletion path, no trust state</strong> —
+the store only grows.</li>
+<li><strong>Dormant since 19 March 2026</strong>, four days after the
+first commit.</li>
+<li><strong>Phase-numbered tests</strong> guard unnamed properties.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the schema for <code>errors_solutions</code> and the hook
+installer's mark-and-restore discipline. Both are small, both are
+copyable, and both solve problems that recur outside this project.</p>
+<p>Build the read path differently. The distance between this and a
+system that actually stops the repetition is one <code>WHERE</code>
+clause and a decision about what to do with the failures instead —
+surfacing them under a "already tried, did not work" heading would keep
+their value and remove the ambiguity.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Is memory branching wired to anything?</strong>
+<code>012_memory_branches.sql</code> creates a branch registry with a
+<code>parent_branch</code>; whether any code path reads it was not
+established, and it is the most distinctive idea in the schema.</li>
+<li><strong>What do <code>014_cross_agent_learning</code> and
+<code>015_memory_intelligence</code> implement?</strong> Both are late
+migrations in a four-day window.</li>
+<li><strong>How large does the store get?</strong> Hook-driven capture
+of commands, outputs and file versions, with no retention policy in the
+schema.</li>
+<li><strong>Was the project abandoned or paused?</strong> 51 commits,
+four days, then nothing for over four months at the time of this
+review.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/init_db.py</code></td>
+<td>The base schema, including <code>errors_solutions</code> and
+<code>patterns</code></td>
+</tr>
+<tr>
+<td><code>migrations/</code></td>
+<td>Fifteen migrations, including memory branches and cross-agent
+learning</td>
+</tr>
+<tr>
+<td><code>scripts/error_db.py</code></td>
+<td>Error search — the ordering that this report turns on</td>
+</tr>
+<tr>
+<td><code>scripts/universal_api.py</code></td>
+<td>The HTTP API, same ordering</td>
+</tr>
+<tr>
+<td><code>scripts/web_server.py</code></td>
+<td>Dashboard, and the only <code>WHERE solution_worked</code></td>
+</tr>
+<tr>
+<td><code>scripts/git_memory_hook.py</code></td>
+<td>Commits into memory, global or per project</td>
+</tr>
+<tr>
+<td><code>scripts/ean_memory.py</code></td>
+<td>Installer: environment detection, hook merge, clean uninstall</td>
+</tr>
+<tr>
+<td><code>scripts/memory_daemon.py</code>,
+<code>transcript_reconciler.py</code></td>
+<td>Background capture and reconciliation</td>
+</tr>
+<tr>
+<td><code>mcp-server/kimi_memory_server.py</code></td>
+<td>MCP surface</td>
+</tr>
+</tbody>
+</table></div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
