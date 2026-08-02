@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **129 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **130 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -18,6 +18,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agent-afk`](../systems/agent-afk/) **agent-afk** — A citation or an [unverified] tag · `griffinwork40/agent-afk` · Negative evals
 - [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
 - [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced
+- [`agentic-context-engine`](../systems/agentic-context-engine/) **Agentic Context Engine** — A decision not to merge, kept · `kayba-ai/agentic-context-engine` · Trust state
 - [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced
 - [`agentrecall-x`](../systems/agentrecall-x/) **AgentRecall-X** — A correction that loses its veto · `Goldentrii/AgentRecall-X` · Trust state, Scope enforced
 - [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
