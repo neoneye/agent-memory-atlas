@@ -96,6 +96,13 @@ when the work happens.
   did not allege do — deleted embeddings persisted verbatim to the index file,
   and a documented seven-day floor on erasure — which is a layer below where
   every `update_delete` claim in the corpus stops.
+- [2026-08-03-a-null-control-and-a-drifted-list.md](2026-08-03-a-null-control-and-a-drifted-list.md) —
+  two findings from a re-read that changed no mark: the published
+  repositories-inspected list had drifted on three systems and every one of them
+  was a system this project had re-reviewed, with the nine-line check that would
+  have caught it still unwritten; and Daimon now ships the placebo arm the
+  benchmarks page argues nobody has, having used it to refute one of its own
+  shipped features and to say which way its conservatism cut.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.

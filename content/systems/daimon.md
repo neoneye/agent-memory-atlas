@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 3f79a952cf8e7f96b7fbcaa322147a7236dd47d0
-revision_url: https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0
-analyzed_at: 2026-07-30
+revision: 3025ee3edecd1958e9e9181fe607a5b1a30309bf
+revision_url: https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf
+analyzed_at: 2026-08-03
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
@@ -20,7 +20,7 @@ matrix:
   integration: "Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only stdio MCP"
   background: "Detached serialize child, retry ledger with self-heal, index rebuild"
   trust: "verbatim vs inferred as a stored field, verified by code against the transcript — with corroboration as a separate axis that can never become a trust class"
-  strengths: "The model's trust claims are checked by code; an eleven-step deletion-durability protocol committed as one deterministic test, every step paired with a never-forgotten twin"
+  strengths: "The model's trust claims are checked by code; an eleven-step deletion-durability protocol committed as one deterministic test, every step paired with a never-forgotten twin; a replay A/B rig with a placebo arm that has published refutations of the project's own features"
   risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value"
 ---
 
@@ -129,10 +129,25 @@ Read the two diamonds as the design: **the model's own trust claim is the input
 to a test, not the verdict.** Nothing promotes an item — the only movement
 between lanes is downward, and it is code that moves it.
 
-The item's identity is content-derived: `id = <kind-initial>-sha1("<field>:<text>")[:6]`
-(`store._stamp_item_ids`, `store.py:444`). Two sessions that extract the same
+The item's identity is content-derived: `id = <kind-initial>-sha1("<field>:<text>")`
+truncated to a hex slice, minted by `policy.stamp_item_ids` (`policy.py:129`,
+re-exported as `store._stamp_item_ids`). Two sessions that extract the same
 sentence into the same field produce the same id. That single decision is what
 makes the tombstone work, and also what bounds it.
+
+**The width of that slice is a correction the project made to itself, and the
+arithmetic is worth reading.** Ids were minted at 6 hex until 1 August 2026. The
+docstring that replaced it states the exposure: collision detection is scoped to
+one checkpoint, "so a cross-session collision is undetectable here by
+construction. At 6 hex that is ~2.4% over ~2k distinct texts per project and
+grows quadratically; the consequence is a `resolve` or `forget` silently
+withholding an unrelated live memory." That is the failure mode of the exact
+mechanism this report praises — a forget hitting the wrong item — arrived at by
+counting rather than by incident. The fix is a width ladder of `(12, 16, 24, 40)`
+with a counter suffix as the last resort. Ids already stamped keep their width
+forever and both shapes coexist, every consumer regex accepting `{6,}`, so the
+migration is a no-op: the tombstone resolves by canonical content key, never by
+id, which is why widening the id could not break it.
 
 ### How a belief stops being one
 
@@ -625,7 +640,8 @@ still a gap.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,974 tests over ~29,700 lines, roughly twice the source. Coverage tracks the
+2,612 tests over ~40,300 lines against ~18,200 lines of source, better than
+twice the source. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
 `test_id_bearing_item_never_fuzzy_withheld`), `test_store.py`,
@@ -673,9 +689,63 @@ a stubbed signer with a fixed clock, at zero model quota.
 The benchmark harness also scores a forbidden-hit dimension against the assembled
 brief, of the kind [open-cowork](../open-cowork/)'s `forbiddenHits` provides.
 
-**What I would still want** is a completed paired A/B on the 150-question
-sample, since the interim file exists precisely because that comparison is
-unfinished.
+**The deletion protocol is also structurally cheap here, and the reason
+generalizes.** Step 8 asserts absence from "recall's SQLite rows", and that is
+the *whole* index — there is no embedding anywhere in `plugin/daimon_briefing/`,
+and the FTS5 database is disposable and rebuilt from the checkpoints. So the
+class of failure described under
+[the layer below delete](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector)
+— a soft-deleted vector persisting in an HNSW graph until an unscheduled
+compaction — has nowhere to happen. The atlas's most complete deletion test
+belongs to the system with the least retrieval machinery, and those two facts
+are related: an index you can throw away and rebuild is one you can prove things
+about.
+
+### The measuring instrument, and what it refuted
+
+The most interesting thing to arrive since the previous reading is not a memory
+mechanism. It is `research/experiments/recall-replay-ab/` — a deterministic
+offline rig for asking whether a proposed change to recall would inject better
+rows than what ships. Arm A is the shipped `recall.suggest()`, untouched; arm B
+is a pluggable variant; both replay the same real historical prompts against the
+same time-filtered snapshot through a faithful replica of the downstream
+post-filter, and the rows where the arms disagree go to a **side-blind judge**.
+Its README states the discipline the design rests on: the harness "holds no
+opinion about what recall should do. It is the measuring device, not the bet."
+
+Three properties are worth naming because this atlas's
+[benchmarks page](../../benchmarks/) argues that almost nobody has them:
+
+- **A placebo arm.** The `placebo` builtin suppresses rows at random at a
+  per-age-band rate, so a treatment that merely removes rows can be compared
+  against removing rows *for no reason*. This is the null control whose absence
+  the benchmarks page treats as the default failure of vendor-run comparisons.
+- **Self-verification of the instrument.** `verify.py` builds a synthetic daimon
+  home through the real write path and asserts determinism (two runs
+  byte-identical), that the identity variant reproduces arm A exactly, and that
+  blind-file hygiene holds.
+- **Published refutations of the project's own features.** Two commit subjects
+  say it outright — `#483 measured and refuted`, `#470 measured and refuted`.
+  `research/experiments/gate-491/measurements.json` commits the third: the age
+  gate's open-question exemption admits a class graded **10% relevant (Wilson
+  95% CI 3.5–25.6, n=30)**, inside the 6–10% band the gate already blocks. The
+  file records that the pre-registered 40% bar was *not* used, and why — it was
+  not derivable from anything measured and held exempt rows to a higher standard
+  than the policy applies to rows it keeps. It lists two rejected alternative
+  explanations, each with the verdict that it "separates the WRONG way". It
+  carries a `not_measured` block naming the silence cost it is structurally
+  blind to. And its `index_composition` note flags that its own count is
+  "conservative in the direction that weakens the finding".
+
+That last habit — stating which way your own conservatism cuts — is the thing
+this atlas asks of benchmark publishers and has found almost nowhere. Here it is
+applied by a project to a feature it then removed.
+
+**What I would still want** is unchanged in kind and narrower in scope: a
+completed paired A/B on the 150-question LongMemEval sample. The replay rig
+answers a different question — precision of what *is* injected on the
+maintainer's own prompts — and says so, in a `not_measured` block, rather than
+letting the two be confused.
 
 ## 11. For Your Own Build
 
@@ -758,7 +828,10 @@ they stop working.
   re-assertion arrives reworded rather than repeated.
 - **What is recall quality at a real sample size?** The paired A/B behind the
   54-question interim file is unfinished; a completed 150-question run with both
-  arms would replace the best available number here.
+  arms would replace the best available number here. The replay rig does not
+  close this — it grades precision of what was injected on the maintainer's own
+  prompts, which is a different corpus answering a different question, and its
+  own README says to read the resolution block before taking a delta off a run.
 - **How often does verification actually fire in the field?**
   `store.verification_counts` exists precisely to answer this per install
   (*"has verification ever caught anything on THIS install"*), but no aggregate
@@ -766,7 +839,11 @@ they stop working.
   statistic in this repository.
 - **How much does the trust machinery cost in retrieval terms?** The benchmark
   README frames verifiability as a trade against raw recall but does not measure
-  the ungated arm, so the size of the trade is asserted rather than shown.
+  the ungated arm, so the size of the trade is asserted rather than shown. This
+  is the question the new replay rig is closest to and does not answer: its arms
+  vary *recall scoring*, not whether the trust gate ran, so an unverified-items
+  arm remains unbuilt. It is the one experiment the instrument is already shaped
+  to run.
 - **Does the exact-copy carry freeze accumulate wrong items?** A verbatim item
   frozen against rewording, carried for weeks, world-checked by nobody, is
   exactly what `stale_carried` flags — but flagging is advisory, and nothing
@@ -810,6 +887,9 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 1,974 tests
+- `plugin/tests/` — 2,612 tests
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
-- `research/`, `.scars/` — the project's own decision and negative-knowledge trail
+- `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
+  arm and its self-verification
+- `research/`, `.scars/` — the project's own decision and negative-knowledge trail,
+  including `gate-491/measurements.json`, a committed refutation of a shipped feature

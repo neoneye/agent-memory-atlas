@@ -88,14 +88,14 @@ stored.</p>
               <strong>Daily-Nerd/daimon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0" title="3f79a952cf8e7f96b7fbcaa322147a7236dd47d0">
+            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">
               <span>Analyzed revision</span>
-              <code>3f79a952…</code>
+              <code>3025ee3e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-08-03</strong>
             </div>
                       </div>
                               <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (66%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -250,11 +250,28 @@ claim is the input to a test, not the verdict.</strong> Nothing promotes
 an item — the only movement between lanes is downward, and it is code
 that moves it.</p>
 <p>The item's identity is content-derived:
-<code>id = &lt;kind-initial&gt;-sha1("&lt;field&gt;:&lt;text&gt;")[:6]</code>
-(<code>store._stamp_item_ids</code>, <code>store.py:444</code>). Two
-sessions that extract the same sentence into the same field produce the
-same id. That single decision is what makes the tombstone work, and also
-what bounds it.</p>
+<code>id = &lt;kind-initial&gt;-sha1("&lt;field&gt;:&lt;text&gt;")</code>
+truncated to a hex slice, minted by <code>policy.stamp_item_ids</code>
+(<code>policy.py:129</code>, re-exported as
+<code>store._stamp_item_ids</code>). Two sessions that extract the same
+sentence into the same field produce the same id. That single decision
+is what makes the tombstone work, and also what bounds it.</p>
+<p><strong>The width of that slice is a correction the project made to
+itself, and the arithmetic is worth reading.</strong> Ids were minted at
+6 hex until 1 August 2026. The docstring that replaced it states the
+exposure: collision detection is scoped to one checkpoint, "so a
+cross-session collision is undetectable here by construction. At 6 hex
+that is ~2.4% over ~2k distinct texts per project and grows
+quadratically; the consequence is a <code>resolve</code> or
+<code>forget</code> silently withholding an unrelated live memory." That
+is the failure mode of the exact mechanism this report praises — a
+forget hitting the wrong item — arrived at by counting rather than by
+incident. The fix is a width ladder of <code>(12, 16, 24, 40)</code>
+with a counter suffix as the last resort. Ids already stamped keep their
+width forever and both shapes coexist, every consumer regex accepting
+<code>{6,}</code>, so the migration is a no-op: the tombstone resolves
+by canonical content key, never by id, which is why widening the id
+could not break it.</p>
 <h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
 <p>Lifecycle is <em>not</em> stored on the item. The checkpoint is
 append-only in practice — <code>last_verified</code> is stamped in
@@ -828,8 +845,8 @@ The boundary is what has a referent on disk or on one host, which is a
 narrower gap than a lexicon over outcome words and still a gap.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,974 tests over ~29,700 lines, roughly twice the source. Coverage
-tracks the design claims closely:
+<p>2,612 tests over ~40,300 lines against ~18,200 lines of source,
+better than twice the source. Coverage tracks the design claims closely:
 <code>test_quote_verification.py</code>, <code>test_carry.py</code>,
 <code>test_briefing.py</code> (withhold semantics, including
 <code>test_id_bearing_item_never_fuzzy_withheld</code>),
@@ -903,9 +920,73 @@ clock, at zero model quota.</p>
 the assembled brief, of the kind <a
 href="../open-cowork/">open-cowork</a>'s <code>forbiddenHits</code>
 provides.</p>
-<p><strong>What I would still want</strong> is a completed paired A/B on
-the 150-question sample, since the interim file exists precisely because
-that comparison is unfinished.</p>
+<p><strong>The deletion protocol is also structurally cheap here, and
+the reason generalizes.</strong> Step 8 asserts absence from "recall's
+SQLite rows", and that is the <em>whole</em> index — there is no
+embedding anywhere in <code>plugin/daimon_briefing/</code>, and the FTS5
+database is disposable and rebuilt from the checkpoints. So the class of
+failure described under <a
+href="../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
+layer below delete</a> — a soft-deleted vector persisting in an HNSW
+graph until an unscheduled compaction — has nowhere to happen. The
+atlas's most complete deletion test belongs to the system with the least
+retrieval machinery, and those two facts are related: an index you can
+throw away and rebuild is one you can prove things about.</p>
+<h3 id="the-measuring-instrument-and-what-it-refuted">The measuring
+instrument, and what it refuted</h3>
+<p>The most interesting thing to arrive since the previous reading is
+not a memory mechanism. It is
+<code>research/experiments/recall-replay-ab/</code> — a deterministic
+offline rig for asking whether a proposed change to recall would inject
+better rows than what ships. Arm A is the shipped
+<code>recall.suggest()</code>, untouched; arm B is a pluggable variant;
+both replay the same real historical prompts against the same
+time-filtered snapshot through a faithful replica of the downstream
+post-filter, and the rows where the arms disagree go to a
+<strong>side-blind judge</strong>. Its README states the discipline the
+design rests on: the harness "holds no opinion about what recall should
+do. It is the measuring device, not the bet."</p>
+<p>Three properties are worth naming because this atlas's <a
+href="../../benchmarks/">benchmarks page</a> argues that almost nobody
+has them:</p>
+<ul>
+<li><strong>A placebo arm.</strong> The <code>placebo</code> builtin
+suppresses rows at random at a per-age-band rate, so a treatment that
+merely removes rows can be compared against removing rows <em>for no
+reason</em>. This is the null control whose absence the benchmarks page
+treats as the default failure of vendor-run comparisons.</li>
+<li><strong>Self-verification of the instrument.</strong>
+<code>verify.py</code> builds a synthetic daimon home through the real
+write path and asserts determinism (two runs byte-identical), that the
+identity variant reproduces arm A exactly, and that blind-file hygiene
+holds.</li>
+<li><strong>Published refutations of the project's own
+features.</strong> Two commit subjects say it outright —
+<code>#483 measured and refuted</code>,
+<code>#470 measured and refuted</code>.
+<code>research/experiments/gate-491/measurements.json</code> commits the
+third: the age gate's open-question exemption admits a class graded
+<strong>10% relevant (Wilson 95% CI 3.5–25.6, n=30)</strong>, inside the
+6–10% band the gate already blocks. The file records that the
+pre-registered 40% bar was <em>not</em> used, and why — it was not
+derivable from anything measured and held exempt rows to a higher
+standard than the policy applies to rows it keeps. It lists two rejected
+alternative explanations, each with the verdict that it "separates the
+WRONG way". It carries a <code>not_measured</code> block naming the
+silence cost it is structurally blind to. And its
+<code>index_composition</code> note flags that its own count is
+"conservative in the direction that weakens the finding".</li>
+</ul>
+<p>That last habit — stating which way your own conservatism cuts — is
+the thing this atlas asks of benchmark publishers and has found almost
+nowhere. Here it is applied by a project to a feature it then
+removed.</p>
+<p><strong>What I would still want</strong> is unchanged in kind and
+narrower in scope: a completed paired A/B on the 150-question
+LongMemEval sample. The replay rig answers a different question —
+precision of what <em>is</em> injected on the maintainer's own prompts —
+and says so, in a <code>not_measured</code> block, rather than letting
+the two be confused.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -990,7 +1071,10 @@ than repeated.</li>
 <li><strong>What is recall quality at a real sample size?</strong> The
 paired A/B behind the 54-question interim file is unfinished; a
 completed 150-question run with both arms would replace the best
-available number here.</li>
+available number here. The replay rig does not close this — it grades
+precision of what was injected on the maintainer's own prompts, which is
+a different corpus answering a different question, and its own README
+says to read the resolution block before taking a delta off a run.</li>
 <li><strong>How often does verification actually fire in the
 field?</strong> <code>store.verification_counts</code> exists precisely
 to answer this per install (<em>"has verification ever caught anything
@@ -1000,7 +1084,11 @@ repository.</li>
 <li><strong>How much does the trust machinery cost in retrieval
 terms?</strong> The benchmark README frames verifiability as a trade
 against raw recall but does not measure the ungated arm, so the size of
-the trade is asserted rather than shown.</li>
+the trade is asserted rather than shown. This is the question the new
+replay rig is closest to and does not answer: its arms vary <em>recall
+scoring</em>, not whether the trust gate ran, so an unverified-items arm
+remains unbuilt. It is the one experiment the instrument is already
+shaped to run.</li>
 <li><strong>Does the exact-copy carry freeze accumulate wrong
 items?</strong> A verbatim item frozen against rewording, carried for
 weeks, world-checked by nobody, is exactly what
@@ -1073,11 +1161,15 @@ scar-candidate drafting</li>
 </ul>
 <p><strong>Tests and evals</strong></p>
 <ul>
-<li><code>plugin/tests/</code> — 1,974 tests</li>
+<li><code>plugin/tests/</code> — 2,612 tests</li>
 <li><code>benchmark/</code> — LongMemEval-S harness, reporting policy,
 committed results</li>
+<li><code>research/experiments/recall-replay-ab/</code> — the replay A/B
+rig, its placebo arm and its self-verification</li>
 <li><code>research/</code>, <code>.scars/</code> — the project's own
-decision and negative-knowledge trail</li>
+decision and negative-knowledge trail, including
+<code>gate-491/measurements.json</code>, a committed refutation of a
+shipped feature</li>
 </ul>
         </article>
       </div>

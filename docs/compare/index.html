@@ -2622,7 +2622,8 @@ transcript — with corroboration as a separate axis that can never become
 a trust class</td>
 <td>The model's trust claims are checked by code; an eleven-step
 deletion-durability protocol committed as one deterministic test, every
-step paired with a never-forgotten twin</td>
+step paired with a never-forgotten twin; a replay A/B rig with a placebo
+arm that has published refutations of the project's own features</td>
 <td>One live checkpoint per project; the chunk cache is purged wholesale
 because it is keyed by chunk text and cannot be searched by value</td>
 </tr>
@@ -6610,6 +6611,16 @@ names embeddings among the derived artifacts a forgetting test would
 have to check. The method anticipated this layer. No per-system review
 has entered it, because entering it means leaving the repository under
 review.</p>
+<p>The counter-example is worth naming because it is not a coincidence.
+<a href="../systems/daimon/">daimon</a> carries the most complete
+deletion test in this atlas — eleven steps, each paired with a
+never-forgotten twin — and step 8 asserts absence from <em>the whole
+index</em>, because the whole index is a disposable SQLite FTS5 database
+rebuilt from the checkpoints and there is no embedding anywhere in the
+source. It has nothing to prove about compaction because it has no graph
+to compact. The system with the least retrieval machinery has the
+strongest deletion guarantee, and the trade is explicit: it also has no
+semantic retrieval at all.</p>
 <h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
 Cross-Agent Persistence</h3>
 <p><code>memory-engine</code> has the most developed access model in the
@@ -7569,8 +7580,8 @@ best idea.</li>
 <li><code>openclaw</code>: test lines far exceed implementation — 4,497
 for the LanceDB extension and 2,530 for the memory-core doctor contract;
 no committed retrieval benchmark.</li>
-<li><code>daimon</code>: 1,974 tests across roughly 29,700 lines against
-15,600 lines of source, with dedicated quote-verification, carry,
+<li><code>daimon</code>: 2,612 tests across roughly 40,300 lines against
+18,200 lines of source, with dedicated quote-verification, carry,
 withhold, redaction-leak, receipt, and host-isolation suites. Its
 <code>benchmark/</code> runs LongMemEval-S through the real serializer
 and answers only from <code>daimon recall</code>, under a written
@@ -7581,7 +7592,24 @@ than the win. Two result files are committed; the honest one is a
 52-question interim baseline at <strong>Recall@5 0.58 / Hit@5 0.67 / MRR
 0.59</strong> (my arithmetic over its per-question rows — the file ships
 no aggregate block). The other is a five-question run, which the config
-stamp makes obvious.</li>
+stamp makes obvious. Since 1 August 2026 it also ships
+<code>research/experiments/recall-replay-ab/</code>, a deterministic
+replay harness whose arm A is the shipped <code>recall.suggest()</code>
+and whose arm B is a pluggable variant, judged side-blind on the rows
+where the arms disagree — with a <strong>placebo arm</strong> that
+suppresses rows at random at a per-age-band rate, a
+<code>verify.py</code> that asserts the rig's own determinism against a
+synthetic store built through the real write path, and three committed
+refutations. One,
+<code>research/experiments/gate-491/measurements.json</code>, killed a
+shipped feature: the age gate's open-question exemption graded 10%
+relevant (Wilson 95% CI 3.5–25.6, n=30), inside the band the gate
+already blocks. That file declines to use its own pre-registered 40% bar
+and says why, names two rejected alternative explanations that "separate
+the WRONG way", carries a <code>not_measured</code> block for the
+silence cost it is blind to, and flags that its own count is
+"conservative in the direction that weakens the finding". It is the only
+null control in this atlas.</li>
 <li><code>helm</code>: <code>workspace/tests/smoke.mjs</code>, 88
 labelled cases against the live SQLite file, of which about nineteen
 touch memory. Two assert <em>ranking</em> rather than round-trips —
@@ -9831,15 +9859,30 @@ semantic arm, and the committed retrieval numbers are modest.</li>
 <code>ground_outcomes</code> in <code>serializer.py</code> — about 200
 lines that make an extraction's own provenance mechanically
 checkable.</li>
-<li>Maturity impression: 15,600 lines of source under 29,700 lines of
-tests, a research logbook, a scar file per landmine, and a benchmark
-reporting policy stricter than most vendors'.</li>
+<li>Maturity impression: 18,200 lines of source under 40,300 lines of
+tests, a research logbook, a scar file per landmine, a benchmark
+reporting policy stricter than most vendors', and a replay A/B rig with
+a placebo arm that has been used to refute three of the project's own
+hypotheses.</li>
 <li>Study when: you want cross-session continuity for a coding agent, or
 you want to see what taking trust classes seriously actually costs in
 code.</li>
 <li>Do not copy when: you need memory within a session, semantic
 retrieval, or a shared service — none of the three is here or
 planned.</li>
+<li>Re-read 2026-08-03 at
+<code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code>, 41 commits past
+the previous pin. The mechanism did not move — the eleven-step deletion
+protocol and its three sibling tests are byte-identical, and no
+capability mark changed. One published claim was stale: item ids are
+minted at 12 hex through a <code>(12, 16, 24, 40)</code> width ladder in
+<code>policy.stamp_item_ids</code>, not at 6 hex in
+<code>store.py</code>, because the project measured a ~2.4%
+cross-session collision rate at 6 hex over ~2k texts whose consequence
+is <code>forget</code> withholding an unrelated live memory. What is new
+is not a memory mechanism but a measuring instrument: a replay A/B
+harness with a placebo arm, self-verification, and committed refutations
+including one of a shipped feature.</li>
 </ul>
 <h3 id="helm"><code>helm</code></h3>
 <ul>
@@ -11865,7 +11908,7 @@ href="https://github.com/MemPalace/mempalace">MemPalace/mempalace</a> at
 href="https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988"><code class="commit-id" title="afd0428823b47f9a9d1d68c450d54bb0045a4988">afd04288…</code></a></li>
 <li><a href="https://github.com/kunal12203/swafra">kunal12203/swafra</a>
 at <a
-href="https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7"><code class="commit-id" title="24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7">24dba18a…</code></a></li>
+href="https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915"><code class="commit-id" title="669e7bdbcbcd421deb172a05f8fe52b741c0e915">669e7bdb…</code></a></li>
 <li><a
 href="https://github.com/ctxr-dev/llm-wiki-memory">ctxr-dev/llm-wiki-memory</a>
 at <a
@@ -11881,7 +11924,7 @@ at <a
 href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6"><code class="commit-id" title="603d0512fd40e4575e2a075938c1851a898ceeb6">603d0512…</code></a></li>
 <li><a href="https://github.com/amitpatole/verel">amitpatole/verel</a>
 at <a
-href="https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e"><code class="commit-id" title="df80efe8207a99585a2ebce36fc6e32ba5077e2e">df80efe8…</code></a></li>
+href="https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d"><code class="commit-id" title="df44e76c6c6a919977806feed9549bc6a892932d">df44e76c…</code></a></li>
 <li><a
 href="https://github.com/vectorize-io/hindsight">vectorize-io/hindsight</a>
 at <a
@@ -12067,7 +12110,7 @@ href="https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad
 href="https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03"><code class="commit-id" title="02b59e5dc1c995cd47574af5eafb23395959ea03">02b59e5d…</code></a></li>
 <li><a href="https://github.com/Daily-Nerd/daimon">Daily-Nerd/daimon</a>
 at <a
-href="https://github.com/Daily-Nerd/daimon/commit/ecb7fafefa817f0726f46b221ddd4c7f4400a30a"><code class="commit-id" title="ecb7fafefa817f0726f46b221ddd4c7f4400a30a">ecb7fafe…</code></a></li>
+href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf"><code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code></a></li>
 <li><a href="https://github.com/Mirix-AI/MIRIX">Mirix-AI/MIRIX</a> at <a
 href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a></li>
 <li><a
@@ -12764,6 +12807,33 @@ moved from five of seven to six. Two of the three stale claims were
 <em>criticisms</em> — the report faulted the system for gaps it had
 since closed — which is the failure direction a drifting pin produces
 most often and the one least likely to be reported by a reader.</li>
+<li>Daimon was re-read again on 2026-08-03 at <a
+href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf"><code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code></a>,
+41 commits on, and this time the outcome was the TigrimOSR shape rather
+than the July one: the mechanism did not move, no mark changed, and the
+deletion protocol is byte-identical. <strong>One published claim was
+stale and it was a detail with a consequence</strong> — the report gave
+the item id as a 6-hex slice minted in <code>store.py</code>. It is now
+12 hex through a <code>(12, 16, 24, 40)</code> ladder in
+<code>policy.stamp_item_ids</code>, because the project computed that 6
+hex collides at ~2.4% over ~2k texts per project, cross-session
+collisions are undetectable by construction, and the consequence is
+<code>forget</code> silently withholding an unrelated live memory. The
+atlas had published the narrow width as part of praising the tombstone
+and had not noticed that the width was the tombstone's weakest link.
+This is the third re-review in a row where the stale claim was found by
+reading rather than by any signal a pin comparison could produce.</li>
+<li><strong>Three entries in the repositories-inspected list above were
+stale</strong>, found while re-pinning Daimon on 2026-08-03: Daimon,
+Verel and Swafra each carried a commit older than the one their own
+report was pinned to, because a re-review updates the report's
+frontmatter and the list is edited by hand. All three now match. The
+class of error matters more than the instances — the published list is
+the atlas's claim about what was actually read, <code>npm test</code>
+validates revision metadata inside reports but never checked it against
+this list, and nothing would have surfaced the drift except looking.
+Every stale entry was on a <em>re-reviewed</em> system, which is the
+population where the atlas's own process is the cause.</li>
 <li>TigrimOSR was re-reviewed on 2026-07-31 at <a
 href="https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4"><code class="commit-id" title="0813f2eb9f28a07e9adb6231f3de4f09803b66b4">0813f2eb…</code></a>,
 fifteen commits past the previous pin, and <strong>nothing published
