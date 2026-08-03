@@ -1,60 +1,112 @@
 ---
 title: "Mem0Sharp"
 eyebrow: "Mem0's architecture, rebuilt in C#"
-description: "A from-scratch .NET implementation of the Mem0 design — extraction, conflict resolution, graph relationships, Postgres and MCP in 2,333 lines — carrying an append-only history table that records old and new text for every mutation."
+description: "A from-scratch .NET implementation of the Mem0 design whose history table has converged on the original's exact schema and now has an integration test proving it — beside a behaviour switch that produces deliberately speculative memories and marks them nowhere on the row."
 root: ../..
 page_kind: system
 source_name: "jihadkhawaja/mem0sharp"
 source_url: https://github.com/jihadkhawaja/mem0sharp
-revision: ebf832c17f65815dfbfa65bcf376d4dc6683f057
-revision_url: https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf376d4dc6683f057
-analyzed_at: 2026-07-30
+revision: 4f995e08349ebb0e0453786d5aad999737ddd239
+revision_url: https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239
+analyzed_at: 2026-08-03
 capabilities: "scope_enforced, audit_log"
 matrix:
   memory_unit: "A row with text, `user_id`, `agent_id`, `run_id`, a `scope`, metadata, an embedding, timestamps, an expiry and a content hash"
-  storage: "Postgres with pgvector as the real backend, plus an in-memory store; a separate relationship store for the graph"
-  retrieval: "Cosine nearest-neighbour over the embedding with the scope predicate applied, ordered by distance and capped by top-k; an optional LLM reranker"
-  write: "LLM extraction into candidate memories, then an LLM conflict resolver deciding what happens to existing rows, with a hash column for dedup"
-  update_delete: "Delete by id and delete by scope predicate; every mutation writes a history row carrying the old and the new text"
+  storage: "Postgres with pgvector or Qdrant as the real backends, plus an in-memory store; a separate relationship store for the graph"
+  retrieval: "Cosine nearest-neighbour with the scope predicate applied, ordered by distance and capped by top-k; optional rerankers — LLM, Cohere, CrossEncoder, ZeroEntropy"
+  write: "LLM extraction into candidate memories, then an LLM conflict resolver deciding what happens to existing rows, with a hash column for dedup; a `Behavior` option swaps both prompts"
+  update_delete: "Delete by id and delete by scope predicate; every mutation writes a history row carrying the old text, the new text, `is_deleted`, `actor_id` and `role`"
   scoping: "`user_id text NOT NULL` plus optional `agent_id`, `run_id` and `scope`, composed into a `WHERE` clause on every read"
   integration: "A .NET library with an MCP server, a telemetry decorator, and clean Application/Infrastructure/Intelligence layering"
   background: "None"
   trust: "None on the row. Conflict resolution is an LLM decision taken at write time and not recorded as a state"
-  strengths: "An append-only `_history` table storing old and new text per event, and a required user scope in the schema rather than in a convention"
-  risks: "2,333 lines reimplementing a design whose extraction and conflict-resolution quality are the whole product, with no evaluation of either"
+  strengths: "An append-only `_history` table with a committed integration test that migrates a legacy table and asserts the add-update-delete sequence, and a required user scope in the schema"
+  risks: "A `Dreaming` behaviour that instructs the model to record imaginative associations, writing rows indistinguishable from observed facts — the behaviour reaches telemetry and never the memory"
 ---
 
 ## 1. Executive Summary
 
-Mem0Sharp is a **reimplementation** rather than a client. Apache-2.0, 2,333 lines
-of C# across `Application`, `Infrastructure`, `Intelligence`, `Transports` and
-`Telemetry`, it builds the [Mem0](../mem0/) architecture — LLM extraction, LLM
-conflict resolution, vector storage, graph relationships — on .NET, with a
-Postgres/pgvector store, an in-memory store, an MCP server, and a decorator that
-wraps the service in telemetry.
+Mem0Sharp is a **reimplementation** rather than a client. Apache-2.0, 2,982
+lines of C# across `Application`, `Infrastructure`, `Intelligence`, `Transports`
+and `Telemetry`, with 1,123 lines of tests beside them. It builds the
+[Mem0](../mem0/) architecture — LLM extraction, LLM conflict resolution, vector
+storage, graph relationships — on .NET, with Postgres/pgvector and Qdrant stores,
+an in-memory store, four rerankers, an MCP server, and a decorator that wraps the
+service in telemetry.
 
 That makes it useful to this atlas in a way a port usually is not: the same
 design, read twice, in two languages, by two teams. And the second reading has
 something the first did not.
 
-**It earns `audit_log`, which the atlas's Mem0 report does not.**
+**The `audit_log` here is now the better-evidenced of the two.**
 `PostgresMemoryStore` creates a `{table}_history` table beside the memory table,
-indexed on `(memory_id, created_at)`, and writes rows through a single
-`INSERT INTO {historyTable} (id, memory_id, event, old_memory, new_memory,
-created_at)`. There is no `UPDATE` and no targeted `DELETE` against it anywhere
-in the file — the only statement that removes history is a `TRUNCATE` of both
-tables together, which is a reset rather than an edit. So every mutation leaves a
-durable record of what the text was and what it became, keyed on the memory, in
-the system's own store.
+indexed on `(memory_id, created_at)`, and `SaveHistoryAsync` writes through a
+single `INSERT INTO {historyTable} (id, memory_id, event, old_memory,
+new_memory, created_at, updated_at, is_deleted, actor_id, role)`. That column
+list is [Mem0](../mem0/)'s exactly: the C# table has converged on the Python one,
+adding `updated_at`, `is_deleted`, `actor_id` and `role` through
+`ALTER TABLE … ADD COLUMN IF NOT EXISTS` migrations.
 
-**The audit is inherited, not added.** [Mem0](../mem0/)'s
-`mem0/mem0/memory/storage.py` carries the same append-only history at its pinned
-commit — written only by `add_history` and `batch_add_history`, with no `UPDATE`
-or `DELETE` against it — and it is the richer of the two, since the Python table
-records `actor_id` and `role` where the C# table does not. Both hold `audit_log`.
-What the port contributes is not the mechanism but a second reading of it: the
-same design expressed in another language, which is the cheapest way to find out
-whether a mark was earned by the design or by the implementation.
+One `UPDATE` touches the history table in the whole repository and it is inside
+that migration block —
+`UPDATE {historyTableName} SET updated_at = created_at WHERE updated_at IS NULL`,
+a one-time backfill so the new column can be made `NOT NULL`. No mutation path
+updates or deletes a history row; the only statement that removes history is a
+`TRUNCATE` of both tables together, which is a reset rather than an edit.
+
+**And the mechanism now has a test that exercises the property, not the
+function.** `tests/Mem0Sharp.Tests/PostgresHistoryIntegrationTests.cs` starts a
+`pgvector/pgvector:pg17` container, creates a *legacy* history table without the
+new columns, runs the migration, and asserts the legacy row survived with
+`updated_at == created_at` and `is_deleted == false`. It then adds, updates and
+deletes one memory and asserts the recorded sequence is exactly
+`[Add, Update, Delete]`, that `is_deleted` is false, false, true across the three,
+that `updated_at` is monotonic, and that `actor_id` and `role` round-trip from
+the write's metadata. Very few audit logs in this atlas are tested at all, and
+none of the others is tested through a schema migration.
+
+One detail the test pins is worth carrying, because it is counter-intuitive:
+`Assert.All(history, entry => Assert.Equal(history[0].CreatedAt, entry.CreatedAt))`.
+Every history row for a memory shares one `created_at` — the *memory's* creation
+time, not the event's. Event ordering lives in `updated_at`, and `GetHistoryAsync`
+orders by `created_at, updated_at, id` accordingly. A reader querying this table
+directly and sorting by `created_at` alone gets an arbitrary order within a
+memory.
+
+**The newest feature writes speculation into the same table as fact.**
+`MemoryBehavior` is a four-value enum on `MemoryAddOptions` — `Normal`,
+`Dreaming`, `RandomThoughts`, `PersonalMemory` — and it swaps the extraction
+system prompt, and through `ForConflictResolution` the conflict-resolution prompt
+as well. The whole feature is 27 lines in
+`src/Mem0Sharp/Intelligence/MemoryBehaviorPrompts.cs`, which is the honest size
+for what it is: a prompt switch, not a second pipeline.
+
+The prompts are written with more care than the names suggest. `Dreaming` asks
+for *"durable themes, emotional patterns, and meaningful associations, including
+subtle connections that may not be explicit"* and then instructs: *"Phrase
+uncertain or imaginative associations as possibilities rather than facts."*
+`RandomThoughts` asks for spontaneous connections *"while keeping uncertainty
+explicit"* and adds *"Do not claim invented details as facts."*
+`PersonalMemory` writes in the agent's first person and adds *"Do not invent
+events or user facts."* Every non-normal behaviour carries an explicit
+instruction against asserting invention.
+
+**And the row records none of it.** `Behavior` is a write-time option. It reaches
+the extractor, it reaches the conflict resolver, and it reaches
+`TelemetryMemoryService` as an attribute on the `mem0.add` span
+(`["behavior"] = options.Behavior.ToString()`). It is not written to the memory,
+to its metadata, or to the history row. So a `Dreaming` association — which the
+prompt itself frames as a possibility rather than a fact — is stored as a row
+with the same shape, the same scope and the same retrieval treatment as a fact
+the user stated outright, and nothing downstream can tell them apart. The
+telemetry knows which mode produced a write; the memory does not.
+
+That is the atlas's recurring shape in a new place, and an unusually avoidable
+instance of it: the option is already threaded through three layers, the metadata
+dictionary the write already carries is `Dictionary<string, string>`, and
+`actor_id` and `role` demonstrate that arbitrary keys survive into the history
+row. One line at the write site would make a speculative memory legible to
+everything that reads one.
 
 Scope is the other mark and it is enforced at the schema: `user_id text NOT NULL`
 with `agent_id`, `run_id` and `scope` beside it, composed into a `WHERE` clause
@@ -113,8 +165,12 @@ skip.
 - `src/Mem0Sharp/Infrastructure/Postgres/PostgresRelationshipStores.cs` (250).
 - `src/Mem0Sharp/Transports/Mcp/MemoryMcpServer.cs` (205).
 - `src/Mem0Sharp/Intelligence/` — extraction, graph extraction, reranking.
-- `tests/Mem0Sharp.Tests/` — `MemoryServiceTests`,
-  `LlmMemoryConflictResolverTests`, `MemoryMcpServerTests`.
+- `tests/Mem0Sharp.Tests/` — nine test classes, including
+  `PostgresHistoryIntegrationTests` (the audit property, through a migration),
+  `MemoryBehaviorTests`, `QdrantMemoryStoreIntegrationTests` and
+  `RerankerProviderTests`.
+- `src/Mem0Sharp/Intelligence/MemoryBehaviorPrompts.cs` — the four behaviours, 27 lines.
+- `src/Mem0Sharp/Infrastructure/Qdrant/QdrantMemoryStore.cs` — the second real backend.
 
 ## 5. Memory Data Model
 
@@ -178,10 +234,18 @@ human reading `_history` and re-inserting by hand.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Three test classes were found — `MemoryServiceTests`,
-`LlmMemoryConflictResolverTests`, `MemoryMcpServerTests` — and none were run.
-That there is a dedicated test class for the conflict resolver is the right
-instinct, since its precision is the product.
+The test tree is 1,123 lines and is where most of this round's growth went:
+`MemoryServiceTests`, `LlmMemoryConflictResolverTests`, `MemoryMcpServerTests`,
+`MemoryBehaviorTests`, `ModelProviderTests`, `RerankerProviderTests`,
+`OpenAiIntegrationTests`, `QdrantMemoryStoreIntegrationTests` and
+`PostgresHistoryIntegrationTests`. That there is a dedicated test class for the
+conflict resolver is the right instinct, since its precision is the product; that
+there is now one for the history table is the more consequential addition, and
+section 1 describes what it asserts.
+
+The integration tests use Testcontainers against real Postgres and Qdrant images,
+so they exercise the SQL rather than a fake. I did not run them — they need a
+container runtime and, for the OpenAI suite, a key and a `testsettings.yaml`.
 
 No benchmark, no retrieval-quality measurement and no published numbers, which
 also means none of the Mem0 figures this atlas has previously had to treat as

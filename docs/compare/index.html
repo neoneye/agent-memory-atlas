@@ -3477,16 +3477,18 @@ filters</td>
 <td>A row with text, <code>user_id</code>, <code>agent_id</code>,
 <code>run_id</code>, a <code>scope</code>, metadata, an embedding,
 timestamps, an expiry and a content hash</td>
-<td>Postgres with pgvector as the real backend, plus an in-memory store;
-a separate relationship store for the graph</td>
-<td>Cosine nearest-neighbour over the embedding with the scope predicate
-applied, ordered by distance and capped by top-k; an optional LLM
-reranker</td>
+<td>Postgres with pgvector or Qdrant as the real backends, plus an
+in-memory store; a separate relationship store for the graph</td>
+<td>Cosine nearest-neighbour with the scope predicate applied, ordered
+by distance and capped by top-k; optional rerankers — LLM, Cohere,
+CrossEncoder, ZeroEntropy</td>
 <td>LLM extraction into candidate memories, then an LLM conflict
 resolver deciding what happens to existing rows, with a hash column for
-dedup</td>
+dedup; a <code>Behavior</code> option swaps both prompts</td>
 <td>Delete by id and delete by scope predicate; every mutation writes a
-history row carrying the old and the new text</td>
+history row carrying the old text, the new text,
+<code>is_deleted</code>, <code>actor_id</code> and
+<code>role</code></td>
 <td><code>user_id text NOT NULL</code> plus optional
 <code>agent_id</code>, <code>run_id</code> and <code>scope</code>,
 composed into a <code>WHERE</code> clause on every read</td>
@@ -3495,12 +3497,12 @@ Application/Infrastructure/Intelligence layering</td>
 <td>None</td>
 <td>None on the row. Conflict resolution is an LLM decision taken at
 write time and not recorded as a state</td>
-<td>An append-only <code>_history</code> table storing old and new text
-per event, and a required user scope in the schema rather than in a
-convention</td>
-<td>2,333 lines reimplementing a design whose extraction and
-conflict-resolution quality are the whole product, with no evaluation of
-either</td>
+<td>An append-only <code>_history</code> table with a committed
+integration test that migrates a legacy table and asserts the
+add-update-delete sequence, and a required user scope in the schema</td>
+<td>A <code>Dreaming</code> behaviour that instructs the model to record
+imaginative associations, writing rows indistinguishable from observed
+facts — the behaviour reaches telemetry and never the memory</td>
 </tr>
 <tr>
 <td><code>memanto</code></td>
@@ -10429,19 +10431,38 @@ dependency choice.</li>
 on every mutation, in an append-only <code>_history</code> table with no
 <code>UPDATE</code> and no targeted <code>DELETE</code> against it — the
 audit most systems here document and do not build.</li>
-<li>Biggest risk: 2,333 lines reimplementing a design whose extraction
-and conflict-resolution <em>quality</em> are the whole product, with no
-evaluation of either.</li>
+<li>Biggest risk: a <code>MemoryBehavior</code> enum —
+<code>Normal</code>, <code>Dreaming</code>, <code>RandomThoughts</code>,
+<code>PersonalMemory</code> — swaps the extraction and
+conflict-resolution prompts, and <code>Dreaming</code> asks the model
+for imaginative associations <em>phrased as possibilities rather than
+facts</em>. The behaviour reaches the extractor, the resolver and the
+telemetry span, and is written to neither the memory nor its metadata,
+so a speculative association is a row of exactly the same shape as a
+stated fact.</li>
 <li>Most reusable component: the owner column as <code>NOT NULL</code>
 rather than a convention, and delete-by-scope beside delete-by-id.</li>
-<li>Maturity impression: three test classes including a dedicated one
-for the conflict resolver — the right instinct, since its precision is
-the product — and a telemetry decorator around the service.</li>
+<li>Maturity impression: 2,982 lines of source against 1,123 of tests
+across nine classes, with Testcontainers integration suites for Postgres
+and Qdrant — including <code>PostgresHistoryIntegrationTests</code>,
+which creates a legacy history table, migrates it, and asserts the
+add-update-delete sequence survives. Very few audit logs in this atlas
+are tested at all.</li>
 <li>Study when: you are building .NET agents and want Mem0's shape
 natively rather than through a REST client.</li>
 <li>Do not copy when: you expect epistemics the original also lacks. It
 stores LLM-extracted text as fact and offers no way to mark a memory
 doubtful; the history table is a forensic tool, not a trust model.</li>
+<li>Re-read 2026-08-03 at <a
+href="https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239"><code class="commit-id" title="4f995e08349ebb0e0453786d5aad999737ddd239">4f995e08…</code></a>,
+six commits on and roughly doubled. Nothing published went stale: the
+history table is still INSERT-only, and it has converged on Mem0's exact
+column list — <code>updated_at</code>, <code>is_deleted</code>,
+<code>actor_id</code> and <code>role</code> added by migration — so the
+two implementations now carry the same audit schema. The single
+<code>UPDATE</code> against history in the repository is a one-time
+backfill inside that migration. Added since: a Qdrant store, four
+rerankers, and the behaviour switch above.</li>
 </ul>
 <h3 id="memary"><code>memary</code></h3>
 <ul>
@@ -12107,7 +12128,7 @@ href="https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66
 <li><a
 href="https://github.com/jihadkhawaja/mem0sharp">jihadkhawaja/mem0sharp</a>
 at <a
-href="https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf376d4dc6683f057"><code class="commit-id" title="ebf832c17f65815dfbfa65bcf376d4dc6683f057">ebf832c1…</code></a></li>
+href="https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239"><code class="commit-id" title="4f995e08349ebb0e0453786d5aad999737ddd239">4f995e08…</code></a></li>
 <li><a
 href="https://github.com/yashneil75/gitlord">yashneil75/gitlord</a> at
 <a
