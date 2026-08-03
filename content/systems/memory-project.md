@@ -28,9 +28,11 @@ matrix:
 
 memory-project is **long-term memory for one developer's Claude Code sessions**,
 wired in globally through hooks so it works from any directory. It is small —
-3,113 lines of Python across a flat module layout, 26 commits, **AGPL-3.0**,
-which is the most restrictive licence in this corpus and a real constraint on
-anyone thinking of vendoring it.
+3,113 lines of Python across a flat module layout, 26 commits, **AGPL-3.0** —
+which puts it with [Logseq](../logseq/), [OpenViking](../openviking/),
+[SillyTavern](../sillytavern/), [Aukora Kernel](../aukora-kernel/) and
+[Juggler](../juggler/) in the copyleft corner of this corpus, and is a real
+constraint on anyone thinking of vendoring it.
 
 The design commitment is stated in the README and honoured in the code: model
 the *phases* of human memory rather than build a search index. Encoding, filing,
@@ -335,7 +337,9 @@ is no scope filter, no tenant, no per-client isolation, and adding one means
 changing the ranking model rather than adding a predicate. The AGPL licence
 compounds this — reusing the code in anything network-facing carries the copyleft
 obligation, which is a reason to read it for the mechanisms rather than to depend
-on it.
+on it. That is a narrower objection than the source-available licences elsewhere
+in this atlas — BSL, ELv2 and PolyForm restrict *what you may do with it*, while
+AGPL restricts *what you must give back*.
 
 If you need correction — a memory that can be marked wrong and stay wrong — this
 is the wrong starting point, and the gap is structural rather than a missing
