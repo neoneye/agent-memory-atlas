@@ -126,6 +126,13 @@ when the work happens.
   was caused an hour earlier by the regex sweep that bumps denominators to
   satisfy the build while leaving numerators nobody checked — a stale figure
   wearing a current denominator reads fresher than it did before the fix.
+- [2026-08-04-the-compare-page-as-a-tool.md](2026-08-04-the-compare-page-as-a-tool.md) —
+  the first external review that measured anything rather than arguing about
+  content; all seven measurements verified, the rows made attributable again by
+  pinning the first column, the consent banner's thumb taken off the scale, and
+  the normalized-badge redesign declined for a stated reason — badges need a
+  vocabulary the atlas refuses to invent, and the seven columns that have one are
+  already filterable on a page two reviewers failed to find.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.

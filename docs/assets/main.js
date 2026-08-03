@@ -44,7 +44,7 @@
       until you choose, and declining is remembered.</p>
       <div class="consent-actions">
         <button type="button" data-consent="declined">Decline</button>
-        <button type="button" class="is-primary" data-consent="granted">Allow</button>
+        <button type="button" data-consent="granted">Allow</button>
       </div>`;
     banner.addEventListener("click", (event) => {
       const choice = event.target.closest("[data-consent]")?.dataset.consent;

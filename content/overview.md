@@ -1293,6 +1293,13 @@ session with an identity you could later correct.
 
 ## 2. Comparative Matrix
 
+**Looking for a specific mechanism rather than a specific system?** The
+[capability index](../capabilities/) filters all 136 systems by the seven
+mechanisms judged against strict definitions, combining them with **and** — it
+answers "tombstone *and* scope enforced" in one click, which is the question this
+table cannot be sorted to answer. Two external reviews have asked for that page
+without finding it, so it is linked here as well as from the homepage.
+
 One column needs a caveat before the table is read. **Update/delete model
 describes what a system's own code does**, and stops at the storage engine's
 boundary. On three of the four vector engines this corpus most depends on, the
