@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **134 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **135 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -74,6 +74,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`helm`](../systems/helm/) **Helm** — Confidence-ratcheted SQLite memory · `GOODMAN-PRO/helm` · Negative evals
 - [`hermes-agent`](../systems/hermes-agent/) **Hermes Agent** — Prompt-cache-bounded memory · `NousResearch/hermes-agent` · Human review
 - [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced
+- [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit
 - [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
 - [`holographic`](../systems/holographic/) **Holographic** — Vector-symbolic memory · `NousResearch/hermes-agent`
 - [`honcho`](../systems/honcho/) **Honcho** — Peer and session representation · `plastic-labs/honcho` · Scope enforced
