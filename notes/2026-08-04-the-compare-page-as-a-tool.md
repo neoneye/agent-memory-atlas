@@ -81,10 +81,13 @@ without anyone asking whether the page should hold them.
 
 ## What to do, in order
 
-1. **Search by system name on `/compare/`.** No data model change, no vocabulary
-   invention, and it answers the single most common visit. Not started.
-2. **Link the capability index from the top of the matrix.** Two reviewers have
-   now asked for a page that exists. One line.
+1. **Search by system name on `/compare/`.** **Done.** A single input above the
+   matrix filtering rows on the first column, with a live count, reusing the
+   `.filter-row` conventions so the compare page and the capability index read as
+   one control family. Name-only on purpose, and the source says why: filtering
+   on the other eleven columns would imply they hold values rather than
+   sentences.
+2. **Link the capability index from the top of the matrix.** **Done.**
 3. **An executive summary above the hero** — five findings, corpus size and
    freshness date, and three actions. The reviewer's version of this is better
    than what is there, and it costs nothing but editing.

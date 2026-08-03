@@ -176,6 +176,39 @@
     });
   });
 
+  // ------------------------------------------------- comparative matrix search
+  // The matrix is twelve columns of prose and cannot be sorted into an answer,
+  // so the one control it needs is "show me this system". Name-only on purpose:
+  // filtering on the other eleven columns would imply they hold values rather
+  // than sentences, which they do not. See the compare-page note.
+  const matrixSearch = document.querySelector("#matrix-search");
+  if (matrixSearch) {
+    const table = [...document.querySelectorAll(".prose table")].find(
+      (el) => el.querySelector("th")?.textContent.trim().toLowerCase() === "repo",
+    );
+    const matrixCount = document.querySelector("#matrix-count");
+    if (table) {
+      const rows = [...table.querySelectorAll("tbody tr")];
+      const applyMatrix = () => {
+        const q = matrixSearch.value.trim().toLowerCase();
+        let visible = 0;
+        rows.forEach((row) => {
+          const name = row.querySelector("td")?.textContent.toLowerCase() || "";
+          const show = !q || name.includes(q);
+          row.hidden = !show;
+          if (show) visible += 1;
+        });
+        if (matrixCount) {
+          matrixCount.textContent = q
+            ? `${visible} of ${rows.length} systems match "${matrixSearch.value.trim()}"`
+            : `${rows.length} systems`;
+        }
+      };
+      matrixSearch.addEventListener("input", applyMatrix);
+      applyMatrix();
+    }
+  }
+
   // ------------------------------------------------- capability grid page
   const grid = document.querySelector(".capability-grid");
   const gridFilters = [...document.querySelectorAll("#capability-filters [data-capability]")];

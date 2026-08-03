@@ -1308,6 +1308,14 @@ reading "exact delete" is accurate about what the next query returns and silent
 about what is still on disk. The evidence is under
 [the layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
 
+<div class="filter-row" role="group" aria-label="Filter the matrix by system">
+  <label class="filter-legend" for="matrix-search">Find</label>
+  <input class="matrix-search" id="matrix-search" type="search" autocomplete="off"
+         placeholder="system or repository name…" aria-describedby="matrix-count">
+</div>
+
+<p class="result-count" id="matrix-count" aria-live="polite"></p>
+
 <!-- BEGIN GENERATED MATRIX -->
 | Repo | Memory unit | Storage backend | Retrieval strategy | Write strategy | Update/delete model | Scoping model | Agent integration | Background processing | Trust/provenance model | Notable strengths | Main risks |
 |---|---|---|---|---|---|---|---|---|---|---|---|
