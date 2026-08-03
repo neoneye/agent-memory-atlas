@@ -230,3 +230,7 @@ Do not copy:
 - Blocks: `memory/memory_blocks/static.py`, `fact.py` (`FactExtractionMemoryBlock`, extract and condense prompts), `vector.py`.
 - Types: `memory/types.py`.
 - Legacy window-management APIs: `memory/chat_memory_buffer.py`, `chat_summary_memory_buffer.py`, `vector_memory.py`, `simple_composable_memory.py`.
+
+## History
+
+**2026-07-27** — [`199e9b5b130bbde72639358a08935b913e7132c0`](https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0) — first reading.

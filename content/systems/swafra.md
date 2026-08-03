@@ -625,3 +625,9 @@ Evals:
 - `swafra/packages/mcp/bench/results.json`
 - `swafra/packages/mcp/bench/longmemeval_colab.ipynb`
 - `swafra/BENCHMARK.md`
+
+## History
+
+**2026-07-29** — [`669e7bdbcbcd421deb172a05f8fe52b741c0e915`](https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915) — Re-read. The project had built its correction path between readings, keyed on a hash of the source.
+
+**2026-07-26** — [`24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7`](https://github.com/kunal12203/swafra/commit/24dba18a4194aef0cb0d6d6c68cf46e6fcbf2da7) — First reading.

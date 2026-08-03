@@ -505,3 +505,7 @@ better than any of this atlas's prose about it.
 **Tests**
 
 - None covering memory. ~30 test files elsewhere in `src/`.
+
+## History
+
+**2026-07-29** — [`316e430bedbe68c80060ce74c5a1fff88f3bdf97`](https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97) — first reading.

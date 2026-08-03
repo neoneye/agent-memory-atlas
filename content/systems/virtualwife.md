@@ -479,3 +479,7 @@ All paths under `domain-chatbot/apps/chatbot/`.
 **Tests**
 
 - `tests/bilibili_api_test.py`. Nothing covering memory.
+
+## History
+
+**2026-07-29** — [`c8afd6d3ce6bb6f58988c649c50299d36b63e08f`](https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f) — first reading.

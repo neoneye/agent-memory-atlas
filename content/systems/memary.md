@@ -402,3 +402,7 @@ October 2024 and the README pins Python at ≤ 3.11.9.
 
 **Tests** — `dev/KG_memory_stream/tests/test_memory_stream.py`,
 `dev/KG_memory_stream/tests/test_entity_knowledge_store.py`
+
+## History
+
+**2026-07-29** — [`b2331a2c0844d66f69acd607b9e4dbaba56552c1`](https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1) — first reading.

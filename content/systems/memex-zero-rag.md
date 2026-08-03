@@ -489,3 +489,7 @@ would assume are enforced, and those are the ones worth moving first.
 | `wiki/contradictions.md` | The human-adjudication queue, maintained by convention |
 | `wiki/log.md`, `wiki/index.md` | Operation record and catalogue, both written by the model |
 | `L1/` | Private context — and tracked in git |
+
+## History
+
+**2026-07-31** — [`c4337081a7dfcdffb84a36ee2778b6d519827aad`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee2778b6d519827aad) — first reading.

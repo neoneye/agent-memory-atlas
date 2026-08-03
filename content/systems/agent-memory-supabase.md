@@ -292,3 +292,7 @@ is no record that a value was ever rejected.
 | `src/client.js` | 257 | `MemoryStore` — embed, extract, store, recall, timeline, history |
 | `examples/quickstart.js` | 54 | The worked example |
 | `sql/rls.sql` | 36 | Posture A enabled, Posture B commented out |
+
+## History
+
+**2026-07-30** — [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53) — first reading.

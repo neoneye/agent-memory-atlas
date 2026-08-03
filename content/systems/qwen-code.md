@@ -395,3 +395,7 @@ re-extracts continuously that is the gap that will find you.
 - Design notes: `docs/design/2026-05-15-async-memory-recall-design.md`,
   `docs/design/auto-memory/`, `docs/design/2026-05-21-memory-pressure-monitor-design.md`,
   `docs/design/2026-07-11-managed-memory-microcompaction.md`.
+
+## History
+
+**2026-07-28** — [`6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe`](https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe) — first reading.

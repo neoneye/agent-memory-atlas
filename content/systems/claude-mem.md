@@ -341,3 +341,7 @@ consistency.
 - `src/services/worker/http/routes/DataRoutes.ts`: deletion routes.
 - `src/services/sync/ChromaSync.ts`: vector projection and repair.
 - `docs/server-storage-boundary.md`: active/future schema boundary.
+
+## History
+
+**2026-07-27** — [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe) — first reading.

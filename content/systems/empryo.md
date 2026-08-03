@@ -422,3 +422,7 @@ upsert at `:298`, supersede at `:660`, read filters at `:807`).
 `memory-prefix-resolve.test.ts`, `memory-prepare-step.test.ts`.
 
 **Licence** — `LICENSE` (Business Source License 1.1).
+
+## History
+
+**2026-07-31** — [`e6b5885db1232f35a52eb9faeae1023ab46d5685`](https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685) — first reading.

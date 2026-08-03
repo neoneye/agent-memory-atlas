@@ -213,3 +213,7 @@ For simpler personal memory, a graph may be needless complexity. Preserve source
 - `graphiti_core/driver/`
 - `mcp_server/`
 - `tests/`
+
+## History
+
+**2026-07-26** — [`9140123a7282d44efc077a0af09179919f3defdf`](https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf) — first reading.

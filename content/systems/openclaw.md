@@ -300,3 +300,7 @@ Do not copy:
 - Configuration and categories: `extensions/memory-lancedb/config.ts`.
 - Embedding adapters: `extensions/{openai,voyage,mistral,lmstudio}/memory-embedding-adapter.ts`.
 - Tests: `extensions/memory-lancedb/index.test.ts`, `extensions/memory-core/doctor-contract-api.test.ts`, `config.test.ts`, `embeddings.lifecycle.test.ts`.
+
+## History
+
+**2026-07-27** — [`570eab59e7c7ce052f4550af7507e7dd77c73e11`](https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11) — first reading.

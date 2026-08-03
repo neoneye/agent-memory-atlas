@@ -486,3 +486,7 @@ is not local.
 
 **Tests/benchmarks** — `tests/test_utils.py`, `tests/storage/drivers/`,
 `memori-ts/tests/`, `benchmarks/`
+
+## History
+
+**2026-07-29** — [`538b61f245295aa1a43df8033879f8293627f74d`](https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d) — first reading.

@@ -464,3 +464,7 @@ cannot support the conclusion.
 | `benchmark/replay-results.json` | Committed four-axis result, 18 June 2026 |
 | `benchmark/*.mjs` | The harness behind it |
 | `packages/*/test/` | 124 test files, ten named for the corrections mechanism |
+
+## History
+
+**2026-07-31** — [`a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd`](https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd) — first reading.

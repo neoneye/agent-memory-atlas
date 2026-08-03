@@ -248,3 +248,7 @@ Do not copy:
 - Agent surface: `memory-tools.ts`, `memory-extension.ts`.
 - Types and utilities: `memory-types.ts`, `memory-utils.ts`.
 - Tests and checks: `src/tests/memory`, `tests/memory-manager-no-fts.test.ts`, `docs/memory-live-smoke-checklist.md`.
+
+## History
+
+**2026-07-27** — [`6f0c04741386b8600aa977f14ac0679d2203bd1b`](https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b) — first reading.

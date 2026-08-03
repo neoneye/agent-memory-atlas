@@ -464,3 +464,7 @@ the two ideas worth having.
 **Tests**
 
 - None.
+
+## History
+
+**2026-07-29** — [`aaf905c12efcbd2a709a3b2285f55e554d47484f`](https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f) — first reading.

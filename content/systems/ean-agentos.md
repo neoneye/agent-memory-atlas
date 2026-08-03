@@ -342,3 +342,7 @@ work" heading would keep their value and remove the ambiguity.
 | `scripts/ean_memory.py` | Installer: environment detection, hook merge, clean uninstall |
 | `scripts/memory_daemon.py`, `transcript_reconciler.py` | Background capture and reconciliation |
 | `mcp-server/kimi_memory_server.py` | MCP surface |
+
+## History
+
+**2026-08-02** — [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6) — first reading.

@@ -291,3 +291,7 @@ memory to the agents it wraps.
   `mutable-config-repair.ts`, `openclaw-config-lock.ts`, `audit.ts`.
 - Hardware inventory, where "memory" means RAM: `src/lib/onboard.ts`.
 - Product page: <https://www.nvidia.com/en-us/ai/nemoclaw/>.
+
+## History
+
+**2026-07-28** — [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03) — first reading.

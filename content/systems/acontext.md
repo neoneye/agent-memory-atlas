@@ -460,3 +460,7 @@ Postgres for nothing.
 `test_task_agent_atomicity.py`,
 `src/server/core/tests/service/test_skill_learner_consumer.py`,
 `src/server/tests/e2e/`
+
+## History
+
+**2026-07-29** — [`259d73bfdebeed35ec2d4211ddc060a2d4126bc6`](https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6) — first reading.

@@ -458,3 +458,7 @@ the dispute to stick.
 **Tests** —
 `src/server/api/tests/{test_api,test_controller,test_db,test_chat_modal}.py`,
 `src/client/tests/`
+
+## History
+
+**2026-07-29** — [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901) — first reading.

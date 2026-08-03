@@ -265,3 +265,7 @@ is answered by whatever you bind underneath it.
 | `packages/python-sdk/cosmonapse/engram/postgres.py` | 426 | asyncpg backend, lazy-imported |
 | `packages/python-sdk/cosmonapse/engram/memory.py` | 407 | Dict backend for tests and dev |
 | `packages/python-sdk/cosmonapse/engram/client.py` | 297 | `EngramClient` |
+
+## History
+
+**2026-07-30** — [`16997d577596750e139f3eb83fd5c4b1c3c740bf`](https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf) — first reading.

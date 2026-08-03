@@ -497,3 +497,7 @@ pass is a bill that grows with the store rather than with the user's activity.
 `tests/test_multi_scope_access.py`, `tests/test_client_agent_isolation.py`,
 `tests/test_deletion_apis.py`, `tests/test_raw_memory.py`, `evals/mab/`,
 `evals/llm_judge.py`
+
+## History
+
+**2026-07-29** — [`51f3342d5366b0e215439581f92e0323227146af`](https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af) — first reading.

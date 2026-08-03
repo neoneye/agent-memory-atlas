@@ -330,3 +330,7 @@ tested of the three.
 | `simplemem/core/answer_generator.py` | 153 | Answer synthesis over retrieved entries |
 | `simplemem/core/models/memory_entry.py` | ~70 | The unit, and the two transforms |
 | `tests/test_vector_store*.py` | 636 | The root test suite, in full |
+
+## History
+
+**2026-07-30** — [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299) — first reading.

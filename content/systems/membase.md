@@ -524,3 +524,7 @@ sitting untouched for a year.
 | `tests/test_chroma.py` | Vector store tests, including the one that passes over the defect |
 | `tests/test_ltm.py` | The long-term memory test, with no assertions |
 | `tests/test_multi_memory.py` | Buffer dictionary tests |
+
+## History
+
+**2026-07-31** — [`9e03b75a453118f4faf4ed3539279435e03bd603`](https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603) — first reading.

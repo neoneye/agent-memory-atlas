@@ -235,3 +235,7 @@ Do not copy:
 - Extension API and events: `packages/coding-agent/src/core/extensions/types.ts`.
 - Custom compaction example: `packages/coding-agent/examples/extensions/custom-compaction.ts`.
 - SDK documentation: `packages/coding-agent/docs/sdk.md`.
+
+## History
+
+**2026-07-27** — [`a597371bda2af70372d1323d550483b5f4a0ae36`](https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36) — first reading.

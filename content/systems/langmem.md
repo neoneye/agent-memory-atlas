@@ -290,3 +290,7 @@ LangMem is best when you are already building on LangGraph and want memory primi
 - Graph/RAG extras: `langmem/src/langmem/graph_rag.py`, `langmem/src/langmem/graphs/`.
 - Short-term summarization: `langmem/src/langmem/short_term/summarization.py`.
 - Tests: `langmem/tests/`.
+
+## History
+
+**2026-07-26** — [`c01e273b94aa4c06e41d0ed1ccce0db17de2bc11`](https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11) — first reading.

@@ -383,3 +383,7 @@ reaching into the Markdown tree, and the memory layer will not do it for you.
 **Tests**
 
 - `tests/e2e/test_search_endpoint_e2e.py` — owner isolation, case→skill bridge
+
+## History
+
+**2026-07-29** — [`4256419595f63fe307147dc19e379477cecdc44f`](https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f) — first reading.

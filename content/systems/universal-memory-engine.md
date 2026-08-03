@@ -388,3 +388,7 @@ under them. Those shapes are the part worth having.
 `test/eval_extraction.spec.js`.
 
 **Licence** — `LICENSE` (Apache-2.0).
+
+## History
+
+**2026-07-31** — [`db98ef59999beb5c33d9aba190cb2c82bf9401cb`](https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb) — first reading.

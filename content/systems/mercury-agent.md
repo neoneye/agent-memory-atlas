@@ -248,3 +248,7 @@ Do not copy:
 - Surface: `src/memory/index.ts`.
 - Review UI: `ui/src/pages/brain/Memory.tsx`.
 - Tests: `src/memory/user-memory.test.ts`.
+
+## History
+
+**2026-07-27** — [`6e174a4b5ea77bbc753bff5f89c76db9303439d1`](https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1) — first reading.

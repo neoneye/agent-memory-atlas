@@ -295,3 +295,7 @@ model, then atomically accept or reject the proposal.
 - `tests/test_retriever.py`: Chroma and persistence tests.
 - `tests/test_utils.py`: unused mock LLM controller.
 - `README.md`: architecture and external paper-reproduction link.
+
+## History
+
+**2026-07-27** — [`ceffb860f0712bbae97b184d440df62bc910ca8d`](https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d) — first reading.

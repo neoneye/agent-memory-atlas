@@ -280,3 +280,7 @@ incompatible forms.
   `packages/core/src/session/sql.ts` (`SessionTable`, `MessageTable`,
   `PartTable`, `TodoTable`).
 - Skills: `packages/opencode/src/skill/discovery.ts`.
+
+## History
+
+**2026-07-28** — [`3cc70160deb0eda7f67fbf5b0c0780000f5c342d`](https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d) — first reading.

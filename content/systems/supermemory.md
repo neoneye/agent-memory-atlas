@@ -292,3 +292,7 @@ Study Supermemory for product/API surface design and memory graph UX more than f
 - Prompt injection: `supermemory/packages/tools/src/shared/context.ts`.
 - Client helper: `supermemory/packages/tools/src/shared/memory-client.ts`.
 - Graph UI: `supermemory/packages/memory-graph/src/`.
+
+## History
+
+**2026-07-26** — [`603d0512fd40e4575e2a075938c1851a898ceeb6`](https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6) — first reading.

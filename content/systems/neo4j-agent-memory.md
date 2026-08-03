@@ -337,3 +337,7 @@ putting the old value back.
   `extraction/pipeline.py`.
 - Surfaces: `mcp/_tools.py`, `cli/main.py`, `integrations/strands/tools.py`.
 - Evaluation: `memory/eval.py`, `benchmarks/runner.py`, `benchmarks/metrics.py`.
+
+## History
+
+**2026-07-28** — [`b017db4449d592a982944986c2e3c18652bb36ad`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad) — first reading.

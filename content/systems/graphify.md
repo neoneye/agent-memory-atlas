@@ -565,3 +565,7 @@ yet had to answer what happens when two people disagree.
 `graphify/always_on/*.md`.
 
 **Tests** — `tests/test_reflect.py` (58 tests, 958 lines).
+
+## History
+
+**2026-07-31** — [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4) — first reading.

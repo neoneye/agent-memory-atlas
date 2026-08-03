@@ -478,3 +478,7 @@ available anywhere else in this atlas.
 - `deps/db-sync/test/logseq/db_sync/worker_handler_sync_test.cljs`
 - `deps/db-sync/test/logseq/db_sync/checksum_test.cljs`
 - `scripts/test/logseq/tasks/db_graph/create_graph_with_clojure_irc_history_test.cljs`
+
+## History
+
+**2026-07-29** — [`9a11243d50b23afeb10bda5a2ca6cc77357eea38`](https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38) — first reading.

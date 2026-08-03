@@ -331,3 +331,7 @@ decide whether to trust it.
 - `cognee/modules/cognify/recovery.py`: stale-run recovery.
 - `cognee/api/v1/forget/forget.py`: deletion lifecycle.
 - `cognee/eval_framework/beam/REPORT.md`: committed BEAM evaluation.
+
+## History
+
+**2026-07-27** — [`325acf356a81545b9892f19ab1ea7b61c51a776b`](https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b) — first reading.

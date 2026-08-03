@@ -306,3 +306,7 @@ you seeing a memory and cannot record that one was wrong.
 | `src/security/classification.ts` | — | public / normal / sensitive / secret |
 | `src/tools/builtin/memory_search.ts` | — | Tier filter, supervisor and human gates |
 | `.github/workflows/memory-bench.yml` | — | Weekly, sampled, 90-day artifacts |
+
+## History
+
+**2026-07-30** — [`0c446572ddaad588164af939f2e093441b06921f`](https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f) — first reading.

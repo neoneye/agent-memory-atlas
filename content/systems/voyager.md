@@ -296,3 +296,7 @@ Do not copy:
 - Task proposal: `voyager/agents/curriculum.py`.
 - Base functions: `voyager/control_primitives/`, `voyager/control_primitives_context/`.
 - Prompts: `voyager/prompts/`.
+
+## History
+
+**2026-07-27** — [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89) — first reading.

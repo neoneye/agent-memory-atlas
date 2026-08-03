@@ -293,3 +293,7 @@ Do not copy:
 - Skills as procedural memory: `tools/skill_manager_tool.py`, `tools/skill_provenance.py`, `tools/skill_usage.py`, `agent/skill_*.py`.
 - Provider adapters: `plugins/memory/{holographic,honcho,mem0,hindsight,supermemory,openviking,byterover,retaindb}/`.
 - Tests: `tests/tools/test_memory_tool*.py`, `tests/tools/test_write_approval.py`, `tests/agent/test_memory_provider.py`.
+
+## History
+
+**2026-07-27** — [`0fa5e41c86f022bba147797849f0b44865721476`](https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476) — first reading.

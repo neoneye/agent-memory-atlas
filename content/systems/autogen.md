@@ -376,3 +376,7 @@ framework guarantees.
 
 - `python/packages/autogen-core/tests/test_memory.py`
 - `python/packages/autogen-ext/tests/memory/`
+
+## History
+
+**2026-07-29** — [`027ecf0a379bcc1d09956d46d12d44a3ad9cee14`](https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14) — first reading.

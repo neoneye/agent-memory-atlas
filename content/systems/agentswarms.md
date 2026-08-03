@@ -533,3 +533,7 @@ the awaited post-turn block on the way out).
 **Retention** — `src/utils/chatRetention.server.ts`.
 
 **Licence** — `LICENSE` (Elastic License 2.0).
+
+## History
+
+**2026-07-31** — [`cfde9169ede6128f3cf149e0b3748859e1a2f4e4`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4) — first reading.

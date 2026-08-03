@@ -264,3 +264,36 @@ Include a compact index of the most important files inspected, grouped by concer
 - Background workers.
 - MCP/API/SDK.
 - Tests/evals.
+
+## History
+
+One dated entry per reading, newest first, and the only place a re-review is
+narrated:
+
+```text
+**2026-08-03** — [`<full 40-char sha>`](<commit url>) — 41 commits on. The
+mechanism did not move and no mark changed. One published claim was stale: …
+```
+
+The section exists because the alternative kept happening. Re-review narration
+was written into whatever paragraph it contradicted — "this report previously
+said", "at the commit this report first covered" — and into two lists in
+`content/overview.md` that had nothing to do with one another, so a reader
+asking *what changed since I last looked* had to reconstruct it from prose in
+two files.
+
+Two rules follow from that, and they pull in opposite directions on purpose:
+
+- **The body is the state; History is the log.** A sentence that would have to
+  change when the *atlas* changes rather than when the *system* changes belongs
+  here and nowhere else. Correct the body in place; do not append a correction
+  beside the old text and do not narrate the correction in the body.
+- **History is per-system.** What a reading taught the *method* — that criticisms
+  are the claims most likely to go stale, that an orphaned pin is not a stale one
+  — is not about the system and belongs in the History section of
+  `content/overview.md` instead.
+
+`scripts/check_history.py` asserts that the newest entry's date equals
+`analyzed_at`, and that entries run newest-first. It does not read the prose: that
+an entry exists and is dated to the current pin is checkable, and what it says is
+a judgement.

@@ -328,3 +328,7 @@ yourself.
 `manager.integration.test.ts`.
 
 **Licence** — `LICENSE` (Elastic License 2.0).
+
+## History
+
+**2026-07-31** — [`4108a9c730425f43602bce6c8720e2fe44b4b9d5`](https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2fe44b4b9d5) — first reading.

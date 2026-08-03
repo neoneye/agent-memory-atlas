@@ -338,3 +338,7 @@ Do not copy:
 - Provider contract: `agent/memory_provider.py`.
 - Sibling provider adapters: `plugins/memory/{byterover,hindsight,honcho,mem0,openviking,retaindb,supermemory}/`.
 - Tests: `tests/plugins/memory/test_holographic_*.py`, `tests/agent/test_memory_provider.py`.
+
+## History
+
+**2026-07-27** — [`0fa5e41c86f022bba147797849f0b44865721476`](https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476) — first reading.

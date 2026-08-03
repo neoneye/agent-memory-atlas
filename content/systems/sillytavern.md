@@ -422,3 +422,7 @@ mostly express as tuning constants, if at all.
 - `public/scripts/extensions/memory/index.js` — `1_memory`, summary sources,
   `formatMemoryValue`, debounced `saveChat`
 - `public/scripts/extensions/memory/settings.html`
+
+## History
+
+**2026-07-29** — [`8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8`](https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8) — first reading.

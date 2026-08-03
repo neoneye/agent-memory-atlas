@@ -237,3 +237,7 @@ deleted, or anything a second person should see.
 | `web/js-tests/unit-tests/memory-system-prompt-test.js` | 134 | What the model is told |
 | `web/extensions/juggler-core/context-items/memory/memory-format.js` | 135 | Formatting and re-tidying |
 | `web/js-tests/unit-tests/memory-seed-test.js` | 114 | Seeding |
+
+## History
+
+**2026-07-30** — [`bf81e61087a6e6af24e5ffd225d66c74135a4faa`](https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa) — first reading.

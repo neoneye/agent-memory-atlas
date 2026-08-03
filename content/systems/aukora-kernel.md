@@ -470,3 +470,7 @@ whose recall is already good.
 
 - `tests/aumlokMemory.test.ts` — authority and the read-denial suite
 - `tests/nodeImportMemory.test.ts`, `tests/aumlokPrivacy.test.ts`
+
+## History
+
+**2026-07-29** — [`b441edc4d17de778d30ae955f46408edae39bffe`](https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe) — first reading.

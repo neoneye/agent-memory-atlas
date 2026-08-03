@@ -298,3 +298,7 @@ a different system beside this one.
 | `tests/memory/test_memory.py` | 1,284 | Tool behaviour, injection bounds, the negative assertions |
 | `tests/memory/test_stores.py` | 1,214 | Store conformance, CAS, replay, recovery |
 | `docs/memory.md` | 248 | The notebook model, injection modes, limits |
+
+## History
+
+**2026-07-30** — [`39ee7e08101c54b1ddf9c1e3a7f603f09ae34555`](https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555) — first reading.

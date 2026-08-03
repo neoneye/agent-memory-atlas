@@ -363,3 +363,7 @@ Do not copy:
   `invariant.go`, `split.go`, `move.go`, `validate.go`.
 - Drift detection: `internal/drift/`.
 - History: `internal/journal/`.
+
+## History
+
+**2026-07-28** — [`ce5a832885d66ba3608e02d2db85e5e90a455559`](https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559) — first reading.

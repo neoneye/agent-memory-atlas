@@ -441,3 +441,7 @@ The storage/search modules can be reimplemented cleanly, but the full experience
 - `test/e2e/lifecycle.e2e.test.mjs`
 - `test/e2e/federation-*.e2e.test.mjs`
 - `PERFORMANCE.md`
+
+## History
+
+**2026-07-26** — [`b7cc76a493573baac133969b324a874990556146`](https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146) — first reading.

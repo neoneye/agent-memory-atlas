@@ -322,3 +322,7 @@ Avoid copying if your target is consumer chat personalization or multi-tenant ho
 - HTTP server: `engram/internal/server/server.go`.
 - Sync: `engram/internal/sync/`, `engram/internal/cloud/`.
 - Tests: `engram/internal/**/*_test.go`.
+
+## History
+
+**2026-07-26** — [`44faeee1fb4fabdee4ba9619df55af485f3d06eb`](https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb) — first reading.

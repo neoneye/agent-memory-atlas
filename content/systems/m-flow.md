@@ -349,3 +349,7 @@ well defined and the repository does not run it.
 | `m_flow/memory/episodic/` | Episodic capture and state |
 | `mflow_workers/` | Queued node writes and the saving worker |
 | `m_flow-mcp/`, `m_flow-frontend/`, `openclaw-skill/` | Interfaces |
+
+## History
+
+**2026-08-02** — [`da2766c5ebf45ff10440b419465c8ec0df674022`](https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022) — first reading.

@@ -393,3 +393,7 @@ most of the field.
 | `ace/core/insight_source.py` | Provenance records attached to skills |
 | `ace/integrations/mcp/` | MCP handlers exposing skills and counters |
 | `benchmarks/`, `test_sm_tau_retail.py` | Harness, loaders and live scripts; no committed results |
+
+## History
+
+**2026-08-02** — [`96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a`](https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a) — first reading.

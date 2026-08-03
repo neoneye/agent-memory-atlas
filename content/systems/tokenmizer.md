@@ -292,3 +292,7 @@ session history.
 | `tests/memory_accuracy/test_retention.py` | — | Ground-truth recall thresholds |
 | `tests/unit/test_contested_decisions.py` | — | Eight cases on the ambiguity rule |
 | `tests/chaos/test_recovery.py` | — | Storage corruption |
+
+## History
+
+**2026-07-30** — [`ed7860e626ccc5c67fdf28c5cd12532ba337aeee`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf28c5cd12532ba337aeee) — first reading.

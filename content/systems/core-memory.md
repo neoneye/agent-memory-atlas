@@ -465,3 +465,7 @@ Do not copy:
   `core_memory/graph/`.
 - Benchmarks: `benchmarks/locomo/`, `benchmarks/longmemeval/`,
   `benchmarks/causal_continuity/`, `eval/kpi_set.json`.
+
+## History
+
+**2026-07-28** — [`dfe306cda3505389904435132599153596417de2`](https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda3505389904435132599153596417de2) — first reading.

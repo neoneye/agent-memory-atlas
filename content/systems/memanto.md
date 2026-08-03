@@ -361,3 +361,7 @@ This lifecycle is generalized as [resolve, don't just detect](../../patterns/res
 - UI: `memanto/app/ui/routes/ui_router.py`.
 - Configuration and backend: `memanto/app/config.py` (`MOORCHEH_API_KEY`,
   `MOORCHEH_ONPREM_URL`).
+
+## History
+
+**2026-07-28** — [`d1902419321352f0108c499bd8ed4ebd129fe138`](https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138) — first reading.

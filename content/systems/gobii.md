@@ -329,3 +329,7 @@ again once an agent has filed it under a name only it chose.
 | `api/agent/tools/json_goldilocks.py` | 1,166 | Fitting results into a prompt |
 | `console/agent_chat/plan_events.py` | — | The kanban activity feed |
 | `tests/unit/test_sqlite_*.py` | 381 tests | Schema prompt, recovery, batch, coordination |
+
+## History
+
+**2026-07-30** — [`26844673ac9f134e2ad3851a12dd26762d94c3a9`](https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9) — first reading.

@@ -385,3 +385,7 @@ a memory you can always trust to be what was written, and can never repair.
 - Tests: `test.py`.
 - Store layout: `~/.optmem/memory/{LOG.txt,TREE/,config}`, relocatable with
   `$MEMORY_DIR`.
+
+## History
+
+**2026-07-28** — [`e36da55815951d50d103d7242d92cf9a71ceee96`](https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96) — first reading.

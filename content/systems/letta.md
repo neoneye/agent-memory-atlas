@@ -311,3 +311,7 @@ Letta is worth studying if you are building a full agent runtime. It is heavier 
 - Conversation search: `letta/letta/services/message_manager.py`.
 - Git memory: `letta/letta/services/memory_repo/`.
 - Tests: `letta/tests/`.
+
+## History
+
+**2026-07-26** — [`6d8cb7fd48938b629aad5770faa051a8d42e1e9f`](https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f) — first reading.

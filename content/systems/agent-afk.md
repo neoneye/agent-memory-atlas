@@ -279,3 +279,7 @@ two of them share a database.
 | `src/agent/memory/memory-evidence-gate.test.ts` | 333 | Twelve cases: categories and the four supersede outcomes |
 | `src/agent/memory/memory-tool-renderers.test.ts` | 157 | Where `[unverified]` is applied |
 | `src/agent/memory/types.ts` | 122 | The types |
+
+## History
+
+**2026-07-30** — [`e3d15fe2389602c2761954baadd495d8ebe7a6a2`](https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2) — first reading.

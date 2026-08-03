@@ -468,3 +468,7 @@ retention model that is the main reason to choose this.
 
 **Tests/benchmarks** — `tests/unit/test_oceanbase_graph.py`,
 `tests/unit/test_sqlite_fts.py`, `benchmark/locomo/`, `benchmark/server/main.py`
+
+## History
+
+**2026-07-29** — [`9d1b48449345b1ec7af1144aa1b81bb776478851`](https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851) — first reading.

@@ -379,3 +379,7 @@ stick, and the change is one `SELECT`.
 | `src/memledger/policy.py`, `memory.policy.yaml` | The hashed policy and its expressions |
 | `src/memledger/triage.py` | The candidate path into `quarantined` |
 | `evals/`, `tests/` | LoCoMo and regression runners, 37 test functions |
+
+## History
+
+**2026-07-31** — [`27f67e436ec0910e50c4b1c41cdf96f7afb6b341`](https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341) — first reading.

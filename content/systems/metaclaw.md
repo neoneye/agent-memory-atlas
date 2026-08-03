@@ -295,3 +295,7 @@ Do not copy:
 - Scope, metrics, telemetry: `scope.py`, `metrics.py`, `telemetry.py`.
 - OpenClaw plugin: `openclaw-metaclaw-memory/OPENCLAW_PLUGIN_SPEC.md` and `sidecar/metaclaw/memory/manager.py`.
 - Benchmarks and ablations: `benchmark/data/metaclaw-bench*/`, `scripts/run_memory_ablation*.py`, `scripts/run_v03_benchmark*.py`.
+
+## History
+
+**2026-07-27** — [`922caf3a1cd093fb316e95183a8acc8aa47b3b21`](https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21) — first reading.

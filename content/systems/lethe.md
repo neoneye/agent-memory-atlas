@@ -299,3 +299,7 @@ vector index.
 | `lethe/receipt.py` | 231 | Merkle root, Ed25519 sign and verify |
 | `lethe/schema.sql` | — | The depth axis, three synced indexes, the event log |
 | `recipes/` | — | OTP TTL, GDPR purge receipt, belief revision, time travel |
+
+## History
+
+**2026-07-30** — [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495) — first reading.

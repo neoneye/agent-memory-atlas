@@ -226,3 +226,7 @@ Do not choose it merely because Markdown feels simple. Bidirectional sync is not
 - `src/basic_memory/indexing/`
 - `tests/`
 - `test-int/`
+
+## History
+
+**2026-07-26** — [`232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b`](https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b) — first reading.

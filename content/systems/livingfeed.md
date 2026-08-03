@@ -281,3 +281,7 @@ the code is legible, the *reasons* are in the comments.
 | `engine/actor/src/lf_actor/memory.py` | 44 | Redis working memory |
 | `packages/schemas/events/actor.memory.consolidated.schema.json` | — | The unit and its rules |
 | `engine/**/tests` | 429 tests | Memory, semantic, phases, integration |
+
+## History
+
+**2026-07-30** — [`9bdd464d570a493ba9125636f4cf01b6cff78bae`](https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae) — first reading.

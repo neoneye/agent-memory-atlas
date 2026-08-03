@@ -272,3 +272,7 @@ Do not copy:
 - Configuration defaults (`damping`, `passage_node_weight`, `synonymy_edge_sim_threshold`, `linking_top_k`): `src/hipporag/utils/config_utils.py`.
 - Benchmark reproduction: `reproduce/`.
 - Tests: `tests/test_bedrock_mantle.py`, `tests/integration/`.
+
+## History
+
+**2026-07-27** — [`e37fba2af1a951ac340d837a7c02efb9d8c9544a`](https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a) — first reading.

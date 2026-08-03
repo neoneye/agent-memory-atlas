@@ -436,3 +436,7 @@ reach `POST /memory/optimize` before someone finds the button.
 | `libs/agno/agno/memory/strategies/summarize.py` | 196 | All memories into one |
 | `libs/agno/agno/learn/curate.py` | 185 | `prune`, `deduplicate` — user profile only |
 | `libs/agno/agno/learn/stores/protocol.py` | 127 | The six-method `LearningStore` Protocol |
+
+## History
+
+**2026-07-30** — [`7c68873c1357321a5152397c8ab4fb8b3f587bba`](https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba) — first reading.

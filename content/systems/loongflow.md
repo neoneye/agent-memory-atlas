@@ -243,3 +243,7 @@ Do not copy:
 - Backends: `evolution/in_memory.py`, `evolution/redis_memory.py`, `evolution/memory_factory.py`.
 - Graded tiers: `grade/memory.py` (`GradeMemory`), `grade/components.py`, `grade/compressor/`, `grade/storage/`.
 - Tests: `tests/agentsdk/memory`.
+
+## History
+
+**2026-07-27** — [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7) — first reading.

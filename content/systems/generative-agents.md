@@ -257,3 +257,7 @@ Do not copy:
 - Reflection: `persona/cognitive_modules/reflect.py` — `reflection_trigger()`, `run_reflect()`, `generate_poig_score()`.
 - Planning: `persona/cognitive_modules/plan.py`.
 - Prompts, including poignancy scoring: `persona/prompt_template/run_gpt_prompt.py`.
+
+## History
+
+**2026-07-27** — [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4) — first reading.

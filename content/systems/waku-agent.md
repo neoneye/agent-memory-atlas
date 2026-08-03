@@ -229,3 +229,7 @@ Do not copy:
 - Episodic: `waku/memory/episodic/store.py`, `notion_store.py`.
 - Procedural: `waku/memory/procedural/loader.py`, `installer.py`.
 - Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`.
+
+## History
+
+**2026-07-27** — [`5f638cfb5de957c14f056027833d8a9df5bbe558`](https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558) — first reading.

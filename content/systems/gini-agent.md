@@ -248,3 +248,7 @@ Do not copy:
 - CLI: `packages/runtime/src/cli/commands/memory.ts`.
 - Decisions: `docs/adr/agent-memory-isolation.md`, `docs/adr/agents-replace-profiles.md`, `docs/adr/prompt-cache-in-memory-tier.md`, `docs/adr/stable-system-prefix.md`, `docs/memory.md`.
 - Tests: `packages/runtime/src/memory/*.test.ts`, `integration.test.ts`.
+
+## History
+
+**2026-07-27** — [`6c5d85ed0ecd7fe8567124bd4890b16c329970d8`](https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8) — first reading.

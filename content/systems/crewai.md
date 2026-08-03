@@ -308,3 +308,7 @@ execute.
 | `memory/storage/kickoff_task_outputs_storage.py` | 222 | SQLite task-output store |
 | `events/types/memory_events.py` | 103 | Ten bus events; not an audit log |
 | `lib/crewai/tests/memory/` | 147 tests | 63 of them on root scoping |
+
+## History
+
+**2026-07-30** — [`ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2`](https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2) — first reading.

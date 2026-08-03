@@ -252,3 +252,7 @@ Do not use it multi-tenant without adding a filter yourself, and do not use
 | `camel/memories/context_creators/score_based.py` | 169 | Chronological ordering; the name is vestigial |
 | `camel/memories/blocks/vectordb_block.py` | 111 | Embed, write, and the unfiltered query |
 | `test/memories/` | 868 | Round-trips, windowing, the `NotImplementedError` paths |
+
+## History
+
+**2026-07-30** — [`ec48f997f3c2a700ae5a4cf0280792838fea81f8`](https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8) — first reading.

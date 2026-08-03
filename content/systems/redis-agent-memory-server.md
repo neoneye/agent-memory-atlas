@@ -281,3 +281,7 @@ Do not copy:
 - Scope and auth: `V0/agent_memory_server/filters.py`, `auth.py`.
 - Background work and migrations: `V0/agent_memory_server/docket_tasks.py`, `tasks.py`, `migrations.py`.
 - Tests: `V0/tests/test_forgetting.py`, `test_extraction*.py`, `test_working_memory_*.py`, `test_contextual_grounding*.py`, `V0/tests/integration/`.
+
+## History
+
+**2026-07-27** — [`886437963dc02289e828872f0ae21fdaa734c337`](https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337) — first reading.

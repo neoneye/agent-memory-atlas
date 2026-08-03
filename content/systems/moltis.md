@@ -222,3 +222,7 @@ Do not copy:
 - Contract tests: `contract.rs`.
 - Scheduled memory work: `crates/cron/src/store_memory.rs`.
 - Plans: `plans/postgres-pgvector-memory-backend.md`, `plans/core-memory-lifecycle-unification.md`.
+
+## History
+
+**2026-07-27** — [`1f53cd27b1a21c36b61ceda7a8ea65a35deb7872`](https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872) — first reading.

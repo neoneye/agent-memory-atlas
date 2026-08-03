@@ -210,3 +210,7 @@ For ordinary agent memory, choose and validate one text implementation first. Do
 - `src/memos/mem_reader/`
 - `src/memos/api/`
 - `tests/`
+
+## History
+
+**2026-07-26** — [`3fd109e7cbaba291af2253f107e0a595dbf62b00`](https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00) — first reading.

@@ -445,3 +445,7 @@ methods it is missing.
 - `tests/unittests/memory/test_vertex_ai_memory_bank_service.py`
 - `tests/unittests/memory/test_vertex_ai_rag_memory_service.py`
 - `tests/unittests/tools/test_load_memory_tool.py`
+
+## History
+
+**2026-07-29** — [`6bab08fc803d26853417c4d6e71704b1a72e035e`](https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e) — first reading.

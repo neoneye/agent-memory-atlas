@@ -492,3 +492,7 @@ it decides to write, or the store stays empty.
 - `crates/buzz-conformance/` — `checker.rs`, `transitions.rs`,
   `proptest_checker.rs`, `replay_fixtures.rs`, `TRACE_SCHEMA.md`, `LIMITS.md`
 - `desktop/src/features/agent-memory/lib/buildMemoryGraph.test.mjs`
+
+## History
+
+**2026-07-29** — [`24d90d1280a9325c6cbcf8eea30ac54db5afd2cb`](https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb) — first reading.

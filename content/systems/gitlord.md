@@ -242,3 +242,7 @@ for a system that does.
 | `gitlord/cli.py` | 243 | CLI |
 | `gitlord/rag.py` | 234 | Retrieval |
 | `tests/` | 233 tests | Sessions, RAG |
+
+## History
+
+**2026-07-30** — [`42b0bab151777c1ee38ced7ab2805b0699e7a8a1`](https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1) — first reading.

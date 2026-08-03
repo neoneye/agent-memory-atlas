@@ -364,3 +364,7 @@ expect to open a text editor when something in it turns out to be wrong.
 - `tests/scripts/memory.test.js`, `tests/scripts/memory-mcp.test.js`
 - `tests/ci/unified-memory-surface.test.js`
 - `tests/hooks/observer-memory.test.js`
+
+## History
+
+**2026-07-29** — [`591ab5cbd3f2f65860ea91c226e410b1502c8e2e`](https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e) — first reading.

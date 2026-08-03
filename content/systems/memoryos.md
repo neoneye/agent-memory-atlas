@@ -336,3 +336,7 @@ to learn the shape from, not to build on.
   `eval/retrieval_and_answer.py`, per-tier scripts.
 - Surfaces: `memoryos-mcp/server_new.py`, `memoryos-chromadb/`,
   `memoryos-playground/`.
+
+## History
+
+**2026-07-28** — [`587ed7755c7aed179965792830ff1b5ad9a6fa92`](https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92) — first reading.

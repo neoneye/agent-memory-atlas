@@ -276,3 +276,7 @@ Read the eval scripts first; they are the most transferable part.
 - Evaluation: `backend/scripts/atlas/eval_recall.py`,
   `backend/scripts/atlas/stress_test.py`.
 - Model and index description: `ATLAS.md`.
+
+## History
+
+**2026-07-28** — [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d) — first reading.

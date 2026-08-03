@@ -235,3 +235,7 @@ Do not copy:
 - Reflection and autonomy: `reflect/autonomous.py`, `goal_mode.py`, `checklist_master.py`, `agent_team_worker.py`.
 - Domain SOPs and helpers: `memory/*.md`, `memory/*.py`.
 - Agent loop: `agent_loop.py`, `llmcore.py`.
+
+## History
+
+**2026-07-27** — [`7ffc95823b6e40ca4e10acf9fb285d923485cacc`](https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc) — first reading.

@@ -465,3 +465,7 @@ filter — three things the research systems mostly discuss.
   `test_hard_filter_drops_suppressed`
 - `tests/unit/test_group_memory_scopes.py`,
   `tests/unit/test_runtime_memory_soak.py`
+
+## History
+
+**2026-07-29** — [`6a3d4beb7425261d01eb08034139d87bec03b8b5`](https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb08034139d87bec03b8b5) — first reading.

@@ -643,3 +643,9 @@ RainBox is worth studying if you want memory to be an inspectable, governed oper
 - Telemetry: `rainbox/source/db/feedback.py`, `rainbox/source/docs/relevance-telemetry.md`.
 - Design docs: `rainbox/source/docs/memory-architecture.md`.
 - Tests: `rainbox/source/**/test_*memory*.py`, `rainbox/source/agents/test_chat_context.py`, `test_assistant_writes.py`, `test_assistant_profile.py`.
+
+## History
+
+**2026-07-26** — [`9f565bf26175bc5e09288f70ec666a4616a2323c`](https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c) — Re-pinned the same day, during the atlas's first publication.
+
+**2026-07-26** — [`0792f8a07f6ff728931e928b2bdf7460492ac011`](https://github.com/neoneye/RainBox/commit/0792f8a07f6ff728931e928b2bdf7460492ac011) — First reading.

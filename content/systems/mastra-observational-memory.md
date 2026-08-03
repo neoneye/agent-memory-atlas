@@ -209,3 +209,7 @@ Do not substitute observational summaries for an auditable long-term store when 
 - `packages/memory/src/processors/observational-memory/working-memory-extractor.ts`
 - `packages/memory/src/processors/observational-memory/__tests__/`
 - `packages/memory/integration-tests/`
+
+## History
+
+**2026-07-26** — [`40547102f655596178346ad2f883fbde735c3333`](https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333) — first reading.

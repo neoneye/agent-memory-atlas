@@ -262,3 +262,7 @@ Do not copy:
 - Distillation and layers: `src/memory/consolidator/`, `lessons/`, `procedures/`, `links/`, `reflection/`, `retrieve/`, `embeddings/`.
 - Rendering and provision: `notes-renderer.ts`, `profile-renderer.ts`, `memory-context-provider.ts`.
 - Design and evaluation: `MEMORY_FABRIC_V2.md` (§14 acceptance criteria), `MEMORY_FABRIC_V2.5.md` (implementation ledger), `eval-memory/PLAN.md`, `eval-memory/config/`.
+
+## History
+
+**2026-07-27** — [`d69332c589733e38ae7393dd81fcbc5a375d02fb`](https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb) — first reading.

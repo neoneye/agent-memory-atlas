@@ -368,3 +368,7 @@ do, which is most of the work.
 | `apps/terse-memory/terse_memory/skills/using-terse-memory/SKILL.md` | The operating procedure the agent follows |
 | `terse-py/`, `terse-mcp/` | Parser and object model; MCP exposure |
 | `apps/terse-memory/tests/` | 89 tests, run and passing |
+
+## History
+
+**2026-07-31** — [`637140a3a749f56a981cdb58d943f4fc1515c53b`](https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b) — first reading.

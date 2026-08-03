@@ -9870,19 +9870,6 @@ code.</li>
 <li>Do not copy when: you need memory within a session, semantic
 retrieval, or a shared service — none of the three is here or
 planned.</li>
-<li>Re-read 2026-08-03 at
-<code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code>, 41 commits past
-the previous pin. The mechanism did not move — the eleven-step deletion
-protocol and its three sibling tests are byte-identical, and no
-capability mark changed. One published claim was stale: item ids are
-minted at 12 hex through a <code>(12, 16, 24, 40)</code> width ladder in
-<code>policy.stamp_item_ids</code>, not at 6 hex in
-<code>store.py</code>, because the project measured a ~2.4%
-cross-session collision rate at 6 hex over ~2k texts whose consequence
-is <code>forget</code> withholding an unrelated live memory. What is new
-is not a memory mechanism but a measuring instrument: a replay A/B
-harness with a placebo arm, self-verification, and committed refutations
-including one of a shipped feature.</li>
 </ul>
 <h3 id="helm"><code>helm</code></h3>
 <ul>
@@ -10028,18 +10015,6 @@ scope key and every entry is stamped
 <code>source_agent: 'unknown'</code>), or you need memory that survives
 being wrong — decay, age-out, dedup and prune all delete without a
 record.</li>
-<li>Re-read 2026-07-31 at <a
-href="https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca"><code class="commit-id" title="6f462b8a5a5d8c33c1d624824668aff8ab67ebca">6f462b8a…</code></a>:
-the unset-identity defect this entry reported is fixed in <a
-href="https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a"><code class="commit-id" title="7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a">7af1d1cf…</code></a>,
-whose test file cites this atlas as where it was flagged. The same
-commit fixed a second defect the atlas had missed and that was blocking
-the same mechanism from the other side: <code>add_corroboration</code>,
-<code>promote_entry</code> and <code>get_entry_tier</code> used the
-singular <code>entry_type</code> filter directly as the storage key
-while entries live under plural keys, so every type-filtered call
-returned "No entry matching". One defect was visible from a grep and the
-other only from running the property.</li>
 </ul>
 <h3 id="powermem"><code>powermem</code></h3>
 <ul>
@@ -10589,16 +10564,6 @@ natively rather than through a REST client.</li>
 <li>Do not copy when: you expect epistemics the original also lacks. It
 stores LLM-extracted text as fact and offers no way to mark a memory
 doubtful; the history table is a forensic tool, not a trust model.</li>
-<li>Re-read 2026-08-03 at <a
-href="https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239"><code class="commit-id" title="4f995e08349ebb0e0453786d5aad999737ddd239">4f995e08…</code></a>,
-six commits on and roughly doubled. Nothing published went stale: the
-history table is still INSERT-only, and it has converged on Mem0's exact
-column list — <code>updated_at</code>, <code>is_deleted</code>,
-<code>actor_id</code> and <code>role</code> added by migration — so the
-two implementations now carry the same audit schema. The single
-<code>UPDATE</code> against history in the repository is a one-time
-backfill inside that migration. Added since: a Qdrant store, four
-rerankers, and the behaviour switch above.</li>
 </ul>
 <h3 id="memary"><code>memary</code></h3>
 <ul>
@@ -11004,16 +10969,6 @@ one's.</li>
 loop and tool config rather than memory, with nothing exercising the
 propose/approve/reject cycle, and nothing at all on the new CLI or its
 path resolvers.</li>
-<li>Re-read 2026-07-31, fifteen commits on: every published claim still
-holds, and the project shipped a second binary. The <code>tigrim</code>
-CLI scopes skills, persona, settings and chat history to a
-<code>.tigrimos</code> folder in the launch directory — a cleaner
-boundary than the project-id filter — and never calls
-<code>skill_synthesizer::start_cron</code>, so the mechanism this entry
-exists for does not run there. The read path also gained a filter that
-drops assistant turns starting <code>"Error: "</code> from the model's
-view of history, because models were imitating a dead provider's quota
-message verbatim.</li>
 <li>Study when: you want a self-contained agent platform that asks
 before changing what it has learned, or you want the promotion mechanism
 on its own.</li>
@@ -12797,69 +12752,6 @@ has <strong>no public source repository</strong> — a GitHub search
 returns only third-party demos consuming the SDK. It cannot be reviewed
 on this atlas's terms, which require inspectable code at a pinned
 commit, and is recorded here rather than silently omitted.</li>
-<li>Daimon was re-reviewed on 2026-07-30 at <a
-href="https://github.com/Daily-Nerd/daimon/commit/3f79a952cf8e7f96b7fbcaa322147a7236dd47d0"><code class="commit-id" title="3f79a952cf8e7f96b7fbcaa322147a7236dd47d0">3f79a952…</code></a>,
-29 commits past the previous pin, and the report was rewritten rather
-than amended. Three claims it had published were no longer true: the
-tombstone key is canonical rather than literal text, a re-assertion test
-exists, and committed negative-retrieval cases exist. The mark count
-moved from five of seven to six. Two of the three stale claims were
-<em>criticisms</em> — the report faulted the system for gaps it had
-since closed — which is the failure direction a drifting pin produces
-most often and the one least likely to be reported by a reader.</li>
-<li>Daimon was re-read again on 2026-08-03 at <a
-href="https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf"><code class="commit-id" title="3025ee3edecd1958e9e9181fe607a5b1a30309bf">3025ee3e…</code></a>,
-41 commits on, and this time the outcome was the TigrimOSR shape rather
-than the July one: the mechanism did not move, no mark changed, and the
-deletion protocol is byte-identical. <strong>One published claim was
-stale and it was a detail with a consequence</strong> — the report gave
-the item id as a 6-hex slice minted in <code>store.py</code>. It is now
-12 hex through a <code>(12, 16, 24, 40)</code> ladder in
-<code>policy.stamp_item_ids</code>, because the project computed that 6
-hex collides at ~2.4% over ~2k texts per project, cross-session
-collisions are undetectable by construction, and the consequence is
-<code>forget</code> silently withholding an unrelated live memory. The
-atlas had published the narrow width as part of praising the tombstone
-and had not noticed that the width was the tombstone's weakest link.
-This is the third re-review in a row where the stale claim was found by
-reading rather than by any signal a pin comparison could produce.</li>
-<li><strong>Three entries in the repositories-inspected list above were
-stale</strong>, found while re-pinning Daimon on 2026-08-03: Daimon,
-Verel and Swafra each carried a commit older than the one their own
-report was pinned to, because a re-review updates the report's
-frontmatter and the list is edited by hand. All three now match. The
-class of error matters more than the instances — the published list is
-the atlas's claim about what was actually read, <code>npm test</code>
-validates revision metadata inside reports but never checked it against
-this list, and nothing would have surfaced the drift except looking.
-Every stale entry was on a <em>re-reviewed</em> system, which is the
-population where the atlas's own process is the cause.</li>
-<li>TigrimOSR was re-reviewed on 2026-07-31 at <a
-href="https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4"><code class="commit-id" title="0813f2eb9f28a07e9adb6231f3de4f09803b66b4">0813f2eb…</code></a>,
-fifteen commits past the previous pin, and <strong>nothing published
-about it had gone stale</strong> — the report was extended rather than
-corrected. Worth recording because it is the opposite outcome from
-Daimon below and the more common one: a pin drifts, the mechanism does
-not move, and what changed is elsewhere. Here the elsewhere was a whole
-second binary. The new <code>tigrim</code> CLI scopes skills, persona,
-settings and chat history to a <code>.tigrimos</code> directory in the
-folder it launches in, and never starts the skill synthesizer, so the
-propose-stage-approve mechanism this atlas reports on is absent from the
-mode a new user is most likely to try. A freshness check that compares
-commit ids would have flagged this repository; only reading it says
-which of the two outcomes it was.</li>
-<li>Verel was re-reviewed on 2026-07-28 at <code>5aa050fe</code>
-(v1.9.0) after its author reported the entry was out of date. The
-previous pin was not merely old but <strong>unreachable from any
-branch</strong> — GitHub served it by SHA while a full clone did not
-contain it — so that reading described a state absent from the project's
-history. The re-read moved Verel from three of the seven rubric
-capabilities to all seven, and changed four atlas-wide counts.
-<code>scripts/check_freshness.py</code> now distinguishes an orphaned
-pin from a stale one. Its first run, on 2026-07-28, found 30 stale pins
-out of the 62 repositories the atlas held that day — a dated measurement
-rather than a live figure, and one that moves between runs, so read it
-as magnitude. The same correction is likely waiting elsewhere.</li>
 <li>Agno was read, not run, and its 304 memory-related unit tests were
 not executed. Three things a live install would settle: whether the
 supersession judge's default threshold is calibrated against anything,
@@ -13082,6 +12974,59 @@ memory surface could not be reviewed at all: twelve
 five-layer memory stack, and <code>workspace/cortex/</code> is
 gitignored and absent from the repository.</li>
 </ul>
+<h2 id="history">History</h2>
+<p>Dated changes to this atlas's own method and reading. Per-system
+reading history lives in each report's own History section; what is
+recorded here is what a reading taught the <em>method</em>, which is the
+part that does not belong to any one system.</p>
+<p><strong>2026-08-03</strong> — Three entries in the
+repositories-inspected list above were stale, found while re-pinning <a
+href="../systems/daimon/">Daimon</a>: Daimon, Verel and Swafra each
+carried a commit older than the one their own report was pinned to.
+Every one was a <strong>re-reviewed</strong> system, which is the only
+population where this project's own process is the cause — a first
+review writes the report and the list entry together, a re-review
+updates frontmatter in one file and leaves the list a hand edit in
+another. <code>npm test</code> validated revision metadata inside a
+report and never against this list, so both halves were internally
+consistent while the site made two disagreeing claims about the same
+commit. <code>scripts/check_inspected_pins.py</code> now closes it.</p>
+<p><strong>2026-08-03</strong> — Daimon's re-read was the third in a row
+where the stale claim was found by <em>reading</em> rather than by any
+signal a pin comparison could produce. The claim was a 6-hex item id the
+atlas had published while praising the tombstone that resolves against
+it, and the project had already widened it after computing its own
+collision rate.</p>
+<p><strong>2026-08-03</strong> — Deletion claims were found to stop at
+each system's own boundary. Four vector engines were read and the
+finding recorded under <a
+href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
+layer below delete</a>; the <a
+href="../methodology/atlas-rubric/">rubric</a> now names it as a limit
+of the unit of review rather than of the definitions.</p>
+<p><strong>2026-07-31</strong> — <a
+href="../systems/tigrimosr/">TigrimOSR</a> produced the opposite outcome
+from Daimon's July re-review, and the more common one: a pin drifts, the
+mechanism does not move, and what changed is elsewhere. A freshness
+check comparing commit ids would have flagged the repository; only
+reading it says which of the two outcomes it was. This is the case
+against a commits-behind badge, stated once so it need not be
+re-derived.</p>
+<p><strong>2026-07-30</strong> — Two of the three claims that had gone
+stale on <a href="../systems/daimon/">Daimon</a> were
+<em>criticisms</em> — the report faulted the system for gaps it had
+since closed. That is the failure direction a drifting pin produces most
+often and the one least likely to be reported by a reader, since nobody
+writes in to say a project is better than described.</p>
+<p><strong>2026-07-28</strong> — <a href="../systems/verel/">Verel</a>'s
+previous pin was not merely old but <strong>unreachable from any
+branch</strong>: GitHub served it by SHA while a full clone did not
+contain it, so that reading described a state absent from the project's
+history. <code>scripts/check_freshness.py</code> now distinguishes an
+orphaned pin from a stale one. Its first run, the same day, found 30
+stale pins across the 62 repositories the atlas then held — a dated
+measurement rather than a live figure, and one that moves between runs,
+so read it as magnitude.</p>
         </article>
       </div>
     </main>

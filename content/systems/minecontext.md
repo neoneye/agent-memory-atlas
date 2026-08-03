@@ -443,3 +443,7 @@ most interesting thing here and the one with the highest cost when it is wrong.
 **Examples (in place of tests)** — `examples/example_screenshot_processor.py`,
 `example_todo_deduplication.py`, `example_document_processor.py`,
 `verify_folder_monitor.py`
+
+## History
+
+**2026-07-29** — [`171c7a9ea8091e326ddcf0f10718aa1b58c83c65`](https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65) — first reading.

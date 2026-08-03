@@ -566,3 +566,7 @@ operational statistics are reported, not reproduced here.
 - Observability: `observability.py`, `monitoring.py`, `tracing_bridge.py`.
 - Skill surface: `memory_skill/`.
 - Tests: `packages/nooa-memory/tests/memory/` (23 modules).
+
+## History
+
+**2026-07-28** — [`f22805b52ea8a073dabc018cefe3db1ccf609a29`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29) — first reading.

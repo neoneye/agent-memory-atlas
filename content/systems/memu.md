@@ -350,3 +350,7 @@ honest about being exactly that.
   `sqlite/`, `postgres/`, `inmemory/`.
 - Host adapters: `src/memu/hosts/` (`claude_code`, `codex`, `cursor`,
   `openclaw`, `hermes`, `cola`, `workbuddy`, `generic`, `bridging`).
+
+## History
+
+**2026-07-28** — [`3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e`](https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e) — first reading.

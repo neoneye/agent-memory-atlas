@@ -247,3 +247,7 @@ Do not copy:
 - Backends and cloud: `memora/backends.py`, `cloud_sync.py`.
 - Ingestion: `memora/document.py`, `memora/image_storage.py`, `memora/embeddings.py`.
 - Tag hierarchy: `memora/hierarchy.py`.
+
+## History
+
+**2026-07-27** — [`bc64ff745a9b2c0e6245e0137654f041fba0c155`](https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155) — first reading.

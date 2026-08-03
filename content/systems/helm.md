@@ -1001,3 +1001,7 @@ the smoke tests cannot see is free to rot.
   2 June 2026.
 - `workspace/upgrades/QUEUE.md` — dated self-upgrade changelog with anchoring
   test numbers.
+
+## History
+
+**2026-07-30** — [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73) — first reading.

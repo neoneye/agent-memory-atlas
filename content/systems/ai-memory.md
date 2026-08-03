@@ -376,3 +376,7 @@ Do not copy:
   `docs/research-karpathy-llm-wiki.md`,
   `docs/prior-art-implementation-findings.md`.
 - Harness adapters: `hooks/` and `crates/ai-memory-hooks/`.
+
+## History
+
+**2026-07-28** — [`5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3`](https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3) — first reading.

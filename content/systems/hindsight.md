@@ -213,3 +213,7 @@ Do not copy the full architecture for a small local agent. Start with two retrie
 - `hindsight-api-slim/hindsight_api/alembic/versions/`
 - `hindsight-api-slim/hindsight_api/worker/`
 - `hindsight-api-slim/tests/`
+
+## History
+
+**2026-07-26** — [`ed120a256d51d731085ec8aca724573a7f2f1e1c`](https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c) — first reading.

@@ -430,3 +430,7 @@ For your own memory system, MemPalace is the strongest reminder that extraction 
 - Dedup/repair/sync: `mempalace/mempalace/dedup.py`, `repair.py`, `sync.py`.
 - Benchmarks: `mempalace/benchmarks/`.
 - Tests: `mempalace/tests/`.
+
+## History
+
+**2026-07-26** — [`afd0428823b47f9a9d1d68c450d54bb0045a4988`](https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988) — first reading.

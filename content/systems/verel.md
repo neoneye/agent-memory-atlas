@@ -576,3 +576,11 @@ Add consolidation/promotion/replication later.
 - Scope lattice: `src/verel/memory/lattice.py`.
 - Backends: `src/verel/memory/*_backend.py`, `hosted.py`, `replicated.py`.
 - Tests: `tests/test_memory*.py`, `tests/test_consolidation.py`, `tests/test_promotion.py`, `tests/test_lattice.py`.
+
+## History
+
+**2026-07-28** — [`df44e76c6c6a919977806feed9549bc6a892932d`](https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d) — Re-pinned. The project ships `memory/rubric.py`, which grades itself against this atlas's capabilities by running a live behavioural probe per criterion.
+
+**2026-07-28** — [`5aa050fea33ce07138ddf644a58df1f0a60b7aa7`](https://github.com/amitpatole/verel/commit/5aa050fea33ce07138ddf644a58df1f0a60b7aa7) — v1.9.0, re-reviewed after the author reported the entry was out of date. The previous pin was not merely old but **unreachable from any branch** — GitHub served it by SHA while a full clone did not contain it — so that reading described a state absent from the project's history. Marks moved from three of seven to all seven, and four atlas-wide counts changed with them.
+
+**2026-07-26** — [`df80efe8207a99585a2ebce36fc6e32ba5077e2e`](https://github.com/amitpatole/verel/commit/df80efe8207a99585a2ebce36fc6e32ba5077e2e) — First reading.

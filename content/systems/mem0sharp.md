@@ -309,3 +309,9 @@ trust model.
 | `src/Mem0Sharp/Intelligence/LlmMemoryIntelligence.cs` | 82 | Extraction and conflict orchestration |
 | `src/Mem0Sharp/Infrastructure/InMemory/InMemoryStore.cs` | 80 | Test backend |
 | `src/Mem0Sharp/Telemetry/TelemetryMemoryService.cs` | 74 | Decorator |
+
+## History
+
+**2026-08-03** — [`4f995e08349ebb0e0453786d5aad999737ddd239`](https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239) — Six commits on and roughly doubled in size. Nothing published went stale: the history table is still INSERT-only, and it has converged on Mem0's exact column list — `updated_at`, `is_deleted`, `actor_id` and `role` added by migration — so the two implementations now carry the same audit schema. The single `UPDATE` against history in the repository is a one-time backfill inside that migration. Added since: a Qdrant store and four rerankers.
+
+**2026-07-30** — [`ebf832c17f65815dfbfa65bcf376d4dc6683f057`](https://github.com/jihadkhawaja/mem0sharp/commit/ebf832c17f65815dfbfa65bcf376d4dc6683f057) — First reading.

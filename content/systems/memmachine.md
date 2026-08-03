@@ -554,3 +554,7 @@ like work before the first memory exists.
 - `packages/server/server_tests/memmachine_server/main/test_memmachine_delete_session.py`
 - `packages/server/server_tests/memmachine_server/common/vector_store/vector_search_engine/test_hnswlib_engine.py`
 - `evaluation/README.md`, `evaluation/retrieval_agent/`, `evaluation/data/locomo10.json`
+
+## History
+
+**2026-07-29** — [`a681abf9623299bba8ad931e5d9af02fb6ef0997`](https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997) — first reading.

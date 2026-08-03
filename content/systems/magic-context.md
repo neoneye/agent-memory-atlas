@@ -296,3 +296,7 @@ Do not copy:
 - Git indexing: `git-commits/`.
 - Pi adapter: `packages/pi-plugin/src/` — `context-handler.ts`, `auto-search-pi.ts`, `clone-inheritance.ts`, `fail-closed-pi.ts`, `commands/`.
 - Tests: 473 files across `packages/`, including `migrations-v*.test.ts` and the CAS-race suites; `packages/e2e-tests/`.
+
+## History
+
+**2026-07-27** — [`113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09`](https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09) — first reading.

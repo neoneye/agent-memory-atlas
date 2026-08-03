@@ -362,3 +362,7 @@ and it is a bet: everything gets simpler except sharing.
 - Enrichment: `src/memvid/enrichment.rs`, `src/enrichment_worker.rs`.
 - Diagnostics: `src/memvid/doctor.rs`, `maintenance.rs`.
 - Access and audit: `src/memvid/acl.rs`, `src/memvid/audit.rs`.
+
+## History
+
+**2026-07-28** — [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813) — first reading.

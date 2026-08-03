@@ -582,3 +582,9 @@ resolvers `skills_root`, `resolve_data_file`, `resolve_config_file`,
 **Security** — `src/security/sandbox.rs`, `src/security/file_access.rs`
 
 **UI review surface** — `src/ui/skills_view.rs`, `src/ui/settings.rs`
+
+## History
+
+**2026-07-31** — [`0813f2eb9f28a07e9adb6231f3de4f09803b66b4`](https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4) — Fifteen commits on, and **nothing published had gone stale** — the report was extended rather than corrected. What changed was elsewhere: a second binary. The `tigrim` CLI scopes skills, persona, settings and chat history to a `.tigrimos` directory in the folder it launches in, and never starts the skill synthesizer, so the propose-stage-approve mechanism this report exists for is absent from the mode a new user is most likely to try.
+
+**2026-07-29** — [`92e8867b63acfb8592d6ae3067ba3192ac49370d`](https://github.com/Sompote/TigrimOSR/commit/92e8867b63acfb8592d6ae3067ba3192ac49370d) — First reading.

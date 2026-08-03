@@ -342,3 +342,7 @@ the original one.
 | `backend/app/gateway/routers/memory.py` | HTTP surface, user resolution, per-fact hooks |
 | `frontend/.../memory-settings-page.tsx` | Where a person reads and edits their facts |
 | `backend/tests/test_memory_prompt_injection.py` | A test name almost nothing else here has |
+
+## History
+
+**2026-08-02** — [`5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504`](https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504) — first reading.

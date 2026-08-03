@@ -470,3 +470,7 @@ YAML prompts
 **Tests/benchmarks** — `tests/integration/test_auto_dream.py`,
 `test_auto_memory.py`, `test_reme_e2e.py`, `benchmark/result-longmemeval.md`,
 `benchmark/result-beam.md`, `reme/steps/benchmark/{lme,beam}/`
+
+## History
+
+**2026-07-29** — [`550317c3bfb755d985a0401194827eaa9676a5bc`](https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc) — first reading.

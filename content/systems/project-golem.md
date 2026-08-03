@@ -363,3 +363,7 @@ reset, and a key. Fix those three and the file is still under fifty lines.
 `src/core/ConversationManager.js`.
 
 **Licence** — `LICENSE` (Project Golem Source-Available Non-Commercial License).
+
+## History
+
+**2026-07-31** — [`210658a11bee669df875cc6edc0511fac239d1ba`](https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba) — first reading.

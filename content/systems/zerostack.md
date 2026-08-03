@@ -245,3 +245,7 @@ one overwritable `.bak`.
 | `src/tests/memory_tests.rs` | 1,203 | 65 test functions |
 | `src/ui/slash/memory.rs` | — | The `/memory` command |
 | `src/agent/tools.rs` | — | `check_perm`, shared with every tool |
+
+## History
+
+**2026-07-30** — [`90986c5c55631e0a372694e77fa69880ba39b31b`](https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b) — first reading.

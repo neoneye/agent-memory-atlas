@@ -323,3 +323,7 @@ Avoid if your goal is a small local memory layer. Honcho is closer to memory inf
 - Dialectic chat: `honcho/src/dialectic/`.
 - Reconciler: `honcho/src/reconciler/`.
 - Tests/evals: `honcho/tests/`.
+
+## History
+
+**2026-07-26** — [`eb386c3ceb77774b29108f9ab114e71d52b7d420`](https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420) — first reading.

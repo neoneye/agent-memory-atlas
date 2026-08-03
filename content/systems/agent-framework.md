@@ -290,3 +290,7 @@ that wants to.
 | `python/packages/core/agent_framework/_sessions.py` | — | `ContextProvider`, `AgentSession`, state registration |
 | `python/packages/core/tests/core/test_harness_memory.py` | 877 | State, parsing, consolidation, the traversal boundary |
 | `python/packages/core/tests/core/test_harness_file_memory.py` | 480 | File tools, traversal reported as tool messages |
+
+## History
+
+**2026-07-30** — [`28389df805b97f846ca21d857e291602a7adc0a4`](https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4) — first reading.

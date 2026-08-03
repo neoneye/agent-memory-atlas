@@ -308,3 +308,7 @@ model grades where a memory came from rather than whether it holds.
 | `src/core/veracity-consolidation.ts` | — | Provenance weights and fact triples |
 | `src/core/typed-memory.ts` | — | Fourteen types, nine priority classes |
 | `test/` and agent tests | 420 cases | Precision regressions, concurrency, voices |
+
+## History
+
+**2026-07-30** — [`4df68d60438423b384b2b47fb3d6835641624757`](https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835641624757) — first reading.

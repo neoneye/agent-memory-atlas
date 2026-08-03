@@ -40,10 +40,18 @@ assigned anywhere in the repository" — or process narration, which is not. If 
 sentence would have to change when the atlas changes rather than when the system
 changes, it is the second kind.
 
-The one place a re-review *is* recorded is the known-limitations list near the
-end of `content/overview.md`, and a one-line `- Re-read <date> at <full sha>: …`
-bullet on the system's verdict in section 9. Those are the log. The report body
-is the state.
+The one place a re-review *is* recorded is the **`## History` section at the
+bottom of the report** — one dated entry per reading, newest first, carrying the
+full 40-character sha. That is the log. The report body is the state, and
+`scripts/check_history.py` fails the build if the newest entry's date is not the
+report's `analyzed_at`, so a re-pin cannot ship without one.
+
+What a reading taught the *method* rather than the system — that criticisms are
+the claims most likely to go stale, that an orphaned pin is not a stale one, that
+a hand-maintained list drifts where the process touches it — goes in the
+`## History` section at the bottom of `content/overview.md`. Nothing dated goes
+in the verdicts in section 9 or in the known-limitations list; those hold the
+system's verdict and the atlas's standing limits, neither of which is an event.
 
 ## Establish what moved
 
@@ -74,10 +82,11 @@ different work.
 
 **Nothing moved.** The mechanism is unchanged and no published claim is stale.
 Re-pin `revision`, `revision_url` and `analyzed_at`, update the commit in
-`content/overview.md`'s repositories-inspected list, and say so plainly in the
-known-limitations bullet. This is a real result and worth recording — it is the
-common case, and it is the one a commit-id comparison cannot distinguish from
-the others.
+`content/overview.md`'s repositories-inspected list, and say so plainly in a new
+History entry. This is a real result and worth recording — it is the common case,
+and it is the one a commit-id comparison cannot distinguish from the others.
+"Nothing moved" is still a reading, so it still gets an entry; the check requires
+one whatever the outcome was.
 
 **A published claim went stale.** The report asserts something that is no longer
 true at the new commit. Correct the body — do not append a correction beside the
@@ -95,11 +104,17 @@ belongs and leave the rest alone.
 
 - `revision`, `revision_url`, `analyzed_at` in the report frontmatter.
 - Any `matrix:` value the change touches, and `capabilities:` if a mark moved.
-- The system's verdict in `content/overview.md` section 9, including its
-  `- Re-read <date> at <full 40-char sha>: …` line.
-- The commit link in the repositories-inspected list in the appendix.
-- A bullet in the known-limitations list when a published claim was wrong,
-  saying what was wrong and in which direction.
+- A new entry at the top of the report's `## History`, dated to `analyzed_at`,
+  with the full 40-char sha and what changed — including, when a published claim
+  was wrong, what was wrong and in which direction.
+- The system's verdict in `content/overview.md` section 9, if the verdict itself
+  changed. It carries no dated line.
+- The commit link in the repositories-inspected list in the appendix. This is a
+  separate hand edit from the frontmatter and it is the one that gets forgotten —
+  three entries had drifted before `scripts/check_inspected_pins.py` existed, all
+  three on re-reviewed systems.
+- An entry in `content/overview.md`'s `## History` **only** when the re-read
+  taught something about the method rather than about the system.
 - The homepage card in `site/index.html` when the headline finding changed, and
   its `data-search` terms when new mechanism names appeared.
 - Pattern pages citing this system as evidence, when the evidence changed.
@@ -180,5 +195,6 @@ npm test
 ```
 
 `npm test` will catch a matrix out of sync, a stale count, an abbreviated commit
-link, and a missing Mermaid diagram. It will not catch a line number that moved
-or a claim that is no longer true.
+link, a missing Mermaid diagram, a missing or misdated History entry, and an
+inspected-list pin that disagrees with the report. It will not catch a line number
+that moved or a claim that is no longer true.

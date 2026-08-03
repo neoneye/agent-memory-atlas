@@ -388,3 +388,7 @@ missing methods are obvious in about ninety seconds.
 **Tests**
 
 - `goodai/ltm/mem/tests/`
+
+## History
+
+**2026-07-29** — [`22ca10c21771d0192d550517cb06c3aab6e602aa`](https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa) — first reading.

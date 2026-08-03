@@ -409,3 +409,7 @@ rather than an invitation to copy the implementation.
 **Licence**
 
 - `LICENSE` (BSL 1.1), `COMMERCIAL-LICENSE.md`
+
+## History
+
+**2026-07-29** — [`128103e732465a00a2d2ab4bf7d322e32c17ad4d`](https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d) — first reading.

@@ -287,3 +287,7 @@ Do not copy:
 - Structural-loss resolution: `src/agent/core/domain/knowledge/conflict-resolver.ts`, `utils.ts`.
 - Document shapes: `src/server/core/domain/knowledge/markdown-writer.ts`.
 - Licence: `LICENSE` (Elastic License 2.0).
+
+## History
+
+**2026-07-27** — [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c) — first reading.

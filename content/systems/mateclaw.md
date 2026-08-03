@@ -239,3 +239,7 @@ Do not copy:
 - Configuration: `MemoryAutoConfiguration.java`, `MemoryProperties.java`.
 - UI and prompts: `mateclaw-ui/src/views/Memory/`, `stores/useMemoryStore.ts`, `mateclaw-server/src/main/resources/prompts/memory/`.
 - Tests: `mateclaw-server/src/test/java/vip/mate/memory/`.
+
+## History
+
+**2026-07-27** — [`3643aed7564390f57906954286a443d5913b97a7`](https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7) — first reading.

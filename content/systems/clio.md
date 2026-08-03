@@ -613,3 +613,9 @@ operations).
 
 **Documentation** — `docs/MEMORY.md` (500 lines, and accurate about everything
 except whether the promotion path can fire).
+
+## History
+
+**2026-07-31** — [`6f462b8a5a5d8c33c1d624824668aff8ab67ebca`](https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca) — The unset-identity defect this report found is fixed upstream in [`7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a`](https://github.com/SyntheticAutonomicMind/CLIO/commit/7af1d1cf8fd3ec6c5a8f5ddd39ace991d2979d6a), whose test file cites this atlas as where it was flagged. The same commit fixed a second defect this report had missed, blocking the same mechanism from the other side: `add_corroboration`, `promote_entry` and `get_entry_tier` used the singular `entry_type` filter directly as the storage key while entries live under plural keys, so every type-filtered call returned "No entry matching". One defect was visible from a grep and the other only from running the property.
+
+**2026-07-31** — [`1c84ed9cb6161304579123ce1e291d1ac4b0eb86`](https://github.com/SyntheticAutonomicMind/CLIO/commit/1c84ed9cb6161304579123ce1e291d1ac4b0eb86) — First reading.

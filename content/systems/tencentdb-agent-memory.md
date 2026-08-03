@@ -331,3 +331,7 @@ failure, and recovery.
 - `src/offload/storage.ts`: offload artifacts and registry.
 - `src/offload/reclaimer.ts`: retention cleanup.
 - `index.ts`: OpenClaw plugin registration.
+
+## History
+
+**2026-07-26** — [`45e6e80ae2e63b65fad0d89f5e13171229c8f295`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295) — first reading.

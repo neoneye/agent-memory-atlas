@@ -542,3 +542,7 @@ projects that resolve it the other way.
 | `inbox/longmemeval-bench-2026-04-27.md` | The negative benchmark result |
 | `inbox/palace_supersede-*.md` | The supersession RFC and its regression note |
 | `.github/workflows/ci.yml` | fmt, clippy across two feature sets, test, audit |
+
+## History
+
+**2026-07-31** — [`9dd7228b8a502099522a900d647c57c99f127359`](https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359) — first reading.

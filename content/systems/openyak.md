@@ -386,3 +386,7 @@ honest signal of the intended scale.
 **Tests** — `backend/tests/test_session/test_prompt_assembler.py`.
 
 **Licence** — `LICENSE` (Apache-2.0).
+
+## History
+
+**2026-07-31** — [`bd88bff824c29fc48024eb19b7435cb2c065e432`](https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432) — first reading.

@@ -327,3 +327,7 @@ This design is appropriate for product personalization and high-throughput memor
 - Entity extraction: `mem0/mem0/utils/entity_extraction.py`.
 - Vector stores: `mem0/mem0/vector_stores/`.
 - Rerankers: `mem0/mem0/reranker/`.
+
+## History
+
+**2026-07-26** — [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150) — first reading.

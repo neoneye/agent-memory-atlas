@@ -234,3 +234,7 @@ becomes the user's whole experience of the product.
 | `npcpy/memory/memory_processor.py` | 276 | Extraction queue and the review loop |
 | `npcpy/memory/search.py` | 254 | Search over the store |
 | `npcpy/memory/knowledge_index.py` | 129 | The index |
+
+## History
+
+**2026-07-30** — [`a31ba52203062f7a586a901f6870176bf3961707`](https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707) — first reading.

@@ -58,6 +58,14 @@ if ! python3 "$project_dir/scripts/check_inspected_pins.py" "$project_dir"; then
   exit 1
 fi
 
+# Re-review narration used to be written into whatever paragraph it contradicted
+# and into two unrelated lists in overview.md. It now goes in one place per
+# report. This asserts the newest History entry is the reading the report is
+# pinned to, so a re-pin cannot ship without recording one.
+if ! python3 "$project_dir/scripts/check_history.py" "$project_dir"; then
+  exit 1
+fi
+
 # --check does more than compare the generated tables: it also validates matrix
 # values, capability flags, and revision pins. Discarding its stderr and printing
 # one hardcoded message reported every one of those as a stale matrix and told
@@ -239,4 +247,4 @@ if [[ -n "$card_order" ]]; then
   exit 1
 fi
 
-echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, analyzed-on dates, and project-relative navigation."
+echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, history sections, analyzed-on dates, and project-relative navigation."

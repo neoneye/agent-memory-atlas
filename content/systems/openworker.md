@@ -295,3 +295,7 @@ schema.
 - Store: `coworker/memory/sqlite_store.py` (the `memories` table).
 - Tools: `coworker/memory/tools.py` (`remember`, `memory_update`,
   `memory_forget`).
+
+## History
+
+**2026-07-28** — [`d3863966c9de39140e7a28cffdc71ae96614774b`](https://github.com/andrewyng/openworker/commit/d3863966c9de39140e7a28cffdc71ae96614774b) — first reading.

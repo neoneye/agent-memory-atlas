@@ -546,3 +546,7 @@ pipeline and the tree — not a column.
 - `src/openhuman/memory_tree/health/mod.rs`
 - `src/openhuman/tinycortex/queue_driver.rs`
 - `src/openhuman/memory_queue/`
+
+## History
+
+**2026-07-29** — [`e213bc5fc4000e9ad599c977a560113cc018c554`](https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554) — first reading.

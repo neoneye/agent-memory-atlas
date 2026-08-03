@@ -352,3 +352,7 @@ rather than relying on the shared default.
 - `src/hooks/`: coding-agent lifecycle hooks.
 - `benchmark/LONGMEMEVAL.md`: retrieval benchmark methodology.
 - `docs/benchmarks/2026-05-20-coding-agent-life-v1.md`: small synthetic eval.
+
+## History
+
+**2026-07-26** — [`d8b5267c367a5da07ad3619363520b7f1a506c6b`](https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b) — first reading.

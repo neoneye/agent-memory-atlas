@@ -619,3 +619,7 @@ the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
 | `tests/test_audit_chain.py` | 16 tamper-evidence tests; run and passing |
 | `CLAIMS_MATRIX.md`, `CLAIMS_NOT_SUPPORTED.md` | Claims with falsifiers, and the disclaimers |
 | `HUMAN_OVERRIDE_POLICY.md`, `KNOWN_FAILURE_MODES.md` | Operator control and stated failure modes |
+
+## History
+
+**2026-07-31** — [`e8866f43c54677d3f2877820cd74cf915af6fbb7`](https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7) — first reading.

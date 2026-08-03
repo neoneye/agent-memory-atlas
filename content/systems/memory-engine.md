@@ -419,3 +419,7 @@ Do not copy:
   `queries/README.md`.
 - Search: `packages/engine/ops/memory.ts` and the space SQL functions.
 - Harness contract: `packages/cli/harness-contract.ts`, `packages/cli/failsafe.ts`.
+
+## History
+
+**2026-07-28** — [`54e4d7d201b5c7ba3aed618ea343d9f4d3f40927`](https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927) — first reading.

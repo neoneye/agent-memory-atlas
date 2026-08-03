@@ -259,3 +259,7 @@ Do not copy:
 - Evidence archive: `memory/history.jsonl`; cursors `memory/.cursor` and `memory/.dream_cursor`.
 - Memory policy: workspace `prompts/dream.md`.
 - Documentation: `docs/memory.md`, `docs/guides/ai-agent-memory.md`.
+
+## History
+
+**2026-07-27** — [`b99e0f937e828504e0f93dbe35dfd6b1540e20b2`](https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2) — first reading.

@@ -555,3 +555,7 @@ and `retrospective.md`;
 **Tests** — `packages/mcp-core/src/tools/archive-lifecycle.spec.ts`,
 `packages/mcp-core/src/edge-parity.spec.ts`, `scope.spec.ts`, `ttl.spec.ts`,
 `org-permissions.spec.ts`.
+
+## History
+
+**2026-07-31** — [`08e3065b3f77dffa8ec313c25e6b38cbab77b67f`](https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f) — first reading.

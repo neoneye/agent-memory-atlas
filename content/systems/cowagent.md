@@ -258,3 +258,7 @@ Do not copy:
 - Index rebuild: `agent/memory/rebuild_index.py`.
 - Agent tools: `agent/tools/memory/`.
 - Documentation: `docs/memory/{index,context,deep-dream,self-evolution}.mdx`.
+
+## History
+
+**2026-07-27** — [`fe88751ccb24e9b2991b6a35a2dcc538f7a38761`](https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761) — first reading.

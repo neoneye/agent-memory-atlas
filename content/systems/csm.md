@@ -811,3 +811,7 @@ have a seam where one would go.
 **Operator-facing** — `AGENTBOOK_STATE.md`, `docs/SCHEMA_SUPPORT_MATRIX.md`,
 `docs/FEATURES.md`, `SECURITY.md`, `scripts/backup-restore-drill.ts`,
 `src/doctor.ts`.
+
+## History
+
+**2026-07-30** — [`21d00969c25ca170ef40bc07e6811beb5e78c99e`](https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e) — first reading.

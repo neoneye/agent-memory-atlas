@@ -292,3 +292,7 @@ Do not copy:
 - Native backends: `src/` (C++), `crates/` (Rust), `openviking/pyagfs/`.
 - Benchmarks: `benchmark/locomo/`, `benchmark/longmemeval/`, `benchmark/tau2/`, `benchmark/skillsbench/`.
 - Tests: `tests/session/memory/`, `tests/test_memory_lifecycle.py`, `tests/integration/test_agent_memory_e2e.py`.
+
+## History
+
+**2026-07-27** — [`c67222c3d46de4874eed65af8918fc55513812ef`](https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef) — first reading.
