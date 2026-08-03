@@ -16,7 +16,7 @@ entries.
 | `Prateek816/7layermem` | 7,016 | **none** | **Candidate** — "7-layer memory framework… persistent, structured long-term memory across conversations" |
 | `RBKunnela/ALMA-memory` | 106,594 | **none** | **Candidate** — Agent Learning Memory Architecture, published to PyPI |
 | `cognicore-dev/cognicore-my-openenv` | 79,439 | present | **Candidate** — "persistent, searchable memory"; the only in-scope one that is licensed |
-| `deepractice/promptx` | 63,237 | present | **Needs one more look** — an "AI Agent Context Platform", but it ships a memory surface in the desktop app |
+| `deepractice/promptx` | 63,237 | present | **Candidate, resolved** — a SQLite engram store under `packages/core/src/cognition/`, not the desktop surface |
 | `FalkorDB/falkordb` | — | — | Out of scope: a graph database, and already in the atlas as a *backend* to [Graphiti](../content/systems/graphiti.md) and [memary](../content/systems/memary.md) |
 | `hshadab/kinic-api` | 310,328 | **none** | Out of scope: a client to a hosted service |
 | `OmniNode-ai/onex_change_control` | 86,383 | present | Out of scope: governance, drift detection and enforcement — nothing durable carries a correctable identity |
@@ -71,13 +71,23 @@ the established corpus.
    promotes between them. Licence absence stated in section 1.
 3. **`ALMA-memory`** — 106,594 lines and a PyPI release; the size means a
    capability pass before committing to a report.
-4. **`promptx`** — resolve the scope question first. A context platform is out of
-   scope; a context platform with a durable, correctable memory surface is not,
-   and the desktop app contains a `memory` directory that decides it.
+4. **`promptx` — scope question resolved, and the answer is in scope.** The
+   memory is not the `memory` directory in the desktop app, which is a view. It
+   is `packages/core/src/cognition/`: `Memory.js` opens `better-sqlite3`, the
+   network directory holds an `engrams.db`, each role carries a `network.json`
+   and an `Anchor` writes `state.json`, and `CognitionLayer` dispatches on an
+   operation type of `prime | recall | remember`. Engrams stored in SQLite under
+   a per-role network, addressed by an operation named `remember`, survive the
+   session with an identity. The product framing — "AI Agent Context Platform" —
+   is what made this look out of scope, and reading the package decided it the
+   other way.
 
 ## What came of it
 
-- **Four candidates**, one of them conditional on a scope question.
+- **Four candidates**, all four resolved — `promptx` was the conditional one and
+  is in scope. Its README sells a context platform and its `packages/core` ships
+  an engram database, which is a reminder that the scope test is answered in the
+  package layout and never in the positioning.
 - **Five refused**, two on grounds the atlas has already written down (hosted
   service, storage engine) and three on the session-survival test.
 - **All nine reachable**, the second such submission in two days.
