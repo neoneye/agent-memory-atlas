@@ -275,6 +275,21 @@ trusting whoever made it.</li>
 <li><strong>Strictness cuts both ways.</strong> A system with a
 nearly-complete mechanism reads the same as one with nothing, which is
 why the near-misses are named in prose.</li>
+<li><strong>Every claim about deletion stops at the system's own
+boundary.</strong> A report says what the code under review does when
+asked to forget; it does not follow the call into the vector index below
+it, and until 3 August 2026 no review had. Reading four engines settled
+what is on the other side: the deleted vector is never returned by a
+subsequent search, so no mark here is wrong in that direction — but on
+Chroma, Qdrant and LanceDB the <strong>embedding itself
+survives</strong> until a vacuum, segment optimize or prune that the
+memory system does not schedule, and LanceDB's default keeps the version
+containing the deleted data for seven days. pgvector is the one that
+zeroes the vector. This is a limit of the unit of review rather than of
+the definitions: the atlas reviews repositories, and this failure lives
+in a dependency they share. The evidence is in the <a
+href="../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">comparative
+report</a>.</li>
 <li><strong>The scope mark is the shallowest</strong>, for the reason
 given above.</li>
 <li><strong>Seven axes cannot describe a memory system.</strong> They

@@ -1743,6 +1743,15 @@ deterministic file manifests on compaction entries. The test for
 inclusion is not whether a system compacts, but whether anything
 survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
+<p>One column needs a caveat before the table is read.
+<strong>Update/delete model describes what a system's own code
+does</strong>, and stops at the storage engine's boundary. On three of
+the four vector engines this corpus most depends on, the embedding
+survives a delete until an unscheduled background pass — so a row
+reading "exact delete" is accurate about what the next query returns and
+silent about what is still on disk. The evidence is under <a
+href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
+layer below delete</a>.</p>
 <!-- BEGIN GENERATED MATRIX -->
 
 <div class="table-wrap"><table>
@@ -6517,6 +6526,90 @@ runtimes in the atlas — <code>hermes-agent</code> and
 mirrors the host's built-in memory additions into its own store but
 implements only the <code>add</code> action, so removing an entry from
 <code>MEMORY.md</code> leaves the mirrored copy behind indefinitely.</p>
+<h4
+id="the-layer-below-delete-what-the-storage-engine-does-with-the-vector">The
+layer below delete: what the storage engine does with the vector</h4>
+<p>Every entry above describes what a memory system's <strong>own
+code</strong> does when asked to forget. None of them describes what the
+vector index underneath does, and the two are not the same claim. This
+section is the exception to the atlas's rule that a finding is about one
+repository: it is about a dependency most of this corpus shares.</p>
+<p>Four engines were read for it — pgvector at
+<code class="commit-id" title="4f3d17f6f74fe98adf54df4d016de241eeaae9af">4f3d17f6…</code>, Chroma at
+<code class="commit-id" title="19e1bf8a8610ab2b660a75e90a2f9e487ffe638c">19e1bf8a…</code> with its hnswlib
+fork at <code class="commit-id" title="6868102bde454dc761136e1994490133a6a026bb">6868102b…</code>, Qdrant at
+<code class="commit-id" title="db8fa43fcb6aedec1e739487e17a99731b74590a">db8fa43f…</code>, LanceDB at
+<code class="commit-id" title="9e26bf3fba7b77bb32434c0f6af9dcb43248f90a">9e26bf3f…</code>. Between them they
+back most of the retrieval in this atlas: pgvector is named in 16
+reports, Chroma and Qdrant in 11 each, LanceDB in 6.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;User: forget that&quot;] --&gt; B[&quot;Memory system delete&lt;br/&gt;row, edge, chunk&quot;]
+    B --&gt; C{&quot;Storage engine&quot;}
+    C --&gt; D[&quot;Query filter&lt;br/&gt;MVCC, deleted mark, bitslice, new version&quot;]
+    C --&gt; E[&quot;Graph structure&lt;br/&gt;node still linked, never returnable&quot;]
+    C --&gt; F[&quot;Bytes on disk&lt;br/&gt;embedding intact&quot;]
+    D --&gt; G[&quot;Not returned&lt;br/&gt;true in all four&quot;]
+    E --&gt; H[&quot;Recall of surviving&lt;br/&gt;memories degrades&quot;]
+    F --&gt; I[&quot;Erased only by vacuum,&lt;br/&gt;optimize or prune&quot;]</code></pre>
+<p><strong>The vector is not returned by search.</strong> This is worth
+stating first because it is the failure most often assumed. It does not
+happen in any of the four. pgvector hands a heap TID to the executor and
+lets ordinary MVCC visibility apply, refusing to run at all without an
+MVCC snapshot (<code>src/hnswscan.c</code>). Chroma's fork guards
+candidate acceptance on <code>isMarkedDeleted</code> in both search
+paths (<code>hnswlib/hnswalg.h</code>). Qdrant carries a deleted
+bitslice per vector storage and excludes it when building. LanceDB never
+mutates — a delete produces a new dataset version without the row.
+<strong>No mark in the matrix below is wrong about what a subsequent
+query returns.</strong></p>
+<p><strong>The index degrades, and the surviving memories are what
+suffers.</strong> A soft-deleted node stays in the graph and keeps being
+traversed while never being returnable, so recall drops for everything
+else. Chroma states the problem in a comment and handles it in the read
+path, but only below a hundred live elements: <code>local_hnsw.rs</code>
+brute-forces the search when the delete percentage exceeds 0.2
+<em>and</em> fewer than 100 elements survive. Above that, a
+heavily-corrected collection degrades and nothing compensates — which
+makes this a cost paid specifically by the systems that correct most,
+the behaviour this atlas argues for everywhere else. Qdrant repairs: a
+<code>GraphLayersHealer</code> re-links neighbours around removed
+points, invoked from index construction rather than from the delete.
+pgvector repairs neighbour links in <code>VACUUM</code>. In both, the
+interval between the delete and the repair belongs to a background
+process no memory system here controls or mentions.</p>
+<p><strong>The embedding survives the delete.</strong> hnswlib says so
+in the comment on the function itself — <code>markDelete</code> "does
+NOT really change the current graph". It sets one bit in the level-0
+link-list header; <code>saveIndex</code> then writes the whole level-0
+memory for every element, so <strong>the deleted embedding is persisted
+to the index file verbatim</strong>, and <code>unmarkDelete</code>
+restores it. Only a later <code>addPoint</code> reusing the slot
+overwrites the vector, and only when replacement is enabled. LanceDB
+documents the same property as a feature: every change is additive and
+the old version, which still contains the removed data, is left in place
+for time travel; <code>OptimizeAction::Prune</code> is the only thing
+that removes it, and it keeps files newer than <strong>seven
+days</strong> unless <code>delete_unverified</code> is set — an option
+whose own comment warns it can corrupt the dataset. Qdrant holds the
+bytes until a segment optimizer rebuilds.</p>
+<p>pgvector is the exception, and it is the reason to treat the other
+three as a choice rather than a law. <code>VACUUM</code> does not merely
+flag the element; it zeroes it — <code>etup-&gt;deleted = 1;</code>
+followed by <code>memset(&amp;etup-&gt;data, 0, …)</code> — invalidates
+the neighbour pointers and offers the page for reuse. Still not
+synchronous with the <code>DELETE</code>, but it terminates.</p>
+<p><strong>What this means for a reader using the matrix.</strong>
+"Exact delete" in the Update/delete column is a true statement about the
+system and an incomplete answer to <em>is it gone</em>. Two reports
+already do this reasoning one layer higher — <code>membase</code>
+records that deletion by <code>memory_index</code> leaves the Chroma
+document and the uploaded hub blob behind, and <code>voyager</code> that
+old versions stay on disk but unreachable — and step 9 of the deletion
+sequence on the <a href="../benchmarks/">benchmarks page</a> already
+names embeddings among the derived artifacts a forgetting test would
+have to check. The method anticipated this layer. No per-system review
+has entered it, because entering it means leaving the repository under
+review.</p>
 <h3 id="cross-session-and-cross-agent-persistence">Cross-Session and
 Cross-Agent Persistence</h3>
 <p><code>memory-engine</code> has the most developed access model in the

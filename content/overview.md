@@ -1293,6 +1293,14 @@ session with an identity you could later correct.
 
 ## 2. Comparative Matrix
 
+One column needs a caveat before the table is read. **Update/delete model
+describes what a system's own code does**, and stops at the storage engine's
+boundary. On three of the four vector engines this corpus most depends on, the
+embedding survives a delete until an unscheduled background pass — so a row
+reading "exact delete" is accurate about what the next query returns and silent
+about what is still on disk. The evidence is under
+[the layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
+
 <!-- BEGIN GENERATED MATRIX -->
 | Repo | Memory unit | Storage backend | Retrieval strategy | Write strategy | Update/delete model | Scoping model | Agent integration | Background processing | Trust/provenance model | Notable strengths | Main risks |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -2225,6 +2233,89 @@ Visible deletion varies from hard API deletion to lifecycle state:
 Semantic forgetting is an antipattern unless there is explicit user review or exact ID targeting.
 
 Deletion is also where pluggable memory breaks down. Both host runtimes in the atlas — `hermes-agent` and `openclaw` — define a memory-provider contract with **no deletion hook and no scope parameter**, so a user's "forget that" has no defined path into whatever backend is mounted. `holographic` shows the resulting hazard concretely: it mirrors the host's built-in memory additions into its own store but implements only the `add` action, so removing an entry from `MEMORY.md` leaves the mirrored copy behind indefinitely.
+
+#### The layer below delete: what the storage engine does with the vector
+
+Every entry above describes what a memory system's **own code** does when asked
+to forget. None of them describes what the vector index underneath does, and the
+two are not the same claim. This section is the exception to the atlas's rule
+that a finding is about one repository: it is about a dependency most of this
+corpus shares.
+
+Four engines were read for it — pgvector at
+`4f3d17f6f74fe98adf54df4d016de241eeaae9af`, Chroma at
+`19e1bf8a8610ab2b660a75e90a2f9e487ffe638c` with its hnswlib fork at
+`6868102bde454dc761136e1994490133a6a026bb`, Qdrant at
+`db8fa43fcb6aedec1e739487e17a99731b74590a`, LanceDB at
+`9e26bf3fba7b77bb32434c0f6af9dcb43248f90a`. Between them they back most of the
+retrieval in this atlas: pgvector is named in 16 reports, Chroma and Qdrant in
+11 each, LanceDB in 6.
+
+```mermaid
+flowchart TD
+    A["User: forget that"] --> B["Memory system delete<br/>row, edge, chunk"]
+    B --> C{"Storage engine"}
+    C --> D["Query filter<br/>MVCC, deleted mark, bitslice, new version"]
+    C --> E["Graph structure<br/>node still linked, never returnable"]
+    C --> F["Bytes on disk<br/>embedding intact"]
+    D --> G["Not returned<br/>true in all four"]
+    E --> H["Recall of surviving<br/>memories degrades"]
+    F --> I["Erased only by vacuum,<br/>optimize or prune"]
+```
+
+**The vector is not returned by search.** This is worth stating first because it
+is the failure most often assumed. It does not happen in any of the four.
+pgvector hands a heap TID to the executor and lets ordinary MVCC visibility
+apply, refusing to run at all without an MVCC snapshot (`src/hnswscan.c`).
+Chroma's fork guards candidate acceptance on `isMarkedDeleted` in both search
+paths (`hnswlib/hnswalg.h`). Qdrant carries a deleted bitslice per vector storage
+and excludes it when building. LanceDB never mutates — a delete produces a new
+dataset version without the row. **No mark in the matrix below is wrong about
+what a subsequent query returns.**
+
+**The index degrades, and the surviving memories are what suffers.** A
+soft-deleted node stays in the graph and keeps being traversed while never being
+returnable, so recall drops for everything else. Chroma states the problem in a
+comment and handles it in the read path, but only below a hundred live elements:
+`local_hnsw.rs` brute-forces the search when the delete percentage exceeds 0.2
+*and* fewer than 100 elements survive. Above that, a heavily-corrected collection
+degrades and nothing compensates — which makes this a cost paid specifically by
+the systems that correct most, the behaviour this atlas argues for everywhere
+else. Qdrant repairs: a `GraphLayersHealer` re-links neighbours around removed
+points, invoked from index construction rather than from the delete. pgvector
+repairs neighbour links in `VACUUM`. In both, the interval between the delete and
+the repair belongs to a background process no memory system here controls or
+mentions.
+
+**The embedding survives the delete.** hnswlib says so in the comment on the
+function itself — `markDelete` "does NOT really change the current graph". It
+sets one bit in the level-0 link-list header; `saveIndex` then writes the whole
+level-0 memory for every element, so **the deleted embedding is persisted to the
+index file verbatim**, and `unmarkDelete` restores it. Only a later `addPoint`
+reusing the slot overwrites the vector, and only when replacement is enabled.
+LanceDB documents the same property as a feature: every change is additive and
+the old version, which still contains the removed data, is left in place for time
+travel; `OptimizeAction::Prune` is the only thing that removes it, and it keeps
+files newer than **seven days** unless `delete_unverified` is set — an option
+whose own comment warns it can corrupt the dataset. Qdrant holds the bytes until
+a segment optimizer rebuilds.
+
+pgvector is the exception, and it is the reason to treat the other three as a
+choice rather than a law. `VACUUM` does not merely flag the element; it zeroes
+it — `etup->deleted = 1;` followed by `memset(&etup->data, 0, …)` — invalidates
+the neighbour pointers and offers the page for reuse. Still not synchronous with
+the `DELETE`, but it terminates.
+
+**What this means for a reader using the matrix.** "Exact delete" in the
+Update/delete column is a true statement about the system and an incomplete
+answer to *is it gone*. Two reports already do this reasoning one layer higher —
+`membase` records that deletion by `memory_index` leaves the Chroma document and
+the uploaded hub blob behind, and `voyager` that old versions stay on disk but
+unreachable — and step 9 of the deletion sequence on the
+[benchmarks page](../benchmarks/) already names embeddings among the derived
+artifacts a forgetting test would have to check. The method anticipated this
+layer. No per-system review has entered it, because entering it means leaving
+the repository under review.
 
 ### Cross-Session and Cross-Agent Persistence
 

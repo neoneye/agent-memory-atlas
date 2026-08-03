@@ -202,6 +202,19 @@ that no amount of automation removes.
   symbol, so it can be checked without trusting whoever made it.
 - **Strictness cuts both ways.** A system with a nearly-complete mechanism reads
   the same as one with nothing, which is why the near-misses are named in prose.
+- **Every claim about deletion stops at the system's own boundary.** A report
+  says what the code under review does when asked to forget; it does not follow
+  the call into the vector index below it, and until 3 August 2026 no review
+  had. Reading four engines settled what is on the other side: the deleted
+  vector is never returned by a subsequent search, so no mark here is wrong in
+  that direction — but on Chroma, Qdrant and LanceDB the **embedding itself
+  survives** until a vacuum, segment optimize or prune that the memory system
+  does not schedule, and LanceDB's default keeps the version containing the
+  deleted data for seven days. pgvector is the one that zeroes the vector. This
+  is a limit of the unit of review rather than of the definitions: the atlas
+  reviews repositories, and this failure lives in a dependency they share. The
+  evidence is in the
+  [comparative report](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
 - **The scope mark is the shallowest**, for the reason given above.
 - **Seven axes cannot describe a memory system.** They describe the failures this
   atlas has found to be common, expensive, and silent. The reports carry the rest.
