@@ -49,6 +49,15 @@ if [[ "$revision_count" != "$expected_systems" ]]; then
   exit 1
 fi
 
+# The check above proves a report carries a pin; it does not prove the pin
+# agrees with the repositories-inspected list overview.md publishes. A
+# re-review updates frontmatter in one file and that list is a hand edit in
+# another, so the two drift apart silently — three entries had, all of them on
+# re-reviewed systems, and every existing check stayed green.
+if ! python3 "$project_dir/scripts/check_inspected_pins.py" "$project_dir"; then
+  exit 1
+fi
+
 # --check does more than compare the generated tables: it also validates matrix
 # values, capability flags, and revision pins. Discarding its stderr and printing
 # one hardcoded message reported every one of those as a stale matrix and told
@@ -230,4 +239,4 @@ if [[ -n "$card_order" ]]; then
   exit 1
 fi
 
-echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, analyzed-on dates, and project-relative navigation."
+echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, analyzed-on dates, and project-relative navigation."

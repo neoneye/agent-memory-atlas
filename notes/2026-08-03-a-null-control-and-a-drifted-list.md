@@ -1,8 +1,8 @@
 # A null control, and a list that drifted where the atlas touched it
 
-**Status:** two findings from the Daimon re-read of 2026-08-03; the report
-changes are committed, both findings below are about the atlas rather than
-about Daimon
+**Status:** done — two findings from the Daimon re-read of 2026-08-03, both
+about the atlas rather than about Daimon; each produced a change (a build check,
+and a new benchmarks subsection)
 **Origin:** a re-read of `Daily-Nerd/daimon` at
 `3025ee3edecd1958e9e9181fe607a5b1a30309bf`, 41 commits past the previous pin,
 requested because the project had moved.
@@ -43,10 +43,12 @@ commit and they disagreed.
 
 **The fix is a check, not a habit.** Every other class of error this repository
 has been caught by is now a script — `check_freshness.py`, `check_anchors.py`,
-`check_heads.py`, `check_homepage.py`, `check_mermaid.py`. The rule this one
-needs is nine lines: for each report, the inspected-list entry keyed on
-`source_name` must carry a prefix of `revision`. It is not written. Until it is,
-this note is the only thing standing between the list and the next re-review.
+`check_heads.py`, `check_homepage.py`, `check_mermaid.py`. This one is now
+`check_inspected_pins.py`, wired into `npm test`: for each report, the
+inspected-list entry keyed on `source_name` must carry a prefix of `revision`,
+and the displayed sha must match the one in the link target — a correct label
+over a stale href is the same failure wearing a disguise. Run against the tree
+as it stood before the correction, it reports all three.
 
 Worth stating plainly because the atlas's standing argument against a
 commits-behind badge is that a pin comparison cannot tell you whether anything
@@ -98,10 +100,13 @@ gate ran. That experiment is unbuilt and the instrument is already shaped to run
 it, which is now recorded in the report as the single most informative
 unpublished result in that repository.
 
-**Left open for the atlas.** The benchmarks page names the systems that publish
-losses. It should also name the one that ships a placebo arm, because "did you
-compare against doing nothing" is a sharper question to hand a reader than "did
-you publish a loss", and there is now exactly one occupant. Not written.
+**Written up.** The benchmarks page named the systems that publish losses and
+had no column for the sharper question — *did you compare against doing it for
+no reason*. It now carries one, under "the baseline is usually too weak", with
+Daimon as its single occupant. The distinction that earns the subsection: a weak
+baseline flatters a system that **adds** something, and says nothing about a
+change that **removes** something, because dropping rows improves precision on
+almost any corpus whether or not the rule choosing them is any good.
 
 ## What came of it
 
@@ -110,7 +115,7 @@ you publish a loss", and there is now exactly one occupant. Not written.
   published while praising the tombstone that depends on them.
 - **No mark moved.** The eleven-step deletion protocol and its three sibling
   tests are byte-identical to the previous pin.
-- **Three inspected-list entries corrected**, and the check that would prevent
-  the fourth left unwritten and specified above.
-- **One gap named** — the benchmarks page has no null-control column and now has
-  a system that would occupy it.
+- **Three inspected-list entries corrected**, and `check_inspected_pins.py`
+  added to `npm test` so the fourth cannot ship.
+- **One gap closed** — the benchmarks page now has a null-control subsection,
+  with the one system in the corpus that occupies it.

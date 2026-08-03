@@ -411,6 +411,47 @@ associations given the sample size and right-censoring.
 Design the ablation so a null result is possible. If the baseline cannot in
 principle win, the experiment cannot tell you anything.
 
+#### The stronger version: compare against doing it for no reason
+
+A weak baseline flatters a system that adds something. It says nothing about a
+change that *removes* something — a gate, a filter, a decay rule — because
+removing rows improves precision on almost any corpus whether or not the rule
+picking them is any good. The control that separates those is a **placebo arm**:
+drop rows at the same rate, at random, and see whether the real rule beats it.
+
+One system in this atlas ships one. [Daimon](../systems/daimon/)'s
+`research/experiments/recall-replay-ab/` replays real historical prompts through
+the shipped recall path (arm A) against a pluggable variant (arm B), judges the
+disagreements side-blind, and carries a `placebo` builtin that suppresses rows
+at random at a per-age-band rate — so a treatment can be matched against its own
+drop rate rather than against nothing. The rig verifies itself: `verify.py`
+asserts two runs are byte-identical and that the identity variant reproduces arm
+A exactly.
+
+It has been used three times to refute the project's own hypotheses, twice in
+commit subjects that say `measured and refuted`, and once to remove a shipped
+feature. That third file, `research/experiments/gate-491/measurements.json`, is
+the artifact this page has been asking for:
+
+- the result is a **loss** — the age gate's open-question exemption graded 10%
+  relevant, Wilson 95% CI 3.5–25.6, n=30, inside the 6–10% band the gate already
+  blocks;
+- the judge was "blind to the hypothesis, to arm structure, and to any prior
+  grading";
+- the **pre-registered bar was discarded and the reason recorded** — the 40%
+  threshold was not derivable from anything measured, and held exempt rows to a
+  higher standard than the policy applies to rows it keeps;
+- two rejected alternative explanations are kept, each with the verdict that it
+  "separates the WRONG way";
+- a `not_measured` block names the silence cost the instrument is structurally
+  blind to;
+- and the count is flagged as "conservative in the direction that weakens the
+  finding".
+
+That last line is the habit worth naming. Every publisher discussed on this page
+makes choices that shape a number; almost none of them state which way their own
+conservatism cuts, in the artifact, before anyone asks.
+
 ### The system may not be optimizing that axis at all
 
 This is the important one. The systems in this atlas with the strongest
