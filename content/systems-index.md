@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **133 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **134 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -110,6 +110,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review
 - [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced
 - [`memory-engine`](../systems/memory-engine/) **Memory Engine** — Agents as principals · `timescale/memory-engine` · Bi-temporal, Scope enforced
+- [`memory-project`](../systems/memory-project/) **memory-project** — Associative decay memory for a coding agent · `acdesigntech/memory-project` · Mutation audit, Human review
 - [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`
 - [`memos`](../systems/memos/) **MemOS** — Memory operating system · `MemTensor/MemOS` · Scope enforced
 - [`mempalace`](../systems/mempalace/) **MemPalace** — Verbatim evidence memory · `MemPalace/mempalace` · Scope enforced

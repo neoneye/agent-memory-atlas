@@ -3805,6 +3805,38 @@ over-granting cannot escalate</td>
 store, not a belief model</td>
 </tr>
 <tr>
+<td><code>memory-project</code></td>
+<td>A fragment or session summary carrying strength, stability,
+memory_type and consolidation_level</td>
+<td>One ChromaDB collection plus a plain-text activity log; embeddings
+from a local all-MiniLM-L6-v2</td>
+<td>Cosine similarity weighted by a forgetting-curve strength, topic as
+a 1.5x boost, plus an associative second hop</td>
+<td><code>jot()</code> for one-line fragments and <code>ingest()</code>
+for session summaries; background transcript extraction at session
+end</td>
+<td><code>prune()</code> archives below a strength floor and is
+reversible via <code>recall_cold</code>/<code>revive_from_cold</code>;
+<code>purge()</code> is the only true delete and no tombstone survives
+it</td>
+<td><code>topic</code> derived from the working directory, applied as a
+ranking boost and never as a filter — cross-project recall is the
+goal</td>
+<td>Claude Code hooks — SessionStart backstop, prompt-time recall,
+SessionEnd capture</td>
+<td>Session-end transcript extraction in a subprocess;
+<code>prune()</code> and feedback consolidation are on-demand, not
+scheduled</td>
+<td>No status field; strength and stability stand in for confidence, and
+a confirmed activation reinforces harder than an ordinary hit</td>
+<td>Two-speed forgetting where routine cleanup is reversible and
+deletion is a separate deliberate act; consolidation drafts rules a
+human must approve</td>
+<td><code>purge()</code> targets the sensitive-content case and leaves
+the embedding in Chroma's index file; no tombstone, so re-jotting a
+purged claim re-admits it</td>
+</tr>
+<tr>
 <td><code>memoryos</code></td>
 <td>QA pair in short term; topic session segment in mid term; profile
 string and knowledge entry in long term</td>
@@ -5155,7 +5187,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>4 of 133:</em> <a
+<p><em>4 of 134:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -5163,7 +5195,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>17 of 133:</em> <a
+<p><em>17 of 134:</em> <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
@@ -5183,7 +5215,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>9 of 133:</em> <a
+<p><em>9 of 134:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -5198,7 +5230,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>72 of 133:</em> <a
+<p><em>72 of 134:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -5275,7 +5307,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>21 of 133:</em> <a
+<p><em>22 of 134:</em> <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
@@ -5288,6 +5320,7 @@ href="../systems/mem0/"><code>mem0</code></a>, <a
 href="../systems/mem0sharp/"><code>mem0sharp</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
+href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a>, <a
@@ -5300,7 +5333,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>27 of 133:</em> <a
+<p><em>28 of 134:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -5318,6 +5351,7 @@ href="../systems/llm-wiki-memory/"><code>llm-wiki-memory</code></a>, <a
 href="../systems/lorekit/"><code>lorekit</code></a>, <a
 href="../systems/memanto/"><code>memanto</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
+href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/mercury-agent/"><code>mercury-agent</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/openyak/"><code>openyak</code></a>, <a
@@ -5331,7 +5365,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>17 of 133:</em> <a
+<p><em>17 of 134:</em> <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -6511,6 +6545,18 @@ git; history is bounded at 1,000 entries, dropping oldest processed
 entries without discarding pending Dream input.</p></li>
 <li><p><code>cowagent</code>: distillation prunes on a stated rule set,
 with recency winning conflicts and no tombstone.</p></li>
+<li><p><code>memory-project</code>: <strong>the clearest two-speed split
+in the atlas.</strong> <code>prune()</code> is routine cleanup and
+archives — <code>archived: True</code> in metadata, dropped from
+<code>recall()</code> entirely, embedding and content kept — and the
+docstring says it models cold storage "rather than true forgetting".
+<code>recall_cold()</code> ignores strength and ranks by raw similarity
+above 0.6, so a specific enough cue reaches an archived memory that
+everyday recall cannot, and <code>revive_from_cold()</code> restores it.
+<code>purge()</code> is the separate deliberate delete, documented for
+"something that should never have been recorded in the first place (e.g.
+accidentally jotted sensitive content)" — and it is a Chroma
+<code>col.delete</code>, so the embedding survives it.</p></li>
 <li><p><code>genericagent</code>: forgetting is constrained by policy —
 verified configs, pitfall guides, and critical paths must never be
 dropped during garbage collection, only compressed or migrated to a
@@ -6611,6 +6657,18 @@ names embeddings among the derived artifacts a forgetting test would
 have to check. The method anticipated this layer. No per-system review
 has entered it, because entering it means leaving the repository under
 review.</p>
+<p><strong>One system in this corpus lands on this directly, and it is
+the case that matters most.</strong> <a
+href="../systems/memory-project/">memory-project</a> separates routine
+archival from deletion and documents <code>purge()</code> for "something
+that should never have been recorded in the first place (e.g.
+accidentally jotted sensitive content)". <code>purge()</code> is
+<code>col.delete(ids=[doc_id])</code> on Chroma — so the document text
+goes and the embedding is written to the index file verbatim,
+recoverable by <code>unmarkDelete</code> until an insert reuses the
+slot. The function built for secrets is the one whose erasure is least
+complete, and nothing about the memory system is at fault: it issued the
+correct call to its store.</p>
 <p>The counter-example is worth naming because it is not a coincidence.
 <a href="../systems/daimon/">daimon</a> carries the most complete
 deletion test in this atlas — eleven steps, each paired with a
@@ -9871,6 +9929,31 @@ code.</li>
 retrieval, or a shared service — none of the three is here or
 planned.</li>
 </ul>
+<h3 id="memory-project"><code>memory-project</code></h3>
+<ul>
+<li>Best idea: forgetting has two speeds and only the slow one destroys
+— <code>prune()</code> archives to a cold tier that a specific enough
+cue can still reach, <code>purge()</code> is a separate deliberate call,
+and the source says plainly which is which.</li>
+<li>Biggest risk: <code>purge()</code> is documented for
+accidentally-jotted secrets and implemented as a Chroma
+<code>col.delete</code>, so the embedding stays in the index file; and
+with no tombstone, re-jotting a purged claim re-admits it at full
+stability.</li>
+<li>Most reusable component: <code>prune()</code> and
+<code>purge()</code> together — about forty lines that remove the false
+choice between growing forever and destroying on "forget".</li>
+<li>Maturity impression: 3,113 lines, 26 commits, AGPL-3.0, 16
+regression assertions on the decay maths and nothing testing the hooks.
+Small and legible, with the tuning constants named and grouped rather
+than scattered.</li>
+<li>Study when: you want a forgetting curve with a reversible archive
+tier, or an injection boundary that distinguishes assert from hedge from
+silence.</li>
+<li>Do not copy when: anything needs a scope boundary — topic is a
+ranking boost and never a filter, by design — or when a memory has to be
+markable as wrong.</li>
+</ul>
 <h3 id="helm"><code>helm</code></h3>
 <ul>
 <li>Best idea: a first observation is capped at 0.7 confidence and can
@@ -12017,6 +12100,10 @@ href="https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed
 href="https://github.com/timescale/memory-engine">timescale/memory-engine</a>
 at <a
 href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927"><code class="commit-id" title="54e4d7d201b5c7ba3aed618ea343d9f4d3f40927">54e4d7d2…</code></a></li>
+<li><a
+href="https://github.com/acdesigntech/memory-project">acdesigntech/memory-project</a>
+at <a
+href="https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298"><code class="commit-id" title="992dc090b347f31976316cfac885b097a26bb298">992dc090…</code></a></li>
 <li><a
 href="https://github.com/akitaonrails/ai-memory">akitaonrails/ai-memory</a>
 at <a
