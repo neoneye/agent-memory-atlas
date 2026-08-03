@@ -326,3 +326,48 @@ than a reading. Before publishing a negative, widen the search to the whole
 source tree at least once and say so — and prefer "not found in `src/`, searched
 for `<terms>`" to "absent", because the first is checkable and the second is a
 claim about the project.
+
+## 10. The corpus-scoped superlative, asserted rather than searched
+
+**Standing, and the largest unmeasured exposure in the project** — 294 live
+instances, counted 2026-08-04 by `scripts/list_superlatives.py`.
+
+Hazard 9 is a search whose scope was too narrow, returning a silence that reads
+as absence. This is the failure one step earlier: **no search at all.**
+
+The instance that produced it. On 2026-08-03 the
+[memory-project](../content/systems/memory-project.md) report was published
+calling AGPL-3.0 "the most restrictive licence in this corpus". Five other
+reports carry AGPL, and six carry licences that are not open source at all —
+BSL, ELv2, PolyForm, all rights reserved. One grep disproved it and the claim
+had never had one. It was retracted the same day.
+
+**The class is much larger than the instance.** A superlative scoped to one
+repository — "the most valuable artifact in this repository" — is an ordinary
+judgement the report's own evidence supports. A superlative scoped to the
+*corpus* is an assertion about all 134 reports at once, and there are 294 of
+them across `content/`: 281 "the only", 200 "the most", 154 "the first", 95
+"nothing else", before narrowing to the ones that name the atlas.
+
+Three properties make this the worst-shaped claim the project produces:
+
+1. **They are the most quotable sentences on the site.** "The only system in this
+   atlas that can remember it was wrong" is the line a reader carries away, and
+   it is the line with no file and no symbol behind it.
+2. **They are the least verifiable by a reader.** Checking one means reading
+   every other report, which is the work the atlas exists to have already done.
+3. **They rot silently and in one direction.** Every report added can only
+   falsify them, never confirm them, and the falsification happens in a file
+   nobody is editing. The count went from 133 to 134 on 2026-08-03 without a
+   single one being re-read.
+
+**Not a build gate, on purpose.** `scripts/list_superlatives.py` reports rather
+than fails, because a check that errors on 294 pre-existing instances trains
+people to skip it. Run it when adding a report and treat the output as a review
+list: for each hit, either the claim is mechanically checkable and should be
+checked, or it is a judgement and the prose should say so.
+
+**Watch for:** the ones that are checkable and read as judgements. "The only
+system carrying a tombstone" is answerable from the capability index in one
+query. "The most carefully reasoned correction in the atlas" is not answerable at
+all, and should not be phrased as though it were.

@@ -28,7 +28,8 @@ when the work happens.
   how this review process fails, including the two that already published wrong
   claims, and the best-evidenced one: a grep scoped to the wrong files returns
   exactly what a real absence returns, caught three times in one assessment and
-  twice pointing at a criticism.
+  twice pointing at a criticism; and the 294 corpus-scoped superlatives nothing
+  in the build has ever checked.
 - [2026-07-28-symbolic-prior-art.md](2026-07-28-symbolic-prior-art.md) —
   belief revision, truth maintenance and BDI belief bases are absent from the
   atlas's lineage, and whether that is an omission or a real discontinuity is
