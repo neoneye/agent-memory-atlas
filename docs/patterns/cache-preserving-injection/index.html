@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Split injected memory by how often
+it changes, so a per-turn recall block cannot invalidate the provider's
+prompt-prefix cache on every request.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cache-Preserving
+Injection — Agent Memory Atlas">
+    <meta property="og:description" content="Split injected memory by
+how often it changes, so a per-turn recall block cannot invalidate the
+provider's prompt-prefix cache on every request.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cache-Preserving
+Injection — Agent Memory Atlas">
+    <meta name="twitter:description" content="Split injected memory by
+how often it changes, so a per-turn recall block cannot invalidate the
+provider's prompt-prefix cache on every request.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cache-Preserving Injection — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Pattern · Cost</p>
+          <h1>Cache-Preserving Injection</h1>
+          <p class="document-deck">Split injected memory by how often it
+changes, so a per-turn recall block cannot invalidate the provider's
+prompt-prefix cache on every request.</p>
+                            </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<blockquote>
+<p><strong>This is a cost pattern, and it is here on a narrow
+argument.</strong> The <a href="./">patterns index</a> declines
+context-window pruning as a prompt-assembly concern rather than a memory
+one, and that decision stands. This page is the part of that territory
+which is not about token budgets: <strong>where you inject memory
+constrains what your memory system is allowed to be</strong>, and one
+system in the atlas redesigned its entire write path around that
+constraint rather than around anything about recall.</p>
+</blockquote>
+<h2 id="intent">Intent</h2>
+<p>Place injected memory according to how often it changes, so that the
+stable part of the prompt stays byte-identical between turns and the
+provider's prefix cache survives the session.</p>
+<h2 id="the-problem">The problem</h2>
+<p>The obvious place to put memory is the system prompt, near the top,
+where the model is most likely to attend to it. Every provider that
+offers prompt caching keys that cache on an <strong>exact prefix
+match</strong>. The two facts collide.</p>
+<p>A retrieval block is a function of the current message. Put it in the
+system prompt and the system prompt differs every turn, so the cached
+prefix misses on every request — and the miss is not partial. Everything
+from the first differing byte onward is re-processed, which for a
+memory-augmented agent is usually the whole prompt.</p>
+<p>This is invisible in exactly the way that matters. Retrieval quality
+is unaffected, tests pass, and the only signal is the bill. Five reports
+in this atlas record a system in this state, and none of the five
+projects appears to have noticed:</p>
+<ul>
+<li><a href="../../systems/helm/">Helm</a> — <em>"Prompt-prefix caching
+is invalidated on every turn, by construction."</em>
+<code>INDEX.md</code> is stable and arrives through an import, but
+<code>--append-system-prompt</code> carries
+<code>buildPersona(mode) + recallMemories(prompt)</code>, and the recall
+block is a function of the current message.</li>
+<li><a href="../../systems/csm/">CSM</a> — the per-turn injection
+invalidates the prefix cache every turn, and the report notes that
+nothing measures the cost.</li>
+<li><a href="../../systems/risuai/">RisuAI</a> — the injected block
+varies per turn, <em>including randomly</em>, which defeats caching by
+construction.</li>
+<li><a href="../../systems/sillytavern/">SillyTavern</a> — memory is
+injected at an unstable position rather than in a stable prefix.</li>
+<li><a href="../../systems/opencode/">OpenCode</a> — no memory of its
+own, but everything a plugin injects goes through
+<code>experimental.chat.system.transform</code> into the system prompt,
+so the <em>contract</em> hands every plugin author this failure.</li>
+</ul>
+<p>The cost is not a rounding error, and it compounds with the thing
+memory systems are for. The more memory you inject, the larger the
+prefix you are invalidating.</p>
+<h2 id="the-pattern">The pattern</h2>
+<p>Sort injected material by volatility and give each class a position
+that matches:</p>
+<pre class="text"><code>system prompt (cached prefix)
+  ├─ persona, policy, instructions        — changes ~never
+  └─ memory INDEX / stable working set    — changes between sessions
+─────────────────────────────────── cache boundary
+user turn (never cached)
+  └─ query-specific recall results        — changes every turn</code></pre>
+<p>Two shapes implement this, and they differ in what they give up:</p>
+<p><strong>Split by position.</strong> Stable memory stays in the
+prefix; query-specific recall moves into the user turn. Nothing is lost
+— the model sees the same tokens, in a different envelope. Helm's report
+notes this arrangement is "one line away" and that the system's own
+static channel already demonstrates it.</p>
+<p><strong>Freeze the snapshot.</strong> Render memory into the system
+prompt once, at session start, and refuse to update it mid-session.
+Writes still land on disk immediately and durably; they simply do not
+reach the model until the next session begins.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;session start&quot;] --&gt; B[&quot;render stable memory&lt;br/&gt;into system prompt&quot;]
+    B --&gt; C[&quot;prefix cached&quot;]
+    D[&quot;turn N&quot;] --&gt; E{&quot;material varies&lt;br/&gt;with this turn?&quot;}
+    E -- &quot;no&quot; --&gt; C
+    E -- &quot;yes&quot; --&gt; F[&quot;append to the user turn&quot;]
+    F --&gt; G[&quot;prefix cache still hits&quot;]
+    H[&quot;mid-session write&quot;] --&gt; I[&quot;persist to disk&quot;]
+    I -.-&gt;|&quot;deliberately not re-rendered&quot;| C</code></pre>
+<h2 id="why-it-works">Why it works</h2>
+<p>Caching is a prefix property, so the only thing that matters is
+<em>where the first difference falls</em>. Moving the volatile block
+after every stable byte converts a guaranteed miss into a guaranteed hit
+without changing what the model reads.</p>
+<p>The second-order effect is the interesting one. Once prompt cost is a
+static, known quantity, a memory budget becomes enforceable — which is
+what lets <a href="../../systems/hermes-agent/">Hermes Agent</a> take
+the position almost nothing else in this atlas takes: memory is
+<strong>hard-bounded and frozen, because the prompt cache matters more
+than completeness.</strong> <code>MEMORY.md</code> is capped at 2,200
+characters and <code>USER.md</code> at 1,375. When an <code>add</code>
+would exceed the cap the write is <em>refused</em>, and the tool returns
+the current entries with an instruction to consolidate and retry within
+the same turn. Compaction is not a background worker; it is a
+synchronous obligation handed to the model at the moment of
+overflow.</p>
+<p>That is a write path, a correction path and a capacity policy all
+derived from a caching constraint. It is why this belongs in a memory
+pattern library rather than in a prompt-engineering note.</p>
+<h2 id="tradeoffs">Tradeoffs</h2>
+<ul>
+<li><strong>Freshness is the price of freezing.</strong> Under the
+frozen-snapshot shape, a memory written at turn 3 is invisible to the
+model until the next session. Hermes accepts this explicitly. If your
+agent must act on what it just learned, take the split-by-position shape
+instead, which costs nothing in freshness.</li>
+<li><strong>The bounded variant hands editorial control to the
+model.</strong> Hermes's refusal loop makes the model choose what to
+discard under time pressure, with no review and no record of what was
+dropped — which is the failure <a
+href="./append-only-memory-audit/">append-only memory audit</a> exists
+to prevent.</li>
+<li><strong>Attention position is not free.</strong> Material moved out
+of the system prompt and into the user turn is in a different position,
+and whether that changes how the model weighs it is not something this
+atlas has measured.</li>
+<li><strong>It only pays where caching does.</strong> A local model, a
+provider without prefix caching, or sessions of one or two turns will
+not repay the restructuring.</li>
+<li><strong>Splitting has a floor.</strong> If the "stable" block is
+itself regenerated by a nightly consolidation pass, the cache dies once
+a day rather than once a turn — better, but the boundary should be drawn
+where the regeneration happens, not where the taxonomy suggests.</li>
+</ul>
+<h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<ul>
+<li><strong><a href="../../systems/hermes-agent/">Hermes
+Agent</a></strong> — the frozen snapshot, and the only system here whose
+memory <em>design</em> follows from the cache constraint.</li>
+<li><strong><a href="../../systems/memobase/">Memobase</a></strong> —
+the profile is injected at the front, which the report notes is
+friendlier to prefix caching than the alternative.</li>
+<li><strong><a href="../../systems/graphify/">Graphify</a></strong> —
+assembles context in a way the report contrasts explicitly with
+"invalidating a prefix cache on every request".</li>
+<li><strong><a href="../../systems/helm/">Helm</a></strong>, <strong><a
+href="../../systems/csm/">CSM</a></strong>, <strong><a
+href="../../systems/risuai/">RisuAI</a></strong>, <strong><a
+href="../../systems/sillytavern/">SillyTavern</a></strong> — the
+counter-examples, each invalidating on every turn.</li>
+<li><strong><a href="../../systems/opencode/">OpenCode</a></strong> —
+the contract-level version: a host whose only injection seam is the
+cache-sensitive one.</li>
+</ul>
+<p>Note that <a href="../../systems/memos/">MemOS</a>'s "activation
+memory: KV/prefix cache" is a <em>different</em> mechanism — reusing
+model state rather than positioning text — and falls under the KV-cache
+scope boundary in the <a href="../../compare/">comparative
+report</a>.</p>
+<h2 id="tests-before-relying-on-it">Tests before relying on it</h2>
+<ul>
+<li>Capture the exact bytes of two consecutive requests and diff them.
+The first differing byte is the cache boundary; assert it falls after
+the stable block.</li>
+<li>Assert a mid-session memory write does not change the system prompt,
+under the frozen shape — and that it <em>does</em> reach disk.</li>
+<li>Assert the stable block is byte-identical across turns, including
+ordering of anything assembled from a set or a dict.</li>
+<li>Under the bounded variant, assert a write that exceeds the cap is
+refused and returns the current entries, rather than silently
+truncating.</li>
+<li>Measure it. Every claim on this page is about a mechanism read in
+code; no system in this atlas publishes a cache hit rate, and the
+reports say so.</li>
+</ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

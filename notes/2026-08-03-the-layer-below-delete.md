@@ -220,12 +220,16 @@ distributed database theory" — is answered on the page it is criticising, and
 the answer is that the key is different, which is the whole pattern.
 
 What is genuinely absent is the *other* half of the review's list: **event
-sourcing and CQRS**. Neither term appears anywhere in `content/`. That is the
-same shape of gap as
-[symbolic-prior-art](2026-07-28-symbolic-prior-art.md) — a mature lineage that
-solved a version of this and is missing from the atlas's stated ancestry — and
-it should be triaged the same way, which is by deciding whether it is an
-omission or a real discontinuity, not by asserting either.
+sourcing and CQRS**. Triaged in
+[the log and the projection](2026-08-03-the-log-and-the-projection.md), which
+corrects this paragraph as first written: `CQRS` appears nowhere in `content/`,
+but `event sourcing` appears twice, and only where a project applies the term to
+itself. Twenty reports describe the shape — canonical store, rebuildable
+projection — in the atlas's own words. The gap is not a missing lineage but a
+name the atlas never reaches for, and the thing worth having from it is a
+distinction the reports currently blur: whether a projection is rebuilt
+deterministically from stored text or re-derived by running a model over the log
+again.
 
 **C — concurrency.** Under-covered and correctly identified. Race conditions,
 write-write conflicts and locking appear in three system reports

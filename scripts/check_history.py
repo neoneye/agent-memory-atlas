@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assert every report's History section leads with the reading it is pinned to.
+"""Assert every report's History section records the reading it is pinned to.
 
 Each system report ends with `## History` — one dated entry per reading, newest
 first. The section exists because re-review narration used to be written into
@@ -7,12 +7,20 @@ whatever paragraph it contradicted, and into two lists in `content/overview.md`
 that had nothing to do with each other. A reader wanting "what changed since I
 last looked" had to reconstruct it from prose spread across two files.
 
-The invariant worth enforcing is small: **the newest History entry is the
-current reading.** A re-pin that updates `revision` and `analyzed_at` without
-adding an entry leaves a report whose body describes one commit and whose
-history stops at an older one, which is the drift this section was added to
-remove. Entries must also run newest-first, since a reader takes the top line as
-current and nothing else signals the order.
+The invariant worth enforcing is small: **some entry is dated `analyzed_at`.** A
+re-pin that updates `revision` and `analyzed_at` without adding an entry leaves a
+report whose body describes one commit and whose history stops at an older one,
+which is the drift this section was added to remove. Entries must also run
+newest-first, since a reader takes the top line as current and nothing else
+signals the order.
+
+Not "the newest entry is `analyzed_at`", because not every reading is a re-pin.
+Mem0's `audit_log` mark was recovered on 2026-07-30 by re-reading one file at the
+*same* commit — a real reading with a real outcome and no new sha to hang it on.
+Requiring it to be the newest entry would have forced either a false
+`analyzed_at` bump, claiming the whole report was re-read, or dropping the record
+of a mark that had been wrong for two months. Both are worse than the weaker
+invariant.
 
 Deliberately does not check prose. What an entry says is a judgement; that one
 exists, and that it is dated today's pin, is not.
@@ -46,7 +54,7 @@ def main(root: str) -> int:
         if not heading:
             problems.append(
                 f"{report.name}: no '## History' section. Add one, newest entry "
-                f"first, starting with **{analyzed}** and the commit it was read at."
+                f"first, including **{analyzed}** and the commit it was read at."
             )
             continue
 
@@ -57,10 +65,10 @@ def main(root: str) -> int:
                 f"line beginning **YYYY-MM-DD**."
             )
             continue
-        if dates[0] != analyzed:
+        if analyzed not in dates:
             problems.append(
-                f"{report.name}: newest History entry is {dates[0]} but "
-                f"analyzed_at is {analyzed} — the re-pin did not record a reading"
+                f"{report.name}: no History entry dated {analyzed} (analyzed_at); "
+                f"newest is {dates[0]} — the re-pin did not record a reading"
             )
         if dates != sorted(dates, reverse=True):
             problems.append(

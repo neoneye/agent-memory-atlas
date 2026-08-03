@@ -103,6 +103,13 @@ when the work happens.
   have caught it still unwritten; and Daimon now ships the placebo arm the
   benchmarks page argues nobody has, having used it to refute one of its own
   shipped features and to say which way its conservatism cut.
+- [2026-08-03-the-log-and-the-projection.md](2026-08-03-the-log-and-the-projection.md) —
+  a claim published the same morning, checked and half retracted: CQRS is absent
+  from the corpus but event sourcing is not, and the atlas writes the name down
+  only when a README hands it over — twenty reports describe a canonical store
+  with a rebuildable projection without once calling it that; the distinction
+  worth taking from the literature is that "rebuildable" means two different
+  things depending on whether a model is in the replay path.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.

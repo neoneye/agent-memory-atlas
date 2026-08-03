@@ -224,6 +224,12 @@ and the tests needed before relying on it.</p>
     <p>Remember what worked as a runnable procedure, and gate the write on verified execution.</p>
     <b>Read pattern →</b>
   </a>
+  <a class="pattern-index-card tone-amber" href="./cache-preserving-injection/">
+    <span>Cost</span>
+    <h2>Cache-preserving injection</h2>
+    <p>Split injected memory by how often it changes, so recall cannot invalidate the prefix cache every turn.</p>
+    <b>Read pattern →</b>
+  </a>
 </div>
 
 <h2 id="how-to-use-the-library">How to use the library</h2>
@@ -269,6 +275,10 @@ behind a verified-execution gate.</li>
 href="./resolve-not-just-detect/">resolve, don't just detect</a>.</li>
 <li>Memory has tiers and nobody can say what promotes between them: <a
 href="./promotion-between-tiers/">promotion between tiers</a>.</li>
+<li>Retrieval quality is fine and the provider bill is not: use <a
+href="./cache-preserving-injection/">cache-preserving injection</a> — a
+recall block in the system prompt invalidates the prefix cache on every
+request, and nothing else reports it.</li>
 </ul>
 <h2 id="how-established-is-any-of-this">How established is any of
 this?</h2>
@@ -583,15 +593,22 @@ href="./promotion-between-tiers/">Promotion between tiers</a> exists
 instead, because the discriminating question is not whether the tiers
 exist but what moves a memory up one — and far fewer systems can answer
 that.</p>
-<p><strong>Context-window pruning and prompt-cache
-preservation.</strong> Genuinely important, and genuinely a
-prompt-assembly concern rather than a memory-lifecycle one. The atlas
-records the interaction where it bites — an injection that changes every
-turn invalidates a provider's prefix cache, which several reports note —
-and <a href="./gate-the-expensive-path/">gate the expensive path</a>
-covers the decision not to retrieve at all. A pruning pattern would be
-about token budgets, and this library is about what survives a session
-with an identity.</p>
+<p><strong>Context-window pruning.</strong> Genuinely important, and
+genuinely a prompt-assembly concern rather than a memory-lifecycle one.
+A pruning pattern would be about token budgets, and this library is
+about what survives a session with an identity. <a
+href="./gate-the-expensive-path/">Gate the expensive path</a> covers the
+adjacent decision not to retrieve at all.</p>
+<p><strong>Prompt-cache preservation was bundled with the above and has
+since been separated</strong>, because the two are not the same claim.
+Pruning is about how many tokens you can afford; caching is about
+<em>where</em> a memory may be placed, and that turns out to constrain
+what a memory system is allowed to be — Hermes Agent's hard character
+caps, its refusal to accept an over-budget write, and its synchronous
+in-turn consolidation all follow from it rather than from anything about
+recall. That is a memory design derived from a cost constraint, so it is
+a pattern here: <a href="./cache-preserving-injection/">cache-preserving
+injection</a>. The pruning half of the original entry stays out.</p>
 <p>If you think one of these is misfiled, the disagreement is about the
 scope test rather than about the mechanism, and that test is stated at
 the top of the <a href="../compare/">comparative report</a>.</p>

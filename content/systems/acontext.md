@@ -207,8 +207,8 @@ record. A skill is current or gone.
 
 There is also no per-file provenance from a skill back to the tasks that shaped
 it. The pipeline knows which tasks it distilled on the way through — the wide
-events carry it — but the atlas found no join from a skill file to the task ids
-that produced it, so "why does this skill say that" is answerable from logs rather
+events carry it — but no join from a skill file to the task ids was found,
+so "why does this skill say that" is answerable from logs rather
 than from the store.
 
 ## 6. Retrieval Mechanics

@@ -138,8 +138,7 @@ Delete/update:
 - `_remove_memory_from_entity_store()` removes memory IDs from entity links.
 - `SQLiteManager.add_history()` records ADD/UPDATE/DELETE history.
 
-**The `history` table earns `audit_log`, and this report withheld the mark until
-2026-07-30.** The schema in `mem0/memory/storage.py` is `id`, `memory_id`,
+**The `history` table earns `audit_log`.** The schema in `mem0/memory/storage.py` is `id`, `memory_id`,
 `old_memory`, `new_memory`, `event`, `created_at`, `updated_at`, `is_deleted`,
 `actor_id`, `role` — so every mutation is recorded with both the value before and
 the value after, attributed to an actor and a role. It is written only by
@@ -151,13 +150,11 @@ drops both tables under a comment saying the caller is expected to replace the
 instance — a wipe, not an edit.
 
 That is a named append-only event record of memory mutations in the system's own
-store, which is the whole test. The mark was withheld here for two months and
-recovered by an accident of coverage: a from-scratch C# reimplementation,
-[Mem0Sharp](../mem0sharp/), was reviewed on 30 July, its narrower history table
-plainly qualified, and the divergence between a port and its original was
-recorded as a limitation rather than resolved. Re-reading `storage.py` settled
-it in the original's favour — Mem0's record is the richer of the two, since the
-C# table has no `actor_id` and no `role`.
+store, which is the whole test. It is also the richer of the two implementations
+of this schema in the atlas: the C# reimplementation
+[Mem0Sharp](../mem0sharp/) carried a narrower history table when it was first
+read, with no `actor_id` and no `role`, and has since converged on this exact
+column list by migration.
 
 The mark does not soften the report's main risk. An audit of *what changed* is
 not a trust model: extracted facts are still stored as plain text with no
@@ -329,5 +326,14 @@ This design is appropriate for product personalization and high-throughput memor
 - Rerankers: `mem0/mem0/reranker/`.
 
 ## History
+
+**2026-07-30** — `audit_log` added, at the same pin. The mark had been withheld
+for two months and was recovered by an accident of coverage: reviewing the C#
+reimplementation [Mem0Sharp](../mem0sharp/) surfaced a narrower history table
+that plainly qualified, and the divergence between a port and its original was
+first recorded as a limitation rather than resolved. Re-reading
+`mem0/memory/storage.py` settled it in the original's favour. The lesson is in
+[the atlas's own history](../../compare/#history): a mark can be wrong in the
+withholding direction, and nothing in the process was looking for that.
 
 **2026-07-26** — [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150) — first reading.
