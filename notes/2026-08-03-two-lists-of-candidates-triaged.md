@@ -102,8 +102,10 @@ message, checkable in ten minutes.
 ## What to do, in order
 
 1. **`kitfunso/hippo-memory`** — highest correction signal in the batch, MIT,
-   heavily tested, and its stated thesis is deletion. If the mechanism matches
-   the tagline this is a report; if it does not, that gap is itself the finding.
+   heavily tested, and its stated thesis is deletion. **First pass done, report
+   not written** — see below. The gap between the tagline and the mechanism is
+   real and is the finding.
+
 2. **`fuyuxiang/echo-agent`** — "forgetting and contradiction detection" is a
    claim about two of the atlas's seven columns. Largest codebase here.
 3. **`sachinsharma9780/memweave`** — not for correction, but because
@@ -138,3 +140,60 @@ dump, which look like harnesses rather than memory systems and were not cloned.
   by a case where following the star count would have picked the weakest system
   in the batch on the atlas's own axes.
 - **One name collision flagged** before it can merge two different projects.
+
+## First pass on hippo-memory, and why it stopped there
+
+Probed at `a9c7cca3613b6571bfb37ad1fb6c070b7c976197` (2026-08-03). 42,482 lines
+in `src/` alone, MIT, 376 test files, a 25-plus-version migration ladder in
+`src/db.ts`. Not read end to end, and **this is not a report** — it is the
+capability pass, recorded so the next session starts from evidence rather than
+from the tagline.
+
+What the code says, against the seven marks:
+
+- **`trust_state` — likely yes.** `ConfidenceLevel = 'verified' | 'observed' |
+  'inferred' | 'stale'` (`src/memory.ts:23`) is a discrete status stored on the
+  row, not a score. `resolveConfidence(entry, now)` takes a clock, so `stale`
+  appears to be derived at read time rather than stored — which needs checking,
+  because a state the store never persists is a different claim.
+- **`audit_log` — likely yes.** A dedicated `audit_log` table with
+  `ts, tenant_id, actor, op, target_id, metadata_json`, one INSERT site
+  (`src/audit.ts:195`), and a typed op union covering `supersede`, `forget`,
+  `promote`, `archive_raw`, `auth_revoke`, plus per-entity variants
+  (`decision_supersede`, `process_supersede`, `policy_supersede`).
+- **`tombstone` — no, and this is the finding.** The word appears nowhere in
+  `src/`. `forget` (`src/api.ts:1677`) resolves to `DELETE FROM memories`
+  (`src/store.ts:1654`). Correction is real but **record-keyed**: 453
+  occurrences of `superseded`, a `superseded_by` pointer honoured on the read
+  path (`src/ambient.ts:57`). That is the same shape as
+  [core-memory](../content/systems/core-memory.md) — supersession hides a row
+  and does not block a re-assertion of the value. For a project whose tagline is
+  *"The secret to good memory isn't remembering more. It's knowing what to
+  forget"*, the mechanism is a hard delete with an audit row.
+- **`scope_enforced` — the near-miss to check first.** `tenant_id` is applied as
+  a real predicate on the read path (`src/store.ts:719-721`), but the parameter
+  is optional — `readEntry(hippoRoot, id, tenantId?)`,
+  `loadAllEntries(hippoRoot, tenantId?)` — and the predicate is the empty string
+  when it is undefined. Whether every caller passes it is the whole question and
+  was not traced. The atlas already calls this mark its shallowest.
+- **`bitemporal` — partial at most.** `valid_from` exists in
+  `src/graph-recall.ts` but not on the `memories` table, so any claim would be
+  about the graph layer only.
+- **`negative_eval` — probably not, and the near-miss is more interesting than
+  the mark.** `tests/api-recall-suppression-summary.test.ts` asserts that
+  `RecallResult.suppressionSummary` carries six counters describing *what was
+  excluded and why* — transparency about the cutoff rather than a case asserting
+  particular material must not be retrieved. Telling the caller what recall
+  silently dropped is a mechanism this atlas has asked for elsewhere and should
+  be written up on its own terms.
+- **`human_review`** — not assessed.
+
+**Why it stopped.** A report at this repository's standard means tracing capture,
+extraction, retrieval, injection, correction and background work end to end
+through 42,000 lines, and every mark above is currently a grep with a hypothesis
+attached. The
+[methodology hazards](2026-07-28-methodology-hazards.md) note names this
+method's characteristic failure as *producing something plausible where the code
+says something adjacent*, and a report written from this much evidence would be
+exactly that. The next session should start with the scope question, since it is
+the one mark where the answer changes what the system is.
