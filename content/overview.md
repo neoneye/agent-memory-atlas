@@ -6,6 +6,38 @@ root: ..
 page_kind: comparison
 ---
 
+## In Short
+
+136 open-source memory systems, each read at a pinned commit and judged against
+seven mechanisms with strict definitions. Corpus last extended **4 August 2026**.
+Five findings, with the counts they rest on:
+
+1. **Correction is the phase that goes unbuilt.** 4 systems of 136 carry a
+   rejected-value tombstone — a record keyed on the *value*, so a later
+   extraction cannot silently re-assert something already judged wrong. Almost
+   everything else corrects by hiding a row, which stops a reader seeing it and
+   does not stop a writer recreating it.
+2. **Deletion claims stop at the storage engine.** Every `update/delete` entry
+   below describes what a system's own code does. On three of the four vector
+   engines this corpus depends on, the embedding survives the delete until an
+   unscheduled compaction — see
+   [the layer below delete](#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
+3. **Scope is the most implemented mechanism and the shallowest.**
+   74 of 136 apply a scope key as a filter on the read path. It is also
+   the mark most often satisfied by a single predicate that a background job
+   then ignores.
+4. **Negative evidence is almost never tested.** 17 of 136 commit a case
+   asserting that particular material must *not* be retrieved — the assertion
+   every scope, deletion and correction claim ultimately rests on.
+5. **Trust is usually a number, not a state.** 18 of 136 record a discrete
+   epistemic status. The rest store a confidence float, which cannot express
+   *rejected* and so cannot survive being wrong.
+
+**Start here:** [find a system](#2-comparative-matrix) in the matrix ·
+[filter by mechanism](../capabilities/) on the capability index ·
+[how this was researched](../methodology/atlas-rubric/), including what a mark
+means and what "not found" does not mean.
+
 ## Reading This Report
 
 **Looking for the table?** It is [section 2, the comparative
@@ -25,7 +57,7 @@ Systems reviewed and excluded on this basis, or on licence grounds, are named in
 the limitations at the end rather than quietly dropped — the exclusions are part
 of the evidence.
 
-**Why the two counts differ.** The atlas holds **135 reports across 132
+**Why the two counts differ.** The atlas holds **136 reports across 135
 repositories**: `NousResearch/hermes-agent` carries two distinct memory systems
 and is reviewed twice, as [Hermes Agent](../systems/hermes-agent/) and
 [Holographic](../systems/holographic/). Counts of *systems* are 133 and counts of

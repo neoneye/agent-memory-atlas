@@ -88,9 +88,11 @@ without anyone asking whether the page should hold them.
    on the other eleven columns would imply they hold values rather than
    sentences.
 2. **Link the capability index from the top of the matrix.** **Done.**
-3. **An executive summary above the hero** — five findings, corpus size and
-   freshness date, and three actions. The reviewer's version of this is better
-   than what is there, and it costs nothing but editing.
+3. **An executive summary above the hero.** **Done** as an `In Short` section
+   opening the page: five findings each stated with the live count it rests on,
+   corpus size and freshness date, and three actions. Writing it surfaced a
+   fourth stale count — the page claimed 135 reports across 132 repositories
+   where the figures are 136 and 135.
 4. **Then decide on the split**, because everything else in the proposal depends
    on whether `/compare/` is a document or a workspace, and the answer determines
    whether the normalization argument above is worth reopening.

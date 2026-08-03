@@ -95,6 +95,43 @@ mechanics, trust models, and operational tradeoffs.</p>
           </div>
         </aside>
         <article class="prose" id="article">
+<h2 id="in-short">In Short</h2>
+<p>136 open-source memory systems, each read at a pinned commit and
+judged against seven mechanisms with strict definitions. Corpus last
+extended <strong>4 August 2026</strong>. Five findings, with the counts
+they rest on:</p>
+<ol type="1">
+<li><strong>Correction is the phase that goes unbuilt.</strong> 4
+systems of 136 carry a rejected-value tombstone — a record keyed on the
+<em>value</em>, so a later extraction cannot silently re-assert
+something already judged wrong. Almost everything else corrects by
+hiding a row, which stops a reader seeing it and does not stop a writer
+recreating it.</li>
+<li><strong>Deletion claims stop at the storage engine.</strong> Every
+<code>update/delete</code> entry below describes what a system's own
+code does. On three of the four vector engines this corpus depends on,
+the embedding survives the delete until an unscheduled compaction — see
+<a
+href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
+layer below delete</a>.</li>
+<li><strong>Scope is the most implemented mechanism and the
+shallowest.</strong> 74 of 136 apply a scope key as a filter on the read
+path. It is also the mark most often satisfied by a single predicate
+that a background job then ignores.</li>
+<li><strong>Negative evidence is almost never tested.</strong> 17 of 136
+commit a case asserting that particular material must <em>not</em> be
+retrieved — the assertion every scope, deletion and correction claim
+ultimately rests on.</li>
+<li><strong>Trust is usually a number, not a state.</strong> 18 of 136
+record a discrete epistemic status. The rest store a confidence float,
+which cannot express <em>rejected</em> and so cannot survive being
+wrong.</li>
+</ol>
+<p><strong>Start here:</strong> <a href="#2-comparative-matrix">find a
+system</a> in the matrix · <a href="../capabilities/">filter by
+mechanism</a> on the capability index · <a
+href="../methodology/atlas-rubric/">how this was researched</a>,
+including what a mark means and what "not found" does not mean.</p>
 <h2 id="reading-this-report">Reading This Report</h2>
 <p><strong>Looking for the table?</strong> It is <a
 href="#2-comparative-matrix">section 2, the comparative matrix</a> —
@@ -115,7 +152,7 @@ Systems reviewed and excluded on this basis, or on licence grounds, are
 named in the limitations at the end rather than quietly dropped — the
 exclusions are part of the evidence.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>135 reports across 132 repositories</strong>:
+<strong>136 reports across 135 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
