@@ -120,6 +120,12 @@ when the work happens.
   scope and tests while the two strongest sat in the list that was waved past —
   the sharpest instance yet of the rule against citing stars, since the starred
   recommendation is the weakest candidate on mechanism in the same message.
+- [2026-08-04-the-superlative-audit-first-pass.md](2026-08-04-the-superlative-audit-first-pass.md) —
+  the 294 corpus-scoped superlatives split into ten mechanically checkable count
+  claims and 284 judgements; four of the seven real counts were stale, and one
+  was caused an hour earlier by the regex sweep that bumps denominators to
+  satisfy the build while leaving numerators nobody checked — a stale figure
+  wearing a current denominator reads fresher than it did before the fix.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.

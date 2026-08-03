@@ -62,7 +62,7 @@ is the atlas's central finding, and it is visible here in one column pair.
 into "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Sixteen repositories of one hundred and thirty-five
+**Negative evidence is almost never tested.** Seventeen repositories of one hundred and thirty-six
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this atlas ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says more
@@ -115,7 +115,7 @@ stale fact not to appear in the captured model context.
 
 **Only these nine probe the question the atlas is actually asking.** A boundary
 test proves the filter works; a content test proves a value that was rejected,
-disputed or forbidden stays gone. Eleven of one hundred and thirty-five is the real figure for the
+disputed or forbidden stays gone. Eleven of one hundred and thirty-six is the real figure for the
 second kind, and the two newest raise a distinction the others do
 not: a test that a *superseded* value stays hidden is cheap, because the row is
 still there to be filtered on. The expensive assertion is that a value the system
