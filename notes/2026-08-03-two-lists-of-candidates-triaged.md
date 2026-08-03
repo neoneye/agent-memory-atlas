@@ -170,12 +170,39 @@ What the code says, against the seven marks:
   and does not block a re-assertion of the value. For a project whose tagline is
   *"The secret to good memory isn't remembering more. It's knowing what to
   forget"*, the mechanism is a hard delete with an audit row.
-- **`scope_enforced` — the near-miss to check first.** `tenant_id` is applied as
-  a real predicate on the read path (`src/store.ts:719-721`), but the parameter
-  is optional — `readEntry(hippoRoot, id, tenantId?)`,
-  `loadAllEntries(hippoRoot, tenantId?)` — and the predicate is the empty string
-  when it is undefined. Whether every caller passes it is the whole question and
-  was not traced. The atlas already calls this mark its shallowest.
+- **`scope_enforced` — traced, and the answer is yes with the most interesting
+  caveat in the batch.** `tenant_id` is a real read-path predicate
+  (`src/store.ts:719-721`) and the parameter is optional, so the question was
+  which callers pass it. Three populations, and each omission turns out to be
+  deliberate:
+
+  1. **The API recall path passes it** — `loadAllEntries(ctx.hippoRoot,
+     ctx.tenantId)` (`src/api.ts:2229-2230`). `resolveTenantId`
+     (`src/tenant.ts`) derives it from a validated API key or `HIPPO_TENANT`,
+     defaulting to `default`, and carries a fix note for the case where
+     `HIPPO_TENANT=""` fell through as the empty string and "broke every
+     downstream tenant filter".
+  2. **The CLI does not, by design.** `cli.ts` omits the argument at fifteen-plus
+     sites, and a comment at `cli.ts:5942` states the rule — the load "is
+     host-wide and intentionally out-of-L9-scope per plan §11 (cli.ts is
+     single-tenant-per-process)", with the `tenantId` argument beside it called
+     "a defensive no-op … only to mirror the canonical caller pattern".
+  3. **`sleep` does not, and this is the design worth reporting.** Phase 3 of
+     `sleep` loads host-wide (`src/api.ts:2789`) and hard-deletes every entry the
+     quality audit grades `error` via `phases.deleteEntry` — whose signature
+     `deleteEntry(hippoRoot, id, opts?)` has no tenant parameter at all. Read
+     alone that is a cross-tenant delete reachable from a tenant-scoped call.
+     It is not, because the route is fenced two ways: `/v1/sleep` is
+     **loopback-only** and **admin-role gated**, and the 403 says why —
+     *"/v1/sleep is loopback-only (host-wide consolidation; see CHANGELOG
+     v1.11.4)"*.
+
+  So the boundary is enforced in the query on the read path and **deliberately
+  suspended for consolidation, with the suspension gated at the transport layer
+  instead**. That is a real architectural position rather than an oversight, it
+  is the kind of thing the atlas's scope mark cannot express on its own, and the
+  version reference in the error string says the project met this hazard in
+  production and fenced it.
 - **`bitemporal` — partial at most.** `valid_from` exists in
   `src/graph-recall.ts` but not on the `memories` table, so any claim would be
   about the graph layer only.
@@ -188,7 +215,11 @@ What the code says, against the seven marks:
   be written up on its own terms.
 - **`human_review`** — not assessed.
 
-**Why it stopped.** A report at this repository's standard means tracing capture,
+**Where it now stands.** The scope question above is settled and is the one
+mark that changes what the system is. Everything else remains a grep with a
+hypothesis attached.
+
+**Why it still stopped.** A report at this repository's standard means tracing capture,
 extraction, retrieval, injection, correction and background work end to end
 through 42,000 lines, and every mark above is currently a grep with a hypothesis
 attached. The
