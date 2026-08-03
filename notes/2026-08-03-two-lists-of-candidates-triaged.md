@@ -151,16 +151,28 @@ from the tagline.
 
 What the code says, against the seven marks:
 
-- **`trust_state` — likely yes.** `ConfidenceLevel = 'verified' | 'observed' |
-  'inferred' | 'stale'` (`src/memory.ts:23`) is a discrete status stored on the
-  row, not a score. `resolveConfidence(entry, now)` takes a clock, so `stale`
-  appears to be derived at read time rather than stored — which needs checking,
-  because a state the store never persists is a different claim.
-- **`audit_log` — likely yes.** A dedicated `audit_log` table with
+- **`trust_state` — yes, and the fourth state is the finding.**
+  `ConfidenceLevel = 'verified' | 'observed' | 'inferred' | 'stale'`
+  (`src/memory.ts:23`). Only the first three are ever stored. `resolveConfidence`
+  (`src/memory.ts:447`) short-circuits on `pinned` or `verified`, then returns
+  `'stale'` when `last_retrieved` is more than 30 days old, otherwise the stored
+  value — so **staleness is computed from disuse and never persisted.** A memory
+  goes stale because nobody looked at it, not because anything suggested it
+  stopped being true. That is the conflation
+  [decay and reinforcement](../content/patterns/decay-and-reinforcement.md)
+  exists to separate: retrieval frequency is being used as a proxy for continued
+  truth, on a fixed 30-day threshold, in a field whose other three values are
+  epistemic.
+- **`audit_log` — yes.** A dedicated table with
   `ts, tenant_id, actor, op, target_id, metadata_json`, one INSERT site
   (`src/audit.ts:195`), and a typed op union covering `supersede`, `forget`,
-  `promote`, `archive_raw`, `auth_revoke`, plus per-entity variants
-  (`decision_supersede`, `process_supersede`, `policy_supersede`).
+  `promote`, `archive_raw`, `auth_revoke`, plus per-entity variants. No
+  `UPDATE audit_log` exists anywhere. The one `DELETE` is retention pruning
+  (`src/audit-prune.ts:92`), which is opt-in per tenant, has a dry-run mode, and
+  **emits its own `audit_prune` row carrying cutoff, count and dryRun** — so, in
+  its own words, operators investigating "where did old rows go" have one row
+  left to find regardless of retention floor. A retention policy that records its
+  own execution in the log it truncates is worth copying.
 - **`tombstone` — no, and this is the finding.** The word appears nowhere in
   `src/`. `forget` (`src/api.ts:1677`) resolves to `DELETE FROM memories`
   (`src/store.ts:1654`). Correction is real but **record-keyed**: 453
@@ -203,21 +215,38 @@ What the code says, against the seven marks:
   is the kind of thing the atlas's scope mark cannot express on its own, and the
   version reference in the error string says the project met this hazard in
   production and fenced it.
-- **`bitemporal` — partial at most.** `valid_from` exists in
-  `src/graph-recall.ts` but not on the `memories` table, so any claim would be
-  about the graph layer only.
-- **`negative_eval` — probably not, and the near-miss is more interesting than
-  the mark.** `tests/api-recall-suppression-summary.test.ts` asserts that
+- **`bitemporal` — likely yes, and this corrects the first pass.** `valid_from`
+  is not confined to the graph layer: migration v-`238` adds it to the
+  `memories` table itself and backfills it from `created`
+  (`src/db.ts:238-240`), with a nullable `valid_to` and a comment naming the
+  pair an "EFFECTIVE-TIME range" (`src/db.ts:1315`) beside `created` /
+  `updated_at` as record time. That is validity time tracked separately from
+  record time on the main table. What remains unchecked is whether the read path
+  filters on it, which is the difference between a bi-temporal schema and a
+  bi-temporal system.
+- **`negative_eval` — not established.** The vocabulary search returned only
+  generic `expect(...).not.toContain` assertions across unrelated suites, which
+  is too loose to claim either way. This is the one mark still genuinely open.
+  The near-miss beside it is more interesting than the mark would have been: `tests/api-recall-suppression-summary.test.ts` asserts that
   `RecallResult.suppressionSummary` carries six counters describing *what was
   excluded and why* — transparency about the cutoff rather than a case asserting
   particular material must not be retrieved. Telling the caller what recall
   silently dropped is a mechanism this atlas has asked for elsewhere and should
   be written up on its own terms.
-- **`human_review`** — not assessed.
+- **`human_review` — no, on what was traced.** `memory_conflicts` carries a
+  `status`, and it does move — but by code, not by a person:
+  `UPDATE memory_conflicts SET status = 'resolved'` fires from inside detection
+  and merge (`src/store.ts:2380`, `:2497`). That is
+  [resolve, don't just detect](../content/patterns/resolve-not-just-detect.md)
+  with an automatic adjudicator, which is a different mechanism from a surface
+  where a person decides. The dashboard was not read.
 
-**Where it now stands.** The scope question above is settled and is the one
-mark that changes what the system is. Everything else remains a grep with a
-hypothesis attached.
+**Where it now stands.** Six of the seven marks have a traced answer —
+`scope_enforced` yes, `trust_state` yes, `audit_log` yes, `bitemporal` likely
+yes, `tombstone` no, `human_review` no — and `negative_eval` is open. Two
+readings from the first pass were wrong and are corrected above: `bitemporal` is
+on the `memories` table and not only in the graph, and `stale` is derived rather
+than stored.
 
 **Why it still stopped.** A report at this repository's standard means tracing capture,
 extraction, retrieval, injection, correction and background work end to end
