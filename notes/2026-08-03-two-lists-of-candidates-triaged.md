@@ -215,19 +215,30 @@ What the code says, against the seven marks:
   is the kind of thing the atlas's scope mark cannot express on its own, and the
   version reference in the error string says the project met this hazard in
   production and fenced it.
-- **`bitemporal` — likely yes, and this corrects the first pass.** `valid_from`
-  is not confined to the graph layer: migration v-`238` adds it to the
-  `memories` table itself and backfills it from `created`
-  (`src/db.ts:238-240`), with a nullable `valid_to` and a comment naming the
-  pair an "EFFECTIVE-TIME range" (`src/db.ts:1315`) beside `created` /
-  `updated_at` as record time. That is validity time tracked separately from
-  record time on the main table. What remains unchecked is whether the read path
-  filters on it, which is the difference between a bi-temporal schema and a
-  bi-temporal system.
-- **`negative_eval` — not established.** The vocabulary search returned only
-  generic `expect(...).not.toContain` assertions across unrelated suites, which
-  is too loose to claim either way. This is the one mark still genuinely open.
-  The near-miss beside it is more interesting than the mark would have been: `tests/api-recall-suppression-summary.test.ts` asserts that
+- **`bitemporal` — yes, for policies, and the route to that answer is a warning.**
+  The `memories` table carries `valid_from`/`valid_to` (`src/db.ts:238-240`) and
+  a search of the memory read path for a filter on them returned **nothing** —
+  which reads exactly like the declared-and-unwired finding this atlas
+  specialises in, and would have been published as one. Widening the search to
+  all of `src/` found the implementation living in `src/policies.ts`, where it is
+  not decorative: `valid_from` is required and defaults to creation time,
+  `valid_to` is nullable meaning open-ended, the header calls the pair "the
+  queryable axis", the interval is half-open `[valid_from, valid_to)`, dates are
+  normalised to fixed width so they sort lexically, and `valid_to > valid_from`
+  is enforced with its own error. It also carries a fix note for a real
+  read-path bug — a datetime `valid_from` "otherwise made a same-day policy
+  invisible" — which is only possible in a system whose reads do filter on it.
+
+  So validity time is tracked separately from record time and reaches the read
+  path, **for policies**. On the `memories` table the columns exist and, on what
+  was traced, nothing filters them. The mark is earned by the policy path; the
+  uneven coverage is the sentence that belongs beside it.
+
+- **`negative_eval` — no.** `FeatureTestCase` (`src/eval-suite.ts:32`) carries
+  `id`, `category`, `query`, `expectedIds`, `description`. There is no
+  must-not-appear field, so the suite can assert what recall *should* return and
+  has no way to express what it must not. The near-miss beside it is more
+  interesting than the mark would have been:
   `RecallResult.suppressionSummary` carries six counters describing *what was
   excluded and why* — transparency about the cutoff rather than a case asserting
   particular material must not be retrieved. Telling the caller what recall
@@ -241,12 +252,20 @@ What the code says, against the seven marks:
   with an automatic adjudicator, which is a different mechanism from a surface
   where a person decides. The dashboard was not read.
 
-**Where it now stands.** Six of the seven marks have a traced answer —
-`scope_enforced` yes, `trust_state` yes, `audit_log` yes, `bitemporal` likely
-yes, `tombstone` no, `human_review` no — and `negative_eval` is open. Two
-readings from the first pass were wrong and are corrected above: `bitemporal` is
-on the `memories` table and not only in the graph, and `stale` is derived rather
-than stored.
+**Where it now stands.** All seven marks are traced:
+`scope_enforced`, `trust_state`, `audit_log` and `bitemporal` yes;
+`tombstone`, `human_review` and `negative_eval` no. That is the frontmatter a
+report needs, with file and symbol behind each one.
+
+Three readings were wrong along the way and every one was corrected by widening
+a search rather than by new information: `bitemporal` was called graph-only,
+then unwired, before turning out to be implemented properly one file over;
+`stale` was assumed stored; `human_review` was left unassessed when the answer
+was already in `store.ts`. The pattern is the same each time — a narrow grep
+returning nothing reads exactly like an absence, and this method's
+[characteristic failure](2026-07-28-methodology-hazards.md) is publishing that
+as a finding. Two of the three would have been *criticisms* of the system, which
+is the direction least likely to be reported by a reader.
 
 **Why it still stopped.** A report at this repository's standard means tracing capture,
 extraction, retrieval, injection, correction and background work end to end
