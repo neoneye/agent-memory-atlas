@@ -93,9 +93,25 @@ without anyone asking whether the page should hold them.
    corpus size and freshness date, and three actions. Writing it surfaced a
    fourth stale count — the page claimed 135 reports across 132 repositories
    where the figures are 136 and 135.
-4. **Then decide on the split**, because everything else in the proposal depends
-   on whether `/compare/` is a document or a workspace, and the answer determines
-   whether the normalization argument above is worth reopening.
+4. **The split, done in the one place it was safe.** Section 9 —
+   136 repo-by-repo verdicts, 1,256 lines, the single largest block on the page —
+   is now [`/verdicts/`](../content/verdicts.md). The compare page went from
+   89,689 words to 69,052, a 23% cut, by moving one self-contained product rather
+   than by restructuring.
+
+   **`/compare/` keeps its URL and every anchor.** It is cited from outside this
+   project, so moving the *comparison* off it would have broken exactly the links
+   most worth preserving. The section heading stays in place as a stub pointing at
+   the new page, which keeps `#9-repo-by-repo-verdicts` resolving and stops
+   sections 10 and 11 renumbering — a renumber would have broken seventeen inbound
+   anchors from `content/` for no reader benefit.
+
+   **What is still one page:** the taxonomy at 1,187 lines and the lifecycle
+   comparison at 710. Those are load-bearing for the argument in a way the
+   verdicts were not, and splitting them is a genuine editorial decision rather
+   than a mechanical one. The remaining proposal items — column chooser,
+   side-by-side selection, URL state, CSV export — still depend on the
+   normalization question, which is declined above and unchanged by this split.
 
 ## What came of it
 
