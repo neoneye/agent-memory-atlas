@@ -282,3 +282,47 @@ positives when it forgets what its instrument cannot read.
 **Watch for:** anything else in the atlas quoted from a figure or table image.
 Those are unverifiable by fetch and should carry the figure number, as this one
 does.
+
+## 9. The narrow grep whose silence reads as an absence
+
+**Standing, and the best-evidenced hazard here** — three instances from a single
+assessment on 2026-08-03, none of which reached the site.
+
+Hazard 6 is about an absence claim *ageing* into wrongness. This one is about an
+absence claim that was **never true at any commit**: a search scoped to the
+wrong files returns nothing, and nothing is exactly what a real absence returns.
+The two are indistinguishable in the output. Only the scope of the search
+separates them, and the scope is invisible once the result is written down.
+
+All three came from assessing `kitfunso/hippo-memory` at
+`a9c7cca3613b6571bfb37ad1fb6c070b7c976197`:
+
+- **`bitemporal`, twice.** First reading: `valid_from` appears in
+  `src/graph-recall.ts`, so the property was called graph-layer-only. Second:
+  the `memories` table has the columns and a search of the memory read path for
+  a filter returned nothing, so it was called declared-and-unwired — which is a
+  finding shape this atlas is known for and would have been believed. Third,
+  after widening to all of `src/`: `src/policies.ts` implements it properly, with
+  a required `valid_from`, a nullable open-ended `valid_to`, a half-open
+  interval, fixed-width date normalisation so values sort lexically, and a
+  committed fix for a read-path bug that made same-day policies invisible.
+- **`human_review`.** Recorded as "not assessed" while the answer was already in
+  `store.ts` — conflict status moved by code rather than by a person, which is a
+  no rather than an unknown.
+
+**Two of the three would have been criticisms**, which is the direction hazard 4
+already identifies as least likely to be corrected by a reader: nobody writes in
+to say a project is better than the atlas described it.
+
+**Why the shape recurs.** A capability probe is a search for a *vocabulary*, and
+every vocabulary has a boundary the searcher chose. When the mechanism is one
+file outside it, the instrument reports the same empty result it reports for a
+system that never built the thing. Confidence in the answer is therefore
+confidence in the search scope, and the scope is the part never written down
+beside the claim.
+
+**Watch for:** any mark recorded as absent on the strength of a search rather
+than a reading. Before publishing a negative, widen the search to the whole
+source tree at least once and say so — and prefer "not found in `src/`, searched
+for `<terms>`" to "absent", because the first is checkable and the second is a
+claim about the project.

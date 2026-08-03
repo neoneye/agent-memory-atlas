@@ -26,7 +26,9 @@ when the work happens.
   six questions the committed corpus can answer with no new reviews.
 - [2026-07-28-methodology-hazards.md](2026-07-28-methodology-hazards.md) —
   how this review process fails, including the two that already published wrong
-  claims.
+  claims, and the best-evidenced one: a grep scoped to the wrong files returns
+  exactly what a real absence returns, caught three times in one assessment and
+  twice pointing at a criticism.
 - [2026-07-28-symbolic-prior-art.md](2026-07-28-symbolic-prior-art.md) —
   belief revision, truth maintenance and BDI belief bases are absent from the
   atlas's lineage, and whether that is an omission or a real discontinuity is
