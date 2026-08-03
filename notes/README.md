@@ -110,6 +110,13 @@ when the work happens.
   with a rebuildable projection without once calling it that; the distinction
   worth taking from the literature is that "rebuildable" means two different
   things depending on whether a model is in the replay path.
+- [2026-08-03-two-lists-of-candidates-triaged.md](2026-08-03-two-lists-of-candidates-triaged.md) —
+  a curated recommendation and a raw GitHub search dump submitted together; six
+  of thirty were already reviewed, all thirty were reachable for once, and the
+  three systems named as worth trying scored bottom of the batch on correction,
+  scope and tests while the two strongest sat in the list that was waved past —
+  the sharpest instance yet of the rule against citing stars, since the starred
+  recommendation is the weakest candidate on mechanism in the same message.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
