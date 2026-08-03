@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A four-tier memory whose write
+guard ranks provenance, so a model-inferred claim cannot overwrite one
+the user stated, and whose contradiction pass adjudicates rather than
+flags.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Echo Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A four-tier memory whose
+write guard ranks provenance, so a model-inferred claim cannot overwrite
+one the user stated, and whose contradiction pass adjudicates rather
+than flags.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Echo
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A four-tier memory whose
+write guard ranks provenance, so a model-inferred claim cannot overwrite
+one the user stated, and whose contradiction pass adjudicates rather
+than flags.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Echo Agent — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Provenance-ranked contradiction memory</p>
+          <h1>Echo Agent</h1>
+          <p class="document-deck">A four-tier memory whose write guard
+ranks provenance, so a model-inferred claim cannot overwrite one the
+user stated, and whose contradiction pass adjudicates rather than
+flags.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/fuyuxiang/echo-agent">
+              <span>Source</span>
+              <strong>fuyuxiang/echo-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e" title="29a19f4dd86ae2aeabab97df2b9bea3ae718460e">
+              <span>Analyzed revision</span>
+              <code>29a19f4d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-04</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (65%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Echo Agent is a <strong>self-hostable long-running agent</strong>
+with memory as a first-class subsystem: 76,594 lines of Python in the
+package, 360 test files, MIT, bilingual documentation with the Chinese
+README as the primary one. The memory layer alone has eighteen modules
+with names that read like this atlas's table of contents —
+<code>contradiction.py</code>, <code>forgetting.py</code>,
+<code>consolidator.py</code>, <code>eligibility.py</code>,
+<code>reviewer.py</code>, <code>tiers.py</code>.</p>
+<p><strong>The idea worth the whole report is
+<code>provenance_guard</code>.</strong> Every memory carries a
+<code>source</code> word recording <em>which write path created it</em>,
+ranked:</p>
+<pre class="python"><code>_SOURCE_PRIORITY = {&quot;user_stated&quot;: 3, &quot;consolidated&quot;: 2, &quot;model_inferred&quot;: 1}
+
+def provenance_guard(actor_source: str, target: &quot;MemoryEntry&quot;) -&gt; bool:
+    return source_priority(actor_source) &gt;= source_priority(target.source)</code></pre>
+<p>A write is permitted only when the actor's provenance ranks at or
+above the target's. <strong>A model-inferred claim cannot overwrite or
+delete a fact the user stated.</strong> Unknown words, including
+<code>legacy</code> for pre-provenance rows, rank zero, so the guard
+fails closed on anything it does not recognise.</p>
+<p>The comment above it matters as much as the code: <em>"the writing
+PATH decides the label, the model never free-chooses"</em>. The model
+cannot nominate its own output as <code>user_stated</code>, because the
+label is a property of how the row arrived rather than a field the
+extraction fills in. That is the <a
+href="../../patterns/governed-write-gateway/">governed write gateway</a>
+and <a href="../../patterns/evidence-before-belief/">evidence before
+belief</a> arriving together, in about fifteen lines, and it is the
+cleanest answer in this corpus to <em>whose claim wins</em>.</p>
+<p><strong>Contradiction adjudicates rather than flags.</strong>
+<code>ContradictionChecker.resolve</code>
+(<code>echo_agent/memory/contradiction.py:171</code>) picks a winner and
+a loser using the same <code>source_priority</code> rank, then marks the
+loser superseded through a maintenance channel described in the source
+as unified invalidation plus audit. The pre-filter excludes
+already-superseded rows from being contradiction candidates, so a value
+that changed twice does not keep re-litigating its own history. This is
+<a href="../../patterns/resolve-not-just-detect/">resolve, don't just
+detect</a> implemented, not gestured at.</p>
+<p><strong>The gap is the same one the corpus keeps having.</strong>
+Supersession is <strong>record-keyed</strong>:
+<code>superseded_by</code> points at a winner and the loser drops out of
+reads. Nothing keys the rejected <em>value</em>, so a later extraction
+that rediscovers the losing claim writes a fresh row with a fresh id and
+the adjudication that already happened is invisible to it. The
+provenance guard limits <em>who</em> may overwrite; it does not stop the
+same wrong value returning through a path with adequate rank.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>MemoryEntry</code> with a <strong>tier</strong>
+and a <strong>type</strong> and a <strong>provenance word</strong>, and
+those three axes do different jobs.</p>
+<p><code>MemoryTier</code> is
+<code>working | episodic | semantic | archival</code> — where a memory
+lives in its lifecycle. <code>MemoryType</code> is
+<code>user | environment</code> — what it is about. <code>source</code>
+is <code>user_stated | consolidated | model_inferred | legacy</code> —
+how it got here, and it is deliberately a string rather than an enum so
+"future write paths add a word for free".</p>
+<p>The lifecycle runs on a forgetting curve.
+<code>ForgettingCurve.effective_importance</code>
+(<code>echo_agent/memory/forgetting.py:47</code>) decays raw importance
+over a half-life, with pinned memories exempt and held at their raw
+value. <code>should_archive</code> and <code>should_forget</code> are
+separate predicates, so archival and removal are separate thresholds
+rather than one cliff, and <code>run_decay_pass</code> applies them in
+the background.</p>
+<h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
+thing becomes a belief, and how it stops being one</h3>
+<pre class="mermaid"><code>flowchart TD
+    W[&quot;write path assigns source&lt;br/&gt;user_stated 3, consolidated 2,&lt;br/&gt;model_inferred 1, legacy 0&quot;] --&gt; G{&quot;provenance_guard:&lt;br/&gt;actor rank &gt;= target rank?&quot;}
+    G -- &quot;no&quot; --&gt; REJ[&quot;write refused&quot;]
+    G -- &quot;yes&quot; --&gt; S[&quot;stored in a tier&quot;]
+    S --&gt;|&quot;episodic, used&quot;| P[&quot;consolidated → semantic&quot;]
+    S --&gt; CC{&quot;contradiction check&quot;}
+    CC -- &quot;conflict found&quot; --&gt; AD[&quot;resolve(): winner by source_priority&quot;]
+    AD --&gt; SUP[&quot;loser marked superseded_by&lt;br/&gt;— excluded from reads and&lt;br/&gt;from future candidacy&quot;]
+    S --&gt;|&quot;importance decays&lt;br/&gt;past archive threshold&quot;| AR[&quot;archival tier&quot;]
+    AR --&gt;|&quot;past forget threshold&quot;| F[[&quot;forgotten&quot;]]
+    SUP -.-&gt;|&quot;nothing keys the value,&lt;br/&gt;so a ranked path re-admits it&quot;| W
+
+    style F fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>The diamond at the top is the design. Most systems in this atlas let
+any writer overwrite any memory and then try to sort out the mess
+downstream; this one refuses the write. The dashed edge is what the
+guard does not cover.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package with SQLite underneath and no external service
+required: embeddings and reranking are both local
+(<code>local_embed.py</code>, <code>local_rerank.py</code>), so the
+memory layer runs offline. The schema is a numbered migration list in
+<code>echo_agent/storage/sqlite.py</code> — <code>memories</code>,
+<code>sessions</code>, <code>tasks</code>, <code>workflows</code>,
+<code>logs</code>, <code>files</code>, <code>vectors</code>, then
+<code>memory_episodes</code> at migration 4 and
+<code>memory_graph_nodes</code>/<code>memory_graph_edges</code> at 6 and
+8, so the graph layer was added to a running schema rather than designed
+in.</p>
+<p>A separate <code>evolution/</code> subsystem carries its own tables —
+trajectories, candidates, runs — which is the agent improving its own
+behaviour rather than memory, and is out of scope for this report beyond
+noting it exists.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Self-hosting is the stated goal and the dependencies support it:
+SQLite, local embedding, local rerank, a web UI in-repo. The cost is
+that the package is large and the memory layer is not separable —
+adopting the memory means adopting the agent.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Provenance and guard:</strong>
+<code>echo_agent/memory/types.py</code> — <code>MemoryTier</code>,
+<code>MemoryType</code>, <code>_SOURCE_PRIORITY</code>,
+<code>source_priority</code>, <code>provenance_guard</code>.</li>
+<li><strong>Contradiction:</strong>
+<code>echo_agent/memory/contradiction.py</code> — <code>check</code>
+(<code>:79</code>), <code>_pre_filter</code> (<code>:108</code>),
+<code>store_contradiction</code> (<code>:150</code>),
+<code>resolve</code> (<code>:171</code>).</li>
+<li><strong>Forgetting:</strong>
+<code>echo_agent/memory/forgetting.py</code> —
+<code>effective_importance</code> (<code>:47</code>),
+<code>half_life_days</code> (<code>:70</code>),
+<code>should_archive</code> (<code>:73</code>),
+<code>should_forget</code> (<code>:77</code>),
+<code>prune_lineage</code> (<code>:98</code>),
+<code>run_decay_pass</code> (<code>:140</code>).</li>
+<li><strong>Service and audit:</strong>
+<code>echo_agent/memory/service.py</code> —
+<code>mark_superseded</code>, <code>_append_audit</code>
+(<code>:405</code>).</li>
+<li><strong>Retrieval:</strong>
+<code>echo_agent/memory/retrieval.py</code> — visibility filter at
+<code>:126</code>.</li>
+<li><strong>Review:</strong> <code>echo_agent/memory/reviewer.py</code>
+— <code>MemoryReviewer.review</code> (<code>:92</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> table is deliberately thin —
+<code>id</code>, <code>type</code>, <code>key</code>, <code>data</code>,
+<code>created_at</code>, <code>updated_at</code> — with the structured
+fields living in the <code>MemoryEntry</code> dataclass and serialised
+into <code>data</code>. That keeps migrations cheap and means the schema
+cannot enforce much: the provenance guard is application code, not a
+constraint.</p>
+<p><code>key</code> is the identity that makes supersession work: a
+changed fact reuses the key, and <code>_pre_filter</code> uses key
+equality plus id inequality to find the previous version. Two memories
+about the same subject with different keys are not contradictions as far
+as this system is concerned.</p>
+<p>There is <strong>no discrete trust state</strong>. The atlas's
+definition wants at least candidate versus verified versus rejected as a
+field, and what exists instead is <code>source</code> — which is
+stronger than a confidence float and answers a different question.
+<code>source</code> says <em>who may overwrite this</em>, not <em>how
+much do we believe it</em>. A <code>user_stated</code> memory outranks a
+<code>model_inferred</code> one on write authority whether or not either
+is true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over locally-computed embeddings, a local reranker, and
+a <strong>visibility filter applied before ranking</strong>:
+<code>retrieval.py:126</code> filters the candidate list through
+<code>self._visibility_fn(e, memory_scope)</code> rather than
+post-filtering results, so a scoped read and an unscoped one do not
+silently differ in how many rows a limit returns.</p>
+<p><code>memory_scope</code> and <code>episode_session_key</code> are
+both parameters on the retrieval path. The caveat belongs beside the
+mark: <code>MemoryStore</code> takes a <code>scope_policy</code> that
+<strong>defaults to <code>"legacy"</code></strong>
+(<code>store.py:160</code>), so what the visibility function enforces
+depends on configuration, and the default is the backward -compatible
+one. The mechanism is on the read path; whether it is strict is an
+operator's decision.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Three write paths, and the provenance word is how they are told
+apart. A memory tool the model calls, with a constrained enum so the
+model's choices are bounded. A background <code>MemoryReviewer</code>
+that reads the conversation and proposes entries, labelled
+<code>model_inferred</code>. And sleep-time consolidation that promotes
+from episodic to semantic, labelled <code>consolidated</code>.</p>
+<p>Writes are refused, not silently downgraded, when the guard fails —
+<code>reviewer.py</code> has a <code>_map_reject</code> that turns a
+refusal into a message naming the target and the operation, so a
+rejected write is visible rather than lost.</p>
+<p><strong>Background passes rewrite the store.</strong> The decay pass
+changes effective importance and moves entries between tiers;
+consolidation promotes and distils; the contradiction pass supersedes.
+<code>prune_lineage</code> exists to stop supersession chains growing
+without bound.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>This is an agent, not a library with an agent binding, so the
+integration story is inward: the memory service is consumed by the agent
+pipeline, a skills directory, and a web UI in-repo. There is no MCP
+server and no documented HTTP memory API, so using this memory from
+another harness means importing the Python package and accepting the
+rest of the agent alongside it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The audit trail is append-only JSONL with rotation.</strong>
+<code>_append_audit</code> (<code>service.py:405</code>) records op,
+entry id, memory type, source, reason and an <code>ok</code> flag — and
+it is called on both the success and the failure path
+(<code>:390</code>, <code>:402</code>), so a <em>refused</em> write is
+recorded as well as a completed one. Most audit implementations in this
+corpus log what happened; this one also logs what was prevented, which
+is the half that tells you the guard is working.</p>
+<p><strong>Contradiction resolution is idempotent and
+defensive.</strong> <code>resolve</code> treats a missing or
+already-superseded loser as done rather than erroring, with a comment
+explaining that the alternative is a permanently stuck row. The
+supersession write goes through the service maintenance channel for
+unified invalidation and audit, with a direct
+<code>UPDATE memories SET superseded_by = ?</code> as the fallback.</p>
+<p><strong>The reviewer is an LLM, not a person.</strong>
+<code>MemoryReviewer.__init__</code> takes a
+<code>provider: LLMProvider</code>, and <code>review()</code> reads a
+conversation and executes memory operations. This is why the
+human-review mark is withheld: there is no surface where a person
+inspects or approves. The provenance guard is what stands in for human
+authority, and it does so structurally — a reviewer write is
+<code>model_inferred</code> and therefore cannot touch anything the user
+stated.</p>
+<p><strong>Correction is record-keyed.</strong>
+<code>superseded_by</code> hides the loser. No rejected- value record
+exists, so the guard's protection is asymmetric: it stops a low-ranked
+path from <em>overwriting</em> a high-ranked memory, and does nothing to
+stop a high-ranked path from re-writing a value that was already
+adjudicated wrong. A user who restates a claim they previously corrected
+gets it stored at priority 3.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>360 test files against 76,594 lines of package source, and the memory
+modules have dedicated suites. I did not run them.</p>
+<p><strong>No committed case asserts that particular material must not
+be retrieved.</strong> Searching for negative-assertion vocabulary
+returned only generic <code>not in result</code>-style checks in
+unrelated suites — which, given how much of this design is about
+<em>refusing</em> writes and <em>excluding</em> superseded rows, is the
+gap worth naming: the guard and the pre-filter are both properties a
+negative assertion expresses naturally, and neither has one.</p>
+<p>No benchmark harness and no committed retrieval numbers.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong><code>provenance_guard</code>, verbatim.</strong> Fifteen
+lines: rank your write paths, refuse a write whose actor ranks below its
+target, and make unknown sources rank zero so the guard fails
+closed.</li>
+<li><strong>The label belongs to the path, not the payload.</strong>
+"The writing PATH decides the label, the model never free-chooses" is
+the sentence that makes the guard trustworthy; a model that can label
+its own output <code>user_stated</code> has no guard at all.</li>
+<li><strong>Audit the refusals.</strong> Logging the blocked write
+beside the completed one is what turns a guard into something you can
+verify is running.</li>
+<li><strong>Separate <code>should_archive</code> from
+<code>should_forget</code>.</strong> Two thresholds rather than one
+cliff, so decay has a reversible stage.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Assuming the guard covers correction.</strong> It governs
+authority, not truth. A wrong <code>user_stated</code> fact outranks
+everything and can be re-asserted freely.</li>
+<li><strong>Shipping <code>scope_policy: "legacy"</code></strong>
+without deciding what your policy should be. The filter runs either way;
+the default is the permissive one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone <strong>adopting the whole agent</strong>, not
+someone shopping for a memory library — the memory layer is eighteen
+modules deep inside a 76,000-line package with no MCP or HTTP surface of
+its own. Read it if you want the single best worked example in this
+atlas of <em>provenance as write authority</em>, which is portable as an
+idea even where the code is not.</p>
+<p>Poor fit if you need correction that survives re-assertion, or if you
+cannot read Chinese comments — the primary documentation and many of the
+load-bearing inline comments are Chinese, and the most important ones
+(the write guard, the supersession channel) are among them.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What happens when a user restates a claim they previously
+corrected?</strong> It arrives as <code>user_stated</code>, outranks
+everything, and no record of the earlier adjudication is consulted. No
+test covers the sequence.</li>
+<li><strong>How often does the guard actually refuse?</strong> The
+refusal is audited, so an install could answer this, and no aggregate is
+published.</li>
+<li><strong>What does <code>scope_policy</code> do in each
+mode?</strong> The default is <code>legacy</code> and the strict modes
+were not traced.</li>
+<li><strong>Does <code>prune_lineage</code> lose adjudication
+history?</strong> Supersession chains are pruned to bound growth; what
+that removes, and whether anything depended on it, was not
+established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>echo_agent/storage/sqlite.py</code> — numbered migrations for
+every table</li>
+<li><code>echo_agent/memory/store.py</code> — the store and its scope
+policy</li>
+</ul>
+<p><strong>Epistemics and governance</strong></p>
+<ul>
+<li><code>echo_agent/memory/types.py</code> — tiers, types, provenance
+ranks, the write guard</li>
+<li><code>echo_agent/memory/contradiction.py</code> — detection,
+pre-filter, adjudication</li>
+<li><code>echo_agent/memory/eligibility.py</code> — what may be written
+at all</li>
+</ul>
+<p><strong>Lifecycle</strong></p>
+<ul>
+<li><code>echo_agent/memory/forgetting.py</code> — the curve, archive
+and forget thresholds</li>
+<li><code>echo_agent/memory/consolidator.py</code>,
+<code>tiers.py</code> — promotion between tiers</li>
+<li><code>echo_agent/memory/reflection.py</code>,
+<code>prefetch.py</code></li>
+</ul>
+<p><strong>Retrieval</strong></p>
+<ul>
+<li><code>echo_agent/memory/retrieval.py</code> — visibility filter then
+ranking</li>
+<li><code>echo_agent/memory/vectors.py</code>,
+<code>local_embed.py</code>, <code>local_rerank.py</code></li>
+</ul>
+<p><strong>Service and audit</strong></p>
+<ul>
+<li><code>echo_agent/memory/service.py</code> —
+<code>mark_superseded</code>, <code>_append_audit</code></li>
+<li><code>echo_agent/memory/reviewer.py</code> — the LLM reviewer and
+its rejection mapping</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/</code> — 360 files</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e"><code class="commit-id" title="29a19f4dd86ae2aeabab97df2b9bea3ae718460e">29a19f4d…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
