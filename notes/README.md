@@ -133,6 +133,13 @@ when the work happens.
   the normalized-badge redesign declined for a stated reason — badges need a
   vocabulary the atlas refuses to invent, and the seven columns that have one are
   already filterable on a page two reviewers failed to find.
+- [2026-08-04-nine-repositories-triaged.md](2026-08-04-nine-repositories-triaged.md) —
+  nine URLs checked: four candidates, five refused, and two of the refusals on
+  grounds already written down — a graph database is a backend the corpus reads
+  as a shared dependency rather than reviews, and 310,000 lines of client around
+  a hosted service is not inspectable code. Five of eight clones carry no licence
+  file at all, which is a caveat to state in section 1 rather than a reason to
+  skip.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
