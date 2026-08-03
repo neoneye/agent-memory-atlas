@@ -89,6 +89,13 @@ when the work happens.
   implementation), one gap with no occupant (failure-driven step repair), and a
   star-velocity argument that is the best external case yet for the rule against
   citing adoption as evidence.
+- [2026-08-03-the-layer-below-delete.md](2026-08-03-the-layer-below-delete.md) —
+  a review whose four headline proposals were all already decided, one of them by
+  shipping the page it asked for; its buried critique sent this project into four
+  vector engines, where the leak it alleged does not happen and two failures it
+  did not allege do — deleted embeddings persisted verbatim to the index file,
+  and a documented seven-day floor on erasure — which is a layer below where
+  every `update_delete` claim in the corpus stops.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
