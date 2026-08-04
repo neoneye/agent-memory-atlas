@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 105 of 147 screened.**
+**Progress: 110 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 34 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 21 |
-| Repositories with build-time execution (`EXEC`) | 77 |
+| Repositories with an auto-run surface (`RUNS`) | 36 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 22 |
+| Repositories with build-time execution (`EXEC`) | 82 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -58,4 +58,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
+| [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
+| [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 
