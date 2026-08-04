@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 141 reports.**
+**This page covers all 142 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1326,3 +1326,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 25,000 lines of one author's carefully documented Python with an unusually detailed changelog, and 21 test files holding five assertions between them — the verification is a person's practice rather than the repository's, and it does not survive the person.
 - Study when: you want to see what correction machinery looks like when there is no model to blame; every epistemic decision here had to be written down because nothing could be delegated to a language model.
 - Do not copy when: literally — the licence is "Viewable, Not Reusable". Also when you need more than one user, since no scope key exists anywhere, or a store that survives an interrupted write, since the whole graph is rewritten non-atomically on every save.
+
+### `memsem`
+
+- Best idea: the benchmark is committed, wired into `npm test`, and reproduces exactly — P@3 0.958 with an ablation across four alternative constant weightings, so the defaults have to keep beating the alternatives on every run, and an author-written honest reading names the set's limits.
+- Biggest risk: supersession is keyed on the live record rather than on the value, so repeating a fact that already lost reinstates it as current and fades the correction that beat it — reversible by the most ordinary event in an agent's life, a later extraction pass over an old transcript.
+- Most reusable component: the audit row — entity, field, old and new value, a reason, a pass id that caps a sub-agent's cumulative adjustment, and a dry-run flag that records what would have happened without applying it.
+- Maturity impression: eighteen commits and eighteen translated READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, two committed negative retrieval cases, and nothing ever deleted.
+- Study when: you are deciding what a defensible retrieval number looks like; this is the corpus's cleanest example of a claim a reader can check in one command.
+- Do not copy when: a correction has to hold. The pin that protects a fact from the scoring sub-agent does not protect it from a contradicting write, and the README's diagram says it does.

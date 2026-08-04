@@ -559,7 +559,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Seventeen of one hundred and forty-one. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Eighteen of one hundred and forty-two. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1382,6 +1382,24 @@ committed results reads as measured and is not. This atlas has now found that
 pattern in several repositories, including some of the most carefully
 engineered ones.
 
+**And [memsem](../systems/memsem/) is the small counter-example that shows the
+price of doing all three.** Its `DESIGN.md` publishes P@3 0.958 over 51 facts and
+20 queries; `scripts/bench.mjs` is committed; `npm test` runs it; and from a
+clean clone every cell of the published table reproduces — offline, deterministic,
+no model, no service, in seconds. It also does the thing this page asks for and
+rarely gets: it publishes an **ablation**, running four alternative constant
+weightings beside the defaults on every test, so the chosen weighting has to keep
+winning rather than merely having won once. And it writes its own limits down,
+in a section headed *"honest reading"* — the set is the author's own rather than
+a standard, the low P@5 is an artifact of most queries having one to three
+relevant facts among five returned, and the single query that discriminates
+between weightings is named.
+
+The scale is small and the author says so. That is the point worth taking: the
+gap between this and the untraceable figures elsewhere in the corpus is not
+resources, it is fifty lines of harness and a paragraph of honesty. Nothing here
+required a GPU, a dataset licence, or a research budget.
+
 [Daimon](../systems/daimon/) is the first system here to write the third rule
 down as policy rather than leave it to the reader, and it is the one this page
 has been implying throughout: **a recall number without its backend is not a
@@ -1404,8 +1422,13 @@ not publish, is still the right order to do these things in.
 
 ## 9. Limits of This Page
 
-- Benchmark harnesses in these repositories were **inspected, not run**. No
-  numbers here were reproduced, and the atlas's per-system reports say the same.
+- Benchmark harnesses in these repositories were **inspected, not run**, with one
+  exception: [memsem](../systems/memsem/)'s `scripts/bench.mjs` was run from a
+  clean clone and reproduced every cell of its published table. It is the only
+  number on this page that has been reproduced rather than read, and it is the
+  cheapest kind — offline, deterministic, no model, no service, seconds. That is
+  a fact about how much this page's standard costs to meet, not about how good
+  the number is.
 - The benchmarks in §2's first table are grounded in committed code. Those in
   the second are from familiarity with the literature and were not verified
   against their own repositories in this review.

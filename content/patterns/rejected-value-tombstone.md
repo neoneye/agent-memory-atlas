@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Four systems of one hundred and forty-one
+> **This is not an established best practice.** Four systems of one hundred and forty-two
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, and one arrived at a weaker form independently. There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -170,9 +170,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and forty-one
+That makes the negative result stronger rather than weaker. Two of one hundred and forty-two
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and forty-one, plus one adoption by a reader who went looking, suggests an idea
+one hundred and forty-two, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -205,6 +205,19 @@ that would move Daimon into the same class as the other two.
 Everything else stops at supersession, archival, or deletion — mechanisms that
 remove a value from view without recording that it was *judged wrong*:
 
+- [memsem](../../systems/memsem/) is the demonstration this page has otherwise
+  had to argue for. Its correction design is deliberate and good — a contradicting
+  fact fades its rivals rather than overwriting them, archives them below a
+  threshold instead of deleting, keeps the row and its history, and writes a
+  `contradicts` edge between the two. The guard is then keyed on the record: the
+  rival query reads `archived = 0`, so a value that already lost is invisible to
+  the check that would have caught it. Re-asserting it inserts a **new live row**
+  and fades the correction that beat it, from confidence 0.700 to 0.420 — run
+  against the project's own milk/lactose example, whose second repetition
+  archives the correction outright. Pinning does not stop it; `pinned` is enforced
+  where a sub-agent adjusts importance and appears nowhere in the fade path. **The
+  cost of record-keying is not that a rejected value can return — it is that
+  returning demotes the thing that rejected it.**
 - [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
   is closer than most, but nothing keyed on the value: an equivalent claim can be
   retained again under a new id.
