@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 15 of 147 screened.**
+**Progress: 20 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 5 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 6 |
-| Repositories with build-time execution (`EXEC`) | 9 |
+| Repositories with an auto-run surface (`RUNS`) | 7 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 7 |
+| Repositories with build-time execution (`EXEC`) | 12 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 0 |
 | Repositories that could not be screened | 0 |
 
@@ -29,4 +29,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
+| [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
+| [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
 
