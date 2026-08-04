@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 35 of 147 screened.**
+**Progress: 40 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 14 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 9 |
-| Repositories with build-time execution (`EXEC`) | 23 |
+| Repositories with an auto-run surface (`RUNS`) | 17 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 12 |
+| Repositories with build-time execution (`EXEC`) | 27 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -38,4 +38,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
+| [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
+| [`ecc`](../../content/systems/ecc.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json` |
 
