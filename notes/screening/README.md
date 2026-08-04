@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 25 of 147 screened.**
+**Progress: 30 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 10 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 7 |
-| Repositories with build-time execution (`EXEC`) | 16 |
+| Repositories with an auto-run surface (`RUNS`) | 12 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 8 |
+| Repositories with build-time execution (`EXEC`) | 21 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -34,4 +34,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`claude-mem`](../../content/systems/claude-mem.md) | `.claude/settings.json`, `.github/copilot-instructions.md` |
+| [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
+| [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 
