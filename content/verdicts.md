@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 142 reports.**
+**This page covers all 143 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1335,3 +1335,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: eighteen commits and eighteen translated READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, two committed negative retrieval cases, and nothing ever deleted.
 - Study when: you are deciding what a defensible retrieval number looks like; this is the corpus's cleanest example of a claim a reader can check in one command.
 - Do not copy when: a correction has to hold. The pin that protects a fact from the scoring sub-agent does not protect it from a contradicting write, and the README's diagram says it does.
+
+### `cambium`
+
+- Best idea: a check that refuses to return a pass it did not earn — run against its own tree, the freshness tool prints `overdue=0` and `fresh=0` together and concludes "NOTHING CHECKED… this is not evidence of freshness", and the vocabulary check exits 1 rather than assume a vocabulary no profile has composed.
+- Biggest risk: intentionally uninstantiated. It ships no corpus, so the standard's claims about maintaining one over time have no worked instance, and an adopter is the first person to discover whether kernel and profile compose.
+- Most reusable component: the prohibition that automated checks may never raise a status — the scripts emit only `fail` and `candidate`, so automation can block work and nominate work and can never promote a belief.
+- Maturity impression: 5,687 lines of deterministic tooling and 6,453 lines of normative prose against 73 lines of tests covering one of twelve scripts; the kernel's own 1,171 wiki links all resolve, which is the one thing here that is demonstrated rather than specified.
+- Study when: you are designing quality gates for agent-maintained knowledge and want the vocabulary for separating "checked and fine" from "could not be checked".
+- Do not copy when: you need a memory component. It stores nothing, retrieves nothing and ranks nothing — adopting it means adopting a working method, not adding a dependency.

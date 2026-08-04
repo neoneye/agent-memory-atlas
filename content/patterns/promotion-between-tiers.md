@@ -146,6 +146,25 @@ core, archival and recall; [MemOS](../../systems/memos/), whose promotion varies
 by cube; [LoongFlow](../../systems/loongflow/)'s stm/mtm/ltm with auto-compress.
 The tiers are real; what crosses them is a schedule.
 
+[Cambium](../../systems/cambium/) states the gate as a prohibition rather than a
+mechanism, which is the cleanest formulation of it in the atlas. Its status
+standard says *"File existence, a resolvable wiki link, the existence of an
+external checklist item, or a large page word count MUST NOT automatically change
+any status"*, and *"A status MUST NOT be upgraded directly because the file
+exists, its length reaches a threshold, or automated checks pass."* Its twelve
+deterministic scripts emit exactly two outcomes, `fail` and `candidate`, and the
+freshness check spells out the consequence: candidates *"only feed the
+maintenance-run candidate list and never change any status axis of a page."* So
+the tooling can block a batch and nominate work, and has no outcome that promotes.
+
+Worth separating from the systems above: the usual failure is a promotion gate
+whose criterion is cheap — an age, a hit count, a threshold — and Cambium's
+contribution is naming those exact signals as the ones that must *not* qualify.
+Its evidence ladder (`signal → single-source → corroborated → validated`) is
+climbed by judgement only. The cost is the honest one: nothing in the repository
+enforces the prohibition, because the component that would enforce it is the one
+being prohibited.
+
 The measured warning comes from NOOA Memory's paper, and it applies to whatever
 promotion produces: reflection records are "22% of rows yet ~1% of both read
 channels". A fifth of that store is distilled material that retrieval essentially

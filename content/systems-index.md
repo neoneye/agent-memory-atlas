@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **142 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **143 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -39,6 +39,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`byterover`](../systems/byterover/) **ByteRover** — Curated coding-agent memory · `campfirein/cipher`
 ## C
 
+- [`cambium`](../systems/cambium/) **Cambium** — A standard, not a store · `KimGLee/Cambium` · Trust state, Human review
 - [`camel`](../systems/camel/) **CAMEL** — Message store with vector recall · `camel-ai/camel`
 - [`claude-mem`](../systems/claude-mem/) **Claude-Mem** — Hook-native coding-agent memory · `thedotmack/claude-mem` · Scope enforced
 - [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
