@@ -1,7 +1,7 @@
 ---
 title: "Perseus Vault"
 eyebrow: "Claims audited against artifacts"
-description: "An encrypted local-first vault whose published benchmark means recompute exactly from committed per-run reports, and whose self-audit retires the claims it cannot back — except the one its own verification command contradicts."
+description: "A local-first vault whose published benchmark means recompute exactly from committed per-run reports, and whose self-audit retires the claims it cannot back — except the one whose verification command cannot answer the question it guards."
 root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
@@ -21,7 +21,7 @@ matrix:
   background: "Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection"
   trust: "A discrete `status`, a separate `verified` flag, a `certainty` float and a `source` field — three distinct axes rather than one score"
   strengths: "Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, and a claims audit that retires what it cannot back"
-  risks: "The audit's own authoritative tool-count command disagrees with the count in three places; encryption is opt-in and a stock install writes plaintext"
+  risks: "The tool count, its documented check and the parsed registry disagree three ways; AES-256-GCM is supported but a stock install writes plaintext until `init`"
 ---
 
 ## 1. Executive Summary
@@ -93,8 +93,23 @@ added"*:
 grep -o '"name": "mimir_[a-z_]*"' src/mcp.rs | sort -u | wc -l
 ```
 
-Run against `src/mcp.rs` at this commit it returns **76**. The command exists, is
-named authoritative, and disagrees by eleven with the number it guards.
+Run against `src/mcp.rs` at this commit it returns **76**. Parsing the embedded
+registry literal instead of grepping it gives a third figure: **88 top-level
+entries**, 87 of them `mimir_`-named and one `perseus_vault_`-named.
+
+So the claim says 65, its designated check says 76, and the registry the check is
+supposed to be counting holds 88. **None of the three is established as the
+canonical figure**, because the canonical/legacy split does not exist in the
+literal at all — `tool_registry_base` describes the `mimir_*` names as *"an
+implementation migration detail"*, and `legacy_alias_tool` synthesizes aliases by
+prefix rewriting at advertise time. What is advertised is decided at runtime by
+`build_tools_array`, which no static grep can see.
+
+The finding is therefore not that the count is wrong by some amount. It is that
+**the count definition and its verification command have drifted apart**, and
+that the command cannot answer the question it is designated to answer. A count
+generated from the registry and asserted in CI is the fix, and it is the one the
+project's author names.
 
 **One more disclosure worth naming as a strength.** The README states, in its own
 install section, that *"Encryption is opt-in. A stock install writes plaintext
@@ -103,6 +118,11 @@ on-disk state rather than assuming the database is encrypted."* A banner that sa
 "Encrypted" over a default that is not, with the gap disclosed above the fold and
 tracked in the claims audit, is a better outcome than most projects manage in
 either direction.
+
+**The distinction is worth preserving whenever the system is summarised**, and it
+is the one a one-line description erodes: *supports AES-256-GCM* and *a stock
+install encrypts by default* are different claims, and only the first is true
+here. This report's own frontmatter previously carried the shorter form.
 
 ## 2. Mental Model
 
@@ -337,11 +357,24 @@ Strengths:
 
 Gaps:
 
-- **The tool count is stale by eleven** against the audit's own authoritative
-  command, in three places, and the command greps a prefix the audit calls
-  legacy.
+- **The tool count has no working verification.** The claim (65), its designated
+  command (76) and the parsed registry (88) disagree three ways, and the command
+  greps a prefix the audit itself calls legacy, so it cannot distinguish canonical
+  tools from compatibility aliases.
 - **No rejected-value tombstone**, so purge and supersession cannot stop
-  re-assertion.
+  re-assertion. Read this against the pattern page's own header rather than as a
+  missing best practice — [it is carried by five systems here](../../patterns/rejected-value-tombstone/)
+  and the page states outright that it is not established practice, with real
+  tradeoffs around normalization, scope, expiry, trusted correction and privacy
+  deletion. It matters here for a specific reason: this store re-derives memory
+  automatically, through consolidation, cohere and dream passes, which is exactly
+  the condition under which record-keyed removal stops holding.
+
+  The falsifying test is small and worth writing down, because the project's
+  author states it in the same terms: reject value A, replace it with B,
+  re-ingest A through a different write path, run the background consolidation
+  passes, and check whether A is still rejected. Nothing committed covers that
+  sequence today.
 - **Encryption is opt-in**, so the default install stores plaintext bodies —
   disclosed, and still the default.
 - **Federation is file-based**, so the multi-machine story is manual.
@@ -455,5 +488,21 @@ you would expect at this level of care.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-04** — same pin, corrected after the project's author reviewed the
+report. The tool-count finding was stated as "stale by eleven", which asserts
+that 76 is the true canonical figure; nothing established that. Parsing the
+embedded registry literal rather than grepping it returns **88** top-level
+entries — 87 `mimir_`-named, one `perseus_vault_`-named — so the claim (65), its
+designated command (76) and the registry (88) disagree three ways. The
+canonical/legacy split is not present in the literal: `tool_registry_base` calls
+the `mimir_*` names "an implementation migration detail" and `legacy_alias_tool`
+synthesizes aliases by prefix rewriting at advertise time, so what is advertised
+is a runtime decision no static count can see. The finding is drift between a
+count definition and its verification command, not a corrected number. The
+tombstone gap is additionally qualified against the pattern page's own "not an
+established best practice" header, and the falsifying test the author proposes —
+reject A, replace with B, re-ingest A by another path, run consolidation, check
+whether A stays rejected — is recorded in section 9.
 
 **2026-08-04** — [`838c63dabbcfc4aaee0867ba7ff0bab7829e442b`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b) — first reading. The published LongMemEval means were recomputed from the six committed per-run reports and match exactly (73.8% plain, 79.0% CoT); the benchmark itself was not re-run, as it requires paid model calls. The claims audit's own tool-count command was executed and returns 76 against a claim of 65.

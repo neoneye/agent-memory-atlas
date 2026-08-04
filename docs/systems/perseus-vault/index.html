@@ -4,27 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="An encrypted local-first vault
-whose published benchmark means recompute exactly from committed per-run
+    <meta name="description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
 reports, and whose self-audit retires the claims it cannot back — except
-the one its own verification command contradicts.">
+the one whose verification command cannot answer the question it
+guards.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Perseus
 Vault — Agent Memory Atlas">
-    <meta property="og:description" content="An encrypted local-first
-vault whose published benchmark means recompute exactly from committed
-per-run reports, and whose self-audit retires the claims it cannot back
-— except the one its own verification command contradicts.">
+    <meta property="og:description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
+reports, and whose self-audit retires the claims it cannot back — except
+the one whose verification command cannot answer the question it
+guards.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Perseus
 Vault — Agent Memory Atlas">
-    <meta name="twitter:description" content="An encrypted local-first
-vault whose published benchmark means recompute exactly from committed
-per-run reports, and whose self-audit retires the claims it cannot back
-— except the one its own verification command contradicts.">
+    <meta name="twitter:description" content="A local-first vault whose
+published benchmark means recompute exactly from committed per-run
+reports, and whose self-audit retires the claims it cannot back — except
+the one whose verification command cannot answer the question it
+guards.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Perseus Vault — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -81,10 +84,10 @@ per-run reports, and whose self-audit retires the claims it cannot back
           <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">Claims audited against artifacts</p>
           <h1>Perseus Vault</h1>
-          <p class="document-deck">An encrypted local-first vault whose
-published benchmark means recompute exactly from committed per-run
-reports, and whose self-audit retires the claims it cannot back — except
-the one its own verification command contradicts.</p>
+          <p class="document-deck">A local-first vault whose published
+benchmark means recompute exactly from committed per-run reports, and
+whose self-audit retires the claims it cannot back — except the one
+whose verification command cannot answer the question it guards.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault">
               <span>Source</span>
@@ -184,8 +187,25 @@ command — re-run it and update README/manifest.json/glama.json whenever
 a tool is added"</em>:</p>
 <pre class="bash"><code>grep -o &#39;&quot;name&quot;: &quot;mimir_[a-z_]*&quot;&#39; src/mcp.rs | sort -u | wc -l</code></pre>
 <p>Run against <code>src/mcp.rs</code> at this commit it returns
-<strong>76</strong>. The command exists, is named authoritative, and
-disagrees by eleven with the number it guards.</p>
+<strong>76</strong>. Parsing the embedded registry literal instead of
+grepping it gives a third figure: <strong>88 top-level entries</strong>,
+87 of them <code>mimir_</code>-named and one
+<code>perseus_vault_</code>-named.</p>
+<p>So the claim says 65, its designated check says 76, and the registry
+the check is supposed to be counting holds 88. <strong>None of the three
+is established as the canonical figure</strong>, because the
+canonical/legacy split does not exist in the literal at all —
+<code>tool_registry_base</code> describes the <code>mimir_*</code> names
+as <em>"an implementation migration detail"</em>, and
+<code>legacy_alias_tool</code> synthesizes aliases by prefix rewriting
+at advertise time. What is advertised is decided at runtime by
+<code>build_tools_array</code>, which no static grep can see.</p>
+<p>The finding is therefore not that the count is wrong by some amount.
+It is that <strong>the count definition and its verification command
+have drifted apart</strong>, and that the command cannot answer the
+question it is designated to answer. A count generated from the registry
+and asserted in CI is the fix, and it is the one the project's author
+names.</p>
 <p><strong>One more disclosure worth naming as a strength.</strong> The
 README states, in its own install section, that <em>"Encryption is
 opt-in. A stock install writes plaintext bodies until you initialize
@@ -194,6 +214,11 @@ on-disk state rather than assuming the database is encrypted."</em> A
 banner that says "Encrypted" over a default that is not, with the gap
 disclosed above the fold and tracked in the claims audit, is a better
 outcome than most projects manage in either direction.</p>
+<p><strong>The distinction is worth preserving whenever the system is
+summarised</strong>, and it is the one a one-line description erodes:
+<em>supports AES-256-GCM</em> and <em>a stock install encrypts by
+default</em> are different claims, and only the first is true here. This
+report's own frontmatter previously carried the shorter form.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>An entity's standing is three separate things — a discrete
 <code>status</code>, a boolean <code>verified</code>, and a
@@ -441,15 +466,30 @@ own install section.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>The tool count is stale by eleven</strong> against the
-audit's own authoritative command, in three places, and the command
-greps a prefix the audit calls legacy.</li>
-<li><strong>No rejected-value tombstone</strong>, so purge and
-supersession cannot stop re-assertion.</li>
-<li><strong>Encryption is opt-in</strong>, so the default install stores
-plaintext bodies — disclosed, and still the default.</li>
-<li><strong>Federation is file-based</strong>, so the multi-machine
-story is manual.</li>
+<li><p><strong>The tool count has no working verification.</strong> The
+claim (65), its designated command (76) and the parsed registry (88)
+disagree three ways, and the command greps a prefix the audit itself
+calls legacy, so it cannot distinguish canonical tools from
+compatibility aliases.</p></li>
+<li><p><strong>No rejected-value tombstone</strong>, so purge and
+supersession cannot stop re-assertion. Read this against the pattern
+page's own header rather than as a missing best practice — <a
+href="../../patterns/rejected-value-tombstone/">it is carried by five
+systems here</a> and the page states outright that it is not established
+practice, with real tradeoffs around normalization, scope, expiry,
+trusted correction and privacy deletion. It matters here for a specific
+reason: this store re-derives memory automatically, through
+consolidation, cohere and dream passes, which is exactly the condition
+under which record-keyed removal stops holding.</p>
+<p>The falsifying test is small and worth writing down, because the
+project's author states it in the same terms: reject value A, replace it
+with B, re-ingest A through a different write path, run the background
+consolidation passes, and check whether A is still rejected. Nothing
+committed covers that sequence today.</p></li>
+<li><p><strong>Encryption is opt-in</strong>, so the default install
+stores plaintext bodies — disclosed, and still the default.</p></li>
+<li><p><strong>Federation is file-based</strong>, so the multi-machine
+story is manual.</p></li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
@@ -575,6 +615,25 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — same pin, corrected after the project's
+author reviewed the report. The tool-count finding was stated as "stale
+by eleven", which asserts that 76 is the true canonical figure; nothing
+established that. Parsing the embedded registry literal rather than
+grepping it returns <strong>88</strong> top-level entries — 87
+<code>mimir_</code>-named, one <code>perseus_vault_</code>-named — so
+the claim (65), its designated command (76) and the registry (88)
+disagree three ways. The canonical/legacy split is not present in the
+literal: <code>tool_registry_base</code> calls the <code>mimir_*</code>
+names "an implementation migration detail" and
+<code>legacy_alias_tool</code> synthesizes aliases by prefix rewriting
+at advertise time, so what is advertised is a runtime decision no static
+count can see. The finding is drift between a count definition and its
+verification command, not a corrected number. The tombstone gap is
+additionally qualified against the pattern page's own "not an
+established best practice" header, and the falsifying test the author
+proposes — reject A, replace with B, re-ingest A by another path, run
+consolidation, check whether A stays rejected — is recorded in section
+9.</p>
 <p><strong>2026-08-04</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b"><code class="commit-id" title="838c63dabbcfc4aaee0867ba7ff0bab7829e442b">838c63da…</code></a>
 — first reading. The published LongMemEval means were recomputed from

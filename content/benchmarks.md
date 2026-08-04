@@ -1444,10 +1444,13 @@ standard is meetable by a project that is not a research lab.
 The counterweight belongs here too, because it is the failure this page has not
 previously named. The same repository ships a `CLAIMS-AUDIT.md` that retired its
 own unbacked latency claim and downgraded "signed results" to "content-hashed" —
-and the one claim of its that is stale is the one with a **documented verification
-command attached**, which returns 76 against a tool count of 65 repeated in three
-places. Auditing your claims and keeping them current are different disciplines,
-and a check that lives in a Markdown file runs only when somebody remembers.
+and its one claim without working verification is the one with a **documented
+command attached**: it returns 76 against a tool count of 65 repeated in three
+places, while the registry that command is meant to be counting parses to 88.
+**Auditing your claims and maintaining them are different disciplines** — the
+project's author puts it that way — and a documented check that nobody runs is
+still only a comment. The fix is a count generated from the registry and asserted
+in CI, which is where every guard on this page belongs.
 
 [Daimon](../systems/daimon/) is the first system here to write the third rule
 down as policy rather than leave it to the reader, and it is the one this page
