@@ -140,6 +140,21 @@ when the work happens.
   a hosted service is not inspectable code. Five of eight clones carry no licence
   file at all, which is a caveat to state in section 1 rather than a reason to
   skip.
+- [2026-08-04-automating-re-analysis.md](2026-08-04-automating-re-analysis.md) —
+  a proposal for scheduling re-reads at 147 systems, arguing that the gap is
+  prioritisation rather than detection since `check_freshness.py` already exists.
+  The strongest signal is a maintainer who has turned up in the Discord or
+  answered a report before — engagement observed rather than proxied, so it is a
+  tier rather than a term, with the privacy and stale-list constraints that come
+  with a hand-kept map of people. Stars belong in the scheduler and nowhere near
+  a report, behind an enforced firewall; they are a weak proxy for the same thing
+  and should damp a tier-2 score built on drift and appendix-touch rather than
+  drive it. The
+  queue should rank on expected value **per unit cost**, because re-verifying a
+  project that ships an assertion gate costs one command. And the thing to build
+  first is not automation at all: commit the demonstration behind every mechanism
+  claim to `demos/<slug>/`, because an upstream's accurate commit message is not
+  a claim about what remains.
 - [2026-08-04-three-repositories-and-a-harness-that-is-not-memory.md](2026-08-04-three-repositories-and-a-harness-that-is-not-memory.md) —
   three URLs, one report: Nova AI calls no model at all, gates every knowledge
   write on a spoken question, quarantines corrections from its curated training
