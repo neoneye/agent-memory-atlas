@@ -199,7 +199,9 @@ built-in <code>node:sqlite</code> — no native addon, no server, no
 vector database required. Schema arrives through a versioned migration
 list in <code>db.ts</code>: <code>memories</code>,
 <code>memory_history</code>, <code>edges</code>, <code>episodes</code>,
-then a history index, then <code>audit_log</code>.</p>
+then a history index, then <code>audit_log</code> — plus a
+<code>memory_fts</code> FTS5 virtual table kept in step by triggers on
+insert, delete and update.</p>
 <p><code>src/</code> is eight files. <code>db.ts</code> (1,517 lines)
 holds the schema and every query; <code>index.ts</code> is the MCP
 server and its fourteen tools; <code>plugin.ts</code> is the opencode
@@ -442,8 +444,17 @@ row is withheld from every read, which is what a rejected state would do
 difference costs. Validity time is not tracked separately from record
 time.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p>One SQL pass over rows filtered by <code>project</code> and
-<code>theme</code>, scored in TypeScript, sorted by priority.
+<p><strong>The strict path is an FTS5 index, not a scan.</strong>
+<code>memory_fts</code> is a virtual table over subject, predicate,
+object and tags, declared <code>tokenize = 'unicode61'</code> and kept
+in step by three triggers on insert, delete and update. Search joins it
+—
+<code>FROM memories m JOIN memory_fts ON memory_fts.rowid = m.id WHERE memory_fts MATCH ?</code>
+— at three call sites. The <code>unicode61</code> tokenizer is what
+makes the non-Latin cases work, and it is why the regression suite can
+assert that a one-character CJK term and a Cyrillic restatement are both
+findable.</p>
+<p>Scoring then happens in TypeScript over the matched rows, and
 <code>whereClause(project, theme)</code> is applied on the list, search
 and index paths alike, so the scope key genuinely reaches the query
 rather than being stored and forgotten — the distinction the <a
@@ -451,6 +462,16 @@ href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
 key</a> pattern draws. The caller supplies the project string, which is
 the standard caveat: this certifies the key reaches the query, not that
 a caller cannot pass a different one.</p>
+<p><strong>The relax arm has a stated cost the strict arm does
+not.</strong> Embeddings are persisted as JSON text, so cosine ranking
+parses every candidate row:</p>
+<pre class="js"><code>// ponytail: cosine over stored JSON is O(n); add a SQLite vector extension only when corpus size justifies it.
+const sim = cosine(qv, JSON.parse(row.embedding) as number[]);</code></pre>
+<p>Naming the complexity and the remedy in the same comment, rather than
+discovering either later, is the same habit as the retrieval docstring
+that says what the path deliberately does not do. It also explains why
+relax mode is opt-in: the default path is an index lookup and the
+optional one is a full parse.</p>
 <p>Two committed negative cases exist, which is unusual enough to name.
 One asserts that a weak lexical match is excluded —
 <code>"stricte: faible correspondance exclue (1 mot sur 3)"</code>. The
@@ -663,17 +684,26 @@ honest reading: <code>DESIGN.md</code> §11.</li>
 <h2 id="history">History</h2>
 <p><strong>2026-08-04</strong> — <a
 href="https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3"><code class="commit-id" title="226c171ac21b6175bfda8e3b29256341e7fb2ff3">226c171a…</code></a>
-— second reading, two commits on. <code>1.2.0</code> and the tombstone
-commit before it change the supersession path in three ways, all
-verified against the built module rather than read. <code>fade()</code>
-now returns <code>untouched</code> on <code>pinned === 1</code>, so a
-pinned correction is exempt: fifteen consecutive re-assertions of the
-value it corrected left its confidence flat at 0.500 and it stayed the
-top result. Critical rows (importance ≥ 0.8) are clamped at
-<code>archiveThreshold + 0.01</code>, so they can no longer be archived,
-though the rejected value climbs past them in rank at the fifth
-re-assertion and stays there. A re-asserted rejected value now
-reactivates its own archived row through
+— second reading, two commits on. Two mechanism details were added
+afterwards from a pull request opened by the project's author against
+this atlas, both verified here before being taken: the strict path runs
+over an FTS5 virtual table declared <code>tokenize = 'unicode61'</code>
+and joined with <code>memory_fts MATCH</code> at three call sites, and
+the relax arm parses every candidate embedding from JSON text, with the
+cost and its remedy stated in a source comment. The same pull request
+proposed the <code>tombstone</code> mark, which is declined — the
+demonstration below was re-run at this commit and an ordinary correction
+is still archived at the third re-assertion. <code>1.2.0</code> and the
+tombstone commit before it change the supersession path in three ways,
+all verified against the built module rather than read.
+<code>fade()</code> now returns <code>untouched</code> on
+<code>pinned === 1</code>, so a pinned correction is exempt: fifteen
+consecutive re-assertions of the value it corrected left its confidence
+flat at 0.500 and it stayed the top result. Critical rows (importance ≥
+0.8) are clamped at <code>archiveThreshold + 0.01</code>, so they can no
+longer be archived, though the rejected value climbs past them in rank
+at the fifth re-assertion and stays there. A re-asserted rejected value
+now reactivates its own archived row through
 <code>resurrectConfidence</code> (0.3) instead of being inserted fresh
 at 0.6, and both the archival and the reactivation write audit rows with
 reasons <code>"supersession"</code> and <code>"resurrection"</code> —

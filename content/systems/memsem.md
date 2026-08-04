@@ -13,7 +13,7 @@ capabilities: "scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "A subject/predicate/object triple with importance, confidence, frequency, tags, theme and an archived flag"
   storage: "One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes and audit tables"
-  retrieval: "Strict lexical by default — a 50% word-match floor, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine and two-hop graph propagation"
+  retrieval: "Strict lexical by default over an FTS5 index with a `unicode61` tokenizer, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine over JSON-stored vectors and two-hop graph propagation"
   write: "`memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge"
   update_delete: "Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a rejected value re-asserted reactivates its archived row at a discount and fades the correction, by design"
   scoping: "`project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes"
@@ -113,7 +113,8 @@ repetition.
 One SQLite file at `~/.memsem/`, opened through Node 22's built-in `node:sqlite`
 — no native addon, no server, no vector database required. Schema arrives through
 a versioned migration list in `db.ts`: `memories`, `memory_history`, `edges`,
-`episodes`, then a history index, then `audit_log`.
+`episodes`, then a history index, then `audit_log` — plus a `memory_fts` FTS5
+virtual table kept in step by triggers on insert, delete and update.
 
 `src/` is eight files. `db.ts` (1,517 lines) holds the schema and every query;
 `index.ts` is the MCP server and its fourteen tools; `plugin.ts` is the opencode
@@ -304,14 +305,35 @@ Validity time is not tracked separately from record time.
 
 ## 6. Retrieval Mechanics
 
-One SQL pass over rows filtered by `project` and `theme`, scored in TypeScript,
-sorted by priority. `whereClause(project, theme)` is applied on the list, search
-and index paths alike, so the scope key genuinely reaches the query rather than
-being stored and forgotten — the distinction the
+**The strict path is an FTS5 index, not a scan.** `memory_fts` is a virtual table
+over subject, predicate, object and tags, declared `tokenize = 'unicode61'` and
+kept in step by three triggers on insert, delete and update. Search joins it —
+`FROM memories m JOIN memory_fts ON memory_fts.rowid = m.id WHERE memory_fts
+MATCH ?` — at three call sites. The `unicode61` tokenizer is what makes the
+non-Latin cases work, and it is why the regression suite can assert that a
+one-character CJK term and a Cyrillic restatement are both findable.
+
+Scoring then happens in TypeScript over the matched rows, and
+`whereClause(project, theme)` is applied on the list, search and index paths
+alike, so the scope key genuinely reaches the query rather than being stored and
+forgotten — the distinction the
 [scope as a first-class key](../../patterns/scope-as-a-first-class-key/) pattern
 draws. The caller supplies the project string, which is the standard caveat: this
 certifies the key reaches the query, not that a caller cannot pass a different
 one.
+
+**The relax arm has a stated cost the strict arm does not.** Embeddings are
+persisted as JSON text, so cosine ranking parses every candidate row:
+
+```js
+// ponytail: cosine over stored JSON is O(n); add a SQLite vector extension only when corpus size justifies it.
+const sim = cosine(qv, JSON.parse(row.embedding) as number[]);
+```
+
+Naming the complexity and the remedy in the same comment, rather than discovering
+either later, is the same habit as the retrieval docstring that says what the
+path deliberately does not do. It also explains why relax mode is opt-in: the
+default path is an index lookup and the optional one is a full parse.
 
 Two committed negative cases exist, which is unusual enough to name. One asserts
 that a weak lexical match is excluded — `"stricte: faible correspondance exclue
@@ -503,6 +525,6 @@ corrections matter, which is the thing users are worst at.
 
 ## History
 
-**2026-08-04** — [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3) — second reading, two commits on. `1.2.0` and the tombstone commit before it change the supersession path in three ways, all verified against the built module rather than read. `fade()` now returns `untouched` on `pinned === 1`, so a pinned correction is exempt: fifteen consecutive re-assertions of the value it corrected left its confidence flat at 0.500 and it stayed the top result. Critical rows (importance ≥ 0.8) are clamped at `archiveThreshold + 0.01`, so they can no longer be archived, though the rejected value climbs past them in rank at the fifth re-assertion and stays there. A re-asserted rejected value now reactivates its own archived row through `resurrectConfidence` (0.3) instead of being inserted fresh at 0.6, and both the archival and the reactivation write audit rows with reasons `"supersession"` and `"resurrection"` — closing most of the audit gap this report recorded on `add()`. What did not change is that a re-assertion still fades the live correction, and `src/test/regression-test.ts` now asserts that as intended behaviour; an ordinary unpinned correction is archived at the third re-assertion rather than the first. The same commits also fixed Unicode case folding in the supersession lookup and made configured confidence values actually be returned, neither of which this report had looked for. `npm test` passes and the benchmark is unchanged: 0.958 / 0.958 / 0.320 / 0.958 with the same ablation.
+**2026-08-04** — [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3) — second reading, two commits on. Two mechanism details were added afterwards from a pull request opened by the project's author against this atlas, both verified here before being taken: the strict path runs over an FTS5 virtual table declared `tokenize = 'unicode61'` and joined with `memory_fts MATCH` at three call sites, and the relax arm parses every candidate embedding from JSON text, with the cost and its remedy stated in a source comment. The same pull request proposed the `tombstone` mark, which is declined — the demonstration below was re-run at this commit and an ordinary correction is still archived at the third re-assertion. `1.2.0` and the tombstone commit before it change the supersession path in three ways, all verified against the built module rather than read. `fade()` now returns `untouched` on `pinned === 1`, so a pinned correction is exempt: fifteen consecutive re-assertions of the value it corrected left its confidence flat at 0.500 and it stayed the top result. Critical rows (importance ≥ 0.8) are clamped at `archiveThreshold + 0.01`, so they can no longer be archived, though the rejected value climbs past them in rank at the fifth re-assertion and stays there. A re-asserted rejected value now reactivates its own archived row through `resurrectConfidence` (0.3) instead of being inserted fresh at 0.6, and both the archival and the reactivation write audit rows with reasons `"supersession"` and `"resurrection"` — closing most of the audit gap this report recorded on `add()`. What did not change is that a re-assertion still fades the live correction, and `src/test/regression-test.ts` now asserts that as intended behaviour; an ordinary unpinned correction is archived at the third re-assertion rather than the first. The same commits also fixed Unicode case folding in the supersession lookup and made configured confidence values actually be returned, neither of which this report had looked for. `npm test` passes and the benchmark is unchanged: 0.958 / 0.958 / 0.320 / 0.958 with the same ablation.
 
 **2026-08-04** — [`33b0d4624020f28fc7b2bee0a3b9865948d90818`](https://github.com/WindSeries69/memsem/commit/33b0d4624020f28fc7b2bee0a3b9865948d90818) — first reading. `npm test` run from a clean clone: all suites pass and the benchmark reproduces DESIGN.md §11 exactly. The supersession inversion and the unprotected pin were demonstrated against the built module rather than read.
