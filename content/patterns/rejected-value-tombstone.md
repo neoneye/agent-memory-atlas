@@ -6,9 +6,11 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Four systems of one hundred and forty-four
+> **This is not an established best practice.** Five systems of one hundred and forty-five
 > carry it: one invented it under adversarial pressure, one adopted it from the
-> first, and one arrived at a weaker form independently. There is no consensus
+> first, one arrived at a weaker form independently, one was driven to it by a
+> regulation, and one carries the mark without yet being characterised here.
+> There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
 > vocabulary for it. Everything below is an argument, and the provenance is
 > traced under *Seen in the atlas* so you can weigh it as one.
@@ -103,8 +105,8 @@ enough.
 
 ## Seen in the atlas
 
-**Three systems in the atlas have this.** That is the most striking
-negative result in the atlas, and it is the reason this page exists.
+**Five systems in the atlas have this.** That is still the most striking negative
+result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
 mechanism and protects rejected states from ordinary pruning.
@@ -112,6 +114,11 @@ mechanism and protects rejected states from ordinary pruning.
 are rejected or superseded, and model writes check them before asserting.
 [Daimon](../../systems/daimon/) is the third and the weakest, and it is
 instructive precisely because of *how* it is weaker.
+[Provem](../../systems/provem/) is the fourth and the first to arrive at it from
+regulation rather than from a failure, discussed below.
+[Universal Memory Engine](../../systems/universal-memory-engine/) carries the
+mark and is not yet characterised on this page — its paragraph is owed, and the
+gap is recorded here rather than papered over.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
@@ -170,9 +177,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and forty-four
+That makes the negative result stronger rather than weaker. Two of one hundred and forty-five
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and forty-four, plus one adoption by a reader who went looking, suggests an idea
+one hundred and forty-five, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -204,6 +211,28 @@ that would move Daimon into the same class as the other two.
 
 Everything else stops at supersession, archival, or deletion — mechanisms that
 remove a value from view without recording that it was *judged wrong*:
+
+**The fourth arrival came from a regulation, and it has the most forgiving key.**
+[Provem](../../systems/provem/)'s `forget(term, scope)` deletes the matching
+records, appends the term's **token set** to a per-tenant `erased_terms`
+registry, and writes an erasure certificate into the audit log. Every later
+recall computes the record's tokens and excludes it with reason `"erased"` if any
+registered set is a subset.
+
+Two things separate it from the three above. Its key is a *normalized token
+subset* rather than an exact string or a canonicalised value, so a later record
+that restates the erased term inside different surrounding text is still caught —
+the round-9 lesson on this page, that normalization is where the work is, taken
+further than Daimon's exact-text hash takes it, at the cost of a false-positive
+surface nobody has measured. And it is **tenant-scoped**, so an erasure for one
+customer cannot silently censor another — the only instance here that treats the
+scope of a rejection as part of its identity.
+
+It shares Daimon's limitation exactly: suppression at read, not refusal at write.
+A re-ingested erased value still lands in the backing store and is stopped on the
+way out. For a system whose stated purpose is GDPR Article 17 that is the sharper
+version of the same criticism — the regulation is about what you hold, and this
+mechanism governs what you serve.
 
 - [memsem](../../systems/memsem/) is the demonstration this page has otherwise
   had to argue for. Its correction design is deliberate and good — a contradicting

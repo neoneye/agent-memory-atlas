@@ -96,13 +96,15 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Four
-systems of one hundred and forty-four carry it: one invented it under
-adversarial pressure, one adopted it from the first, and one arrived at
-a weaker form independently. There is no consensus behind this page, no
-library that provides the mechanism, and no shared vocabulary for it.
-Everything below is an argument, and the provenance is traced under
-<em>Seen in the atlas</em> so you can weigh it as one.</p>
+<p><strong>This is not an established best practice.</strong> Five
+systems of one hundred and forty-five carry it: one invented it under
+adversarial pressure, one adopted it from the first, one arrived at a
+weaker form independently, one was driven to it by a regulation, and one
+carries the mark without yet being characterised here. There is no
+consensus behind this page, no library that provides the mechanism, and
+no shared vocabulary for it. Everything below is an argument, and the
+provenance is traced under <em>Seen in the atlas</em> so you can weigh
+it as one.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -217,17 +219,22 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Three systems in the atlas have this.</strong> That is the
-most striking negative result in the atlas, and it is the reason this
-page exists.</p>
+<p><strong>Five systems in the atlas have this.</strong> That is still
+the most striking negative result in the atlas, and it is the reason
+this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
 <code>MemoryRejectedValue</code> rows when claims are rejected or
 superseded, and model writes check them before asserting. <a
 href="../../systems/daimon/">Daimon</a> is the third and the weakest,
-and it is instructive precisely because of <em>how</em> it is
-weaker.</p>
+and it is instructive precisely because of <em>how</em> it is weaker. <a
+href="../../systems/provem/">Provem</a> is the fourth and the first to
+arrive at it from regulation rather than from a failure, discussed
+below. <a href="../../systems/universal-memory-engine/">Universal Memory
+Engine</a> carries the mark and is not yet characterised on this page —
+its paragraph is owed, and the gap is recorded here rather than papered
+over.</p>
 <p><strong>Where it came from: an adversary, not a designer.</strong>
 Verel's git history dates the mechanism to 28 June 2026, inside a
 numbered red-team sequence, and the commit that introduces it describes
@@ -314,8 +321,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-one hundred and forty-four would suggest a hard idea that a few teams
-reach independently. One of one hundred and forty-four, plus one
+one hundred and forty-five would suggest a hard idea that a few teams
+reach independently. One of one hundred and forty-five, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -348,6 +355,31 @@ move Daimon into the same class as the other two.</p>
 <p>Everything else stops at supersession, archival, or deletion —
 mechanisms that remove a value from view without recording that it was
 <em>judged wrong</em>:</p>
+<p><strong>The fourth arrival came from a regulation, and it has the
+most forgiving key.</strong> <a
+href="../../systems/provem/">Provem</a>'s
+<code>forget(term, scope)</code> deletes the matching records, appends
+the term's <strong>token set</strong> to a per-tenant
+<code>erased_terms</code> registry, and writes an erasure certificate
+into the audit log. Every later recall computes the record's tokens and
+excludes it with reason <code>"erased"</code> if any registered set is a
+subset.</p>
+<p>Two things separate it from the three above. Its key is a
+<em>normalized token subset</em> rather than an exact string or a
+canonicalised value, so a later record that restates the erased term
+inside different surrounding text is still caught — the round-9 lesson
+on this page, that normalization is where the work is, taken further
+than Daimon's exact-text hash takes it, at the cost of a false-positive
+surface nobody has measured. And it is <strong>tenant-scoped</strong>,
+so an erasure for one customer cannot silently censor another — the only
+instance here that treats the scope of a rejection as part of its
+identity.</p>
+<p>It shares Daimon's limitation exactly: suppression at read, not
+refusal at write. A re-ingested erased value still lands in the backing
+store and is stopped on the way out. For a system whose stated purpose
+is GDPR Article 17 that is the sharper version of the same criticism —
+the regulation is about what you hold, and this mechanism governs what
+you serve.</p>
 <ul>
 <li><a href="../../systems/memsem/">memsem</a> is the demonstration this
 page has otherwise had to argue for. Its correction design is deliberate

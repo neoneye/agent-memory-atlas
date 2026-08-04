@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 144 reports.**
+**This page covers all 145 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1353,3 +1353,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 59,000 lines of Rust, 660 commits, 536 inline tests, six of seven capability marks — and the one claim that went stale is the one with a documented verification command, which returns 76 against a count of 65 repeated in three places.
 - Study when: you are deciding what a defensible benchmark claim looks like, or you want bi-temporal history and a hash-chained journal in a single local binary.
 - Do not copy when: you need multi-machine sync, since federation is export and re-import; encryption you cannot forget to enable, since it is opt-in and a stock install writes plaintext; or a guarantee that a rejected value stays rejected.
+
+### `provem`
+
+- Best idea: a replay script that asserts every published number instead of printing it, exiting non-zero on drift — 21 assertions from frozen artifacts at zero cost, 25 with the governance benchmark and unit tests, and it passes.
+- Biggest risk: no licence file exists anywhere in the tree and none is asserted in the README or `pyproject.toml`, so all rights are reserved by default — the one thing a compliance-minded adopter cannot do with a compliance product is use it.
+- Most reusable component: `forget(term, scope)` — delete the rows, append the term's token set to a per-tenant erased registry, emit an erasure certificate, and exclude any later record whose tokens are a superset. A value-keyed tombstone with a normalized, forgiving key.
+- Maturity impression: 21,000 lines with 7,600 lines of tests, a claim register that marks its own claims `Unsupported` and "Rejected for now", a research journal of negative results, and two of four deployment tiers published as losing — one below the no-memory baseline.
+- Study when: governance is your actual problem, or you want to see what a defensible claim looks like when the repository itself fails CI if the README drifts.
+- Do not copy when: you need erasure that stops content entering the store rather than leaving it — this suppresses at read, so the store retains what a subject asked to erase.

@@ -559,7 +559,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Nineteen of one hundred and forty-four. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Twenty of one hundred and forty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1417,6 +1417,25 @@ flag that Zep's publication does not state its prompt variant. It publishes the
 per-question-type breakdown including the category it does badly on
 (`single-session-preference`, 0.300 on 30 questions).
 
+**[Provem](../systems/provem/) goes one step past all of them: it makes the
+reproduction a gate rather than an invitation.** Every other repository here, at
+best, ships a harness a reader may run. Provem ships a script that re-derives its
+published numbers and *asserts* them, so a README that drifts from its artifacts
+fails a command. It also does the things this page has been asking for
+individually: the dataset is hash-pinned and fetched rather than redistributed;
+two of its four deployment tiers are published **losing**, one of them scoring
+0.21 against a stated 0.24 no-memory baseline; a prompt confound gets its own
+named replay step; the competitor was configured to that competitor's own
+published evaluation checklist; third-party evaluations are quoted verbatim in a
+separate ranking marked not comparable; and `docs/claim_register.md` carries rows
+whose evidence column reads `Unsupported` and whose disposition reads *"Rejected
+for now"*. Its author describes a nominal recall win over Mem0 as "roughly a tie".
+
+The counterweight is the one it states itself: the governance suite producing the
+240 → 0 and 100% → 0% figures is **self-authored**, so it measures the failure
+modes its author modelled. A reproducible number is not the same as a
+generalisable one, and this page's standard has always been the first.
+
 That is the run-count rule, the config-stamp rule, the commit-the-results rule,
 the don't-reproduce-others'-numbers rule and the report-the-trade rule, in one
 repository. Set against the rest of this page it is the existence proof that the
@@ -1452,9 +1471,17 @@ not publish, is still the right order to do these things in.
 
 ## 9. Limits of This Page
 
-- Benchmark harnesses in these repositories were **inspected, not run**, with two
-  exceptions at different strengths, and the difference between them is worth
-  keeping. [memsem](../systems/memsem/)'s `scripts/bench.mjs` was **re-run** from
+- Benchmark harnesses in these repositories were **inspected, not run**, with
+  three exceptions at different strengths, and the differences between them are
+  worth keeping. The strongest is [Provem](../systems/provem/), because the
+  checking is the repository's own: `scripts/verify_repro.sh` re-derives every
+  published number from frozen artifacts and **asserts it verbatim**, exiting
+  non-zero on any drift or missing input. Run here from a clean clone it reports
+  `VERIFY OK (21 assertions)`, and 25 with `--full`, which adds the deterministic
+  governance benchmark and the unit tests. Its one prerequisite is fetching the
+  LoCoMo dataset, which is CC BY-NC and so pinned by sha256 rather than
+  redistributed; without it the gate exits 1 with `MISSING INPUT` instead of
+  quietly skipping. [memsem](../systems/memsem/)'s `scripts/bench.mjs` was **re-run** from
   a clean clone and reproduced every cell of its published table — offline,
   deterministic, no model, no service, seconds. [Perseus Vault](../systems/perseus-vault/)'s
   LongMemEval figures were **recomputed, not re-run**: its published 73.8% and
