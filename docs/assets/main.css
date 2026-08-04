@@ -1687,9 +1687,24 @@ a {
   background: var(--paper);
 }
 
-.prose .table-wrap th:first-child {
+/* Only the corner cell of the header ROW takes the dark header background.
+   Written as `th:first-child` this also matched every `th[scope="row"]` — the
+   capability grid uses those for its system-name column — which painted each
+   row header dark ink while its link text stayed dark. Dark on dark, on the
+   one column a reader needs to identify the row. */
+.prose .table-wrap thead th:first-child {
   z-index: 3;
   background: var(--ink);
+}
+
+/* A sticky cell must be OPAQUE or the columns scrolling underneath show through
+   it. The row stripe is `rgb(255 253 248 / 0.66)`, which is translucent by
+   design and unusable here, so the pinned cell uses that stripe pre-blended
+   over --paper (#f7f4ec) at full opacity. Keep the two in step if either
+   changes. */
+.prose .table-wrap tr:nth-child(even) th:first-child,
+.prose .table-wrap tr:nth-child(even) td:first-child {
+  background: #fcfaf4;
 }
 
 .prose th {
