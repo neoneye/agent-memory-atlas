@@ -178,7 +178,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Explicit trust state | 21 of 144 |
 | Negative retrieval assertion | 19 of 144 |
 | Bi-temporal validity | 11 of 144 |
-| Rejected-value tombstone | 4 of 144 |
+| Rejected-value tombstone | 5 of 144 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in two or three

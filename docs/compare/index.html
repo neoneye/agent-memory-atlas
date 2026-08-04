@@ -4238,13 +4238,15 @@ core recall</td>
 <td>A subject/predicate/object triple with importance, confidence,
 frequency, tags, theme and an archived flag</td>
 <td>One SQLite file via <code>node:sqlite</code>, with versioned
-migrations, plus history, edges, episodes and audit tables</td>
-<td>Strict lexical by default — a 50% word-match floor, ranked by
+migrations, history, edges, episodes, audit tables and a
+trigger-maintained FTS5 table</td>
+<td>Strict lexical by default — Unicode FTS5 narrows candidates before
+the 50% word-match floor and ranking by
 <code>importance × confidence × recency × frequency</code>; an opt-in
 relax mode adds cosine and two-hop graph propagation</td>
-<td><code>memory_add</code> upserts a triple; a differing object for the
-same subject and predicate fades every live rival and records a
-<code>contradicts</code> edge</td>
+<td><code>memory_add</code> upserts a triple with case-insensitive
+subject/predicate matching; a differing object fades every live rival
+and records a <code>contradicts</code> edge</td>
 <td>Supersession by attenuation — confidence × 0.6, or × 0.9 above the
 critical threshold — archiving below 0.25; archived rows are kept and
 excluded from reads, and nothing is ever deleted</td>
@@ -4261,9 +4263,9 @@ text; no discrete epistemic status</td>
 <td>A committed offline benchmark that reproduces exactly, an ablation
 over its own constants, and an audit log carrying a reason and a dry-run
 flag</td>
-<td>Supersession is keyed on the record, not the value, so repeating a
-discredited fact reinstates it and demotes the correction — pinning does
-not prevent it</td>
+<td>The lexical path is indexed and Unicode-safe, but optional cosine
+ranking still scans stored vectors; trust remains a confidence float and
+background safety rules remain prompt-driven</td>
 </tr>
 <tr>
 <td><code>memu</code></td>
@@ -5655,8 +5657,9 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>4 of 144:</em> <a
+<p><em>5 of 144:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a></p>
@@ -10177,7 +10180,7 @@ href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae573
 <li><a
 href="https://github.com/WindSeries69/memsem">WindSeries69/memsem</a> at
 <a
-href="https://github.com/WindSeries69/memsem/commit/33b0d4624020f28fc7b2bee0a3b9865948d90818"><code class="commit-id" title="33b0d4624020f28fc7b2bee0a3b9865948d90818">33b0d462…</code></a></li>
+href="https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3"><code class="commit-id" title="226c171ac21b6175bfda8e3b29256341e7fb2ff3">226c171a…</code></a></li>
 <li><a href="https://github.com/KimGLee/Cambium">KimGLee/Cambium</a> at
 <a
 href="https://github.com/KimGLee/Cambium/commit/289515b5c961de6e283ffea60ccbe544827a11cc"><code class="commit-id" title="289515b5c961de6e283ffea60ccbe544827a11cc">289515b5…</code></a></li>
