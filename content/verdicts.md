@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 143 reports.**
+**This page covers all 144 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1344,3 +1344,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 5,687 lines of deterministic tooling and 6,453 lines of normative prose against 73 lines of tests covering one of twelve scripts; the kernel's own 1,171 wiki links all resolve, which is the one thing here that is demonstrated rather than specified.
 - Study when: you are designing quality gates for agent-maintained knowledge and want the vocabulary for separating "checked and fine" from "could not be checked".
 - Do not copy when: you need a memory component. It stores nothing, retrieves nothing and ranks nothing — adopting it means adopting a working method, not adding a dependency.
+
+### `perseus-vault`
+
+- Best idea: three independent full runs per benchmark condition, every report committed with a complete config stamp, and the answer prompt folded into the run signature so a chain-of-thought number can never be quoted beside a plain one — the published means recompute from those artifacts exactly.
+- Biggest risk: no rejected-value tombstone. Purge and supersession are keyed on the record, so a later ingest of the same wrong content creates a new entity, in a system whose correction machinery is otherwise the most complete here.
+- Most reusable component: the `CLAIMS-AUDIT.md` habit — a file that retires claims it cannot back, naming the retired figure, why it failed, and the artifact that replaced it, including downgrading its own "signed results" to "content-hashed".
+- Maturity impression: 59,000 lines of Rust, 660 commits, 536 inline tests, six of seven capability marks — and the one claim that went stale is the one with a documented verification command, which returns 76 against a count of 65 repeated in three places.
+- Study when: you are deciding what a defensible benchmark claim looks like, or you want bi-temporal history and a hash-chained journal in a single local binary.
+- Do not copy when: you need multi-machine sync, since federation is export and re-import; encryption you cannot forget to enable, since it is opt-in and a stock install writes plaintext; or a guarantee that a rejected value stays rejected.

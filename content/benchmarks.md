@@ -559,7 +559,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Eighteen of one hundred and forty-three. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Nineteen of one hundred and forty-four. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1400,6 +1400,36 @@ gap between this and the untraceable figures elsewhere in the corpus is not
 resources, it is fifty lines of harness and a paragraph of honesty. Nothing here
 required a GPU, a dataset licence, or a research budget.
 
+**[Perseus Vault](../systems/perseus-vault/) is the same discipline at full
+scale, and it satisfies every rule on this page at once.** Its LongMemEval
+headline is the mean of **three independent full 500-question runs**, not one, and
+all three reports are committed with dataset, split, `n_instances`,
+`mock_llm: false`, the pinned answerer and judge model snapshots, temperature,
+retrieval mode and `k`, commit, binary version, platform, hardware, elapsed time
+and a run signature. The published 73.8% recomputes from those three files
+exactly. So does the 79.0% it does **not** lead with — the chain-of-thought
+condition scores higher and the README quotes the plain-prompt number, with the
+answer prompt folded into the run signature so *"a CoT number can never be
+silently blended with a plain-prompt one"*. Its comparison table labels Zep's and
+Mem0's figures as their publishers' claims and cites them to an issue rather than
+reproducing them as head-to-heads, and its caveats section instructs a reader to
+flag that Zep's publication does not state its prompt variant. It publishes the
+per-question-type breakdown including the category it does badly on
+(`single-session-preference`, 0.300 on 30 questions).
+
+That is the run-count rule, the config-stamp rule, the commit-the-results rule,
+the don't-reproduce-others'-numbers rule and the report-the-trade rule, in one
+repository. Set against the rest of this page it is the existence proof that the
+standard is meetable by a project that is not a research lab.
+
+The counterweight belongs here too, because it is the failure this page has not
+previously named. The same repository ships a `CLAIMS-AUDIT.md` that retired its
+own unbacked latency claim and downgraded "signed results" to "content-hashed" —
+and the one claim of its that is stale is the one with a **documented verification
+command attached**, which returns 76 against a tool count of 65 repeated in three
+places. Auditing your claims and keeping them current are different disciplines,
+and a check that lives in a Markdown file runs only when somebody remembers.
+
 [Daimon](../systems/daimon/) is the first system here to write the third rule
 down as policy rather than leave it to the reader, and it is the one this page
 has been implying throughout: **a recall number without its backend is not a
@@ -1422,13 +1452,18 @@ not publish, is still the right order to do these things in.
 
 ## 9. Limits of This Page
 
-- Benchmark harnesses in these repositories were **inspected, not run**, with one
-  exception: [memsem](../systems/memsem/)'s `scripts/bench.mjs` was run from a
-  clean clone and reproduced every cell of its published table. It is the only
-  number on this page that has been reproduced rather than read, and it is the
-  cheapest kind — offline, deterministic, no model, no service, seconds. That is
-  a fact about how much this page's standard costs to meet, not about how good
-  the number is.
+- Benchmark harnesses in these repositories were **inspected, not run**, with two
+  exceptions at different strengths, and the difference between them is worth
+  keeping. [memsem](../systems/memsem/)'s `scripts/bench.mjs` was **re-run** from
+  a clean clone and reproduced every cell of its published table — offline,
+  deterministic, no model, no service, seconds. [Perseus Vault](../systems/perseus-vault/)'s
+  LongMemEval figures were **recomputed, not re-run**: its published 73.8% and
+  79.0% are the exact means of three committed per-run reports each, which
+  establishes that the headline is a function of artifacts in the repository
+  rather than a number in a README, and does not establish that a fresh run would
+  land there. Re-running it needs 500 questions × 3 runs × two `gpt-4o` calls,
+  which is why nobody checks figures of that kind and why committing the per-run
+  reports matters as much as it does.
 - The benchmarks in §2's first table are grounded in committed code. Those in
   the second are from familiarity with the literature and were not verified
   against their own repositories in this review.
