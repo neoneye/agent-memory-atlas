@@ -8,13 +8,23 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 5 of 147 screened.**
+**Progress: 10 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 0 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 2 |
-| Repositories with build-time execution (`EXEC`) | 4 |
+| Repositories with an auto-run surface (`RUNS`) | 3 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 4 |
+| Repositories with build-time execution (`EXEC`) | 6 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 0 |
 | Repositories that could not be screened | 0 |
+
+## Auto-run surfaces
+
+These execute without a command being typed. Read before opening the tree.
+
+| System | Surfaces |
+| --- | --- |
+| [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
+| [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
+| [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 
