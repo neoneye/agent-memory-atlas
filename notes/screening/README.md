@@ -8,11 +8,11 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 145 of 147 screened.**
+**Progress: 147 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 46 |
+| Repositories with an auto-run surface (`RUNS`) | 47 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 28 |
 | Repositories with build-time execution (`EXEC`) | 106 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -70,4 +70,5 @@ These execute without a command being typed. Read before opening the tree.
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.mcp.json`, `server.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
+| [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 
