@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 115 of 147 screened.**
+**Progress: 120 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 37 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 23 |
-| Repositories with build-time execution (`EXEC`) | 86 |
+| Repositories with an auto-run surface (`RUNS`) | 38 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 24 |
+| Repositories with build-time execution (`EXEC`) | 90 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -61,4 +61,5 @@ These execute without a command being typed. Read before opening the tree.
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
+| [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 
