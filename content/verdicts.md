@@ -1357,11 +1357,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `provem`
 
 - Best idea: a replay script that asserts every published number instead of printing it, exiting non-zero on drift — 21 assertions from frozen artifacts at zero cost, 25 with the governance benchmark and unit tests, and it passes.
-- Biggest risk: no licence file exists anywhere in the tree and none is asserted in the README or `pyproject.toml`, so all rights are reserved by default — the one thing a compliance-minded adopter cannot do with a compliance product is use it.
+- Biggest risk: erasure is read-side suppression, not write-side refusal. A re-ingested erased value still lands in the backing store and is stopped on the way out, so every future read path has to consult the registry and the store retains what a subject asked to erase — the sharpest thing to press on a product whose stated purpose is Article 17.
 - Most reusable component: `forget(term, scope)` — delete the rows, append the term's token set to a per-tenant erased registry, emit an erasure certificate, and exclude any later record whose tokens are a superset. A value-keyed tombstone with a normalized, forgiving key.
 - Maturity impression: 21,000 lines with 7,600 lines of tests, a claim register that marks its own claims `Unsupported` and "Rejected for now", a research journal of negative results, and two of four deployment tiers published as losing — one below the no-memory baseline.
 - Study when: governance is your actual problem, or you want to see what a defensible claim looks like when the repository itself fails CI if the README drifts.
-- Do not copy when: you need erasure that stops content entering the store rather than leaving it — this suppresses at read, so the store retains what a subject asked to erase.
+- Do not copy when: the governance suite's numbers are being read as general. It is self-authored, so it measures the failure modes its author modelled; a reproducible number is not a generalisable one.
 
 ### `argo`
 

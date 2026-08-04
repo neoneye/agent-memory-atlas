@@ -6,8 +6,8 @@ root: ../..
 page_kind: system
 source_name: "BernhardJackiewicz/provem"
 source_url: https://github.com/BernhardJackiewicz/provem
-revision: fc722f06767eb534c7d71d0463d5d5fd2564fe4c
-revision_url: https://github.com/BernhardJackiewicz/provem/commit/fc722f06767eb534c7d71d0463d5d5fd2564fe4c
+revision: 9cc7401b97f258beca56b3caab92a16362fc00f5
+revision_url: https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5
 analyzed_at: 2026-08-04
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
@@ -21,7 +21,7 @@ matrix:
   background: "Reflection, consolidation, and a deterministic governance benchmark that needs no API key"
   trust: "Discrete statuses — hypothesis, accepted, proposed, pending review, quarantined — plus source trust, confidence and an abstain-on-conflict policy"
   strengths: "A replay script that asserts every published number and passes; a claim register that marks its own claims unsupported; losing configurations published"
-  risks: "No licence file anywhere, so all rights are reserved by default; the governance benchmark is self-authored"
+  risks: "Erasure suppresses at read rather than refusing at write, so the store retains what a subject asked to erase; the governance benchmark is self-authored"
 ---
 
 ## 1. Executive Summary
@@ -74,13 +74,15 @@ only on committed fixtures until a licensed real PII set is approved."* A claim
 register that carries a rejected claim is the artifact this atlas has been
 describing in the abstract for months.
 
-Reservations. **There is no licence file anywhere in the tree**, and neither
-`README.md` nor `pyproject.toml` asserts one, so all rights are reserved by
-default — reviewed under the same exception applied to OptMem, and stated here
-because it governs what a reader may do with the code. The governance benchmark
-that produces the headline compliance numbers is self-authored, which the
-repository says plainly. And the erasure guard is read-side suppression rather
-than write-side refusal, which matters in the way described below.
+Reservations. The governance benchmark that produces the headline compliance
+numbers is self-authored, which the repository says plainly. And the erasure
+guard is **read-side suppression rather than write-side refusal**, which matters
+in the way described below and is the sharpest thing to press on an Article 17
+claim.
+
+It is MIT licensed, with `license = "MIT"` and `license-files = ["LICENSE"]`
+declared in `pyproject.toml` rather than left to a stray file — so the metadata
+and the file agree, which is more than several systems here manage.
 
 ## 2. Mental Model
 
@@ -315,8 +317,6 @@ Strengths:
 
 Gaps:
 
-- **No licence file, and no licence asserted anywhere**, so all rights are
-  reserved by default.
 - **Erasure is read-side suppression**, so the store retains content a subject
   asked to erase and every read path must consult the registry.
 - **The governance benchmark is self-authored**, and its 240 → 0 and 100% → 0%
@@ -376,9 +376,11 @@ wired into a gate that fails if the count moves off zero.
 - **Read-side suppression as the whole of an erasure story.** It is a real
   defence and it leaves the erased content in the store, which is exactly the
   property the regulation is about.
-- **Shipping without a licence file** when the pitch is enterprise compliance.
-  The one thing a compliance-minded adopter cannot do with this repository is use
-  it.
+- **Shipping without a licence file** when the pitch is enterprise compliance —
+  the one thing a compliance-minded adopter cannot do with an unlicensed
+  repository is use it. Worth keeping as a general rule because it is the cheapest
+  possible fix and the easiest to leave undone; here it was closed in one commit
+  once someone pointed at it.
 - **Treating a self-authored governance suite as a general result.** It measures
   the attacks the author modelled.
 
@@ -392,11 +394,11 @@ evidence practice around the claims is the strongest in this atlas.
 
 Wrong as a drop-in recall upgrade: the recall win is real and modest, its author
 calls it a tie, and two of the four deployment tiers are slower or worse than the
-baseline. And until a licence appears, wrong for anything you intend to ship.
+baseline. And wrong wherever "erased" has to mean the store no longer holds it,
+rather than no longer serves it.
 
 ## 12. Open Questions
 
-- Will there be a licence? Nothing in the tree grants any rights.
 - Could the erasure registry move to the write path, so an erased value is
   refused at ingest rather than filtered at recall?
 - The erased-token subset test is looser than an exact hash — what is its false
@@ -423,8 +425,10 @@ baseline. And until a licence appears, wrong for anything you intend to ship.
   `docs/lager_optimization_log.md`, `docs/ship_report.md`,
   `docs/reliability_results.md`, `docs/trust_model.md`,
   `docs/locomo_benchmark.md`.
-- No licence file exists at any path.
+- Licensing: `LICENSE` (MIT), declared in `pyproject.toml` as `license = "MIT"` with `license-files`.
 
 ## History
+
+**2026-08-04** — [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5) — second reading, one commit on. `9cc7401` adds an MIT `LICENSE` and makes the package publishable, declaring `license = "MIT"` and `license-files = ["LICENSE"]` in `pyproject.toml`, so the file and the metadata agree. The previous reading recorded that no licence existed anywhere in the tree and that all rights were therefore reserved; that is no longer the case and the report no longer says it. `scripts/verify_repro.sh --full` was re-run from the new pin after fetching the hash-pinned dataset: **VERIFY OK, 25 assertions**, so the published figures still hold at this commit. Nothing about the erasure path changed — `forget` still registers the term's tokens and excludes at recall rather than refusing at write, and the store still retains a re-ingested erased value.
 
 **2026-08-04** — [`fc722f06767eb534c7d71d0463d5d5fd2564fe4c`](https://github.com/BernhardJackiewicz/provem/commit/fc722f06767eb534c7d71d0463d5d5fd2564fe4c) — first reading. `scripts/verify_repro.sh` was executed from a clean clone after fetching the hash-pinned LoCoMo dataset: VERIFY OK, 21 assertions, and 25 with `--full` including the governance benchmark and the unit tests. Without the dataset the gate exits 1 with `MISSING INPUT`, which is the one prerequisite behind the zero-cost claim.
