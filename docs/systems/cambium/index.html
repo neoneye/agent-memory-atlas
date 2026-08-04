@@ -89,9 +89,9 @@ passed'.</p>
               <strong>KimGLee/Cambium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/289515b5c961de6e283ffea60ccbe544827a11cc" title="289515b5c961de6e283ffea60ccbe544827a11cc">
+            <a class="meta-pill revision-pill" href="https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d" title="4f8bf4df77868ff9a86531539276cea11c28093d">
               <span>Analyzed revision</span>
-              <code>289515b5…</code>
+              <code>4f8bf4df…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -117,12 +117,14 @@ passed'.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Cambium is not a memory system. It says so in its second paragraph —
 <em>"Cambium does not provide a knowledge corpus, a RAG engine, or a
-default domain policy"</em> — and the repository describes itself as
-<strong>intentionally uninstantiated</strong>: no profile is selected,
-the governance placeholders are unfilled, and no composed vocabulary
-ships. What it provides is the standard by which an operator and an LLM
-agent maintain a corpus over time, plus twelve deterministic scripts
-that check whether they did.</p>
+default domain policy"</em> — and the repository <strong>selects no
+profile of its own</strong>: the four governance placeholders in
+<code>K00/03</code> are unfilled and no composed vocabulary ships. What
+it provides is the standard by which an operator and an LLM agent
+maintain a corpus over time, twelve deterministic scripts that check
+whether they did, and a filled reference profile under
+<code>profiles/examples/agent-atlas/</code> that shows what the
+interface looks like answered.</p>
 <p>It is in this atlas for the same reason <a
 href="../terse-memory/">TERSE Memory</a> and <a
 href="../memex-zero-rag/">MeMex Zero-RAG</a> are: the durable thing is
@@ -163,11 +165,11 @@ default, re-parses the merged result before writing and <strong>aborts
 rather than write a ledger that no longer parses</strong>, writes
 atomically, and rejects a page whose batch does not match the
 delta's.</p>
-<p>Reservations. Almost none of this is exercised: the repository ships
-no corpus, so the standard's claims about maintaining one have no worked
-instance, and there are 73 lines of tests covering one of twelve
-scripts. Supersession keeps the relationship and the reason and is keyed
-on a page rather than a value, so it is history rather than a <a
+<p>Reservations. The repository ships no corpus, so every claim about
+maintaining one over time is unexercised end to end, and there are 73
+lines of tests covering one of twelve scripts. Supersession keeps the
+relationship and the reason and is keyed on a page rather than a value,
+so it is history rather than a <a
 href="../../patterns/rejected-value-tombstone/">tombstone</a>. And most
 of the 6,453 kernel lines are <code>MUST</code>/<code>MUST NOT</code>
 prose addressed to an agent — the boundary between that prose and the
@@ -448,9 +450,11 @@ blanket claim.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>Intentionally uninstantiated</strong>, so the standard's
-central claims about maintaining a corpus over time have no worked
-instance in the repository.</li>
+<li><strong>No corpus, so nothing is exercised end to end.</strong> The
+reference profile shows the interface answered and
+<code>check_profile.py</code> passes on it; what remains undemonstrated
+is everything downstream of a vault — vocabulary conformance, freshness,
+duplicates, MOC coverage, residual content, delta application.</li>
 <li><strong>The kernel is prose.</strong> Most <code>MUST</code> and
 <code>MUST NOT</code> rules have no script, and the enforcement boundary
 is not written down anywhere as a list.</li>
@@ -477,38 +481,65 @@ commit:</p>
 <thead>
 <tr>
 <th>Check</th>
-<th>Result on Cambium's own tree</th>
+<th>Target</th>
+<th>Result</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>check_links.py</code></td>
+<td>the kernel</td>
 <td>153 files, 1,171 links, <code>missing=0 ambiguous=0</code> —
 <strong>exit 0</strong></td>
 </tr>
 <tr>
+<td><code>check_profile.py</code></td>
+<td><code>profiles/examples/agent-atlas</code></td>
+<td><code>slots=10 bound_ok=10</code>,
+<code>sentinel_hits(fail)=0</code>, 13 files scanned — <strong>exit
+0</strong></td>
+</tr>
+<tr>
+<td><code>compose_vocab.py</code></td>
+<td>that profile's extensions</td>
+<td>refuses: <code>K00/03</code> still carries
+<code>{{ standards_status }}</code>,
+<code>{{ selected_profile_manifest }}</code> — <strong>exit
+1</strong></td>
+</tr>
+<tr>
 <td><code>check_vocab.py</code></td>
+<td>the kernel</td>
 <td>no composed vocabulary; prints the fix — <strong>exit
 1</strong></td>
 </tr>
 <tr>
 <td><code>check_freshness.py</code></td>
+<td>the kernel</td>
 <td><code>NOTHING CHECKED — … not evidence of freshness</code> —
 <strong>exit 2</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p>The first is a real result: a standard whose kernel is 153
-interlinked Markdown files, with every one of 1,171 wiki links
-resolving, is a corpus obeying its own K09 rule. The second and third
-are the design working — a tree that has selected no profile
-<em>should</em> be unable to demonstrate vocabulary conformance or
-freshness, and both tools say so instead of returning green.</p>
-<p>Taken together they are also the clearest statement of the coverage
-problem. Of twelve scripts, the one that can produce a meaningful pass
-here is the one whose subject is internal consistency; everything about
-a corpus, which is the point of the standard, is unexercised because
-there is no corpus.</p>
+<p>Two real passes, and they answer different questions. Every one of
+1,171 wiki links across 153 interlinked kernel files resolves, so the
+standard's own corpus obeys its own K09 rule. And the reference profile
+binds all ten interface slots with no unfilled-template marker left, so
+the profile interface is answerable in practice rather than only in the
+abstract — with the tool's own caveat attached: <em>"This checks
+structure, not whether the answers are good."</em></p>
+<p>The three non-passes are the design working, and the third one is the
+sharpest. <code>compose_vocab.py</code> will not build a vocabulary from
+a validated example profile because the
+<strong>repository-level</strong> governance page is deliberately
+uninstantiated — adoption is a governance act, and the tool refuses to
+simulate one. So the boundary is not "no worked instance"; it is that
+the worked instance stops precisely where a real adopter's judgement
+would have to begin.</p>
+<p>What that leaves unexercised is everything downstream of a composed
+vocabulary, which is most of what the standard is for: conformance,
+freshness, duplicates, MOC coverage, residual content, delta
+application, and the terminal proof.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -540,10 +571,12 @@ a dependency.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Publishing a governance standard with no worked
-instance.</strong> The uninstantiated choice is defensible, and it means
-an adopter is the first person to find out whether the rules
-compose.</li>
+<li><strong>Gating your own demonstration on an adoption you decline to
+make.</strong> The reference profile validates, and the vocabulary it
+would compose cannot be built, because <code>compose_vocab.py</code>
+requires the repository-level governance placeholders to be filled
+first. That is a defensible boundary and it means the half of the
+toolchain downstream of a vocabulary has no public passing run.</li>
 <li><strong>Leaving the prose/script boundary undocumented.</strong>
 Twelve scripts beside twelve kernel modules invites a reader to assume
 the rules are enforced; a list of which <code>MUST</code> clauses have a
@@ -574,8 +607,10 @@ needs.</li>
 supersession model, or does the corpus's unit rule it out?</li>
 <li>Does the Coverage Ledger's in-place update lose anything the receipt
 register does not recover?</li>
-<li>Would a reference profile — even a small one — confirm or falsify
-the claim that kernel and profile compose cleanly?</li>
+<li>The reference profile binds every interface slot, and composing its
+vocabulary is blocked by the repo's own unfilled governance page. Is
+that ordering deliberate, or would a composed example vocabulary be
+shippable?</li>
 <li><code>check_proof.py</code> is the largest script and the one gating
 completion. What would it take to test it?</li>
 <li>The freshness intervals (120 days, 365 days, stable never) are
@@ -608,6 +643,29 @@ parser <code>kblib.py</code>.</li>
 <code>NOTICE</code>, <code>ATTRIBUTION.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d"><code class="commit-id" title="4f8bf4df77868ff9a86531539276cea11c28093d">4f8bf4df…</code></a>
+— second reading, four commits on, prompted by the project's author.
+<code>profiles/examples/agent-atlas/</code> is a 603-line filled
+reference profile carrying no placeholder markers, and it was present at
+the previously pinned commit; <code>check_profile.py</code> passes on it
+— <code>slots=10 bound_ok=10</code>, <code>sentinel_hits(fail)=0</code>,
+13 files scanned. Verified at the old pin before the re-pin.
+<code>compose_vocab.py</code> still refuses to build a vocabulary from
+it, because <code>K00/03</code> carries four uninstantiated
+<code>{{ }}</code> placeholders and adoption is a governance act the
+public repository declines to simulate, so <code>check_vocab.py</code>
+continues to exit 1 and <code>check_freshness.py</code> continues to
+report <code>NOTHING CHECKED</code>. Since the old pin:
+<code>ROADMAP.md</code> gains a typed-dependency-runtime section, and
+the example's adoption wording is rewritten — where it previously
+described the live Agent Systems Atlas corpus as "migration inputs to a
+future adoption task", it now records that the Atlas has completed a
+separate formal adoption of Cambium <code>3.0.0</code> against a
+materialized <code>profiles/agent-atlas/</code>, while adding that this
+example "remains a reference rather than an adoption certificate or
+proof of corpus-wide acceptance". That private instance state is not
+distributed, so nothing about it is checkable here.</p>
 <p><strong>2026-08-04</strong> — <a
 href="https://github.com/KimGLee/Cambium/commit/289515b5c961de6e283ffea60ccbe544827a11cc"><code class="commit-id" title="289515b5c961de6e283ffea60ccbe544827a11cc">289515b5…</code></a>
 — first reading. The three self-application runs in section 10 were

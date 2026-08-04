@@ -1339,9 +1339,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `cambium`
 
 - Best idea: a check that refuses to return a pass it did not earn — run against its own tree, the freshness tool prints `overdue=0` and `fresh=0` together and concludes "NOTHING CHECKED… this is not evidence of freshness", and the vocabulary check exits 1 rather than assume a vocabulary no profile has composed.
-- Biggest risk: intentionally uninstantiated. It ships no corpus, so the standard's claims about maintaining one over time have no worked instance, and an adopter is the first person to discover whether kernel and profile compose.
+- Biggest risk: it ships no corpus, so everything downstream of a composed vocabulary — conformance, freshness, duplicates, MOC coverage, delta application, terminal proof — has no public passing run. The reference profile validates; the vocabulary it would compose is blocked by the repository's own deliberately unfilled governance page.
 - Most reusable component: the prohibition that automated checks may never raise a status — the scripts emit only `fail` and `candidate`, so automation can block work and nominate work and can never promote a belief.
-- Maturity impression: 5,687 lines of deterministic tooling and 6,453 lines of normative prose against 73 lines of tests covering one of twelve scripts; the kernel's own 1,171 wiki links all resolve, which is the one thing here that is demonstrated rather than specified.
+- Maturity impression: 5,687 lines of deterministic tooling and 6,453 lines of normative prose against 73 lines of tests covering one of twelve scripts; two things are demonstrated rather than specified — the kernel's own 1,171 wiki links all resolve, and the reference profile binds every interface slot with no unfilled marker left.
 - Study when: you are designing quality gates for agent-maintained knowledge and want the vocabulary for separating "checked and fine" from "could not be checked".
 - Do not copy when: you need a memory component. It stores nothing, retrieves nothing and ranks nothing — adopting it means adopting a working method, not adding a dependency.
 

@@ -371,3 +371,32 @@ checked, or it is a judgement and the prose should say so.
 system carrying a tombstone" is answerable from the capability index in one
 query. "The most carefully reasoned correction in the atlas" is not answerable at
 all, and should not be phrased as though it were.
+
+## Hazard 3b: the truncated listing (2026-08-04)
+
+A third form of the scoped-search hazard, found by the author of
+[Cambium](../content/systems/cambium.md) reporting a wrong claim.
+
+The repository was surveyed with `find . -type f -not -path "./.git/*" | head -40`.
+The listing ran out inside `docs/`, and `profiles/` contributed exactly one line —
+its `README.md`. The report then said the repository had "no worked instance" of
+its profile interface. `profiles/examples/agent-atlas/` is a 603-line filled
+reference profile with no placeholder markers, it passes `check_profile.py` with
+all ten interface slots bound, and it was present at the commit under review.
+
+**Why this is worse than the two forms already recorded.** Hazard 3's existing
+instances are a grep scoped to the wrong files and a pattern that matched
+nothing — both cases where the query *returned nothing* and nothing is
+indistinguishable from absence. Here the query returned forty lines. A partial
+result reads as a survey, not as a sample, and one line from `profiles/` is
+exactly what an empty `profiles/` would have produced.
+
+**The rule.** A listing used to establish that something is *absent* must not be
+truncated. Count first (`| wc -l`) or drop the `head`. Truncation is fine for
+orientation and never fine for a negative claim.
+
+**On the correction path.** It was verified at the atlas's own pinned commit
+before anything was rewritten, not against the project's current `main` — the
+disputed claim was about what existed at the pin, and checking only the current
+tree would have left it unfalsifiable in either direction. The retraction is
+logged in the known-limitations list in `content/overview.md`.
