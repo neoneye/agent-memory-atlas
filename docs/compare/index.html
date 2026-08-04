@@ -10862,6 +10862,34 @@ is synthesized at runtime rather than present in the source, so no
 static count settles it. What is established is that the count
 definition and its verification command have drifted apart. Reported by
 the project's author; verified at the atlas's pinned commit.</li>
+<li><strong><code>HKUDS/Auto-Deep-Research</code> was examined and has
+no report, because its memory layer is present in the tree and
+unreachable from it.</strong> It is a deep-research agent built on the
+AutoAgent framework — 11,115 lines of Python, dormant since October 2025
+— and it does inherit a memory package: <code>autoagent/memory/</code>
+is 747 lines wrapping a ChromaDB <code>PersistentClient</code>, with
+<code>rag_memory</code>, <code>code_memory</code>,
+<code>codetree_memory</code>, <code>paper_memory</code> and
+<code>tool_memory</code>. Durable storage, retrieved by query, so it
+looks like a candidate. The disconnection is what settles it. Every one
+of the five functions in <code>autoagent/tools/rag_tools.py</code> —
+<code>save_raw_docs_to_vector_db</code>, <code>query_db</code>,
+<code>modify_query</code>, <code>answer_query</code>,
+<code>can_answer</code> — is referenced in <strong>zero</strong> other
+files in the repository; <code>autoagent/agents/</code> contains only
+<code>system_agent</code>; and the RAG imports in
+<code>autoagent/tools/__init__.py</code> are <strong>commented
+out</strong> rather than merely unused, so the disconnection is a choice
+someone made rather than an accident. Checked by enumerating each
+defined function and searching the whole tree for each name, because
+"nothing calls this" is exactly the claim a single mis-scoped grep gets
+wrong. Nothing this agent stores survives a session, because nothing
+reaches the store — which is the genuine exclusion, distinct from a
+system that stores carelessly. Worth recording rather than dropping
+because it is a shape the corpus has not previously named:
+<strong>inherited memory machinery, complete and disabled</strong>, in a
+fork whose parent presumably uses it. A reader evaluating the parent
+framework should not conclude anything about it from this.</li>
 <li>Core Memory's grounding ceiling, Memanto's conflict-detection
 precision, Memory Engine's agent clamp, ai-memory's cross-harness
 continuity claim, ctx's disclosure reachability, and OptMem's cover loss
