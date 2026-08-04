@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 10 of 147 screened.**
+**Progress: 15 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 3 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 4 |
-| Repositories with build-time execution (`EXEC`) | 6 |
+| Repositories with an auto-run surface (`RUNS`) | 5 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 6 |
+| Repositories with build-time execution (`EXEC`) | 9 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 0 |
 | Repositories that could not be screened | 0 |
 
@@ -27,4 +27,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
+| [`agno`](../../content/systems/agno.md) | `.cursorrules` |
+| [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 
