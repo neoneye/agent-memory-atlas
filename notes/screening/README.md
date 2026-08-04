@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 75 of 147 screened.**
+**Progress: 80 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 27 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 17 |
-| Repositories with build-time execution (`EXEC`) | 54 |
+| Repositories with an auto-run surface (`RUNS`) | 28 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 18 |
+| Repositories with build-time execution (`EXEC`) | 56 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -51,4 +51,5 @@ These execute without a command being typed. Read before opening the tree.
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
+| [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 
