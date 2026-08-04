@@ -1,7 +1,7 @@
 # Nine repositories, triaged — and five of them carry no licence
 
-**Status:** triaged; four candidates for review, five refused with reasons, no
-report written
+**Status:** done — all four candidates reviewed on 2026-08-04 as reports 137-140;
+five refused with reasons
 **Origin:** nine GitHub URLs submitted 2026-08-04. Checked against the 136
 reports in `content/systems/`, then cloned and probed.
 
@@ -93,3 +93,25 @@ the established corpus.
 - **All nine reachable**, the second such submission in two days.
 - **One rate worth watching**: five of eight cloned repositories had no licence
   file, which is a caveat to state rather than a reason to skip.
+
+## Closed
+
+All four candidates became reports the same day:
+[7layermem](../content/systems/7layermem.md) (137),
+[CogniCore](../content/systems/cognicore.md) (138),
+[ALMA](../content/systems/alma-memory.md) (139),
+[PromptX](../content/systems/promptx.md) (140).
+
+Between them they carry three marks — `trust_state` and `scope_enforced` on
+CogniCore, `scope_enforced` on ALMA and PromptX, none on 7layermem — and **no
+tombstone**, which keeps that count at four of 140. Two of the four came close
+enough to be worth naming: ALMA's `alma_anti_patterns` stores `why_bad` and
+`better_alternative`, which is more than any tombstone here records and is read
+as guidance rather than consulted on the write path; and CogniCore stores
+`supersedes` as searchable metadata, so "what replaced this" is already a query
+and only the value-keying is missing.
+
+The licence finding held up under the reviews. Of the four, two carry a grant in
+a manifest with no `LICENSE` file in the tree (ALMA, MIT in `pyproject.toml`) or
+no grant at all (7layermem), and both reports state it in section 1 rather than
+treating it as an exclusion.

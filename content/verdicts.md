@@ -646,6 +646,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want a memory that learns operating heuristics from task outcomes, or the richest worked example of storing what not to do.
 - Do not copy when: an epistemic judgement has to persist beyond the call that produced it.
 
+### `promptx`
+
+- Best idea: one SQLite database per role, opened from the role's own directory, so isolation cannot be forgotten — crossing it would mean opening a different file rather than omitting a predicate.
+- Biggest risk: `strength` is the only epistemic field, so a wrong engram and an unused one decay identically and nothing records that anything was ever judged.
+- Most reusable component: the `cue_index` — memories addressed by the words that lead to them rather than by embedding proximity, with `ON DELETE CASCADE` keeping the index from outliving its target.
+- Maturity impression: MIT, 63,237 lines, twenty-one cognition modules with a Cucumber suite over them — and `CREATE TABLE IF NOT EXISTS` with no version column across a store that is per-role, so the first schema change is a manual migration everywhere.
+- Study when: you want associative recall by cue rather than similarity, or the cleanest example here of scope enforced by file boundary.
+- Do not copy when: you need correction of any kind, or your scope is a person rather than a role.
+
 ### `echo-agent`
 
 - Best idea: `provenance_guard` — every memory records which write path created it, ranked `user_stated` 3, `consolidated` 2, `model_inferred` 1, unknown 0, and a write is refused unless the actor ranks at or above its target. A model-inferred claim cannot overwrite a fact the user stated, and the label belongs to the path rather than the payload, so the model cannot nominate its own output as user-stated.
