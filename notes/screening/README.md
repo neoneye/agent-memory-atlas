@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 70 of 147 screened.**
+**Progress: 75 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 25 |
+| Repositories with an auto-run surface (`RUNS`) | 27 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 17 |
-| Repositories with build-time execution (`EXEC`) | 49 |
+| Repositories with build-time execution (`EXEC`) | 54 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -49,4 +49,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
+| [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
+| [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
 
