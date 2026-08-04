@@ -8,14 +8,14 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 20 of 147 screened.**
+**Progress: 25 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 7 |
+| Repositories with an auto-run surface (`RUNS`) | 10 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 7 |
-| Repositories with build-time execution (`EXEC`) | 12 |
-| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 0 |
+| Repositories with build-time execution (`EXEC`) | 16 |
+| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
 ## Auto-run surfaces
@@ -31,4 +31,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
+| [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
+| [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
+| [`claude-mem`](../../content/systems/claude-mem.md) | `.claude/settings.json`, `.github/copilot-instructions.md` |
 

@@ -254,11 +254,19 @@ def scan_gitattributes(root: Path, out: list) -> int:
     p = root / ".gitattributes"
     if not p.exists():
         return 0
-    lines = [ln.strip() for ln in read(p).splitlines() if "filter=" in ln or "diff=" in ln]
-    if lines:
+    # `filter=` is the one that executes: git runs the configured smudge command on
+    # checkout and clean on add. `diff=` only selects a diff driver for display and
+    # cannot execute anything on checkout, so reporting the two identically would
+    # be an over-broad rule of exactly the kind this atlas criticises elsewhere.
+    filters = [ln.strip() for ln in read(p).splitlines() if "filter=" in ln]
+    diffs = [ln.strip() for ln in read(p).splitlines() if "diff=" in ln and "filter=" not in ln]
+    if filters:
         out.append(("RUNS", ".gitattributes",
-                    f"declares {len(lines)} filter/diff driver(s); a configured smudge filter "
-                    f"executes on checkout: {'; '.join(lines[:3])}"))
+                    f"declares {len(filters)} filter driver(s); a *configured* smudge filter "
+                    f"executes on checkout: {'; '.join(filters[:3])}"))
+    if diffs:
+        out.append(("NOTE", ".gitattributes",
+                    f"declares {len(diffs)} diff driver(s) — display only, nothing executes on checkout"))
     return 1
 
 
