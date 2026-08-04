@@ -54,7 +54,11 @@
       closeBanner();
     });
     document.body.appendChild(banner);
-    banner.querySelector("[data-consent='granted']")?.focus();
+    // Focus the banner itself, not a choice. Focusing "Allow" put a keyboard
+    // reader one Enter away from consenting to analytics without reading the
+    // question, which is the same thumb on the scale as styling it primary.
+    banner.setAttribute("tabindex", "-1");
+    banner.focus();
   };
 
   const stored = readConsent();
@@ -175,6 +179,56 @@
       applyFilters();
     });
   });
+
+  // ------------------------------------------------- legacy verdict anchors
+  // The 140 per-system verdict anchors lived on /compare/ until 4 August 2026.
+  // Fragments never reach the server, so an external deep link to
+  // /compare/#mem0 cannot be redirected by the host — it has to be caught here.
+  // Deliberately not a hardcoded slug list: any hash that matches nothing on
+  // this page is either a moved verdict or already broken, and /verdicts/ is
+  // the only place it can now be. check_verdict_anchors.py asserts every slug
+  // resolves there.
+  if (/\/compare\/?$/.test(location.pathname) && location.hash.length > 1) {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (/^[a-z0-9][a-z0-9-]*$/.test(id) && !document.getElementById(id)) {
+      location.replace("../verdicts/" + location.hash);
+    }
+  }
+
+  // ------------------------------------------------- verdict page search
+  const verdictSearch = document.querySelector("#verdict-search");
+  if (verdictSearch) {
+    const entries = [...document.querySelectorAll(".prose h3")].map((h) => {
+      const block = [h];
+      let el = h.nextElementSibling;
+      while (el && el.tagName !== "H3" && el.tagName !== "H2") {
+        block.push(el);
+        el = el.nextElementSibling;
+      }
+      return { name: h.textContent.toLowerCase(), block };
+    });
+    const vCount = document.querySelector("#verdict-count");
+    const tocLinks = [...document.querySelectorAll(".toc a")];
+    const applyVerdicts = () => {
+      const q = verdictSearch.value.trim().toLowerCase();
+      let visible = 0;
+      entries.forEach(({ name, block }) => {
+        const show = !q || name.includes(q);
+        block.forEach((el) => { el.hidden = !show; });
+        if (show) visible += 1;
+      });
+      tocLinks.forEach((a) => {
+        a.hidden = Boolean(q) && !a.textContent.toLowerCase().includes(q);
+      });
+      if (vCount) {
+        vCount.textContent = q
+          ? `${visible} of ${entries.length} systems match "${verdictSearch.value.trim()}"`
+          : `${entries.length} systems`;
+      }
+    };
+    verdictSearch.addEventListener("input", applyVerdicts);
+    applyVerdicts();
+  }
 
   // ------------------------------------------------- comparative matrix search
   // The matrix is twelve columns of prose and cannot be sorted into an answer,

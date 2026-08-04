@@ -17,20 +17,32 @@ out because it is a different thing: the comparison argues about mechanisms
 across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
-**This section covers all 116 reports.** Six judgements each: the best idea,
+<!-- BEGIN GENERATED VERDICT COUNT -->
+**This page covers all 140 reports.**
+<!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
 walk away.
 
 It is hand-written, unlike the [capability index](../capabilities/) and the
-comparative matrix above, which are generated from every report's frontmatter
+[comparative matrix](../compare/#2-comparative-matrix), which is generated from every report's frontmatter
 and complete by construction. So completeness here is a fact about today rather
 than a guarantee: nothing fails the build if the next report arrives without an
 entry, and `scripts/check_homepage.py` only notices the count in the sentence
-above going stale. A verdict missing in future means nobody wrote the paragraph,
+going stale. A verdict missing in future means nobody wrote the paragraph,
 not that a system was judged and found unremarkable — the same distinction the
 [rubric](../methodology/atlas-rubric/) enforces for capability marks, where the
 build *does* fail if a report omits the key.
+
+<div class="filter-row" role="group" aria-label="Find a system verdict">
+  <label class="filter-legend" for="verdict-search">Find</label>
+  <input class="matrix-search" id="verdict-search" type="search" autocomplete="off"
+         placeholder="system name…" aria-describedby="verdict-count">
+</div>
+
+<p class="result-count" id="verdict-count" aria-live="polite"></p>
+
+## System verdicts
 
 ### `mem0`
 

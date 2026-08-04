@@ -28,6 +28,9 @@ GRID_BEGIN = "<!-- BEGIN GENERATED CAPABILITY GRID -->"
 GRID_END = "<!-- END GENERATED CAPABILITY GRID -->"
 CAPABILITIES_PAGE = ROOT / "content" / "capabilities.md"
 PATTERNS_PAGE = ROOT / "content" / "patterns" / "index.md"
+VCOUNT_BEGIN = "<!-- BEGIN GENERATED VERDICT COUNT -->"
+VCOUNT_END = "<!-- END GENERATED VERDICT COUNT -->"
+VERDICTS_PAGE = CONTENT / "verdicts.md"
 SPREAD_BEGIN = "<!-- BEGIN GENERATED SPREAD -->"
 SPREAD_END = "<!-- END GENERATED SPREAD -->"
 
@@ -417,7 +420,18 @@ def main() -> int:
     spread_text = PATTERNS_PAGE.read_text(encoding="utf-8")
     spread_updated = splice(spread_text, SPREAD_BEGIN, SPREAD_END, build_spread(), "spread")
 
-    if updated == text and grid_updated == grid_text and spread_updated == spread_text:
+    # The verdicts page opens by claiming how many reports it covers. It was
+    # split off /compare/ carrying a hand-written "116 reports" while holding
+    # 136 headings, so the sentence was wrong the moment the page existed.
+    verdict_text = VERDICTS_PAGE.read_text(encoding="utf-8")
+    n_verdicts = len(list(SYSTEMS.glob("*.md")))
+    verdict_updated = splice(
+        verdict_text, VCOUNT_BEGIN, VCOUNT_END,
+        f"**This page covers all {n_verdicts} reports.**", "verdict count",
+    )
+
+    if (updated == text and grid_updated == grid_text
+            and spread_updated == spread_text and verdict_updated == verdict_text):
         print("Matrix, capability index, grid and pattern spread already up to date.")
         return 0
 
@@ -431,6 +445,7 @@ def main() -> int:
     OVERVIEW.write_text(updated, encoding="utf-8")
     CAPABILITIES_PAGE.write_text(grid_updated, encoding="utf-8")
     PATTERNS_PAGE.write_text(spread_updated, encoding="utf-8")
+    VERDICTS_PAGE.write_text(verdict_updated, encoding="utf-8")
     print(
         f"Regenerated comparative matrix ({table.count(chr(10)) - 1} systems), "
         "capability index, capability grid and pattern spread."

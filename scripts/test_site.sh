@@ -66,6 +66,13 @@ if ! python3 "$project_dir/scripts/check_history.py" "$project_dir"; then
   exit 1
 fi
 
+# Section 9's 140 per-system anchors moved to /verdicts/ on 4 August 2026 and a
+# fragment never reaches the server, so external /compare/#<slug> links are
+# caught client-side. That only works while the slug exists on the new page.
+if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; then
+  exit 1
+fi
+
 # --check does more than compare the generated tables: it also validates matrix
 # values, capability flags, and revision pins. Discarding its stderr and printing
 # one hardcoded message reported every one of those as a stale matrix and told
@@ -247,4 +254,4 @@ if [[ -n "$card_order" ]]; then
   exit 1
 fi
 
-echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, history sections, analyzed-on dates, and project-relative navigation."
+echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, history sections, verdict anchors, analyzed-on dates, and project-relative navigation."

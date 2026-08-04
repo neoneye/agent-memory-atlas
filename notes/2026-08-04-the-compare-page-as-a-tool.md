@@ -124,3 +124,37 @@ without anyone asking whether the page should hold them.
   that have one are already filterable elsewhere.
 - **One navigation finding**, corroborated: two consecutive reviewers asked for
   the capability index without finding it.
+
+## The split was reviewed back, and the claim was wrong
+
+A second Codex pass on 2026-08-04 measured the result and found the extraction
+sound but the reporting of it overconfident. **The claim that the split carried
+"none of that exposure" is retracted.**
+
+The evidence for it was seventeen inbound anchor links counted in `content/`.
+Those are *internal* references. The links the conservative strategy existed to
+protect are **external deep links**, which no search of this repository can see
+and none of which was checked — and all 140 per-system verdict anchors did in
+fact leave `/compare/`. Only the section-level `#9-repo-by-repo-verdicts`
+survived, because the stub heading kept it. That is hazard 10 in its exact shape:
+a claim whose scope was wider than the search behind it.
+
+Four regressions and one prior miss, all fixed:
+
+| | Fix |
+| --- | --- |
+| 140 legacy `/compare/#<slug>` anchors gone | A fragment never reaches the server, so this is caught client-side: on `/compare/`, a hash matching no element on the page is `location.replace`d to `/verdicts/`. Deliberately not a hardcoded slug list — a hash that matches nothing here is either a moved verdict or already broken. `scripts/check_verdict_anchors.py` asserts every slug resolves on the new page and that the stub anchor survives; control-tested by breaking three slugs. |
+| "This section covers all **116** reports" | The sentence moved with the content and was wrong the moment the page existed — 116 against 136 headings. Now spliced by `generate_matrix.py` like the matrix and the capability grid, so `--check` fails on a hand-edit. Verified by hand-editing it back to 116 and watching the build reject it. |
+| "the comparative matrix **above**" | Now a link to `../compare/#2-comparative-matrix`. It was never above; it was on another page from the moment of the split. |
+| One H1, zero H2, 140 H3 | The H3s lost their parent when section 9's heading stayed behind. A `## System verdicts` heading now sits above them. |
+| Consent banner still focused *Allow* | Removing `is-primary` fixed the styling and left `[data-consent='granted']?.focus()` in place, so a keyboard reader was still one Enter from consenting without reading the question. The banner region takes focus now, neither choice does. |
+
+**And a search on `/verdicts/`,** which the page's own introduction demanded —
+it tells the reader to find the system they are weighing and then offered a
+3,578-pixel contents list at 10.2px. The search filters the verdict sections and
+the contents list together.
+
+**The unresolved item is correctly identified and stands.** The normalization
+objection covers replacing prose with badges; it does not cover a column chooser,
+row selection for side-by-side, URL-preserved state, or CSV export, none of which
+need a vocabulary. Those remain undone rather than declined.
