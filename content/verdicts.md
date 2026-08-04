@@ -1330,11 +1330,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `memsem`
 
 - Best idea: the benchmark is committed, wired into `npm test`, and reproduces exactly — P@3 0.958 with an ablation across four alternative constant weightings, so the defaults have to keep beating the alternatives on every run, and an author-written honest reading names the set's limits.
-- Biggest risk: a re-asserted rejection still fades the live correction, now as specified behaviour with a regression test behind it. Pin a correction and it is untouchable; leave it ordinary and three repetitions of the value it corrected archive it, which puts the burden on a user knowing in advance which corrections matter.
+- Biggest risk: the automatic supersession path still prices a re-asserted rejection rather than constraining it — pin a correction and it is untouchable, leave it ordinary and three repetitions of the value it corrected archive it. 1.3.0 adds a real refusal, but only for the value a person explicitly rejects at the review gate.
 - Most reusable component: the audit row — entity, field, old and new value, a reason, a pass id that caps a sub-agent's cumulative adjustment, and a dry-run flag that records what would have happened without applying it.
-- Maturity impression: eighteen commits and eighteen translated READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, two committed negative retrieval cases, and nothing ever deleted.
-- Study when: you are deciding what a defensible retrieval number looks like; this is the corpus's cleanest example of a claim a reader can check in one command.
-- Do not copy when: a correction has to hold without anyone having pinned it. The rejected value is keyed and consulted, so re-entry costs it a `resurrectConfidence` discount — but a discount is a price, not a prohibition, and repetition pays it off.
+- Maturity impression: twenty-one commits and sixteen translated READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, a committed benchmark with its ablation, a human write-gate tombstone, a discrete trust state, bi-temporal validity, and nothing ever automatically deleted.
+- Study when: you are deciding what a defensible retrieval number looks like, or what a correction mechanism looks like after its automatic path has been priced and its human path rebuilt as a refusal.
+- Do not copy when: a correction has to hold without anyone having pinned or reviewed it. The automatic path prices re-entry (`resurrectConfidence` discount) and repetition pays it off; only the human write gate refuses.
 
 ### `cambium`
 

@@ -1158,10 +1158,15 @@ that as intended behaviour. What it costs depends on protection the user
 had to choose in advance: a pinned correction is exempt outright, a
 critical one is floored above the archive threshold but outranked from
 the fifth repetition, and an ordinary one is archived at the third.
-Measured against the repository's own milk/lactose example. The distance
-between pricing a rejection and constraining it is the whole of the
-tombstone argument, in a system that got almost everything around it
-right.</p>
+Measured against the repository's own milk/lactose example.
+<strong>1.3.0, two releases later, adds the half the previous reading
+said was missing: a human write-gate tombstone.</strong> A rejected
+candidate now writes a <code>memory_suppressions</code> row keyed on the
+normalized value that refuses the write (<code>rejected: true</code>)
+until explicitly unsuppressed, alongside a discrete trust state and
+bi-temporal validity. The distance between pricing a rejection and
+constraining it is the whole of the tombstone argument, in a system that
+got almost everything around it right.</p>
 <p><strong>Cambium is the family's governance layer with no store under
 it, and it contributes the one check discipline this atlas has been
 asking for.</strong> It is a standard — twelve kernel modules, twelve
@@ -4406,37 +4411,47 @@ core recall</td>
 <tr>
 <td><code>memsem</code></td>
 <td>A subject/predicate/object triple with importance, confidence,
-frequency, tags, theme and an archived flag</td>
+frequency, tags, theme, trust, evidence, a pinned flag and an archived
+flag</td>
 <td>One SQLite file via <code>node:sqlite</code>, with versioned
-migrations, plus history, edges, episodes and audit tables</td>
+migrations, plus history, edges, episodes, candidates, suppressions,
+audit and an FTS5 index</td>
 <td>Strict lexical by default over an FTS5 index with a
 <code>unicode61</code> tokenizer, ranked by
 <code>importance × confidence × recency × frequency</code>; an opt-in
 relax mode adds cosine over JSON-stored vectors and two-hop graph
-propagation</td>
+propagation; an <code>asOf</code> arm reads bi-temporal validity</td>
 <td><code>memory_add</code> upserts a triple; a differing object for the
 same subject and predicate fades every live rival and records a
-<code>contradicts</code> edge</td>
+<code>contradicts</code> edge; a value under a human suppression is
+refused outright</td>
 <td>Supersession by attenuation — pinned rows exempt, critical rows
 floored above the archive threshold; a rejected value re-asserted
 reactivates its archived row at a discount and fades the correction, by
-design</td>
+design; a human-rejected value is refused at the write gate until
+explicitly unsuppressed</td>
 <td><code>project</code> and <code>theme</code> applied as filters on
-every read path, plus a focus list that attenuates rather than
-excludes</td>
-<td>An MCP server with fourteen tools, an opencode plugin, and a CLI
-with list, edit, forget and doctor</td>
+every read path, plus a focus list that attenuates rather than excludes;
+cross-project reach is opt-in via <code>crossProject: true</code></td>
+<td>An MCP server with review, verify, unsuppress and purge tools added
+to the core set, an opencode plugin, and a CLI with list, edit, forget,
+doctor and purge</td>
 <td>Session-end extraction, consolidation into patterns, and a
 pairwise-comparison scoring pass — all sub-agents driven by prompts in
 <code>plugin.ts</code></td>
-<td>Importance, confidence, frequency and a pinned flag; provenance
-text; no discrete epistemic status</td>
+<td>A discrete <code>trust</code> field (<code>inferred</code> /
+<code>verbatim</code> / <code>verified</code>) with an
+<code>evidence</code> string and provenance; a candidate gate whose
+<code>pending</code> rows are withheld from retrieval until a person
+approves them</td>
 <td>A committed offline benchmark that reproduces exactly, an ablation
-over its own constants, and an audit log carrying a reason and a dry-run
-flag</td>
-<td>A re-asserted rejected value still fades the live correction; unless
-it was pinned, three repetitions archive it and five outrank a critical
-one</td>
+over its own constants, an audit log carrying a reason, a pass id and a
+dry-run flag, and now a human write-gate tombstone, a discrete trust
+state and bi-temporal validity</td>
+<td>The automatic supersession path still prices a rejection rather than
+constraining it — an unpinned correction is archived at the third
+re-assertion — while the human write-gate tombstone refuses only what a
+person has explicitly rejected</td>
 </tr>
 <tr>
 <td><code>memu</code></td>
@@ -5888,8 +5903,9 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>5 of 148:</em> <a
+<p><em>6 of 148:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -5897,7 +5913,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>23 of 148:</em> <a
+<p><em>24 of 148:</em> <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
@@ -5912,6 +5928,7 @@ href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
@@ -5923,7 +5940,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>12 of 148:</em> <a
+<p><em>13 of 148:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -5931,6 +5948,7 @@ href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
@@ -10429,7 +10447,7 @@ href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae573
 <li><a
 href="https://github.com/WindSeries69/memsem">WindSeries69/memsem</a> at
 <a
-href="https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3"><code class="commit-id" title="226c171ac21b6175bfda8e3b29256341e7fb2ff3">226c171a…</code></a></li>
+href="https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a"><code class="commit-id" title="16c28a940beac69fc060eb6bf5828061ad881d1a">16c28a94…</code></a></li>
 <li><a href="https://github.com/KimGLee/Cambium">KimGLee/Cambium</a> at
 <a
 href="https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d"><code class="commit-id" title="4f8bf4df77868ff9a86531539276cea11c28093d">4f8bf4df…</code></a></li>
@@ -10892,6 +10910,28 @@ because it is a shape the corpus has not previously named:
 <strong>inherited memory machinery, complete and disabled</strong>, in a
 fork whose parent presumably uses it. A reader evaluating the parent
 framework should not conclude anything about it from this.</li>
+<li><strong><a href="../systems/empryo/">Empryo</a>'s maintainer reports
+substantial changes in a tree this atlas cannot verify, and the report
+is unchanged because of it.</strong> They opened a pull request
+rewriting the report against commit <code>aa963f28</code>, in which the
+memory layer has moved from <code>src/core/memory/</code> into a
+standalone <code>packages/memory/</code> workspace that is
+<strong>private</strong>. The public repository still carries the v2
+layout, and its default branch head is still
+<code class="commit-id" title="e6b5885db1232f35a52eb9faeae1023ab46d5685">e6b5885d…</code> — the exact commit
+pinned here, so the published pin has zero drift and every path in the
+current report still resolves. What is reported and <em>not</em>
+verified: a retrieval-quality benchmark with committed results, a
+content-hash resurrection path closed after this atlas named it, two
+further capability marks, and — volunteered by the maintainer — a
+<em>degradation</em> in provenance, where an optional distillation pass
+writes model-authored memories into the same table with no ranking
+distinction from user-dictated ones. Also reported is a measured and
+unexplained gap between synthetic and real-data recall. None of it is
+checkable from outside, so none of it is in the report; the maintainer
+said the same thing first and marked the PR draft. Recorded here so a
+reader knows the pin is current with the public tree and may lag the
+project, which is a different claim from the pin being stale.</li>
 <li>Core Memory's grounding ceiling, Memanto's conflict-detection
 precision, Memory Engine's agent clamp, ai-memory's cross-harness
 continuity claim, ctx's disclosure reachability, and OptMem's cover loss

@@ -124,7 +124,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`
 - [`memos`](../systems/memos/) **MemOS** — Memory operating system · `MemTensor/MemOS` · Scope enforced
 - [`mempalace`](../systems/mempalace/) **MemPalace** — Verbatim evidence memory · `MemPalace/mempalace` · Scope enforced
-- [`memsem`](../systems/memsem/) **memsem** — Correction by attenuation · `WindSeries69/memsem` · Scope enforced, Mutation audit, Human review, Negative evals
+- [`memsem`](../systems/memsem/) **memsem** — Correction by attenuation · `WindSeries69/memsem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`memu`](../systems/memu/) **memU** — Documented decisions · `NevaMind-AI/memU`
 - [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
 - [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review

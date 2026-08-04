@@ -6,11 +6,12 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Five systems of one hundred and forty-eight
+> **This is not an established best practice.** Six systems of one hundred and forty-eight
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, and one carries the mark without yet being characterised here.
-> There is no consensus
+> regulation, one carries the mark without yet being characterised here, and one
+> adopted the guard this page recommends after its own report held it up as the
+> near-miss. There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
 > vocabulary for it. Everything below is an argument, and the provenance is
 > traced under *Seen in the atlas* so you can weigh it as one.
@@ -105,7 +106,7 @@ enough.
 
 ## Seen in the atlas
 
-**Five systems in the atlas have this.** That is still the most striking negative
+**Six systems in the atlas have this.** That is still the most striking negative
 result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -119,6 +120,8 @@ regulation rather than from a failure, discussed below.
 [Universal Memory Engine](../../systems/universal-memory-engine/) carries the
 mark and is not yet characterised on this page — its paragraph is owed, and the
 gap is recorded here rather than papered over.
+[memsem](../../systems/memsem/) is the sixth, arriving at it in 1.3.0 via a human
+write-gate that refuses a rejected value rather than pricing it.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
@@ -235,31 +238,31 @@ version of the same criticism — the regulation is about what you hold, and thi
 mechanism governs what you serve.
 
 **[memsem](../../systems/memsem/) is the one case here where the distinction on
-this page was tested against a maintainer, and it is worth reading as a partial
-concession rather than a failure.** At the commit this atlas first read, a
-re-asserted rejected value arrived as a new live row and faded the correction
-that beat it; pinning did not help, because `pinned` was enforced where a
-sub-agent adjusts importance and appeared nowhere in the fade path. Two commits
-later the shape has changed. The archived row is now consulted and reactivated in
-place at a `resurrectConfidence` discount instead of arriving fresh, both the
-archival and the reactivation write audit rows, and `fade()` exits immediately on
-`pinned === 1` while clamping critical rows above the archive threshold.
+this page was tested against a maintainer, and it is worth reading as the field's
+clearest two-path answer.** At the commit this atlas first read, a re-asserted
+rejected value arrived as a new live row and faded the correction that beat it;
+pinning did not help, because `pinned` was enforced where a sub-agent adjusts
+importance and appeared nowhere in the fade path. Two commits later the shape
+changed: the archived row is now consulted and reactivated in place at a
+`resurrectConfidence` discount instead of arriving fresh, both the archival and
+the reactivation write audit rows, and `fade()` exits immediately on `pinned === 1`
+while clamping critical rows above the archive threshold. **That automatic path
+still buys a price rather than a prohibition** — a re-assertion still fades the
+live correction (now asserted as intended contract), a pinned correction survives
+fifteen re-assertions untouched, a critical unpinned one is outranked from the
+fifth, and an ordinary one is archived at the third.
 
-**What did not change is the half this page is actually about.** A re-assertion
-still fades the live correction, and a committed regression test now asserts that
-as the intended contract — *"Re-asserting a rejected value also supersedes its
-current contradiction"*. Measured at the new commit: a pinned correction survives
-fifteen re-assertions untouched, a critical unpinned one is never archived but is
-outranked from the fifth, and an ordinary one is archived at the third.
-
-So the guard is keyed on the value and consulted, which is the hard half — and
-what it buys is a **price rather than a prohibition**. That is the sharpest
-statement this page has of its own claim: a tombstone has to make the rejection a
-*durable constraint*, because any discount on re-entry is paid off by repetition,
-and an extractor re-reading one old transcript looks exactly like a fact being
-independently restated. memsem's answer is that the user should pin what matters,
-which is a real answer that relocates the problem to whoever had to know in
-advance.
+**Then 1.3.0, two releases later, added the refusal the price was never going to
+buy.** A sub-agent can route a fact into `memory_candidates`; a person who rejects
+it writes a `memory_suppressions` row keyed on the *normalized* value, and every
+further `add()` of that value is refused outright — `rejected: true` — until an
+explicit `unsuppress`. The governance suite verifies both directions: the rejected
+candidate blocks the write, the unsuppress restores it. Unlike the automatic
+supersession path, this is a durable constraint on the value, not a discount; it
+is the thing a tombstone is for, arrived at because the maintainer held both views
+at once — repetition is evidence on the automatic path, a person's rejection is a
+standing fact on the human one. The mark is earned here even where it was (and
+remains) declined for the automatic supersession path on its own.
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry

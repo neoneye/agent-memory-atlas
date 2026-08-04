@@ -1,126 +1,111 @@
 ---
 title: "memsem"
 eyebrow: "Correction by attenuation"
-description: "A small MCP memory whose committed benchmark reproduces exactly, and whose contradiction handling fades the loser rather than deleting it — until the loser is simply repeated."
+description: "A small MCP memory whose committed benchmark reproduces exactly, whose contradiction handling fades the loser rather than deleting it — and whose 1.3.0 adds a human write-gate tombstone, a discrete trust state and bi-temporal validity."
 root: ../..
 page_kind: system
 source_name: "WindSeries69/memsem"
 source_url: https://github.com/WindSeries69/memsem
-revision: 226c171ac21b6175bfda8e3b29256341e7fb2ff3
-revision_url: https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3
-analyzed_at: 2026-08-04
-capabilities: "scope_enforced, audit_log, human_review, negative_eval"
+revision: 16c28a940beac69fc060eb6bf5828061ad881d1a
+revision_url: https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a
+analyzed_at: 2026-08-05
+capabilities: "scope_enforced, audit_log, human_review, negative_eval, trust_state, bitemporal, tombstone"
 matrix:
-  memory_unit: "A subject/predicate/object triple with importance, confidence, frequency, tags, theme and an archived flag"
-  storage: "One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes and audit tables"
-  retrieval: "Strict lexical by default over an FTS5 index with a `unicode61` tokenizer, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine over JSON-stored vectors and two-hop graph propagation"
-  write: "`memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge"
-  update_delete: "Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a rejected value re-asserted reactivates its archived row at a discount and fades the correction, by design"
-  scoping: "`project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes"
-  integration: "An MCP server with fourteen tools, an opencode plugin, and a CLI with list, edit, forget and doctor"
+  memory_unit: "A subject/predicate/object triple with importance, confidence, frequency, tags, theme, trust, evidence, a pinned flag and an archived flag"
+  storage: "One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes, candidates, suppressions, audit and an FTS5 index"
+  retrieval: "Strict lexical by default over an FTS5 index with a `unicode61` tokenizer, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine over JSON-stored vectors and two-hop graph propagation; an `asOf` arm reads bi-temporal validity"
+  write: "`memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge; a value under a human suppression is refused outright"
+  update_delete: "Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a rejected value re-asserted reactivates its archived row at a discount and fades the correction, by design; a human-rejected value is refused at the write gate until explicitly unsuppressed"
+  scoping: "`project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes; cross-project reach is opt-in via `crossProject: true`"
+  integration: "An MCP server with review, verify, unsuppress and purge tools added to the core set, an opencode plugin, and a CLI with list, edit, forget, doctor and purge"
   background: "Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts`"
-  trust: "Importance, confidence, frequency and a pinned flag; provenance text; no discrete epistemic status"
-  strengths: "A committed offline benchmark that reproduces exactly, an ablation over its own constants, and an audit log carrying a reason and a dry-run flag"
-  risks: "A re-asserted rejected value still fades the live correction; unless it was pinned, three repetitions archive it and five outrank a critical one"
+  trust: "A discrete `trust` field (`inferred` / `verbatim` / `verified`) with an `evidence` string and provenance; a candidate gate whose `pending` rows are withheld from retrieval until a person approves them"
+  strengths: "A committed offline benchmark that reproduces exactly, an ablation over its own constants, an audit log carrying a reason, a pass id and a dry-run flag, and now a human write-gate tombstone, a discrete trust state and bi-temporal validity"
+  risks: "The automatic supersession path still prices a rejection rather than constraining it — an unpinned correction is archived at the third re-assertion — while the human write-gate tombstone refuses only what a person has explicitly rejected"
 ---
 
 ## 1. Executive Summary
 
-memsem is 2,600 lines of TypeScript exposing an MCP server, an opencode plugin
-and a CLI over a single SQLite file. It is MIT-licensed, twenty commits old,
-and ships sixteen translated READMEs — a presentation-to-code ratio that in this
-atlas usually predicts claims outrunning implementation. It does not here, and
-the reason is worth leading with.
+memsem is TypeScript exposing an MCP server, an opencode plugin and a CLI over
+a single SQLite file. It is MIT-licensed, twenty-one commits old, and ships
+sixteen translated READMEs. Its committed benchmark reproduces, and its 1.3.0
+release adds real governance: a human write-gate tombstone, a discrete trust
+state and bi-temporal validity.
 
 **Its benchmark reproduces.** `DESIGN.md` §11 publishes P@3 0.958 on a 51-fact,
 20-query set, alongside four alternative constant weightings. From a clean clone,
 `npm install && npm test` reproduces every figure in that table exactly —
-0.958 / 0.958 / 0.320 / 0.958 for the defaults, 0.933 for the égalitaire,
+0.958 / 0.958 / 0.320 / 0.958 for the defaults, 0.933 for the egalitarian,
 recency-heavy and confidence-heavy variants, 0.958 for the relaxed lexical
 threshold — offline, deterministic, in seconds, with no model and no network.
-
-That is rare enough in this atlas to state plainly. The recurring finding on the
-[benchmarks page](../../benchmarks/) is untraceable numbers — figures in a README
-with no committed harness, no committed results, and no way to get from one to
-the other. memsem publishes the harness, wires it into `npm test`, and the number
-is what the harness prints.
+The number is what the committed harness prints, and the ablation runs on every
+test.
 
 **The honesty extends past the number.** §11 carries a section headed *"Lecture
-honnête"* that states the set is author-designed rather than a standard, explains
-that the low P@5 of 0.320 is an artifact of most queries having only one to three
-relevant facts among five returned, names the single query that discriminates
-between the weightings, and lists what would have to change to make the result
-mean more. This is a calibration ablation with its own limitations attached, and
-almost nothing else in the corpus does it.
+honnête"* that states the set is author-designed rather than a standard,
+explains that the low P@5 of 0.320 is an artifact of most queries having only one
+to three relevant facts among five returned, and names the single query that
+discriminates between the weightings.
 
-**The design's central claim is about correction**, and it is the claim this
-report tests hardest. The README says memsem fixes what other systems miss:
-*"A fact contradicted months ago stays as strong as the day it was written."*
-Its answer is attenuation — a contradicting fact fades its rivals by multiplying
-confidence by 0.6, or 0.9 for facts above the critical importance threshold, and
-archives them below 0.25 rather than deleting. History is kept, a `contradicts`
-edge is written between the two, and the correction is reversible.
-
-**And a re-asserted rejection still costs the correction, deliberately.** The
-supersession path now consults archived rows: a value that already lost is
-reactivated in its original row at a discount rather than inserted fresh, and the
-reactivation is audited. But the same call still fades the live correction, and
-`src/test/regression-test.ts` locks that in as intended behaviour rather than
-leaving it as an accident. What that costs depends on whether the correction was
-pinned — measured three ways below, against the repository's own headline
-example.
+**The correction design is the claim these re-reads test hardest, and 1.3.0
+finally separates the two questions it had been conflating.** The automatic
+supersession path still *prices* a re-asserted rejection as a one-time discount
+that repetition pays off — an unpinned correction is archived at the third
+re-assertion, exactly as the previous reading measured. That is the design
+position and it is unchanged. What is *new* is a second, human path that
+*refuses*: a person reviews candidates, and a rejected one writes a
+`memory_suppressions` row keyed on the normalized value that blocks any future
+write of that value until it is explicitly unsuppressed — the demonstration below
+returns `rejected: true`, which is the
+thing the [rejected-value tombstone](../../patterns/rejected-value-tombstone/)
+pattern asks for even where the automatic path declines to provide it.
 
 ## 2. Mental Model
 
 A fact is a triple, and its standing is a number that goes up when repeated and
-down when contradicted. There are no epistemic states — only a live/archived
-flag and a confidence float that moves.
+down when contradicted. There are now two distinct mechanisms for keeping a value
+away, and the distinction is the whole difference between a discount and a
+constraint.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Live: memory_add
-    Live: confidence 0.5<br/>importance, frequency, theme
+    Live: confidence 0.5<br/>importance, frequency, theme, trust
     Live --> Live: same object again<br/>confidence + 0.1, frequency + 1
 
     Live --> Faded: a different object<br/>for the same subject+predicate
-    Faded: confidence × 0.6<br/>pinned exempt<br/>critical floored at 0.26
-    Faded --> Faded: contradicted again
+    Faded: confidence × 0.6<br/>pinned exempt, critical floored
     Faded --> Archived: confidence < 0.25<br/><i>ordinary rows only</i>
-    Archived: archived = 1<br/>excluded from every read
-
     Archived --> Live: <b>re-asserted</b><br/>same row, × 0.3, audited
-    Live --> Faded: and the correction fades<br/><i>asserted by the regression test</i>
+    Live --> Faded: correction fades<br/><i>asserted by the regression test</i>
 
-    note right of Archived
-        The rejected value is keyed and
-        consulted — the hard half of a
-        tombstone. What it buys is a
-        one-time discount, not a
-        durable constraint.
-    end note
+    Pending --> Approved: person approves<br/>published with evidence
+    Pending --> Rejected: person rejects
+    Rejected --> Suppressed: write-gate row<br/>keyed on normalized value
+    Suppressed --> [*]: blocked, until unsuppressed
 ```
 
-The loop from `Archived` back to `Live` is the design position and the finding at
-once. Everything around it is considered: attenuation instead of deletion,
-keeping the loser, a `contradicts` edge between the two, and now a pin that
-`fade()` refuses to touch. The unresolved part is what the discount is worth —
-the [rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern
-asks for a durable constraint on the value, and a discount is paid off by
-repetition.
+Left column is the automatic supersession path, and it remains a discount paid
+off by repetition. Right column is the human path added in 1.3.0, and it is the
+durable refusal the
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern
+names. Writing the same blob through `memory_add` and through `reviewCandidate`
+now reaches different ends — which is the honest way to hold both the design
+position and the pattern's argument at once.
 
 ## 3. Architecture
 
 One SQLite file at `~/.memsem/`, opened through Node 22's built-in `node:sqlite`
-— no native addon, no server, no vector database required. Schema arrives through
-a versioned migration list in `db.ts`: `memories`, `memory_history`, `edges`,
-`episodes`, then a history index, then `audit_log` — plus a `memory_fts` FTS5
-virtual table kept in step by triggers on insert, delete and update.
+— no native addon, no server, no vector database required. Schema arrives
+through a versioned migration list in `db.ts`: `memories`, `memory_history`,
+`edges`, `episodes`, `audit_log`, a `memory_fts` FTS5 virtual table kept in step
+by triggers, and — new in 1.3.0 — `memory_candidates` and `memory_suppressions`
+for the human review gate.
 
-`src/` is eight files. `db.ts` (1,517 lines) holds the schema and every query;
-`index.ts` is the MCP server and its fourteen tools; `plugin.ts` is the opencode
-integration and the prompts that drive three background sub-agents; `scoring.ts`
-is the priority formula; `config.ts` is every tunable constant with defaults and
-partial-override validation; `cli.ts` is `list`, `edit`, `forget` and `doctor`.
+`src/` holds the schema and every query in `db.ts`; `index.ts` is the MCP server
+and its tools; `plugin.ts` is the opencode integration and the prompts that drive
+three background sub-agents; `scoring.ts` is the priority formula; `config.ts`
+is every tunable constant; `cli.ts` is the review surface, now including `purge`.
 
 ### Deployment and ergonomics
 
@@ -130,19 +115,14 @@ emits an experimental-feature warning on every run. Embeddings are optional and
 local: `embed.ts` talks to Ollama, and without it the relax mode's cosine arm is
 simply unavailable while strict lexical search continues to work.
 
-That is a genuinely low adoption cost. The whole thing installs in one command,
-runs offline, and its default retrieval path needs no model at all.
-
 ## 4. Essential Implementation Paths
 
 ### The benchmark, and what running it settles
 
 `scripts/bench.mjs` builds 51 facts across four themes, ages some of them by one
 to thirty days so recency discriminates, and runs 20 queries with expected
-results — including deliberately ambiguous ones. The DESIGN document names the
-query that decides between weightings: *"node"*, where five candidates match
-lexically, two are relevant, and one of those two has been aged while carrying
-importance 0.9. Only the default weighting keeps it in the top three.
+results. The DESIGN document names the query that decides between weightings:
+*"node"*.
 
 Run at this commit:
 
@@ -156,237 +136,155 @@ confiance-heavy      | 0.933  0.933  0.320  0.958
 seuil-0.4            | 0.958  0.958  0.320  0.958
 ```
 
-Every cell matches the committed table. What this settles is narrow and worth
-being precise about: it settles that the published number is the harness's
-output and that the constants were chosen by comparison rather than by taste. It
-does not settle that the constants generalise — the author says as much, and the
-set is 51 facts of their own construction.
+Every cell matches the committed table. The transferable move is the ablation
+itself: four alternative weightings run on every `npm test`, so a regression
+against the alternatives is visible immediately.
 
-The transferable move is the ablation itself. Four alternative weightings are run
-on every `npm test`, so a future change that improves the defaults on paper and
-regresses them against the alternatives is visible immediately. Most systems in
-this atlas that publish a tuning constant publish only the winner.
-
-### Supersession by attenuation
+### The automatic supersession path: still a priced re-entry
 
 `add()` selects live rows sharing the subject and predicate. If the incoming
-object matches one exactly, that row is reinforced — confidence + 0.1, frequency
-+ 1, importance raised to the max, tags merged — and every rival is faded. If no
-live row matches, the new object is inserted at `supersedeConfidence` 0.6, every
-rival is faded, and a `contradicts` edge is written from the new row to each.
+object matches one exactly, that row is reinforced and every rival is faded. If
+no live row matches but the object is found only as a past `previous` in
+`memory_history`, the value is detected as rejected and reactivated in its
+original row at `resurrectConfidence` (0.3) — a discount — with the reactivation
+audited.
 
-`fade()` is eleven lines and does the whole job:
+`fade()` carries the three floors verified in the previous reading and unchanged
+here:
 
 ```ts
-const factor = row.importance >= cfg.criticalImportance ? cfg.criticalFadeFactor : cfg.fadeFactor;
-const next = row.confidence * factor;
-if (next < cfg.archiveThreshold) {
-  // archive, and record the previous object in memory_history
+if (row.pinned === 1) return { id: row.id, archived: false, untouched: true };
+if (row.importance >= cfg.criticalImportance) {
+  const next = Math.max(row.confidence * cfg.criticalFadeFactor, cfg.archiveThreshold + 0.01);
+  this.db.prepare(`UPDATE memories SET confidence = ? WHERE id = ?`).run(next, row.id);
+  return { id: row.id, archived: false, untouched: false };
+}
+const next = row.confidence * cfg.fadeFactor;
+```
+
+`pinned` is untouched, critical is floored above the archive threshold, and a
+re-asserted rejected value still fades the live correction — `regression-test.ts`
+asserts that as intended behaviour. The consequence measured in the previous
+reading holds: an unpinned, ordinary correction is archived at the third
+re-assertion of the value that corrected it. Nothing here is new; it is the
+design position, held.
+
+### The new human write-gate tombstone: refusal at the write
+
+What is new in 1.3.0 is a second path that *refuses* rather than prices. A
+sub-agent can route a fact into `memory_candidates` rather than straight into the
+live store. A pending candidate is withheld from retrieval until a person calls
+`memory_candidate_review`:
+
+- **Approve** publishes the candidate into the live store (carrying its trust and
+  evidence), recording a `candidate → approved` audit row.
+- **Reject** does not merely mark the candidate; it writes a
+  `memory_suppressions` row keyed on the *normalized* `(subject, predicate,
+  object, project)`, and every subsequent `add()` of that value is refused
+  outright before any supersession logic runs:
+
+```ts
+if (this.blockedBySuppression(subject, predicate, object, input.project)) {
+  return this.rejectedAddResult(); // rejected: true
 }
 ```
 
-Nothing is deleted. The archived row stays, its object is copied into
-`memory_history`, and `stats` counts it. As a treatment of *"I drank milk for
-years… wait, lactose intolerant"* — the README's own example — this is a good
-design, and better than the overwrite-in-place that several larger systems here
-use.
+`unsuppress()` removes the row ("une réautorisation explicite est possible"), and
+a re-assertion after that is evaluated fresh. This is the value-keyed refusal the
+rejected-value tombstone pattern asks for, and it is verified by the governance
+suite: a rejected candidate blocks the write (`blocked.rejected === true`), an
+explicit unsuppress restores it, and the re-authorized value can be re-evaluated.
 
-### Where it inverts
-
-The rival query is `WHERE subject = ? AND predicate = ? AND project = ? AND
-archived = 0`. An archived value is not a rival, because it is not live. So the
-system has no way to notice that an incoming fact is one it already rejected.
-
-Re-asserting a value that already lost does not create a new row. `add()` finds
-the archived row, reactivates it in place, and returns `resurrected: true` with
-its confidence discounted through `resurrectConfidence` (0.3) —
-`archivedRow.confidence × 0.3 + reinforceConfidenceStep`. The reactivation is
-audited: `{field: "archived", oldValue: "1", newValue: "0", reason:
-"resurrection"}`.
-
-**And the same call fades the live correction, by design.** That is not an
-oversight; `src/test/regression-test.ts` pins it as a specified property under
-the heading *"Re-asserting a rejected value also supersedes its current
-contradiction"*, asserting that the live correction is faded again, that its
-confidence decreases, and that the rejected value becomes active. The design
-position is that a re-assertion is evidence and must count for something.
-
-The consequence is measurable, and what it is depends entirely on whether the
-correction was protected in advance. Run against the repository's own
-milk/lactose example — establish `milk`, correct to `oat milk` until `milk`
-archives, then re-assert `milk` as a later extraction pass over an old transcript
-would:
-
-| The correction is… | What repeated re-assertion does to it |
-| --- | --- |
-| **pinned** | Nothing. `fade()` returns `untouched` on the first line, confidence flat at 0.500 across fifteen re-assertions, and it stays the top result. |
-| **critical (≥ 0.8), not pinned** | Never archived — the fade floors at `archiveThreshold + 0.01` = 0.260 — but the rejected value climbs 0.600 → 1.000 and **takes the top rank at re-assertion #5**, permanently, with the correction surviving underneath it. |
-| **ordinary** | Archived at re-assertion #3. The rejected value climbs 0.190 → 0.290 → 0.390 and ends up alone. |
-
-So pinning is now real protection and criticality is half of one: it guarantees
-the correction survives, not that anyone will see it. For an unpinned, ordinary
-correction the outcome is unchanged from the design's own worst case — repetition
-wins — it now takes three repetitions rather than one.
-
-**This is why the tombstone mark is still withheld, and the near-miss is now
-deliberate rather than accidental.** The archived row *is* keyed on the value and
-*is* consulted, which is the hard half of the
-[rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern. What
-that page asks for next is a durable *constraint*; what exists here is a one-time
-re-entry discount that repetition pays off. Reasonable people can hold memsem's
-position — a fact restated ten times across ten sessions probably is evidence —
-but the pattern's argument is that an extractor re-reading one old transcript ten
-times looks identical to that, and nothing here distinguishes them.
-
-The three protection tiers the README described as one are now two:
-
-| Threat | Protection |
-| --- | --- |
-| The scoring sub-agent adjusting importance | **Enforced in code** — pinned and importance ≥ 0.9 are refused, the refusal is audited, and a committed test proves it |
-| Supersession by a contradicting write | **Enforced in code for pinned, floored for critical** — `fade()` exits on `pinned === 1` and clamps critical facts above the archive threshold |
-| The consolidation sub-agent archiving small facts | **Prompt only** — `plugin.ts` instructs it never to archive a pinned or critical fact |
-
-The remaining gap is the one that was always the odd one out: the two paths
-enforced in code are the ones a database can check, and the path still governed by
-a sentence is the one where an LLM decides what to throw away.
-
-### Retrieval that defaults to strict
-
-Strict lexical search requires 50% of query words to match, with no graph
-propagation, and ranks by `0.45 × importance + 0.25 × confidence + 0.2 × recency
-+ 0.1 × frequency` with a 7-day recency half-life. `relax: true` opts into cosine
-similarity and two-hop graph propagation with a 0.3 boost.
-
-Defaulting to the precise mode and making the fuzzy one opt-in is the opposite of
-the usual arrangement in this atlas, and it is defensible for the stated use —
-the README's complaint is that similarity search over everything drowns signal in
-noise. It also means the default path degrades to nothing when the query shares
-no vocabulary with the stored fact, which is the trade taken knowingly.
-
-The `theme` and focus mechanisms sit on top: a `memory-index.md` routing card of
-themes and keywords is injected at session start, and out-of-focus themes are
-attenuated by 0.35 rather than filtered out. Attenuate-don't-exclude is the same
-instinct as fade-don't-delete, applied to retrieval.
+The two paths are deliberately different. The automatic supersession path treats
+repetition as evidence and prices the re-entry; the human gate treats a
+person's rejection as durable and refuses it. Holding both is coherent, and it is
+the honest way to answer the previous reading's central question: the automatic
+mechanism still inverts under repetition, but a human is no longer limited to
+hoping — they can write a refusal that holds.
 
 ## 5. Memory Data Model
 
 `memories` is a triple — `subject`, `predicate`, `object` — plus `tags`,
 `importance`, `confidence`, `frequency`, `project`, `provenance`, `archived`,
-`pinned`, `theme`, `embedding`, `created_at`, `updated_at`.
+`pinned`, `theme`, `embedding`, `trust`, `evidence`, `created_at`, `updated_at`,
+`recorded_at`, `valid_from`, `valid_until`.
 
-Around it: `memory_history` (`memory_id`, `previous`, `changed_at`), `edges`
-(`source_id`, `target_id`, `relation`, unique on the pair), `episodes`, and
-`audit_log` (`entity`, `entity_id`, `field`, `old_value`, `new_value`, `reason`,
-`pass_id`, `dry_run`, `created_at`).
+Around it: `memory_history` (now carrying the superseded value's trust and
+validity), `edges`, `episodes`, `audit_log`, and — new in 1.3.0 —
+`memory_candidates` (with `pending` / `approved` / `rejected` status and a
+`rejection_reason`) and `memory_suppressions` (the write gate).
 
-The `audit_log` shape is the best thing in the schema. A **reason** is carried on
-every entry, a `pass_id` groups a sub-agent's adjustments so a per-pass cumulative
-cap can be enforced, and `dry_run` lets a proposed change be recorded without
-being applied — the scoring sub-agent can be asked what it *would* do and the
-answer is durable. Very little in this atlas records a refused or simulated
-mutation; memsem records both.
+The `audit_log` shape remains the best thing in the schema: a **reason** on every
+entry, a `pass_id` grouping a sub-agent's adjustments, and a `dry_run` flag. Its
+reach is broad and deliberate: `forget`, `cli-edit`, the scoring path including
+refusals and dry runs, both directions of supersession (`"supersession"` and
+`"resurrection"`), the candidate lifecycle (`candidate-add`, `human-approve`,
+`human-reject`), and a purge that leaves a redacted trace.
 
-Its coverage now reaches the automatic path, which is where it was thinnest.
-`audit()` is called from `forget`, from `cli-edit`, from the scoring path
-including its refusals and dry runs, and from `add()` in both directions — an
-archival by supersession writes `{field: "archived", "0" → "1", reason:
-"supersession"}` and a reactivation writes the same fields reversed with reason
-`"resurrection"`. What still leaves no audit row is a fade that does not cross
-the archive threshold, so the confidence a correction loses on the way down is
-visible only in the value itself; `memory_history` records the previous object at
-the moment of archival, and only then.
-
-What is absent: no discrete epistemic status. `archived` is a lifecycle flag and
-`pinned` is a user preference; neither expresses candidate versus verified versus
-rejected, and `confidence` is a score. The near-miss is real — an archived row is
-withheld from every read, which is what a rejected state would do — but it is
-keyed on the row, and the demonstration above is what that difference costs.
-Validity time is not tracked separately from record time.
+The two additions to the trust model matter. **Bi-temporal validity** —
+`recorded_at` separate from `valid_from` / `valid_until`, queryable with `asOf` —
+lets "where I lived last March" and "what we believed last March" be different
+queries. And a **discrete trust state** (`inferred` / `verbatim` / `verified`,
+with `evidence`) separates "how sure am I" from "may this be acted on", joined by
+the candidate gate whose `pending` rows are withheld until approved.
 
 ## 6. Retrieval Mechanics
 
-**The strict path is an FTS5 index, not a scan.** `memory_fts` is a virtual table
-over subject, predicate, object and tags, declared `tokenize = 'unicode61'` and
-kept in step by three triggers on insert, delete and update. Search joins it —
-`FROM memories m JOIN memory_fts ON memory_fts.rowid = m.id WHERE memory_fts
-MATCH ?` — at three call sites. The `unicode61` tokenizer is what makes the
-non-Latin cases work, and it is why the regression suite can assert that a
-one-character CJK term and a Cyrillic restatement are both findable.
+The strict path is an FTS5 index over subject, predicate, object and tags,
+declared `tokenize = 'unicode61'` and kept in step by triggers, joined with
+`memory_fts MATCH` at three call sites. Scoring happens in TypeScript over the
+matched rows, and `whereClause(project, theme)` reaches the query on the list,
+search and index paths alike — the
+[scope as a first-class key](../../patterns/scope-as-a-first-class-key/) pattern.
+Cross-project reach is opt-in via `crossProject: true`; a project supplied by the
+caller is the standard caveat that this certifies the key reaches the query, not
+that a caller cannot pass a different one.
 
-Scoring then happens in TypeScript over the matched rows, and
-`whereClause(project, theme)` is applied on the list, search and index paths
-alike, so the scope key genuinely reaches the query rather than being stored and
-forgotten — the distinction the
-[scope as a first-class key](../../patterns/scope-as-a-first-class-key/) pattern
-draws. The caller supplies the project string, which is the standard caveat: this
-certifies the key reaches the query, not that a caller cannot pass a different
-one.
+The relax arm carries a stated cost the strict arm does not: embeddings are
+persisted as JSON text and cosine ranking parses every candidate row, with the
+complexity and remedy in one source comment (`cosine over stored JSON is O(n)…`).
+An `asOf` arm reads bi-temporal validity — an expired fact is not returned by
+default, and the state valid at a past date is queryable.
 
-**The relax arm has a stated cost the strict arm does not.** Embeddings are
-persisted as JSON text, so cosine ranking parses every candidate row:
-
-```js
-// ponytail: cosine over stored JSON is O(n); add a SQLite vector extension only when corpus size justifies it.
-const sim = cosine(qv, JSON.parse(row.embedding) as number[]);
-```
-
-Naming the complexity and the remedy in the same comment, rather than discovering
-either later, is the same habit as the retrieval docstring that says what the
-path deliberately does not do. It also explains why relax mode is opt-in: the
-default path is an index lookup and the optional one is a full parse.
-
-Two committed negative cases exist, which is unusual enough to name. One asserts
-that a weak lexical match is excluded — `"stricte: faible correspondance exclue
-(1 mot sur 3)"`. The other asserts that an archived fact stays out of the active
-set across an export/import round trip. Both are the shape the
-[benchmarks page](../../benchmarks/) asks for: a test that fails if the wrong
-thing comes back.
-
-Neither covers the supersession outcome measured in section 4. There is no
-committed case bounding how many re-assertions an unpinned correction survives —
-and the regression test that does cover this path asserts the opposite property,
-that a rejected value *does* come back.
+Two committed negative cases exist, unchanged: a weak lexical match is excluded,
+and an archived fact stays out of the active set across an export/import round
+trip. The governance suite adds negative cases for the new material: a pending
+candidate is not retrieved until approved, a project does not leak to another,
+and a suppressed value stays out.
 
 ## 7. Write Mechanics
 
 Writes are synchronous SQLite transactions; nothing queues, and a memory is
-searchable the moment `memory_add` returns. There is no extraction on the write
-path — the MCP tool takes a structured triple, and the work of deciding what is
-worth remembering is done by a sub-agent that calls the tool.
+searchable the moment `memory_add` returns. Three background passes are defined
+as prompts in `plugin.ts`: session-end extraction, consolidation, and
+pairwise-comparison scoring. The consolidation pass re-runs a search with two of
+the fact's keywords and confirms the merged pattern still ranks in the top five
+before archiving the parts — a good prompt rule, still prompted rather than
+enforced.
 
-Three background passes are defined as prompts in `plugin.ts`: session-end
-extraction of durable facts, consolidation of small facts into patterns, and
-pairwise-comparison scoring. Their safety rules are prose in those prompts, with
-one exception — the scoring caps are enforced in `db.ts` and tested. The
-consolidation pass carries the more interesting prompt rule: before archiving a
-small fact it must re-run a search with two of that fact's keywords and confirm
-the consolidated pattern still ranks in the top five, or leave the fact alive.
-**A consolidation that must prove the memory stayed at least as searchable** is a
-good idea and one this atlas has not seen stated elsewhere. It is also a rule an
-LLM is asked to follow rather than one the code enforces.
+The 1.3.0 addition is the upstream write gate. A candidate can be routed to
+`memory_candidates` as `pending` and kept out of the live store until a person
+adjudicates it. The interesting consequence is that the review surface now sits
+*before* the live store as well as after it: `forget` and `purge` act on what is
+already believed, while `reviewCandidate` decides what will be.
 
 ### Operational cost
 
 The default read path costs one SQLite query and some arithmetic — no model, no
-network. The background passes cost whatever the host agent's model costs, and
-they run at session end rather than per turn. Storage grows monotonically:
-nothing is deleted, archived rows stay, and every archival appends to history.
-For a personal memory that is the right trade and the growth is trivial.
+network. Storage grows monotonically: nothing is automatically deleted, archived
+rows and history persist. A deliberate `purge` is the exception and requires
+explicit confirmation, deleting the content and history while keeping a redacted
+audit trace.
 
 ## 8. Agent Integration
 
-An MCP server with fourteen tools — add, search, list, forget, edit, score,
-index, stats, episode search, export/import — so any MCP client can use it, plus
-a dedicated opencode plugin and a CLI. The `memory-index.md` routing card
-injected at session start is the interesting integration choice: rather than
-retrieving into every turn, it puts a table of contents in front of the agent and
-lets the agent decide when to search.
-
-The CLI is where a person enters. `list` shows priority order with pins flagged,
-`edit` prints before and after, `forget` asks for confirmation unless given
-`--yes`, and `doctor` shows recent adjustments with their audit reasons sorted by
-magnitude of change. That is a real review surface — inspect, adjudicate, and see
-what the sub-agents did and why.
+An MCP server whose tool set now spans add, search, list, forget, edit, score,
+index, stats, episode search, export/import and the 1.3.0 additions — candidate
+add/list/review, verify, unsuppress, and a confirmed purge — plus an opencode
+plugin and a CLI with list, edit, forget, doctor and purge. The
+`memory-index.md` routing card injected at session start remains the interesting
+integration choice: a table of contents in front of the agent rather than
+retrieval into every turn.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -397,134 +295,119 @@ Strengths:
 - **An ablation over its own constants**, so a regression against the
   alternatives is visible on every run.
 - **A stated honest reading** of that benchmark's limits, written by the author.
-- **An audit log carrying a reason, a pass id and a dry-run flag**, recording
-  refused and simulated changes as well as applied ones.
-- **Bounded sub-agent authority** — per-call and per-pass caps on importance
-  adjustment, floors and ceilings, enforced in code and tested.
-- **Scope applied on the read path**, and attenuation rather than exclusion for
-  focus.
-- **Two committed negative retrieval cases.**
-- **Nothing is ever deleted** — archived rows and history both persist.
+- **An audit log carrying a reason, a pass id and a dry-run flag**, reaching the
+  scoring refusals, both directions of supersession, the candidate lifecycle and
+  purge.
+- **A human write-gate tombstone.** A rejected candidate writes a value-keyed
+  suppression that refuses the write until explicitly unsuppressed — verified by
+  the governance suite in both directions.
+- **A discrete trust state and bi-temporal validity**, added in 1.3.0.
+- **Scope enforced on the read path**, with cross-project reach opt-in.
+- **Two committed negative retrieval cases**, plus governance negatives for the
+  new material.
+- **Nothing is automatically deleted** — archived rows, history and a redacted
+  purge trace all persist.
 
 Gaps:
 
-- **Supersession is keyed on the record, not the value.** A discredited fact that
-  is repeated returns as live and demotes its own correction.
-- **Pinning and criticality do not protect against supersession**, though the
-  README's diagram says they do.
-- **`add()` writes no audit row**, so the automatic path that changes what is
-  believed is the one path that leaves no reasoned trace.
-- **No discrete trust state**, so a candidate and a confirmed fact differ only by
-  a float.
-- **The consolidation and extraction safety rules are prompts**, not code.
+- **The automatic supersession path still prices a rejection rather than
+  constraining it.** An unpinned, ordinary correction is archived at the third
+  re-assertion of its value; only pinning or the new human gate stops it.
+- **The human tombstone protects only what a person explicitly rejects.** The
+  common, unexamined case — a later extraction pass re-reading an old transcript
+  against an *unpinned, unreviewed* correction — still resolves to repetition
+  wins.
+- **The consolidation and extraction safety rules remain prompts, not code.**
+- **Scope is enforced on the read path, not on write authorization.**
 
 ## 10. Tests, Evals, and Benchmarks
 
-`npm test` builds and runs five suites plus the benchmark, in seconds, with no
+`npm test` builds and runs the client, durability, config, scoring, CLI,
+regression and governance suites plus the benchmark, in seconds, with no
 services. It passes at this commit, and the benchmark output matches DESIGN.md
-§11 cell for cell, so the published figures are the harness's live output rather
-than a committed record of one.
+§11 cell for cell.
 
-The suites are real assertions, not print scripts: the scoring caps, the pin and
-critical-importance refusals, the dry-run path, `doctor`'s ordering, the CLI's
-confirmation behaviour, export/import durability, and the two negative retrieval
-cases above.
-
-`src/test/regression-test.ts` now covers the supersession path directly, and it
-is worth reading for what it chose to assert. Its resurrection section pins three
-properties: the live correction *is* faded again, its confidence *does* decrease,
-and the rejected value *does* become active. Fading the correction is therefore
-specified behaviour, not an accident — disagreeing with it means disagreeing with
-a decision that has a test behind it.
-
-What no test covers is the outcome over repetition, which is where the decision
-shows its cost: nothing asserts an upper bound on how many re-assertions an
-unpinned correction survives, and the measured answer is three. The same commit
-also fixed two things unrelated to correction — Unicode case folding in the
-supersession lookup, so a Cyrillic restatement no longer creates a duplicate
-rival, and configured confidence values actually being returned instead of
-hardcoded ones. The second is the kind of defect a report that quotes a config
-constant without setting it will always miss.
+The suites are real assertions: the scoring caps, the pin and critical refusals,
+the dry-run path, `doctor`'s ordering, CLI confirmation, export/import durability,
+the value-keyed resurrection (re-assertion returns weak and is audited), the
+pinned fact surviving a contradicting write, and — new in 1.3.0 — the governance
+suite: a rejected candidate blocks the write, an explicit unsuppress restores it,
+the approved candidate publishes evidence, a human verify elevates trust, a
+project does not leak, and a confirmed purge removes the content while leaving a
+redacted audit trace.
 
 ## 11. For Your Own Build
 
 ### Steal
 
 - **Commit the harness, not the number.** memsem's P@3 is credible because
-  `npm test` prints it. A figure in a README with no runnable path to it is the
-  single most common unverifiable claim in this atlas.
-- **Ablate your own constants and keep the ablation in CI.** Four alternative
-  weightings run on every test, so the defaults have to keep winning.
-- **Write the honest reading yourself.** Naming the set as author-designed, the
-  metric artifact, and the one query that discriminates costs a paragraph and is
-  worth more than the number.
-- **Put a reason, a pass id and a dry-run flag on the audit row.** Recording what
-  a sub-agent was refused, and what it would have done, is cheap and rare.
-- **Attenuate rather than exclude** on retrieval, and fade rather than delete on
-  contradiction — both keep a recoverable path that a hard filter destroys.
-- **Make consolidation prove the memory stayed findable** before it archives the
-  parts it merged.
+  `npm test` prints it.
+- **Ablate your own constants and keep the ablation in CI.**
+- **Write the honest reading yourself.**
+- **Put a reason, a pass id and a dry-run flag on the audit row.**
+- **Refuse at the write gate, not just at the read path, when a person decides.**
+  A `memory_suppressions`-style row keyed on the normalized value, cleared only by
+  explicit unsuppress, is the difference between a belief and a standing refusal.
+- **Separate record time from validity time**, and hold a discrete trust state
+  with a withholding status.
+- **Attenuate rather than exclude** on the read path, and fade rather than delete
+  on automatic contradiction.
 
 ### Avoid
 
-- **Pricing a rejection instead of constraining it.** A discount on re-entry is
-  paid off by repetition; if you want a rejection to hold, the check has to refuse
-  rather than charge. memsem's own answer — pin the ones that matter — is a real
-  answer and it moves the decision to a user who has to make it in advance.
-- **Making the durable protection opt-in and the fragile one the default.** An
-  unpinned correction here survives three re-assertions; a pinned one survives
-  indefinitely. Whichever way that trade is set, the docs have to say which side
-  a user is on.
+- **Pricing a rejection instead of constraining it on the automatic path.** The
+  discount is paid off by repetition; if a correction must hold against a
+  re-extraction, only the explicit human gate refuses.
+- **Making the durable protection opt-in and the fragile one the default.** A
+  pinned or human-rejected value holds; an ordinary unpinned correction does
+  not — the docs have to say which side a user is on.
 - **Leaving the sub-agent path governed by a sentence** once the database paths
-  are enforced in code. The consolidation prompt is now the only place where "do
-  not archive a pinned fact" is an instruction rather than a check.
+  are enforced in code.
 
 ### Fit
 
 Right for a single developer who wants a local, offline, MIT-licensed memory that
 installs in one command, ranks precisely by default, and can be inspected and
-corrected from a CLI. At 2,600 lines it is readable end to end in an afternoon,
+corrected from a CLI. At roughly four thousand lines it is readable end to end,
 and the engineering habits — committed benchmark, ablation, bounded sub-agent
-authority, audit with reasons — are better than its twenty commits suggest.
+authority, audit with reasons — are better than its twenty-one commits suggest.
 
-Wrong wherever a correction has to hold **without anyone having pinned it**. Pin
-the facts you cannot afford to lose and the guarantee is absolute; leave one
-ordinary and three repetitions of the value it corrected will archive it. That is
-a coherent product decision — memsem treats repetition as evidence and gives you
-an override — and it puts the burden on a user knowing in advance which
-corrections matter, which is the thing users are worst at.
+Wrong wherever a correction has to hold **without anyone having pinned it or
+reviewed it**. The automatic path still treats repetition as evidence; the 1.3.0
+governance is a real answer, but it is an answer a person has to exercise.
 
 ## 12. Open Questions
 
 - Is `resurrectConfidence` meant to be a one-time discount or the start of a
   ladder? At 0.3 a value returns cheap and then climbs on ordinary reinforcement.
 - Should an unpinned correction have a floor too, or is pinning the intended
-  answer and the docs' job to say so?
-- Would a value-keyed rejection record fit the existing schema, or does the
-  triple's `object` column already provide the key?
-- What is a new memory's initial confidence meant to express, given 0.5 is both
-  the default and the midpoint? The DESIGN document lists this as open.
-- The document also asks who wins when a consolidated pattern is contradicted by
-  a critical fact — is that decided anywhere in code?
+  answer?
+- The human tombstone writes only on explicit rejection — is there a shape where
+  the write gate refuses on the automatic supersession's behalf without erasing
+  the design's "repetition is evidence" position?
+- Who wins when a consolidated pattern is contradicted by a critical fact — is
+  that decided anywhere in code?
 - Does the relax mode's 0.5 cosine threshold hold up against real embeddings, or
   is it carried over from the lexical floor?
 
 ## Appendix: File Index
 
-- Schema, queries and correction: `src/db.ts` (`add`, `fade`, `whereClause`,
-  `forget`, `edit`, `score`, `audit`, `historyOf`, `importJSON`).
+- Schema, queries and correction: `src/db.ts` (`add`, `fade`, `blockedBySuppression`,
+  `whereClause`, `forget`, `edit`, `score`, `audit`, `historyOf`, `addCandidate`,
+  `reviewCandidate`, `unsuppress`, `purge`, `importJSON`).
 - MCP server and tools: `src/index.ts`.
-- Sub-agent prompts and opencode plugin: `src/plugin.ts` (`SCORE_PROMPT`, the
-  consolidation and extraction prompts).
+- Sub-agent prompts and opencode plugin: `src/plugin.ts`.
 - Scoring: `src/scoring.ts`; constants and overrides: `src/config.ts`.
-- CLI review surface: `src/cli.ts` (`list`, `edit`, `forget`, `doctor`).
+- CLI review surface: `src/cli.ts` (`list`, `edit`, `forget`, `doctor`, `purge`).
 - Benchmark: `scripts/bench.mjs`; its documented result and honest reading:
   `DESIGN.md` §11.
-- Tests: `src/test/score-test.ts`, `cli-test.ts`, `durability-test.ts`,
-  `client-test.ts`, `config-test.ts`, `regression-test.ts`.
+- Tests: `src/test/client-test.ts`, `cli-test.ts`, `durability-test.ts`,
+  `score-test.ts`, `config-test.ts`, `regression-test.ts`, `governance-test.ts`.
 
 ## History
 
-**2026-08-04** — [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3) — second reading, two commits on. Two mechanism details were added afterwards from a pull request opened by the project's author against this atlas, both verified here before being taken: the strict path runs over an FTS5 virtual table declared `tokenize = 'unicode61'` and joined with `memory_fts MATCH` at three call sites, and the relax arm parses every candidate embedding from JSON text, with the cost and its remedy stated in a source comment. The same pull request proposed the `tombstone` mark, which is declined — the demonstration below was re-run at this commit and an ordinary correction is still archived at the third re-assertion. `1.2.0` and the tombstone commit before it change the supersession path in three ways, all verified against the built module rather than read. `fade()` now returns `untouched` on `pinned === 1`, so a pinned correction is exempt: fifteen consecutive re-assertions of the value it corrected left its confidence flat at 0.500 and it stayed the top result. Critical rows (importance ≥ 0.8) are clamped at `archiveThreshold + 0.01`, so they can no longer be archived, though the rejected value climbs past them in rank at the fifth re-assertion and stays there. A re-asserted rejected value now reactivates its own archived row through `resurrectConfidence` (0.3) instead of being inserted fresh at 0.6, and both the archival and the reactivation write audit rows with reasons `"supersession"` and `"resurrection"` — closing most of the audit gap this report recorded on `add()`. What did not change is that a re-assertion still fades the live correction, and `src/test/regression-test.ts` now asserts that as intended behaviour; an ordinary unpinned correction is archived at the third re-assertion rather than the first. The same commits also fixed Unicode case folding in the supersession lookup and made configured confidence values actually be returned, neither of which this report had looked for. `npm test` passes and the benchmark is unchanged: 0.958 / 0.958 / 0.320 / 0.958 with the same ablation.
+**2026-08-05** — [`16c28a940beac69fc060eb6bf5828061ad881d1a`](https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a) — third reading, on 1.3.0, two releases past the previous pin. Adds two mechanism facts and one capability mark to the 1.2.0 report. 1.3.0 routes a fact into `memory_candidates` until a person approves or rejects it; a rejection writes a `memory_suppressions` row keyed on the normalized value that refuses every further `add()` of that value until `unsuppress` — verified by the governance suite (a rejected candidate blocks the write, an explicit unsuppress restores it). That is a value-keyed refusal at the write gate, distinct from the automatic supersession path, which still prices a re-asserted rejection as a discount (`regression-test.ts` asserts the correction fades) and was and remains declined for the `tombstone` mark on its own. The write gate earns the mark. 1.3.0 also adds a discrete `trust` state (`inferred`/`verbatim`/`verified`) with evidence, bi-temporal `valid_from`/`valid_until`/`recorded_at` queried with `asOf`, a scope key reached on the read path with `crossProject` opt-in, a human `verify` that elevates trust, and a confirmed `purge` that removes content while keeping a redacted audit trace — `trust_state` and `bitemporal` marks added. `npm test` at this commit passes and the benchmark still matches §11.
+
+**2026-08-04** — [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3) — second reading. FTS5 `unicode61` route, relax-mode O(n) cosine cost, pinned/critical floors, and the value-keyed resurrection discount; the `tombstone` mark was declined for the automatic supersession path.
 
 **2026-08-04** — [`33b0d4624020f28fc7b2bee0a3b9865948d90818`](https://github.com/WindSeries69/memsem/commit/33b0d4624020f28fc7b2bee0a3b9865948d90818) — first reading. `npm test` run from a clean clone: all suites pass and the benchmark reproduces DESIGN.md §11 exactly. The supersession inversion and the unprotected pin were demonstrated against the built module rather than read.
