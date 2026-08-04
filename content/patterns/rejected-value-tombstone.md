@@ -234,19 +234,32 @@ way out. For a system whose stated purpose is GDPR Article 17 that is the sharpe
 version of the same criticism — the regulation is about what you hold, and this
 mechanism governs what you serve.
 
-- [memsem](../../systems/memsem/) is the demonstration this page has otherwise
-  had to argue for. Its correction design is deliberate and good — a contradicting
-  fact fades its rivals rather than overwriting them, archives them below a
-  threshold instead of deleting, keeps the row and its history, and writes a
-  `contradicts` edge between the two. The guard is then keyed on the record: the
-  rival query reads `archived = 0`, so a value that already lost is invisible to
-  the check that would have caught it. Re-asserting it inserts a **new live row**
-  and fades the correction that beat it, from confidence 0.700 to 0.420 — run
-  against the project's own milk/lactose example, whose second repetition
-  archives the correction outright. Pinning does not stop it; `pinned` is enforced
-  where a sub-agent adjusts importance and appears nowhere in the fade path. **The
-  cost of record-keying is not that a rejected value can return — it is that
-  returning demotes the thing that rejected it.**
+**[memsem](../../systems/memsem/) is the one case here where the distinction on
+this page was tested against a maintainer, and it is worth reading as a partial
+concession rather than a failure.** At the commit this atlas first read, a
+re-asserted rejected value arrived as a new live row and faded the correction
+that beat it; pinning did not help, because `pinned` was enforced where a
+sub-agent adjusts importance and appeared nowhere in the fade path. Two commits
+later the shape has changed. The archived row is now consulted and reactivated in
+place at a `resurrectConfidence` discount instead of arriving fresh, both the
+archival and the reactivation write audit rows, and `fade()` exits immediately on
+`pinned === 1` while clamping critical rows above the archive threshold.
+
+**What did not change is the half this page is actually about.** A re-assertion
+still fades the live correction, and a committed regression test now asserts that
+as the intended contract — *"Re-asserting a rejected value also supersedes its
+current contradiction"*. Measured at the new commit: a pinned correction survives
+fifteen re-assertions untouched, a critical unpinned one is never archived but is
+outranked from the fifth, and an ordinary one is archived at the third.
+
+So the guard is keyed on the value and consulted, which is the hard half — and
+what it buys is a **price rather than a prohibition**. That is the sharpest
+statement this page has of its own claim: a tombstone has to make the rejection a
+*durable constraint*, because any discount on re-entry is paid off by repetition,
+and an extractor re-reading one old transcript looks exactly like a fact being
+independently restated. memsem's answer is that the user should pin what matters,
+which is a real answer that relocates the problem to whoever had to know in
+advance.
 - [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
   is closer than most, but nothing keyed on the value: an equivalent claim can be
   retained again under a new id.

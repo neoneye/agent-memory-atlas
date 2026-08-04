@@ -1147,16 +1147,20 @@ the others are being measured against. Its correction design is the
 right instinct too: a contradicting fact does not overwrite its rival
 but multiplies its confidence by 0.6 — by 0.9 above a critical threshold
 — archiving below 0.25 and keeping the row, with a
-<code>contradicts</code> edge written between the two. <strong>Then the
-supersession query reads <code>archived = 0</code></strong>, so a value
-that already lost is invisible to the check. Re-asserting it, which is
-what a later extraction pass over an old transcript does, installs it as
-live <em>and fades the correction that beat it</em> — demonstrated
-against the repository's own milk/lactose example, and not prevented by
-pinning, whose protection is enforced against the scoring sub-agent and
-absent here. The gap between a record-keyed guard and a value-keyed one
-is the whole of the tombstone argument, in a system that got almost
-everything around it right.</p>
+<code>contradicts</code> edge written between the two. <strong>Then a
+re-asserted rejection still costs the correction, and now does so by
+design.</strong> A value that already lost is consulted rather than
+ignored — it reactivates its own archived row at a discount instead of
+arriving fresh, and the reactivation is audited — but the same call
+still fades the live correction, and a committed regression test asserts
+that as intended behaviour. What it costs depends on protection the user
+had to choose in advance: a pinned correction is exempt outright, a
+critical one is floored above the archive threshold but outranked from
+the fifth repetition, and an ordinary one is archived at the third.
+Measured against the repository's own milk/lactose example. The distance
+between pricing a rejection and constraining it is the whole of the
+tombstone argument, in a system that got almost everything around it
+right.</p>
 <p><strong>Cambium is the family's governance layer with no store under
 it, and it contributes the one check discipline this atlas has been
 asking for.</strong> It is a standard — twelve kernel modules, twelve
@@ -4280,9 +4284,10 @@ relax mode adds cosine and two-hop graph propagation</td>
 <td><code>memory_add</code> upserts a triple; a differing object for the
 same subject and predicate fades every live rival and records a
 <code>contradicts</code> edge</td>
-<td>Supersession by attenuation — confidence × 0.6, or × 0.9 above the
-critical threshold — archiving below 0.25; archived rows are kept and
-excluded from reads, and nothing is ever deleted</td>
+<td>Supersession by attenuation — pinned rows exempt, critical rows
+floored above the archive threshold; a rejected value re-asserted
+reactivates its archived row at a discount and fades the correction, by
+design</td>
 <td><code>project</code> and <code>theme</code> applied as filters on
 every read path, plus a focus list that attenuates rather than
 excludes</td>
@@ -4296,9 +4301,9 @@ text; no discrete epistemic status</td>
 <td>A committed offline benchmark that reproduces exactly, an ablation
 over its own constants, and an audit log carrying a reason and a dry-run
 flag</td>
-<td>Supersession is keyed on the record, not the value, so repeating a
-discredited fact reinstates it and demotes the correction — pinning does
-not prevent it</td>
+<td>A re-asserted rejected value still fades the live correction; unless
+it was pinned, three repetitions archive it and five outrank a critical
+one</td>
 </tr>
 <tr>
 <td><code>memu</code></td>
@@ -10251,7 +10256,7 @@ href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae573
 <li><a
 href="https://github.com/WindSeries69/memsem">WindSeries69/memsem</a> at
 <a
-href="https://github.com/WindSeries69/memsem/commit/33b0d4624020f28fc7b2bee0a3b9865948d90818"><code class="commit-id" title="33b0d4624020f28fc7b2bee0a3b9865948d90818">33b0d462…</code></a></li>
+href="https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3"><code class="commit-id" title="226c171ac21b6175bfda8e3b29256341e7fb2ff3">226c171a…</code></a></li>
 <li><a href="https://github.com/KimGLee/Cambium">KimGLee/Cambium</a> at
 <a
 href="https://github.com/KimGLee/Cambium/commit/289515b5c961de6e283ffea60ccbe544827a11cc"><code class="commit-id" title="289515b5c961de6e283ffea60ccbe544827a11cc">289515b5…</code></a></li>
@@ -10952,6 +10957,32 @@ gitignored and absent from the repository.</li>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-04</strong> — <a href="../systems/memsem/">memsem</a>
+is the first system in this atlas to change in response to something a
+report said, and re-reading it produced a method lesson about how to
+read that response. The upstream commit subject is <em>"valeur rejetée
+non réinstaurable d'un coup"</em> — a rejected value is not reinstatable
+in one go. That is <strong>exactly true</strong>, and a reader who
+stopped there would have recorded the finding as closed. Re-running the
+original demonstration against the built module instead: a pinned
+correction is now genuinely untouchable (fifteen re-assertions, zero
+fades), an ordinary one is archived at the third re-assertion rather
+than the first, and a committed regression test now asserts that a
+re-assertion <em>should</em> fade the live correction.</p>
+<p><strong>The accurate commit message and the unchanged outcome are
+both real.</strong> "Not in one go" was a precise description of a fix
+that moved the threshold from one repetition to three, and the atlas's
+finding survived in narrowed form only because the demonstration was
+re-run rather than re-read. The rule this suggests for the re-analysis
+workflow: when an upstream responds to a report, the artifact to
+re-execute is the <em>demonstration</em>, not the diff — a maintainer
+describing what they changed is not making a claim about what
+remains.</p>
+<p>Second, and separable: what the fix left in place is now backed by a
+test, which converts a defect into a design position. The report had to
+change register from "this is a bug" to "this is a decision with a
+measured cost", and that is the better outcome for a reader either
+way.</p>
 <p><strong>2026-08-04</strong> — The repository count was wrong by four,
 and adding <a href="../systems/nova-ai/">Nova AI</a> is what surfaced
 it. The scope section claimed "140 reports across 135 repositories" and

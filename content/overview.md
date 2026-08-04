@@ -810,14 +810,17 @@ that is the standard the others are being measured against. Its correction desig
 is the right instinct too: a contradicting fact does not overwrite its rival but
 multiplies its confidence by 0.6 — by 0.9 above a critical threshold — archiving
 below 0.25 and keeping the row, with a `contradicts` edge written between the
-two. **Then the supersession query reads `archived = 0`**, so a value that already
-lost is invisible to the check. Re-asserting it, which is what a later extraction
-pass over an old transcript does, installs it as live *and fades the correction
-that beat it* — demonstrated against the repository's own milk/lactose example,
-and not prevented by pinning, whose protection is enforced against the scoring
-sub-agent and absent here. The gap between a record-keyed guard and a value-keyed
-one is the whole of the tombstone argument, in a system that got almost
-everything around it right.
+two. **Then a re-asserted rejection still costs the correction, and now does so by
+design.** A value that already lost is consulted rather than ignored — it
+reactivates its own archived row at a discount instead of arriving fresh, and the
+reactivation is audited — but the same call still fades the live correction, and
+a committed regression test asserts that as intended behaviour. What it costs
+depends on protection the user had to choose in advance: a pinned correction is
+exempt outright, a critical one is floored above the archive threshold but
+outranked from the fifth repetition, and an ordinary one is archived at the
+third. Measured against the repository's own milk/lactose example. The distance
+between pricing a rejection and constraining it is the whole of the tombstone
+argument, in a system that got almost everything around it right.
 
 **Cambium is the family's governance layer with no store under it, and it
 contributes the one check discipline this atlas has been asking for.** It is a
@@ -1556,7 +1559,7 @@ about what is still on disk. The evidence is under
 | `memoryos` | QA pair in short term; topic session segment in mid term; profile string and knowledge entry in long term | JSON files by default; a separate ChromaDB variant | Embedding similarity per tier, with mid-term segments ordered by a heat score | Dialogue pairs appended; LLM segmentation into topic sessions; profile and knowledge updates | LFU eviction at capacity; bounded knowledge deques; profile merged by rewrite | `user_id` and `assistant_id` on the store | PyPI package, MCP server, ChromaDB variant, playground | Segmentation, heat recomputation, profile and knowledge updates on threshold | None found — no source, actor, or status on a memory | A committed LoCoMo harness with its dataset, and an explicit promotion signal | Heat mixes three signals with hardcoded weights; a second LFU counter can disagree with it |
 | `memos` | Textual item, graph tier, preference/skill, KV cache, LoRA | Configurable vector/graph stores, dumps, cache/model artifacts | Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories | Reader extraction into a memory cube; scheduler transformations | Module-specific update/delete/soft-delete/dump semantics | User plus registered memory cube | MOS chat/runtime, APIs, CLI | Scheduler and activation-memory refresh | Source metadata varies by module; no uniform trust state | Treats memory as heterogeneous mountable resources | Umbrella API hides uneven guarantees and maturity |
 | `mempalace` | Verbatim drawer chunks, closets, KG triples | Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG | Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback | Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text | Delete/update drawers, delete by source, dedup, repair; limited epistemic correction | Palace, wing, room, source file, parent drawer, backend namespace | MCP, CLI, hooks, skills, wake-up stack | Mining, closet/hallway/tunnel computation, repair/sync/backup | Strong source provenance; weak candidate/verified/rejected trust state | Evidence-preserving raw baseline, hybrid retrieval, operational hardening | Raw stores get large/noisy; contradiction resolution mostly outside core recall |
-| `memsem` | A subject/predicate/object triple with importance, confidence, frequency, tags, theme and an archived flag | One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes and audit tables | Strict lexical by default — a 50% word-match floor, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine and two-hop graph propagation | `memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge | Supersession by attenuation — confidence × 0.6, or × 0.9 above the critical threshold — archiving below 0.25; archived rows are kept and excluded from reads, and nothing is ever deleted | `project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes | An MCP server with fourteen tools, an opencode plugin, and a CLI with list, edit, forget and doctor | Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts` | Importance, confidence, frequency and a pinned flag; provenance text; no discrete epistemic status | A committed offline benchmark that reproduces exactly, an ablation over its own constants, and an audit log carrying a reason and a dry-run flag | Supersession is keyed on the record, not the value, so repeating a discredited fact reinstates it and demotes the correction — pinning does not prevent it |
+| `memsem` | A subject/predicate/object triple with importance, confidence, frequency, tags, theme and an archived flag | One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes and audit tables | Strict lexical by default — a 50% word-match floor, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine and two-hop graph propagation | `memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge | Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a rejected value re-asserted reactivates its archived row at a discount and fades the correction, by design | `project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes | An MCP server with fourteen tools, an opencode plugin, and a CLI with list, edit, forget and doctor | Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts` | Importance, confidence, frequency and a pinned flag; provenance text; no discrete epistemic status | A committed offline benchmark that reproduces exactly, an ablation over its own constants, and an audit log carrying a reason and a dry-run flag | A re-asserted rejected value still fades the live correction; unless it was pinned, three repetitions archive it and five outrank a critical one |
 | `memu` | `RecallFile` on a memory or skill track, sliced into `RecallFileSegment` search units | Pluggable repositories over SQLite, Postgres, or in-memory | Single-shot, LLM-free: segments ranked by embedding, rolled up to files by max score | `commit_results` writes recall files, resources and user state in one call | Segments dropped and recreated when a file is re-sliced; no supersession found | `where` filters over records; no tenant or project model traced | Host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy | Scheduling module; agentic backend for richer flows; a client-event spool flushed on the bridging pair, never on the per-turn hook | Timestamps and track only; no source, actor, or status on a record | Ranking on segments and returning files, with local/remote ordering parity as an invariant | No trust state, provenance, correction path, or tombstone; opt-out telemetry on by default |
 | `memvid` | Immutable frame; structured memory card keyed `entity:slot` with a cardinality | One `.mv2` file — payload, internal WAL, TOC, footer, lexical/vector/time indexes, no sidecars | Lexical, vector and graph search over frames; `get_current` and `get_at_time` per entity:slot | Append-only frames through a WAL; supersede links; enrichment recorded per engine and version | `Active \| Superseded \| Deleted`; supersedes/superseded_by chains; a `Tombstone` WAL op | ACL module over a single file; no multi-tenant model traced | Rust library and CLI over a portable file | Enrichment workers, maintenance, doctor | Checksums per frame, an audit module, enrichment provenance by engine and version | Immutable frames plus as-of reads and session replay — the memory can be rewound | Headline benchmark numbers with no committed result artifacts found; correction is frame-keyed |
 | `mercury-agent` | `UserMemoryRecord` graded on confidence, importance, and durability | Second-brain DB, with people and relation records | Retrieval records `lastUsedAt` and `lastUsedQuery` | Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration | `dismissed` boolean and `supersededBy`; no tombstone | `durable`, `active`, `subconscious` tiers; single user | Internal, with a `brain/Memory.tsx` review page | Not traced | Four-way `evidenceKind`, corroboration counts, free-text provenance | Durability separated from importance; a subconscious tier; a learning-pause switch | Scores estimated once at write time; dismissal is not durable |
@@ -4101,7 +4104,7 @@ Privacy/deletion:
 - [eanai-ro/ean-agentos](https://github.com/eanai-ro/ean-agentos) at [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6)
 - [FlowElement-ai/m_flow](https://github.com/FlowElement-ai/m_flow) at [`da2766c5ebf45ff10440b419465c8ec0df674022`](https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022)
 - [Whooptie/NOVA_AI](https://github.com/Whooptie/NOVA_AI) at [`4a7d89b915b8bd785606c347b6ae5733030edc1f`](https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f)
-- [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`33b0d4624020f28fc7b2bee0a3b9865948d90818`](https://github.com/WindSeries69/memsem/commit/33b0d4624020f28fc7b2bee0a3b9865948d90818)
+- [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3)
 - [KimGLee/Cambium](https://github.com/KimGLee/Cambium) at [`289515b5c961de6e283ffea60ccbe544827a11cc`](https://github.com/KimGLee/Cambium/commit/289515b5c961de6e283ffea60ccbe544827a11cc)
 - [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`838c63dabbcfc4aaee0867ba7ff0bab7829e442b`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b)
 - [BernhardJackiewicz/provem](https://github.com/BernhardJackiewicz/provem) at [`fc722f06767eb534c7d71d0463d5d5fd2564fe4c`](https://github.com/BernhardJackiewicz/provem/commit/fc722f06767eb534c7d71d0463d5d5fd2564fe4c)
@@ -4237,6 +4240,30 @@ Dated changes to this atlas's own method and reading. Per-system reading
 history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
+
+**2026-08-04** — [memsem](../systems/memsem/) is the first system in this atlas to
+change in response to something a report said, and re-reading it produced a
+method lesson about how to read that response. The upstream commit subject is
+*"valeur rejetée non réinstaurable d'un coup"* — a rejected value is not
+reinstatable in one go. That is **exactly true**, and a reader who stopped there
+would have recorded the finding as closed. Re-running the original demonstration
+against the built module instead: a pinned correction is now genuinely untouchable
+(fifteen re-assertions, zero fades), an ordinary one is archived at the third
+re-assertion rather than the first, and a committed regression test now asserts
+that a re-assertion *should* fade the live correction.
+
+**The accurate commit message and the unchanged outcome are both real.** "Not in
+one go" was a precise description of a fix that moved the threshold from one
+repetition to three, and the atlas's finding survived in narrowed form only
+because the demonstration was re-run rather than re-read. The rule this suggests
+for the re-analysis workflow: when an upstream responds to a report, the artifact
+to re-execute is the *demonstration*, not the diff — a maintainer describing what
+they changed is not making a claim about what remains.
+
+Second, and separable: what the fix left in place is now backed by a test, which
+converts a defect into a design position. The report had to change register from
+"this is a bug" to "this is a decision with a measured cost", and that is the
+better outcome for a reader either way.
 
 **2026-08-04** — The repository count was wrong by four, and adding
 [Nova AI](../systems/nova-ai/) is what surfaced it. The scope section claimed
