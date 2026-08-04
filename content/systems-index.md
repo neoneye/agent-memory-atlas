@@ -6,10 +6,13 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **136 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **137 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
+## 7
+
+- [`7layermem`](../systems/7layermem/) **7layermem** — Seven tables, one thread key · `Prateek816/7layermem`
 ## A
 
 - [`a-mem`](../systems/a-mem/) **A-MEM** — Evolving Zettelkasten memory · `agiresearch/A-mem`

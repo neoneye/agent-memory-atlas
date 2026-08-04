@@ -619,6 +619,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you need multi-tenant memory where different transports carry different trust models, or you want a worked example of ranking that fuses lexical, vector and derived-quantity arms.
 - Do not copy when: correction has to be durable — supersession hides a row and re-assertion is unguarded — or when you want a small dependency.
 
+### `7layermem`
+
+- Best idea: seven memory types separated at the schema rather than by a type column, each table annotated with the cognitive category it stands for, so "which kind of memory is this" is answered by the table name.
+- Biggest risk: the layers are destinations rather than a lifecycle. Nothing promotes, expires or demotes between them, six of the seven have no delete path, and deleting a conversation thread leaves its summary behind.
+- Most reusable component: the seven `CREATE TABLE` statements with their annotations — a legible taxonomy that costs nothing at this scale.
+- Maturity impression: 7,016 lines, no licence file at this commit, no migrations, and a test suite that re-declares the schema with its own `CREATE TABLE` strings rather than calling the store manager.
+- Study when: you want to hold an entire typed-memory design in your head at once, or you are deciding whether to split memory types across tables.
+- Do not copy when: you need any correction path, a scope beyond one conversation thread, or a licence.
+
 ### `echo-agent`
 
 - Best idea: `provenance_guard` — every memory records which write path created it, ranked `user_stated` 3, `consolidated` 2, `model_inferred` 1, unknown 0, and a write is refused unless the actor ranks at or above its target. A model-inferred claim cannot overwrite a fact the user stated, and the label belongs to the path rather than the payload, so the model cannot nominate its own output as user-stated.

@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Seven SQLite memory tables behind
+a LangChain BaseMemory adapter, where the layers are storage
+destinations rather than a lifecycle and nothing moves between them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="7layermem — Agent Memory Atlas">
+    <meta property="og:description" content="Seven SQLite memory tables
+behind a LangChain BaseMemory adapter, where the layers are storage
+destinations rather than a lifecycle and nothing moves between them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="7layermem — Agent Memory Atlas">
+    <meta name="twitter:description" content="Seven SQLite memory tables
+behind a LangChain BaseMemory adapter, where the layers are storage
+destinations rather than a lifecycle and nothing moves between them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>7layermem — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Seven tables, one thread key</p>
+          <h1>7layermem</h1>
+          <p class="document-deck">Seven SQLite memory tables behind a
+LangChain BaseMemory adapter, where the layers are storage destinations
+rather than a lifecycle and nothing moves between them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Prateek816/7layermem">
+              <span>Source</span>
+              <strong>Prateek816/7layermem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e" title="d3500bfd74b380585e8220f6c6f235c825bc803e">
+              <span>Analyzed revision</span>
+              <code>d3500bfd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-04</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (65%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>7layermem is a <strong>seven-table memory schema for a LangChain
+agent</strong>, 7,016 lines of Python. It is the smallest system
+reviewed here in some time, and the size is what makes it worth reading:
+the whole design is legible in an afternoon.</p>
+<p><strong>There is no licence file at this commit.</strong> The
+repository contains no <code>LICENSE</code>, <code>LICENCE</code> or
+<code>COPYING</code> — not a permissive grant or a restrictive one but
+the absence of any, which defaults to all rights reserved. The
+mechanisms are described below on the atlas's usual terms; a reader
+intending to copy any of it needs to resolve that first.</p>
+<p><strong>The idea is that memory types deserve separate tables rather
+than one table with a <code>type</code> column.</strong>
+<code>store_manager.py</code> opens with the seven, each annotated with
+the cognitive category it stands for:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Annotated as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CONVERSATIONAL_MEMORY</code></td>
+<td>episodic</td>
+</tr>
+<tr>
+<td><code>SEMANTIC_MEMORY</code></td>
+<td>semantic</td>
+</tr>
+<tr>
+<td><code>ENTITY_MEMORY</code></td>
+<td>semantic</td>
+</tr>
+<tr>
+<td><code>SUMMARY_MEMORY</code></td>
+<td>semantic</td>
+</tr>
+<tr>
+<td><code>WORKFLOW_MEMORY</code></td>
+<td>procedural</td>
+</tr>
+<tr>
+<td><code>TOOLBOX_MEMORY</code></td>
+<td>procedural</td>
+</tr>
+<tr>
+<td><code>TOOL_LOG_MEMORY</code></td>
+<td>tool execution logs</td>
+</tr>
+</tbody>
+</table></div>
+<p>Separating them at the schema means a query for a workflow cannot
+accidentally match a conversation, and each type gets its own columns
+instead of a JSON blob doing seven jobs. That is a defensible choice and
+the reason to look.</p>
+<p><strong>The name is the weakness.</strong> <em>Layer</em> implies a
+hierarchy with movement between levels, and there is none. Nothing
+promotes a conversation into a summary, expires an entity, or demotes a
+workflow that stopped working. The seven are <strong>destinations chosen
+at write time by the caller</strong>, not stages a memory passes
+through. The word the code supports is <em>categories</em>.</p>
+<p>The second weakness follows from the first: <strong>correction has
+almost nowhere to happen.</strong> Searching the source for
+<code>tombstone</code>, <code>supersede</code>, <code>retract</code> or
+<code>forget</code> returns nothing; the only lifecycle vocabulary
+present is two occurrences of <code>decay</code>, neither a mechanism.
+<code>memory_manager</code> exposes <code>delete_conversation</code> and
+<code>delete_thread_conversations</code>, and the single
+<code>UPDATE</code> in the codebase sets <code>summary_id</code>.
+<strong>Six of the seven tables have no delete path at all</strong>, so
+a wrong entity, a stale workflow or a superseded tool definition stays
+until someone opens the database by hand.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>row in the table its type belongs to</strong>,
+and the type is decided by which manager method the caller invokes.</p>
+<p>The conversational table is the one with structure worth reading:</p>
+<pre class="sql"><code>CREATE TABLE CONVERSATIONAL_MEMORY (
+    id TEXT PRIMARY KEY,
+    thread_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    summary_id TEXT DEFAULT NULL
+)</code></pre>
+<p><code>thread_id</code> is indexed and is the only grouping key in the
+system. <code>summary_id</code> is the one link between layers — a
+conversation row can point at the summary covering it, set after the
+fact by <code>update_conversation_summary_id</code>. That is the entire
+inter-layer relationship: one nullable foreign key, in one direction,
+between two of the seven.</p>
+<p>There is <strong>no status, confidence or provenance column on any
+table</strong>. Nothing records where a fact came from, whether it was
+verified, or whether anything has contradicted it.</p>
+<h3 id="how-a-thing-becomes-a-belief-and-how-it-stops-being-one">How a
+thing becomes a belief, and how it stops being one</h3>
+<pre class="mermaid"><code>flowchart TD
+    C[&quot;caller picks the memory type&quot;] --&gt; W[&quot;insert into that table&quot;]
+    W --&gt; CONV[&quot;CONVERSATIONAL&quot;]
+    W --&gt; OTH[&quot;SEMANTIC · ENTITY · SUMMARY&lt;br/&gt;WORKFLOW · TOOLBOX · TOOL_LOG&quot;]
+    CONV --&gt;|&quot;summarised later&quot;| S[&quot;summary_id set —&lt;br/&gt;the only link between tables&quot;]
+    CONV --&gt;|&quot;delete_conversation(id)&quot;| D[[&quot;removed&quot;]]
+    CONV --&gt;|&quot;delete_thread_conversations(thread_id)&quot;| D
+    D -.-&gt;|&quot;the summary survives&lt;br/&gt;its own sources&quot;| S
+    OTH -.-&gt;|&quot;no delete path exists&quot;| OTH
+
+    style D fill:#f4e2bd,stroke:#b8860b</code></pre>
+<p>Two dashed edges, and both are the finding. Six of the seven tables
+are write-and-read only: a row enters and no code path removes or
+changes it. And the one inter-layer link is also the one place a delete
+propagates wrongly — deleting a thread's turns leaves the summary
+derived from them in place, with nothing recording that its sources are
+gone.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite file, seven tables, created on demand by
+<code>store_manager</code>. A separate RAG subsystem under
+<code>src/RAG/</code> carries its own persistence —
+<code>context_store.py</code> creates <code>retrieved_contexts</code>
+and <code>search_contexts</code> — and a hybrid retriever combining a
+BM25 layer and a vector layer.</p>
+<p>An operator needs Python, SQLite, and whatever the vector layer's
+embedding backend requires. There is no server and no scheduler.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The absence of a migration path is the operational cost. Table
+existence is checked with a <code>sqlite_master</code> query and then
+<code>CREATE TABLE</code> is issued directly, so a schema change means
+editing the create statement and reconciling existing databases by hand.
+At seven tables and no versioning, the first schema change is a manual
+migration.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema:</strong> <code>src/memory/store_manager.py</code> —
+the seven table names with their cognitive annotations, and the create
+statements.</li>
+<li><strong>Write and read:</strong>
+<code>src/memory/memory_manager.py</code> — per-type methods,
+<code>update_conversation_summary_id</code> (<code>:286</code>),
+<code>delete_conversation</code> (<code>:298</code>),
+<code>delete_thread_conversations</code> (<code>:306</code>).</li>
+<li><strong>Agent surface:</strong>
+<code>src/memory/agent_memory.py</code>, <code>agent.py</code>.</li>
+<li><strong>LangChain adapters:</strong>
+<code>src/langchain_extension/memory.py</code>
+(<code>SevenLayerMemory(BaseMemory)</code>),
+<code>src/langchain_extension/store.py</code>
+(<code>SevenLayerStore(BaseStore[str, str])</code>).</li>
+<li><strong>Corpus retrieval:</strong>
+<code>src/RAG/hybrid_retriever.py</code>, <code>vector_layer.py</code>,
+<code>ingestor.py</code>, <code>context_store.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Seven tables, one grouping key. <code>thread_id</code> scopes
+conversations; the other six have no equivalent, so entities, workflows
+and tool definitions are global to the database.</p>
+<p>The absence of a <code>user_id</code> or <code>project_id</code>
+anywhere is why the scope mark is withheld, and it is a design
+consequence rather than an oversight: a single-agent, single-database
+deployment does not need one, and this is built as one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two unrelated retrieval systems live in this repository, and the
+distinction matters more than either.</p>
+<p>Memory reads are direct SQL keyed on <code>thread_id</code> or row id
+— no ranking, no recency weighting, no scoring. The RAG subsystem is
+separate and more developed: <code>hybrid_retriever</code> runs a BM25
+layer and a vector layer, takes <code>k * 2</code> from each, and fuses
+them.</p>
+<p><strong>The two do not meet.</strong> The hybrid retriever searches
+an ingested document corpus; the seven memory tables are read by key. A
+memory written through <code>memory_manager</code> is not reachable
+through the hybrid retriever. The <code>bm25_layer</code> and
+<code>vector_layer</code> named in that subsystem are also unrelated to
+the seven memory layers despite sharing the word, which makes "layer"
+ambiguous inside a single 7,000-line repository.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous inserts. The caller chooses the table by
+choosing the method; nothing classifies, routes or gates. There is no
+extraction step, so nothing decides what is worth remembering — the
+agent code decides by calling or not calling, which is a legitimate
+design and puts the whole write policy in the caller.</p>
+<p><strong>No background pass exists.</strong> No scheduler, no
+consolidation worker, no decay job, so nothing rewrites the store and
+the lag between writing a memory and it being retrievable is a single
+insert.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The LangChain adapters are the intended surface:
+<code>SevenLayerMemory</code> implements <code>BaseMemory</code> and
+<code>SevenLayerStore</code> implements
+<code>BaseStore[str, str]</code>, so the tables can be mounted where
+LangChain expects a memory or a key-value store. <code>agent.py</code>
+is a standalone entry point. There is no MCP server and no HTTP API.</p>
+<p>The <code>BaseStore[str, str]</code> typing is worth noting: a store
+constrained to string values flattens the typed tables at the boundary,
+so a consumer arriving through the LangChain path loses the schema
+separation that is the design's main idea.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No capability marks are earned, and the reasons differ per
+column.</strong></p>
+<ul>
+<li><strong>Tombstone, trust state, bi-temporal:</strong> absent, with
+no near-miss. No status field, no validity interval, no record of a
+rejected value.</li>
+<li><strong>Scope:</strong> <code>thread_id</code> is a real indexed key
+applied on conversational reads, but it groups a conversation rather
+than isolating a principal, and six of the seven tables have no key at
+all. The mark wants a stored scope key applied as a filter on the read
+path across the memory the system holds; this covers one table of
+seven.</li>
+<li><strong>Audit log:</strong> no mutation record.
+<code>TOOL_LOG_MEMORY</code> logs tool <em>executions</em> — what the
+agent did, not what the memory did — and nothing writes an entry when a
+row is deleted.</li>
+<li><strong>Human review:</strong> no surface.</li>
+<li><strong>Negative evals:</strong> the tests create tables and
+exercise the manager; no committed case asserts that particular material
+must not be retrieved.</li>
+</ul>
+<p><strong>The deletion asymmetry is the risk worth naming.</strong>
+<code>delete_thread_conversations</code> removes a whole thread's turns
+and any summary derived from that thread survives it.
+<code>summary_id</code> points from conversation to summary, so after
+the delete the summary remains with no back-reference intact and nothing
+recording that its sources are gone. This is the failure the <a
+href="../../benchmarks/">benchmarks page</a> calls step 9 — a deleted
+memory surviving in derived form — in its simplest possible instance,
+two tables and one foreign key.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/</code> contains <code>test_memory_manager.py</code> and
+<code>testing.py</code>. The test file builds the conversational and
+tool-log tables <strong>with its own <code>CREATE TABLE</code>
+statements</strong> rather than calling <code>store_manager</code>, so
+the schema exists twice in the repository as two separate strings that
+can drift, and nothing compares them. A column added to the
+implementation and not to the test leaves the suite green and testing a
+schema the system no longer has.</p>
+<p>No benchmark, no committed retrieval numbers, and no evaluation of
+the hybrid retriever. I did not run the suite.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate tables per memory type, annotated with the
+cognitive category.</strong> Seven <code>CREATE TABLE</code> statements
+and a comment each. It costs nothing at this scale and makes "which kind
+of memory is this" a schema question rather than a runtime one.</li>
+<li><strong>The <code>summary_id</code> back-link.</strong> Pointing a
+raw row at the derived artifact covering it is the cheap half of <a
+href="../../patterns/evidence-before-belief/">evidence before belief</a>
+— you can always get from a summary back to what it summarised, provided
+you also handle the delete.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Calling them layers.</strong> They are categories. A reader
+expecting promotion, expiry or demotion will look for machinery that
+does not exist, and the design is more defensible under its accurate
+name.</li>
+<li><strong>A delete path on one table of seven.</strong> The types a
+user is most likely to want removed — a wrong entity, a stale workflow —
+are the ones with no removal code.</li>
+<li><strong>Duplicating the schema in the tests.</strong> Two
+<code>CREATE TABLE</code> strings for one table is a drift the suite
+cannot detect.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>reading, not adopting</strong>. It is a clear,
+small worked example of typed memory tables behind a LangChain adapter,
+and at 7,016 lines a developer can hold all of it at once — genuinely
+rare in this corpus and the reason it is here. It is not a fit for
+production: no licence grant, no migrations, no scope beyond a thread,
+no correction, and two retrieval systems that never meet.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the hybrid retriever ever pointed at the memory
+tables?</strong> It searches an ingested corpus, and no code path was
+found connecting the two. If that connection is intended, it is the
+missing half of the design.</li>
+<li><strong>What decides that a thread should be summarised?</strong>
+The <code>summary_id</code> link exists and its write side was traced;
+the trigger was not.</li>
+<li><strong>Is the licence absence deliberate?</strong> The README makes
+no licence claim, so unlike <a href="../membase/">membase</a> there is
+no assertion contradicted by a missing file — there is simply
+nothing.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>src/memory/store_manager.py</code> — the seven tables and
+their annotations</li>
+<li><code>src/RAG/context_store.py</code> — the RAG subsystem's own two
+tables</li>
+</ul>
+<p><strong>Write and read path</strong></p>
+<ul>
+<li><code>src/memory/memory_manager.py</code> — per-type methods, the
+one update, the two deletes</li>
+<li><code>src/memory/agent_memory.py</code> — the agent-facing
+wrapper</li>
+</ul>
+<p><strong>Retrieval</strong></p>
+<ul>
+<li><code>src/RAG/hybrid_retriever.py</code>,
+<code>vector_layer.py</code>, <code>ingestor.py</code></li>
+</ul>
+<p><strong>Integration</strong></p>
+<ul>
+<li><code>src/langchain_extension/memory.py</code>,
+<code>store.py</code> — <code>BaseMemory</code> and
+<code>BaseStore</code></li>
+<li><code>agent.py</code> — standalone entry point</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_memory_manager.py</code>,
+<code>tests/testing.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code class="commit-id" title="d3500bfd74b380585e8220f6c6f235c825bc803e">d3500bfd…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
