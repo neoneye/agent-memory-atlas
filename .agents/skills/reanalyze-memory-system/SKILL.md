@@ -9,6 +9,20 @@ The atlas pins every report to a commit. Upstream moves; the pin does not. This
 skill covers the second-most-common workflow in the repository: reading a system
 again at a newer commit and folding the result into the report that exists.
 
+**Screen the new checkout first, every time.** Run the `screen-repository` skill
+before reading the diff:
+
+```sh
+python3 scripts/screen_repo.py /absolute/path/to/source-repository
+```
+
+A re-read clones a *newer* commit than the one that was screened, and the newest
+commit is exactly where a compromise would arrive — a `postinstall` added last
+week, a hook that was not there at the pin, a dependency range that resolved to
+something new. Screening once at first reading is worth nothing here. Compare the
+screen against the previous one where it matters: a new `RUNS` finding since the
+pin is itself a reason to slow down.
+
 It is not `add-memory-system`. There is no scaffolding, no new slug, no new
 homepage card. Read that skill for the report format, the capability
 definitions, the matrix rules and the build/validate loop — all of that still

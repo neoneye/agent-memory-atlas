@@ -7,6 +7,22 @@ description: Research and integrate a new agent-memory repository into Agent Mem
 
 Add one memory system to the atlas as a code-grounded, commit-pinned analysis. Treat the individual report, comparative synthesis, homepage, and generated site as one change.
 
+**Screen the checkout first — this is a precondition, not a suggestion.** Run the
+`screen-repository` skill before reading a single file of a newly cloned tree:
+
+```sh
+python3 scripts/screen_repo.py /absolute/path/to/source-repository
+```
+
+Analysis means cloning a stranger's repository onto a personal machine and often
+running its build or its tests. Auto-executing hooks fire without a command being
+typed, and an unpinned dependency is a supply-chain compromise waiting on somebody
+else's account. Read every `RUNS` finding before doing anything else, keep the
+default posture read-only, and prefer `npm ci --ignore-scripts` and a throwaway
+venv over the documented install when execution is genuinely needed. `NOTHING
+SCANNED` is a finding, not a pass. Record the outcome in the report's History
+entry.
+
 If the atlas already has a report for this repository, this is the wrong skill — use `reanalyze-memory-system`, which covers re-pinning, deciding whether a published claim went stale, and the rename-and-redirect convention. Check first:
 
 ```sh
