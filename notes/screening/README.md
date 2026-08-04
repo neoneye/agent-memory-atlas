@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 60 of 147 screened.**
+**Progress: 65 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 23 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 15 |
-| Repositories with build-time execution (`EXEC`) | 42 |
+| Repositories with an auto-run surface (`RUNS`) | 24 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 16 |
+| Repositories with build-time execution (`EXEC`) | 46 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 1 |
 | Repositories that could not be screened | 0 |
 
@@ -47,4 +47,5 @@ These execute without a command being typed. Read before opening the tree.
 | [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 
