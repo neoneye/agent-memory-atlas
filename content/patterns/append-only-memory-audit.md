@@ -210,6 +210,15 @@ SQLite history around memory changes. [llm-wiki-memory](../../systems/llm-wiki-m
 uses git history for inspectable mutation groups — and demonstrates why audit
 history is not privacy erasure.
 
+[memU](../../systems/memu/) is the clean separation of the two halves, one of
+which is missing. Its event spool is careful about everything telemetry is
+usually careless about — an allowlist per event type, no query text, bounded
+payloads — and it records that a retrieval happened and how many results came
+back. It records nothing about what changed in the store, it is deleted once
+delivered, and it is addressed to a vendor analytics endpoint rather than to the
+memory. A system can have a considered account of its own operation and no
+account of its own contents, and this is what that looks like.
+
 [NOOA Memory](../../systems/nooa-memory/) takes the opposite arrangement to
 everything else here and states why: the access log "lives ON the record (capped
 ring in `Memory.access_log`): copy or export one row and its usage story travels

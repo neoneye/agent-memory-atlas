@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: NevaMind-AI/memU
 source_url: https://github.com/NevaMind-AI/memU
-revision: 3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e
-revision_url: https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e
-analyzed_at: 2026-07-28
+revision: c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
+revision_url: https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
+analyzed_at: 2026-08-04
 capabilities: ""
 matrix:
   memory_unit: "`RecallFile` on a memory or skill track, sliced into `RecallFileSegment` search units"
@@ -18,10 +18,10 @@ matrix:
   update_delete: "Segments dropped and recreated when a file is re-sliced; no supersession found"
   scoping: "`where` filters over records; no tenant or project model traced"
   integration: "Host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy"
-  background: "Scheduling module; agentic backend for richer flows"
+  background: "Scheduling module; agentic backend for richer flows; a client-event spool flushed on the bridging pair, never on the per-turn hook"
   trust: "Timestamps and track only; no source, actor, or status on a record"
   strengths: "Ranking on segments and returning files, with local/remote ordering parity as an invariant"
-  risks: "No trust state, provenance, correction path, or tombstone"
+  risks: "No trust state, provenance, correction path, or tombstone; opt-out telemetry on by default"
 ---
 
 ## 1. Executive Summary
@@ -67,10 +67,25 @@ schema into a design document; memU does the same for decisions, which means a
 reader asking "why is it like this" has a document to open rather than a
 maintainer to find.
 
+**The client reports on itself, and the store does not.** `src/memu/events.py`
+spools a fixed set of lifecycle events — install, uninstall, a bridging run, a
+retrieval, a listing, a fatal error — to `~/.memu/events.jsonl` and POSTs them in
+batches to `https://api.memu.so/api/memu/analytics/events`. It is **on by
+default**, switched off with `MEMU_TELEMETRY=0`, and it honours `DO_NOT_TRACK`.
+The engineering is careful in ways most telemetry is not: the payload keys are an
+**allowlist** per event rather than a filter, so adding a leak takes a deliberate
+edit; the query text of a retrieval is deliberately not among what is recorded,
+only counts and latency; the instance id is random with "no hostname, no MAC, no
+user name"; and recording on the per-turn `retrieve` hook appends a line and
+returns without ever touching the network.
+
 Reservations: this is a well-engineered retrieval and sync layer with **no
 epistemic model at all** — no trust state, no provenance, no supersession, no
 tombstone, and no scope beyond `where` filters. It knows how to find and move
-memories, and nothing about whether they are true or whose they are.
+memories, and nothing about whether they are true or whose they are. The
+telemetry inverts that: the system now has a considered account of its own
+operation and still none of its contents, so the only thing memU can tell you it
+is unsure about is whether it is installed correctly.
 
 ## 2. Mental Model
 
@@ -103,7 +118,11 @@ that a memory was wrong, and nothing can express that it was.
 client pool, settings), `database/` (factory, interfaces, models, repositories,
 and `sqlite`/`postgres`/`inmemory` implementations), `embedding/`, `vector.py`,
 `hosts/` (per-agent adapters plus `bridging`, `retrieval`, `scheduling`,
-`templates`), `cli.py`, `cloud.py`.
+`templates`), `cli.py`, `cloud.py`, `events.py`.
+
+`docs/adr/` holds the numbered decision records the schema comments cite, sixteen
+of them, and they are long — ADR 0016 runs 560 lines for a telemetry module of
+879.
 
 The protocol is three methods:
 
@@ -204,6 +223,44 @@ pattern. memU's version is the cheapest: one column, one shared retrieval path,
 no second subsystem. What it gives up is the verified-execution gate that pattern
 asks for — a skill here is a file, and nothing establishes that it works.
 
+### The event spool, and why it is a spool
+
+`events.record` appends one JSON line and returns — "no lock, no network, and no
+read of the existing spool" — because the caller is the per-turn `retrieve` hook,
+the one path the codebase already forbade from fetching. Delivery happens later,
+from `prepare` and `commit`, from `report uninstall`, and from the CLI's error
+handler.
+
+The interesting part is the argument for why deferral is not merely politeness:
+
+> "Client-generated ids buy idempotence *for a client that retries*. A
+> fire-and-forget sender never double-delivers, so it would give the backend
+> nothing to deduplicate. A spool that survives an offline laptop and re-POSTs on
+> the next flush does."
+
+The `event_id` and the spool are one decision, not two, and the module says so.
+Most telemetry generates an id because the schema has a field for it.
+
+The payload discipline is the transferable half. `_ALLOWED_PROPERTIES` is a
+per-event **allowlist** — `core_action_completed` may carry `action_name`,
+`success`, `result_count`, two latency clocks and three counts, and nothing else,
+"including anything an agent supplied", so a new field leaks only if someone edits
+that table. Every bound is a named constant with its reason beside it: a 1 MB
+spool cap, 200 POSTs per flush, 20 stack frames, and `MAX_DETAIL_CHARS = 5000`
+because an unbounded error detail would be "a privacy dump and an unbounded body
+at once". The one genuinely free-form channel is that `--detail` string on
+`report error`, which an agent writes and which is deduplicated on a SHA-256
+fingerprint so the local ledger "holds no agent prose" — the prose itself still
+goes to the endpoint; it is the sidecar file that is hashed.
+
+**What this is not is an audit log.** The spool records that a search happened and
+how many results came back; it records nothing about what changed in the store, it
+is discarded once delivered, and its destination is a vendor analytics endpoint
+rather than the memory. The
+[append-only memory audit](../../patterns/append-only-memory-audit/) pattern
+separates retrieval telemetry from a mutation record and treats them as two
+halves; memU has now built one half carefully and still has none of the other.
+
 ## 5. Memory Data Model
 
 `BaseRecord` gives every row `id`, `created_at`, `updated_at`. `RecallFile` adds
@@ -238,6 +295,34 @@ gets asked about.
 them in one call, which keeps a host adapter's write path to a single operation.
 Re-slicing drops and recreates segments.
 
+### The one repair path, and the drift underneath it
+
+`get_or_create_recall_file` matches on `(name, track, user scope)` and, on a
+match, **backfills**: a stored `description` or `embedding` that is empty takes
+the argument's value, while a populated field is never overwritten and an empty
+argument writes nothing at all. The docstring is explicit that this is "the only
+channel that can repair a persisted-empty field, since `update_recall_file` skips
+`None` arguments", and equally explicit that "backfill is not an update".
+
+This is the closest thing in memU to a correction path, and the distance is
+instructive. It repairs a field that was never filled; it cannot express that a
+field was filled *wrongly*. A stub gets topped up, a mistake stays.
+
+The reason it is written down at all is that the three backends disagreed. The
+test that arrived with it opens by naming the drift:
+
+> "The backends had drifted: SQLite carried no backfill at all, and SQLite and
+> Postgres both tested `is None`, which never fires for the empties the models
+> actually hold."
+
+That is worth holding against the design's headline invariant — the docstring in
+`agentic_backend.py` requiring local and remote to "stay byte-for-byte the same".
+The invariant is real and stated; what the repository now also demonstrates is
+that on a *different* method it did not hold, in three directions at once, and
+that nothing detected it until someone wrote a parametrized test across the
+backends. An invariant asserted in one docstring does not propagate to the
+methods beside it.
+
 ### Operational cost
 
 The read path costs one embedding call and two scans — no LLM, so recall latency
@@ -262,7 +347,9 @@ Strengths:
 
 - **Search unit separated from return unit**, with max-of-segments as the
   roll-up.
-- **Local and remote ordering parity** stated as an invariant.
+- **Local and remote ordering parity** stated as an invariant — though the
+  backends had silently drifted on `get_or_create_recall_file`, so read it as a
+  requirement the project holds itself to rather than one the code guarantees.
 - **Decision records cited from the schema**, so "why is it like this" is
   answerable.
 - **A denormalization with its safety argument** written beside it.
@@ -272,6 +359,8 @@ Strengths:
 - **Explicitly LLM-free retrieval**, so recall cost and latency are predictable.
 - **Skills as a track**, not a parallel subsystem.
 - **Three storage backends** behind one repository interface.
+- **Telemetry payloads governed by an allowlist**, bounded by named constants,
+  excluding the query text, and honouring `DO_NOT_TRACK`.
 
 Gaps:
 
@@ -280,16 +369,75 @@ Gaps:
 - **Vector-only retrieval**, in a domain full of exact identifiers.
 - **No consolidation**, so memory does not improve and duplicates are not merged.
 - **Skills are unverified files**, with no execution gate.
+- **Telemetry is on by default and the opt-out is undocumented for users.** See
+  below; this is the gap the project's own decision record says it closed.
+
+### The disclosure the ADR claims and the tree does not contain
+
+ADR 0016 §11 is titled "Disclosed, and off with one line", and its first
+sub-point is unambiguous about where the disclosure lives:
+
+> "`INSTALL.md` Part 1.2 states plainly what is collected and how to turn it off,
+> at the same moment the user chooses local or cloud. Silent telemetry in an OSS
+> CLI is a reputational event; disclosure at the point of the privacy decision is
+> the cheap way to not have one."
+
+**Part 1.2 does not contain it.** In every host's `INSTALL.md`, that section
+covers the cloud-versus-local choice, the API key, and the file permissions on
+`~/.memu/config.env`, and says nothing about events. The string `MEMU_TELEMETRY`
+appears in exactly three places in the tree — the ADR, the `events.py` module
+docstring, and `tests/test_events.py` — and in none of `README.md`, any
+`INSTALL.md`, or any other user-facing document. A user installing memU at this
+commit is not told that lifecycle events go to `api.memu.so`, and is not told the
+one line that stops it.
+
+What the install guides *did* gain is the opposite direction of the same flow: a
+new closing section instructing the agent to run `report install` or
+`report error --detail`, to "be generous with `--detail`", and to keep
+credentials, absolute paths, DSNs and "the user's memory content, file contents,
+or transcript text" out of what it writes. So the install procedure now asks the
+agent to send a paragraph of prose to the vendor, with the privacy rules aimed at
+the model rather than surfaced to the person.
+
+The ADR carries `Status: Proposed`, and that is worth stating without leaning on
+it: five of the sixteen ADRs are `Proposed` and describe behaviour this report
+documents as shipped — ADR 0014's pagination is the pagination — so in this
+project a proposed status has not meant unmerged. The reasonable reading is a
+disclosure that is intended, specified in unusual detail, and not yet written.
+
+What makes the gap legible rather than ordinary is that the same commit built the
+machinery that would have caught it.
+`test_no_guide_asks_for_report_error_without_the_scrubbing_sentence` walks every
+host guide, and its docstring names exactly what it is doing — "ADR 0016 section
+5's gate, as a test rather than a promise" — with the reasoning that an
+instruction "guided prompt-side only… may never ship without the sentence that
+scopes it". Section 5's promise was turned into a test and holds. Section 11's
+promise was not, and does not. The two sentences are four pages apart in one
+document, and the difference between them is whether anything executes.
 
 ## 10. Tests, Evals, and Benchmarks
 
-A `tests/` tree exists and the in-memory backend is built for it. Nothing was run
-for this review, and no retrieval-quality benchmark was found.
+The suite runs in seconds and passes: `uv run pytest` gives **359 passed, 1
+skipped in 2.74s** at this commit, with no service dependencies. There is still no
+retrieval-quality benchmark.
 
-The invariant the design most invites testing is its own: that the local and
-remote paths order identically. That is deterministic, needs no judge, and is the
-kind of property that silently breaks the first time one backend gains a tiebreak
-the other lacks.
+The skip is the interesting one. `test_postgres_list_segments_deduplicates_cache`
+opens with `pytest.importorskip("pgvector")`, and `pgvector` lives in the optional
+`postgres` extra rather than the dev group — so on a default developer install it
+does not run. It is the regression test for
+`PostgresRecallFileSegmentRepo._cache_segment`, which appended a segment to its
+cache on every repeated query and returned growing duplicate lists. That bug was
+Postgres-only; the two backends whose tests *do* run were already correct. The
+test that covers the fixed line is the one skipped by default, and a green suite
+does not say it passed.
+
+The invariant the design most invites testing is still its own: that the local and
+remote paths order identically. Nothing in the suite covers it — the only
+cross-backend test is `test_recall_file_backfill.py`, which parametrizes over
+`inmemory` and `sqlite` and covers a different method. That is deterministic,
+needs no judge, and is the kind of property that silently breaks the first time
+one backend gains a tiebreak the other lacks; on `get_or_create_recall_file` it
+already had.
 
 ## 11. For Your Own Build
 
@@ -309,6 +457,15 @@ the other lacks.
   feature request from being read as a bug report.
 - **Decline to store a field that would mislead**, and record why.
 - **Cite the decision record from the schema comment.**
+- **Allowlist your telemetry payload, per event.** A denylist leaks by default
+  the first time a caller adds a field; an allowlist makes a leak a deliberate
+  edit to one table.
+- **Spool rather than fire-and-forget**, and notice that this is what makes a
+  client-generated event id worth having — a sender that never retries gives the
+  receiver nothing to deduplicate.
+- **Turn the ADR clause you cannot enforce in code into a test.** memU's guides
+  are prose an agent reads, so a parametrized test walks every guide and asserts
+  the scrubbing sentence is present. The clauses that got this treatment held.
 
 ### Avoid
 
@@ -317,6 +474,12 @@ the other lacks.
   projects share a store.
 - **Vector-only retrieval for coding agents**, where identifiers are a large
   share of queries.
+- **Shipping telemetry whose disclosure exists only in the decision record.**
+  Being careful about the payload does not substitute for telling the person who
+  installed it; the ADR here argues that case itself, and the sentence it
+  promised is not in the tree.
+- **Putting the regression test for a backend behind an optional extra.** The
+  suite is green either way, which is worse than red.
 
 ### Fit
 
@@ -328,15 +491,24 @@ no epistemic model here at all, and adding one later means adding a schema this
 one deliberately does not have. Read it as a retrieval and sync layer that is
 honest about being exactly that.
 
+One thing that judgement now has to carry: adopting memU means opting your users
+into vendor telemetry unless you set `MEMU_TELEMETRY=0` yourself, and they will
+not learn it from anything memU shows them. The payload is counts and latency,
+not content, so the exposure is small — but if you install this for other people,
+the disclosure is yours to make, because the install guide will not make it.
+
 ## 12. Open Questions
 
-- Is the local/remote ordering parity tested, or only asserted in a docstring?
 - What separates two hosts' memories in one store beyond a caller-supplied
   `where`?
 - Does anything merge duplicate recall files, or does the store accumulate them?
 - What establishes that a skill-track file works, given there is no execution
   gate?
 - How are `file.top_k` and `resource.top_k` chosen?
+- Does the ordering-parity invariant hold anywhere it is not asserted, given the
+  backends had drifted on `get_or_create_recall_file`?
+- Will the ADR 0016 §11 disclosure land in the install guides, and does anything
+  test for it when it does?
 
 ## Appendix: File Index
 
@@ -350,7 +522,17 @@ honest about being exactly that.
   `sqlite/`, `postgres/`, `inmemory/`.
 - Host adapters: `src/memu/hosts/` (`claude_code`, `codex`, `cursor`,
   `openclaw`, `hermes`, `cola`, `workbuddy`, `generic`, `bridging`).
+- Telemetry: `src/memu/events.py` (`record`, `record_action`,
+  `record_agent_error`, `flush`, `enabled`, `_ALLOWED_PROPERTIES`),
+  `src/memu/hosts/retrieval.py`, `src/memu/hosts/host_cli.py`.
+- Decision records: `docs/adr/` — 0003 (user scope), 0006 (tracks), 0007
+  (segments), 0014 (pagination), 0015 (bridging must not mine its own run), 0016
+  (client event reporting).
+- Tests: `tests/test_events.py`, `tests/test_recall_file_backfill.py`,
+  `tests/test_cache_segment_duplicates.py`.
 
 ## History
+
+**2026-08-04** — [`c35060e2a6d35d6c4e155ffa1c6a97a92db964cb`](https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb) — eight commits on. The memory core is untouched: `models.py`, `app/agentic.py` and `agentic_backend.py` are byte-identical to the previous pin, so every mechanism claim, every quoted docstring and the capability assessment (`""`) stand, re-verified rather than carried. What changed sits beside it. `events.py` adds opt-out client telemetry to `api.memu.so` — allowlisted payloads, no query text, `DO_NOT_TRACK` honoured — whose own decision record claims a disclosure in `INSTALL.md` Part 1.2 that is not in the tree; `MEMU_TELEMETRY` appears in no user-facing document. `get_or_create_recall_file` gained a documented backfill after the three backends were found to have drifted three different ways, which qualifies the local/remote parity strength this report leads with. A Postgres-only segment-cache duplication bug was fixed, and its regression test is skipped on a default install because `pgvector` is an optional extra. Suite run: 359 passed, 1 skipped.
 
 **2026-07-28** — [`3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e`](https://github.com/NevaMind-AI/memU/commit/3a5a05ea7fa4e3eafe609c189f2f2ff046c5e87e) — first reading.
