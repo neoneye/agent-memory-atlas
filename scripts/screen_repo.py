@@ -29,8 +29,9 @@ typing `npm install` out of habit.
 
 Result vocabulary is deliberate: `RUNS` for something that executes without being
 asked, `EXEC` for something that executes when a normal build/test command is
-run, `FLOAT` for an unpinned dependency surface, `AGENT` for text addressed to a
-reading agent rather than to a machine, and `NOTE` for context. Exit 2 means
+run, `FRESH` for a dependency surface changed inside the seven-day cooldown, `FLOAT`
+for an unpinned dependency surface, `AGENT` for text addressed to a reading agent
+rather than to a machine, and `NOTE` for context. Exit 2 means
 findings, 0 means none, 1 means the path was unusable. **An empty run reports
 NOTHING SCANNED rather than passing**, because a screen that found no manifests
 is not evidence of safety.
@@ -44,8 +45,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# A dependency surface changed inside this window is inside the blast radius of a
+# registry compromise that has not been caught yet. Published supply-chain
+# incidents are typically detected within hours to a couple of days; seven days
+# is a deliberately conservative cooldown.
+COOLDOWN_DAYS = 7
 
 # ---------------------------------------------------------------- auto-run
 
@@ -253,13 +262,88 @@ def scan_gitattributes(root: Path, out: list) -> int:
     return 1
 
 
+DEP_MANIFESTS = [
+    "package.json", "requirements.txt", "pyproject.toml", "Pipfile",
+    "Cargo.toml", "go.mod", "composer.json", "Gemfile",
+]
+
+
+def git_last_change(root: Path, relpath: str) -> datetime | None:
+    """When git last recorded a change to this path, or None.
+
+    Read-only and offline: `git log` on an already-cloned tree touches no network
+    and executes nothing from the repository.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "log", "-1", "--format=%cI", "--", relpath],
+            capture_output=True, text=True, timeout=20, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    stamp = out.stdout.strip()
+    if not stamp:
+        return None
+    try:
+        return datetime.fromisoformat(stamp)
+    except ValueError:
+        return None
+
+
+def scan_dependency_age(root: Path, out: list) -> int:
+    """Flag dependency surfaces changed inside the cooldown window.
+
+    The reasoning is a lower bound and it is sound. Every version recorded in a
+    lockfile was published *before* that lockfile was written, so a lockfile git
+    has not touched in thirty days cannot resolve to anything younger than thirty
+    days. An untouched lockfile is therefore positive evidence, obtainable
+    offline, that the resolved set is outside the blast radius.
+
+    The converse is the case worth catching, and it is the one `npm ci` walks
+    straight into: a lockfile updated two days ago installs exactly what it says,
+    including a version published two days ago. Pinning is faithful, not safe —
+    it reproduces whatever was chosen, including a choice made during a
+    compromise window.
+    """
+    if not (root / ".git").exists():
+        out.append(("NOTE", "-", "not a git checkout — dependency ages cannot be bounded offline"))
+        return 0
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=COOLDOWN_DAYS)
+    scanned = 0
+    for name in LOCKFILES + DEP_MANIFESTS:
+        for p in sorted(root.rglob(name)):
+            if any(part in ("node_modules", ".venv", "venv", ".git") for part in p.parts):
+                continue
+            relpath = rel(root, p)
+            when = git_last_change(root, relpath)
+            if when is None:
+                continue
+            scanned += 1
+            age = (now - when).days
+            locked = name in LOCKFILES
+            if when > cutoff:
+                out.append((
+                    "FRESH", relpath,
+                    f"changed {age} day(s) ago, inside the {COOLDOWN_DAYS}-day cooldown"
+                    + (" — `npm ci` would install exactly what this pins, however new that is"
+                       if locked else " — resolution may pick up something published this week"),
+                ))
+            elif locked:
+                out.append((
+                    "NOTE", relpath,
+                    f"unchanged for {age} day(s), so every version it resolves is at least that old",
+                ))
+    return scanned
+
+
 def scan_lockfiles(root: Path, out: list) -> None:
     present = [lf for lf in LOCKFILES if (root / lf).exists()]
     if present:
         out.append(("NOTE", "-", f"lockfile(s) present: {', '.join(present)}"))
 
 
-SEVERITY = {"RUNS": 0, "EXEC": 1, "FLOAT": 2, "AGENT": 3, "NOTE": 4}
+SEVERITY = {"RUNS": 0, "FRESH": 1, "EXEC": 2, "FLOAT": 3, "AGENT": 4, "NOTE": 5}
 
 
 def main() -> int:
@@ -281,6 +365,7 @@ def main() -> int:
     scanned += scan_python(root, findings)
     scanned += scan_build_exec(root, findings)
     scanned += scan_gitattributes(root, findings)
+    scanned += scan_dependency_age(root, findings)
     scan_lockfiles(root, findings)
 
     findings.sort(key=lambda f: (SEVERITY.get(f[0], 9), f[1]))
@@ -303,7 +388,15 @@ def main() -> int:
         runs = sum(1 for f in findings if f[0] == "RUNS")
         execs = sum(1 for f in findings if f[0] == "EXEC")
         floats = sum(1 for f in findings if f[0] == "FLOAT")
-        print(f"\n  scanned {scanned} file(s): {runs} auto-run, {execs} build-time exec, {floats} unpinned surface(s)")
+        fresh = sum(1 for f in findings if f[0] == "FRESH")
+        print(f"\n  scanned {scanned} file(s): {runs} auto-run, {fresh} inside cooldown, "
+              f"{execs} build-time exec, {floats} unpinned surface(s)")
+        if fresh:
+            print(f"  A dependency surface changed within {COOLDOWN_DAYS} days. Do not install from\n"
+                  f"  this tree yet; wait out the cooldown, or install with an explicit age floor\n"
+                  f"  (`npm install --ignore-scripts --min-release-age={COOLDOWN_DAYS}`,\n"
+                  f"  `uv pip install --exclude-newer <date>`), and never with `npm ci`, which\n"
+                  f"  reproduces the pin regardless of how new it is.")
         if runs or execs or floats:
             print("  Conclusion: review the entries above before running any command in this tree.\n"
                   "  Nothing here means 'malicious'; it means execution is possible and someone\n"
@@ -311,7 +404,7 @@ def main() -> int:
         else:
             print("  Conclusion: no auto-run, build-exec or unpinned surface found by this screen.")
 
-    return 2 if any(f[0] in ("RUNS", "EXEC", "FLOAT") for f in findings) or scanned == 0 else 0
+    return 2 if any(f[0] in ("RUNS", "FRESH", "EXEC", "FLOAT") for f in findings) or scanned == 0 else 0
 
 
 if __name__ == "__main__":

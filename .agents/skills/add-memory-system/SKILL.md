@@ -20,8 +20,11 @@ typed, and an unpinned dependency is a supply-chain compromise waiting on somebo
 else's account. Read every `RUNS` finding before doing anything else, keep the
 default posture read-only, and prefer `npm ci --ignore-scripts` and a throwaway
 venv over the documented install when execution is genuinely needed. `NOTHING
-SCANNED` is a finding, not a pass. Record the outcome in the report's History
-entry.
+SCANNED` is a finding, not a pass, and so is `FRESH` — **never install a
+third-party dependency published in the last seven days**, because that window is
+where an undetected registry compromise lives. `npm ci` does not protect you
+there: it reproduces the lockfile faithfully however new the pin is. Record the
+outcome in the report's History entry.
 
 If the atlas already has a report for this repository, this is the wrong skill — use `reanalyze-memory-system`, which covers re-pinning, deciding whether a published claim went stale, and the rename-and-redirect convention. Check first:
 

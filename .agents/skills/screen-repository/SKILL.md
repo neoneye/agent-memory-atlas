@@ -65,8 +65,9 @@ Its vocabulary:
 | --- | --- |
 | `RUNS` | Executes without a command being typed — hooks, devcontainer, direnv, checkout filters, MCP manifests, editor bundles |
 | `EXEC` | Executes when an ordinary build or test command is run — npm lifecycle scripts, `setup.py`, `conftest.py`, `build.rs`, `Makefile` |
+| `FRESH` | A dependency surface changed inside the seven-day cooldown — see below |
 | `FLOAT` | An unpinned dependency surface — floating ranges, non-registry sources, a manifest with no lockfile |
-| `AGENT` | Text addressed to a reading agent — `CLAIM.md`, `AGENTS.md`, `.cursorrules` |
+| `AGENT` | Text addressed to a reading agent — `CLAUDE.md`, `AGENTS.md`, `.cursorrules` |
 | `NOTE` | Context, such as which lockfiles exist |
 
 **An empty run reports `NOTHING SCANNED` and exits 2 rather than passing.** A
@@ -93,6 +94,66 @@ What to look for, in order of how often it is the answer:
 so.** Refusing to analyse a repository is a valid outcome and costs nothing;
 "probably fine" is how this goes wrong.
 
+## Step 3b — the seven-day cooldown
+
+**Do not install a third-party dependency published in the last seven days.**
+
+Registry compromises are usually caught quickly — hours to a couple of days —
+which means almost the entire risk lives in a narrow window right after
+publication. Waiting the window out converts "was this version malicious" from a
+question nobody can answer offline into one the ecosystem has already answered.
+Seven days is deliberately more than the observed detection time.
+
+### The `npm ci` trap, which is the whole reason this is a separate step
+
+Pinning is **faithful, not safe**. A lockfile reproduces whatever was chosen,
+including a choice made during a compromise window. `npm ci` installs exactly
+what the lockfile says, so a lockfile bumped two days ago installs a two-day-old
+package with complete fidelity — and `--min-release-age` does not save you,
+because nothing is being resolved.
+
+So a lockfile answers "will this be reproducible", never "is this old enough".
+
+### The offline check, and why it is sound
+
+Every version recorded in a lockfile was published *before* that lockfile was
+written. So the date git last touched the lockfile is a **lower bound on the age
+of every dependency it resolves** — a lockfile unchanged for thirty days cannot
+contain anything younger than thirty days. That is free, offline, and needs no
+registry.
+
+`screen_repo.py` reports it both ways: `NOTE` when a lockfile is comfortably old
+(positive evidence), `FRESH` when a lockfile or manifest changed inside the
+window (the case to act on).
+
+### What to do about a `FRESH` finding
+
+In order of preference:
+
+1. **Wait.** Analysis is rarely urgent. Come back after the cooldown and the
+   evidence problem has solved itself.
+2. **Read without installing.** Most reports in this atlas are mechanism reads,
+   and mechanism is established by reading. A `FRESH` finding is only a problem
+   if something is going to be installed.
+3. **Install with an explicit age floor**, never with `npm ci`:
+
+   ```sh
+   npm install --ignore-scripts --min-release-age=7
+   uv pip install --exclude-newer "$(date -u -v-7d +%Y-%m-%d)"   # GNU: date -u -d '7 days ago'
+   ```
+
+   Both flags were verified against the installed toolchain rather than assumed
+   — `npm --min-release-age` applies transitively, so a dependency's own
+   dependencies are held to the same floor, and `npm --min-release-age-exclude`
+   exists for first-party scopes if that ever becomes necessary.
+4. **Refuse.** A repository that cannot be analysed without installing something
+   published this week is a repository to come back to.
+
+Note the tension with the previous step and resolve it deliberately: `npm ci`
+respects the lockfile, `npm install --min-release-age` respects the cooldown, and
+they are not the same command. When the lockfile is old, `npm ci --ignore-scripts`
+is right. When it is `FRESH`, the age floor wins.
+
 ## Step 4 — decide the execution posture, explicitly
 
 The default for analysis is **read-only**. Most reports in this atlas are
@@ -105,9 +166,9 @@ mechanism question — reduce the surface:
 
 | Ecosystem | Instead of | Use |
 | --- | --- | --- |
-| npm | `npm install` | `npm ci --ignore-scripts` — respects the lockfile, skips every dependency's lifecycle scripts |
+| npm | `npm install` | `npm ci --ignore-scripts` when the lockfile is outside the cooldown; `npm install --ignore-scripts --min-release-age=7` when it is not |
 | npm | `npm test` | read the script first; it may chain an install |
-| Python | `pip install -e .` | a throwaway venv, and read `setup.py`/`conftest.py` first |
+| Python | `pip install -e .` | a throwaway venv, `uv pip install --exclude-newer <date>`, and read `setup.py`/`conftest.py` first |
 | Python | `pytest` | note that `conftest.py` executes at collection, before any test |
 | Rust | `cargo build` | read `build.rs` first; it runs at build time |
 | Any | running on the host | a container or VM, if the finding is worth that much |
@@ -152,7 +213,15 @@ Stated so it is not mistaken for more than it is:
 
 - **It cannot detect a compromised package.** The malicious code is in a
   dependency on a registry, not in the tree. A lockfile tells you what would be
-  installed; it does not tell you that version is clean.
+  installed; it does not tell you that version is clean. The cooldown is the
+  answer to that gap and it is a *waiting* strategy, not a detection one — it
+  works because someone else finds the compromise during the window, which means
+  it fails exactly when nobody is looking.
+- **The age bound is a lower bound from git, not a registry lookup.** A lockfile
+  untouched for thirty days proves its contents are at least thirty days old. It
+  proves nothing about a package whose *publish* date is recent but whose entry
+  in the lockfile is not — that case cannot arise, since a lockfile cannot name a
+  version that did not exist when it was written.
 - **It does not check signatures, provenance or advisories.** No network calls, by
   design — a screen that phones out is a screen that can be slow, rate-limited or
   wrong at the moment it matters.

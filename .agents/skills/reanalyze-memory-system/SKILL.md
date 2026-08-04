@@ -21,7 +21,10 @@ commit is exactly where a compromise would arrive — a `postinstall` added last
 week, a hook that was not there at the pin, a dependency range that resolved to
 something new. Screening once at first reading is worth nothing here. Compare the
 screen against the previous one where it matters: a new `RUNS` finding since the
-pin is itself a reason to slow down.
+pin is itself a reason to slow down, and a `FRESH` finding is close to guaranteed
+— a project that just moved has just changed its dependency surface, which is
+exactly the seven-day window the cooldown exists for. Re-reads are the common
+case for that finding, not the exception.
 
 It is not `add-memory-system`. There is no scaffolding, no new slug, no new
 homepage card. Read that skill for the report format, the capability
