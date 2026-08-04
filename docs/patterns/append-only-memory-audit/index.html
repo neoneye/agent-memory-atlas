@@ -296,6 +296,20 @@ around memory changes. <a
 href="../../systems/llm-wiki-memory/">llm-wiki-memory</a> uses git
 history for inspectable mutation groups — and demonstrates why audit
 history is not privacy erasure.</p>
+<p><a href="../../systems/nova-ai/">Nova AI</a> puts the log on the
+record and pays the scaling cost for it. <code>ensure_concept</code>
+seeds an <code>audit_log</code> array on every concept, and creation,
+sense upgrade, confidence change and relation add each append an entry
+carrying <code>old_value</code>, <code>new_value</code>, the source and
+a timestamp, mirrored to an external <code>logs/concepts.jsonl</code>.
+Exporting one concept exports its whole history, which is the placement
+NOOA argues for. The cost is visible in the same file: the store is one
+JSON document rewritten in full on every save, so the history that makes
+a concept auditable is also what a single confidence bump rewrites — and
+non-atomically. It is also the atlas's sharpest demonstration that an
+audit log is not a correction mechanism: Nova can say exactly when and
+from whom it learned something wrong, and has no code anywhere that
+removes it.</p>
 <p><a href="../../systems/memu/">memU</a> is the clean separation of the
 two halves, one of which is missing. Its event spool is careful about
 everything telemetry is usually careless about — an allowlist per event

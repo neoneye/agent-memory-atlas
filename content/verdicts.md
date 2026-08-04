@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 140 reports.**
+**This page covers all 141 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1317,3 +1317,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 149,000 lines across four deployable packages with Alembic migrations, Docker and a starter kit — and integration tests that need a graph database and a worker queue, so nothing here was run.
 - Study when: you are building tiered gates around model calls, or you want a third point on the spreading-activation axis beside NOOA Memory's ACT-R decay and HippoRAG's PageRank.
 - Do not copy when: "one strong path is enough" would be applied to belief rather than recall — a single low-cost chain is a good reason to look somewhere and a weak reason to believe something, and the graph does not distinguish.
+
+### `nova-ai`
+
+- Best idea: a relation is stored only after the user answers a spoken question — "may I remember that X is a kind of Y?" — with sense disambiguation asked first, so the only path from parsed language to a stored belief runs through a person, in the turn where they still have the context to answer.
+- Biggest risk: knowledge is strictly monotonic. Nothing anywhere removes a relation, a sense or a concept, and `find_contradictions` — which would notice the consequence — is called by nothing, so a wrong `is_a` is walked by every chained query forever and explained confidently each time.
+- Most reusable component: the correction quarantine — confirmed corrections live in their own file, are merged with the curated training set only in a local copy for the duration of a retrain, and are restored under `try/finally`, so the human-owned ground truth cannot be polluted by the machine's own learning.
+- Maturity impression: 25,000 lines of one author's carefully documented Python with an unusually detailed changelog, and 21 test files holding five assertions between them — the verification is a person's practice rather than the repository's, and it does not survive the person.
+- Study when: you want to see what correction machinery looks like when there is no model to blame; every epistemic decision here had to be written down because nothing could be delegated to a language model.
+- Do not copy when: literally — the licence is "Viewable, Not Reusable". Also when you need more than one user, since no scope key exists anywhere, or a store that survives an interrupted write, since the whole graph is rewritten non-atomically on every save.

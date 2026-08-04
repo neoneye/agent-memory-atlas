@@ -256,6 +256,24 @@ href="../../systems/openviking/">OpenViking</a> has merge operations but
 "no operator-facing review queue for contradictions". <a
 href="../../systems/holographic/">Holographic</a> surfaces
 contradictions as an ordinary query and only reports them.</p>
+<p><a href="../../systems/nova-ai/">Nova AI</a> is the limit case of the
+detect-only group and worth reading as one.
+<code>find_contradictions</code> checks a word's <code>is_a</code>
+parents against three hardcoded incompatible category groups and returns
+a reason per conflict — and it is invoked by nothing. One facade method
+re-exports it; no background pass, write-time check or command calls
+either. This is not a detector whose output is dropped downstream, which
+is the usual shape here; it is a detector with <strong>no downstream at
+all</strong>, in a system that otherwise gates every knowledge write on
+a human confirmation.</p>
+<p>The compounding is the instructive part. Even wiring a caller would
+only produce a report, because nothing anywhere in the repository
+removes a relation — the single removal path in 25,000 lines applies to
+user preferences, not to knowledge. Requirement 5 is unreachable rather
+than skipped. A reader deciding whether to build detection first should
+take the ordering from this: the disposition is what makes the detector
+worth writing, and building the detector first produces a repository
+that reads as though the problem is handled.</p>
 <p><a href="../../systems/memora/">Memora</a> sits between the two
 groups: it classifies pairs into a defined vocabulary including
 <code>contradicts</code> as an edge between two named memories, and its

@@ -169,6 +169,23 @@ operations but "no operator-facing review queue for contradictions".
 [Holographic](../../systems/holographic/) surfaces contradictions as an ordinary
 query and only reports them.
 
+[Nova AI](../../systems/nova-ai/) is the limit case of the detect-only group and
+worth reading as one. `find_contradictions` checks a word's `is_a` parents
+against three hardcoded incompatible category groups and returns a reason per
+conflict — and it is invoked by nothing. One facade method re-exports it; no
+background pass, write-time check or command calls either. This is not a detector
+whose output is dropped downstream, which is the usual shape here; it is a
+detector with **no downstream at all**, in a system that otherwise gates every
+knowledge write on a human confirmation.
+
+The compounding is the instructive part. Even wiring a caller would only produce
+a report, because nothing anywhere in the repository removes a relation — the
+single removal path in 25,000 lines applies to user preferences, not to
+knowledge. Requirement 5 is unreachable rather than skipped. A reader deciding
+whether to build detection first should take the ordering from this: the
+disposition is what makes the detector worth writing, and building the detector
+first produces a repository that reads as though the problem is handled.
+
 [Memora](../../systems/memora/) sits between the two groups: it classifies pairs
 into a defined vocabulary including `contradicts` as an edge between two named
 memories, and its correction pass defaults to a dry run — a report a human reads

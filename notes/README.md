@@ -140,6 +140,16 @@ when the work happens.
   a hosted service is not inspectable code. Five of eight clones carry no licence
   file at all, which is a caveat to state in section 1 rather than a reason to
   skip.
+- [2026-08-04-three-repositories-and-a-harness-that-is-not-memory.md](2026-08-04-three-repositories-and-a-harness-that-is-not-memory.md) —
+  three URLs, one report: Nova AI calls no model at all, gates every knowledge
+  write on a spoken question, quarantines corrections from its curated training
+  set — and still never built a delete, which is weak evidence that the
+  correction asymmetry is not about LLMs. The two refusals are chat apps whose
+  substance is a Claude Code harness beside them, and the closer one keeps
+  HMAC-signed cross-session state it can correct; refused anyway, because a phase
+  is not a claim that can be wrong. A harness that persists is not a memory that
+  believes. The sweep also found the repository count wrong by four, in a
+  sentence that carried three vintages at once.
 - [2026-08-04-a-third-review-and-the-second-invented-quotation.md](2026-08-04-a-third-review-and-the-second-invented-quotation.md) —
   a favourable Gang-of-Four comparison checked line by line: the intersection and
   stack arguments are read correctly and seven pattern names are quoted right,

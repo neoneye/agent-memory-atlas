@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 140 reports.</strong></p>
+<p><strong>This page covers all 141 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3078,6 +3078,37 @@ ACT-R decay and HippoRAG's PageRank.</li>
 belief rather than recall — a single low-cost chain is a good reason to
 look somewhere and a weak reason to believe something, and the graph
 does not distinguish.</li>
+</ul>
+<h3 id="nova-ai"><code>nova-ai</code></h3>
+<ul>
+<li>Best idea: a relation is stored only after the user answers a spoken
+question — "may I remember that X is a kind of Y?" — with sense
+disambiguation asked first, so the only path from parsed language to a
+stored belief runs through a person, in the turn where they still have
+the context to answer.</li>
+<li>Biggest risk: knowledge is strictly monotonic. Nothing anywhere
+removes a relation, a sense or a concept, and
+<code>find_contradictions</code> — which would notice the consequence —
+is called by nothing, so a wrong <code>is_a</code> is walked by every
+chained query forever and explained confidently each time.</li>
+<li>Most reusable component: the correction quarantine — confirmed
+corrections live in their own file, are merged with the curated training
+set only in a local copy for the duration of a retrain, and are restored
+under <code>try/finally</code>, so the human-owned ground truth cannot
+be polluted by the machine's own learning.</li>
+<li>Maturity impression: 25,000 lines of one author's carefully
+documented Python with an unusually detailed changelog, and 21 test
+files holding five assertions between them — the verification is a
+person's practice rather than the repository's, and it does not survive
+the person.</li>
+<li>Study when: you want to see what correction machinery looks like
+when there is no model to blame; every epistemic decision here had to be
+written down because nothing could be delegated to a language
+model.</li>
+<li>Do not copy when: literally — the licence is "Viewable, Not
+Reusable". Also when you need more than one user, since no scope key
+exists anywhere, or a store that survives an interrupted write, since
+the whole graph is rewritten non-atomically on every save.</li>
 </ul>
         </article>
       </div>

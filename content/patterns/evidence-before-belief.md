@@ -88,6 +88,18 @@ model guesses, unexecuted plans, and unverified assumptions explicitly forbidden
 direction: a lesson and its procedure are derived from the **same consolidator
 cluster** in one LLM call, so the how-to and the why cannot drift apart.
 
+[Nova AI](../../systems/nova-ai/) reaches the same separation with no model
+anywhere in the system, which makes the boundary unusually easy to see. A
+sentence parsed into a candidate relation is held in a single `pending_relation`
+and is **not stored**; it becomes a belief only when the user answers "ja" to a
+question asked in plain language — *"Mag ik onthouden dat 'X' is een soort van
+'Y'?"* — with the sense disambiguated first, by number, if the word has more than
+one. An unparseable answer re-asks rather than defaulting. Because there is no
+extractor to trust or distrust, the pattern here is not a defence against a
+model's confidence; it is just the recognition that a parse and a belief are
+different objects, and it costs one conversational turn taken at the moment the
+user still has the context to answer.
+
 [MemPalace](../../systems/mempalace/) remains the strongest verbatim-first design
 — extracted structures are navigation aids, drawers are authoritative.
 [Cognee](../../systems/cognee/) retains source data below its projections and can
