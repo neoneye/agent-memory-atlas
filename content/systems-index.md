@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **137 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **138 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -42,6 +42,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`claude-mem`](../systems/claude-mem/) **Claude-Mem** — Hook-native coding-agent memory · `thedotmack/claude-mem` · Scope enforced
 - [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
 - [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced
+- [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
 - [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Human review
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
 - [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`

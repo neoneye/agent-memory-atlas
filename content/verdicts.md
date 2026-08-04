@@ -628,6 +628,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want to hold an entire typed-memory design in your head at once, or you are deciding whether to split memory types across tables.
 - Do not copy when: you need any correction path, a scope beyond one conversation thread, or a licence.
 
+### `cognicore`
+
+- Best idea: `state TEXT DEFAULT 'candidate'` — a memory arrives unassessed rather than believed, which a confidence float cannot express, plus a utility ledger separating retrieved from used from *ignored*.
+- Biggest risk: scope is filtered in Python after the backend returns, so any limit the backend applied was applied to the unscoped set and a scoped read can silently come back short.
+- Most reusable component: the four column groups on `memory_entries` — content, epistemic, scope, and provenance-plus-utility — which put `creation_reason` and `source_component` in the schema rather than in a metadata blob.
+- Maturity impression: MIT, 79,439 lines, six backends behind one contract, a benchmark programme and a paper directory — beside fourteen loose `test_*.py` provider smoke files and two committed `.db` files at the repository root.
+- Study when: you want an epistemic state in the schema rather than in a prompt, or a retrieval feedback signal that records what the agent declined.
+- Do not copy when: the scope boundary has to hold under a limit, or you want a dependency rather than an environment.
+
 ### `echo-agent`
 
 - Best idea: `provenance_guard` — every memory records which write path created it, ranked `user_stated` 3, `consolidated` 2, `model_inferred` 1, unknown 0, and a write is refused unless the actor ranks at or above its target. A model-inferred claim cannot overwrite a fact the user stated, and the label belongs to the path rather than the payload, so the model cannot nominate its own output as user-stated.
