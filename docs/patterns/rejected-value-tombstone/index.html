@@ -97,7 +97,7 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong> Five
-systems of one hundred and forty-seven carry it: one invented it under
+systems of one hundred and forty-eight carry it: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, and one
 carries the mark without yet being characterised here. There is no
@@ -321,8 +321,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-one hundred and forty-seven would suggest a hard idea that a few teams
-reach independently. One of one hundred and forty-seven, plus one
+one hundred and forty-eight would suggest a hard idea that a few teams
+reach independently. One of one hundred and forty-eight, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -409,7 +409,34 @@ constraint</em>, because any discount on re-entry is paid off by
 repetition, and an extractor re-reading one old transcript looks exactly
 like a fact being independently restated. memsem's answer is that the
 user should pin what matters, which is a real answer that relocates the
-problem to whoever had to know in advance.</p>
+problem to whoever had to know in advance. <strong><a
+href="../../systems/memoryops-ai/">MemoryOps AI</a> is the closest any
+system here comes without arriving</strong>, and it is the best argument
+on this page that the expensive half of the pattern is not the hard
+half. Its records carry <code>normalized_content</code>, computed on
+write, persisted on every row, and already compared — the normalization
+this page's <em>Cost to adopt</em> section calls "where the real work
+is" is simply done. Deletion is a soft delete setting
+<code>deleted_at</code>, followed by a compaction pass.</p>
+<p>Then the lookup that would catch a returning value reads:</p>
+<pre class="python"><code>MemoryRecordORM.status == _ACTIVE,
+MemoryRecordORM.normalized_content == _norm(content),</code></pre>
+<p>A value that was deleted and is later re-asserted matches nothing,
+and lands as a new active memory with an audit entry that looks like a
+legitimate creation — because on its own terms it is one. <strong>The
+gap is one predicate wide</strong>: the same comparison run without the
+<code>active</code> filter, or a rejection table keyed on
+<code>(tenant_id, user_id, normalized_content)</code> consulted before
+activation.</p>
+<p>Worth holding beside the rest of that system, because it makes the
+page's central claim concrete. This is a project that enforces tenancy
+through Postgres row-level security, chains its audit per tenant so it
+cannot fork, holds sensitive writes for human approval, and commits eval
+cases that plant a cross-tenant memory before asserting it is
+unreachable. It is <em>more</em> careful than most of the corpus about
+what may enter. <strong>Admission and rejection are different problems,
+and building the first extremely well does not build the
+second.</strong></p>
 <ul>
 <li><a href="../../systems/gini-agent/">Gini</a> has a
 <code>rejected</code> <strong>status</strong> on a unit, which is closer

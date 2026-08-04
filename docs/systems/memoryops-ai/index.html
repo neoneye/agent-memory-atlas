@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A governed memory runtime whose
+tenancy is enforced by Postgres row-level security and whose audit is a
+per-tenant hash chain — with the normalized key a tombstone needs
+already computed, stored, and scoped to live rows only.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoryOps
+AI — Agent Memory Atlas">
+    <meta property="og:description" content="A governed memory runtime
+whose tenancy is enforced by Postgres row-level security and whose audit
+is a per-tenant hash chain — with the normalized key a tombstone needs
+already computed, stored, and scoped to live rows only.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoryOps
+AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A governed memory runtime
+whose tenancy is enforced by Postgres row-level security and whose audit
+is a per-tenant hash chain — with the normalized key a tombstone needs
+already computed, stored, and scoped to live rows only.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoryOps AI — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Governed memory as a runtime</p>
+          <h1>MemoryOps AI</h1>
+          <p class="document-deck">A governed memory runtime whose
+tenancy is enforced by Postgres row-level security and whose audit is a
+per-tenant hash chain — with the normalized key a tombstone needs
+already computed, stored, and scoped to live rows only.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/patibandlavenkatamanideep/memoryops-ai">
+              <span>Source</span>
+              <strong>patibandlavenkatamanideep/memoryops-ai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866" title="5f8a724b8bd00b1b9e66765a8119096682b7a866">
+              <span>Analyzed revision</span>
+              <code>5f8a724b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-04</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (62%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoryOps AI is a governed memory runtime — roughly 39,000 lines of
+Python and 3,300 of TypeScript across a monorepo, MIT-licensed, 169
+commits, with a published <code>memoryops-sdk</code> on PyPI and a
+hosted playground. Its README states the scope as governing <em>"what
+becomes memory, what enters context, what must be forgotten, what
+influenced an answer, and what evidence proves each decision"</em>,
+which is close to a restatement of this atlas's own rubric.</p>
+<p><strong>It was screened before it was read, and nothing in it was
+executed.</strong> The screen reported <strong>zero auto-run
+surfaces</strong> — no harness hooks, no devcontainer lifecycle, no
+direnv, no checkout filters — which is the cleanest result on that axis
+of any recently added system. It also reported five dependency surfaces
+changed one to two days ago, inside the seven-day cooldown, so this
+report is a read: no install, no test run, no demo.</p>
+<p><strong>Its tenancy is enforced by the database, which is rare
+here.</strong> <code>_scoped</code> opens every session with
+<code>app.tenant_id</code> and <code>app.user_id</code> set as
+transaction-local GUCs, and the docstring states the intent: the
+row-level security policies from migration 004 <em>"enforce tenant
+isolation at the database, not just in application code (defense in
+depth)"</em>. Most systems in this corpus apply a scope key as a query
+predicate and are one forgotten <code>WHERE</code> from a leak. Here a
+forgotten predicate is caught by a policy the application cannot
+bypass.</p>
+<p><strong>Its audit is a tamper-evident chain, serialised per
+tenant.</strong> <code>AuditLogORM</code> carries <code>action</code>,
+<code>reason</code>, <code>trace_id</code> and <code>prev_hash</code>;
+<code>AuditChainHeadORM</code> holds one head row per tenant so that, in
+the schema's own comment, <em>"audited mutations serialize onto one
+continuous chain instead of forking"</em>. The evidence package exposes
+<code>compute_entry_hash</code> and <code>verify_chain</code> against a
+<code>GENESIS</code> constant. A mutation record with a reason and a
+verifiable chain is both halves of the <a
+href="../../patterns/append-only-memory-audit/">append-only audit</a>
+pattern.</p>
+<p><strong>Writes are gated, and one outcome is a hold.</strong> The
+admission gate returns save, drop, block or
+<code>PENDING_APPROVAL</code>; a memory reaching the last of these gets
+<code>Status.pending</code> and an audit action of
+<code>memory_content_update_pending_approval</code>, and the governance
+routes expose approve and reject. Sensitive content is withheld rather
+than stored, which makes <code>pending</code> a genuine epistemic state
+rather than a lifecycle flag.</p>
+<p><strong>And the correction gap is the closest near-miss this atlas
+has recorded.</strong> Deletion is a soft delete plus a compaction pass,
+and the dedup lookup that would catch a returning value reads:</p>
+<pre class="python"><code>MemoryRecordORM.status == _ACTIVE,
+MemoryRecordORM.normalized_content == _norm(content),</code></pre>
+<p>The normalized key a <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> needs is <strong>already computed, already persisted on
+every row, and already used</strong> — it is simply scoped to live
+records. A value that was deleted and is then re-asserted matches
+nothing, and returns as a new active memory. The gap is one predicate
+wide.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A candidate is judged before it is stored, stored under a scope the
+database enforces, and every transition is chained into an audit that
+can be verified.</p>
+<pre class="mermaid"><code>flowchart TB
+    IN[&quot;candidate&quot;] --&gt; ADM{&quot;admission gate&quot;}
+    ADM --&gt;|&quot;block / drop&quot;| NO[&quot;never stored&lt;br/&gt;&lt;i&gt;audited with a reason&lt;/i&gt;&quot;]
+    ADM --&gt;|&quot;sensitive&quot;| PEND[&quot;status: pending&lt;br/&gt;governance approve / reject&quot;]
+    ADM --&gt;|&quot;save&quot;| ACT[&quot;status: active&lt;br/&gt;content + normalized_content&lt;br/&gt;confidence, sensitivity, weight&quot;]
+    PEND --&gt;|&quot;approved&quot;| ACT
+
+    ACT --&gt; RCL{&quot;recall gate&quot;}
+    RCL --&gt; OUT[&quot;output gate → answer&quot;]
+
+    ACT --&gt;|&quot;soft delete&quot;| DEL[&quot;deleted_at set&lt;br/&gt;compaction pass follows&quot;]
+    DEL -.-&gt;|&quot;re-asserted&quot;| ACT
+
+    ACT --&gt; AUD[(&quot;audit chain&lt;br/&gt;prev_hash → head per tenant&quot;)]
+    DEL --&gt; AUD
+    PEND --&gt; AUD
+    NO --&gt; AUD
+
+    style DEL fill:#f5e9e7,stroke:#a4553f</code></pre>
+<p>Every solid arrow is governed. The dotted one is not: nothing
+consults the deleted row when the same value arrives again, because the
+lookup that would is filtered to <code>active</code>.</p>
+<p>Worth stating plainly, because it is the interesting shape. This
+system is <em>better</em> than most of the corpus at deciding what may
+enter, and it is conventional at making a removal stay removed.
+Admission and rejection are different problems, and building the first
+well does not build the second.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A monorepo: <code>services/api</code> (FastAPI, the governed
+runtime), <code>services/worker</code>,
+<code>packages/memoryops-sdk</code> (published), <code>apps/web</code>
+(Next.js playground), <code>apps/playground</code> (Streamlit), plus
+<code>benchmark/</code>, <code>evals/</code>, <code>research/</code>,
+<code>paper/</code>, <code>contracts/</code>, <code>infra/</code> and
+<code>railway/</code>.</p>
+<p>Inside the API: <code>core/</code> (config, sensitivity),
+<code>services/</code> (admission gate, recall gate, output gate, write,
+update, policy broker, gateway, eval harness), <code>db/</code>
+(Postgres repo, memory repo, vector), <code>evidence/</code> (hash
+chain, reports), <code>auth/</code>, <code>economics/</code>,
+<code>observability/</code>, <code>loops/</code>,
+<code>workers/</code>.</p>
+<p><code>postgres_repo.py</code> is 907 lines and is where the
+interesting invariants live.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two postures, both documented. <code>MEMORYOPS_STORAGE=memory</code>
+runs the whole governed pipeline with no infrastructure and no keys —
+the README's 30-second path — and Postgres with pgvector is the
+production store where RLS applies. The distinction matters for a
+reader: the in-memory mode exercises the gates but not the database
+policies, so the strongest isolation guarantee is only present in the
+deployment that has a database.</p>
+<p>Two version tracks are declared and separated: a platform release
+(<code>v2.3</code>) and an additive-compatibility API+SDK contract
+(<code>1.x</code>). Naming those as different promises, in
+<code>docs/api-stability.md</code>, is more care than most projects here
+take with the word "version".</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="tenancy-enforced-below-the-application">Tenancy enforced below
+the application</h3>
+<pre class="python"><code>def _scoped(self, tenant_id: str, user_id: str = &quot;&quot;) -&gt; Iterator[Session]:
+    &quot;&quot;&quot;Open a session with the per-request RLS context set.
+
+    Sets ``app.tenant_id`` (and ``app.user_id``) as transaction-local GUCs so
+    the Row-Level Security policies in migration 004 enforce tenant isolation
+    at the database, not just in application code (defense in depth).
+    &quot;&quot;&quot;</code></pre>
+<p>Transaction-local, so the setting cannot leak across a pooled
+connection, and there is a <code>_validate_active_scope</code> check
+when a session is already open — guarding the case where nested work
+tries to operate under a different tenant than the one the outer
+transaction established.</p>
+<p>This atlas's <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> page distinguishes a key that is <em>stored</em> from one
+<em>applied on the read path</em>. This is a third and stronger
+position: the key is applied by a policy the query cannot omit. The
+comparable instance in the corpus is Memobase making scope structural
+through composite primary keys, so that a cross-tenant query is a schema
+error. RLS gets to the same place from the other direction — the query
+compiles fine and the database refuses to return the rows.</p>
+<h3 id="an-audit-chain-that-cannot-fork">An audit chain that cannot
+fork</h3>
+<p><code>prev_hash</code> on each entry is the ordinary part. The
+per-tenant head row is the considered one: without it, two concurrent
+mutations both read the same previous hash and produce two valid-looking
+chains, and a verifier following one never sees the other. Serialising
+through a head row makes the chain single-threaded per tenant by
+construction rather than by hoping writes do not race.</p>
+<p><code>verify_chain</code> and <code>compute_entry_hash</code> are
+exported from <code>evidence/</code>, so the chain is checkable by a
+caller rather than only by the writer — which is the difference between
+a tamper-evident log and a log that says it is one.</p>
+<h3 id="a-gate-whose-outcomes-include-not-yet">A gate whose outcomes
+include "not yet"</h3>
+<p>The admission decision space is save, drop, block and
+<code>PENDING_APPROVAL</code>, and the eval harness enumerates them as
+first-class kinds. <code>pending</code> is not a lifecycle stage on the
+way to storage; it is a state a memory can sit in while a person
+decides, reachable specifically for sensitive content, with approve and
+reject routes under <code>/governance</code>.</p>
+<p>Most systems in this corpus have a binary write path and discover the
+need for a hold later. Having <em>four</em> outcomes at admission — and
+distinguishing <code>drop</code> (not worth storing) from
+<code>block</code> (must not be stored) — is a vocabulary worth copying
+on its own.</p>
+<h3 id="the-tombstone-that-is-one-predicate-away">The tombstone that is
+one predicate away</h3>
+<p><code>find_by_normalized</code>-style lookup filters on
+<code>status == _ACTIVE</code>. Deletion sets <code>deleted_at</code>
+and leaves the row for a compaction pass. So:</p>
+<ol type="1">
+<li>A memory is stored with <code>normalized_content</code> computed and
+persisted.</li>
+<li>It is deleted; the row survives with a <code>deleted</code> status
+until compaction.</li>
+<li>The same content arrives again. The lookup sees no active
+match.</li>
+<li>It is stored as a new active memory, and the audit chain faithfully
+records a legitimate-looking creation.</li>
+</ol>
+<p>Nothing here is careless — every step is doing what it was written to
+do. What is absent is any record keyed on the <em>value</em> rather than
+the row, which the <a
+href="../../patterns/rejected-value-tombstone/">tombstone page</a>
+argues is the only thing that survives a writer which never saw the old
+record.</p>
+<p>The reason this instance is worth singling out: the expensive half of
+that pattern is normalization, and this system already has it.
+<code>normalized_content</code> is computed on write, persisted, indexed
+against, and used for exactly this kind of comparison. What is missing
+is not machinery but scope — a rejection table keyed on
+<code>(tenant_id, user_id, normalized_content)</code> consulted before
+activation, or the same lookup run without the <code>active</code>
+filter and a decision attached to a hit.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_records</code>: <code>id</code>, <code>tenant_id</code>,
+<code>user_id</code>, <code>memory_type</code>, <code>content</code>,
+<code>normalized_content</code>, <code>embedding</code>,
+<code>importance</code>, <code>confidence</code>,
+<code>sensitivity</code>, <code>status</code>, <code>source</code>,
+<code>extra_metadata</code>, <code>weight</code>,
+<code>reinforcement_count</code>, <code>revision</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>archived_at</code>, <code>deleted_at</code>.</p>
+<p>Around it: <code>memory_audit_logs</code> with <code>action</code>,
+<code>reason</code>, <code>trace_id</code>, <code>prev_hash</code>;
+<code>audit_chain_heads</code>; <code>loop_runs</code> and
+<code>loop_events</code>; <code>worker_leases</code> and
+<code>worker_runs</code>; <code>memory_settings</code>.</p>
+<p>Trust is several columns rather than one. <code>status</code> carries
+the discrete state, <code>confidence</code> the score,
+<code>sensitivity</code> the classification that drives the
+pending-approval path, <code>importance</code> and <code>weight</code>
+the ranking inputs, and <code>reinforcement_count</code> the repetition
+signal. Keeping the classification separate from the confidence is what
+lets sensitivity gate a write while confidence only ranks a read.</p>
+<p>Absent: validity time distinct from record time.
+<code>created_at</code>, <code>updated_at</code>,
+<code>archived_at</code> and <code>deleted_at</code> are all when the
+<em>system</em> did something; there is no column for when a fact was
+true in the world, so the <a
+href="../../patterns/bi-temporal-fact-validity/">bi-temporal</a> mark
+does not apply. And absent, as above, any value-keyed rejection.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Dense candidate search over pgvector behind a recall gate, then an
+output gate before the answer. The scope filter is the notable part and
+it is not in the query: candidates are constrained by RLS, so a recall
+path that forgot its tenant predicate returns nothing rather than
+everything.</p>
+<p><code>revision</code> on the record and a
+<code>reinforcement_count</code> suggest supersession and repetition
+both feed ranking, and the gateway composes the pipeline. What this
+report does not establish — because nothing was run — is how the gates
+behave under load or what fraction of candidates a typical recall
+drops.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Synchronous through the gateway: admission decides, the write service
+persists, the audit chain records. <code>update_service</code> handles
+content edits and carries a comment worth noting for its honesty — it
+explains that the alternative design, <em>"invalidate and mark pending
+for an async worker"</em>, is <strong>not yet safe</strong> because the
+dense candidate set would then contain an edited memory in an
+inconsistent state. Declining a design and writing down the reason is
+the kind of thing that usually only survives in a maintainer's head.</p>
+<p>Deletion is soft, followed by <code>compact_deleted_memory</code>.
+Loop and worker tables carry leases, which is the right shape for
+background work that must not run twice.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Postgres with pgvector, or nothing at all in the in-memory mode.
+Embedding and LLM calls sit behind <code>embeddings/</code> and
+<code>llm/</code> with prompts under <code>llm/prompts</code>, so the
+model cost is at admission and extraction rather than on the read path.
+The audit chain adds one row and one head update per mutation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A FastAPI service with an OpenAPI surface, a published PyPI SDK, a
+Next.js playground, a Streamlit app, and a live hosted demo.
+<code>contracts/</code> holds the API contract and
+<code>docs/api-stability.md</code> states the compatibility promise.</p>
+<p>The integration posture is a service rather than a library — the
+governance only means something if the application cannot go around it,
+and a process boundary is how that is enforced. That is consistent with
+the RLS choice: both are bets that guarantees belong below the
+caller.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Tenant isolation enforced by database policy</strong>, with
+transaction-local GUCs and a nested-scope validation, stated as defense
+in depth beside the application check.</li>
+<li><strong>A tamper-evident audit chain that cannot fork</strong>,
+serialised through a per-tenant head row, with <code>verify_chain</code>
+exported for callers.</li>
+<li><strong>Four admission outcomes</strong> — save, drop, block,
+pending-approval — with sensitive content held rather than stored.</li>
+<li><strong>A human approval surface</strong>, approve and reject under
+<code>/governance</code>, reachable from a real state rather than bolted
+on.</li>
+<li><strong>Committed adversarial and isolation eval cases</strong>,
+discussed below.</li>
+<li><strong>A declined design with its reason recorded</strong> in
+<code>update_service</code>.</li>
+<li><strong>Two version tracks named and separated</strong>, platform
+release from API contract.</li>
+<li><strong>A keyless in-memory mode</strong>, so the pipeline is
+exercisable without infra.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No value-keyed rejection.</strong> Deletion is record-keyed
+and the dedup lookup is filtered to active rows, so a re-asserted value
+returns as new.</li>
+<li><strong>No validity time</strong> apart from record time.</li>
+<li><strong>The strongest guarantee is deployment-dependent.</strong>
+RLS protects the Postgres deployment; the in-memory mode the quickstart
+recommends has application-level scoping only, and a reader could easily
+carry the stronger claim across.</li>
+<li><strong>Nothing here was run</strong>, so every behavioural claim in
+this report is read from code rather than observed.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The committed eval sets are the strongest part of the verification
+story, and they are the kind this atlas's <a
+href="../../benchmarks/">benchmarks page</a> asks for rather than the
+kind it complains about:</p>
+<ul>
+<li><code>evals/adversarial_cases.json</code> — 18 cases, each with a
+<code>kind</code>. The <code>block</code> cases assert that particular
+content must <strong>not</strong> be stored, with the first being an API
+key: <em>"Remember that my API key is
+sk-test-123456789abcdefghij."</em></li>
+<li><code>evals/tenant_isolation_cases.json</code> — 16 cases that
+<strong>plant</strong> a memory under one tenant and assert it is not
+reachable from another. Planting the material and then asserting its
+absence is a materially stronger test than asserting a filter was
+applied.</li>
+<li><code>evals/golden_memory_cases.json</code>, plus
+<code>run_evals.py</code> and <code>run_extraction_quality.py</code>,
+and a <code>research/extraction_eval</code> tree.</li>
+</ul>
+<p><code>eval_harness.py</code> maps case kinds to decisions —
+<code>save</code>, <code>drop</code>, <code>block</code>,
+<code>pending</code> — so the eval vocabulary and the runtime vocabulary
+are the same one, which is why the <code>negative_eval</code> mark
+applies without argument.</p>
+<p>The test tree is substantial: 777 lines on memory-route
+authorization, 613 on sensitivity classification, 555 on RBAC, 497 on
+the governance API, 492 on deletion. There is a CI badge and a separate
+benchmark workflow.</p>
+<p><strong>None of it was executed for this review</strong>, and the
+reason is recorded rather than glossed: the screen found five dependency
+surfaces changed one to two days ago, inside the cooldown, and
+installing from a tree in that window is the specific thing the cooldown
+exists to prevent. A later reading, past the window, could run the eval
+sets — and <code>test_deletion.py</code> at 492 lines is the file that
+would settle whether the re-assertion path above behaves as this report
+reads it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Push tenancy into the database.</strong> RLS with
+transaction-local GUCs means a forgotten predicate returns nothing
+instead of everything. Application-level scoping is one code review away
+from a leak; a policy is not.</li>
+<li><strong>Serialise your audit chain through a head row.</strong>
+Without it, concurrent mutations fork the chain into two valid-looking
+histories and a verifier following one never learns about the
+other.</li>
+<li><strong>Export the verifier.</strong> A chain a caller can check is
+tamper-evident; a chain only the writer can check is a claim.</li>
+<li><strong>Give admission four outcomes, not two.</strong> Separating
+<em>drop</em> (not worth keeping) from <em>block</em> (must not be kept)
+from <em>pending</em> (someone must decide) gives the audit log
+something meaningful to record.</li>
+<li><strong>Plant the memory, then assert it is unreachable.</strong>
+The tenant-isolation cases here test the property rather than the
+mechanism, which survives a refactor that changes how filtering
+works.</li>
+<li><strong>Write down the design you rejected and why</strong>, next to
+the code that would have changed. <code>update_service</code>'s note on
+why async invalidation is not yet safe is worth more than a ticket.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Filtering your dedup lookup to active rows</strong> when the
+same lookup would otherwise catch a returning deleted value. The
+normalization is the expensive part and it is already done; scoping it
+to live records throws the benefit away at the last step.</li>
+<li><strong>Letting the quickstart mode be weaker than the documented
+guarantee.</strong> If the strongest isolation only exists with
+Postgres, the in-memory path a reader actually runs should say so where
+they will see it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right if governance is the requirement and multi-tenancy is real: the
+isolation story is the strongest in this atlas by mechanism, the audit
+is verifiable by a caller, and the admission vocabulary is richer than
+most. The service posture and the published SDK mean it can sit in front
+of an application rather than inside it, which is the only arrangement
+in which the guarantees hold.</p>
+<p>Wrong if you need a deletion that stays deleted against an automatic
+writer. The machinery to fix that is present and unused, which makes
+this a good system to adopt and a bad one to assume is complete — read
+<code>postgres_repo.py</code>'s lookups before relying on a
+<code>forget</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Would a rejection keyed on
+<code>(tenant_id, user_id, normalized_content)</code> fit, given the
+column already exists and is already compared?</li>
+<li>Does <code>compact_deleted_memory</code> remove the row entirely,
+and if so does the audit chain retain enough to answer a later "was this
+ever rejected"?</li>
+<li>What does the in-memory mode do about scope, and is the difference
+from the RLS deployment documented anywhere a quickstart reader would
+meet it?</li>
+<li><code>revision</code> and <code>reinforcement_count</code> both
+exist — which one drives supersession, and can a re-asserted deleted
+value inherit either?</li>
+<li>The paper harness and <code>research/extraction_eval</code> suggest
+published numbers; are the results committed alongside the harness?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store and invariants:
+<code>services/api/app/db/postgres_repo.py</code> (<code>_scoped</code>,
+<code>_validate_active_scope</code>, <code>soft_delete</code>,
+<code>compact_deleted_memory</code>, the normalized-content lookup),
+<code>db/memory_repo.py</code>, <code>db/entities.py</code>.</li>
+<li>Model: <code>services/api/app/models/sqlalchemy_models.py</code>
+(<code>MemoryRecordORM</code>, <code>AuditLogORM</code>,
+<code>AuditChainHeadORM</code>, loop and worker tables).</li>
+<li>Gates and services: <code>services/api/app/services/</code>
+(<code>admission_gate.py</code>, <code>recall_gate.py</code>,
+<code>output_gate.py</code>, <code>write_service.py</code>,
+<code>update_service.py</code>, <code>policy_broker.py</code>,
+<code>gateway.py</code>, <code>eval_harness.py</code>).</li>
+<li>Evidence: <code>services/api/app/evidence/</code>
+(<code>hashchain.py</code>, <code>compute_entry_hash</code>,
+<code>verify_chain</code>, <code>GENESIS</code>).</li>
+<li>Sensitivity and config:
+<code>services/api/app/core/sensitivity.py</code>,
+<code>core/config.py</code>.</li>
+<li>Evals: <code>evals/adversarial_cases.json</code>,
+<code>evals/tenant_isolation_cases.json</code>,
+<code>evals/golden_memory_cases.json</code>,
+<code>evals/run_evals.py</code>,
+<code>research/extraction_eval/</code>.</li>
+<li>Tests: <code>services/api/tests/</code>
+(<code>test_memory_route_authorization.py</code>,
+<code>test_sensitivity_classification.py</code>,
+<code>test_api_rbac.py</code>, <code>test_governance_api.py</code>,
+<code>test_deletion.py</code>).</li>
+<li>SDK and apps: <code>packages/memoryops-sdk/</code>,
+<code>apps/web/</code>, <code>apps/playground/</code>.</li>
+<li>Licence: <code>LICENSE</code> (MIT).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-04</strong> — <a
+href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866"><code class="commit-id" title="5f8a724b8bd00b1b9e66765a8119096682b7a866">5f8a724b…</code></a>
+— first reading, and the first report produced under the screening
+workflow. <code>scripts/screen_repo.py</code> reported <strong>zero
+auto-run surfaces</strong> and five dependency surfaces changed one to
+two days ago, inside the seven-day cooldown; the tree was therefore read
+and <strong>nothing in it was executed</strong> — no install, no tests,
+no demo. Every behavioural claim here is read from code rather than
+observed, and the eval sets remain unrun.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

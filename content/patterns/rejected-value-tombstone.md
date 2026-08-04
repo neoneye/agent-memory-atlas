@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Five systems of one hundred and forty-seven
+> **This is not an established best practice.** Five systems of one hundred and forty-eight
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, and one carries the mark without yet being characterised here.
@@ -177,9 +177,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and forty-seven
+That makes the negative result stronger rather than weaker. Two of one hundred and forty-eight
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and forty-seven, plus one adoption by a reader who went looking, suggests an idea
+one hundred and forty-eight, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -260,6 +260,35 @@ and an extractor re-reading one old transcript looks exactly like a fact being
 independently restated. memsem's answer is that the user should pin what matters,
 which is a real answer that relocates the problem to whoever had to know in
 advance.
+**[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
+without arriving**, and it is the best argument on this page that the expensive
+half of the pattern is not the hard half. Its records carry
+`normalized_content`, computed on write, persisted on every row, and already
+compared — the normalization this page's *Cost to adopt* section calls "where the
+real work is" is simply done. Deletion is a soft delete setting `deleted_at`,
+followed by a compaction pass.
+
+Then the lookup that would catch a returning value reads:
+
+```python
+MemoryRecordORM.status == _ACTIVE,
+MemoryRecordORM.normalized_content == _norm(content),
+```
+
+A value that was deleted and is later re-asserted matches nothing, and lands as a
+new active memory with an audit entry that looks like a legitimate creation —
+because on its own terms it is one. **The gap is one predicate wide**: the same
+comparison run without the `active` filter, or a rejection table keyed on
+`(tenant_id, user_id, normalized_content)` consulted before activation.
+
+Worth holding beside the rest of that system, because it makes the page's central
+claim concrete. This is a project that enforces tenancy through Postgres
+row-level security, chains its audit per tenant so it cannot fork, holds
+sensitive writes for human approval, and commits eval cases that plant a
+cross-tenant memory before asserting it is unreachable. It is *more* careful than
+most of the corpus about what may enter. **Admission and rejection are different
+problems, and building the first extremely well does not build the second.**
+
 - [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
   is closer than most, but nothing keyed on the value: an equivalent claim can be
   retained again under a new id.

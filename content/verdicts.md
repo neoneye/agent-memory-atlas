@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 147 reports.**
+**This page covers all 148 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1380,3 +1380,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 634 lines with atomic persistence and a required covenant enforced in the constructor — and `pyproject.toml` is invalid TOML, a root `amity.py` shadows the packaged module byte for byte, and the README calls the committed passing tests "not present yet".
 - Study when: you want to see admission control treated as an ethical mechanism rather than a rate limiter, in a codebase small enough to read in one sitting.
 - Do not copy when: you need a memory. Recall is a timestamp filter over a bounded deque whose evictions are uncounted, in the one buffer whose contents are the product.
+
+### `memoryops-ai`
+
+- Best idea: tenancy enforced by Postgres row-level security through transaction-local GUCs, so a recall path that forgets its tenant predicate returns nothing instead of everything — the strongest isolation mechanism in this atlas, and stated in the code as defense in depth beside the application check.
+- Biggest risk: deletion is record-keyed. `soft_delete` sets `deleted_at` and the dedup lookup is filtered to active rows, so a value that was deleted and is later re-asserted returns as a new active memory — while `normalized_content`, the key that would stop it, is already computed, persisted and compared.
+- Most reusable component: the audit chain serialised through a per-tenant head row, so concurrent mutations cannot fork it into two valid-looking histories, with `verify_chain` exported so a caller rather than the writer can check it.
+- Maturity impression: 39,000 lines of Python across a monorepo with a published SDK, a hosted demo, RLS migrations, and eval sets that plant a cross-tenant memory before asserting it is unreachable — none of it run for this review, because five dependency surfaces were inside the seven-day cooldown.
+- Study when: multi-tenancy is real and you want to see governance placed below the caller rather than beside it.
+- Do not copy when: you need a deletion that stays deleted against an automatic writer; the machinery for that is present and unused.

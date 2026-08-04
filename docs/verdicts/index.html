@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 147 reports.</strong></p>
+<p><strong>This page covers all 148 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3278,6 +3278,32 @@ in one sitting.</li>
 <li>Do not copy when: you need a memory. Recall is a timestamp filter
 over a bounded deque whose evictions are uncounted, in the one buffer
 whose contents are the product.</li>
+</ul>
+<h3 id="memoryops-ai"><code>memoryops-ai</code></h3>
+<ul>
+<li>Best idea: tenancy enforced by Postgres row-level security through
+transaction-local GUCs, so a recall path that forgets its tenant
+predicate returns nothing instead of everything — the strongest
+isolation mechanism in this atlas, and stated in the code as defense in
+depth beside the application check.</li>
+<li>Biggest risk: deletion is record-keyed. <code>soft_delete</code>
+sets <code>deleted_at</code> and the dedup lookup is filtered to active
+rows, so a value that was deleted and is later re-asserted returns as a
+new active memory — while <code>normalized_content</code>, the key that
+would stop it, is already computed, persisted and compared.</li>
+<li>Most reusable component: the audit chain serialised through a
+per-tenant head row, so concurrent mutations cannot fork it into two
+valid-looking histories, with <code>verify_chain</code> exported so a
+caller rather than the writer can check it.</li>
+<li>Maturity impression: 39,000 lines of Python across a monorepo with a
+published SDK, a hosted demo, RLS migrations, and eval sets that plant a
+cross-tenant memory before asserting it is unreachable — none of it run
+for this review, because five dependency surfaces were inside the
+seven-day cooldown.</li>
+<li>Study when: multi-tenancy is real and you want to see governance
+placed below the caller rather than beside it.</li>
+<li>Do not copy when: you need a deletion that stays deleted against an
+automatic writer; the machinery for that is present and unused.</li>
 </ul>
         </article>
       </div>
