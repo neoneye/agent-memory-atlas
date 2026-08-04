@@ -31,7 +31,7 @@ of which 551 are SQL and 257 are a JavaScript client. MIT-licensed. There is one
 table, five functions, ten indexes, and a set of design decisions argued for in
 comments at a density most large systems never reach.
 
-**It has genuine bi-temporal validity**, which twelve of one hundred and forty-five systems
+**It has genuine bi-temporal validity**, which twelve of one hundred and forty-six systems
 here do. `created_at` and `updated_at` are record time; `valid_from` and `valid_until`
 are when the fact was true; `expires_at` is a separate hard TTL for ephemeral
 rows. `memory_history()` returns all three alongside `superseded_by` and computes

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 145 reports.**
+**This page covers all 146 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1362,3 +1362,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 21,000 lines with 7,600 lines of tests, a claim register that marks its own claims `Unsupported` and "Rejected for now", a research journal of negative results, and two of four deployment tiers published as losing — one below the no-memory baseline.
 - Study when: governance is your actual problem, or you want to see what a defensible claim looks like when the repository itself fails CI if the README drifts.
 - Do not copy when: you need erasure that stops content entering the store rather than leaving it — this suppresses at read, so the store retains what a subject asked to erase.
+
+### `argo`
+
+- Best idea: retrieval that fails closed when the embedding index is not qualified, and a write that cannot report success when indexing failed — both asserted by committed acceptance cases rather than described, in a suite of architecture fitness functions running four times the volume of the implementation it covers.
+- Biggest risk: the graph is a projection, not a memory. `clearGraph` wipes it with `DETACH DELETE` and re-creates every node on each sync, so there is no supersession, history, status or audit anywhere in the store; correction lives in a JSON file and whatever review surrounds it.
+- Most reusable component: the ArchiMate 3.2 rule engine — a constrained relationship vocabulary means a malformed architectural claim is refused by a rule rather than caught in review, which is the schema doing work free-text extraction cannot.
+- Maturity impression: 861 commits, 27,152 lines of tests to 6,674 of graph-rag implementation, a 54 KB design document for one subsystem — and the suite is red at HEAD, 114 passed and 8 failed, including its own credential boundary.
+- Study when: you already model your system and want an agent that can query architecture instead of re-deriving it, or you want to see architecture fitness functions used as a delivery gate.
+- Do not copy when: you need a general-purpose store. The memory here is one project's architecture model, and adopting it means adopting the modelling practice first.
