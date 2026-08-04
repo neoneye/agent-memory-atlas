@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 146 reports.**
+**This page covers all 147 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1371,3 +1371,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 861 commits, 27,152 lines of tests to 6,674 of graph-rag implementation, a 54 KB design document for one subsystem — and the suite is red at HEAD, 114 passed and 8 failed, including its own credential boundary.
 - Study when: you already model your system and want an agent that can query architecture instead of re-deriving it, or you want to see architecture fitness functions used as a delivery gate.
 - Do not copy when: you need a general-purpose store. The memory here is one project's architecture model, and adopting it means adopting the modelling practice first.
+
+### `sovereign`
+
+- Best idea: refusal as a first-class outcome — energy cost scaled by priority, a boundary that clears only past the threshold plus a margin so it cannot flap, a hard floor, and a returned reason string that lets a caller tell a refusal from a failure from an empty result.
+- Biggest risk: an episode has no identifier, and no update, delete, forget or supersede exists anywhere in the module, so nothing stored can be corrected — the question this atlas asks has no place to be asked rather than a bad answer.
+- Most reusable component: the hysteresis. Clearing a boundary at `threshold + 0.1` rather than at `threshold` is two characters and removes an entire class of flapping, and it applies to any boundary crossed repeatedly.
+- Maturity impression: 634 lines with atomic persistence and a required covenant enforced in the constructor — and `pyproject.toml` is invalid TOML, a root `amity.py` shadows the packaged module byte for byte, and the README calls the committed passing tests "not present yet".
+- Study when: you want to see admission control treated as an ethical mechanism rather than a rate limiter, in a codebase small enough to read in one sitting.
+- Do not copy when: you need a memory. Recall is a timestamp filter over a bounded deque whose evictions are uncounted, in the one buffer whose contents are the product.
