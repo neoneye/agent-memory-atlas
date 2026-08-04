@@ -140,6 +140,14 @@ when the work happens.
   a hosted service is not inspectable code. Five of eight clones carry no licence
   file at all, which is a caveat to state in section 1 rather than a reason to
   skip.
+- [2026-08-04-a-third-review-and-the-second-invented-quotation.md](2026-08-04-a-third-review-and-the-second-invented-quotation.md) —
+  a favourable Gang-of-Four comparison checked line by line: the intersection and
+  stack arguments are read correctly and seven pattern names are quoted right,
+  but the closer claims five maintainers merged code against the rubric and no
+  report, verdict or note records a single one — the only adoption the atlas can
+  evidence is RainBox, its own repository. Two of three reviews now invent their
+  final sentence at the point of maximum claimed evidence, which makes the error
+  location predictable rather than anecdotal.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
