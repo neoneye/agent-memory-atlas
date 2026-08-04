@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 125 of 147 screened.**
+**Progress: 130 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 41 |
+| Repositories with an auto-run surface (`RUNS`) | 43 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 26 |
-| Repositories with build-time execution (`EXEC`) | 94 |
+| Repositories with build-time execution (`EXEC`) | 97 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -65,4 +65,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
+| [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 
