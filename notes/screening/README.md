@@ -8,13 +8,13 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 120 of 147 screened.**
+**Progress: 125 of 147 screened.**
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 38 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 24 |
-| Repositories with build-time execution (`EXEC`) | 90 |
+| Repositories with an auto-run surface (`RUNS`) | 41 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 26 |
+| Repositories with build-time execution (`EXEC`) | 94 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -62,4 +62,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
+| [`provem`](../../content/systems/provem.md) | `.gitattributes` |
+| [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
+| [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 
