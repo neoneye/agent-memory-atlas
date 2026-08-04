@@ -179,7 +179,7 @@ reasoning engine. There is no server, no container, no vector service.
 - **`workspace/think/think.mjs`** — background cognition as a long-lived process
   under launchd/systemd (`com.helm.think`), ticking every
   `THINK_INTERVAL_MIN` (default 15).
-- **`workspace/tools/`** — a JSON registry of 138 shell-out tools, two of which
+- **`workspace/tools/`** — a JSON registry of 139 shell-out tools, two of which
   are `memory.remember` and `memory.recall`.
 - **`workspace/sessions.mjs`** — a second SQLite file mapping the single key
   `'owner'` to a Claude Code session id for `--resume`.

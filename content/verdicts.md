@@ -637,6 +637,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want an epistemic state in the schema rather than in a prompt, or a retrieval feedback signal that records what the agent declined.
 - Do not copy when: the scope boundary has to hold under a limit, or you want a dependency rather than an environment.
 
+### `alma-memory`
+
+- Best idea: an anti-pattern table carrying `why_bad` and `better_alternative` beside the pattern itself — the only place in this corpus where a correction record holds both the reason and the replacement.
+- Biggest risk: `VerificationStatus` — verified, uncertain, contradicted, unverifiable — is computed at retrieval and never written to any column, so nothing can query for contradicted memories, no pass can act on them, and the same contradiction is re-derived on every read.
+- Most reusable component: `VerificationMethod`, which separates checked-against-an-authority from checked-against-our-own-memories from guessed-from-a-number — three claims most systems collapse into one score.
+- Maturity impression: 106,594 lines on PyPI, MIT in the manifest with no LICENSE file in the tree, and one schema maintained by hand in two dialects with nothing comparing them.
+- Study when: you want a memory that learns operating heuristics from task outcomes, or the richest worked example of storing what not to do.
+- Do not copy when: an epistemic judgement has to persist beyond the call that produced it.
+
 ### `echo-agent`
 
 - Best idea: `provenance_guard` — every memory records which write path created it, ranked `user_stated` 3, `consolidated` 2, `model_inferred` 1, unknown 0, and a write is refused unless the actor ranks at or above its target. A model-inferred claim cannot overwrite a fact the user stated, and the label belongs to the path rather than the payload, so the model cannot nominate its own output as user-stated.
