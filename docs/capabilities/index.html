@@ -157,7 +157,7 @@ material must <em>not</em> be retrieved — the assertion every scope,
 deletion and correction claim in this atlas ultimately rests on. Read
 together rather than one at a time, they split cleanly in two, and the
 split says more than the count.</p>
-<p><strong>Four assert a boundary:</strong> that a principal cannot
+<p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
 creates a memory under one scope, searches under another, and asserts
@@ -175,12 +175,16 @@ three records under <code>/other/scope</code>,
 <code>/crew/crew-a/inner</code> and <code>/crew/crew-b/inner</code>, a
 <code>Memory</code> opened with <code>root_scope="/crew/crew-a"</code>,
 and an assertion that recall returns exactly one result and it is the
-rooted one.</p>
-<p>All four of those systems also hold <code>scope_enforced</code>.
+rooted one. <a href="../systems/csm/">CSM</a> asserts the degenerate
+case the other four leave implicit: <code>searchMemories</code> called
+in project mode with <em>no</em> project id must return <code>[]</code>,
+with the assertion message spelling out the intent — <em>"project mode
+without a project ID must fail closed"</em>.</p>
+<p>All five of those systems also hold <code>scope_enforced</code>.
 Their negative suites are therefore tests <strong>of a capability the
 same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
-<p><strong>Nine assert about content:</strong> that particular material
+<p><strong>Ten assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
 asking. <a href="../systems/open-cowork/">open-cowork</a>'s
 <code>forbiddenHits</code> is an eval-harness field naming what a query
@@ -193,26 +197,34 @@ N.E.K.O.</a>'s <code>test_hard_filter_drops_negative_score</code>
 asserts that an entry the user <em>disputed</em> is dropped before the
 rerank, the docstring giving the reason: <em>"Stage-2 would either
 reinforce the dispute or, worse, cancel it."</em> <a
-href="../systems/helm/">Helm</a> is the fourth and the weakest of them:
-its supersede case asserts <code>recall</code> returns exactly one
-active row and fails with "recall returned old value" if the replaced
-one appears. The value is still in the table and still readable through
+href="../systems/helm/">Helm</a> is the weakest of them: its supersede
+case asserts <code>recall</code> returns exactly one active row and
+fails with "recall returned old value" if the replaced one appears. The
+value is still in the table and still readable through
 <code>history</code>, so this is a genuine read-path exclusion — but it
 covers <em>replacement</em> only. Helm's other two exits,
 <code>forget</code> and the confidence-floor prune, are hard deletes
 with nothing asserted about them, which is the case where a
 re-derivation would actually reinstate the value. <a
-href="../systems/agno/">Agno</a> is the same shape against a judged
-verdict — a retired fact absent from <code>live_facts()</code> while
-both rows remain in the record. The <a
-href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> is the
-sixth and asserts it about the <em>prompt</em> rather than the store:
+href="../systems/agent-afk/">agent-afk</a>'s
+<code>it('excludes superseded facts from search')</code> asserts the
+same about its FTS path, and <a href="../systems/agno/">Agno</a> is the
+same shape against a judged verdict — a retired fact absent from
+<code>live_facts()</code> while both rows remain in the record. The <a
+href="../systems/pydantic-ai-harness/">Pydantic AI Harness</a> asserts
+it about the <em>prompt</em> rather than the store:
 <code>test_delete_existing_is_content_free</code> requires a deleted
 body to be absent from the tool result, a search test requires
 <code>all('secret' not in repr(match))</code> under a character budget,
 and two injection tests require a superseded line and a stale fact not
-to appear in the captured model context.</p>
-<p><strong>Only these nine probe the question the atlas is actually
+to appear in the captured model context. <a
+href="../systems/graphify/">Graphify</a> adds the cheapest version of
+the shape and one nobody else has:
+<code>test_negative_only_node_absent_from_sources</code> asserts that a
+source cited only by answers marked <code>dead_end</code> appears in
+none of the three lesson lists — a <em>source</em> that failed rather
+than a <em>value</em> that was rejected.</p>
+<p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
 Eleven of one hundred and forty-eight is the real figure for the second
@@ -240,10 +252,11 @@ that synchronize row deletion across stores — not a rejected-value
 tombstone.</li>
 <li><a href="../systems/mercury-agent/">Mercury</a> grades confidence
 three ways and has no discrete state.</li>
-<li>Of the four trust-state systems, only <a
+<li>Most trust-state systems stop short of the state that matters. <a
 href="../systems/verel/">Verel</a>, <a
-href="../systems/rainbox/">RainBox</a> and <a
-href="../systems/gini-agent/">Gini</a> carry an explicitly
+href="../systems/rainbox/">RainBox</a>, <a
+href="../systems/gini-agent/">Gini</a> and <a
+href="../systems/memsem/">memsem</a> carry an explicitly
 <em>rejected</em> state; <a href="../systems/magic-context/">Magic
 Context</a> qualifies on <code>stale</code> and
 <code>flagged</code>.</li>
@@ -259,12 +272,17 @@ git, which is a real mechanism and a different one.</li>
 <li><a href="../systems/memanto/">Memanto</a> resolves conflicts with a
 human and then deletes without a tombstone — the most carefully reasoned
 correction in the atlas, and the next extraction pass may undo it.</li>
-<li><a href="../systems/daimon/">Daimon</a> is the weakest of the three
+<li><a href="../systems/daimon/">Daimon</a> is the weakest of the
 tombstones, and the flag is granted on mechanism rather than on
 hardening: it suppresses on the read path rather than refusing the
 write, and its key is a hash of the item's exact text, so a paraphrase
 defeats it where Verel's normalized key would not. It is also the only
 holder with no test that re-asserts a forgotten value.</li>
+<li><a href="../systems/memsem/">memsem</a> is the near-miss in the
+other direction: its suppression table refuses the write and is keyed on
+the normalised value, and nothing but a human rejecting a candidate ever
+writes a row into it, so its own automatic supersession path reaches the
+store ungated.</li>
 </ul>
         </article>
       </div>

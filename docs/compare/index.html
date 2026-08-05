@@ -5850,23 +5850,31 @@ near-misses are frequently the interesting part:</p>
 <li><a href="../systems/claude-mem/"><code>claude-mem</code></a> has
 "tombstones" that synchronize row deletion across stores, which is not a
 rejected-value tombstone.</li>
-<li>The three tombstones are not equal. <a
-href="../systems/verel/"><code>verel</code></a> and <a
+<li>The tombstones are not equal, and they divide on where the check
+runs. <a href="../systems/verel/"><code>verel</code></a> and <a
 href="../systems/rainbox/"><code>rainbox</code></a> normalize the value
 and refuse the <em>write</em>; <a
+href="../systems/memsem/"><code>memsem</code></a> also refuses the
+write, from a table only a human rejection can populate, leaving its
+automatic supersession path ungated. <a
 href="../systems/daimon/"><code>daimon</code></a> keys on a hash of the
-item's exact text and suppresses on every <em>read</em> path — briefing,
-carry and index deletion alike. For a byte-identical re-extraction the
-effect is the same, and a paraphrase defeats the third but not the first
-two. Its own test suite never exercises re-assertion after a forget, so
-the mechanism is read, not demonstrated.</li>
+item's exact text and <a
+href="../systems/provem/"><code>provem</code></a> on a normalized token
+subset, and both suppress on the <em>read</em> path instead. For a
+byte-identical re-extraction the effect is the same; a paraphrase
+defeats Daimon's key and not the others. Daimon's own test suite never
+exercises re-assertion after a forget, so that mechanism is read, not
+demonstrated.</li>
 <li><a href="../systems/mercury-agent/"><code>mercury-agent</code></a>
 grades confidence three ways but has no discrete state.</li>
-<li>Of the four trust-state systems, only <a
+<li>Most trust-state systems stop short of the state that matters. <a
 href="../systems/verel/"><code>verel</code></a>, <a
-href="../systems/rainbox/"><code>rainbox</code></a> and <a
-href="../systems/gini-agent/"><code>gini-agent</code></a> carry an
-explicitly <strong>rejected</strong> state. <a
+href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/gini-agent/"><code>gini-agent</code></a> and <a
+href="../systems/memsem/"><code>memsem</code></a> carry an explicitly
+<strong>rejected</strong> state — memsem's as a suppression row a human
+rejection writes, and a pending/approved/rejected status on the
+candidate it came from. <a
 href="../systems/magic-context/"><code>magic-context</code></a>
 qualifies on <code>stale</code> and <code>flagged</code> — states that
 withhold a memory from being trusted — and it is the one system here

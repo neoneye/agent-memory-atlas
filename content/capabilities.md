@@ -68,7 +68,7 @@ scope, deletion and correction claim in this atlas ultimately rests on. Read tog
 rather than one at a time, they split cleanly in two, and the split says more
 than the count.
 
-**Four assert a boundary:** that a principal cannot retrieve another
+**Five assert a boundary:** that a principal cannot retrieve another
 principal's material. [MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`
 creates a memory under one scope, searches under another, and asserts the id is
 absent. [Aukora Kernel](../systems/aukora-kernel/) does it better — an unrelated
@@ -81,13 +81,16 @@ repeated for two agent owners sharing a keyword. [CrewAI](../systems/crewai/)
 does it over a path hierarchy: three records under `/other/scope`,
 `/crew/crew-a/inner` and `/crew/crew-b/inner`, a `Memory` opened with
 `root_scope="/crew/crew-a"`, and an assertion that recall returns exactly one
-result and it is the rooted one.
+result and it is the rooted one. [CSM](../systems/csm/) asserts the degenerate
+case the other four leave implicit: `searchMemories` called in project mode with
+*no* project id must return `[]`, with the assertion message spelling out the
+intent — *"project mode without a project ID must fail closed"*.
 
-All four of those systems also hold `scope_enforced`. Their negative suites are
+All five of those systems also hold `scope_enforced`. Their negative suites are
 therefore tests **of a capability the same system already claims** — which is
 worth having, and is not evidence about deletion or correction.
 
-**Nine assert about content:** that particular material must not surface to
+**Ten assert about content:** that particular material must not surface to
 anyone entitled to search, regardless of who is asking.
 [open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
 naming what a query must not return, scored as a penalty.
@@ -97,23 +100,29 @@ red-team finding that produced its tombstone. [Project N.E.K.O.](../systems/neko
 `test_hard_filter_drops_negative_score` asserts that an entry the user
 *disputed* is dropped before the rerank, the docstring giving the reason:
 *"Stage-2 would either reinforce the dispute or, worse, cancel it."*
-[Helm](../systems/helm/) is the fourth and the weakest of them: its supersede
+[Helm](../systems/helm/) is the weakest of them: its supersede
 case asserts `recall` returns exactly one active row and fails with "recall
 returned old value" if the replaced one appears. The value is still in the table
 and still readable through `history`, so this is a genuine read-path exclusion —
 but it covers *replacement* only. Helm's other two exits, `forget` and the
 confidence-floor prune, are hard deletes with nothing asserted about them,
 which is the case where a re-derivation would actually reinstate the value.
-[Agno](../systems/agno/) is the same shape against a judged verdict — a retired
-fact absent from `live_facts()` while both rows remain in the record. The
-[Pydantic AI Harness](../systems/pydantic-ai-harness/) is the sixth and asserts
+[agent-afk](../systems/agent-afk/)'s
+`it('excludes superseded facts from search')` asserts the same about its FTS
+path, and [Agno](../systems/agno/) is the same shape against a judged verdict — a
+retired fact absent from `live_facts()` while both rows remain in the record. The
+[Pydantic AI Harness](../systems/pydantic-ai-harness/) asserts
 it about the *prompt* rather than the store:
 `test_delete_existing_is_content_free` requires a deleted body to be absent from
 the tool result, a search test requires `all('secret' not in repr(match))` under
 a character budget, and two injection tests require a superseded line and a
 stale fact not to appear in the captured model context.
+[Graphify](../systems/graphify/) adds the cheapest version of the shape and one
+nobody else has: `test_negative_only_node_absent_from_sources` asserts that a
+source cited only by answers marked `dead_end` appears in none of the three
+lesson lists — a *source* that failed rather than a *value* that was rejected.
 
-**Only these nine probe the question the atlas is actually asking.** A boundary
+**Only these ten probe the question the atlas is actually asking.** A boundary
 test proves the filter works; a content test proves a value that was rejected,
 disputed or forbidden stays gone. Eleven of one hundred and forty-eight is the real figure for the
 second kind, and the two newest raise a distinction the others do
@@ -140,8 +149,9 @@ cases. The ones worth knowing:
   deletion across stores — not a rejected-value tombstone.
 - [Mercury](../systems/mercury-agent/) grades confidence three ways and has no
   discrete state.
-- Of the four trust-state systems, only [Verel](../systems/verel/),
-  [RainBox](../systems/rainbox/) and [Gini](../systems/gini-agent/) carry an
+- Most trust-state systems stop short of the state that matters.
+  [Verel](../systems/verel/), [RainBox](../systems/rainbox/),
+  [Gini](../systems/gini-agent/) and [memsem](../systems/memsem/) carry an
   explicitly *rejected* state; [Magic Context](../systems/magic-context/)
   qualifies on `stale` and `flagged`.
 - [RainBox](../systems/rainbox/)'s `RetrievalEvent` and
@@ -153,8 +163,12 @@ cases. The ones worth knowing:
 - [Memanto](../systems/memanto/) resolves conflicts with a human and then deletes
   without a tombstone — the most carefully reasoned correction in the atlas, and
   the next extraction pass may undo it.
-- [Daimon](../systems/daimon/) is the weakest of the three tombstones, and the
+- [Daimon](../systems/daimon/) is the weakest of the tombstones, and the
   flag is granted on mechanism rather than on hardening: it suppresses on the
   read path rather than refusing the write, and its key is a hash of the item's
   exact text, so a paraphrase defeats it where Verel's normalized key would not.
   It is also the only holder with no test that re-asserts a forgotten value.
+- [memsem](../systems/memsem/) is the near-miss in the other direction: its
+  suppression table refuses the write and is keyed on the normalised value, and
+  nothing but a human rejecting a candidate ever writes a row into it, so its own
+  automatic supersession path reaches the store ungated.

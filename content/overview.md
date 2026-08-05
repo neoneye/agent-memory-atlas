@@ -1700,18 +1700,24 @@ interesting part:
 
 - [`claude-mem`](../systems/claude-mem/) has "tombstones" that synchronize row
   deletion across stores, which is not a rejected-value tombstone.
-- The three tombstones are not equal. [`verel`](../systems/verel/) and
-  [`rainbox`](../systems/rainbox/) normalize the value and refuse the *write*;
-  [`daimon`](../systems/daimon/) keys on a hash of the item's exact text and
-  suppresses on every *read* path — briefing, carry and index deletion alike.
-  For a byte-identical re-extraction the effect is the same, and a paraphrase
-  defeats the third but not the first two. Its own test suite never exercises
-  re-assertion after a forget, so the mechanism is read, not demonstrated.
+- The tombstones are not equal, and they divide on where the check runs.
+  [`verel`](../systems/verel/) and [`rainbox`](../systems/rainbox/) normalize the
+  value and refuse the *write*; [`memsem`](../systems/memsem/) also refuses the
+  write, from a table only a human rejection can populate, leaving its automatic
+  supersession path ungated. [`daimon`](../systems/daimon/) keys on a hash of the
+  item's exact text and [`provem`](../systems/provem/) on a normalized token
+  subset, and both suppress on the *read* path instead. For a byte-identical
+  re-extraction the effect is the same; a paraphrase defeats Daimon's key and not
+  the others. Daimon's own test suite never exercises re-assertion after a
+  forget, so that mechanism is read, not demonstrated.
 - [`mercury-agent`](../systems/mercury-agent/) grades confidence three ways but
   has no discrete state.
-- Of the four trust-state systems, only [`verel`](../systems/verel/),
-  [`rainbox`](../systems/rainbox/) and [`gini-agent`](../systems/gini-agent/)
-  carry an explicitly **rejected** state.
+- Most trust-state systems stop short of the state that matters.
+  [`verel`](../systems/verel/), [`rainbox`](../systems/rainbox/),
+  [`gini-agent`](../systems/gini-agent/) and [`memsem`](../systems/memsem/) carry
+  an explicitly **rejected** state — memsem's as a suppression row a human
+  rejection writes, and a pending/approved/rejected status on the candidate it
+  came from.
   [`magic-context`](../systems/magic-context/) qualifies on `stale` and
   `flagged` — states that withhold a memory from being trusted — and it is the
   one system here keeping lifecycle and epistemic state on genuinely separate
