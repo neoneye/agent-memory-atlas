@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 149 reports.</strong></p>
+<p><strong>This page covers all 150 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3337,6 +3337,36 @@ leave the durable-facts store outside all of it.</li>
 <li>Do not copy when: a remembered fact is expensive to reacquire.
 Nothing marks a note as unconsolidatable, nothing records its deletion,
 and session deletion does not reach the notes at all.</li>
+</ul>
+<h3 id="prime-agent"><code>prime-agent</code></h3>
+<ul>
+<li>Best idea: every applied harness edit keeps a full
+<code>before</code> and <code>after</code> snapshot, appended to a
+cross-session <code>refinements.jsonl</code>, so
+<code>rollbackProposal</code> can invert a refinement made in another
+session — the most complete undo for a self-modifying memory in this
+atlas, and tested as such.</li>
+<li>Biggest risk: nothing is keyed on a rejected value. Rollback answers
+"can I undo what it learned" and not "can I stop it learning that
+again", so a memory deleted as wrong can be proposed again by the next
+pass as a fresh create.</li>
+<li>Most reusable component: the baseline check — an edit whose target
+entry changed while the model was planning is refused with
+<code>entry changed during refinement planning</code>, with the
+same-proposal case correctly excluded. A lost-update defence on a memory
+write, in about ten lines.</li>
+<li>Maturity impression: 184,000 lines of TypeScript and 4,469 commits,
+with a 1,519-line test file covering the baseline guard, the immutable
+base prompt from both directions, atomic state replacement, scope-merge
+collisions, malformed history lines, and cross-session rollback — none
+of it run for this review, because six dependency surfaces were inside
+the seven-day cooldown.</li>
+<li>Study when: you are building a background pass that edits durable
+state on model judgement and want to know what making it reversible
+actually costs.</li>
+<li>Do not copy when: you need a correction that holds against
+re-derivation; the undo is excellent and there is no refusal behind
+it.</li>
 </ul>
         </article>
       </div>

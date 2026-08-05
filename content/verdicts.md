@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 149 reports.**
+**This page covers all 150 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1398,3 +1398,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: roughly 118,000 lines of Python with an event-sourced thread store, a crash-recoverable deletion journal, and a memory module whose docstring states plainly that consolidation has no test oracle — while the test beside it patches in a scripted no-op provider and the docstring's claim of verification "with a real model" has no committed counterpart in the tree.
 - Study when: you want to see what an event log, replay and typed provenance look like applied to conversation state, and what it costs to leave the durable-facts store outside all of it.
 - Do not copy when: a remembered fact is expensive to reacquire. Nothing marks a note as unconsolidatable, nothing records its deletion, and session deletion does not reach the notes at all.
+
+### `prime-agent`
+
+- Best idea: every applied harness edit keeps a full `before` and `after` snapshot, appended to a cross-session `refinements.jsonl`, so `rollbackProposal` can invert a refinement made in another session — the most complete undo for a self-modifying memory in this atlas, and tested as such.
+- Biggest risk: nothing is keyed on a rejected value. Rollback answers "can I undo what it learned" and not "can I stop it learning that again", so a memory deleted as wrong can be proposed again by the next pass as a fresh create.
+- Most reusable component: the baseline check — an edit whose target entry changed while the model was planning is refused with `entry changed during refinement planning`, with the same-proposal case correctly excluded. A lost-update defence on a memory write, in about ten lines.
+- Maturity impression: 184,000 lines of TypeScript and 4,469 commits, with a 1,519-line test file covering the baseline guard, the immutable base prompt from both directions, atomic state replacement, scope-merge collisions, malformed history lines, and cross-session rollback — none of it run for this review, because six dependency surfaces were inside the seven-day cooldown.
+- Study when: you are building a background pass that edits durable state on model judgement and want to know what making it reversible actually costs.
+- Do not copy when: you need a correction that holds against re-derivation; the undo is excellent and there is no refusal behind it.

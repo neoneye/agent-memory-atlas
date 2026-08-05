@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **149 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **150 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -159,6 +159,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`perseus-vault`](../systems/perseus-vault/) **Perseus Vault** — Claims audited against artifacts · `Perseus-Computing-LLC/perseus-vault` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
+- [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
 - [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
 - [`promptx`](../systems/promptx/) **PromptX** — An engram network per role · `deepractice/promptx` · Scope enforced
 - [`provem`](../systems/provem/) **Provem** — Governance as the product · `BernhardJackiewicz/provem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
