@@ -4,28 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="A small MCP memory that added a
-durable value-keyed write gate, discrete trust states and bi-temporal
-validity — and left automatic supersession exactly where it was, so the
-write path an extractor uses still cannot refuse a value it already
-rejected.">
+    <meta name="description" content="A small MCP memory whose durable
+value-keyed write gate refuses a rejected value outright — and is armed
+only by a human rejecting a candidate, so the write path an extractor
+uses cannot refuse a value the system already discarded.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="memsem — Agent Memory Atlas">
-    <meta property="og:description" content="A small MCP memory that
-added a durable value-keyed write gate, discrete trust states and
-bi-temporal validity — and left automatic supersession exactly where it
-was, so the write path an extractor uses still cannot refuse a value it
-already rejected.">
+    <meta property="og:description" content="A small MCP memory whose
+durable value-keyed write gate refuses a rejected value outright — and
+is armed only by a human rejecting a candidate, so the write path an
+extractor uses cannot refuse a value the system already discarded.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="memsem — Agent Memory Atlas">
-    <meta name="twitter:description" content="A small MCP memory that
-added a durable value-keyed write gate, discrete trust states and
-bi-temporal validity — and left automatic supersession exactly where it
-was, so the write path an extractor uses still cannot refuse a value it
-already rejected.">
+    <meta name="twitter:description" content="A small MCP memory whose
+durable value-keyed write gate refuses a rejected value outright — and
+is armed only by a human rejecting a candidate, so the write path an
+extractor uses cannot refuse a value the system already discarded.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>memsem — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -82,11 +79,10 @@ already rejected.">
           <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
           <p class="eyebrow">A tombstone only a human can set</p>
           <h1>memsem</h1>
-          <p class="document-deck">A small MCP memory that added a
-durable value-keyed write gate, discrete trust states and bi-temporal
-validity — and left automatic supersession exactly where it was, so the
-write path an extractor uses still cannot refuse a value it already
-rejected.</p>
+          <p class="document-deck">A small MCP memory whose durable
+value-keyed write gate refuses a rejected value outright — and is armed
+only by a human rejecting a candidate, so the write path an extractor
+uses cannot refuse a value the system already discarded.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/WindSeries69/memsem">
               <span>Source</span>
@@ -156,8 +152,8 @@ contradicting fact fades its rivals by multiplying confidence by 0.6, or
 below 0.25 rather than deleting. History is kept, a
 <code>contradicts</code> edge is written between the two, and the
 correction is reversible.</p>
-<p><strong>There are now two ways to reject a value here, and only one
-of them holds.</strong> <code>memory_candidate_add</code> parks an
+<p><strong>There are two ways to reject a value here, and only one of
+them holds.</strong> <code>memory_candidate_add</code> parks an
 uncertain fact outside retrieval until a person decides; approving it
 publishes it, and rejecting it writes a row into
 <code>memory_suppressions</code> keyed on the normalised subject,
@@ -231,8 +227,9 @@ finally <code>memory_candidates</code> and
 <code>memory_suppressions</code>. The migrations are written to run
 against an existing database — each column addition is wrapped
 individually and swallows the already-present error, and the
-evidence-and-time step backfills <code>recorded_at</code> from the
-timestamp that used to stand in for it.</p>
+evidence-and-time step backfills <code>recorded_at</code> from
+<code>created_at</code> and the history table's
+<code>changed_at</code>.</p>
 <p><code>src/</code> is eight files. <code>db.ts</code> (2,195 lines)
 holds the schema and every query; <code>index.ts</code> is the MCP
 server and its eighteen tools; <code>plugin.ts</code> is the opencode
@@ -244,7 +241,7 @@ is every tunable constant with defaults and partial-override validation;
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p><code>npx memsem</code> and a setup command that writes the MCP
 configuration. Node ≥ 22.13 is the only hard requirement — the
-<code>node:sqlite</code> dependency is why, and it still emits an
+<code>node:sqlite</code> dependency is why, and it emits an
 experimental-feature warning on every run. Embeddings are optional and
 local: <code>embed.ts</code> talks to Ollama, and without it the relax
 mode's cosine arm is simply unavailable while strict lexical search
@@ -330,12 +327,12 @@ tool the extraction sub-agent is told to call.</p>
 parked in <code>memory_candidates</code> with status
 <code>pending</code>, in a table no read path joins, so it is invisible
 to retrieval until a person approves it. Approval replays it through
-<code>add()</code> — and throws if a suppression now blocks it, so the
-gate outranks the reviewer's earlier inclination. Rejection writes the
-suppression and records the reason.</p>
+<code>add()</code> — and throws if a suppression blocks it by then, so
+the gate outranks the reviewer's earlier inclination. Rejection writes
+the suppression and records the reason.</p>
 <p>That is a clean governed-write shape. What it does not cover is the
 path that does not involve a person.</p>
-<h3 id="where-it-still-inverts">Where it still inverts</h3>
+<h3 id="where-it-inverts">Where it inverts</h3>
 <p>The rival query is <code>archived = 0</code> filtered by subject and
 predicate, so an archived value is not a rival. <code>add()</code>
 additionally reads <code>memory_history</code> for values this key has
@@ -403,13 +400,13 @@ sorts by the priority formula where a pin is not a term. A person
 auditing the store by hand sees the correction on top; the agent
 retrieving through MCP sees the value the correction was meant to
 remove.</p>
-<p><strong>So the tombstone mark is earned and the finding is narrower
-than it was.</strong> The mechanism exists, in the right shape, with a
-test. What is missing is a route from the automatic judgement to it — no
-path in the codebase turns "this value was contradicted until it
-archived" into "refuse this value", and the pattern's argument is
-precisely that an extractor re-reading one old transcript ten times is
-indistinguishable from ten sessions of genuine repetition.</p>
+<p><strong>The mechanism is the right shape and its trigger is the
+narrow part.</strong> It exists, keyed correctly, with a test. What is
+missing is a route from the automatic judgement to it — no path in the
+codebase turns "this value was contradicted until it archived" into
+"refuse this value", and the pattern's argument is precisely that an
+extractor re-reading one old transcript ten times is indistinguishable
+from ten sessions of genuine repetition.</p>
 <p>Two smaller routes also write past the gate:</p>
 <ul>
 <li><strong><code>importJSON</code> does not consult it.</strong> A dump
@@ -424,8 +421,7 @@ defensible — the pattern page allows a trusted human correction to
 override, and every edit is audited — but the override is
 indistinguishable in the log from an ordinary edit.</li>
 </ul>
-<p>The three protection tiers the README described as one are still
-two:</p>
+<p>The three protection tiers the README describes as one are two:</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -452,10 +448,9 @@ never to archive a pinned or critical fact</td>
 </tr>
 </tbody>
 </table></div>
-<p>The remaining gap is the one that was always the odd one out: the two
-paths enforced in code are the ones a database can check, and the path
-still governed by a sentence is the one where an LLM decides what to
-throw away.</p>
+<p>The odd one out is the informative one: the two paths enforced in
+code are the ones a database can check, and the path governed by a
+sentence is the one where an LLM decides what to throw away.</p>
 <h3 id="retrieval-that-defaults-to-strict">Retrieval that defaults to
 strict</h3>
 <p>Strict lexical search requires 50% of query words to match, with no
@@ -477,16 +472,14 @@ fact, which is the trade taken knowingly.</p>
 injected at session start, and out-of-focus themes are attenuated by
 0.35 rather than filtered out. Attenuate-don't-exclude is the same
 instinct as fade-don't-delete, applied to retrieval.</p>
-<p>Until <code>1.3.0</code> a theme search left the project behind — a
-fact written in <code>global</code> surfaced in any project when the
-subject matched, and the protocol document described that as the point
-of a theme. <code>whereClause</code> now keeps the project clause when
-both are given unless the caller passes <code>crossProject: true</code>,
-and the committed governance suite asserts both halves: a search in
-project <code>a</code> returns nothing from project <code>b</code>, and
-the same search with <code>crossProject</code> does. That closes the one
-hole in an otherwise enforced scope, and it turns the leak into
-something a caller has to ask for by name.</p>
+<p>A theme does not carry a search out of its project.
+<code>whereClause</code> keeps the project clause when both are given
+unless the caller passes <code>crossProject: true</code>, and the
+committed governance suite asserts both halves: a search in project
+<code>a</code> returns nothing from project <code>b</code>, and the same
+search with <code>crossProject</code> does. Crossing the boundary is
+something a caller has to ask for by name, which is the arrangement the
+scope mark is worth having under.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>memories</code> is a triple — <code>subject</code>,
 <code>predicate</code>, <code>object</code> — plus <code>tags</code>,
@@ -494,9 +487,9 @@ something a caller has to ask for by name.</p>
 <code>frequency</code>, <code>project</code>, <code>provenance</code>,
 <code>archived</code>, <code>pinned</code>, <code>theme</code>,
 <code>embedding</code>, <code>created_at</code>,
-<code>updated_at</code>, and now <code>trust</code>,
-<code>evidence</code>, <code>recorded_at</code>, <code>valid_from</code>
-and <code>valid_until</code>.</p>
+<code>updated_at</code>, <code>trust</code>, <code>evidence</code>,
+<code>recorded_at</code>, <code>valid_from</code> and
+<code>valid_until</code>.</p>
 <p>Around it: <code>memory_history</code> (<code>memory_id</code>,
 <code>previous</code>, <code>changed_at</code>, and a
 <code>previous_*</code> copy of the trust, evidence and validity
@@ -507,8 +500,8 @@ fields), <code>edges</code> (<code>source_id</code>,
 <code>new_value</code>, <code>reason</code>, <code>pass_id</code>,
 <code>dry_run</code>, <code>created_at</code>),
 <code>memory_candidates</code> and <code>memory_suppressions</code>.</p>
-<h3 id="trust-is-now-a-state-not-only-a-score">Trust is now a state, not
-only a score</h3>
+<h3 id="trust-is-a-state-not-only-a-score">Trust is a state, not only a
+score</h3>
 <p><code>trust</code> is one of <code>inferred</code>,
 <code>verbatim</code> or <code>verified</code>, ranked, and a
 reinforcement keeps the higher of the two rather than the newer. What
@@ -565,21 +558,21 @@ change be recorded without being applied — the scoring sub-agent can be
 asked what it <em>would</em> do and the answer is durable. Very little
 in this atlas records a refused or simulated mutation; memsem records
 both.</p>
-<p>Its coverage reaches the automatic path, which is where it was
-thinnest. <code>audit()</code> is called from <code>forget</code>, from
+<p>Its coverage reaches the automatic path as well as the deliberate
+one. <code>audit()</code> is called from <code>forget</code>, from
 <code>cli-edit</code>, from the scoring path including its refusals and
 dry runs, from every candidate decision, from <code>verify</code>, from
 <code>unsuppress</code>, and from <code>add()</code> in both directions
 — an archival by supersession writes
 <code>{field: "archived", "0" → "1", reason: "supersession"}</code> and
 a reactivation writes the same fields reversed with reason
-<code>"resurrection"</code>. What still leaves no audit row is a fade
-that does not cross the archive threshold, so the confidence a
-correction loses on the way down is visible only in the value itself;
+<code>"resurrection"</code>. What leaves no audit row is a fade that
+does not cross the archive threshold, so the confidence a correction
+loses on the way down is visible only in the value itself;
 <code>memory_history</code> records the previous object at the moment of
 archival, and only then. A refused write leaves none either — the
 suppression gate returns <code>rejected: true</code> without recording
-that the refusal happened, which is the one governance event the log
+that the refusal happened, which is the only governance event the log
 does not carry.</p>
 <h3
 id="forgetting-has-two-depths-and-the-deeper-one-is-nearly-complete">Forgetting
@@ -624,10 +617,10 @@ distinction the <a
 href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
 key</a> pattern draws. One function assembles the archived, project,
 theme and validity clauses for every read path, which is why the
-temporal filter arrived on all of them at once rather than on the one
-the feature was written for. The caller supplies the project string,
-which is the standard caveat: this certifies the key reaches the query,
-not that a caller cannot pass a different one.</p>
+validity filter applies on all of them rather than only where it would
+have been needed first. The caller supplies the project string, which is
+the standard caveat: this certifies the key reaches the query, not that
+a caller cannot pass a different one.</p>
 <p><strong>The relax arm has a stated cost the strict arm does
 not.</strong> Embeddings are persisted as JSON text, so cosine ranking
 parses every candidate row:</p>
@@ -638,7 +631,7 @@ discovering either later, is the same habit as the retrieval docstring
 that says what the path deliberately does not do. It also explains why
 relax mode is opt-in: the default path is an index lookup and the
 optional one is a full parse.</p>
-<p>Committed negative cases now run to five, which is unusual enough to
+<p>Committed negative cases run to five, which is unusual enough to
 enumerate. A weak lexical match is excluded —
 <code>"stricte: faible correspondance exclue (1 mot sur 3)"</code>. An
 archived fact stays out of the active set across an export/import round
@@ -657,8 +650,8 @@ memory is searchable the moment <code>memory_add</code> returns. There
 is no extraction on the write path — the MCP tool takes a structured
 triple, and the work of deciding what is worth remembering is done by a
 sub-agent that calls the tool.</p>
-<p>There are now two write destinations and the caller chooses between
-them. <code>memory_add</code> publishes immediately.
+<p>There are two write destinations and the caller chooses between them.
+<code>memory_add</code> publishes immediately.
 <code>memory_candidate_add</code> parks the fact outside retrieval until
 a person decides, and the protocol document tells the agent when to use
 which: uncertain but worth a human decision goes to the candidate queue.
@@ -703,7 +696,7 @@ permanent, and <code>doctor</code> shows recent adjustments with their
 audit reasons sorted by magnitude of change. That is a real review
 surface — inspect, adjudicate, and see what the sub-agents did and
 why.</p>
-<p>The review queue is the newer half of it, and it is MCP-only.
+<p>The review queue is the half of it that is MCP-only.
 <code>memory_candidate_list</code> and
 <code>memory_candidate_review</code> have no CLI counterpart, so the
 person adjudicating a pending fact does it by asking an agent to call a
@@ -746,11 +739,11 @@ it leaves behind.</li>
 <ul>
 <li><strong>Automatic supersession writes no suppression.</strong> The
 mechanism that would refuse a repeated wrong value exists and only a
-human rejection arms it, so a discredited fact that is repeated still
-returns as live and demotes its own correction.</li>
+human rejection arms it, so a discredited fact that is repeated returns
+as live and demotes its own correction.</li>
 <li><strong>Pinning protects survival, not visibility.</strong> A pinned
-correction never loses confidence and still stops being the top search
-result once the value it corrected has been repeated six times.</li>
+correction never loses confidence and stops being the top search result
+once the value it corrected has been repeated six times.</li>
 <li><strong><code>import</code> writes past the gate</strong>, inserting
 a suppressed value as a live row while the suppression stays active for
 direct writes.</li>
@@ -845,17 +838,17 @@ not <code>import</code>, which is enough to reinstate a rejected value
 from a backup.</li>
 <li><strong>Leaving the sub-agent path governed by a sentence</strong>
 once the database paths are enforced in code. The consolidation prompt
-is now the only place where "do not archive a pinned fact" is an
-instruction rather than a check.</li>
+is the only place where "do not archive a pinned fact" is an instruction
+rather than a check.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Right for a single developer who wants a local, offline, MIT-licensed
 memory that installs in one command, ranks precisely by default, keeps a
 real review queue, and can be inspected, corrected and genuinely erased
-from a CLI. At 3,700 lines it is still readable end to end in a day, and
-the engineering habits — committed benchmark, ablation, bounded
-sub-agent authority, audit with reasons, adverse-case suite — are better
-than its twenty-one commits suggest.</p>
+from a CLI. At 3,700 lines it is readable end to end in a day, and the
+engineering habits — committed benchmark, ablation, bounded sub-agent
+authority, audit with reasons, adverse-case suite — are better than its
+twenty-one commits suggest.</p>
 <p>Wrong wherever a correction has to hold <strong>without anyone having
 reviewed it</strong>. Route the facts that matter through the candidate
 queue and reject the wrong value there, and the refusal is durable and

@@ -238,8 +238,7 @@ way out. For a system whose stated purpose is GDPR Article 17 that is the sharpe
 version of the same criticism — the regulation is about what you hold, and this
 mechanism governs what you serve.
 
-**The fifth was built after an argument about this page, and it is the only one
-here where the mechanism is gated on a human decision.**
+**The fifth is the only one here whose tombstone a person has to arm.**
 [memsem](../../systems/memsem/) parks an uncertain fact in a `memory_candidates`
 table that no read path joins; rejecting it writes a row into
 `memory_suppressions` keyed on the normalised subject, predicate, object and
@@ -265,7 +264,7 @@ re-assertion of the value it corrected, and a pinned correction, whose confidenc
 `fade()` never touches, stops being the top search result at the sixth.
 
 That is this page's argument in one system. A discount on re-entry is paid off by
-repetition; a check that refuses is not. memsem now has both mechanisms in the
+repetition; a check that refuses is not. memsem carries both mechanisms in the
 same file, which makes the comparison unusually clean — and leaves the open
 question of whether an automatic judgement should be allowed to write a tombstone
 at all, or whether a rejection is by definition something a person does.
