@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 148 reports.**
+**This page covers all 149 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1389,3 +1389,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 39,000 lines of Python across a monorepo with a published SDK, a hosted demo, RLS migrations, and eval sets that plant a cross-tenant memory before asserting it is unreachable — none of it run for this review, because five dependency surfaces were inside the seven-day cooldown.
 - Study when: multi-tenancy is real and you want to see governance placed below the caller rather than beside it.
 - Do not copy when: you need a deletion that stays deleted against an automatic writer; the machinery for that is present and unused.
+
+### `deepcode`
+
+- Best idea: typed provenance on conversational input — a `ClientSurface` of `cli`/`desktop`/`headless`/`automation`/`app_server`/`internal` and a `TurnInputSource` of `start`/`steer`/`queue`/`goal_continuation`/`automation`/`retry`, so months later the store can still say whether a person steered a turn or an automation retried it.
+- Biggest risk: `autodream` is a scheduled agent turn holding `delete` over a flat directory of markdown notes that has no history, no protected flag and no record a note ever existed — and the only mechanical signal, which the scheduler also treats as its stopping condition, is whether the file count changed.
+- Most reusable component: `system_preamble()`, which assembles user-global instructions, a repo-root-downward `AGENTS.md` walk, the memory index and the tool description in one function that every frontend calls, so the TUI, the desktop app, the headless path and the app server cannot drift apart.
+- Maturity impression: roughly 118,000 lines of Python with an event-sourced thread store, a crash-recoverable deletion journal, and a memory module whose docstring states plainly that consolidation has no test oracle — while the test beside it patches in a scripted no-op provider and the docstring's claim of verification "with a real model" has no committed counterpart in the tree.
+- Study when: you want to see what an event log, replay and typed provenance look like applied to conversation state, and what it costs to leave the durable-facts store outside all of it.
+- Do not copy when: a remembered fact is expensive to reacquire. Nothing marks a note as unconsolidatable, nothing records its deletion, and session deletion does not reach the notes at all.

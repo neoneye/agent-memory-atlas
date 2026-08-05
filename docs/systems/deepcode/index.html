@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agentic coding harness that
+event-sources every conversational turn with typed provenance, and keeps
+its durable facts as markdown notes a scheduled LLM pass may delete —
+with a before-and-after note count as the only mechanical check.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DeepCode — Agent Memory Atlas">
+    <meta property="og:description" content="An agentic coding harness
+that event-sources every conversational turn with typed provenance, and
+keeps its durable facts as markdown notes a scheduled LLM pass may
+delete — with a before-and-after note count as the only mechanical
+check.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DeepCode — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agentic coding harness
+that event-sources every conversational turn with typed provenance, and
+keeps its durable facts as markdown notes a scheduled LLM pass may
+delete — with a before-and-after note count as the only mechanical
+check.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DeepCode — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Consolidation with no oracle</p>
+          <h1>DeepCode</h1>
+          <p class="document-deck">An agentic coding harness that
+event-sources every conversational turn with typed provenance, and keeps
+its durable facts as markdown notes a scheduled LLM pass may delete —
+with a before-and-after note count as the only mechanical check.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/HKUDS/DeepCode">
+              <span>Source</span>
+              <strong>HKUDS/DeepCode</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5" title="69233821b5dbcf044eb17f91bca1b9c6b1d2fda5">
+              <span>Analyzed revision</span>
+              <code>69233821…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-05</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (62%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DeepCode is HKUDS's agentic coding harness — paper-to-code,
+text-to-web, text-to-backend — at roughly 118,000 lines of Python plus a
+Tauri desktop app, MIT-licensed, 241 commits in. Most of it is not
+memory. What is memory is worth reading precisely, because the same
+repository holds two durable stores built to opposite standards, and the
+gap between them is the report.</p>
+<p><strong>The conversation layer is event-sourced and carries
+provenance.</strong> Threads, turns and items live in SQLite behind an
+append-only <code>event_log</code> with monotonic per-thread sequence
+numbers, a <code>replay()</code> path and <code>sequence_heads()</code>
+for resumption. Every mutation is an event — <code>item.created</code>,
+<code>item.updated</code>, <code>thread.renamed</code>,
+<code>thread.archived</code>, <code>thread.projection_conflict</code>.
+Alongside it, <code>core/domain/message_provenance.py</code> types where
+input came from: a <code>ClientSurface</code> of <code>cli</code>,
+<code>desktop</code>, <code>headless</code>, <code>automation</code>,
+<code>app_server</code> or <code>internal</code>, and a
+<code>TurnInputSource</code> of <code>start</code>, <code>steer</code>,
+<code>queue</code>, <code>goal_continuation</code>,
+<code>automation</code>, <code>retry</code> or
+<code>turn_interrupt</code>. A store that can distinguish a human
+steering a turn from an automation retrying one is answering a question
+most of this atlas cannot.</p>
+<p><strong>The durable-facts layer is a flat directory of markdown notes
+with none of that.</strong>
+<code>&lt;workspace&gt;/.deepcode/memory/</code> holds plain files.
+<code>MEMORY.md</code> is the index and is injected verbatim into the
+system prompt on every session; the rest are reachable only if the agent
+calls <code>memory read</code>. The tool's five actions are
+<code>list</code>, <code>read</code>, <code>write</code>,
+<code>append</code> and <code>delete</code>, and <code>delete</code> is
+<code>Path.unlink()</code>. There is no history, no status field, no
+protected note, and no event anywhere recording that a note existed.</p>
+<p><strong>And a scheduled LLM pass is allowed to delete from
+it.</strong> <code>autodream</code> is a single agent turn driven by a
+fixed prompt: merge duplicates, <em>"delete stale, obviously-wrong, or
+superseded notes"</em>, rewrite the index. It runs from
+<code>python -m cli.schedule_cli autodream -w ./proj --every 3600</code>,
+so it is opt-in rather than hidden — but once scheduled it holds
+<code>write</code> and <code>delete</code> over every note, governed by
+the sentence <em>"Keep every durable fact; only remove redundancy and
+staleness."</em></p>
+<p><strong>The module says so itself, which is the reason to take it
+seriously rather than to score it.</strong> From
+<code>core/loop/autodream.py</code>:</p>
+<blockquote>
+<p>memory tidiness has no test oracle, so there is nothing to
+backpressure on; a before/after note-count check is the only mechanical
+signal we keep.</p>
+</blockquote>
+<p>That is a more honest statement of the problem than most systems here
+manage, and it is also an exact description of the risk. The harness
+that records a typed provenance stamp on every conversational turn
+records nothing at all when a durable fact is deleted — and the deleting
+party is a language model.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two stores, one workspace, and no path between them.</p>
+<pre class="mermaid"><code>flowchart TD
+    U[&quot;a turn of conversation&quot;] --&gt; E[&quot;event_log — append-only&lt;br/&gt;item.created / thread.renamed / turn.completed&lt;br/&gt;sequence per thread, replayable&quot;]
+    E --&gt; S[&quot;SQLite: projects, threads, items&lt;br/&gt;~/.deepcode/state/deepcode.sqlite3&quot;]
+    U --&gt; P[&quot;message_provenance&lt;br/&gt;ClientSurface + TurnInputSource&lt;br/&gt;automation distinguishable from a person&quot;]
+    P --&gt; S
+
+    A[&quot;the agent decides a fact is durable&quot;] --&gt; M[&quot;memory tool&lt;br/&gt;write / append / delete&quot;]
+    M --&gt; N[&quot;flat markdown notes, no metadata&lt;br/&gt;in the workspace memory directory&quot;]
+    N -- &quot;MEMORY.md only, capped at 8,000 chars&quot; --&gt; I[&quot;system prompt at session start&quot;]
+    N -. &quot;every other note: only if the agent&lt;br/&gt;calls memory read&quot; .-&gt; I
+
+    D[&quot;autodream — scheduled agent turn&quot;] --&gt; M
+    D -. &quot;the only mechanical check:&lt;br/&gt;notes_before vs notes_after&quot; .-&gt; R[&quot;RunOutcome&quot;]
+
+    S -. &quot;session deletion quarantines to .trash&lt;br/&gt;and never touches the notes&quot; .-&gt; N</code></pre>
+<p>The asymmetry is the whole mental model. Down the left, a mutation to
+the conversation store produces a sequenced, replayable,
+provenance-stamped event. Down the right, a mutation to the
+durable-facts store produces a changed file and nothing else — and the
+arrow into it from <code>autodream</code> is a language model with
+<code>delete</code> in its tool list. The dotted line at the bottom is
+the other half: a user who deletes a session removes the transcript and
+leaves every note the agent wrote from it, because the two stores do not
+know about each other.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three stores, deliberately separate:</p>
+<ul>
+<li><strong>SQLite</strong> at
+<code>~/.deepcode/state/deepcode.sqlite3</code>, opened WAL, holding
+projects, threads, turns, items, executions, automations and the
+<code>event_log</code>. <code>core/persistence/</code> is thirteen
+modules of repositories over it, with migrations.</li>
+<li><strong>Session transcripts</strong> under the session store as JSON
+and JSONL — 977 lines in <code>core/sessions/store.py</code> covering
+continuation, a thread-goal store and an index.</li>
+<li><strong>Markdown notes</strong> under
+<code>&lt;workspace&gt;/.deepcode/memory/</code>, which is the only one
+of the three the agent writes with a tool.</li>
+</ul>
+<p><code>core/harness/memory.py</code> is 238 lines and holds the whole
+durable-facts layer. <code>core/loop/autodream.py</code> is 95.
+Everything else in the repository — the workflow engine, the
+paper-to-code pipeline, the Tauri desktop app, the SWE-bench eval
+harness under <code>eval/swebench</code> — sits outside the memory
+question.</p>
+<h3
+id="the-instruction-layers-which-are-memory-the-agent-cannot-write">The
+instruction layers, which are memory the agent cannot write</h3>
+<p><code>system_preamble()</code> assembles four things in a fixed
+precedence, lowest first: user-global instructions
+(<code>~/.deepcode/AGENTS.md</code>, falling back to
+<code>~/.claude/CLAUDE.md</code>), project instructions walked from the
+enclosing repo root down to the workspace, the <code>MEMORY.md</code>
+index, and a fixed paragraph telling the model the memory tool exists.
+The project walk is the careful part — it finds the nearest ancestor
+holding a <code>.git</code> marker and reads one instructions file per
+directory from the root down, so a monorepo root file and a nearer
+service file both apply with the nearer one last. <code>AGENTS.md</code>
+beats <code>DEEPCODE.md</code> beats <code>CLAUDE.md</code> within a
+directory.</p>
+<p>Each layer is capped by <code>_MAX_INJECT_CHARS = 8000</code>. The
+cap is applied per layer rather than across the preamble —
+<code>project_instructions</code> decrements a running budget across its
+own directory chain, and <code>memory_index</code> starts from the full
+8,000 again — so the assembled preamble can reach roughly 24,000
+characters of injected text before the conversation begins. Truncation
+appends a visible <code>…[truncated]</code> marker, which is better than
+silence.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-memory-tool-and-what-it-does-not-have">The memory tool, and
+what it does not have</h3>
+<pre class="python"><code>if action == &quot;delete&quot;:
+    if not target.is_file():
+        return f&quot;Error: no such memory: {name}&quot;
+    try:
+        target.unlink()</code></pre>
+<p>That is the entire deletion path. <code>_resolve()</code> refuses any
+name that is not a bare filename —
+<code>if not name or name != Path(name).name</code> — so the namespace
+is flat by construction and traversal is impossible, and a committed
+test proves the escape attempt writes nothing. <code>write</code>
+truncates, <code>append</code> reads the existing text and rewrites the
+concatenation.</p>
+<p>What is absent is everything that would make a deletion recoverable
+or a note defensible: no <code>pinned</code> or protected flag, no
+status, no confidence, no provenance on a note, no history file, no
+append-only record that the note ever existed. The one honest mitigation
+is in the prompt rather than the code — the standing usage text tells
+the model <em>"Read a note before relying on it; it reflects a past
+session and may be stale"</em>, which is a staleness warning aimed at
+the reader instead of a validity field on the record.</p>
+<h3 id="autodream-and-the-check-it-keeps">autodream, and the check it
+keeps</h3>
+<p><code>consolidate_memory()</code> counts the notes, runs one agent
+turn against the fixed consolidation prompt, counts again, and returns
+<code>AutodreamResult(ran, notes_before, notes_after, summary)</code>
+with the summary clipped to its first line and 200 characters. It
+short-circuits to <code>ran=False</code> when the directory is
+empty.</p>
+<p>The scheduler treats a run that changed nothing as the terminal
+condition:</p>
+<pre class="python"><code>done = not result.ran or result.notes_after == result.notes_before</code></pre>
+<p>That is a reasonable stopping rule for a maintenance job and it is
+not a correctness check. <code>notes_after == notes_before</code> is
+equally true of a pass that did nothing and a pass that deleted three
+notes and created three others. Nothing compares content, and nothing
+can — the module says as much.</p>
+<p>The prompt confines the pass to the memory tool by instruction
+(<em>"Use ONLY the <code>memory</code> tool — do not touch any other
+files"</em>), and the docstring notes that the permission engine fences
+writes to the workspace anyway, so the containment is real at the
+directory boundary even though the rule inside it is prose. The
+distinction worth keeping is that the boundary is enforced and the
+<em>judgement</em> — which note is stale — is not.</p>
+<h3 id="the-other-durable-log-built-to-the-opposite-policy">The other
+durable log, built to the opposite policy</h3>
+<p>The paper-to-code workflow carries a second memory in
+<code>workflows/agents/memory_agent_concise.py</code>. Most of that file
+is context-window management and out of scope here: after the first
+generated file it discards conversation history and rebuilds a clean
+message list from the system prompt, the initial plan and the current
+round's tool results. But it also persists, and what it persists is the
+interesting part.</p>
+<p><code>_save_code_summary_to_file()</code> opens
+<code>implement_code_summary.md</code> in append mode, writes a
+separator and a <code>## IMPLEMENTATION File … ROUND …</code> header,
+and appends an LLM-written summary of the file just implemented.
+<code>_read_code_knowledge_base()</code> reads the whole file back as a
+knowledge base. There is no update path and no delete path — the log
+only grows, and a later entry supersedes an earlier one by sitting below
+it.</p>
+<p>So the same repository contains an append-only memory nothing can
+rewrite and a mutable memory a scheduled model may delete from, and the
+durable one is the throwaway build artifact.</p>
+<h3 id="deletion-that-is-careful-about-the-other-store">Deletion that is
+careful, about the other store</h3>
+<p><code>core/sessions/deletion.py</code> is a crash-recoverable
+journal: a session is quarantined by moving its canonical JSONL
+directory to <code>.trash</code>, a ticket is written under
+<code>.deletions</code>, and startup recovery finishes the SQLite
+cascade without re-projecting the quarantined directory back into a
+thread. Its own docstring calls the ticket a tombstone.</p>
+<p>It is a tombstone in the Cassandra sense — keyed on the record,
+existing so a deletion takes effect across a crash — and not in the
+sense the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> pattern means, which is the collision that page exists to
+name. Nothing here is keyed on a <em>value</em>, so a fact deleted from
+a session is free to be re-derived and written back as a note in the
+next one.</p>
+<p>And the journal does not reach the notes at all. Deleting a session
+removes the transcript and leaves
+<code>&lt;workspace&gt;/.deepcode/memory/</code> untouched, which is the
+right default for a project convention the agent learned and the wrong
+one for anything a user deleted a session in order to remove.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is a file. It has a name, bytes, and whatever mtime the
+filesystem gives it. There is no schema, no frontmatter convention, no
+identity beyond the filename, and nothing to correct against — two notes
+stating opposite facts are two files.</p>
+<p>The conversation layer is the opposite and is where the modelling
+went. <code>DomainEvent</code> carries <code>sequence</code>,
+<code>type</code>, <code>thread_id</code>, <code>payload</code>,
+optional <code>turn_id</code> and <code>item_id</code>, an
+<code>evt</code>-prefixed id and a timezone-aware timestamp, with
+validation refusing an item event that has no turn, a non-positive
+sequence, or an id without its prefix. <code>Thread</code> carries
+<code>project_id</code>, <code>parent_thread_id</code>, status, model
+and an <code>archived_at</code>, so archiving is a state rather than a
+delete.</p>
+<p>The provenance types are the part worth stealing and are described in
+section 9.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is no retrieval.</strong> No index, no embedding, no
+ranking, no query — the words do not appear in this layer. Two
+mechanisms stand in for it:</p>
+<ul>
+<li><code>MEMORY.md</code> is read at session start and injected into
+the system prompt, capped at 8,000 characters.</li>
+<li>Every other note is reachable only when the model decides to call
+<code>memory read</code>, having seen the index.</li>
+</ul>
+<p>That is the routing-card arrangement: put a table of contents in
+front of the agent and let it fetch. It is a legitimate design for a
+store of tens of notes, it costs nothing per turn, and it degrades in a
+specific way — the index is written by the same model that maintains the
+notes, so a fact whose index entry <code>autodream</code> rewrote
+inaccurately is not merely ranked low but unreachable, since nothing
+else enumerates the directory into the prompt.</p>
+<p>The scope key does reach the query on the conversation side:
+<code>SELECT * FROM threads WHERE project_id = ? ORDER BY …</code> and
+the same predicate on the listing paths, which is what the <a
+href="../../patterns/scope-as-a-first-class-key/">scope as a first-class
+key</a> pattern asks for. On the notes side the scope is physical — a
+per-workspace directory, plus the tool's refusal of any name that is not
+a bare filename — which is a stronger boundary and not a key that could
+be filtered, joined or widened.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes to the notes layer are synchronous file writes made by the
+model through the tool. There is no extraction pass, no scoring, no
+dedupe and no conflict detection: if the agent writes a note that
+contradicts an existing one, both exist, and the resolution is whatever
+<code>autodream</code> decides on its next run.</p>
+<p>Writes to the conversation layer append a domain event and project
+it. The <code>item.projected</code>, <code>thread.projected</code>,
+<code>thread.projection_conflict</code> and
+<code>thread.reconciled</code> types show a system that expects
+projection to disagree with the log and has vocabulary for the
+disagreement.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The notes layer costs one file read at session start and whatever the
+model spends deciding to call the tool. <code>autodream</code> costs one
+full agent turn — up to twenty iterations by default — per scheduled
+run, which for a store of a few notes is the most expensive thing in the
+memory system by a wide margin. The conversation layer costs an event
+insert per mutation and grows monotonically; <code>archived_at</code> is
+a state, so archiving reclaims nothing.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One tool, registered in <code>core/harness/tools/__init__.py</code>
+and constructed with the workspace, alongside the other harness tools.
+The preamble is assembled in exactly one place —
+<code>build_agent_session()</code> in <code>core/agent_setup.py</code> —
+which is the reason every frontend behaves identically: the TUI under
+<code>cli/tui</code>, the Tauri desktop app, the headless exec path and
+the app server all get the same memory because none of them assembles it
+themselves.</p>
+<p>That single assembly point is a small thing that pays. Several
+systems in this atlas inject memory in one entry point and forget to in
+another, and the failure is invisible until someone compares two
+transcripts.</p>
+<p>There is no review surface for the notes. They are files a user can
+open, which this atlas does not count as a review mechanism, and the
+desktop app and TUI expose threads rather than the memory directory.
+Nothing lists what <code>autodream</code> changed beyond the one-line
+summary it is asked to produce and the note counts either side of
+it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>An append-only event log with replay and per-thread sequence
+heads</strong>, and explicit vocabulary for projection conflict and
+reconciliation.</li>
+<li><strong>Typed input provenance.</strong> <code>ClientSurface</code>
+and <code>TurnInputSource</code> record which frontend produced a turn
+and whether it was a start, a steer, a queued input, an automation or a
+retry — so an automated write is distinguishable from a person's after
+the fact, which is the distinction most stores here lose.</li>
+<li><strong>A crash-recoverable deletion journal</strong> that
+quarantines before cascading and can finish after a crash without
+resurrecting the quarantined data.</li>
+<li><strong>One assembly point for the whole preamble</strong>, so every
+frontend has the same memory.</li>
+<li><strong>A module that documents its own missing oracle</strong>
+rather than implying a check it does not have.</li>
+<li><strong>A flat namespace enforced in code</strong>, with the
+traversal refusal tested.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>A scheduled model may delete any note</strong>, and the
+store has no history, no protected flag and no record that the note
+existed.</li>
+<li><strong>The note count is not a correctness check.</strong> Delete
+three and create three and the scheduler reports a clean, terminal
+run.</li>
+<li><strong>The notes layer has no provenance</strong>, in a repository
+that models provenance carefully one directory away.</li>
+<li><strong>Session deletion does not reach the notes</strong>, so
+removing a conversation leaves whatever the agent durably wrote from
+it.</li>
+<li><strong><code>MEMORY.md</code> is both the index and the only thing
+injected</strong>, so an index the consolidation pass rewrites badly
+makes the notes under it unreachable rather than merely
+lower-ranked.</li>
+<li><strong>No dedupe or conflict detection on write</strong> —
+contradiction is deferred to a prompt.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory layer has a real unit suite.
+<code>tests/test_memory.py</code> covers the
+write/read/append/list/delete cycle, persistence across tool instances,
+the traversal refusal, the empty-content refusal, the on-disk location,
+the <code>AGENTS.md</code> &gt; <code>CLAUDE.md</code> precedence, the
+repo-root walk with both files applying in order, and the
+global-before-project ordering of the preamble.</p>
+<p>Two of those are negative assertions about what must <em>not</em>
+reach the prompt.
+<code>test_project_instructions_no_repo_reads_only_workspace</code>
+writes a parent-directory <code>AGENTS.md</code> marked <em>"must NOT be
+read"</em>, and asserts it is absent from the assembled instructions
+when there is no repo root; <code>test_name_traversal_refused</code>
+asserts the escaping write neither succeeds nor creates a file.
+Asserting about the prompt rather than the store is the same shape as
+the strongest negative case elsewhere in this atlas, and it is what
+earns the mark here.</p>
+<p><code>tests/test_autodream.py</code> is the one to read carefully,
+because it is candid about its own scope. It patches in a scripted
+provider that returns <code>"nothing to change"</code>, so the pass is a
+guaranteed no-op, and then asserts
+<code>notes_after == notes_before</code> — with the comment
+<code># scripted provider is a no-op → after == before</code> saying
+exactly that. It covers the empty-store guard and the accounting. It
+does not cover consolidation, and cannot.</p>
+<p>The docstring says the merging behaviour is <em>"verified separately
+with a real model"</em>. No such verification is committed: no test in
+the tree exercises a live provider against the memory directory, and the
+only mentions of a real model are in that docstring. This is the atlas's
+most common finding in a new form — not an unreproducible number in a
+README, but an unreproducible <em>behavioural</em> claim in a test file,
+made in the one place a reader is most likely to trust it.</p>
+<p>Nothing was executed from this checkout. Four dependency surfaces had
+changed inside the seven-day cooldown when it was screened, and
+establishing the above is a reading job.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Type your input provenance.</strong> A
+<code>ClientSurface</code> and a <code>TurnInputSource</code> enum cost
+nothing and let the store answer "was this a person or an automation"
+for every turn, months later. Most systems here store text and lose the
+question.</li>
+<li><strong>Assemble the context preamble in exactly one
+function.</strong> Every frontend then has the same memory by
+construction, and the failure mode where one entry point forgets to
+inject becomes unrepresentable.</li>
+<li><strong>Walk to the repo root for project instructions</strong>,
+applying root-first and nearest-last, so a monorepo and a service
+directory can both have a say.</li>
+<li><strong>Quarantine before you cascade.</strong> Moving canonical
+data out of discovery and writing a ticket first makes deletion
+crash-safe without a transaction across two stores.</li>
+<li><strong>Say in the module what you could not check.</strong>
+autodream's docstring is worth more to a reader than a passing test with
+a scripted provider.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Giving a model <code>delete</code> over a store with no
+history.</strong> If a consolidation pass can remove a note, either the
+note needs a protected flag the pass cannot clear, or the deletion needs
+to be recoverable, or the pass needs to propose rather than apply. This
+build has none of the three.</li>
+<li><strong>Letting a count stand in for a check.</strong>
+<code>notes_after == notes_before</code> is reported as a clean run and
+is satisfied by three deletions and three creations. A content hash over
+the directory would cost one line and distinguish them.</li>
+<li><strong>Splitting provenance from the store that needs it.</strong>
+The careful modelling is on conversational turns, which are replayable;
+the store with no provenance is the one holding facts that outlive every
+transcript.</li>
+<li><strong>Testing a scripted no-op and describing the result as
+coverage.</strong> The test is honest about it in a comment; the
+docstring above it is not, and the docstring is what a reader takes
+away.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right if you want an agentic coding harness with a solid
+event-sourced conversation store and a lightweight
+<code>AGENTS.md</code>-compatible notes memory, and your durable facts
+are project conventions cheap to relearn — which is the case this design
+is built for and serves well. The interoperability is real: it reads
+<code>~/.claude/CLAUDE.md</code> and a project <code>CLAUDE.md</code>,
+so an existing setup carries over.</p>
+<p>Wrong wherever a remembered fact is expensive to reacquire or
+dangerous to lose. Schedule <code>autodream</code> against a store of
+hard-won notes and the mechanism that decides which of them are
+<em>"stale, obviously-wrong, or superseded"</em> is a language model
+with no oracle, no undo and no log — and the pass reports success by
+counting files.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a note be able to declare itself unconsolidatable? A single
+<code>pinned</code> marker in the frontmatter that
+<code>autodream</code>'s prompt and the tool both honour would cost very
+little.</li>
+<li>Would a content hash over the memory directory before and after a
+pass be a better terminal signal than the note count, given the module
+already computes a count?</li>
+<li>Is <code>implement_code_summary.md</code> meant to be permanent? It
+is the only append-only memory here and it lives in a generated-code
+directory.</li>
+<li>Should session deletion offer to sweep notes written during that
+session? That would need a note-to-session link, which does not
+currently exist.</li>
+<li>The preamble cap is per layer rather than global. Is roughly 24,000
+characters of standing injection the intended ceiling?</li>
+<li><code>_read_code_knowledge_base()</code> returns the entire
+accumulated summary file and
+<code>_extract_latest_implementation_entry()</code> exists beside it
+unused on that path — is the full read deliberate, given it grows
+without bound?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Durable notes, preamble assembly and the tool:
+<code>core/harness/memory.py</code> (<code>MemoryTool</code>,
+<code>system_preamble</code>, <code>project_instructions</code>,
+<code>user_global_instructions</code>, <code>memory_index</code>,
+<code>_MAX_INJECT_CHARS</code>).</li>
+<li>Consolidation: <code>core/loop/autodream.py</code>
+(<code>consolidate_memory</code>, <code>_CONSOLIDATE_PROMPT</code>,
+<code>_note_count</code>); its scheduler:
+<code>cli/schedule_cli.py</code>.</li>
+<li>Tool registration and session assembly:
+<code>core/harness/tools/__init__.py</code>,
+<code>core/agent_setup.py</code>
+(<code>build_agent_session</code>).</li>
+<li>Event log and repositories: <code>core/persistence/</code>
+(<code>database.py</code>, <code>event_repository.py</code>,
+<code>thread_repository.py</code>); the event model:
+<code>core/domain/event.py</code>; provenance:
+<code>core/domain/message_provenance.py</code>.</li>
+<li>Session store and deletion: <code>core/sessions/store.py</code>,
+<code>core/sessions/deletion.py</code>.</li>
+<li>The workflow's second memory:
+<code>workflows/agents/memory_agent_concise.py</code>
+(<code>_save_code_summary_to_file</code>,
+<code>_read_code_knowledge_base</code>,
+<code>create_concise_messages</code>).</li>
+<li>Tests: <code>tests/test_memory.py</code>,
+<code>tests/test_autodream.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-05</strong> — <a
+href="https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5"><code class="commit-id" title="69233821b5dbcf044eb17f91bca1b9c6b1d2fda5">69233821…</code></a>
+— first reading. Screened before reading: 0 auto-run surfaces, 3
+build-time exec paths (<code>setup.py</code>,
+<code>tests/conftest.py</code>,
+<code>desktop/src-tauri/build.rs</code>), 2 unpinned manifests, and 4
+dependency surfaces changed inside the seven-day cooldown —
+<code>desktop/package-lock.json</code> one day before the pin,
+<code>uv.lock</code> two, <code>requirements.txt</code> three,
+<code>pyproject.toml</code> five, the most recent being the upstream
+commit <em>"fix(security): refresh audited sidecar dependencies"</em>.
+<strong>Nothing was executed</strong>: the cooldown rules out
+installing, the system needs provider credentials to run at all, and
+every claim here is established by reading. The two durable stores were
+traced separately — the SQLite event log with its sequence heads and
+replay, and the flat markdown notes under
+<code>&lt;workspace&gt;/.deepcode/memory/</code> reached through a
+five-action tool whose <code>delete</code> is a bare
+<code>Path.unlink()</code>. <code>autodream</code> is a single agent
+turn holding that tool, scheduled from <code>cli/schedule_cli.py</code>,
+and its only mechanical signal is a before-and-after note count, which
+the scheduler also treats as its terminal condition.
+<code>tests/test_autodream.py</code> patches in a scripted no-op
+provider, so its <code>notes_after == notes_before</code> assertion
+covers the accounting rather than the consolidation; the docstring's
+claim that the merging is <em>"verified separately with a real
+model"</em> has no committed counterpart anywhere in the tree. Marks:
+<code>scope_enforced</code> for <code>WHERE project_id = ?</code> on the
+thread read path, <code>audit_log</code> for the append-only
+<code>event_log</code> — both of which cover the conversation layer and
+neither of which reaches the notes — and <code>negative_eval</code> for
+<code>test_project_instructions_no_repo_reads_only_workspace</code>,
+which asserts a parent-directory instructions file marked <em>"must NOT
+be read"</em> is absent from the assembled preamble.
+<code>tombstone</code> is withheld and the near-miss is deliberate:
+<code>core/sessions/deletion.py</code> calls its deletion ticket a
+tombstone, and it is the record-keyed, crash-recovery kind rather than
+the value-keyed kind.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

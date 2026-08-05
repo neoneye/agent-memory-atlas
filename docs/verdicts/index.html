@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 148 reports.</strong></p>
+<p><strong>This page covers all 149 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3305,6 +3305,38 @@ seven-day cooldown.</li>
 placed below the caller rather than beside it.</li>
 <li>Do not copy when: you need a deletion that stays deleted against an
 automatic writer; the machinery for that is present and unused.</li>
+</ul>
+<h3 id="deepcode"><code>deepcode</code></h3>
+<ul>
+<li>Best idea: typed provenance on conversational input — a
+<code>ClientSurface</code> of
+<code>cli</code>/<code>desktop</code>/<code>headless</code>/<code>automation</code>/<code>app_server</code>/<code>internal</code>
+and a <code>TurnInputSource</code> of
+<code>start</code>/<code>steer</code>/<code>queue</code>/<code>goal_continuation</code>/<code>automation</code>/<code>retry</code>,
+so months later the store can still say whether a person steered a turn
+or an automation retried it.</li>
+<li>Biggest risk: <code>autodream</code> is a scheduled agent turn
+holding <code>delete</code> over a flat directory of markdown notes that
+has no history, no protected flag and no record a note ever existed —
+and the only mechanical signal, which the scheduler also treats as its
+stopping condition, is whether the file count changed.</li>
+<li>Most reusable component: <code>system_preamble()</code>, which
+assembles user-global instructions, a repo-root-downward
+<code>AGENTS.md</code> walk, the memory index and the tool description
+in one function that every frontend calls, so the TUI, the desktop app,
+the headless path and the app server cannot drift apart.</li>
+<li>Maturity impression: roughly 118,000 lines of Python with an
+event-sourced thread store, a crash-recoverable deletion journal, and a
+memory module whose docstring states plainly that consolidation has no
+test oracle — while the test beside it patches in a scripted no-op
+provider and the docstring's claim of verification "with a real model"
+has no committed counterpart in the tree.</li>
+<li>Study when: you want to see what an event log, replay and typed
+provenance look like applied to conversation state, and what it costs to
+leave the durable-facts store outside all of it.</li>
+<li>Do not copy when: a remembered fact is expensive to reacquire.
+Nothing marks a note as unconsolidatable, nothing records its deletion,
+and session deletion does not reach the notes at all.</li>
 </ul>
         </article>
       </div>
