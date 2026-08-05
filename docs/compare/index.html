@@ -102,7 +102,7 @@ judged against seven mechanisms with strict definitions. Corpus last
 extended <strong>4 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 5
+<li><strong>Correction is the phase that goes unbuilt.</strong> 6
 systems of 148 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -119,11 +119,11 @@ layer below delete</a>.</li>
 shallowest.</strong> 82 of 148 apply a scope key as a filter on the read
 path. It is also the mark most often satisfied by a single predicate
 that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 17 of 148
+<li><strong>Negative evidence is almost never tested.</strong> 22 of 148
 commit a case asserting that particular material must <em>not</em> be
 retrieved — the assertion every scope, deletion and correction claim
 ultimately rests on.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 23 of 148
+<li><strong>Trust is usually a number, not a state.</strong> 24 of 148
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -210,11 +210,11 @@ that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Three systems in this entire
-atlas can record that a <em>value</em> was rejected so extraction cannot
-bring it back — see the <a href="../capabilities/">capability index</a>
-for the live count. This is the single widest gap in the field, and it
-is invisible on every benchmark.</li>
+everything can overwrite or supersede. Six systems in this entire atlas
+can record that a <em>value</em> was rejected so extraction cannot bring
+it back — see the <a href="../capabilities/">capability index</a> for
+the live count. This is the single widest gap in the field, and it is
+invisible on every benchmark.</li>
 <li><strong>Whether evidence outlives its derivations.</strong> Systems
 that keep the raw event and treat summaries, profiles, and graphs as
 rebuildable projections can repair a bad extraction. Systems that
@@ -1148,20 +1148,26 @@ the others are being measured against. Its correction design is the
 right instinct too: a contradicting fact does not overwrite its rival
 but multiplies its confidence by 0.6 — by 0.9 above a critical threshold
 — archiving below 0.25 and keeping the row, with a
-<code>contradicts</code> edge written between the two. <strong>Then a
-re-asserted rejection still costs the correction, and now does so by
-design.</strong> A value that already lost is consulted rather than
-ignored — it reactivates its own archived row at a discount instead of
-arriving fresh, and the reactivation is audited — but the same call
-still fades the live correction, and a committed regression test asserts
-that as intended behaviour. What it costs depends on protection the user
-had to choose in advance: a pinned correction is exempt outright, a
-critical one is floored above the archive threshold but outranked from
-the fifth repetition, and an ordinary one is archived at the third.
-Measured against the repository's own milk/lactose example. The distance
-between pricing a rejection and constraining it is the whole of the
-tombstone argument, in a system that got almost everything around it
-right.</p>
+<code>contradicts</code> edge written between the two. <strong>It now
+carries a rejected-value tombstone, and the tombstone sits on the door
+the extractor does not use.</strong> A person can park an uncertain fact
+as a candidate outside retrieval and reject it, which writes a durable
+suppression keyed on the normalised subject, predicate, object and
+project; every subsequent <code>memory_add</code> and
+<code>memory_add_many</code> is refused against that table before a row
+is written or a rival faded, and only an audited
+<code>memory_unsuppress</code> lifts it. That is the constraint the
+pattern argues for, built correctly and covered by an adverse-case
+suite. Automatic supersession writes no such record: archiving a value
+by attenuation and rejecting a candidate by review are two judgements
+about the same sentence, and only the second is remembered as a
+rejection. So the measured outcome against the repository's own
+milk/lactose example is unchanged — an ordinary correction is archived
+at the third re-assertion, and a pinned one, whose confidence never
+moves, stops being the top search result at the sixth while staying
+first in the CLI listing that sorts on the pin. <strong>A gate on one of
+two write paths is the whole of the tombstone argument</strong>, in a
+system that got almost everything around it right.</p>
 <p><strong>Cambium is the family's governance layer with no store under
 it, and it contributes the one check discipline this atlas has been
 asking for.</strong> It is a standard — twelve kernel modules, twelve
@@ -4406,37 +4412,44 @@ core recall</td>
 <tr>
 <td><code>memsem</code></td>
 <td>A subject/predicate/object triple with importance, confidence,
-frequency, tags, theme and an archived flag</td>
-<td>One SQLite file via <code>node:sqlite</code>, with versioned
-migrations, plus history, edges, episodes and audit tables</td>
+frequency, tags, theme, an archived flag, a trust level, a short
+evidence string and a validity interval</td>
+<td>One SQLite file via <code>node:sqlite</code>, six versioned
+migrations, plus history, edges, episodes, audit, candidate and
+suppression tables</td>
 <td>Strict lexical by default over an FTS5 index with a
 <code>unicode61</code> tokenizer, ranked by
-<code>importance × confidence × recency × frequency</code>; an opt-in
-relax mode adds cosine over JSON-stored vectors and two-hop graph
-propagation</td>
-<td><code>memory_add</code> upserts a triple; a differing object for the
-same subject and predicate fades every live rival and records a
-<code>contradicts</code> edge</td>
+<code>importance × confidence × recency × frequency</code> and filtered
+by validity interval; an opt-in relax mode adds cosine over JSON-stored
+vectors and two-hop graph propagation</td>
+<td><code>memory_add</code> is refused outright when the normalised
+value carries a suppression; otherwise it upserts a triple, and a
+differing object for the same subject and predicate fades every live
+rival and records a <code>contradicts</code> edge</td>
 <td>Supersession by attenuation — pinned rows exempt, critical rows
-floored above the archive threshold; a rejected value re-asserted
-reactivates its archived row at a discount and fades the correction, by
-design</td>
-<td><code>project</code> and <code>theme</code> applied as filters on
-every read path, plus a focus list that attenuates rather than
-excludes</td>
-<td>An MCP server with fourteen tools, an opencode plugin, and a CLI
-with list, edit, forget and doctor</td>
+floored above the archive threshold; a human rejection writes a durable
+value-keyed suppression, and <code>purge</code> deletes the row and
+cascades to its history and edges</td>
+<td><code>project</code> filters every read path and now holds even when
+a theme is given, with <code>crossProject: true</code> required to cross
+it; a focus list attenuates rather than excludes</td>
+<td>An MCP server with eighteen tools, an opencode plugin, and a CLI
+with list, edit, forget, purge and doctor</td>
 <td>Session-end extraction, consolidation into patterns, and a
 pairwise-comparison scoring pass — all sub-agents driven by prompts in
 <code>plugin.ts</code></td>
-<td>Importance, confidence, frequency and a pinned flag; provenance
-text; no discrete epistemic status</td>
+<td><code>inferred</code> / <code>verbatim</code> /
+<code>verified</code> as a field, with <code>verified</code> reachable
+only through <code>memory_verify</code>; a separate
+pending/approved/rejected candidate status; plus importance, confidence,
+frequency and a pinned flag</td>
 <td>A committed offline benchmark that reproduces exactly, an ablation
-over its own constants, and an audit log carrying a reason and a dry-run
-flag</td>
-<td>A re-asserted rejected value still fades the live correction; unless
-it was pinned, three repetitions archive it and five outrank a critical
-one</td>
+over its own constants, an audit log carrying a reason and a dry-run
+flag, and a value-keyed write gate with committed adverse-case
+tests</td>
+<td>Only a human candidate rejection writes a suppression, so automatic
+supersession still lets a repeated value return and fade its own
+correction; <code>import</code> writes past the gate</td>
 </tr>
 <tr>
 <td><code>memu</code></td>
@@ -5888,8 +5901,9 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>5 of 148:</em> <a
+<p><em>6 of 148:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -5897,7 +5911,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>23 of 148:</em> <a
+<p><em>24 of 148:</em> <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
@@ -5912,6 +5926,7 @@ href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
@@ -5923,7 +5938,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>12 of 148:</em> <a
+<p><em>13 of 148:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -5931,6 +5946,7 @@ href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
+href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
@@ -6128,7 +6144,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p>Three observations follow from the counts, stated no more strongly
 than the counts support.</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving, while three systems
+half the atlas applies a scope key when retrieving, while six systems
 carry a value-level tombstone. That is not the same as saying scope is
 solved — this flag measures the read path only. It says nothing about
 write authorization, whether background consolidation respects the same
@@ -6986,10 +7002,10 @@ href="https://github.com/TeleAI-UAGI/Awesome-Agent-Memory">Awesome-Agent-Memory<
 survey runs to about 1,500 lines across seventy sections and covers
 mem0, Letta, Zep, Graphiti, Cognee, MemOS, and HippoRAG — every
 widely-cited system, and all of them reviewed here. It does not list
-<code>verel</code>, <code>rainbox</code> or <code>daimon</code>, the
-only three systems in this atlas that carry a rejected-value tombstone.
-That is not a criticism of the survey; all three are small and obscure.
-It does mean correction-focused memory is under-surveyed as well as
+<code>verel</code>, <code>rainbox</code> or <code>daimon</code>, three
+of the systems in this atlas that carry a rejected-value tombstone. That
+is not a criticism of the survey; all three are small and obscure. It
+does mean correction-focused memory is under-surveyed as well as
 under-built: a reader working from the standard reading list would not
 encounter the mechanism at all.</p>
 <p>The stronger version of that observation is not about which
@@ -10429,7 +10445,7 @@ href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae573
 <li><a
 href="https://github.com/WindSeries69/memsem">WindSeries69/memsem</a> at
 <a
-href="https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3"><code class="commit-id" title="226c171ac21b6175bfda8e3b29256341e7fb2ff3">226c171a…</code></a></li>
+href="https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a"><code class="commit-id" title="16c28a940beac69fc060eb6bf5828061ad881d1a">16c28a94…</code></a></li>
 <li><a href="https://github.com/KimGLee/Cambium">KimGLee/Cambium</a> at
 <a
 href="https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d"><code class="commit-id" title="4f8bf4df77868ff9a86531539276cea11c28093d">4f8bf4df…</code></a></li>
@@ -11214,6 +11230,33 @@ gitignored and absent from the repository.</li>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-05</strong> — Re-reading <a
+href="../systems/memsem/">memsem</a> produced two method lessons, both
+about how a re-read establishes that something <em>changed</em>.</p>
+<p><strong>Run the demonstration at the old commit too, not only the new
+one.</strong> The milk/lactose measurement was re-run at the new pin and
+three of its cells disagreed with what this atlas had published.
+Checking out the previous pin into a worktree and running the identical
+script there produced output identical to the new commit, line for line
+— which settled that the correction path had not moved and the earlier
+reading's numbers came from a different setup. Without that second run
+the only available conclusions were "upstream regressed" and "upstream
+improved", and both would have been wrong. The cost is one
+<code>git worktree add</code> and a rebuild; the alternative is
+publishing a change that did not happen. This is the cheap version of
+the artifact the <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-04-automating-re-analysis.md">demonstration
+note</a> argues for: a saved script would have made the reconciliation
+exact instead of merely decisive, and this re-read is the second time in
+two days that its absence cost something.</p>
+<p><strong>"The top result" is not a property of a system, only of a
+surface.</strong> A pinned correction in memsem is first in the CLI
+listing, which sorts on the pin, and sixth-place-losing in
+<code>memory_search</code>, which ranks on a formula with no pin term —
+and the divergence appears only once the rejected value has been
+repeated enough times. A ranking claim in any report has to name the
+call that produced it, because a system with two read surfaces can be
+honestly described two contradictory ways.</p>
 <p><strong>2026-08-04</strong> — Re-reading <a
 href="../systems/provem/">Provem</a> after its author acted on the
 report cost one command, and the reason is worth generalising:

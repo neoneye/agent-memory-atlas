@@ -12,7 +12,7 @@ page_kind: comparison
 seven mechanisms with strict definitions. Corpus last extended **4 August 2026**.
 Five findings, with the counts they rest on:
 
-1. **Correction is the phase that goes unbuilt.** 5 systems of 148 carry a
+1. **Correction is the phase that goes unbuilt.** 6 systems of 148 carry a
    rejected-value tombstone — a record keyed on the *value*, so a later
    extraction cannot silently re-assert something already judged wrong. Almost
    everything else corrects by hiding a row, which stops a reader seeing it and
@@ -26,10 +26,10 @@ Five findings, with the counts they rest on:
    82 of 148 apply a scope key as a filter on the read path. It is also
    the mark most often satisfied by a single predicate that a background job
    then ignores.
-4. **Negative evidence is almost never tested.** 17 of 148 commit a case
+4. **Negative evidence is almost never tested.** 22 of 148 commit a case
    asserting that particular material must *not* be retrieved — the assertion
    every scope, deletion and correction claim ultimately rests on.
-5. **Trust is usually a number, not a state.** 23 of 148 record a discrete
+5. **Trust is usually a number, not a state.** 24 of 148 record a discrete
    epistemic status. The rest store a confidence float, which cannot express
    *rejected* and so cannot survive being wrong.
 
@@ -112,7 +112,7 @@ proves only that nobody built one *in public*.
 else:
 
 1. **Whether correction is possible at all.** Almost everything can overwrite
-   or supersede. Three systems in this entire atlas can record that a *value*
+   or supersede. Six systems in this entire atlas can record that a *value*
    was rejected so extraction cannot bring it back — see the
    [capability index](../capabilities/) for the live count. This is the single widest gap in
    the field, and it is invisible on every benchmark.
@@ -810,17 +810,22 @@ that is the standard the others are being measured against. Its correction desig
 is the right instinct too: a contradicting fact does not overwrite its rival but
 multiplies its confidence by 0.6 — by 0.9 above a critical threshold — archiving
 below 0.25 and keeping the row, with a `contradicts` edge written between the
-two. **Then a re-asserted rejection still costs the correction, and now does so by
-design.** A value that already lost is consulted rather than ignored — it
-reactivates its own archived row at a discount instead of arriving fresh, and the
-reactivation is audited — but the same call still fades the live correction, and
-a committed regression test asserts that as intended behaviour. What it costs
-depends on protection the user had to choose in advance: a pinned correction is
-exempt outright, a critical one is floored above the archive threshold but
-outranked from the fifth repetition, and an ordinary one is archived at the
-third. Measured against the repository's own milk/lactose example. The distance
-between pricing a rejection and constraining it is the whole of the tombstone
-argument, in a system that got almost everything around it right.
+two. **It now carries a rejected-value tombstone, and the tombstone sits on the
+door the extractor does not use.** A person can park an uncertain fact as a
+candidate outside retrieval and reject it, which writes a durable suppression
+keyed on the normalised subject, predicate, object and project; every subsequent
+`memory_add` and `memory_add_many` is refused against that table before a row is
+written or a rival faded, and only an audited `memory_unsuppress` lifts it. That
+is the constraint the pattern argues for, built correctly and covered by an
+adverse-case suite. Automatic supersession writes no such record: archiving a
+value by attenuation and rejecting a candidate by review are two judgements about
+the same sentence, and only the second is remembered as a rejection. So the
+measured outcome against the repository's own milk/lactose example is unchanged —
+an ordinary correction is archived at the third re-assertion, and a pinned one,
+whose confidence never moves, stops being the top search result at the sixth while
+staying first in the CLI listing that sorts on the pin. **A gate on one of two
+write paths is the whole of the tombstone argument**, in a system that got almost
+everything around it right.
 
 **Cambium is the family's governance layer with no store under it, and it
 contributes the one check discipline this atlas has been asking for.** It is a
@@ -1620,7 +1625,7 @@ about what is still on disk. The evidence is under
 | `memoryos` | QA pair in short term; topic session segment in mid term; profile string and knowledge entry in long term | JSON files by default; a separate ChromaDB variant | Embedding similarity per tier, with mid-term segments ordered by a heat score | Dialogue pairs appended; LLM segmentation into topic sessions; profile and knowledge updates | LFU eviction at capacity; bounded knowledge deques; profile merged by rewrite | `user_id` and `assistant_id` on the store | PyPI package, MCP server, ChromaDB variant, playground | Segmentation, heat recomputation, profile and knowledge updates on threshold | None found — no source, actor, or status on a memory | A committed LoCoMo harness with its dataset, and an explicit promotion signal | Heat mixes three signals with hardcoded weights; a second LFU counter can disagree with it |
 | `memos` | Textual item, graph tier, preference/skill, KV cache, LoRA | Configurable vector/graph stores, dumps, cache/model artifacts | Direct vector or graph + BM25 + rerank + reasoner; optional auxiliary memories | Reader extraction into a memory cube; scheduler transformations | Module-specific update/delete/soft-delete/dump semantics | User plus registered memory cube | MOS chat/runtime, APIs, CLI | Scheduler and activation-memory refresh | Source metadata varies by module; no uniform trust state | Treats memory as heterogeneous mountable resources | Umbrella API hides uneven guarantees and maturity |
 | `mempalace` | Verbatim drawer chunks, closets, KG triples | Local Chroma default; sqlite_exact, Qdrant, pgvector; SQLite KG | Direct drawer vector search, BM25 rerank, closet boost, metadata filters, FTS fallback | Mine files/convos or MCP add drawer; deterministic IDs; chunk/upsert verbatim text | Delete/update drawers, delete by source, dedup, repair; limited epistemic correction | Palace, wing, room, source file, parent drawer, backend namespace | MCP, CLI, hooks, skills, wake-up stack | Mining, closet/hallway/tunnel computation, repair/sync/backup | Strong source provenance; weak candidate/verified/rejected trust state | Evidence-preserving raw baseline, hybrid retrieval, operational hardening | Raw stores get large/noisy; contradiction resolution mostly outside core recall |
-| `memsem` | A subject/predicate/object triple with importance, confidence, frequency, tags, theme and an archived flag | One SQLite file via `node:sqlite`, with versioned migrations, plus history, edges, episodes and audit tables | Strict lexical by default over an FTS5 index with a `unicode61` tokenizer, ranked by `importance × confidence × recency × frequency`; an opt-in relax mode adds cosine over JSON-stored vectors and two-hop graph propagation | `memory_add` upserts a triple; a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge | Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a rejected value re-asserted reactivates its archived row at a discount and fades the correction, by design | `project` and `theme` applied as filters on every read path, plus a focus list that attenuates rather than excludes | An MCP server with fourteen tools, an opencode plugin, and a CLI with list, edit, forget and doctor | Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts` | Importance, confidence, frequency and a pinned flag; provenance text; no discrete epistemic status | A committed offline benchmark that reproduces exactly, an ablation over its own constants, and an audit log carrying a reason and a dry-run flag | A re-asserted rejected value still fades the live correction; unless it was pinned, three repetitions archive it and five outrank a critical one |
+| `memsem` | A subject/predicate/object triple with importance, confidence, frequency, tags, theme, an archived flag, a trust level, a short evidence string and a validity interval | One SQLite file via `node:sqlite`, six versioned migrations, plus history, edges, episodes, audit, candidate and suppression tables | Strict lexical by default over an FTS5 index with a `unicode61` tokenizer, ranked by `importance × confidence × recency × frequency` and filtered by validity interval; an opt-in relax mode adds cosine over JSON-stored vectors and two-hop graph propagation | `memory_add` is refused outright when the normalised value carries a suppression; otherwise it upserts a triple, and a differing object for the same subject and predicate fades every live rival and records a `contradicts` edge | Supersession by attenuation — pinned rows exempt, critical rows floored above the archive threshold; a human rejection writes a durable value-keyed suppression, and `purge` deletes the row and cascades to its history and edges | `project` filters every read path and now holds even when a theme is given, with `crossProject: true` required to cross it; a focus list attenuates rather than excludes | An MCP server with eighteen tools, an opencode plugin, and a CLI with list, edit, forget, purge and doctor | Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts` | `inferred` / `verbatim` / `verified` as a field, with `verified` reachable only through `memory_verify`; a separate pending/approved/rejected candidate status; plus importance, confidence, frequency and a pinned flag | A committed offline benchmark that reproduces exactly, an ablation over its own constants, an audit log carrying a reason and a dry-run flag, and a value-keyed write gate with committed adverse-case tests | Only a human candidate rejection writes a suppression, so automatic supersession still lets a repeated value return and fade its own correction; `import` writes past the gate |
 | `memu` | `RecallFile` on a memory or skill track, sliced into `RecallFileSegment` search units | Pluggable repositories over SQLite, Postgres, or in-memory | Single-shot, LLM-free: segments ranked by embedding, rolled up to files by max score | `commit_results` writes recall files, resources and user state in one call | Segments dropped and recreated when a file is re-sliced; no supersession found | `where` filters over records; no tenant or project model traced | Host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy | Scheduling module; agentic backend for richer flows; a client-event spool flushed on the bridging pair, never on the per-turn hook | Timestamps and track only; no source, actor, or status on a record | Ranking on segments and returning files, with local/remote ordering parity as an invariant | No trust state, provenance, correction path, or tombstone; opt-out telemetry on by default |
 | `memvid` | Immutable frame; structured memory card keyed `entity:slot` with a cardinality | One `.mv2` file — payload, internal WAL, TOC, footer, lexical/vector/time indexes, no sidecars | Lexical, vector and graph search over frames; `get_current` and `get_at_time` per entity:slot | Append-only frames through a WAL; supersede links; enrichment recorded per engine and version | `Active \| Superseded \| Deleted`; supersedes/superseded_by chains; a `Tombstone` WAL op | ACL module over a single file; no multi-tenant model traced | Rust library and CLI over a portable file | Enrichment workers, maintenance, doctor | Checksums per frame, an audit module, enrichment provenance by engine and version | Immutable frames plus as-of reads and session replay — the memory can be rewound | Headline benchmark numbers with no committed result artifacts found; correction is frame-keyed |
 | `mercury-agent` | `UserMemoryRecord` graded on confidence, importance, and durability | Second-brain DB, with people and relation records | Retrieval records `lastUsedAt` and `lastUsedQuery` | Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration | `dismissed` boolean and `supersededBy`; no tombstone | `durable`, `active`, `subconscious` tiers; single user | Internal, with a `brain/Memory.tsx` review page | Not traced | Four-way `evidenceKind`, corroboration counts, free-text provenance | Durability separated from importance; a subconscious tier; a learning-pause switch | Scores estimated once at write time; dismissal is not durable |
@@ -1731,15 +1736,15 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*5 of 148:* [`daimon`](../systems/daimon/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
+*6 of 148:* [`daimon`](../systems/daimon/), [`memsem`](../systems/memsem/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
-*23 of 148:* [`agentic-context-engine`](../systems/agentic-context-engine/), [`agentrecall-x`](../systems/agentrecall-x/), [`aura`](../systems/aura/), [`cambium`](../systems/cambium/), [`clio`](../systems/clio/), [`cognicore`](../systems/cognicore/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`graphify`](../systems/graphify/), [`hippo-memory`](../systems/hippo-memory/), [`magic-context`](../systems/magic-context/), [`memledger`](../systems/memledger/), [`memoryops-ai`](../systems/memoryops-ai/), [`npcpy`](../systems/npcpy/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`terse-memory`](../systems/terse-memory/), [`tigrimosr`](../systems/tigrimosr/), [`tokenmizer`](../systems/tokenmizer/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
+*24 of 148:* [`agentic-context-engine`](../systems/agentic-context-engine/), [`agentrecall-x`](../systems/agentrecall-x/), [`aura`](../systems/aura/), [`cambium`](../systems/cambium/), [`clio`](../systems/clio/), [`cognicore`](../systems/cognicore/), [`core-memory`](../systems/core-memory/), [`daimon`](../systems/daimon/), [`gini-agent`](../systems/gini-agent/), [`graphify`](../systems/graphify/), [`hippo-memory`](../systems/hippo-memory/), [`magic-context`](../systems/magic-context/), [`memledger`](../systems/memledger/), [`memoryops-ai`](../systems/memoryops-ai/), [`memsem`](../systems/memsem/), [`npcpy`](../systems/npcpy/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`terse-memory`](../systems/terse-memory/), [`tigrimosr`](../systems/tigrimosr/), [`tokenmizer`](../systems/tokenmizer/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
 
 **Bi-temporal validity** — When a fact was true tracked separately from when the system recorded or expired it.
 
-*12 of 148:* [`agent-memory-supabase`](../systems/agent-memory-supabase/), [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hippo-memory`](../systems/hippo-memory/), [`memory-engine`](../systems/memory-engine/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`verel`](../systems/verel/)
+*13 of 148:* [`agent-memory-supabase`](../systems/agent-memory-supabase/), [`atomic-agent`](../systems/atomic-agent/), [`core-memory`](../systems/core-memory/), [`gini-agent`](../systems/gini-agent/), [`graphiti`](../systems/graphiti/), [`hippo-memory`](../systems/hippo-memory/), [`memory-engine`](../systems/memory-engine/), [`memsem`](../systems/memsem/), [`memvid`](../systems/memvid/), [`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`verel`](../systems/verel/)
 
 **Scope enforced in retrieval** — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument.
 
@@ -1762,7 +1767,7 @@ Three observations follow from the counts, stated no more strongly than the
 counts support.
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies
-a scope key when retrieving, while three systems carry a value-level tombstone.
+a scope key when retrieving, while six systems carry a value-level tombstone.
 That is not the same as saying scope is solved — this flag measures the read
 path only. It says nothing about write authorization, whether background
 consolidation respects the same boundary, whether cache and embedding keys
@@ -2274,8 +2279,8 @@ The gap is visible from outside this atlas too. TeleAI's
 [Awesome-Agent-Memory](https://github.com/TeleAI-UAGI/Awesome-Agent-Memory)
 survey runs to about 1,500 lines across seventy sections and covers mem0, Letta,
 Zep, Graphiti, Cognee, MemOS, and HippoRAG — every widely-cited system, and all
-of them reviewed here. It does not list `verel`, `rainbox` or `daimon`, the only
-three systems in this atlas that carry a rejected-value tombstone. That is not a
+of them reviewed here. It does not list `verel`, `rainbox` or `daimon`, three of
+the systems in this atlas that carry a rejected-value tombstone. That is not a
 criticism of the survey; all three are small and obscure. It does mean
 correction-focused memory is under-surveyed as well as under-built: a reader
 working from the standard reading list would not encounter the mechanism at all.
@@ -4169,7 +4174,7 @@ Privacy/deletion:
 - [eanai-ro/ean-agentos](https://github.com/eanai-ro/ean-agentos) at [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6)
 - [FlowElement-ai/m_flow](https://github.com/FlowElement-ai/m_flow) at [`da2766c5ebf45ff10440b419465c8ec0df674022`](https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022)
 - [Whooptie/NOVA_AI](https://github.com/Whooptie/NOVA_AI) at [`4a7d89b915b8bd785606c347b6ae5733030edc1f`](https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f)
-- [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`226c171ac21b6175bfda8e3b29256341e7fb2ff3`](https://github.com/WindSeries69/memsem/commit/226c171ac21b6175bfda8e3b29256341e7fb2ff3)
+- [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`16c28a940beac69fc060eb6bf5828061ad881d1a`](https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a)
 - [KimGLee/Cambium](https://github.com/KimGLee/Cambium) at [`4f8bf4df77868ff9a86531539276cea11c28093d`](https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d)
 - [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`838c63dabbcfc4aaee0867ba7ff0bab7829e442b`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b)
 - [BernhardJackiewicz/provem](https://github.com/BernhardJackiewicz/provem) at [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5)
@@ -4312,6 +4317,32 @@ Dated changes to this atlas's own method and reading. Per-system reading
 history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
+
+**2026-08-05** — Re-reading [memsem](../systems/memsem/) produced two method
+lessons, both about how a re-read establishes that something *changed*.
+
+**Run the demonstration at the old commit too, not only the new one.** The
+milk/lactose measurement was re-run at the new pin and three of its cells
+disagreed with what this atlas had published. Checking out the previous pin into
+a worktree and running the identical script there produced output identical to
+the new commit, line for line — which settled that the correction path had not
+moved and the earlier reading's numbers came from a different setup. Without that
+second run the only available conclusions were "upstream regressed" and "upstream
+improved", and both would have been wrong. The cost is one `git worktree add` and
+a rebuild; the alternative is publishing a change that did not happen. This is
+the cheap version of the artifact the [demonstration
+note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-04-automating-re-analysis.md)
+argues for: a saved script would have made the reconciliation exact instead of
+merely decisive, and this re-read is the second time in two days that its absence
+cost something.
+
+**"The top result" is not a property of a system, only of a surface.** A pinned
+correction in memsem is first in the CLI listing, which sorts on the pin, and
+sixth-place-losing in `memory_search`, which ranks on a formula with no pin term —
+and the divergence appears only once the rejected value has been repeated enough
+times. A ranking claim in any report has to name the call that produced it,
+because a system with two read surfaces can be honestly described two
+contradictory ways.
 
 **2026-08-04** — Re-reading [Provem](../systems/provem/) after its author acted on
 the report cost one command, and the reason is worth generalising: **the price of

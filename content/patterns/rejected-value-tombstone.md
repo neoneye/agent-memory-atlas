@@ -6,10 +6,11 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Five systems of one hundred and forty-eight
+> **This is not an established best practice.** Six systems of one hundred and forty-eight
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, and one carries the mark without yet being characterised here.
+> regulation, one built it after this page argued with its maintainer, and one
+> carries the mark without yet being characterised here.
 > There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
 > vocabulary for it. Everything below is an argument, and the provenance is
@@ -105,7 +106,7 @@ enough.
 
 ## Seen in the atlas
 
-**Five systems in the atlas have this.** That is still the most striking negative
+**Six systems in the atlas have this.** That is still the most striking negative
 result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -116,6 +117,9 @@ are rejected or superseded, and model writes check them before asserting.
 instructive precisely because of *how* it is weaker.
 [Provem](../../systems/provem/) is the fourth and the first to arrive at it from
 regulation rather than from a failure, discussed below.
+[memsem](../../systems/memsem/) is the fifth, refuses the write like the first
+two rather than filtering the read like the middle two, and puts the mechanism
+behind a human decision — discussed below.
 [Universal Memory Engine](../../systems/universal-memory-engine/) carries the
 mark and is not yet characterised on this page — its paragraph is owed, and the
 gap is recorded here rather than papered over.
@@ -234,32 +238,37 @@ way out. For a system whose stated purpose is GDPR Article 17 that is the sharpe
 version of the same criticism — the regulation is about what you hold, and this
 mechanism governs what you serve.
 
-**[memsem](../../systems/memsem/) is the one case here where the distinction on
-this page was tested against a maintainer, and it is worth reading as a partial
-concession rather than a failure.** At the commit this atlas first read, a
-re-asserted rejected value arrived as a new live row and faded the correction
-that beat it; pinning did not help, because `pinned` was enforced where a
-sub-agent adjusts importance and appeared nowhere in the fade path. Two commits
-later the shape has changed. The archived row is now consulted and reactivated in
-place at a `resurrectConfidence` discount instead of arriving fresh, both the
-archival and the reactivation write audit rows, and `fade()` exits immediately on
-`pinned === 1` while clamping critical rows above the archive threshold.
+**The fifth was built after an argument about this page, and it is the only one
+here where the mechanism is gated on a human decision.**
+[memsem](../../systems/memsem/) parks an uncertain fact in a `memory_candidates`
+table that no read path joins; rejecting it writes a row into
+`memory_suppressions` keyed on the normalised subject, predicate, object and
+project, and `blockedBySuppression()` is the first effective statement in
+`add()`. A suppressed value is refused outright — no row written, no rival faded —
+and `memory_add_many`, the tool the extraction sub-agent is instructed to call,
+inherits the same check. Lifting it takes an explicit `memory_unsuppress`, which
+is audited. The key is `trim().toLowerCase()`, which is the case-and-space class
+rather than Verel's NFKC canonicalisation, and `expires_at` exists in the schema
+with nothing writing it, so round 8's lesson — a tombstone that expires is not a
+tombstone — is passed by omission rather than by decision.
 
-**What did not change is the half this page is actually about.** A re-assertion
-still fades the live correction, and a committed regression test now asserts that
-as the intended contract — *"Re-asserting a rejected value also supersedes its
-current contradiction"*. Measured at the new commit: a pinned correction survives
-fifteen re-assertions untouched, a critical unpinned one is never archived but is
-outranked from the fifth, and an ordinary one is archived at the third.
+**What it shows is that the check and the trigger are separable, and that
+building the check is the easier half.** memsem's other correction path is
+supersession by attenuation: a contradicting write multiplies its rival's
+confidence by 0.6 and archives it below 0.25. That path writes no suppression.
+Archiving a value because it lost an argument and rejecting a candidate because a
+person said no are two judgements about the same sentence, and only the second is
+recorded as a rejection — so the write path a background extractor uses reaches
+the store through the door with no lock on it. Measured against the project's own
+milk/lactose example: an ordinary correction is archived at the third
+re-assertion of the value it corrected, and a pinned correction, whose confidence
+`fade()` never touches, stops being the top search result at the sixth.
 
-So the guard is keyed on the value and consulted, which is the hard half — and
-what it buys is a **price rather than a prohibition**. That is the sharpest
-statement this page has of its own claim: a tombstone has to make the rejection a
-*durable constraint*, because any discount on re-entry is paid off by repetition,
-and an extractor re-reading one old transcript looks exactly like a fact being
-independently restated. memsem's answer is that the user should pin what matters,
-which is a real answer that relocates the problem to whoever had to know in
-advance.
+That is this page's argument in one system. A discount on re-entry is paid off by
+repetition; a check that refuses is not. memsem now has both mechanisms in the
+same file, which makes the comparison unusually clean — and leaves the open
+question of whether an automatic judgement should be allowed to write a tombstone
+at all, or whether a rejection is by definition something a person does.
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry

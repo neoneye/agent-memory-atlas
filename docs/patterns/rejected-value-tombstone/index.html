@@ -96,15 +96,16 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Five
+<p><strong>This is not an established best practice.</strong> Six
 systems of one hundred and forty-eight carry it: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
-weaker form independently, one was driven to it by a regulation, and one
-carries the mark without yet being characterised here. There is no
-consensus behind this page, no library that provides the mechanism, and
-no shared vocabulary for it. Everything below is an argument, and the
-provenance is traced under <em>Seen in the atlas</em> so you can weigh
-it as one.</p>
+weaker form independently, one was driven to it by a regulation, one
+built it after this page argued with its maintainer, and one carries the
+mark without yet being characterised here. There is no consensus behind
+this page, no library that provides the mechanism, and no shared
+vocabulary for it. Everything below is an argument, and the provenance
+is traced under <em>Seen in the atlas</em> so you can weigh it as
+one.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -219,7 +220,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Five systems in the atlas have this.</strong> That is still
+<p><strong>Six systems in the atlas have this.</strong> That is still
 the most striking negative result in the atlas, and it is the reason
 this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -231,6 +232,9 @@ href="../../systems/daimon/">Daimon</a> is the third and the weakest,
 and it is instructive precisely because of <em>how</em> it is weaker. <a
 href="../../systems/provem/">Provem</a> is the fourth and the first to
 arrive at it from regulation rather than from a failure, discussed
+below. <a href="../../systems/memsem/">memsem</a> is the fifth, refuses
+the write like the first two rather than filtering the read like the
+middle two, and puts the mechanism behind a human decision — discussed
 below. <a href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a> carries the mark and is not yet characterised on this page —
 its paragraph is owed, and the gap is recorded here rather than papered
@@ -380,36 +384,42 @@ store and is stopped on the way out. For a system whose stated purpose
 is GDPR Article 17 that is the sharper version of the same criticism —
 the regulation is about what you hold, and this mechanism governs what
 you serve.</p>
-<p><strong><a href="../../systems/memsem/">memsem</a> is the one case
-here where the distinction on this page was tested against a maintainer,
-and it is worth reading as a partial concession rather than a
-failure.</strong> At the commit this atlas first read, a re-asserted
-rejected value arrived as a new live row and faded the correction that
-beat it; pinning did not help, because <code>pinned</code> was enforced
-where a sub-agent adjusts importance and appeared nowhere in the fade
-path. Two commits later the shape has changed. The archived row is now
-consulted and reactivated in place at a <code>resurrectConfidence</code>
-discount instead of arriving fresh, both the archival and the
-reactivation write audit rows, and <code>fade()</code> exits immediately
-on <code>pinned === 1</code> while clamping critical rows above the
-archive threshold.</p>
-<p><strong>What did not change is the half this page is actually
-about.</strong> A re-assertion still fades the live correction, and a
-committed regression test now asserts that as the intended contract —
-<em>"Re-asserting a rejected value also supersedes its current
-contradiction"</em>. Measured at the new commit: a pinned correction
-survives fifteen re-assertions untouched, a critical unpinned one is
-never archived but is outranked from the fifth, and an ordinary one is
-archived at the third.</p>
-<p>So the guard is keyed on the value and consulted, which is the hard
-half — and what it buys is a <strong>price rather than a
-prohibition</strong>. That is the sharpest statement this page has of
-its own claim: a tombstone has to make the rejection a <em>durable
-constraint</em>, because any discount on re-entry is paid off by
-repetition, and an extractor re-reading one old transcript looks exactly
-like a fact being independently restated. memsem's answer is that the
-user should pin what matters, which is a real answer that relocates the
-problem to whoever had to know in advance. <strong><a
+<p><strong>The fifth was built after an argument about this page, and it
+is the only one here where the mechanism is gated on a human
+decision.</strong> <a href="../../systems/memsem/">memsem</a> parks an
+uncertain fact in a <code>memory_candidates</code> table that no read
+path joins; rejecting it writes a row into
+<code>memory_suppressions</code> keyed on the normalised subject,
+predicate, object and project, and <code>blockedBySuppression()</code>
+is the first effective statement in <code>add()</code>. A suppressed
+value is refused outright — no row written, no rival faded — and
+<code>memory_add_many</code>, the tool the extraction sub-agent is
+instructed to call, inherits the same check. Lifting it takes an
+explicit <code>memory_unsuppress</code>, which is audited. The key is
+<code>trim().toLowerCase()</code>, which is the case-and-space class
+rather than Verel's NFKC canonicalisation, and <code>expires_at</code>
+exists in the schema with nothing writing it, so round 8's lesson — a
+tombstone that expires is not a tombstone — is passed by omission rather
+than by decision.</p>
+<p><strong>What it shows is that the check and the trigger are
+separable, and that building the check is the easier half.</strong>
+memsem's other correction path is supersession by attenuation: a
+contradicting write multiplies its rival's confidence by 0.6 and
+archives it below 0.25. That path writes no suppression. Archiving a
+value because it lost an argument and rejecting a candidate because a
+person said no are two judgements about the same sentence, and only the
+second is recorded as a rejection — so the write path a background
+extractor uses reaches the store through the door with no lock on it.
+Measured against the project's own milk/lactose example: an ordinary
+correction is archived at the third re-assertion of the value it
+corrected, and a pinned correction, whose confidence <code>fade()</code>
+never touches, stops being the top search result at the sixth.</p>
+<p>That is this page's argument in one system. A discount on re-entry is
+paid off by repetition; a check that refuses is not. memsem now has both
+mechanisms in the same file, which makes the comparison unusually clean
+— and leaves the open question of whether an automatic judgement should
+be allowed to write a tombstone at all, or whether a rejection is by
+definition something a person does. <strong><a
 href="../../systems/memoryops-ai/">MemoryOps AI</a> is the closest any
 system here comes without arriving</strong>, and it is the best argument
 on this page that the expensive half of the pattern is not the hard

@@ -1330,9 +1330,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `memsem`
 
 - Best idea: the benchmark is committed, wired into `npm test`, and reproduces exactly — P@3 0.958 with an ablation across four alternative constant weightings, so the defaults have to keep beating the alternatives on every run, and an author-written honest reading names the set's limits.
-- Biggest risk: a re-asserted rejection still fades the live correction, now as specified behaviour with a regression test behind it. Pin a correction and it is untouchable; leave it ordinary and three repetitions of the value it corrected archive it, which puts the burden on a user knowing in advance which corrections matter.
+- Biggest risk: the durable rejection is real and only a human can arm it. A rejected candidate writes a value-keyed suppression that refuses every later write; automatic supersession writes none, so a re-asserted value still returns and fades the live correction — three repetitions archive an ordinary one, and six take a pinned one off the top of a search while leaving its confidence untouched.
 - Most reusable component: the audit row — entity, field, old and new value, a reason, a pass id that caps a sub-agent's cumulative adjustment, and a dry-run flag that records what would have happened without applying it.
-- Maturity impression: eighteen commits and eighteen translated READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, two committed negative retrieval cases, and nothing ever deleted.
+- Maturity impression: twenty-one commits and sixteen READMEs, and the engineering habits underneath are better than that ratio predicts — bounded sub-agent authority enforced in code and tested, an adverse-case governance suite that exits non-zero, five committed negative retrieval cases, and a purge that cascades rather than a flag rename.
 - Study when: you are deciding what a defensible retrieval number looks like; this is the corpus's cleanest example of a claim a reader can check in one command.
 - Do not copy when: a correction has to hold without anyone having pinned it. The rejected value is keyed and consulted, so re-entry costs it a `resurrectConfidence` discount — but a discount is a price, not a prohibition, and repetition pays it off.
 
