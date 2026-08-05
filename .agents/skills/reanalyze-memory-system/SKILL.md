@@ -57,6 +57,50 @@ assigned anywhere in the repository" — or process narration, which is not. If 
 sentence would have to change when the atlas changes rather than when the system
 changes, it is the second kind.
 
+### The forms that grep misses, which are the common ones
+
+The list above is what the failure looks like when it is *explicit*. It almost
+never is. The re-review leaks in as ordinary adverbs, and a report can pass the
+grep above while every section quietly narrates the diff:
+
+- "There are **now** two ways to reject a value" — there are two.
+- "Where it **still** inverts" — where it inverts.
+- "Trust is **now** a state, not only a score" — trust is a state.
+- "Committed negative cases **now** run to five" — they run to five.
+- "The review queue is the **newer** half" — newer than what the reader cannot see.
+- "The mark is earned and the finding is **narrower than it was**" — grades the
+  atlas's position, not the code.
+
+Every one of those is invisible to the first grep and says the same forbidden
+thing. So run the second check too, over the body only:
+
+```sh
+sed '/^## History$/q' content/systems/<slug>.md \
+  | rg -n -i '\b(now|still|no longer|used to|already|newer|earlier|these days|has since|as of this reading)\b'
+```
+
+**Stop at `## History`.** That section is the log and its tense is correct there;
+including it buries the real hits under the entry you just wrote, and a check
+whose output is mostly noise is a check that gets skipped.
+
+This one has a **high false-positive rate by design** — it is a prompt to apply
+the test, not a list of defects. Triage each hit by asking what the word is about:
+
+| Keep — the word is about the subject | Delete — the word is about the report |
+| --- | --- |
+| "values this key has **previously** lost" | "there are **now** two write destinations" |
+| "evaluated against **now** or against an `asOf`" | "**still** archived at the third re-assertion" |
+| "the pattern must **still** rank in the top five" after consolidation | "the audit gap is **no longer** open" |
+| "what the store believed then against what is **now** claimed about then" | "**already** covered in the previous pin" |
+
+The rule is unchanged and the adverbs are just where it hides: a sentence that
+has to change when the atlas changes is the wrong kind, whatever word carries it.
+
+Sweep the same vocabulary through every file the re-read touched, not only the
+report. The homepage card is the one that gets missed — it is three sentences
+written last, and "a rejected candidate **now** writes a suppression" shipped to
+the published homepage exactly that way.
+
 The one place a re-review *is* recorded is the **`## History` section at the
 bottom of the report** — one dated entry per reading, newest first, carrying the
 full 40-character sha. That is the log. The report body is the state, and
