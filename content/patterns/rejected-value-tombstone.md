@@ -6,10 +6,10 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Six systems of one hundred and fifty
+> **This is not an established best practice.** Seven systems of one hundred and fifty
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, one built it after this page argued with its maintainer, and one
+> regulation, two built it after this page named its absence in their report, and one
 > carries the mark without yet being characterised here.
 > There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -106,7 +106,7 @@ enough.
 
 ## Seen in the atlas
 
-**Six systems in the atlas have this.** That is still the most striking negative
+**Seven systems in the atlas have this.** That is still the most striking negative
 result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -120,6 +120,8 @@ regulation rather than from a failure, discussed below.
 [memsem](../../systems/memsem/) is the fifth, refuses the write like the first
 two rather than filtering the read like the middle two, and puts the mechanism
 behind a human decision — discussed below.
+[Perseus Vault](../../systems/perseus-vault/) is the sixth and the only one that
+refuses a value without storing it — discussed below.
 [Universal Memory Engine](../../systems/universal-memory-engine/) carries the
 mark and is not yet characterised on this page — its paragraph is owed, and the
 gap is recorded here rather than papered over.
@@ -268,6 +270,38 @@ repetition; a check that refuses is not. memsem carries both mechanisms in the
 same file, which makes the comparison unusually clean — and leaves the open
 question of whether an automatic judgement should be allowed to write a tombstone
 at all, or whether a rejection is by definition something a person does.
+**The sixth stores the digest and not the value, which answers a tradeoff on this
+page rather than inheriting it.** [Perseus Vault](../../systems/perseus-vault/)'s
+`rejected_value_tombstones` is keyed on `(workspace_hash, subject, predicate,
+value_sha256)` and carries a reason, an evidence reference, an author id and an
+optional expiry. The value is never written — only its SHA-256, over a form that
+is JSON-canonicalised when it parses, whitespace-collapsed and lower-cased, so a
+re-indented body, a re-ordered object and a case variant all land on the same
+tombstone.
+
+That directly addresses the *Tradeoffs* entry above — *"the tombstone itself can
+contain sensitive data and must follow deletion policy"* — which is a real problem
+for every other holder: a rejection record for a leaked secret is a copy of the
+secret. A digest refuses the value without retaining it, and the project states
+the property in those terms.
+
+Three further details. It **refuses at the write path** rather than filtering at
+read, like Verel and RainBox and unlike Daimon and Provem, enforced in
+`remember_impl` with a comment claiming the reach — agent remember, capture,
+ingest, connectors, derived writers. Its **override is an audited act**, not a
+bypass: a deliberate write passes `allow_rejected=true` and is journaled into the
+same hash-chained ledger, which is the shape the tradeoff list above asks for when
+a trusted human correction has to win. And the lookup matches on **predicate and
+digest without the subject**, so a rejected value is refused under any key in
+scope — deliberate, named in a test, and the most aggressive reading of the
+normalization tradeoff any holder here takes, with a correspondingly larger
+false-positive surface.
+
+The open edge is reach rather than existence: the comment names connectors and
+derived writers, and no committed test walks the background consolidation passes,
+which is the condition under which record-keyed removal stops holding and the one
+this page cares most about.
+
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry

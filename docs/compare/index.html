@@ -102,7 +102,7 @@ judged against seven mechanisms with strict definitions. Corpus last
 extended <strong>4 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 6
+<li><strong>Correction is the phase that goes unbuilt.</strong> 7
 systems of 150 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -210,11 +210,11 @@ that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Six systems in this entire atlas
-can record that a <em>value</em> was rejected so extraction cannot bring
-it back — see the <a href="../capabilities/">capability index</a> for
-the live count. This is the single widest gap in the field, and it is
-invisible on every benchmark.</li>
+everything can overwrite or supersede. Seven systems in this entire
+atlas can record that a <em>value</em> was rejected so extraction cannot
+bring it back — see the <a href="../capabilities/">capability index</a>
+for the live count. This is the single widest gap in the field, and it
+is invisible on every benchmark.</li>
 <li><strong>Whether evidence outlives its derivations.</strong> Systems
 that keep the raw event and treat summaries, profiles, and graphs as
 rebuildable projections can repair a bad extraction. Systems that
@@ -1204,35 +1204,43 @@ reason, sit on top. The limits are the mirror image: with no corpus
 almost nothing is exercised end to end, most of the 6,453 lines of
 kernel are <code>MUST</code> prose with no script behind them, and there
 are 73 lines of tests over one of the twelve scripts.</p>
-<p><strong>Perseus Vault carries six of the seven marks and is the
-corpus's best answer to the question the benchmarks page keeps
-asking.</strong> 59,000 lines of Rust in one binary over one SQLite
-file: bi-temporal columns on the live table <em>and</em> its history
-with <code>superseded_by</code>, a SHA-256 hash-chained journal with a
-keyed MAC, <code>workspace_hash</code> applied in read predicates, trust
-split into a discrete <code>status</code>, a separate
-<code>verified</code> flag and a separate <code>certainty</code> float,
-an operator review surface, and a purge tested in both directions — the
-PII is gone from history and the journal, and the redaction did not
-cross the workspace boundary. Its headline <strong>73.8% on
-LongMemEval</strong> is the mean of three independent full 500-question
-runs whose reports are all committed with dataset, split, pinned
-answerer and judge snapshots, temperature, commit, binary version,
-hardware and a run signature; the mean recomputes from those artifacts
-exactly, and so does the 79.0% it <em>does not</em> lead with, because
-the plain and chain-of-thought prompts are different official conditions
-and the answer prompt is folded into the run signature so the two can
-never be blended. Competitor figures are labelled as their publishers'
-claims rather than reproduced. It also ships a
-<code>CLAIMS-AUDIT.md</code> that retired its own "sub-millisecond
-recall" for lack of an artifact and downgraded "signed results" to
-"content-hashed". <strong>And the one claim that went stale is the one
-with a check attached</strong> — the audit's own authoritative
-tool-count command returns 76 against a claim of 65 repeated in three
-places, because a command written in Markdown runs when somebody
-remembers. The missing mark is the tombstone: purge and supersession are
-keyed on the record, so nothing stops a later ingest re-asserting a
-value that was removed.</p>
+<p><strong>Perseus Vault carries all seven marks and is the corpus's
+best answer to the question the benchmarks page keeps asking.</strong>
+59,000 lines of Rust in one binary over one SQLite file: bi-temporal
+columns on the live table <em>and</em> its history with
+<code>superseded_by</code>, a SHA-256 hash-chained journal with a keyed
+MAC, <code>workspace_hash</code> applied in read predicates, trust split
+into a discrete <code>status</code>, a separate <code>verified</code>
+flag and a separate <code>certainty</code> float, an operator review
+surface, and a purge tested in both directions — the PII is gone from
+history and the journal, and the redaction did not cross the workspace
+boundary. Its headline <strong>73.8% on LongMemEval</strong> is the mean
+of three independent full 500-question runs whose reports are all
+committed with dataset, split, pinned answerer and judge snapshots,
+temperature, commit, binary version, hardware and a run signature; the
+mean recomputes from those artifacts exactly, and so does the 79.0% it
+<em>does not</em> lead with, because the plain and chain-of-thought
+prompts are different official conditions and the answer prompt is
+folded into the run signature so the two can never be blended.
+Competitor figures are labelled as their publishers' claims rather than
+reproduced. It also ships a <code>CLAIMS-AUDIT.md</code> that retired
+its own "sub-millisecond recall" for lack of an artifact and downgraded
+"signed results" to "content-hashed". <strong>And the count claim it
+once carried in Markdown is now derived and enforced</strong> —
+<code>scripts/registry_metadata_check.py</code> parses the embedded
+registry literal as the implementation does, asserts the same figure
+across five published surfaces, and runs on every push and pull request
+beside a Rust uniqueness test, which is the difference between a number
+that agrees today and one that cannot silently drift. Its tombstone is
+the atlas's most privacy-careful: <code>rejected_value_tombstones</code>
+stores <code>value_sha256</code> over a JSON-canonicalised,
+whitespace-collapsed, lower-cased form and never the value itself, so a
+rejection record cannot leak the content it suppresses — and it refuses
+at the write path rather than filtering at read, with a trusted override
+that is journaled. The remaining question is reach: the comment on
+<code>remember_impl</code> claims the check covers connectors and
+derived writers, and no committed test walks the background
+consolidation passes.</p>
 <p><strong>Provem is the second system here to carry all seven marks,
 and it got there from regulation rather than from a red team.</strong>
 Where <a href="../systems/verel/">Verel</a> reached the same seven under
@@ -5086,9 +5094,10 @@ human approval is a sentence addressed to the model</td>
 <td><code>perseus-vault</code></td>
 <td>An entity — category, key, JSON body — carrying status, type, layer,
 certainty, verified flag, decay score, and bi-temporal bounds</td>
-<td>One SQLite file with FTS5, optional AES-256-GCM bodies, an entity
-history table, a hash-chained journal, and sign-bit embedding
-signatures</td>
+<td>One SQLite file with FTS5, AES-256-GCM bodies encrypted by default
+on a fresh install, an entity history table, a hash-chained journal,
+sign-bit embedding signatures, and a rejected-value tombstone table
+holding digests</td>
 <td>Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming
 prefilter on embedding sign bits and workspace filters applied in the
 query</td>
@@ -5096,24 +5105,26 @@ query</td>
 and sets <code>superseded_by</code>, with a trust-admission path in
 front</td>
 <td>Supersede, correct, demote, archive with a reason, forget, and purge
-— purge erases history and redacts the journal, tested; no value-keyed
-rejection</td>
+— purge erases history and redacts the journal; a rejected value is
+refused on every remember-path write by a digest-keyed tombstone, with
+an audited trusted override</td>
 <td><code>workspace_hash</code> on entities and journal rows, a
 <code>(category, key, workspace_hash)</code> identity index, and a
 <code>visibility</code> column; applied in read queries</td>
-<td>An MCP stdio server, plus LangGraph, CrewAI and AutoGen adapters;
-one binary, no services</td>
+<td>An MCP stdio server with ninety canonical tools, plus LangGraph,
+CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no
+services</td>
 <td>Decay ticks, cohere and dream passes, consolidation, hygiene scans,
 community detection</td>
 <td>A discrete <code>status</code>, a separate <code>verified</code>
 flag, a <code>certainty</code> float and a <code>source</code> field —
 three distinct axes rather than one score</td>
 <td>Three full benchmark runs per prompt variant with a config stamp,
-published means that recompute exactly, and a claims audit that retires
-what it cannot back</td>
-<td>The tool count, its documented check and the parsed registry
-disagree three ways; AES-256-GCM is supported but a stock install writes
-plaintext until <code>init</code></td>
+published means that recompute exactly, a claims audit that retires what
+it cannot back, and a count check derived from source and run in CI</td>
+<td>A database created before the default flipped stays plaintext until
+an explicit <code>init --rekey</code>, and the encryption key sits
+beside the database it protects</td>
 </tr>
 <tr>
 <td><code>pi</code></td>
@@ -6004,9 +6015,10 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>6 of 150:</em> <a
+<p><em>7 of 150:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
+href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -6253,7 +6265,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p>Three observations follow from the counts, stated no more strongly
 than the counts support.</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving, while six systems
+half the atlas applies a scope key when retrieving, while seven systems
 carry a value-level tombstone. That is not the same as saying scope is
 solved — this flag measures the read path only. It says nothing about
 write authorization, whether background consolidation respects the same
@@ -10578,7 +10590,7 @@ href="https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea1
 <li><a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault">Perseus-Computing-LLC/perseus-vault</a>
 at <a
-href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b"><code class="commit-id" title="838c63dabbcfc4aaee0867ba7ff0bab7829e442b">838c63da…</code></a></li>
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601"><code class="commit-id" title="5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601">5d6cecf9…</code></a></li>
 <li><a
 href="https://github.com/BernhardJackiewicz/provem">BernhardJackiewicz/provem</a>
 at <a

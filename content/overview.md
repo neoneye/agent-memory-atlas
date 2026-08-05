@@ -12,7 +12,7 @@ page_kind: comparison
 seven mechanisms with strict definitions. Corpus last extended **4 August 2026**.
 Five findings, with the counts they rest on:
 
-1. **Correction is the phase that goes unbuilt.** 6 systems of 150 carry a
+1. **Correction is the phase that goes unbuilt.** 7 systems of 150 carry a
    rejected-value tombstone — a record keyed on the *value*, so a later
    extraction cannot silently re-assert something already judged wrong. Almost
    everything else corrects by hiding a row, which stops a reader seeing it and
@@ -112,7 +112,7 @@ proves only that nobody built one *in public*.
 else:
 
 1. **Whether correction is possible at all.** Almost everything can overwrite
-   or supersede. Six systems in this entire atlas can record that a *value*
+   or supersede. Seven systems in this entire atlas can record that a *value*
    was rejected so extraction cannot bring it back — see the
    [capability index](../capabilities/) for the live count. This is the single widest gap in
    the field, and it is invisible on every benchmark.
@@ -848,7 +848,7 @@ is exercised end to end, most of the 6,453 lines of kernel are `MUST` prose with
 no script behind them, and there are 73 lines of tests over one of the twelve
 scripts.
 
-**Perseus Vault carries six of the seven marks and is the corpus's best answer to
+**Perseus Vault carries all seven marks and is the corpus's best answer to
 the question the benchmarks page keeps asking.** 59,000 lines of Rust in one
 binary over one SQLite file: bi-temporal columns on the live table *and* its
 history with `superseded_by`, a SHA-256 hash-chained journal with a keyed MAC,
@@ -865,12 +865,19 @@ conditions and the answer prompt is folded into the run signature so the two can
 never be blended. Competitor figures are labelled as their publishers' claims
 rather than reproduced. It also ships a `CLAIMS-AUDIT.md` that retired its own
 "sub-millisecond recall" for lack of an artifact and downgraded "signed results"
-to "content-hashed". **And the one claim that went stale is the one with a check
-attached** — the audit's own authoritative tool-count command returns 76 against
-a claim of 65 repeated in three places, because a command written in Markdown
-runs when somebody remembers. The missing mark is the tombstone: purge and
-supersession are keyed on the record, so nothing stops a later ingest
-re-asserting a value that was removed.
+to "content-hashed". **And the count claim it once carried in Markdown is now
+derived and enforced** — `scripts/registry_metadata_check.py` parses the embedded
+registry literal as the implementation does, asserts the same figure across five
+published surfaces, and runs on every push and pull request beside a Rust
+uniqueness test, which is the difference between a number that agrees today and
+one that cannot silently drift. Its tombstone is the atlas's most privacy-careful:
+`rejected_value_tombstones` stores `value_sha256` over a JSON-canonicalised,
+whitespace-collapsed, lower-cased form and never the value itself, so a rejection
+record cannot leak the content it suppresses — and it refuses at the write path
+rather than filtering at read, with a trusted override that is journaled. The
+remaining question is reach: the comment on `remember_impl` claims the check
+covers connectors and derived writers, and no committed test walks the background
+consolidation passes.
 
 **Provem is the second system here to carry all seven marks, and it got there
 from regulation rather than from a red team.** Where [Verel](../systems/verel/)
@@ -1651,7 +1658,7 @@ about what is still on disk. The evidence is under
 | `openyak` | One row per workspace directory holding a free-form plain-text document capped at 200 lines | A single SQLAlchemy table with a unique index on the normalised workspace path | None. The whole document is wrapped in `<workspace-memory>` tags and injected when non-empty | An LLM rewrites the entire document from the previous version plus the conversation, after a debounce | Whole-document overwrite, a `PUT` from the settings editor, and a hard `DELETE`; no history of any kind | The normalised `workspace_path` is the primary key and the read-path filter | A desktop agent with a settings tab that edits the document directly, plus list, refresh and export endpoints | A debounced async queue keyed by workspace path so concurrent sessions in one directory cannot race | None. There is no unit below the document to attach a status, a source or a confidence to | Debouncing by workspace rather than by session, and refusing to write when the model returns nothing | A short rewrite silently replaces a full one, the 200-line cap truncates the tail without warning, and a bundled skill documents a memory system the code does not implement |
 | `optmem` | One line of at most 280 characters, fixed width, position-addressed | `LOG.txt` append-only, never edited; `TREE/` of compressed blocks, a rebuildable cache | `wake` prints a budgeted cover of the merge tree — verbatim recent, compressed ancient | `note` appends one line and may return a compression for the agent to answer | `forget <lo>-<hi>` drops a summary; the next nap rebuilds it. The log is never edited | One store per `$MEMORY_DIR`; none within it | A 426-token prompt block pasted into AGENTS.md or CLAUDE.md | None, by design — every compression is requested inline in the output of `note` | None; the log is append-only and everything derived is rebuildable from it | Detail decays by geometry, not policy, and no job can rewrite memory behind your back | No licence file; no scope, trust, or correction of the log itself |
 | `palazzo` | A verbatim text with four free-text taxonomy tags — category, wing, room, hall — and five temporal-validity columns | One Qdrant collection of 768-dimension points, plus an append-only JSONL write-ahead log on local disk | Cosine search with optional facet, time-range and author filters, and an opt-in `score × exp(-age/half_life)` re-rank | Agent tool calls over MCP; a duplicate probe runs before every write and short-circuits only on an exact text match | `palace_supersede` stamps `valid_until` and `superseded_by` and the read path hides them; two hard-delete tools with a confirm flag and a count-echo guard | None by default. One collection, one palace; `author` is an unverified optional facet and the taxonomy tags are categories, not tenancy | An MCP server over stdio or streamable HTTP, eleven tools, no UI | None. Every operation is synchronous inside the tool call | `author` is a claimed, unverified email the code itself calls provenance rather than proof; nothing grades a memory's content | A destructive operation that aborts when its own audit entry cannot be written, and a dedup probe that deliberately refuses to match superseded points | The README's stated differentiator — an enum-validated schema — does not exist; the duplicate probe and the writer apply different rules; the human approval is a sentence addressed to the model |
-| `perseus-vault` | An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds | One SQLite file with FTS5, optional AES-256-GCM bodies, an entity history table, a hash-chained journal, and sign-bit embedding signatures | Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query | MCP tool calls into a Rust binary; supersession writes history rows and sets `superseded_by`, with a trust-admission path in front | Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal, tested; no value-keyed rejection | `workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in read queries | An MCP stdio server, plus LangGraph, CrewAI and AutoGen adapters; one binary, no services | Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection | A discrete `status`, a separate `verified` flag, a `certainty` float and a `source` field — three distinct axes rather than one score | Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, and a claims audit that retires what it cannot back | The tool count, its documented check and the parsed registry disagree three ways; AES-256-GCM is supported but a stock install writes plaintext until `init` |
+| `perseus-vault` | An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds | One SQLite file with FTS5, AES-256-GCM bodies encrypted by default on a fresh install, an entity history table, a hash-chained journal, sign-bit embedding signatures, and a rejected-value tombstone table holding digests | Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query | MCP tool calls into a Rust binary; supersession writes history rows and sets `superseded_by`, with a trust-admission path in front | Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal; a rejected value is refused on every remember-path write by a digest-keyed tombstone, with an audited trusted override | `workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in read queries | An MCP stdio server with ninety canonical tools, plus LangGraph, CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no services | Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection | A discrete `status`, a separate `verified` flag, a `certainty` float and a `source` field — three distinct axes rather than one score | Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, a claims audit that retires what it cannot back, and a count check derived from source and run in CI | A database created before the default flipped stays plaintext until an explicit `init --rekey`, and the encryption key sits beside the database it protects |
 | `pi` | None — session-tree entry, not a memory record | JSONL session tree (`id`/`parentId`), swappable in-memory backend | None; context is the tree walked to root plus discovered resource files | Append to session; compaction replaces a range | None; no durable claim exists | None | Own CLI/TUI/SDK; 20+ extension events, none memory-shaped | Compaction and branch summarization | Deterministic `readFiles`/`modifiedFiles` on compaction entries | Deterministic file manifest kept out of the model's output; branchable sessions | No memory contract at all, so scope and deletion have nowhere to live |
 | `powermem` | An LLM-extracted memory row with retention metadata, plus distilled Experience and Skill records above it | SQLite, pgvector or OceanBase for memory; the skill and source stores are OceanBase only | Vector, FTS and graph fused by RRF, with recency and retention scores applied | LLM extraction with a simple and an intelligent path, plus background workers | Update and delete APIs; forgetting is a retention score falling below a threshold | user_id, agent_id and run_id built into effective filters and carried into the store | Python SDK, HTTP server, MCP, CLI, VS Code extension and a Claude Code plugin | Decay, promotion and archival evaluated during search, with some updates dispatched to a thread pool | None; retention and importance are scores, and no memory carries a status | The atlas's most complete forgetting-curve implementation, with promotion, archival and reinforcement as separate decisions | The history table has no callers anywhere in the repository; search writes to the store |
 | `prime-agent` | A `HarnessEntry` — id, kind of `prompt` / `memory` / `skill` / `subagent`, title, content, path, scope, reference and argument contracts, source and a monotonic `version` | `harness_state.json` written atomically through temp-and-rename at mode 0600, in a global directory under `~/.prime/agent/harness/` and a local one under the session's artifact directory, beside an append-only `refinements.jsonl` | No search. A capped overview is injected into the system prompt — six entries per kind, content truncated to 180 characters, five recent refinements — and labelled to the model as routing hints rather than full descriptions | A refinement pass proposes `create` / `update` / `delete` edits as JSON, each validated against a per-kind contract, applied against a baseline snapshot and versioned on write | `delete` removes the entry from state while its full `before` snapshot survives in the refinement history, so any refinement can be inverted into a rollback proposal — including from a different session | Entries carry `local` or `global`; a session merges both and renames colliding local ids rather than shadowing, and session listing filters by stored working directory | A `refine` skill callable from the IPython kernel, a `/refine` slash command, plus TUI, daemon, ACP and SDK front ends over the same session core | An auto-refine review — a cheap model judging from the trajectory whether to refine at all and at which scope — followed by a planning call that must return parseable JSON | A `version` per entry, a `source`, a stored scope, and a model-authored `evidence` string on each refinement event; no candidate, verified or rejected status | Before-and-after snapshots on every applied edit, cross-session rollback, an optimistic-concurrency guard that refuses an edit whose target moved during planning, an immutable base prompt enforced in code, and 1,500 lines of tests over all of it | Nothing is keyed on a rejected value, so a memory deleted as wrong can be re-derived by the next refinement; the evidence behind an edit is prose the model wrote about itself |
@@ -1744,7 +1751,7 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*6 of 150:* [`daimon`](../systems/daimon/), [`memsem`](../systems/memsem/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
+*7 of 150:* [`daimon`](../systems/daimon/), [`memsem`](../systems/memsem/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
@@ -1775,7 +1782,7 @@ Three observations follow from the counts, stated no more strongly than the
 counts support.
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies
-a scope key when retrieving, while six systems carry a value-level tombstone.
+a scope key when retrieving, while seven systems carry a value-level tombstone.
 That is not the same as saying scope is solved — this flag measures the read
 path only. It says nothing about write authorization, whether background
 consolidation respects the same boundary, whether cache and embedding keys
@@ -4200,7 +4207,7 @@ Privacy/deletion:
 - [Whooptie/NOVA_AI](https://github.com/Whooptie/NOVA_AI) at [`4a7d89b915b8bd785606c347b6ae5733030edc1f`](https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f)
 - [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`16c28a940beac69fc060eb6bf5828061ad881d1a`](https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a)
 - [KimGLee/Cambium](https://github.com/KimGLee/Cambium) at [`4f8bf4df77868ff9a86531539276cea11c28093d`](https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d)
-- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`838c63dabbcfc4aaee0867ba7ff0bab7829e442b`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b)
+- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601)
 - [BernhardJackiewicz/provem](https://github.com/BernhardJackiewicz/provem) at [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5)
 - [derekhu0002/Argo](https://github.com/derekhu0002/Argo) at [`9cd3e70fa28f4336b6df1181a771af9289f0f0f7`](https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7)
 - [Renkasha/Sovereign](https://github.com/Renkasha/Sovereign) at [`86018d651acb6500ea4d3c79acf5acbbaf547a76`](https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76)

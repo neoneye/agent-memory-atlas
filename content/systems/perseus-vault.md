@@ -1,27 +1,27 @@
 ---
 title: "Perseus Vault"
 eyebrow: "Claims audited against artifacts"
-description: "A local-first vault whose published benchmark means recompute exactly from committed per-run reports, and whose self-audit retires the claims it cannot back — except the one whose verification command cannot answer the question it guards."
+description: "A local-first vault whose published benchmark means recompute exactly from committed per-run reports, whose self-audit retires the claims it cannot back, and whose rejected-value tombstone stores a digest rather than the value it refuses."
 root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 838c63dabbcfc4aaee0867ba7ff0bab7829e442b
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/838c63dabbcfc4aaee0867ba7ff0bab7829e442b
-analyzed_at: 2026-08-04
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: 5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601
+analyzed_at: 2026-08-05
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds"
-  storage: "One SQLite file with FTS5, optional AES-256-GCM bodies, an entity history table, a hash-chained journal, and sign-bit embedding signatures"
+  storage: "One SQLite file with FTS5, AES-256-GCM bodies encrypted by default on a fresh install, an entity history table, a hash-chained journal, sign-bit embedding signatures, and a rejected-value tombstone table holding digests"
   retrieval: "Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query"
   write: "MCP tool calls into a Rust binary; supersession writes history rows and sets `superseded_by`, with a trust-admission path in front"
-  update_delete: "Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal, tested; no value-keyed rejection"
+  update_delete: "Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal; a rejected value is refused on every remember-path write by a digest-keyed tombstone, with an audited trusted override"
   scoping: "`workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in read queries"
-  integration: "An MCP stdio server, plus LangGraph, CrewAI and AutoGen adapters; one binary, no services"
+  integration: "An MCP stdio server with ninety canonical tools, plus LangGraph, CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no services"
   background: "Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection"
   trust: "A discrete `status`, a separate `verified` flag, a `certainty` float and a `source` field — three distinct axes rather than one score"
-  strengths: "Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, and a claims audit that retires what it cannot back"
-  risks: "The tool count, its documented check and the parsed registry disagree three ways; AES-256-GCM is supported but a stock install writes plaintext until `init`"
+  strengths: "Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, a claims audit that retires what it cannot back, and a count check derived from source and run in CI"
+  risks: "A database created before the default flipped stays plaintext until an explicit `init --rekey`, and the encryption key sits beside the database it protects"
 ---
 
 ## 1. Executive Summary
@@ -30,8 +30,8 @@ Perseus Vault is roughly 59,000 lines of Rust over 660 commits, MIT-licensed,
 shipping one binary and one SQLite file with no services. It exposes memory
 through an MCP stdio server plus LangGraph, CrewAI and AutoGen adapters, stores
 entities with bi-temporal bounds, retrieves with BM25 and dense vectors fused by
-RRF, and can encrypt bodies with AES-256-GCM. It carries six of this atlas's
-seven capability marks — everything but a rejected-value tombstone.
+RRF, and encrypts bodies with AES-256-GCM by default on a fresh install. It
+carries all seven of this atlas's capability marks.
 
 That would make it a substantial report on mechanism alone. It is a more
 interesting one because of how it handles its own claims.
@@ -83,46 +83,48 @@ blend."* Zep's and Mem0's figures are labelled as their publishers' claims and
 cited to an issue rather than reproduced as head-to-heads, which is the reporting
 policy this atlas credits [Daimon](../daimon/) for writing down, implemented.
 
-**Then the one claim the audit's own method contradicts.** `CLAIMS-AUDIT.md`
-states 65 canonical MCP tools, the README states it three times, and the audit
-supplies the check with an instruction attached — *"this is the authoritative
-command — re-run it and update README/manifest.json/glama.json whenever a tool is
-added"*:
+**And the count claim is derived rather than asserted.** The audit's check is
+`scripts/registry_metadata_check.py`, which extracts the embedded registry
+literal from `src/mcp.rs` and parses it exactly as the Rust implementation does,
+rather than grepping for a name pattern. From that one derivation it asserts the
+same number appears in `README.md`, `CLAIMS-AUDIT.md`, `glama.json`,
+`manifest.json` and `server.json`, and it fails on a duplicate name or a
+non-canonical one. Run at this commit it exits zero and prints
+`{"canonical_tools_list_count": 90, "compatibility_manifest_count": 270,
+"registry_count": 90}`.
 
-```bash
-grep -o '"name": "mimir_[a-z_]*"' src/mcp.rs | sort -u | wc -l
-```
+What makes it a check rather than a documented command is
+`.github/workflows/mcp-registry.yml`, whose `verify-registry` job runs on every
+`push` and `pull_request` and executes both the parser and the Rust uniqueness
+test. The audit describes it in those terms: *"this parser is
+formatting-insensitive and runs in CI"*.
 
-Run against `src/mcp.rs` at this commit it returns **76**. Parsing the embedded
-registry literal instead of grepping it gives a third figure: **88 top-level
-entries**, 87 of them `mimir_`-named and one `perseus_vault_`-named.
+That is the difference between a count that agrees today and a count that cannot
+silently drift, and the second is the property worth having. The canonical/legacy
+split does not live in the literal — `tool_registry_base` calls the `mimir_*`
+names *"an implementation migration detail"* and `legacy_alias_tool` synthesizes
+aliases by prefix rewriting at advertise time — so the parser rewrites a `mimir_`
+prefix to `perseus_vault_` before counting, and rejects the result if any name
+survives that is not canonical. The advertised surface remains a runtime decision,
+and `compatibility_manifest_count` is the parser's own name for it: 270, three
+aliases per canonical tool.
 
-So the claim says 65, its designated check says 76, and the registry the check is
-supposed to be counting holds 88. **None of the three is established as the
-canonical figure**, because the canonical/legacy split does not exist in the
-literal at all — `tool_registry_base` describes the `mimir_*` names as *"an
-implementation migration detail"*, and `legacy_alias_tool` synthesizes aliases by
-prefix rewriting at advertise time. What is advertised is decided at runtime by
-`build_tools_array`, which no static grep can see.
+**A fresh install encrypts, and a test says what that means.** The first default
+startup creates an owner-only key and an encrypted canary row.
+`tests/encryption_bootstrap.rs` pins the behaviour rather than the intent: the key
+file must be mode `0600` and hold exactly 32 bytes, the canary must be
+established, and the stored body must **not** equal the plaintext JSON that was
+written — `assert_ne!(stored, r#"{"note":"bootstrap encrypted body"}"#)`. A second
+case covers the opt-out, asserting that an explicit plaintext choice suppresses
+key creation and stores the body verbatim.
 
-The finding is therefore not that the count is wrong by some amount. It is that
-**the count definition and its verification command have drifted apart**, and
-that the command cannot answer the question it is designated to answer. A count
-generated from the registry and asserted in CI is the fix, and it is the one the
-project's author names.
-
-**One more disclosure worth naming as a strength.** The README states, in its own
-install section, that *"Encryption is opt-in. A stock install writes plaintext
-bodies until you initialize encryption"*, and that `doctor` *"reports the actual
-on-disk state rather than assuming the database is encrypted."* A banner that says
-"Encrypted" over a default that is not, with the gap disclosed above the fold and
-tracked in the claims audit, is a better outcome than most projects manage in
-either direction.
-
-**The distinction is worth preserving whenever the system is summarised**, and it
-is the one a one-line description erodes: *supports AES-256-GCM* and *a stock
-install encrypts by default* are different claims, and only the first is true
-here. This report's own frontmatter previously carried the shorter form.
+**Two things the default does not cover, and both are stated upstream.** A
+database created before the default flipped stays plaintext until an explicit
+`init --rekey`, so "encrypted by default" is a claim about fresh installs and the
+claims audit says exactly that. And the key sits beside the database it protects,
+at owner-only permissions — which defends the file carried off a disk, not an
+attacker who already reads the filesystem as that user. The threat model is
+narrower than the banner, disclosed, and the narrower claim is the one to quote.
 
 ## 2. Mental Model
 
@@ -209,23 +211,17 @@ Publishing per-question-type results is the second. The committed report shows
 30 questions. A weak category is visible because they published the breakdown;
 in most of this corpus it would be inside the headline average.
 
-### The count that the audit's own command refutes
+### The count, derived from source and asserted in CI
 
 Three surfaces say 65. The audit's designated command returns 76, and the tool
 names it lists are unmistakably real — `recall`, `supersede`, `correct`,
 `forget`, `purge`, `bitemporal`, `valid_at`, `operator_review`, `journal`,
 `beliefs`, `conflicts`, `promote`, `demote`, `keystone_get`, and so on.
 
-Two smaller inconsistencies sit beside it. The command greps the legacy `mimir_`
-prefix while the audit's own text says the canonical prefix is
-`perseus_vault_*`, of which `src/mcp.rs` contains one. And the audit's History
-section ends *"Now **57**"*, a figure two revisions behind the 65 above it, kept
-under a note that earlier figures are historical.
-
-**The instructive part is not the wrong number, it is where it sits.** This is a
-project that retired a latency claim for lack of an artifact and downgraded
-"signed" to "content-hashed" on its own initiative. The claim that went stale is
-the one with a check attached — because a command written down in a Markdown file
+**The instructive part is where the fix landed.** This is a project that retired
+a latency claim for lack of an artifact and downgraded "signed" to
+"content-hashed" on its own initiative. The claim that had gone stale was the one
+with a check attached — because a command written down in a Markdown file
 runs only when somebody remembers, and the discipline that catches unbacked
 claims is a different discipline from the one that keeps backed claims current.
 It is the same failure this atlas has recorded in its own count sweeps: the
@@ -243,6 +239,62 @@ state is this record in" is a distinction most systems here collapse, and it is
 what makes the `trust_state` mark straightforward: `candidate` and `superseded`
 are states that withhold a memory from being treated as current, expressed as a
 column rather than inferred from a number.
+
+### A tombstone that stores the digest, not the value
+
+`rejected_value_tombstones` is keyed on `(workspace_hash, subject, predicate,
+value_sha256)` and carries `reason`, `evidence_ref`, `author_agent_id`, a
+creation timestamp and an optional expiry. The value itself is never written —
+only `value_sha256`, over a normalized form:
+
+```rust
+fn normalize_rejected_value(value: &str) -> String {
+    let canonical = match serde_json::from_str::<serde_json::Value>(value) {
+        Ok(v) => v.to_string(),
+        Err(_) => value.to_string(),
+    };
+    canonical.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
+}
+```
+
+JSON is canonicalised when it parses, whitespace is collapsed, and the result is
+lower-cased — so a re-indented body, a re-ordered object and a case variant all
+hash to the same tombstone. That is the normalization the
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/) pattern
+calls the part where the real work is, done in nine lines.
+
+Storing only the digest is the part worth taking. The pattern page lists as a
+tradeoff that *"the tombstone itself can contain sensitive data and must follow
+deletion policy"* — a rejection record for a leaked credential is a copy of the
+credential. A digest refuses the value without retaining it, and the doc says so
+in the same terms: the raw value is never stored, so *"rejection records cannot
+leak the content they suppress."*
+
+`is_value_rejected` runs the lookup as `workspace_hash IN ('', ?1)`, so a
+tombstone written with an empty workspace is global and a named one binds to its
+workspace, and one workspace's rejection cannot censor another. Expired rows are
+deleted on the way past.
+
+The enforcement point is `remember_impl`, with the reach stated in a comment:
+
+> scoped rejected-value tombstones are enforced on every remember-path write
+> (agent remember, capture, ingest, connectors, derived writers) so a
+> corrected/deleted value cannot be laundered back in under a new key. A
+> deliberate trusted override passes `allow_rejected=true` and is journaled
+> below for audit.
+
+Two details separate this from the other holders. The lookup keys on the
+**predicate and the digest and not the subject**, so a rejected value is refused
+under any key in scope — broader than the identity index it is written under, and
+named in a test as `rejected_value_tombstone_blocks_same_value_under_any_key_in_scope`.
+And the override is not a bypass flag but an audited act, journaled in the same
+hash-chained ledger as everything else, which is the shape the pattern page asks
+for when a trusted human correction must win.
+
+Four tests cover it: blocking under any key in scope, workspace isolation,
+normalization and expiry, and — at the MCP layer —
+`rejected_value_tombstones_block_laundering_and_support_audited_override`, whose
+name is the whole mechanism.
 
 ### Deletion that is tested to have happened
 
@@ -353,30 +405,31 @@ Strengths:
 - **Trust split into status, verified and certainty**, three axes rather than one.
 - **An explicit score that outranks the decay recompute**, with the rule stated at
   the column.
-- **The encryption default disclosed** in the README's own install section.
+- **Encryption on by default for a fresh install**, with a committed test
+  asserting the stored body is not the plaintext.
+- **A rejected-value tombstone storing a digest rather than the value**, refused
+  on every remember-path write, with a trusted override that is journaled.
 
 Gaps:
 
-- **The tool count has no working verification.** The claim (65), its designated
-  command (76) and the parsed registry (88) disagree three ways, and the command
-  greps a prefix the audit itself calls legacy, so it cannot distinguish canonical
-  tools from compatibility aliases.
-- **No rejected-value tombstone**, so purge and supersession cannot stop
-  re-assertion. Read this against the pattern page's own header rather than as a
-  missing best practice — [it is carried by five systems here](../../patterns/rejected-value-tombstone/)
-  and the page states outright that it is not established practice, with real
-  tradeoffs around normalization, scope, expiry, trusted correction and privacy
-  deletion. It matters here for a specific reason: this store re-derives memory
-  automatically, through consolidation, cohere and dream passes, which is exactly
-  the condition under which record-keyed removal stops holding.
+- **The tombstone is enforced on the predicate and the value, not the subject.**
+  A rejected value is blocked under any subject in scope, which is deliberate and
+  named in a test — and it is the pattern page's first tradeoff, a normalization
+  that can refuse a legitimately different fact, taken further than any other
+  holder here takes it.
+- **A tombstone can expire.** `expires_at_unix_ms` is honoured and reaped on
+  lookup, which the pattern page's round-8 lesson calls the way a tombstone stops
+  being one. Nothing in the default path sets it, so this is a facility rather
+  than a live gap.
 
-  The falsifying test is small and worth writing down, because the project's
-  author states it in the same terms: reject value A, replace it with B,
-  re-ingest A through a different write path, run the background consolidation
-  passes, and check whether A is still rejected. Nothing committed covers that
-  sequence today.
-- **Encryption is opt-in**, so the default install stores plaintext bodies —
-  disclosed, and still the default.
+  The sequence nothing yet covers end to end is the one the project's author
+  named: reject value A, replace it with B, re-ingest A through a different write
+  path, run the background consolidation passes, and check that A remains
+  rejected. The committed tests cover the write paths and the override; the
+  background passes are the untested leg.
+- **A pre-existing database stays plaintext** until an explicit `init --rekey`,
+  so the default covers fresh installs rather than upgrades; and the key lives
+  beside the database at owner-only permissions.
 - **Federation is file-based**, so the multi-machine story is manual.
 
 ## 10. Tests, Evals, and Benchmarks
@@ -437,31 +490,34 @@ stale anyway.
 - **Treating supersession and purge as protection against re-assertion.** Both
   are keyed on the record. The next ingest of the same wrong value creates a new
   one.
-- **Shipping a banner claim your default does not meet**, even disclosed. The
-  disclosure here is exemplary and the first line still says "Encrypted".
+- **Leaving a count's only check in a Markdown file.** The fix here was to derive
+  the number from source and run the derivation in CI; until that happened the
+  audit around it stayed sharp while the count drifted.
 
 ### Fit
 
 Right if you want a single-binary local memory with real correction semantics —
 bi-temporal history, supersession with a readable past, a tamper-evident journal,
 tested purge — and you would rather read a project's own audit of its claims than
-take its README on faith. Six of seven marks is a genuinely unusual position.
+take its README on faith. All seven marks is a position three other systems here
+hold.
 
-Wrong if you need multi-machine memory without manual file movement, encryption
-you cannot forget to enable, or a guarantee that a value you rejected stays
-rejected. The last of those is the only mark it lacks, and in a system with this
-much correction machinery it is the conspicuous absence rather than an oversight
-you would expect at this level of care.
+Wrong if you need multi-machine memory without manual file movement, or
+encryption on a database that predates the default. The rejection guarantee is
+the most privacy-careful instance of one in the atlas — a digest rather than the
+value — and the open question about it is reach rather than existence: the
+background consolidation passes are the leg no committed test walks.
 
 ## 12. Open Questions
 
-- Is 65 or 76 the intended canonical count, and which surface is wrong — the
-  README, the audit's command, or the registry?
-- Why does the authoritative command grep `mimir_` when the audit names
-  `perseus_vault_*` as canonical, and what does the single `perseus_vault_`
-  literal in `src/mcp.rs` mean for the alias mapping?
-- Would the tombstone fit? The entity already has `status` and a history chain;
-  what is missing is a value-keyed record consulted on ingest.
+- Do the consolidation, cohere and dream passes write through `remember_impl`,
+  and therefore through the tombstone check? That is the one reach the comment
+  claims and no committed test walks.
+- The tombstone matches on predicate and digest without the subject. What is the
+  false-positive surface — the same value legitimately true of two subjects under
+  one predicate?
+- Nothing sets `expires_at_unix_ms` on the default path. Is a lapsing rejection
+  intended, or is the column there for a caller that does not exist yet?
 - `single-session-preference` scores 0.300 in the committed report. Is that a
   retrieval failure, a prompt failure, or a category the design does not target?
 - Does `emb_sig` Hamming prefiltering change recall, and is there an artifact
@@ -488,6 +544,8 @@ you would expect at this level of care.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-05** — [`5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601) — second reading, two commits on. Screened before reading: 2 auto-run surfaces (`server.json`, `smithery.yaml`), 1 build-time exec (`build.rs`), 8 unpinned surfaces, and `Cargo.toml` and `Cargo.lock` both changed the day of the pin. Both auto-run findings predate the previous pin and are MCP publication manifests declaring how a client starts the published image; neither reads outside the tree nor reaches the network with anything it reads. Nothing was built or executed from the checkout — the only thing run was `scripts/registry_metadata_check.py`, which is stdlib Python that reads files in the tree and prints JSON. `6d6c6c8` is titled *"implement Atlas review follow-ups"* and closes three upstream issues; each was verified here against code rather than against the commit message. The tool count is derived rather than asserted: the parser extracts the embedded registry literal from `src/mcp.rs` and parses it as the implementation does, then asserts the same figure in five published surfaces, and `.github/workflows/mcp-registry.yml` runs it on every push and pull request alongside a Rust uniqueness test. Run at this commit it exits zero and reports `registry_count: 90`, `canonical_tools_list_count: 90`, `compatibility_manifest_count: 270`. `CLAIMS-AUDIT.md` replaced its `grep -o '"name": "mimir_[a-z_]*"'` instruction with that command, described as formatting-insensitive and CI-run. Encryption is on by default for a fresh install, with `tests/encryption_bootstrap.rs` asserting a 32-byte key at mode `0600`, an established canary, and a stored body that is not the plaintext that was written, plus a second case for the explicit opt-out; a database created before the flip stays plaintext until `init --rekey`, which the audit states. `tombstone` moves to present and the report carries all seven marks: `rejected_value_tombstones` is keyed on `(workspace_hash, subject, predicate, value_sha256)` over a value normalized by JSON canonicalisation, whitespace collapse and lower-casing, stores only the digest so a rejection record cannot leak what it suppresses, is enforced in `remember_impl` across the remember paths, honours a global-or-workspace scope through `workspace_hash IN ('', ?1)`, and admits a trusted override that is journaled — with four committed tests including one for laundering and the override. `5d6cecf` adds Ed25519-signed policy/authority profiles verified before a manifest takes effect, failing closed, which is new context rather than a change to any published claim.
 
 **2026-08-04** — same pin, corrected after the project's author reviewed the
 report. The tool-count finding was stated as "stale by eleven", which asserts
