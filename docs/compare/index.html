@@ -11493,6 +11493,79 @@ See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-a-paper-and-its-official-implementation.md">the
 note</a> for the component-by-component comparison against the
 paper.</li>
+<li><strong><code>vista-research.github.io</code> was examined and has
+no report, and it is the corpus's best argument that a published trace
+can stand in for source.</strong> VISTA is a visual harness from five
+MIT authors, posted 5 August 2026, reporting all 25 public ARC-AGI-3
+games won with a perfect efficiency score. Its memory design is
+three-part — raw frames as observation, two markdown notes, and a
+<em>"lossless visual memory"</em> holding every frame the environment
+returned, indexed by turn, recalled through <code>inspect</code> and
+<code>read_pixels</code> on the model's own decision, which the page
+names an <em>"explicit attention mechanism"</em>. It is excluded on two
+independent grounds: <strong>there is no harness source at any
+commit</strong> — the only repository in the organisation is the project
+page — and <strong>the memory does not outlive the run</strong>, which
+the traces confirm rather than merely imply, since zero of the 25 games'
+first <code>GUIDE.md</code> writes reference another game. What earns it
+a note is the artifact discipline. The page ships 320 MB of per-game run
+traces recording every message, every region inspected with the question
+that motivated it, and every memory write with its full content — enough
+that the entire memory surface was reconstructed here without the
+implementation: two files, 260 writes, <strong>full-document replacement
+in 215 rewrites and not one append</strong>, a median note of 1,320
+characters. The headline claim recomputes from the same files: 25 of 25
+runs carry <code>status: "WIN"</code>, every scorecard reads
+<code>score: 100</code>, and <code>levelsCompleted == levelCount</code>
+throughout. Set beside <code>rahvis/cognitive-weave</code> in the bullet
+above — examined the same day, claiming 34% and 42% over MemGPT, A-MEM
+and Mem0 with no dataset, metric or result committed — the two mark the
+ends of the axis the <a href="../benchmarks/">benchmarks page</a> exists
+to measure, and the difference is not rigour of prose but whether the
+evidence was published. See <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-a-harness-whose-traces-are-published-and-whose-code-is-not.md">the
+note</a>, including the check that a cheap reading of the note rewrites
+would have produced a finding that inspection does not support.</li>
+<li><strong>Three further ARC-AGI-3 harnesses were examined alongside
+VISTA and none earns a report, but together they are the corpus's
+clearest case of convergent memory design.</strong>
+<code>NIMI-research/Tycho</code> (Apache-2.0, 24,829 lines of Python),
+<code>ryanbbrown/Retrodict</code> (<strong>no licence</strong>, 3,888
+lines) and <code>schema-harness.github.io</code> (a project page from
+Impossible Research, Berkeley and CMU, with no source at any commit) all
+fail the inclusion test the same way, verified individually rather than
+by family resemblance: Tycho's workspace docstring calls itself
+<em>"per-game on-disk working memory"</em> and its constructor wipes a
+named root at startup unless resuming; Retrodict copies an empty
+<code>workspace_template</code> into a fresh run directory every run;
+Schema has no code to check. <strong>What they share is worth
+extracting.</strong> All four — including VISTA — split memory into an
+append-only record the model did not author (every frame, with diffs)
+and a small model-authored belief file that is explicitly subordinate to
+it: Tycho's <code>notes/actor_beliefs.md</code> and
+<code>world_model.md</code>, Retrodict's <code>playbook.md</code> with
+each point marked <em>"checked against the log vs. still assumed"</em>,
+Schema's <code>world_model.py</code> beside an append-only timeline,
+VISTA's <code>GUIDE.md</code> and <code>WORKING.md</code> beside the
+lossless frame store. <strong>That inverts the corpus's dominant
+pattern</strong>, which extracts beliefs from a transcript and then
+demotes the transcript; here the record is the memory and the distilled
+belief is a disposable cache, so a falsified rule is simply deleted and
+re-derived rather than needing a tombstone — a correction model
+available only where ground truth is replayable, which an interaction
+log with a deterministic environment is and a conversation with a person
+is not. <a href="../systems/mempalace/">MemPalace</a> is the closest
+existing instance. They also differ sharply on verifiability, and
+ARC-AGI-3 is unusual in making that checkable: Tycho publishes six
+official ARC Prize scorecards including the ablation rungs that scored
+worse, Retrodict publishes one and commits its JSON while naming its two
+weakest games, VISTA publishes 320 MB of traces from which its claim
+recomputes, and Schema publishes neither scorecard nor source for a
+<em>"~99%"</em> claim. See <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md">the
+note</a>, including Retrodict's <code>containment.json</code> — a
+per-run artifact proving the game engine cannot be imported, which is
+the only self-proving negative capability check in the corpus.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>

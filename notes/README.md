@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md](2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md) —
+  Tycho, Retrodict, Schema and VISTA independently put an append-only record in
+  charge and the model's own notes on probation — and why a third-party
+  scorecard makes a whole family of claims checkable.
+- [2026-08-06-a-harness-whose-traces-are-published-and-whose-code-is-not.md](2026-08-06-a-harness-whose-traces-are-published-and-whose-code-is-not.md) —
+  VISTA: no source, 320 MB of run traces, and the whole memory surface
+  reconstructed from them — plus the shrinking-note finding that inspection
+  refuted.
 - [2026-08-06-a-paper-and-its-official-implementation.md](2026-08-06-a-paper-and-its-official-implementation.md) —
   Cognitive Weave: a paper claiming 34% and 42% over MemGPT, A-MEM and Mem0,
   and an official implementation whose title mechanism is an unchecked To-Do
