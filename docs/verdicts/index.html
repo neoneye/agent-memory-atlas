@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 153 reports.</strong></p>
+<p><strong>This page covers all 154 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3471,6 +3471,35 @@ schema.</li>
 <li>Do not copy when: you need multi-user or multi-project isolation. No
 scope key exists on either table, and retrofitting one is a migration
 plus an audit of every read.</li>
+</ul>
+<h3 id="mnemory"><code>mnemory</code></h3>
+<ul>
+<li>Best idea: the consistency check screens stored memories for prompt
+injection with a regex <em>before</em> any LLM stage reads them, and
+re-screens material that already passed the write-time filter — treating
+the store as a live attack surface rather than something validated once
+at the door.</li>
+<li>Biggest risk: no audit record of anything. A checker that can be
+scheduled with auto-fix edits a user's stored memory on an unmeasured
+LLM judgement, and the issue list it worked from is an in-memory cache
+with a TTL, so "why is this memory gone" is unanswerable in
+principle.</li>
+<li>Most reusable component: the run/review/apply cycle —
+<code>start_fsck</code>, <code>get_fsck_status</code>,
+<code>apply_fsck</code> — which puts a person between a machine-proposed
+change and the store, and which the same codebase also offers with the
+person removed.</li>
+<li>Maturity impression: 26,650 lines under 24,205 lines of tests across
+24 files, including 1,673 lines testing the prompts, a complete LoCoMo
+harness with no committed result, Prometheus metrics and a Grafana
+dashboard in the tree.</li>
+<li>Study when: you want a self-hosted memory service several MCP
+clients share, with per-user isolation enforced in the query rather than
+after it.</li>
+<li>Do not copy when: you need memory without a model in the loop —
+extraction, classification, dedup and contradiction resolution are one
+LLM call with no fallback — or you need to answer questions about the
+store's past.</li>
 </ul>
         </article>
       </div>

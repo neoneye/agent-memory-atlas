@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 153 reports.**
+**This page covers all 154 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1434,3 +1434,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 475,988 lines of Python under 502,973 lines of tests across 1,024 files, 1,606 commits since 1 June 2026, Apache-2.0, with a `pysqlite3`-without-`connect` fallback that someone clearly met in the wild.
 - Study when: you want an agent that cannot quietly learn arbitrary things about you — the allow-listed key namespace and the `user_explicit`-only `system.` prefix are the clearest worked example in the corpus of stopping that at the schema.
 - Do not copy when: you need multi-user or multi-project isolation. No scope key exists on either table, and retrofitting one is a migration plus an audit of every read.
+
+### `mnemory`
+
+- Best idea: the consistency check screens stored memories for prompt injection with a regex *before* any LLM stage reads them, and re-screens material that already passed the write-time filter — treating the store as a live attack surface rather than something validated once at the door.
+- Biggest risk: no audit record of anything. A checker that can be scheduled with auto-fix edits a user's stored memory on an unmeasured LLM judgement, and the issue list it worked from is an in-memory cache with a TTL, so "why is this memory gone" is unanswerable in principle.
+- Most reusable component: the run/review/apply cycle — `start_fsck`, `get_fsck_status`, `apply_fsck` — which puts a person between a machine-proposed change and the store, and which the same codebase also offers with the person removed.
+- Maturity impression: 26,650 lines under 24,205 lines of tests across 24 files, including 1,673 lines testing the prompts, a complete LoCoMo harness with no committed result, Prometheus metrics and a Grafana dashboard in the tree.
+- Study when: you want a self-hosted memory service several MCP clients share, with per-user isolation enforced in the query rather than after it.
+- Do not copy when: you need memory without a model in the loop — extraction, classification, dedup and contradiction resolution are one LLM call with no fallback — or you need to answer questions about the store's past.
