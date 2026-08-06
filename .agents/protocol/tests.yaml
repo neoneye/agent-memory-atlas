@@ -1,0 +1,216 @@
+# Portable acceptance tests derived from the atlas's patterns.
+#
+# Every entry here is a test the atlas already asks for in prose. The ids are new;
+# the tests are not. Each carries the page it came from, so a test whose source
+# argument changes goes stale visibly rather than quietly.
+#
+# Three rules govern this file.
+#
+#   1. Nothing is added here that is not already argued for on a pattern page or
+#      in the benchmarks page. This is packaging, not new doctrine.
+#   2. Every entry states what a pass does NOT prove. A green test that is quoted
+#      as more than it is does more damage than a missing one.
+#   3. The specs are language-independent — given / when / then over a memory
+#      system's own API. The atlas has never run them against anything, and says
+#      so wherever the number would otherwise imply that it had.
+#
+# Referenced by .agents/protocol/build-brief.md and the use-the-atlas skill.
+
+version: 1
+atlas_pages:
+  patterns: content/patterns/
+  benchmarks: content/benchmarks.md
+  overview: content/overview.md
+
+tests:
+
+  - id: scope.cross_tenant_absent
+    pattern: scope-as-a-first-class-key
+    source: "content/patterns/scope-as-a-first-class-key.md § Tests to require"
+    proves: A memory written under one scope is never returned under another.
+    spec:
+      given: Two scopes A and B, and a memory written under A whose text is the best possible match for a query.
+      when: The same query runs under scope B.
+      then: The memory is absent from the result — asserted by exclusion, not by ranking position.
+    not_proven: >
+      That the boundary is authenticated, or that a caller cannot widen it by
+      passing a different scope argument. That is scope.caller_cannot_widen.
+
+  - id: scope.caller_cannot_widen
+    pattern: scope-as-a-first-class-key
+    source: "content/patterns/scope-as-a-first-class-key.md § Tests to require (unauthorized caller-supplied scope IDs)"
+    proves: Scope comes from authenticated identity, not from an argument the caller controls.
+    spec:
+      given: A caller authenticated as scope A.
+      when: It calls read and write paths passing scope B explicitly, including a wildcard or empty value.
+      then: Every call is refused or silently confined to A. No call returns B's data.
+    not_proven: That background jobs respect the same boundary — see scope.background_respects_boundary.
+
+  - id: scope.background_respects_boundary
+    pattern: scope-as-a-first-class-key
+    source: "content/patterns/scope-as-a-first-class-key.md § Tests to require (cache, embedding, and background-job isolation)"
+    proves: Consolidation, embedding, and cache keys carry the scope the read path enforces.
+    spec:
+      given: Memories in two scopes with overlapping content, and any background pass that summarizes, merges or indexes.
+      when: The pass runs to completion and the caches are warm.
+      then: No derived artifact mixes the two scopes, and a scoped read after the pass still excludes the other scope.
+    not_proven: >
+      Anything about deletion reaching those derived artifacts — that is
+      deletion.absent_after_reindex_and_restart.
+
+  - id: evidence.claim_resolves_to_source
+    pattern: evidence-before-belief
+    source: "content/patterns/evidence-before-belief.md § Tests to require"
+    proves: Every claim that can reach a prompt names the material it was derived from.
+    spec:
+      given: A store populated by whatever path the product uses, including automatic extraction.
+      when: Each injected claim is followed back through its provenance.
+      then: A surviving source record is reached for every claim. Zero orphans.
+    not_proven: That the source is accurate, or that the derivation was correct.
+
+  - id: evidence.source_delete_reaches_derived
+    pattern: evidence-before-belief
+    source: "content/patterns/evidence-before-belief.md § Tests to require"
+    proves: Deleting evidence invalidates or removes everything derived from it.
+    spec:
+      given: A source document, and derived memories built from it — summaries, facts, graph edges, embeddings.
+      when: The source is deleted through the product's own delete path.
+      then: Every derived artifact is gone or marked invalid. Assert per derived kind, not in aggregate.
+    not_proven: >
+      That the bytes left the storage engine. The atlas's layer-below-delete
+      finding applies: on three of four common vector engines the embedding
+      survives until an unscheduled compaction.
+
+  - id: evidence.rebuild_from_retained
+    pattern: evidence-before-belief
+    source: "content/patterns/evidence-before-belief.md § Tests to require"
+    proves: Derived memory is a projection, not the only copy.
+    spec:
+      given: A populated store.
+      when: Every derived table and index is dropped and rebuilt from retained evidence.
+      then: Recall answers the same questions it did before the rebuild.
+    not_proven: >
+      That the rebuild is deterministic when a model sits in the replay path —
+      see the log-and-projection note on what "rebuildable" means in that case.
+
+  - id: gateway.no_bypass_path
+    pattern: governed-write-gateway
+    source: "content/patterns/governed-write-gateway.md § Tests to require"
+    proves: Every write path enforces the same policy.
+    spec:
+      given: Every entry point that can mutate memory — API, MCP tool, CLI, importer, background pass, admin script.
+      when: The same policy-violating write is attempted through each one.
+      then: Each is refused, with the refusal recorded. Enumerate the paths first; the test is only as good as that list.
+    not_proven: That a future path will be added behind the gateway rather than beside it.
+
+  - id: gateway.model_cannot_claim_human_authority
+    pattern: governed-write-gateway
+    source: "content/patterns/governed-write-gateway.md § Tests to require"
+    proves: Trust level is assigned by the write path, not by the payload.
+    spec:
+      given: A model-originated write whose content asserts it is user-stated, verified, or approved.
+      when: It is committed.
+      then: The stored record carries the model actor and the lower trust level.
+    not_proven: That a human-authored write is correct.
+
+  - id: tombstone.laundering_sequence
+    pattern: rejected-value-tombstone
+    source: "content/patterns/rejected-value-tombstone.md § Tests to require (round 7)"
+    proves: A rejected value cannot be walked back to trusted through ordinary operations.
+    spec:
+      given: A value rejected by a human.
+      when: The claim is superseded with a different value, then the original is restated and corroborated.
+      then: The original is still inactive, and its rejection is intact.
+    not_proven: That the same value is blocked under a different key or scope.
+
+  - id: tombstone.survives_ttl_and_prune
+    pattern: rejected-value-tombstone
+    source: "content/patterns/rejected-value-tombstone.md § Tests to require (round 8)"
+    proves: The tombstone outlives every expiry the system has.
+    spec:
+      given: A rejected value and every TTL, decay and prune pass the product runs.
+      when: The store is aged past all of them and the laundering sequence is repeated.
+      then: The value is still refused. A tombstone that expires is not a tombstone.
+    not_proven: That storage growth from retained tombstones was budgeted.
+
+  - id: tombstone.key_normalization_attack
+    pattern: rejected-value-tombstone
+    source: "content/patterns/rejected-value-tombstone.md § Tests to require (round 9)"
+    proves: The key stops a value, not a string.
+    spec:
+      given: A rejected value.
+      when: It is re-asserted with unicode look-alikes, differing case, added whitespace, invisible characters, and a paraphrase.
+      then: The look-alike variants are refused. The paraphrase is expected to pass — record which side of that line the product needs.
+    not_proven: >
+      Semantic equivalence blocking. No system in the atlas does that, and
+      normalization is where the mechanism leaks in every recorded failure.
+
+  - id: tombstone.reextraction_stays_inactive
+    pattern: rejected-value-tombstone
+    source: "content/patterns/rejected-value-tombstone.md § Tests to require"
+    proves: Automatic extraction cannot resurrect a rejected value.
+    spec:
+      given: A rejected value and the product's real extraction path.
+      when: Input containing the value is ingested again.
+      then: No active record carries it.
+    not_proven: >
+      Whether the write was refused or merely absorbed. Pair with
+      tombstone.no_second_copy to tell those apart.
+
+  - id: tombstone.no_second_copy
+    pattern: rejected-value-tombstone
+    source: "notes/2026-08-07-the-strong-form-tombstone-subset.md § Follow-up"
+    proves: >
+      Which of the three mechanisms the product actually has. Consulted systems
+      refuse the write; collided ones let it land on the rejected row; suppressed
+      ones store a copy and hide it at read.
+    spec:
+      given: A rejected value.
+      when: It is re-asserted through the extractor.
+      then: Assert both that no new live record exists AND that the store holds no second copy of the value.
+    not_proven: >
+      Nothing further — but note which half fails. Consulted passes both,
+      collided passes the first, suppressed passes neither.
+
+  - id: deletion.absent_after_reindex_and_restart
+    pattern: multiple
+    source: "content/benchmarks.md § 6 (ten-step deletion sequence, six-method adapter)"
+    proves: Deleted content stays absent across every path that could bring it back.
+    spec:
+      given: A memory written, settled, and present in a prompt prefix.
+      when: It is forgotten, then background jobs, reindex, restart and export are run.
+      then: Every leak probe comes back empty, and the audit records the deletion.
+    not_proven: >
+      Erasure at the storage engine. Step 9 covers derived artifacts; the
+      embedding may still be in the index file. See the layer-below-delete
+      section of the comparative report.
+
+  - id: correction.survives_reindex
+    pattern: multiple
+    source: "content/benchmarks.md § 7 (contradiction test, five case shapes)"
+    proves: A correction holds through replacement, polarity flip, retraction, partial supersession and bounded validity.
+    spec:
+      given: Each of the five case shapes.
+      when: The correction is applied and the index is rebuilt.
+      then: Recall answers with the corrected value, the history is intact, and derived artifacts agree.
+    not_proven: That the model uses the corrected value once retrieval returns both.
+
+  - id: retrieval.k_is_an_upper_bound
+    pattern: gate-the-expensive-path
+    source: "content/overview.md § 6 (antipattern: recall@k without enforcing k)"
+    proves: The declared limit is what reaches the prompt.
+    spec:
+      given: A recall configured with a k and a token budget.
+      when: A query matches far more than k, with long records.
+      then: The assembled prompt contains at most k records and stays within budget. Score the prompt prefix, not the retriever.
+    not_proven: That the k records are the right ones.
+
+  - id: prompt.recall_is_data_not_instruction
+    pattern: multiple
+    source: "content/overview.md § 7 (render recalled memory defensively)"
+    proves: Recalled text cannot issue instructions.
+    spec:
+      given: A stored memory whose text contains an injection — an instruction, a fake system prompt, a tool call.
+      when: It is recalled and assembled into a prompt.
+      then: It is fenced or quoted as untrusted data, and the agent does not act on it.
+    not_proven: That the model is immune to injection. This tests the rendering, not the model.

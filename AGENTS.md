@@ -9,6 +9,11 @@ There are two jobs here, and they use different parts of the repo.
 
 ## Job 1 — You are designing or building memory for some other product
 
+**Start with the `use-the-atlas` skill** (`.agents/skills/use-the-atlas/`). It is
+this section as a workflow: read the target repository, pick a profile, write a
+build brief, stop for approval, implement in an order where each stage stands
+alone, then run the tests by id. The rest of this section is what it is built on.
+
 **Do not read the reports.** There are 155 of them and reading widely is how an
 agent ends up recommending the most interesting mechanism instead of the smallest
 sufficient one. Read five things, in this order.
@@ -37,6 +42,13 @@ sufficient one. Read five things, in this order.
    tests: a ten-step deletion sequence with a six-method adapter, and a
    contradiction test with five case shapes. Both are specified in enough detail
    to implement and neither has been run by this project.
+
+Two machine-readable artifacts package the above:
+[`.agents/protocol/tests.yaml`](.agents/protocol/tests.yaml) — portable
+acceptance tests with stable ids, each citing the page it came from and stating
+what a pass does *not* prove — and
+[`.agents/protocol/build-brief.md`](.agents/protocol/build-brief.md), the brief,
+closure report and lock-file formats.
 
 Read a system report only when a pattern page cites it for the exact mechanism
 you are borrowing.

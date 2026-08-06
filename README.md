@@ -23,6 +23,8 @@ Questions, corrections, and systems worth adding are welcome on Discord: [neoney
 - `assets/` — styles, behavior, and social-preview media.
 - `docs/` — generated static site published by GitHub Pages.
 - `AGENTS.md` — the entry point for an AI agent: what to read to build memory for a product, in what order, and what not to read.
+- `.agents/protocol/` — the machine-readable half: portable acceptance tests with stable ids, and the build-brief, closure-report and lock-file formats.
+- `.agents/skills/use-the-atlas/` — designing memory for another product from the atlas: profile, brief, approval, then code.
 - `.agents/skills/screen-repository/` — the security screen every checkout passes before it is read or run.
 - `.agents/skills/add-memory-system/` — the repeatable workflow for researching and integrating another memory system.
 

@@ -1,7 +1,9 @@
 # The atlas as an agent protocol — what to build, what exists, what would be invention
 
-**Status:** triaged. One piece built (`AGENTS.md`); three scoped; two declined
-on grounds this project has already recorded once.
+**Status:** triaged, then the three scoped pieces built the same day —
+`AGENTS.md`, `.agents/protocol/tests.yaml`, `.agents/protocol/build-brief.md`,
+and the `use-the-atlas` skill. Two items remain declined on grounds this project
+has already recorded once.
 **Origin:** a seven-step proposal (Codex, 2026-08-07) to turn the atlas "from a
 library into an agent workflow": inspect the target product → select a profile →
 emit a reviewable build brief → implement in dependency order → run
@@ -52,7 +54,10 @@ count, the correctable stack is not the default.
 That is the cheapest fix for the actual complaint, and it needed no new
 vocabulary.
 
-## Scoped, not yet built, in the order I would do them
+## Built next, in the order they depended on each other
+
+All three landed the same day. What follows was the plan; the notes under each
+are what actually came out.
 
 **1. The build brief and the lock file.** Genuinely new, genuinely cheap, and the
 part that makes the rest reviewable. `adopt` / `defer` / `reject` with a reason
@@ -106,6 +111,39 @@ table titled *"which failure modes this build closes, and which it does not"* is
 honest, useful, and does not imply a certification. **Would change if** the
 deletion harness were actually run — the same condition recorded for the
 compliance framing, which remains unmet.
+
+## What the building taught, beyond the plan
+
+**Test ids had to come before the brief**, not after — `required_tests` is a list
+of ids, so the ids are the dependency. Seventeen went in, all traceable to a
+`Tests to require` section, a benchmarks specification, or an overview
+antipattern. One is new-but-derived: `tombstone.no_second_copy`, the discriminator
+from [yesterday's re-derivation](2026-08-07-the-strong-form-tombstone-subset.md),
+which is what tells a *consulted* tombstone from a *collided* one — assert both
+that no live record carries the value and that the store holds no second copy.
+Consulted passes both halves, collided passes the first, suppressed passes
+neither.
+
+**Every entry states what a pass does not prove**, which turned out to be the
+field that took the longest to write and is the reason the file is worth having.
+`deletion.absent_after_reindex_and_restart` does not prove erasure at the storage
+engine. `scope.cross_tenant_absent` does not prove the boundary is authenticated.
+`prompt.recall_is_data_not_instruction` tests the rendering, not the model. A
+green test quoted as more than it is does more damage than a missing one, and
+this atlas has spent three notes on exactly that failure in its own prose.
+
+**The skill is subtractive on purpose.** Its stated failure mode is an agent
+building a tombstone and a governed gateway onto a single-user notes app, and its
+closing section says the answer *"you do not need this"* is a complete one worth
+writing a brief for. The brief rule that enforces it: **an empty `defer` list
+means the failure analysis did not happen.**
+
+**And one small self-catch.** `AGENTS.md` first said "sixteen portable
+acceptance tests"; there are seventeen. The number was hand-written into prose
+next to a file that could be counted — the exact class
+`check_claim_counts.py` exists to catch, in a file that checker does not scan.
+Fixed by removing the count rather than correcting it, which is the right fix
+every time it is available.
 
 ## The tension worth keeping in view
 
