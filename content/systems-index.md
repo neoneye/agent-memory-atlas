@@ -27,7 +27,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
 - [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals
 - [`ai-memory`](../systems/ai-memory/) **ai-memory** — Cross-harness handoff · `akitaonrails/ai-memory` · Scope enforced
-- [`alma-memory`](../systems/alma-memory/) **ALMA** — Five typed tables and a record of what not to do · `RBKunnela/ALMA-memory` · Scope enforced
+- [`alma-memory`](../systems/alma-memory/) **ALMA** — A write guard on one door of six · `RBKunnela/ALMA-memory` · Trust state, Scope enforced, Mutation audit
 - [`argo`](../systems/argo/) **ARGO** — Architecture as the memory · `derekhu0002/Argo` · Scope enforced, Negative evals
 - [`atomic-agent`](../systems/atomic-agent/) **Atomic Agent** — Evaluated memory fabric · `AtomicBot-ai/atomic-agent` · Bi-temporal
 - [`aukora-kernel`](../systems/aukora-kernel/) **Aukora Kernel** — Receipted memory · `aumara-xyz/aukora-kernel` · Scope enforced, Mutation audit, Negative evals

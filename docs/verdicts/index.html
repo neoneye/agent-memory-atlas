@@ -1308,23 +1308,25 @@ you want a dependency rather than an environment.</li>
 <code>better_alternative</code> beside the pattern itself — the only
 place in this corpus where a correction record holds both the reason and
 the replacement.</li>
-<li>Biggest risk: <code>VerificationStatus</code> — verified, uncertain,
-contradicted, unverifiable — is computed at retrieval and never written
-to any column, so nothing can query for contradicted memories, no pass
-can act on them, and the same contradiction is re-derived on every
-read.</li>
+<li>Biggest risk: the anti-pattern write guard has one call site.
+<code>learn()</code> refuses a strategy matching a known anti-pattern;
+the heuristic extractor, the conversation miner, the consolidation pass
+and two MCP write paths reach the same store without passing it, and
+those are the automatic writers a rejection most needs to bind.</li>
 <li>Most reusable component: <code>VerificationMethod</code>, which
 separates checked-against-an-authority from
 checked-against-our-own-memories from guessed-from-a-number — three
 claims most systems collapse into one score.</li>
-<li>Maturity impression: 106,594 lines on PyPI, MIT in the manifest with
-no LICENSE file in the tree, and one schema maintained by hand in two
-dialects with nothing comparing them.</li>
+<li>Maturity impression: 104,360 lines under 42,467 lines of tests, MIT
+with a LICENSE file, a dual-dialect migration for the new columns, and a
+committed LongMemEval run whose published recall curve recomputes
+exactly from its per-question records at every k.</li>
 <li>Study when: you want a memory that learns operating heuristics from
 task outcomes, or the richest worked example of storing what not to
 do.</li>
-<li>Do not copy when: an epistemic judgement has to persist beyond the
-call that produced it.</li>
+<li>Do not copy when: you need the write guard to hold against a
+background pass today — the paths that re-derive memory automatically
+are the ones it does not cover.</li>
 </ul>
 <h3 id="promptx"><code>promptx</code></h3>
 <ul>

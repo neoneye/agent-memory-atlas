@@ -123,7 +123,7 @@ that a background job then ignores.</li>
 commit a case asserting that particular material must <em>not</em> be
 retrieved — the assertion every scope, deletion and correction claim
 ultimately rests on.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 24 of 151
+<li><strong>Trust is usually a number, not a state.</strong> 25 of 151
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -2473,23 +2473,28 @@ results before returning them</td>
 <td>Outcomes recorded per task; heuristics accumulate occurrence and
 success counts; a file miner extracts heuristics and anti-patterns from
 a repository</td>
-<td>A <code>ForgettingEngine</code> prunes by age and by confidence; no
-supersession pointer and no rejected-value record</td>
+<td>A <code>ForgettingEngine</code> prunes by age and by confidence,
+writing an <code>alma_forget_audit</code> row before three of its eight
+deletes; no supersession pointer</td>
 <td><code>project_id</code> and <code>agent</code> on every one of the
 five tables, applied as a SQL predicate on the read path and indexed
 together</td>
-<td>An MCP server with retrieval tools, a CLI, and a PyPI package</td>
+<td>An MCP server whose tools include a verified retrieve and a
+list-by-verification-status, plus a CLI, a PyPI package and a JS
+package</td>
 <td>The forgetting engine's pruning strategies and a file-mining
 ingestion pass</td>
 <td>Four verification states — verified, uncertain, contradicted,
-unverifiable — computed at retrieval by ground truth, cross-verification
-or confidence, and never persisted</td>
+unverifiable — derived by ground truth, cross-verification or
+confidence, and written to a <code>verification_status</code> column on
+both backends</td>
 <td>An anti-pattern table storing the reason something was wrong and the
-better alternative beside it, which is more than any tombstone in this
-corpus records</td>
-<td>The verification states exist only in the returned object, so
-nothing accumulates and a contradiction found today is rediscovered
-tomorrow</td>
+better alternative beside it, a persisted epistemic status, and a
+LongMemEval recall curve that recomputes exactly from committed
+per-question records</td>
+<td>The anti-pattern write guard sits on <code>learn()</code> alone, so
+the heuristic extractor, the consolidation pass, the conversation miner
+and two MCP write paths reach the store without passing it</td>
 </tr>
 <tr>
 <td><code>argo</code></td>
@@ -6087,9 +6092,10 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>24 of 151:</em> <a
+<p><em>25 of 151:</em> <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
+href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/cambium/"><code>cambium</code></a>, <a
 href="../systems/clio/"><code>clio</code></a>, <a
@@ -6224,7 +6230,8 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>32 of 151:</em> <a
+<p><em>33 of 151:</em> <a
+href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
@@ -7529,12 +7536,20 @@ being replaced — stored as searchable metadata in the Chroma backend, so
 "what replaced this" is a query rather than a scan. Record-keyed, so the
 value itself can return through extraction.</p></li>
 <li><p><code>alma-memory</code>: a <code>ForgettingEngine</code> prunes
-by age and by confidence, destructively and without recording what went.
-The interesting half is elsewhere — <code>alma_anti_patterns</code>
-durably stores a pattern with <code>why_bad</code> and
-<code>better_alternative</code>, which is more than any tombstone here
-records, and is read as guidance rather than consulted on the write
-path.</p></li>
+by age and by confidence, writing an insert-only
+<code>alma_forget_audit</code> row — id, reason, and the pruned
+heuristic's <em>strategy</em> — before three of its eight deletes; the
+bulk outcome purge and four per-row deletes are silent.
+<code>alma_anti_patterns</code> durably stores a pattern with
+<code>why_bad</code> and <code>better_alternative</code>, more than any
+tombstone here records, and <code>check_write_guard</code> refuses a
+matching write on the <code>learn()</code> path. It is withheld the mark
+on reach: the heuristic extractor, the conversation miner and the
+consolidation pass reach the store without the check, which are the
+automatic writers the definition is about. The audit row already holds
+the removed value, so consulting it from the same guard would bind a
+deletion against re-derivation — the shortest distance to a tombstone in
+the corpus.</p></li>
 <li><p><code>promptx</code>: no correction path at all — the cognition
 package has no tombstone, supersede or forget vocabulary, and
 <code>decay</code> on an engram's strength is the only lever, so a wrong
@@ -10194,7 +10209,7 @@ href="https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a
 <li><a
 href="https://github.com/RBKunnela/ALMA-memory">RBKunnela/ALMA-memory</a>
 at <a
-href="https://github.com/RBKunnela/ALMA-memory/commit/164d2e3e3c67f3ce1c33d2b9ccd9acaa65f9ad7a"><code class="commit-id" title="164d2e3e3c67f3ce1c33d2b9ccd9acaa65f9ad7a">164d2e3e…</code></a></li>
+href="https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9"><code class="commit-id" title="e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9">e2178ad4…</code></a></li>
 <li><a
 href="https://github.com/deepractice/promptx">deepractice/promptx</a> at
 <a

@@ -652,11 +652,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `alma-memory`
 
 - Best idea: an anti-pattern table carrying `why_bad` and `better_alternative` beside the pattern itself — the only place in this corpus where a correction record holds both the reason and the replacement.
-- Biggest risk: `VerificationStatus` — verified, uncertain, contradicted, unverifiable — is computed at retrieval and never written to any column, so nothing can query for contradicted memories, no pass can act on them, and the same contradiction is re-derived on every read.
+- Biggest risk: the anti-pattern write guard has one call site. `learn()` refuses a strategy matching a known anti-pattern; the heuristic extractor, the conversation miner, the consolidation pass and two MCP write paths reach the same store without passing it, and those are the automatic writers a rejection most needs to bind.
 - Most reusable component: `VerificationMethod`, which separates checked-against-an-authority from checked-against-our-own-memories from guessed-from-a-number — three claims most systems collapse into one score.
-- Maturity impression: 106,594 lines on PyPI, MIT in the manifest with no LICENSE file in the tree, and one schema maintained by hand in two dialects with nothing comparing them.
+- Maturity impression: 104,360 lines under 42,467 lines of tests, MIT with a LICENSE file, a dual-dialect migration for the new columns, and a committed LongMemEval run whose published recall curve recomputes exactly from its per-question records at every k.
 - Study when: you want a memory that learns operating heuristics from task outcomes, or the richest worked example of storing what not to do.
-- Do not copy when: an epistemic judgement has to persist beyond the call that produced it.
+- Do not copy when: you need the write guard to hold against a background pass today — the paths that re-derive memory automatically are the ones it does not cover.
 
 ### `promptx`
 
