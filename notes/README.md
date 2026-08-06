@@ -8,6 +8,12 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-06-what-is-actually-new-here.md](2026-08-06-what-is-actually-new-here.md) —
+  a novelty inventory: the five framings the atlas produced that the survey
+  literature does not name, the eleven mechanisms closest to being one of a kind,
+  and the shape they make — every one of them sits after a memory has been
+  believed, which is the phase no benchmark scores. Plus two stale counts found
+  while assembling it, of exactly the kind the superlative audit predicted.
 - [2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md](2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md) —
   Tycho, Retrodict, Schema and VISTA independently put an append-only record in
   charge and the model's own notes on probation — and why a third-party
