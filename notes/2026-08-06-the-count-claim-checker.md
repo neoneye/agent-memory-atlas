@@ -1,4 +1,4 @@
-# The count-claim checker — thirteen stale numerators in one day
+# The count-claim checker — thirteen stale numerators, and two reviews of the fix
 
 **Status:** written and wired into `test_site.sh` as
 `scripts/check_claim_counts.py`. This note is the postmortem; it was Part 4 of
@@ -64,6 +64,19 @@ mechanism-as-noun rule is restricted to the two mechanisms whose plural is never
 a within-system quantity — a tombstone and an eval suite — and the exclusion is
 written into the source.
 
+**That fix then failed its own review, in the way this file keeps describing.**
+The new branch skipped the local-scope guard the windowed matcher applies, and
+shipped with **no fixture of its own** — all three self-test controls exercised
+the old matcher. So a checker whose whole argument is *a check that cannot
+demonstrate failure is not evidence of success* gained a branch that had never
+been demonstrated to do either, and could have failed the build on a report
+saying its store holds two tombstones. A mechanism-noun claim now also requires a
+corpus marker in its sentence (`atlas`, `corpus`, `systems here`, a corpus
+denominator), and three controls cover the branch: correct count passes, wrong
+count fails, and a within-system count is left unbound. The last one was
+mutation-tested — deleting the guard makes that control fail, which is the only
+evidence that a negative control is testing anything.
+
 ## What the checker does
 
 Finds a number that counts atlas nouns or names the corpus total, binds it to one
@@ -85,10 +98,12 @@ figure. A table row is a boundary, not every cell wall — splitting on `|` left
 - Zero bound claims exits **non-zero** with `NOTHING BOUND`. If a prose rewrite
   moves every claim out of reach, a green run would have verified nothing.
 
-**It has a negative control.** `--self-test` builds a two-report fixture where
-exactly one carries a tombstone and asserts three outcomes: correct count passes,
-wrong count fails, nothing-bound fails. `test_site.sh` runs the self-test
-*before* the real check, so a checker that can no longer fail breaks the build.
+**It has negative controls.** `--self-test` builds a two-report fixture where
+exactly one carries a tombstone and asserts six outcomes — three per matcher:
+correct count passes, wrong count fails, and the shape that must *not* bind
+(nothing recognisable for the windowed matcher, a within-system count for the
+mechanism-noun one). `test_site.sh` runs the self-test *before* the real check,
+so a checker that can no longer fail breaks the build.
 This is [Cambium](../content/systems/cambium/)'s rule applied to the atlas's own
 tooling — a check that cannot demonstrate failure is not evidence of success.
 

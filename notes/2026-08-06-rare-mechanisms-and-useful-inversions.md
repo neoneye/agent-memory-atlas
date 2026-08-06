@@ -194,8 +194,12 @@ hid the difference behind one heading:
   `content_hash`, `prev_hash`, `entry_hash`), so deletion shows as a sequence gap
   and insertion as a broken link. I ran `tests/test_audit_chain.py` — 16 passed,
   including modified-body, broken-link and deleted-entry. **Prior art:**
-  hash-chained logs are decades old and are what certificate transparency is
-  built on.
+  hash-chained logs are a decades-old tamper-evident construction. Not the same
+  construction as Certificate Transparency, which the first version implied: CT
+  uses an append-only **Merkle tree** with signed tree heads and
+  inclusion/consistency proofs ([RFC 9162](https://www.rfc-editor.org/rfc/rfc9162.html)),
+  where Aura has a linear `prev_hash` chain. Same family, different guarantees —
+  and it is *Lethe*, with its Merkle root, that sits closer to the CT shape.
 **Limit:** Aura's chain is verified by Aura. Tamper-evidence without an external
 witness detects a careless rewrite, not a determined one.
 
@@ -314,28 +318,43 @@ read path already respects, rather than a predicate every query must remember.
 ## Part 3 — Where they sit, counted
 
 The first version asserted that *every* idea above sits after a memory has been
-believed, which its own entries falsify — 7 and 9 are retrieval. Counted
-properly, one entry per row:
+believed, which its own entries falsify — 7 and 9 are retrieval. The second
+version counted, but counted **entries**, and four of those entries hold more
+than one mechanism — so "seven of eleven" and "six of fourteen" had different
+denominators built from different units. Third attempt, one **atomic mechanism**
+per row:
 
-| # | Mechanism | Lifecycle phase |
-| --- | --- | --- |
-| 1 | ACE KEEP record | Consolidation (write path) |
-| 2 | AgentRecall-X veto withdrawal | Use / act |
-| 3 | MemLedger policy hash | Audit / provenance |
-| 4 | Palazzo, Aura | Delete / audit |
-| 5 | Aukora, Lethe | Delete |
-| 6 | CSM authorship check | Verification of stored claims |
-| 7 | LoongFlow sampling | **Retrieval** |
-| 8 / 8b | Omi, OpenHuman | Use / act; provenance |
-| 9 | HippoRAG | **Retrieval** + entity resolution |
-| 10 / 10b | MineContext, Memento | Admission / scheduling |
-| 11 | echo-agent, empryo, cosmonapse, cambium | Write; **retrieval**; contract; tooling |
+| # | Mechanism | System | Phase | Refusal? |
+| --- | --- | --- | --- | --- |
+| 1 | KEEP-decision record, consulted | `agentic-context-engine` | Consolidation | yes |
+| 2 | Veto withdrawn by measured precision | `agentrecall-x` | Use / act | yes |
+| 3 | Policy hash stamped on every event | `memledger` | Audit / provenance | no |
+| 4 | Audit entry as precondition for delete | `palazzo` | Delete | yes |
+| 5 | Hash-chained receipt store | `aura` | Audit / provenance | no |
+| 6 | Receipt fsynced before the row, chained on content hash | `aukora-kernel` | Delete | no |
+| 7 | Signed purge acknowledgment | `lethe` | Delete | no |
+| 8 | Line-multiplicity authorship check | `csm` | Verification | no |
+| 9 | Boltzmann-sampled recall | `loongflow` | **Retrieval** | no |
+| 10 | Status gates permitted uses | `omi` | Use / act | yes |
+| 11 | Taint lattice by consequence | `openhuman` | Provenance | no |
+| 12 | PPR diffusion instead of traversal | `hipporag` | **Retrieval** | no |
+| 13 | Non-destructive entity resolution | `hipporag` | Consolidation | no |
+| 14 | Event time allowed in the future | `minecontext` | Admission / schema | no |
+| 15 | Sealed until `deliver_on` | `memento` | Admission | no |
+| 16 | Write refused below provenance rank | `echo-agent` | Capture / write | yes |
+| 17 | Git co-change affinity as a recall signal | `empryo` | **Retrieval** | no |
+| 18 | Failure vocabulary in the contract | `cosmonapse` | Contract | yes |
+| 19 | Check refuses an unearned pass | `cambium` | Tooling | yes |
 
-So: **seven of the eleven entries sit after a memory has been believed, three
-touch retrieval, one is admission.** That is a weaker and truer statement than
-the first version's, and it is still the shape worth noticing — the phases with
-the most mechanisms per system in this corpus are capture and retrieval, and the
-mechanisms that separate systems from each other cluster after belief.
+Nineteen mechanisms. Grouping consolidation, delete, audit/provenance,
+verification and use/act as *after a memory exists and is believed*: **11 of 19.**
+Retrieval: **3.** The remaining five are admission (2), write, contract and
+tooling.
+
+The phase assignment is a judgement and the bucket boundary is arguable — a
+reader who thinks consolidation belongs with capture gets 9 of 19 instead. The
+arithmetic is not: it is derivable from the table above, which is the difference
+between this version and the last two.
 
 **What cannot be concluded.** The first version wrote that nobody benchmarks the
 correction phase and that the sparse mechanisms and the sparse benchmarks "are
@@ -346,18 +365,20 @@ support a causal claim about why anyone built anything. What the corpus supports
 is the observation, not the explanation.
 
 **On refusal.** The first version said "seven of eleven entries are about
-refusal" and gave five examples, which is not reproducible. Counted explicitly,
-the entries whose mechanism *is* a refusal are 1 (a decision not to act), 2 (a
-veto revoked), 4-Palazzo (a delete that fails when it cannot be logged),
-8-Omi (an action denied by status), 11-cosmonapse (a backend allowed to decline)
-and 11-cambium (a check that will not return a pass) — **six of the fourteen
-distinct mechanisms.** The observation from
-[refusal as a lens](2026-07-28-refusal-as-a-lens.md) survives at that size.
+refusal" and gave five examples; the second counted six of fourteen against a
+denominator that did not exist. From the table: rows 1, 2, 4, 10, 16, 18 and 19 —
+**7 of 19**, where the test is that the mechanism's *action* is to deny, withhold
+or decline. Row 13 is the closest call and is marked no: linking instead of
+merging avoids a destructive act rather than refusing a request. The observation
+from [refusal as a lens](2026-07-28-refusal-as-a-lens.md) survives at that size,
+and survives being counted three different ways, which is more than it had
+before.
 
-## Part 4 — What the review changed
+## Part 4 — What the reviews changed
 
 Recorded because a note that was wrong about its central claim should say so at
-the top of the file and in detail at the bottom, not be quietly edited.
+the top of the file and in detail at the bottom, not be quietly edited. Two
+passes, the second reviewing the first version's own corrections.
 
 | Claim in v1 | Status |
 | --- | --- |
@@ -370,10 +391,12 @@ the top of the file and in detail at the bottom, not be quietly edited.
 | Lethe's receipt proves erasure | **Corrected.** It is a signed acknowledgment bound to the log |
 | Omi + OpenHuman are one trust entry | **Split.** OpenHuman's report says it does not model belief |
 | MineContext + Memento are one prospective entry | **Split.** Memento's report says it is not prospective |
-| Every entry sits after belief | **Corrected** by counting: seven of eleven |
+| Every entry sits after belief | **Corrected twice.** v2 counted entries, four of which held several mechanisms each, so its two conclusions had incompatible denominators. v3 counts 19 atomic mechanisms: 11 after belief, 3 retrieval, 7 refusals |
 | Nobody benchmarks the phase | **Retracted.** 30 negative-eval suites, plus ForgetEval |
 | pgvector 16, Chroma 11, Qdrant 11, LanceDB 6 | **Corrected** to 15/12/11/5 by `matrix.storage`, with the definition stated. `content/overview.md` carried the same stale figures and is fixed |
 | "the 284-judgement subset" | **Corrected.** That split was taken at 136 reports; `list_superlatives.py` now reports **320** corpus-scoped superlatives, and it scans `content/`, not `notes/`, so the disclosure was inapplicable as written |
+| Aura's chain is "what certificate transparency is built on" | **Corrected in v3.** CT is a Merkle tree with signed tree heads and inclusion proofs ([RFC 9162](https://www.rfc-editor.org/rfc/rfc9162.html)); Aura is a linear `prev_hash` chain. Same family, different construction — and Lethe's Merkle root is the closer analogue |
+| The mechanism-noun matcher added in v2 | **Fixed in v3.** It bypassed the local-scope guard and had no fixture of its own, so "two tombstones" in one system's prose could have failed the build. It now requires a corpus marker in the sentence, and three controls cover the branch — one of them mutation-tested by deleting the guard and confirming the control fails |
 
 **And the drift the review found that the new checker missed.**
 [`overview.md:104`](../content/overview.md) still read *"the atlas's headline

@@ -83,14 +83,29 @@ CLAIM = re.compile(
 #: mechanism noun is usable here only when its plural is never a within-system
 #: quantity, which is true of a tombstone and of an eval suite and of nothing
 #: else on the rubric.
+#:
+#: Even for those two the restriction is not enough on its own, because a report
+#: may legitimately say a *store* holds two tombstones. So a mechanism-noun claim
+#: must also carry a corpus marker in its sentence — the same discipline the
+#: windowed matcher gets for free by requiring a mechanism to be named beside an
+#: atlas noun. Without it this branch was the one part of the checker with no way
+#: to tell "nine tombstones in the atlas" from "two tombstones in this table".
 MECHANISM_NOUNS: dict[str, str] = {
-    "tombstone": r"tombstones",
-    "negative_eval": r"negative[- ]eval(?:uation)? suites|negative[- ]evals",
+    "tombstone": r"tombstones?",
+    "negative_eval": r"negative[- ]eval(?:uation)? suites?|negative[- ]evals",
 }
 MECHANISM_NOUN_CLAIM = re.compile(
     rf"\b(?P<num>{NUMBER})\s+(?P<mech>"
     + "|".join(f"(?P<{flag}>{pattern})" for flag, pattern in MECHANISM_NOUNS.items())
     + r")\b",
+    re.I,
+)
+#: What makes a sentence a statement about the corpus rather than about one
+#: system. Deliberately short: every phrase here is one the atlas only writes
+#: when it is counting across reports.
+CORPUS_MARKER = re.compile(
+    r"\batlas\b|\bcorpus\b|systems here|reports here|headline counts"
+    r"|of\s+(?:the\s+)?(?:\d{2,3}|one hundred and [a-z-]+)",
     re.I,
 )
 
@@ -259,11 +274,21 @@ def check(root: Path, show_list: bool) -> int:
         claimed_spans: list[tuple[int, int]] = []
         for match in MECHANISM_NOUN_CLAIM.finditer(text):
             flag = next(f for f in MECHANISM_NOUNS if match.group(f))
+            ahead, behind = window(text, match.start(), match.end())
+            line = text[: match.start()].count("\n") + 1
+            claim = " ".join(match.group(0).split())
+            # Same two guards the windowed matcher applies, which this branch
+            # bypassed when it was first written: a count scoped to a batch or a
+            # single system is not a claim about the corpus.
+            if LOCAL_SCOPE.match(ahead) or not CORPUS_MARKER.search(f"{behind} {ahead}"):
+                if show_list:
+                    listed.append(
+                        f"{where}:{line}: '{claim}' — no corpus marker in the sentence, not checked"
+                    )
+                continue
             claimed_spans.append(match.span())
             bound += 1
             said = value(match.group("num"))
-            line = text[: match.start()].count("\n") + 1
-            claim = " ".join(match.group(0).split())
             if show_list:
                 listed.append(
                     f"{where}:{line}: '{claim}' — {LABELS[flag]}, said {said}, live {counts[flag]}"
@@ -368,10 +393,23 @@ def self_test() -> int:
     import io
     import tempfile
 
+    # Every matcher needs a control here. The mechanism-noun branch was added
+    # after a reader found what the windowed one missed, shipped with no fixture
+    # of its own, and a second review caught that before it caught a bug — which
+    # is the same lesson as the rest of this file: an untested branch is a claim
+    # nobody has checked.
     cases = [
-        ("One system carries a rejected-value tombstone.\n", 0, "correct count passes"),
-        ("Two systems carry a rejected-value tombstone.\n", 1, "wrong count fails"),
+        ("One system carries a rejected-value tombstone.\n", 0, "windowed: correct count passes"),
+        ("Two systems carry a rejected-value tombstone.\n", 1, "windowed: wrong count fails"),
         ("Memory is nice.\n", 1, "nothing bound is not a pass"),
+        ("The atlas holds one tombstone.\n", 0, "mechanism noun: correct count passes"),
+        ("The atlas holds two tombstones.\n", 1, "mechanism noun: wrong count fails"),
+        (
+            "One system carries a rejected-value tombstone.\n\n"
+            "Its store holds two tombstones and a queue.\n",
+            0,
+            "mechanism noun: a within-system count is not a corpus claim",
+        ),
     ]
     failures = []
     for prose, expected, label in cases:

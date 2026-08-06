@@ -16,9 +16,11 @@ when the work happens.
   retractions are tabled at the bottom — including the framing the atlas thought
   it coined, which the literature had already named *false success*.
 - [2026-08-06-the-count-claim-checker.md](2026-08-06-the-count-claim-checker.md) —
-  thirteen stale numerators in one day, the checker that now guards them, and the
-  one it missed that a reader found the same evening. Every one sat beside
-  generated numbers that were correct, which is what makes the class dangerous.
+  thirteen stale numerators in one day, the checker that now guards them, the one
+  it missed that a reader found the same evening, and the branch added to catch
+  that which then shipped with no control of its own. Every stale number sat
+  beside generated ones that were correct, which is what makes the class
+  dangerous.
 - [2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md](2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md) —
   Tycho, Retrodict, Schema and VISTA independently put an append-only record in
   charge and the model's own notes on probation — and why a third-party
