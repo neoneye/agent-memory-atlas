@@ -6,11 +6,11 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Eight systems of one hundred and fifty-one
+> **This is not an established best practice.** Nine systems of one hundred and fifty-one
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, two built it after this page named its absence in their report, one
-> has it as a side effect of a hash primary key and does not appear to know, and one
+> regulation, two built it after this page named its absence in their report, **two
+> have it as a side effect of a lookup that forgot to exclude the rejected row**, and one
 > carries the mark without yet being characterised here.
 > There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -107,7 +107,7 @@ enough.
 
 ## Seen in the atlas
 
-**Eight systems in the atlas have this.** That is still the most striking negative
+**Nine systems in the atlas have this.** That is still the most striking negative
 result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -333,6 +333,36 @@ different session is a new row with no expiry. And the confidence on the
 tombstoned row keeps climbing with each re-mention, so anything that ever did
 clear the flag would resurrect the value stronger than it was rejected.
 
+**The eighth is the seventh's mechanism in a different language, and it is the
+better instance.** [Nova AI](../../systems/nova-ai/) is a symbolic concept graph
+with no model anywhere in it. `weerleg` — refute — sets `status = "rejected"` on
+a sense, with the reason and timestamp in that record's own audit log; the
+reasoning query and the disambiguation candidate list both filter it out, while
+`get_senses()` deliberately keeps showing it, so a person inspecting the graph
+sees exactly what the reasoner refuses to use. That split — invisible to
+inference, visible to audit — is the cleanest expression of this pattern's intent
+in the corpus.
+
+What makes it a tombstone rather than a soft delete is the same omission that
+makes [Mnemosyne](../../systems/mnemosyne/) one: the deduplication loop in
+`add_sense` matches an incoming definition **by definition text and does not
+exclude rejected rows**, and the status branch below it promotes only when
+`source == "user"`. So Wikipedia auto-learning or auto-extraction re-deriving a
+refuted definition lands on the refusal, leaves it in place, and the reasoner
+still cannot see it. The key is the definition — the value — not the row.
+
+Two systems arriving at this by the same accident, in different languages, on
+different data models, is worth stating plainly: **the property falls out of
+writing dedup against content and rejection against the same record, and it is
+destroyed by the tidy-up that adds `AND status != 'rejected'` to the lookup.**
+Neither project claims the behaviour and neither pins it with a test. If you have
+this shape, write the test before someone helpfully filters it.
+
+Nova is also the only holder here where a human can lift the refusal by
+re-teaching the same definition, which sets `confirmed` — the audited override
+this page's tradeoff list asks for, present because the same branch that blocks
+automatic sources admits the person.
+
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry
@@ -415,9 +445,10 @@ nothing blocks. Rich relation modelling is not a substitute for negative memory.
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
   in the atlas that carries this mechanism should have this test; Daimon, which
-  has 1,920 others, does not, and neither does Mnemosyne, which has 51,407 lines
-  of them. A tombstone is the one mechanism whose silent failure looks exactly
-  like success.
+  has 1,920 others, does not, and neither do Mnemosyne, with 51,407 lines of
+  them, nor Nova AI, whose 21 test files hold five assertions between them. All
+  three of those hold the property by accident. A tombstone is the one mechanism
+  whose silent failure looks exactly like success.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.
 - Verify trusted override and tombstone reactivation are audited.

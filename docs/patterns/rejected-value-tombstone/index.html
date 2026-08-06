@@ -96,17 +96,17 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Eight
+<p><strong>This is not an established best practice.</strong> Nine
 systems of one hundred and fifty-one carry it: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, two
-built it after this page named its absence in their report, one has it
-as a side effect of a hash primary key and does not appear to know, and
-one carries the mark without yet being characterised here. There is no
-consensus behind this page, no library that provides the mechanism, and
-no shared vocabulary for it. Everything below is an argument, and the
-provenance is traced under <em>Seen in the atlas</em> so you can weigh
-it as one.</p>
+built it after this page named its absence in their report, <strong>two
+have it as a side effect of a lookup that forgot to exclude the rejected
+row</strong>, and one carries the mark without yet being characterised
+here. There is no consensus behind this page, no library that provides
+the mechanism, and no shared vocabulary for it. Everything below is an
+argument, and the provenance is traced under <em>Seen in the atlas</em>
+so you can weigh it as one.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -221,7 +221,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Eight systems in the atlas have this.</strong> That is still
+<p><strong>Nine systems in the atlas have this.</strong> That is still
 the most striking negative result in the atlas, and it is the reason
 this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -489,6 +489,38 @@ different session is a new row with no expiry. And the confidence on the
 tombstoned row keeps climbing with each re-mention, so anything that
 ever did clear the flag would resurrect the value stronger than it was
 rejected.</p>
+<p><strong>The eighth is the seventh's mechanism in a different
+language, and it is the better instance.</strong> <a
+href="../../systems/nova-ai/">Nova AI</a> is a symbolic concept graph
+with no model anywhere in it. <code>weerleg</code> — refute — sets
+<code>status = "rejected"</code> on a sense, with the reason and
+timestamp in that record's own audit log; the reasoning query and the
+disambiguation candidate list both filter it out, while
+<code>get_senses()</code> deliberately keeps showing it, so a person
+inspecting the graph sees exactly what the reasoner refuses to use. That
+split — invisible to inference, visible to audit — is the cleanest
+expression of this pattern's intent in the corpus.</p>
+<p>What makes it a tombstone rather than a soft delete is the same
+omission that makes <a href="../../systems/mnemosyne/">Mnemosyne</a>
+one: the deduplication loop in <code>add_sense</code> matches an
+incoming definition <strong>by definition text and does not exclude
+rejected rows</strong>, and the status branch below it promotes only
+when <code>source == "user"</code>. So Wikipedia auto-learning or
+auto-extraction re-deriving a refuted definition lands on the refusal,
+leaves it in place, and the reasoner still cannot see it. The key is the
+definition — the value — not the row.</p>
+<p>Two systems arriving at this by the same accident, in different
+languages, on different data models, is worth stating plainly:
+<strong>the property falls out of writing dedup against content and
+rejection against the same record, and it is destroyed by the tidy-up
+that adds <code>AND status != 'rejected'</code> to the lookup.</strong>
+Neither project claims the behaviour and neither pins it with a test. If
+you have this shape, write the test before someone helpfully filters
+it.</p>
+<p>Nova is also the only holder here where a human can lift the refusal
+by re-teaching the same definition, which sets <code>confirmed</code> —
+the audited override this page's tradeoff list asks for, present because
+the same branch that blocks automatic sources admits the person.</p>
 <p><strong><a href="../../systems/memoryops-ai/">MemoryOps AI</a> is the
 closest any system here comes without arriving</strong>, and it is the
 best argument on this page that the expensive half of the pattern is not
@@ -582,9 +614,11 @@ whitespace variants. Verel's round 9 was an NFKC bypass of
 <code>strip().lower()</code>.</li>
 <li>Reject a value, rerun extraction, and prove it stays inactive. Every
 system in the atlas that carries this mechanism should have this test;
-Daimon, which has 1,920 others, does not, and neither does Mnemosyne,
-which has 51,407 lines of them. A tombstone is the one mechanism whose
-silent failure looks exactly like success.</li>
+Daimon, which has 1,920 others, does not, and neither do Mnemosyne, with
+51,407 lines of them, nor Nova AI, whose 21 test files hold five
+assertions between them. All three of those hold the property by
+accident. A tombstone is the one mechanism whose silent failure looks
+exactly like success.</li>
 <li>Correct A to B, then try to reintroduce A through a different
 source.</li>
 <li>Verify scope isolation between users, projects, and agents.</li>

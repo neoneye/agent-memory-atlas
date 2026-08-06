@@ -1,27 +1,27 @@
 ---
 title: "Nova AI"
 eyebrow: "Symbolic memory, no model"
-description: "A single-user companion whose memory is a hand-built concept graph with an audit log on every record and a confirmation gate before any relation is written — and no way to remove one afterwards."
+description: "A single-user companion whose memory is a hand-built concept graph with an audit log on every record, a confirmation gate before any relation is written, and a refusal that survives re-extraction because the dedup lookup does not exempt it."
 root: ../..
 page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
-revision: 4a7d89b915b8bd785606c347b6ae5733030edc1f
-revision_url: https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f
-analyzed_at: 2026-08-04
-capabilities: "audit_log, human_review"
+revision: c4c000b17487683deecb06cf810dc82c17ef0894
+revision_url: https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894
+analyzed_at: 2026-08-06
+capabilities: "tombstone, trust_state, audit_log, human_review"
 matrix:
   memory_unit: "Two units — an interaction event, and a concept with senses, relations and a per-record audit log"
   storage: "SQLite for events (plus a JSONL mirror and an archive table); one `concepts.json` rewritten whole for knowledge"
   retrieval: "SQL `LIKE` over the event JSON, `difflib.SequenceMatcher` over the newest 500 rows, and graph walks over `is_a`/`part_of`/`causes` — no embeddings anywhere"
   write: "Event-bus fan-in with a 50-event/5-second buffer; knowledge writes pass a spoken yes/no confirmation gate"
-  update_delete: "Definitions correctable with old and new value recorded; relations, senses and concepts have no removal path at all; the preference store is the only thing that can be told to forget"
+  update_delete: "`weerleg` marks a sense, concept or relation `rejected` with a reason in the audit log; the reasoning layer ignores rejected rows while `get_senses()` still shows them, and a hard delete is refused until everything is rejected first"
   scoping: "None — a single named user, no scope key anywhere"
   integration: "An in-process event bus across roughly 40 modules; a 24/7 loop that decides when to speak unprompted"
-  background: "Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip, vacuum, backup rotation, health check; four-hourly classifier retraining"
-  trust: "Per-relation `source` and `confidence`, a confidence history, and an append-only audit log per concept — but no status field and no rejected state"
-  strengths: "Corrections quarantined from the curated training set; a confirmation gate before knowledge is written; an audit log on the record itself"
-  risks: "Contradiction detection nothing calls, no way to retract a relation, a whole-file non-atomic save, and a licence that forbids reuse"
+  background: "Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip, vacuum, backup rotation, health check; four-hourly classifier retraining; a periodic contradiction sweep that reports conflicts to the user"
+  trust: "A three-value `status` on every sense and relation — `unverified`, `confirmed`, `rejected` — set from the source, monotonic against automatic downgrades, beside `source`, `confidence` and a per-record audit log"
+  strengths: "A rejection keyed on the definition text that automatic re-extraction cannot lift, a confirmation gate before knowledge is written, and an audit log on the record itself"
+  risks: "Twenty-one test files carrying five assertions between them, a whole-file non-atomic save, and a licence that forbids reuse"
 ---
 
 ## 1. Executive Summary
@@ -59,13 +59,28 @@ with `old_value` and `new_value` where a value changed. The same entries are
 mirrored to `logs/concepts.jsonl`. Nova can answer "when did I come to believe
 this, and who told me" for anything in the graph.
 
-Reservations, and they are structural. **`find_contradictions` exists, works, and
-nothing calls it** — one facade method re-exports it, and no code path in the
-running system invokes either. And there is no way to remove a relation, a sense
-or a concept: across 25,000 lines the only removal in the project is
-`remove_preference`. So Nova can detect that it believes a dog is both an animal
-and a piece of furniture, has no code that looks, and could not act on the answer
-if it did.
+**The refusal is the mechanism worth reading, and it holds by an omission.**
+`weerleg` — refute — sets `status = "rejected"` on a sense, a concept's every
+sense, or a relation, with the reason and timestamp written into that record's
+own audit log. The reasoning layer then filters `status != "rejected"` when
+choosing a sense and when offering disambiguation candidates, while `get_senses()`
+deliberately keeps showing it *"transparantie"* — so a person inspecting the graph
+sees what the reasoner refuses to use.
+
+What makes it a tombstone rather than a soft delete is the deduplication loop in
+`add_sense`. It matches an incoming definition against existing senses **by
+definition text, without excluding rejected ones**, and the status branch below
+it only promotes on `source == "user"`. So when `wikipedia_teacher` or
+`auto_extract` re-derives a definition that was refuted, the write lands on the
+rejected row, leaves the status where it is, and the reasoner still cannot see
+it. The rejection is keyed on the value and survives its own re-assertion.
+
+A person can lift it — re-teaching the same definition as `user` sets
+`confirmed`, which is the audited human override the atlas asks for and not a
+hole. Automatic sources cannot.
+
+`hard_delete` sits behind it as a second step: it refuses while any sense is
+still unrejected, so physical removal requires the refusal first.
 
 **Licence caveat, stated because it governs what a reader may do with the rest.**
 `LICENSE.txt` is headed *"Viewable, Not Reusable"* — all rights reserved,
@@ -94,14 +109,13 @@ stateDiagram-v2
     Believed: relation appended<br/>source, confidence, created_at
 
     Believed --> Conflicting: an incompatible is_a arrives
-    Conflicting: find_contradictions can see it
-    Conflicting --> Conflicting: nothing calls it
-
-    note right of Conflicting
-        No transition out.
-        No delete, no tombstone,
-        no supersession.
-    end note
+    Conflicting: a background sweep finds it<br/>and tells the user
+    Conflicting --> Rejected: user answers with weerleg
+    Believed --> Rejected: user refutes it directly
+    Rejected: status rejected<br/>reason and time in the audit log
+    Rejected --> Rejected: auto re-extraction lands here<br/>and cannot lift it
+    Rejected --> Believed: only a person re-teaching it
+    Rejected --> [*]: hard_delete, refused until everything is rejected
 ```
 
 The gate between `Pending` and `Believed` is the design's best idea: a parsed
@@ -109,11 +123,12 @@ relation is not a belief, and a person decides which it becomes. That is
 [evidence before belief](../../patterns/evidence-before-belief/) arrived at
 independently, in a system with no model to distrust.
 
-The missing arrow out of `Conflicting` is the defining gap. Nova is strictly
-monotonic about knowledge — it can only ever believe more — and a symbolic system
-with inference chains is exactly where that hurts, because `is_a_chained` will
-walk through a wrong edge forever and explain its reasoning confidently while
-doing it.
+The arrow that matters is the self-loop on `Rejected`. Nova is monotonic in the
+direction that is safe — a person's confirmation outranks any later automatic
+match, and an automatic match can never downgrade what a person confirmed — and
+the refusal is the exit the graph needs, because `is_a_chained` walks inference
+chains and a wrong edge left in place would be reasoned through confidently
+forever.
 
 ## 3. Architecture
 
@@ -221,23 +236,32 @@ sentence — *"Ja, een {source} is een {target}, want: hond → dier → levend 
 A memory that can show its reasoning as a chain of stored edges is rare in this
 atlas, and it is a direct consequence of refusing the embedding.
 
-### Contradiction detection with no caller
+### Contradiction detection, and the loop that answers it
 
 `find_contradictions` checks a word's `is_a` parents against three hardcoded
 incompatible groups — `{dier, plant, meubel, voertuig, gebouw, apparaat,
 voedsel}`, `{levend, niet-levend}`, `{vloeibaar, vast, gas}` — and returns a list
 with a readable reason per conflict.
 
-It is called from exactly one place: a facade method on the module that
-re-exports it. Nothing invokes that facade. No background pass, no write-time
-check, no debug command.
+`modules/knowledge/contradiction_checker.py` is its caller: a periodic sweep in
+`main.py`'s background loop, on the same pattern as the weather and emergence
+modules, walking the whole knowledge graph, collecting conflicts, and raising
+them with the user through `layer4_response` **with a concrete `weerleg:`
+proposal per conflict** so the refusal is one spoken sentence away. Its module
+docstring is explicit that it adds no intelligence: *"Puur symbolisch: geen ML,
+geen generatie — roept enkel bestaande, al-geteste reasoning-code aan"* — purely
+symbolic, calling existing already-tested reasoning code and formatting the
+result.
 
-This is the failure mode the
-[resolve, don't just detect](../../patterns/resolve-not-just-detect/) pattern
-describes, in the purest form available — not a detector whose output is ignored
-downstream, but a detector with no downstream at all. And the gap compounds: even
-a caller could only report the conflict, because no code anywhere removes a
-relation.
+It also solves the problem that makes proactive reporting unbearable. A
+`contradiction_state.json` remembers which conflicts have already been raised,
+keyed on the word plus its sorted conflict list so the same collision produces
+the same key whatever order the `is_a` relations were stored in. An unresolved
+conflict is mentioned once, not every cycle.
+
+That is [resolve, don't just detect](../../patterns/resolve-not-just-detect/)
+completed end to end: detection, a bounded proactive surface, a named resolution
+verb, and a state that ends in the store rather than in a conversation.
 
 ## 5. Memory Data Model
 
@@ -381,13 +405,23 @@ Strengths:
 
 Gaps:
 
-- **No removal path for knowledge.** No delete of a concept, a sense or a
-  relation exists anywhere; knowledge is strictly monotonic.
-- **Contradiction detection with no caller**, so the one mechanism that could
-  notice the consequence is unreachable.
-- **No trust state and no rejected values**, so a wrong fact and a right one are
-  the same kind of thing once stored.
+- **A rejection only a person can make.** Every path to `rejected` runs through
+  the user; nothing lets the system refuse its own bad inference, so a
+  contradiction sits until someone answers the prompt.
+- **The status is written and barely read.** Three call sites read it back, all
+  to compute an audit diff, and two reasoning queries filter on it. Nothing
+  reports on it, counts it, or surfaces the unverified backlog.
 - **The whole graph is rewritten on every save**, non-atomically.
+- **`tombstone` — earned, and by an omission rather than a design.** The record
+  is keyed on the definition text, the reasoner filters it, and `add_sense`'s
+  dedup loop finds it without exempting it, so automatic re-extraction lands on
+  the refusal instead of routing around it. Nothing in the code claims this
+  property and no test pins it; adding an `and s.get("status") != "rejected"` to
+  that loop during a tidy-up would remove it silently.
+- **`trust_state` — earned.** `unverified`, `confirmed` and `rejected` on every
+  sense and relation, set from `source` at write time, with a stated
+  monotonicity rule: a user confirmation may overwrite `unverified`, and a later
+  automatic match may never push a confirmed sense back down.
 - **No scope key**, by design, which makes the schema single-user rather than
   merely deployed that way.
 
@@ -400,10 +434,11 @@ leaves the word standing under the other, then publishes `preference_forgotten`.
 That is a more careful forget than several dedicated memory systems in this atlas
 manage, and it is source-aware in exactly the way a correction should be.
 
-It applies to what Kevin likes. It does not apply to what Nova knows. The system
-can be told to forget a preference and cannot be told that a stored `is_a` was
-wrong — and the second is the one that propagates, because the inference chains
-walk through it and then explain themselves.
+It applies to what Kevin likes, and `weerleg` applies to what Nova knows. The two
+verbs differ in kind and the difference is right: `vergeet` deletes a preference
+outright, and `weerleg` leaves the refuted knowledge in the file where a person
+can still see it while the reasoner cannot use it. Deleting a taste is harmless;
+deleting a belief loses the record that it was ever held and refuted.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -451,9 +486,10 @@ survive the person.
 
 ### Avoid
 
-- **Detection with no caller.** A contradiction finder nothing invokes is worse
-  than none, because the repository reads as though the problem is handled. If
-  you write the detector, write the caller in the same change.
+- **Detection with no caller.** A finder nothing invokes is worse than none,
+  because the repository reads as though the problem is handled. Nova wrote the
+  caller afterwards; write it in the same change, and give it a state file so a
+  standing conflict is raised once rather than every cycle.
 - **A knowledge store with no removal path.** Additive-only is defensible for an
   event log and indefensible for beliefs, especially with inference on top: one
   wrong `is_a` is walked by every chained query forever.
@@ -469,9 +505,10 @@ several model-driven systems here manage, and they are stronger *because* the
 author had to decide each case explicitly rather than delegate it.
 
 Do not read it as a component. The licence forbids reuse, the schema has no scope
-key, the store is a single JSON file rewritten whole, and knowledge cannot be
-retracted. It is a well-kept notebook of one person's design decisions, and its
-value to a reader is the decisions.
+key, and the store is a single JSON file rewritten whole. It is a well-kept
+notebook of one person's design decisions, and its value to a reader is the
+decisions — of which the strongest is that a refusal should be keyed on what was
+said, not on the row that said it.
 
 The honest summary of the whole system: Nova is careful about *how* something
 becomes a belief and has no theory at all about how something stops being one.
@@ -481,9 +518,10 @@ has yet written the delete.
 
 ## 12. Open Questions
 
-- Was `find_contradictions` ever wired to a caller, or written ahead of one?
-- Is there an intended resolution path for a detected contradiction, given that
-  nothing can remove a relation?
+- Is the dedup loop's blindness to `rejected` deliberate? It is what makes the
+  refusal survive automatic re-extraction, and no comment claims it.
+- What happens to the `unverified` backlog? Nothing counts it or offers it for
+  confirmation, so it grows silently as Wikipedia and auto-extraction run.
 - Why does `add_relation` hardcode `source: "user"` and `confidence: 1.0` when
   the schema and the committed data both carry real values?
 - Does `ConceptStore.save` need to become atomic before the graph grows, or is
@@ -517,5 +555,17 @@ has yet written the delete.
 - Licence: `LICENSE.txt` ("Viewable, Not Reusable").
 
 ## History
+
+**2026-08-06** — [`c4c000b17487683deecb06cf810dc82c17ef0894`](https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894) — 5 commits on. Four published criticisms went stale together, all closed by the project, and the report is rewritten around what replaced them.
+
+`weerleg` sets `status = "rejected"` on a sense, a whole concept's senses or a relation, with reason and timestamp in the record's own audit log; the reasoning query and the disambiguation candidate list both filter it out while `get_senses()` still shows it. `add_sense`'s dedup loop matches an incoming definition without exempting rejected rows, and its status branch promotes only on `source == "user"` — so `wikipedia_teacher` and `auto_extract` re-deriving a refuted definition land on the refusal and cannot lift it. `tombstone` earned, keyed on the value. `hard_delete` refuses while any sense is unrejected, so physical removal requires the refusal first.
+
+`trust_state` earned: `unverified`, `confirmed`, `rejected` as a field on senses and relations, written from `source`, with `scripts/migrate_trust_state.py` backfilling existing rows — dry-run by default, timestamped backup before `--apply`, re-read and revalidated after writing, idempotent.
+
+`find_contradictions` has a caller. `modules/knowledge/contradiction_checker.py` sweeps the graph on the background loop, raises each conflict with the user through `layer4_response` with a concrete `weerleg:` proposal, and keeps a `contradiction_state.json` keyed on the word plus its sorted conflict list so a standing conflict is raised once rather than every cycle.
+
+Unchanged: the licence is still *"Viewable, Not Reusable"*, all rights reserved; 21 test files still carry five assertions between them, so none of the above is pinned by a test; and `ConceptStore.save` still rewrites the whole graph non-atomically.
+
+Nothing was run — `requirements.txt` changed three days before this reading, inside the cooldown.
 
 **2026-08-04** — [`4a7d89b915b8bd785606c347b6ae5733030edc1f`](https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f) — first reading.

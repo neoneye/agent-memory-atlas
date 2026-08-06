@@ -3097,21 +3097,20 @@ question — "may I remember that X is a kind of Y?" — with sense
 disambiguation asked first, so the only path from parsed language to a
 stored belief runs through a person, in the turn where they still have
 the context to answer.</li>
-<li>Biggest risk: knowledge is strictly monotonic. Nothing anywhere
-removes a relation, a sense or a concept, and
-<code>find_contradictions</code> — which would notice the consequence —
-is called by nothing, so a wrong <code>is_a</code> is walked by every
-chained query forever and explained confidently each time.</li>
-<li>Most reusable component: the correction quarantine — confirmed
-corrections live in their own file, are merged with the curated training
-set only in a local copy for the duration of a retrain, and are restored
-under <code>try/finally</code>, so the human-owned ground truth cannot
-be polluted by the machine's own learning.</li>
+<li>Biggest risk: every path to a refusal runs through the user. Nothing
+lets the system refuse its own bad inference, and the
+<code>unverified</code> backlog that Wikipedia and auto-extraction
+produce is never counted or offered for confirmation, so it grows
+silently while nothing prompts anyone to work it down.</li>
+<li>Most reusable component: a refusal keyed on the definition text that
+automatic re-extraction cannot lift, because the dedup lookup finds the
+rejected row without exempting it — the whole tombstone, in a loop that
+was written for deduplication.</li>
 <li>Maturity impression: 25,000 lines of one author's carefully
-documented Python with an unusually detailed changelog, and 21 test
-files holding five assertions between them — the verification is a
-person's practice rather than the repository's, and it does not survive
-the person.</li>
+documented Python with an unusually detailed changelog, four capability
+marks, and 21 test files holding five assertions between them — so the
+mechanisms that earn the marks are pinned by nobody, and the
+verification is a person's practice rather than the repository's.</li>
 <li>Study when: you want to see what correction machinery looks like
 when there is no model to blame; every epistemic decision here had to be
 written down because nothing could be delegated to a language

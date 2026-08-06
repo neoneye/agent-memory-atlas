@@ -102,7 +102,7 @@ judged against seven mechanisms with strict definitions. Corpus last
 extended <strong>6 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 8
+<li><strong>Correction is the phase that goes unbuilt.</strong> 9
 systems of 151 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -123,7 +123,7 @@ that a background job then ignores.</li>
 commit a case asserting that particular material must <em>not</em> be
 retrieved — the assertion every scope, deletion and correction claim
 ultimately rests on.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 25 of 151
+<li><strong>Trust is usually a number, not a state.</strong> 26 of 151
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -4887,23 +4887,28 @@ walks over <code>is_a</code>/<code>part_of</code>/<code>causes</code> —
 no embeddings anywhere</td>
 <td>Event-bus fan-in with a 50-event/5-second buffer; knowledge writes
 pass a spoken yes/no confirmation gate</td>
-<td>Definitions correctable with old and new value recorded; relations,
-senses and concepts have no removal path at all; the preference store is
-the only thing that can be told to forget</td>
+<td><code>weerleg</code> marks a sense, concept or relation
+<code>rejected</code> with a reason in the audit log; the reasoning
+layer ignores rejected rows while <code>get_senses()</code> still shows
+them, and a hard delete is refused until everything is rejected
+first</td>
 <td>None — a single named user, no scope key anywhere</td>
 <td>An in-process event bus across roughly 40 modules; a 24/7 loop that
 decides when to speak unprompted</td>
 <td>Six-hourly maintenance — RAM trim, 90-day archival, 365-day gzip,
 vacuum, backup rotation, health check; four-hourly classifier
-retraining</td>
-<td>Per-relation <code>source</code> and <code>confidence</code>, a
-confidence history, and an append-only audit log per concept — but no
-status field and no rejected state</td>
-<td>Corrections quarantined from the curated training set; a
-confirmation gate before knowledge is written; an audit log on the
-record itself</td>
-<td>Contradiction detection nothing calls, no way to retract a relation,
-a whole-file non-atomic save, and a licence that forbids reuse</td>
+retraining; a periodic contradiction sweep that reports conflicts to the
+user</td>
+<td>A three-value <code>status</code> on every sense and relation —
+<code>unverified</code>, <code>confirmed</code>, <code>rejected</code> —
+set from the source, monotonic against automatic downgrades, beside
+<code>source</code>, <code>confidence</code> and a per-record audit
+log</td>
+<td>A rejection keyed on the definition text that automatic
+re-extraction cannot lift, a confirmation gate before knowledge is
+written, and an audit log on the record itself</td>
+<td>Twenty-one test files carrying five assertions between them, a
+whole-file non-atomic save, and a licence that forbids reuse</td>
 </tr>
 <tr>
 <td><code>npcpy</code></td>
@@ -6082,10 +6087,11 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>8 of 151:</em> <a
+<p><em>9 of 151:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
@@ -6094,7 +6100,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>25 of 151:</em> <a
+<p><em>26 of 151:</em> <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
@@ -6111,6 +6117,7 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
+href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
@@ -10694,7 +10701,7 @@ at <a
 href="https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022"><code class="commit-id" title="da2766c5ebf45ff10440b419465c8ec0df674022">da2766c5…</code></a></li>
 <li><a href="https://github.com/Whooptie/NOVA_AI">Whooptie/NOVA_AI</a>
 at <a
-href="https://github.com/Whooptie/NOVA_AI/commit/4a7d89b915b8bd785606c347b6ae5733030edc1f"><code class="commit-id" title="4a7d89b915b8bd785606c347b6ae5733030edc1f">4a7d89b9…</code></a></li>
+href="https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894"><code class="commit-id" title="c4c000b17487683deecb06cf810dc82c17ef0894">c4c000b1…</code></a></li>
 <li><a
 href="https://github.com/WindSeries69/memsem">WindSeries69/memsem</a> at
 <a
@@ -11092,14 +11099,14 @@ has.</li>
 <li><strong>Nothing was run for Nova AI, and its own suite would not
 have helped.</strong> Its 21 test files carry five assertions between
 them, all in one file, against roughly 230 <code>print</code> calls —
-manual scripts a person reads the output of. Nothing in the repository
-detects that <code>find_contradictions</code> has no caller, and nothing
-asserts the invariant its most careful code exists to hold: that a
-classifier retrain leaves <code>training_data.json</code>
-byte-identical. Its licence is <em>"Viewable, Not Reusable"</em> — all
-rights reserved — reviewed under the same exception applied to OptMem,
-because the mechanisms are ones the atlas has not otherwise found in a
-system that calls no model at all.</li>
+manual scripts a person reads the output of. Nothing asserts the
+invariant its most careful code exists to hold — that a classifier
+retrain leaves <code>training_data.json</code> byte-identical — and
+nothing pins the refusal path that earns it two capability marks. Its
+licence is <em>"Viewable, Not Reusable"</em> — all rights reserved —
+reviewed under the same exception applied to OptMem, because the
+mechanisms are ones the atlas has not otherwise found in a system that
+calls no model at all.</li>
 <li><strong>Two repositories examined in this round have no reports, and
 both are the same misread.</strong> <code>showjihyun/bvwebchat</code>
 and <code>showjihyun/bvcounterchat</code> are, respectively, a
