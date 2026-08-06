@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust graph memory for coding
+assistants whose trust decays only when judged contradicting evidence
+lands, never from age alone and never from being retrieved — with the
+ablation row it ships labelled in its own committed benchmark data.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engram
+Alpha — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust graph memory for
+coding assistants whose trust decays only when judged contradicting
+evidence lands, never from age alone and never from being retrieved —
+with the ablation row it ships labelled in its own committed benchmark
+data.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engram
+Alpha — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust graph memory for
+coding assistants whose trust decays only when judged contradicting
+evidence lands, never from age alone and never from being retrieved —
+with the ablation row it ships labelled in its own committed benchmark
+data.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engram Alpha — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Time doesn't validate, exposure doesn't
+validate</p>
+          <h1>Engram Alpha</h1>
+          <p class="document-deck">A Rust graph memory for coding
+assistants whose trust decays only when judged contradicting evidence
+lands, never from age alone and never from being retrieved — with the
+ablation row it ships labelled in its own committed benchmark data.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/techtheist/engram">
+              <span>Source</span>
+              <strong>techtheist/engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37" title="5721848af9fe4adc28ff08dce5bda6cfc3f24a37">
+              <span>Analyzed revision</span>
+              <code>5721848a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-06</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (58%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engram Alpha is graph memory for AI coding assistants: 25,521 lines
+of Rust across <code>engram-core</code>, <code>engram-mcp</code> and
+<code>engram-http</code>, MIT, 66 commits since 3 July 2026, shipping as
+a JetBrains plugin and a VS Code extension on three marketplaces with a
+browser demo of the real pane. <strong>Not to be confused with <a
+href="../engram/">Engram</a> — a different project of the same name,
+already in this atlas.</strong></p>
+<p>A memory is a typed node — <code>Principle</code>,
+<code>Decision</code>, <code>Caution</code>, <code>Problem</code>,
+<code>Resolution</code>, <code>Insight</code>, <code>Intent</code>,
+<code>Anchor</code> — joined by typed edges: <code>about</code>,
+<code>because</code>, <code>answers</code>, <code>builds-on</code>,
+<code>replaces</code>, <code>conflicts-with</code>,
+<code>needs</code>.</p>
+<p><strong>Its trust model states two principles the rest of this corpus
+mostly violates</strong>, and
+<code>crates/engram-core/src/policy.rs</code> names both:</p>
+<blockquote>
+<p><strong>Time doesn't validate.</strong> <code>stable</code> knowledge
+holds its trust flat until a live <code>conflicts-with</code> edge (the
+judged-evidence event) stamps <code>demoted_at</code>; only then does it
+ramp down, and withdrawing the evidence withdraws the demotion.</p>
+</blockquote>
+<blockquote>
+<p><strong>Exposure doesn't validate.</strong> Retrieval stamps
+<code>last_seen</code> for observability only — it proves a note was
+<em>findable</em>, not that it is true. Trust anchors on
+<code>confirmed_at</code>, which only deliberate acts refresh. Otherwise
+a broad recurring query would keep an attractive but wrong note alive
+forever — <strong>retrieval certifying its own outputs.</strong></p>
+</blockquote>
+<p>That second sentence is the exact failure this atlas records in <a
+href="../core-memory/">Core Memory</a> ("recall raises the class… still
+a use signal feeding a trust field"), in <a
+href="../nooa-memory/">NOOA</a>'s myelination, and in the decay curves
+of <a href="../mnemopi/">Mnemopi</a> and <a
+href="../powermem/">PowerMem</a>. Engram names it and refuses it. The
+header adds that both principles were <em>"learned from external
+feedback on v0.4.1"</em> — a trust model changed by review rather than
+defended.</p>
+<p>Drift is treated the same way: surfaced for review, never demoting,
+because it is <em>"environment-dependent (wrong cwd, feature branches)
+and a sticky stamp from a bad scan would mass-bury the graph."</em> A
+system that knows which of its own signals are too noisy to act on is
+rare.</p>
+<p><strong>The write path resolves instead of queueing.</strong>
+<code>WriteOutcome::Created</code> returns the look-alike pairs the
+write just queued, with the reason in the type: <em>"returned so the
+writer judges them in the same turn instead of leaving them for the next
+session's brief (PLAN §7: detection is local, judgment is the
+assistant's)."</em> Deterministic local detection, model judgment, in
+one turn — the shape <a
+href="../../patterns/resolve-not-just-detect/">resolve, don't just
+detect</a> asks for.</p>
+<p><strong>And the benchmark data is the most self-incriminating in the
+corpus.</strong> <code>eval/results/bench-100.json</code> is a
+thirteen-row ablation with a full config stamp
+(<code>"embeddings_are_fake": false</code>, seed, embedder, reranker), a
+corpus profile, and a phrasing mix. The shipped configuration is
+labelled <em>in the data</em>:
+<code>"kw 0.15 · reranker VOTES   &lt;- ships today"</code>. And it does
+not win:</p>
+<pre class="text"><code>rag (pure vectors)   weighted_recall 0.992   oblique 0.92   tokens_mean 2268.8
+engram (shipped)     weighted_recall 0.989   oblique 0.89   tokens_mean  373.1</code></pre>
+<p>They publish the row where plain RAG beats them on recall, and let
+the six-fold token reduction make the argument.
+<code>contradictions-500.json</code> separates the two ways
+contradiction detection fails — <em>"missed_by_retrieval": 0,
+"missed_by_judgment": 3</em> out of 100 — which is a diagnostic
+decomposition almost nobody reports, and <code>floor-500.json</code>
+sweeps twenty-one score floors with unanswerable
+<strong>controls</strong> at each point, so the precision gained is
+priced against the answerable questions declined.</p>
+<p>The limits are real and stated by the name: this is alpha, there is
+no scope key of any kind, and every number above is measured on graphs
+the project generated itself.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A node is a claim of a stated kind, and the kind carries the
+epistemics: a <code>Decision</code> is not a <code>Caution</code> is not
+an <code>Insight</code>. Durability is separate — <code>stable</code>,
+<code>episodic</code>, <code>volatile</code> — and decides whether time
+is allowed to erode it at all.</p>
+<p>Trust is <strong>computed at read time</strong> from durable anchors,
+so nothing depends on a background pass having run. The anchor picks the
+starting value: <code>created_at</code> alone starts at
+<code>TRUST_UNSEEN_START</code>; <code>confirmed_at</code> (a deliberate
+update, or "Confirm still true") restarts the clock at
+<code>TRUST_CONFIRMED_START</code>; <code>approved_at</code> starts
+higher and ramps to a floor. <code>trust_override</code> — the pane's
+pin — short-circuits all of it: pinned nodes never decay, never
+auto-archive, and evidence events skip them, because <em>"a human said
+'forever', so only a human unsays it"</em> — while contradictions still
+surface for review.</p>
+<p>A node whose computed trust falls below <code>STALE_TRUST</code> is
+<strong>stale</strong>: still searchable, buried by the multiplier,
+flagged to the assistant, and put in the pane's review queue for a human
+decision. Nothing disappears silently.</p>
+<p>The other half of the state machine is the <code>suspects</code>
+table: look-alike pairs with a similarity, an optional local-NLI hint
+(<code>contradiction | entailment | neutral</code>) and a score whose
+column comment reads <em>"models don't validate"</em>. A suspect is
+<code>suspected</code>, then <code>confirmed</code> or
+<code>dismissed</code>, and the verdict vocabulary is
+<code>conflict</code>, <code>replaces</code>, <code>dismiss</code>.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Unseen: created_at only, trust starts low
+    Unseen --&gt; Confirmed: a deliberate update or Confirm still true
+    Unseen --&gt; Approved: explicit approval, higher start, ramps to a floor
+    Confirmed --&gt; Demoted: a live conflicts-with edge stamps demoted_at
+    Approved --&gt; Demoted: a live conflicts-with edge stamps demoted_at
+    Demoted --&gt; Confirmed: the evidence is withdrawn, the demotion lifts
+    Approved --&gt; Pinned: trust_override, decay off
+    Pinned --&gt; Approved: only a human unpins
+    Confirmed --&gt; Stale: trust falls below the floor, buried not deleted
+    Stale --&gt; Confirmed: reviewed and confirmed in the pane
+    Confirmed --&gt; Archived: valid_until set
+    Unseen --&gt; Unseen: retrieval stamps last_seen and moves nothing</code></pre>
+<p>The self-loop at the bottom is the design. Retrieval touches the
+graph and changes no trust, so a note cannot certify itself by being
+popular.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Runtime.</strong> A Rust core (<code>engram-core</code>) with
+an MCP server (<code>engram-mcp</code>, 2,979 lines) and an HTTP surface
+(<code>engram-http</code>), a Vue frontend for the pane, and editor
+integrations for JetBrains and VS Code published to the JetBrains
+Marketplace, the VS Marketplace and Open VSX. There is a standalone
+browser demo running the real pane over an invented project.</p>
+<p><strong>Persistence.</strong> SQLite (<code>store_sqlite.rs</code>)
+with a second backend (<code>store_tepin.rs</code>) behind the same
+<code>store.rs</code> trait. Four tables: <code>nodes</code>,
+<code>edges</code>, <code>suspects</code>, <code>audit</code>, plus a
+<code>meta</code> table holding the embedding model identity and vector
+width so a store cannot be silently read with the wrong embedder.</p>
+<p><strong>Modules worth naming.</strong> <code>nli.rs</code> runs a
+local natural-language-inference model for contradiction hints;
+<code>policy.rs</code> holds the trust constants and their rationale;
+<code>redact.rs</code> exists at all; <code>cortex.rs</code>,
+<code>digest.rs</code>, <code>rag.rs</code>, <code>hub.rs</code> carry
+retrieval and briefing; <code>migrate.rs</code> handles schema
+movement.</p>
+<p><strong>Background work.</strong> Deliberately little. Trust is a
+read-time computation. Drift scans surface for review without demoting.
+The suspects queue is filled synchronously by the write that created the
+look-alike.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One binary and one SQLite file per project, plus optional local
+models — an embedder (<code>bge-small-en-v1.5</code>), a reranker
+(<code>jina-reranker-v1-turbo-en</code>) and an NLI model
+(<code>mobilebert-uncased-mnli</code>) — all small enough to run on a
+developer machine, which is the point. No service to stand up and no API
+key required to store anything.</p>
+<p>The pane is the operating surface, and it is unusually complete for
+an alpha: a live graph, a review queue, conflict judgement, retirement,
+pinning, and a theme menu. The browser demo means a reader can exercise
+the correction flow without installing anything, which is the best
+documentation decision in the repository.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema:</strong>
+<code>crates/engram-core/src/schema.rs</code> — <code>nodes</code>
+(<code>:6</code>), <code>edges</code> (<code>:27</code>),
+<code>suspects</code> (<code>:50</code>), the append-only
+<code>audit</code> journal (<code>:65</code>), <code>meta</code>.</li>
+<li><strong>Types and vocabularies:</strong>
+<code>crates/engram-core/src/types.rs</code> — node kinds, edge verbs,
+durability, statuses, <code>WriteOutcome::Created</code> returning
+<code>suspects</code>.</li>
+<li><strong>Trust:</strong>
+<code>crates/engram-core/src/policy.rs</code> — the two principles, the
+anchors, <code>STALE_TRUST</code>, <code>trust_override</code>.</li>
+<li><strong>Contradiction:</strong>
+<code>crates/engram-core/src/nli.rs</code>; <code>hub.rs:104</code>
+gates on a live <code>conflicts-with</code> edge with
+<code>valid_until</code> unset.</li>
+<li><strong>Stores:</strong> <code>store.rs</code>,
+<code>store_sqlite.rs</code>, <code>store_tepin.rs</code>,
+<code>migrate.rs</code>.</li>
+<li><strong>Retrieval:</strong> <code>rag.rs</code>,
+<code>cortex.rs</code>, <code>digest.rs</code>.</li>
+<li><strong>Redaction:</strong> <code>redact.rs</code>.</li>
+<li><strong>Surfaces:</strong> <code>crates/engram-mcp/</code>,
+<code>crates/engram-http/</code>, <code>frontend/</code>,
+<code>engram-vscode/</code>, the JetBrains plugin.</li>
+<li><strong>Evaluation:</strong> <code>eval/src/</code> and
+<code>eval/results/</code> — 71 committed files.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> carries <code>id</code>, <code>type</code>,
+<code>title</code>, <code>body</code>, <code>durability</code>,
+<code>source</code>, <code>session_id</code>, <code>created_at</code>,
+<strong><code>valid_from</code>, <code>valid_until</code></strong>,
+<code>status</code>, <code>code_refs</code>, <code>tags</code>,
+<code>last_seen</code>, <code>confirmed_at</code>,
+<code>approved_at</code>, <code>demoted_at</code>,
+<code>trust_override</code>. <code>edges</code> carries the same
+temporal pair plus <code>confidence</code>, <code>strength</code>,
+<code>note</code> and a <code>status</code>.</p>
+<p><strong>Bi-temporality is real and used.</strong>
+<code>valid_from</code> / <code>valid_until</code> are validity time and
+<code>created_at</code> is record time; <code>hub.rs:104</code> treats
+an edge as live only when <code>valid_until.is_none()</code>, and
+<code>types.rs:368</code> documents a neighbour as
+<em>"superseded/archived (<code>valid_until</code> set)"</em>. Archival
+is closing an interval rather than deleting a row.</p>
+<p><strong>The trust anchors are three separate durable facts</strong>,
+not one score: <code>confirmed_at</code> (a deliberate act),
+<code>approved_at</code> (explicit approval), and
+<code>demoted_at</code> (contradicting evidence landed). Keeping them
+apart is what lets the policy say <em>withdrawing the evidence withdraws
+the demotion</em> — with one blended number that operation is
+impossible.</p>
+<p><strong><code>code_refs</code> ties memory to the artifact it
+describes</strong>, which is the property <a
+href="../magic-context/">Magic Context</a> is credited for here.</p>
+<p><strong>There is no scope key.</strong> No user, project or workspace
+column; isolation is one graph per project directory. Coherent for an
+editor plugin, and it means the schema cannot host two projects without
+a migration.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vectors from <code>bge-small-en-v1.5</code>, a keyword weight of
+0.15, and a reranker (<code>jina-reranker-v1-turbo-en</code>) that
+<strong>votes rather than decides</strong> — a distinction the ablation
+measures rather than asserts. Across every keyword weight in
+<code>bench-100.json</code>, <code>reranker VOTES</code> beats
+<code>reranker DECIDES</code> on weighted recall (0.991 vs 0.980 at the
+shipped 0.15) and on oblique questions (0.91 vs 0.80). A reranker
+allowed to overrule the retriever loses obliquely-phrased hits; one that
+contributes a vote does not.</p>
+<p>The score floor is a published tradeoff curve rather than a constant.
+<code>floor-500.json</code> walks twenty-one floors and reports, at
+each, recall@5, oblique recall, mean results returned, mean tokens, and
+two decline rates — for answerable questions and for
+<strong>unanswerable controls</strong>. At floor 0 the system returns
+9.95 results and 512 tokens and declines nothing including the controls;
+by floor ~0.62 it returns 1.03 results and 55 tokens, declines 62% of
+controls and 38% of answerable questions. Every operating point is
+priced.</p>
+<p>Trust multiplies the score, so a stale node is buried rather than
+filtered — it stays findable, which is what makes the review queue
+meaningful.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is synchronous and returns more than an id.
+<code>WriteOutcome::Created</code> carries the node, any
+<code>warnings</code>, and the <code>suspects</code> — look-alike pairs
+the write just created — <em>"so the writer judges them in the same turn
+instead of leaving them for the next session's brief."</em></p>
+<p>The division of labour is stated: <strong>detection is local,
+judgment is the assistant's.</strong> Similarity and the NLI hint are
+computed by small local models; the verdict — <code>conflict</code>,
+<code>replaces</code>, <code>dismiss</code> — is the assistant's, and
+the column comment beside the NLI score says why: <em>"models don't
+validate."</em> A probability is a hint, not a ruling.</p>
+<p>Correction is a family of moves rather than a delete: a
+<code>replaces</code> edge, a <code>conflicts-with</code> edge that
+stamps <code>demoted_at</code>, closing <code>valid_until</code> to
+archive, approving, pinning, or dismissing a suspect. Every one of them
+appends to the audit journal.</p>
+<p><strong>The audit journal is the richest in this corpus.</strong> One
+row per node or edge mutation, insert-only, carrying
+<code>before_json</code> and <code>after_json</code> in full, the
+<code>action</code> from an eleven-value vocabulary
+(<code>created | updated | approved | unapproved | pinned | unpinned | demoted | undemoted | archived | deleted | imported</code>),
+the <code>origin</code> surface
+(<code>pane | mcp | daemon | cli | library</code>), and the writing
+process's <code>session_id</code>, <code>cwd</code>, <code>pid</code>
+and <code>version</code>. <code>title</code> is snapshotted so it
+<em>"survives deletion"</em>.</p>
+<p>Knowing which surface made a change — a human in the pane, an
+assistant over MCP, a daemon — is the distinction most audit logs here
+collapse, and it is exactly what you need when a memory is wrong and you
+are deciding whether to distrust the model or the person.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server for the assistant, an HTTP surface, a JetBrains plugin,
+a VS Code extension, and a standalone pane. The screenshots show the
+intended loop: the graph fills in live while Claude Code works in the
+terminal below.</p>
+<p>The assistant's authority is broad on judgment and bounded on trust.
+It writes nodes and edges, and it judges the suspects the write hands
+back — but approval and pinning are human acts, retrieval moves nothing,
+and a pinned node ignores the assistant's evidence entirely until a
+human unpins it.</p>
+<p>The pane is a genuine review surface: stale nodes queue for a
+decision, conflicts are judged there, decisions are retired there, and
+the browser demo lets a reader do all three without installing
+anything.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>audit_log</code> — earned, and it sets the
+bar.</strong> Insert-only, one row per mutation, full before and after
+JSON, an eleven-value action vocabulary, the originating surface, and
+process context. Deletion-surviving titles.</p>
+<p><strong><code>bitemporal</code> — earned.</strong>
+<code>valid_from</code> / <code>valid_until</code> on nodes and edges
+against <code>created_at</code>, used on the read path to decide what is
+live.</p>
+<p><strong><code>trust_state</code> — earned.</strong>
+<code>suspects.status</code> is a persisted
+<code>suspected | confirmed | dismissed</code>; nodes carry a
+<code>status</code> and three distinct durable epistemic stamps,
+<code>confirmed_at</code>, <code>approved_at</code> and
+<code>demoted_at</code>, which the policy reads separately and which the
+audit journal names as actions.</p>
+<p><strong><code>human_review</code> — earned.</strong> A review queue
+for stale nodes, conflict judgement, retirement and pinning, with
+pinning explicitly reserved to humans.</p>
+<p><strong><code>negative_eval</code> — earned.</strong> The floor sweep
+carries unanswerable <strong>controls</strong> at every operating point
+and reports <code>controls_declined</code>, so the evaluation asserts
+that material which should not be returned is not returned — and prices
+the answerable questions lost at each threshold.</p>
+<p><strong><code>tombstone</code> — not found.</strong> A
+<code>dismissed</code> suspect durably records that a pair was judged
+not-a-conflict, and <code>replaces</code> records supersession, but both
+are keyed on ids. Nothing is keyed on a rejected <em>value</em>, so a
+claim retired as wrong can be re-authored from the next conversation
+that mentions it.</p>
+<p><strong><code>scope_enforced</code> — not found.</strong> No scope
+key on either table.</p>
+<p>Other observations:</p>
+<ul>
+<li><strong><code>redact.rs</code> exists</strong>, so redaction is a
+modelled concern rather than an afterthought; what drives it was not
+traced.</li>
+<li><strong><code>meta</code> pins the embedding model identity and
+vector width</strong>, so a store read with the wrong embedder is
+detectable rather than silently wrong.</li>
+<li><strong>Alpha, and the README says so first.</strong> APIs may
+change between releases.</li>
+<li><strong>Every number is self-generated.</strong> The graphs,
+questions and controls are the project's own synthetic corpora; nothing
+here is measured on an external benchmark, and the report should not be
+read as saying otherwise.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>eval/</code> is a first-class crate with 71 committed result
+files — <code>bench-100.json</code>,
+<code>contradictions-500.json</code>,
+<code>floor-100/500/1500.json</code> and their <code>.log</code>
+companions — and this is the part of the project most worth copying.</p>
+<p><strong>The ablation labels its own shipped row.</strong>
+<code>bench-100.json</code> holds thirteen configurations with a runtime
+stamp (<code>"embeddings_are_fake": false</code>, seed, embedder,
+reranker), a corpus profile down to the verb mix and code-ref
+distribution, and a phrasing mix of 45% lexical, 45% paraphrase, 10%
+oblique. One row reads
+<code>"kw 0.15 · reranker VOTES   &lt;- ships today"</code>, and pure
+RAG beats it on recall. Publishing the row you lose, beside the row you
+ship, in the machine- readable artifact, is the strongest form of the
+discipline this atlas credits <a href="../perseus-vault/">Perseus
+Vault</a> and <a href="../memsem/">memsem</a> for.</p>
+<p><strong>Contradiction detection is decomposed, not scored.</strong>
+<code>contradictions-500.json</code>: 100 contradictions, 97 caught,
+<code>"missed_by_retrieval": 0</code>,
+<code>"missed_by_judgment": 3</code>; 100 entailments with 78 supported.
+Separating a detector's retrieval failures from its judgment failures
+tells a maintainer which half to fix, and almost nothing in this corpus
+reports it.</p>
+<p><strong>The floor sweep has controls.</strong> Unanswerable questions
+at every threshold, with <code>controls_declined</code> rising as the
+floor rises — so precision is never claimed without the recall it
+cost.</p>
+<p>Nothing was run for this review: three dependency surfaces were
+inside the seven-day cooldown and one auto-run surface was present.</p>
+<p>What the evaluation does not establish: any of this on data the
+project did not generate. The graphs, the questions, the phrasing mix
+and the controls are all synthetic and self-authored, which makes the
+<em>relative</em> comparisons (VOTES vs DECIDES, floor by floor)
+credible and the absolute numbers a statement about their generator.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>"Exposure doesn't validate."</strong> Stamp retrieval for
+observability and let it move nothing. A trust signal fed by recall is
+retrieval certifying its own outputs, and it keeps attractive wrong
+notes alive forever.</li>
+<li><strong>"Time doesn't validate" — for stable knowledge.</strong>
+Decay episodic and volatile material; hold stable knowledge flat until
+judged evidence lands. Age is not disagreement.</li>
+<li><strong>Make demotion reversible.</strong> <code>demoted_at</code>
+is set by a live <code>conflicts-with</code> edge and lifted when that
+edge is resolved, dismissed or deleted. A correction that cannot be
+withdrawn makes reviewers reluctant to correct.</li>
+<li><strong>Decide which of your own signals may not act.</strong> Drift
+is surfaced and deliberately never demotes, because a bad scan would
+mass-bury the graph. Knowing a signal is too noisy to be trusted with a
+write is a design decision worth writing down.</li>
+<li><strong>Return the conflicts from the write that created
+them.</strong> Detection local, judgment the model's, both in one turn —
+instead of a queue somebody reads next session.</li>
+<li><strong>Log the origin surface.</strong>
+<code>pane | mcp | daemon | cli | library</code> on every audit row
+answers "was this the human or the assistant", which is the first
+question when a memory turns out wrong.</li>
+<li><strong>Label the shipped row in the benchmark file.</strong> Not
+the README — the data.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting a reranker decide.</strong> Measured here across
+every keyword weight: DECIDES loses oblique recall against VOTES. If you
+rerank, fuse.</li>
+<li><strong>A single blended trust number.</strong> Three separate
+anchors are what make "withdraw the evidence, withdraw the demotion"
+expressible at all.</li>
+<li><strong>Treating an NLI score as a verdict.</strong> The column
+comment is <em>"models don't validate"</em>; the score is a hint and the
+judgment is elsewhere.</li>
+<li><strong>Reading self-generated benchmark numbers as external
+validation.</strong> Engram is scrupulous about publishing its config; a
+reader still has to notice that the corpus is its own.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who wants project memory inside the editor,
+with a graph they can see and correct, and small local models rather
+than an API key. The editor integrations and the browser demo make it
+unusually easy to evaluate before adopting.</p>
+<p>It is alpha, single-project, and has no scope key — so it is not a
+fit for a team store or anything multi-tenant, and the API is expected
+to move.</p>
+<p>Take the policy module even if you take nothing else. It is a few
+hundred lines of constants and rationale, and it is the clearest
+statement in this corpus of which signals are allowed to change what an
+agent believes.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How does any of it perform on a corpus the project did not
+generate?</strong> Every committed number is over synthetic graphs and
+questions of its own making.</li>
+<li><strong>What drives <code>redact.rs</code>?</strong> The module
+exists; the policy that calls it was not traced.</li>
+<li><strong>How often does the local NLI hint disagree with the
+assistant's verdict?</strong> Both are stored — <code>nli_label</code>
+beside the resolved <code>status</code> — so the repository could report
+it and does not.</li>
+<li><strong>Does the TepinDB backend match the SQLite one?</strong> Two
+stores behind one trait, with no parity comparison found.</li>
+<li><strong>What happens to a pinned node that is genuinely
+wrong?</strong> Evidence events skip it by design; contradictions
+surface for review, and nothing forces the review.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and types</strong></p>
+<ul>
+<li><code>crates/engram-core/src/schema.rs</code>,
+<code>types.rs</code>, <code>id.rs</code></li>
+</ul>
+<p><strong>Trust and judgment</strong></p>
+<ul>
+<li><code>crates/engram-core/src/policy.rs</code>, <code>nli.rs</code>,
+<code>hub.rs</code></li>
+</ul>
+<p><strong>Stores</strong></p>
+<ul>
+<li><code>store.rs</code>, <code>store_sqlite.rs</code>,
+<code>store_tepin.rs</code>, <code>migrate.rs</code>,
+<code>registry.rs</code></li>
+</ul>
+<p><strong>Retrieval and briefing</strong></p>
+<ul>
+<li><code>rag.rs</code>, <code>cortex.rs</code>, <code>digest.rs</code>,
+<code>engine.rs</code>, <code>harness.rs</code></li>
+</ul>
+<p><strong>Safety</strong></p>
+<ul>
+<li><code>redact.rs</code>, <code>config.rs</code>,
+<code>error.rs</code></li>
+</ul>
+<p><strong>Surfaces</strong></p>
+<ul>
+<li><code>crates/engram-mcp/</code>, <code>crates/engram-http/</code>,
+<code>frontend/</code>, <code>engram-vscode/</code></li>
+</ul>
+<p><strong>Evaluation</strong></p>
+<ul>
+<li><code>eval/src/</code>, <code>eval/results/</code> —
+<code>bench-100.json</code>, <code>contradictions-500.json</code>,
+<code>floor-100.json</code>, <code>floor-500.json</code>,
+<code>floor-1500.json</code> and logs</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37"><code class="commit-id" title="5721848af9fe4adc28ff08dce5bda6cfc3f24a37">5721848a…</code></a>
+— first reading. The slug is <code>engram-alpha</code> because
+<code>engram</code> is taken by <a href="../engram/">a different project
+of the same name</a>; the two are unrelated. Screened before reading: 1
+auto-run surface, 0 build-time exec paths, 2 unpinned dependency
+surfaces and three inside the seven-day cooldown. Nothing was installed,
+built or run; the committed evaluation artifacts were read, not
+regenerated.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

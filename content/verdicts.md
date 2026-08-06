@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 154 reports.**
+**This page covers all 155 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1443,3 +1443,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 26,650 lines under 24,205 lines of tests across 24 files, including 1,673 lines testing the prompts, a complete LoCoMo harness with no committed result, Prometheus metrics and a Grafana dashboard in the tree.
 - Study when: you want a self-hosted memory service several MCP clients share, with per-user isolation enforced in the query rather than after it.
 - Do not copy when: you need memory without a model in the loop — extraction, classification, dedup and contradiction resolution are one LLM call with no fallback — or you need to answer questions about the store's past.
+
+### `engram-alpha`
+
+- Best idea: two stated principles its trust module enforces — *"time doesn't validate"* and *"exposure doesn't validate"* — so stable knowledge decays only when a judged `conflicts-with` edge stamps `demoted_at`, retrieval moves nothing, and withdrawing the evidence withdraws the demotion.
+- Biggest risk: every published number is measured on graphs, questions and controls the project generated itself, so the relative comparisons are credible and the absolute figures are a statement about its own generator.
+- Most reusable component: the audit journal — insert-only, full before and after JSON, an eleven-value action vocabulary, and the originating surface (`pane | mcp | daemon | cli | library`) on every row, which is the first thing you want when a memory turns out wrong.
+- Maturity impression: alpha and says so, 25,521 lines of Rust across three crates, shipping on three editor marketplaces with a browser demo of the real pane, and 71 committed evaluation artifacts including an ablation that labels its shipped row `<- ships today` and shows pure RAG beating it on recall.
+- Study when: you are deciding which signals may move an agent's trust. The policy module is a few hundred lines of constants and rationale and is the clearest answer in this corpus.
+- Do not copy when: you need multi-project or multi-tenant memory — there is no scope key on either table — or a stable API.
