@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
-revision: f22805b52ea8a073dabc018cefe3db1ccf609a29
-revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29
-analyzed_at: 2026-07-28
-capabilities: "scope_enforced"
+revision: bfb347bca53c1eaa0449d7acfebdefb29075fc23
+revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23
+analyzed_at: 2026-08-06
+capabilities: "scope_enforced, negative_eval"
 matrix:
   memory_unit: "`Memory` typed info, skill, episode, intent, todo, reflection or scratch, with typed edges"
   storage: "SQLite with owner/status columns and pluggable vector backends"
@@ -21,7 +21,7 @@ matrix:
   background: "Reflection: dedup/merge, edge formation, re-scoring, prune — deterministic steps need no LLM"
   trust: "Separate importance, salience and confidence; per-access score components retained"
   strengths: "Every retrieval leaves behind why it ranked where it did, on the record itself"
-  risks: "Archival is record-keyed, and the access log is capped, so both history and correction are bounded"
+  risks: "Archival is record-keyed, the access log is capped, and the two bi-temporal columns in the schema are written by nothing"
 ---
 
 ## 1. Executive Summary
@@ -327,14 +327,18 @@ unowned row returns `""` and `owner_matches` accepts `""` against every scope
 target* — an edge pointing at a row that no longer exists — which it drops, and
 which is the right answer for that case too.
 
-Two committed tests cover the leak half: `test_spread_does_not_leak_foreign_memories`
+Three committed tests cover it. `test_spread_does_not_leak_foreign_memories`
 and `test_spread_confined_to_role` each build one edge across an owner boundary
-and assert the far node is absent from `recall`. Neither builds the three-node
-graph — own → foreign → own — that would assert the amplify half, so at this
-commit the relay property is delivered by the `continue`'s position and asserted
-nowhere. A test for it is proposed upstream in
-[labs-OO-Agents#73](https://github.com/NVIDIA-NeMo/labs-OO-Agents/pull/73), open
-at the time of writing.
+and assert the far node is absent from `recall` — the leak half.
+`test_spread_does_not_relay_through_foreign_memories`
+(`tests/memory/test_memory_owner.py`) builds the three-node graph that asserts the
+amplify half: `alice_a → bob → alice_c`, where the only path between alice's two
+memories runs through bob's. It calls `_spread` twice — unscoped first, asserting
+both `bid` and `cid` *are* reachable, then scoped, asserting neither is — so the
+scoped assertion cannot pass merely because nothing was reachable. Its docstring
+states the invariant the `continue`'s position delivers: *"The visibility check
+must drop bob before he enters the next hop's frontier, not merely before the
+spread write."*
 
 **Two things about that test are worth more than the test.** It asserts against
 `_spread` rather than through `recall`, because the property is *not observable
@@ -415,11 +419,22 @@ Strengths:
 - **`status` restricted to one memory type** by a validator.
 - **Deterministic reflection by default**, LLM steps opt-in.
 - **A test file per module**, including owner roles, contract, and hygiene.
+- **A committed negative case with a positive control.**
+  `test_spread_does_not_relay_through_foreign_memories` asserts a foreign memory
+  is neither activated nor used as a relay, and asserts first that the same path
+  *is* live unscoped, so the exclusion cannot pass vacuously.
 
 Gaps:
 
 - **No value-level tombstone**; archival is a record flag.
-- **No trust state** and no bi-temporal validity.
+- **No trust state.**
+- **Bi-temporal columns that nothing writes.** `schema.py:223` declares
+  `valid_from` and `valid_to`, the second carrying the comment
+  *"bi-temporal: invalidate-don't-delete"*. Across `src/` and `tests/` those two
+  names appear at that declaration and nowhere else — no writer, no reader, no
+  test. The mark is withheld not because the design lacks the idea but because
+  the idea is a schema comment; the intent is recorded and the mechanism is
+  absent, which is a more specific criticism than an absence would be.
 - **A capped access log**, so the distinctive observability is bounded and the
   earliest accesses — the ones explaining how a memory became established — are
   the first to go.
@@ -568,5 +583,13 @@ operational statistics are reported, not reproduced here.
 - Tests: `packages/nooa-memory/tests/memory/` (23 modules).
 
 ## History
+
+**2026-08-06** — [`bfb347bca53c1eaa0449d7acfebdefb29075fc23`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23) — 83 commits on, four of them touching the memory package. The mechanism is unchanged; the coverage is not.
+
+`a22d5c4` merged on 1 August adds `test_spread_does_not_relay_through_foreign_memories`, which builds the three-node `alice_a → bob → alice_c` graph, asserts through `_spread` that neither bob nor the node reachable only through him is activated under an owner scope, and asserts first that both *are* reachable unscoped so the exclusion cannot pass on an empty frontier. Its docstring names the invariant the `continue`'s position delivers. `negative_eval` is earned. The pull request that carried it credits this atlas by name and links this page — a fact about that repository, recorded here as one.
+
+The bi-temporal gap is restated accurately. `schema.py:223` declares `valid_from` and `valid_to` with the comment *"bi-temporal: invalidate-don't-delete"*, and both names appear nowhere else in `src/` or `tests/` — a declared intent with no implementation, which is a different claim from the absence the report previously stated. Both fields were present at the previous pin.
+
+Nothing was run — four dependency surfaces were inside the seven-day cooldown.
 
 **2026-07-28** — [`f22805b52ea8a073dabc018cefe3db1ccf609a29`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29) — first reading.

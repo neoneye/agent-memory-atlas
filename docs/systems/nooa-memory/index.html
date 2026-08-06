@@ -91,17 +91,17 @@ retrieved.</p>
               <strong>NVIDIA-NeMo/labs-OO-Agents</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29" title="f22805b52ea8a073dabc018cefe3db1ccf609a29">
+            <a class="meta-pill revision-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23" title="bfb347bca53c1eaa0449d7acfebdefb29075fc23">
               <span>Analyzed revision</span>
-              <code>f22805b5…</code>
+              <code>bfb347bc…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-08-06</strong>
             </div>
                       </div>
-                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (60%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (59%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -464,16 +464,23 @@ accepts <code>""</code> against every scope
 therefore about a <em>dangling edge target</em> — an edge pointing at a
 row that no longer exists — which it drops, and which is the right
 answer for that case too.</p>
-<p>Two committed tests cover the leak half:
+<p>Three committed tests cover it.
 <code>test_spread_does_not_leak_foreign_memories</code> and
 <code>test_spread_confined_to_role</code> each build one edge across an
 owner boundary and assert the far node is absent from
-<code>recall</code>. Neither builds the three-node graph — own → foreign
-→ own — that would assert the amplify half, so at this commit the relay
-property is delivered by the <code>continue</code>'s position and
-asserted nowhere. A test for it is proposed upstream in <a
-href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/pull/73">labs-OO-Agents#73</a>,
-open at the time of writing.</p>
+<code>recall</code> — the leak half.
+<code>test_spread_does_not_relay_through_foreign_memories</code>
+(<code>tests/memory/test_memory_owner.py</code>) builds the three-node
+graph that asserts the amplify half:
+<code>alice_a → bob → alice_c</code>, where the only path between
+alice's two memories runs through bob's. It calls <code>_spread</code>
+twice — unscoped first, asserting both <code>bid</code> and
+<code>cid</code> <em>are</em> reachable, then scoped, asserting neither
+is — so the scoped assertion cannot pass merely because nothing was
+reachable. Its docstring states the invariant the
+<code>continue</code>'s position delivers: <em>"The visibility check
+must drop bob before he enters the next hop's frontier, not merely
+before the spread write."</em></p>
 <p><strong>Two things about that test are worth more than the
 test.</strong> It asserts against <code>_spread</code> rather than
 through <code>recall</code>, because the property is <em>not observable
@@ -562,12 +569,26 @@ by a validator.</li>
 opt-in.</li>
 <li><strong>A test file per module</strong>, including owner roles,
 contract, and hygiene.</li>
+<li><strong>A committed negative case with a positive control.</strong>
+<code>test_spread_does_not_relay_through_foreign_memories</code> asserts
+a foreign memory is neither activated nor used as a relay, and asserts
+first that the same path <em>is</em> live unscoped, so the exclusion
+cannot pass vacuously.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
 <li><strong>No value-level tombstone</strong>; archival is a record
 flag.</li>
-<li><strong>No trust state</strong> and no bi-temporal validity.</li>
+<li><strong>No trust state.</strong></li>
+<li><strong>Bi-temporal columns that nothing writes.</strong>
+<code>schema.py:223</code> declares <code>valid_from</code> and
+<code>valid_to</code>, the second carrying the comment <em>"bi-temporal:
+invalidate-don't-delete"</em>. Across <code>src/</code> and
+<code>tests/</code> those two names appear at that declaration and
+nowhere else — no writer, no reader, no test. The mark is withheld not
+because the design lacks the idea but because the idea is a schema
+comment; the intent is recorded and the mechanism is absent, which is a
+more specific criticism than an absence would be.</li>
 <li><strong>A capped access log</strong>, so the distinctive
 observability is bounded and the earliest accesses — the ones explaining
 how a memory became established — are the first to go.</li>
@@ -739,6 +760,30 @@ and the operational statistics are reported, not reproduced here.</p>
 modules).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23"><code class="commit-id" title="bfb347bca53c1eaa0449d7acfebdefb29075fc23">bfb347bc…</code></a>
+— 83 commits on, four of them touching the memory package. The mechanism
+is unchanged; the coverage is not.</p>
+<p><code>a22d5c4</code> merged on 1 August adds
+<code>test_spread_does_not_relay_through_foreign_memories</code>, which
+builds the three-node <code>alice_a → bob → alice_c</code> graph,
+asserts through <code>_spread</code> that neither bob nor the node
+reachable only through him is activated under an owner scope, and
+asserts first that both <em>are</em> reachable unscoped so the exclusion
+cannot pass on an empty frontier. Its docstring names the invariant the
+<code>continue</code>'s position delivers. <code>negative_eval</code> is
+earned. The pull request that carried it credits this atlas by name and
+links this page — a fact about that repository, recorded here as
+one.</p>
+<p>The bi-temporal gap is restated accurately.
+<code>schema.py:223</code> declares <code>valid_from</code> and
+<code>valid_to</code> with the comment <em>"bi-temporal:
+invalidate-don't-delete"</em>, and both names appear nowhere else in
+<code>src/</code> or <code>tests/</code> — a declared intent with no
+implementation, which is a different claim from the absence the report
+previously stated. Both fields were present at the previous pin.</p>
+<p>Nothing was run — four dependency surfaces were inside the seven-day
+cooldown.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/f22805b52ea8a073dabc018cefe3db1ccf609a29"><code class="commit-id" title="f22805b52ea8a073dabc018cefe3db1ccf609a29">f22805b5…</code></a>
 — first reading.</p>

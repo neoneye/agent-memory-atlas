@@ -141,7 +141,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`neko`](../systems/neko/) **Project N.E.K.O.** — Memory that must not reopen a wound · `Project-N-E-K-O/N.E.K.O` · Scope enforced, Mutation audit, Negative evals
 - [`nemoclaw`](../systems/nemoclaw/) **NemoClaw** — Memory as an operand · `NVIDIA/NemoClaw`
 - [`neo4j-agent-memory`](../systems/neo4j-agent-memory/) **Neo4j Agent Memory** — Memory of its own reasoning · `neo4j-labs/agent-memory` · Bi-temporal, Scope enforced
-- [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced
+- [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
 - [`nova-ai`](../systems/nova-ai/) **Nova AI** — Symbolic memory, no model · `Whooptie/NOVA_AI` · Tombstone, Trust state, Mutation audit, Human review
 - [`npcpy`](../systems/npcpy/) **npcpy** — Memory that waits for a yes · `npc-worldwide/npcpy` · Trust state, Human review
 ## O
