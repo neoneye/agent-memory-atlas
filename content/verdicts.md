@@ -463,9 +463,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `core-memory`
 
 - Best idea: epistemic grounding caps the confidence ladder, so a speculative record cannot reach canonical status by any amount of use.
-- Biggest risk: correction is record-keyed, so supersession and rejection do not stop re-extraction from retained turns.
+- Biggest risk: correction is record-keyed. `tombstone_bead` is documented as the single-bead semantic action and keyed on a bead id, so supersession and rejection do not stop re-extraction from the retained turns that produced the value.
 - Most reusable component: the grounding-to-ceiling table plus the monotonic class, which is a lookup and a `min()`.
-- Maturity impression: the largest and most specification-like system in the atlas, with 300+ tests tracking the risky logic and committed benchmark harnesses.
+- Maturity impression: the largest and most specification-like system in the atlas, six of seven capability marks, 412 test files, and its distinctive claim asserted end to end — a promoted speculative bead stays capped at B across an index rebuild.
 - Study when: you need to explain why an incorrect memory never became permanent, and want the answer to be structural.
 - Do not copy when: you cannot carry the surface — thirteen subpackages and forty store-ops modules is a real maintenance budget.
 

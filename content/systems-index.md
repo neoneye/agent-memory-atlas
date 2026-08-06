@@ -46,7 +46,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
 - [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced
 - [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
-- [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Human review
+- [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
 - [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`
 - [`cowagent`](../systems/cowagent/) **CowAgent** — Daily-distilled memory · `zhayujie/CowAgent` · Scope enforced

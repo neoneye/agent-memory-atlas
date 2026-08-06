@@ -6,21 +6,21 @@ root: ../..
 page_kind: system
 source_name: JohnnyFiv3r/Core-Memory
 source_url: https://github.com/JohnnyFiv3r/Core-Memory
-revision: dfe306cda3505389904435132599153596417de2
-revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda3505389904435132599153596417de2
-analyzed_at: 2026-07-28
-capabilities: "trust_state, bitemporal, scope_enforced, human_review"
+revision: 1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
+revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
+analyzed_at: 2026-08-06
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "Bead (typed record) plus Claim (subject/slot/value) with claim updates"
   storage: "Session JSONL as live authority, rebuildable index projection; Qdrant, Kuzu, Neo4j, SQLite backends"
-  retrieval: "Typed pipeline over archive/graph/projection; lexical, semantic, entity, causal; myelinated edges"
+  retrieval: "Typed pipeline over archive/graph/projection; lexical, semantic, entity, causal; myelinated edges; a junction/roadmap layer that plans over recurring memory locations and may never author meaning"
   write: "Turn capture into beads; claim extraction; connector ingest with per-source grounding"
   update_delete: "Supersession chains, `retracted`, tombstone_bead, reject; every governance action requires a reason"
   scoping: "`scope` on every bead; session/project surfaces with a documented truth hierarchy"
   integration: "Python API, HTTP server, MCP, PydanticAI tools, OpenClaw bridge, CrewAI, Spring AI"
   background: "Dreamer proposes candidates for human decision; association passes; promotion; compaction"
   trust: "`grounding` gates `confidence_class` C/B/A; `authority`; approval workflow with rejecter and reason"
-  strengths: "Grounding caps the trust ladder, so a speculative memory cannot be promoted by use"
+  strengths: "Grounding caps the trust ladder, so a speculative memory cannot be promoted by use — asserted end to end, including across an index rebuild"
   risks: "Very large surface; supersession is record-keyed, so re-derivation is not blocked"
 ---
 
@@ -296,6 +296,27 @@ record is.
 `include_superseded` makes historical retrieval an explicit request rather than
 a leak.
 
+**Above that sits a junction-and-roadmap layer with a stated write prohibition.**
+`graph/junctions.py` derives *junction identities* — recurring memory locations —
+from canonical claims, curated entity worldlines, goals and cached semantic
+vectors. `graph/roadmap.py` builds a durable roadmap over observed causal
+segments, bounded by explicit caps (200 vertices, 8 neighbours per vertex,
+segments of 6, 5,000 expansions per pair), and `retrieval/roadmap.py` plans
+queries across it. Both modules open by disclaiming authorship: the roadmap
+*"is a derived projection. It may sample, search, deduplicate, and cache
+structural facts, but it never authors associations or semantic meaning"*, and
+junctions *"never writes associations or semantic meaning."*
+
+That prohibition is not left to the docstrings. `scripts/check_architecture_guards.py`
+carries a `sanctioned_deterministic_writers` allowlist in
+`scripts/architecture_guards_baseline.json`, with a
+`deterministic_writer` check that rejects a preview surface claiming write
+authority, and `test_architecture_guards.py::test_current_baseline_has_no_new_architecture_drift`
+fails on new drift against the committed baseline. A retrieval layer that is
+forbidden from writing belief, with the prohibition enforced by a baseline
+rather than by review, is the read-side counterpart of the log-and-projection
+split the store already uses.
+
 ## 7. Write Mechanics
 
 Turns are captured into beads through a write pipeline with an enrichment queue,
@@ -344,10 +365,23 @@ Strengths:
   continuity, plus KPI targets and a dreamer eval.
 - **Secret redaction and encryption** modules with dedicated tests.
 
+- **An append-only edge event log.** `core_memory/graph/core.py` appends
+  `edge_add`, `edge_update` and `edge_deactivate` records to a JSONL through
+  `append_jsonl`; deactivation is an appended event rather than a deletion, and
+  `atomic_write_json` is reserved for the index and the derived graph file. The
+  log is the authority and the index is a projection, which is the same
+  discipline the session archive applies to beads.
+- **Committed negative retrieval cases.** `test_chunk_evidence_retrieval.py`
+  ingests three chunks, cites two, and asserts the uncited `chunk-orphan` does
+  not appear in the returned `evidence_turn_ids`, with
+  `test_cross_document_chunk_citation_fails_closed` beside it.
+
 Gaps:
 
-- **No value-level tombstone.** Correction is record-keyed, so re-extraction is
-  unblocked.
+- **No value-level tombstone.** `tombstone_bead` is described in
+  `management/__init__.py` as *"the single-bead semantic action"* and is keyed on
+  a bead id, so correction is record-keyed and re-extraction is unblocked. The
+  vocabulary is the closest in the atlas to the mark it does not hold.
 - **A very large surface.** Thirteen subpackages and forty `store_*_ops` modules
   is a lot of system to keep coherent, and the documentation tree has its own
   archive of superseded plans.
@@ -372,11 +406,23 @@ Over three hundred test files, and the names track the risky logic closely:
 `longitudinal_benchmark_v2.py`, `paraphrase_eval.py`, `dreamer_behavior_eval.py`
 and a `kpi_set.json`.
 
-Nothing was run for this review, and no scored result artifacts were located, so
-this sits in the same category the atlas has flagged elsewhere: a reproducible
-harness is not a reproduced result. The distinctive claim — that grounding
-prevents speculative memory from becoming canonical — is testable directly and
-cheaply, and no evidence of it having been measured was found.
+**The distinctive claim is asserted, at two levels.**
+`tests/test_external_versioning_and_confidence.py` pins the grounding ceiling as
+a unit — `resolve_confidence_class({"type": "hypothesis", "confidence_class":
+"A"})` returns `"B"`, so an attempt to *set* the canonical class on a
+speculative bead is capped rather than honoured — and as an integration:
+`test_promoting_speculative_bead_is_capped_at_b` creates a pending hypothesis,
+calls `store.promote()`, and asserts the grounding stays `speculative` and the
+class stays `B`, *"not silently rewritten to A or back to C"*, **surviving a
+`rebuild_index()`**. That last clause is what makes it a test of the store
+rather than of the projection. The complement is asserted too:
+`test_promoting_validated_hypothesis_reaches_a`.
+
+Nothing was run for this review. No scored benchmark artifacts were located, so
+the LoCoMo, LongMemEval and causal-continuity harnesses remain in the category
+the atlas flags elsewhere — a reproducible harness is not a reproduced result.
+The grounding ceiling is the exception: it is not a benchmark claim but an
+invariant, and the invariant is covered.
 
 ## 11. For Your Own Build
 
@@ -440,12 +486,17 @@ Do not copy:
 - What prevents a rejected bead's content being re-extracted from the retained
   turns that produced it?
 - Have the LoCoMo and LongMemEval harnesses been run, and where are the results?
+  The grounding-ceiling invariant is covered by tests; the benchmark claims are
+  the part with no committed artifact.
 - How does `retrieval_eligible` get set, and what detects the silent
   under-retrieval that a failure there produces?
 - Do the four graph backends produce equivalent rankings, or only equivalent
   APIs? The parity tests suggest the question was asked.
 - Does the OpenClaw bridge carry grounding and confidence class across the
   boundary, or flatten them?
+- Does the junction roadmap stay bounded on a store larger than its caps assume?
+  The limits are explicit constants; what happens at the boundary is not
+  measured here.
 
 ## Appendix: File Index
 
@@ -466,6 +517,26 @@ Do not copy:
 - Benchmarks: `benchmarks/locomo/`, `benchmarks/longmemeval/`,
   `benchmarks/causal_continuity/`, `eval/kpi_set.json`.
 
+- Retrieval projections: `core_memory/graph/junctions.py`,
+  `core_memory/graph/roadmap.py`, `core_memory/retrieval/roadmap.py`,
+  `core_memory/persistence/junction_roadmap.py`
+- Append-only edge log: `core_memory/graph/core.py` (`edge_add`, `edge_update`,
+  `edge_deactivate` through `append_jsonl`)
+- Architecture guard: `scripts/check_architecture_guards.py` and
+  `scripts/architecture_guards_baseline.json`
+- Ceiling tests: `tests/test_external_versioning_and_confidence.py`
+- Negative retrieval cases: `tests/test_chunk_evidence_retrieval.py`
+
 ## History
+
+**2026-08-06** — [`1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6`](https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6) — 8 commits on, all retrieval. A junction-and-roadmap layer arrives: junction identities derived from claims, worldlines and goals; a durable roadmap over observed causal segments with explicit expansion caps; and a query planner over both, under 1,900 lines of new tests. Both modules disclaim write authority in their opening docstrings, and a `sanctioned_deterministic_writers` allowlist with a committed baseline enforces it.
+
+Two marks are added that the previous reading did not assess in either direction. `audit_log`: `graph/core.py` appends `edge_add`, `edge_update` and `edge_deactivate` events through `append_jsonl`, with deactivation an appended event rather than a delete and `atomic_write_json` reserved for the index. `negative_eval`: `test_chunk_evidence_retrieval.py` asserts an uncited chunk is absent from the returned evidence, with a cross-document fails-closed case beside it. That takes the report to six of seven.
+
+`tombstone` stays withheld and the reason is confirmed rather than assumed: `tombstone_bead` is documented in `management/__init__.py` as *"the single-bead semantic action"* and is keyed on a bead id.
+
+**One published claim was wrong, and wrong at the previous pin rather than overtaken by it.** The report stated that the system's distinctive claim — that grounding prevents a speculative memory from becoming canonical — had no evidence of having been measured. `tests/test_external_versioning_and_confidence.py` was present at `dfe306cd` and asserts it at two levels: `resolve_confidence_class` caps an explicitly-set `A` on a hypothesis back to `B`, and `test_promoting_speculative_bead_is_capped_at_b` promotes a pending hypothesis and asserts the class stays `B` across a `rebuild_index()`. The section listed ten test files by name and concluded from that list that the property was untested; the file holding the assertion was not among the ten.
+
+Nothing was run. No dependency surface was inside the cooldown at this reading, but the tree carries an install-time `setup.py` and no lockfile, so the checks above are static.
 
 **2026-07-28** — [`dfe306cda3505389904435132599153596417de2`](https://github.com/JohnnyFiv3r/Core-Memory/commit/dfe306cda3505389904435132599153596417de2) — first reading.
