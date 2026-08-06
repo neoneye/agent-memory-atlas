@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: letta-ai/letta
 source_url: https://github.com/letta-ai/letta
-revision: 6d8cb7fd48938b629aad5770faa051a8d42e1e9f
-revision_url: https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f
-analyzed_at: 2026-07-26
+revision: ff19ffeafeb54bd2a7dc5d4a552f10191732a235
+revision_url: https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
 matrix:
   memory_unit: "Core memory block, archival passage, message"
@@ -313,5 +313,7 @@ Letta is worth studying if you are building a full agent runtime. It is heavier 
 - Tests: `letta/tests/`.
 
 ## History
+
+**2026-08-06** — [`ff19ffeafeb54bd2a7dc5d4a552f10191732a235`](https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235) — 3 commits on, none of them source. The diff is `.github/` issue templates and a workflow, `.gitignore`, `AGENTS.md`, `AI_POLICY.md` and the README; `git diff --name-only` filtered to `*.py` is empty. The memory mechanism is unchanged and no published claim is stale. Screened again: 0 auto-run surfaces, 4 build-time exec paths, and an `AGENTS.md` addressed to a reading agent, read as data. Nothing was installed or run.
 
 **2026-07-26** — [`6d8cb7fd48938b629aad5770faa051a8d42e1e9f`](https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f) — first reading.

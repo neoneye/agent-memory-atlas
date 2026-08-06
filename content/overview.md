@@ -4182,7 +4182,7 @@ Privacy/deletion:
 ### Repos Inspected
 
 - [mem0ai/mem0](https://github.com/mem0ai/mem0) at [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150)
-- [langchain-ai/langmem](https://github.com/langchain-ai/langmem) at [`c01e273b94aa4c06e41d0ed1ccce0db17de2bc11`](https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11)
+- [langchain-ai/langmem](https://github.com/langchain-ai/langmem) at [`7c7ebf36b5e1697001f92eed77c43e3d541decd7`](https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7)
 - [plastic-labs/honcho](https://github.com/plastic-labs/honcho) at [`eb386c3ceb77774b29108f9ab114e71d52b7d420`](https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420)
 - [Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram) at [`44faeee1fb4fabdee4ba9619df55af485f3d06eb`](https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb)
 - [MemPalace/mempalace](https://github.com/MemPalace/mempalace) at [`afd0428823b47f9a9d1d68c450d54bb0045a4988`](https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988)
@@ -4195,7 +4195,7 @@ Privacy/deletion:
 - [kunal12203/swafra](https://github.com/kunal12203/swafra) at [`669e7bdbcbcd421deb172a05f8fe52b741c0e915`](https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915)
 - [ctxr-dev/llm-wiki-memory](https://github.com/ctxr-dev/llm-wiki-memory) at [`b7cc76a493573baac133969b324a874990556146`](https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146)
 - [neoneye/RainBox](https://github.com/neoneye/RainBox) at [`9f565bf26175bc5e09288f70ec666a4616a2323c`](https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c)
-- [letta-ai/letta](https://github.com/letta-ai/letta) at [`6d8cb7fd48938b629aad5770faa051a8d42e1e9f`](https://github.com/letta-ai/letta/commit/6d8cb7fd48938b629aad5770faa051a8d42e1e9f)
+- [letta-ai/letta](https://github.com/letta-ai/letta) at [`ff19ffeafeb54bd2a7dc5d4a552f10191732a235`](https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235)
 - [supermemoryai/supermemory](https://github.com/supermemoryai/supermemory) at [`603d0512fd40e4575e2a075938c1851a898ceeb6`](https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6)
 - [amitpatole/verel](https://github.com/amitpatole/verel) at [`df44e76c6c6a919977806feed9549bc6a892932d`](https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d)
 - [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) at [`ed120a256d51d731085ec8aca724573a7f2f1e1c`](https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c)

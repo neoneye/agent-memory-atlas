@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: langchain-ai/langmem
 source_url: https://github.com/langchain-ai/langmem
-revision: c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
-revision_url: https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11
-analyzed_at: 2026-07-26
+revision: 7c7ebf36b5e1697001f92eed77c43e3d541decd7
+revision_url: https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
 matrix:
   memory_unit: "Store item, usually JSON memory"
@@ -292,5 +292,7 @@ LangMem is best when you are already building on LangGraph and want memory primi
 - Tests: `langmem/tests/`.
 
 ## History
+
+**2026-08-06** — [`7c7ebf36b5e1697001f92eed77c43e3d541decd7`](https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7) — 10 commits on, and the entire diff is `uv.lock`: 155 insertions, 153 deletions, one file. No Python changed. The mechanism is unchanged and no published claim is stale. Screened again: `uv.lock` moved within the seven-day cooldown, so nothing was installed; 2 build-time exec paths.
 
 **2026-07-26** — [`c01e273b94aa4c06e41d0ed1ccce0db17de2bc11`](https://github.com/langchain-ai/langmem/commit/c01e273b94aa4c06e41d0ed1ccce0db17de2bc11) — first reading.

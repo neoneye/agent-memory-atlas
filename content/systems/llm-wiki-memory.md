@@ -8,7 +8,7 @@ source_name: ctxr-dev/llm-wiki-memory
 source_url: https://github.com/ctxr-dev/llm-wiki-memory
 revision: b7cc76a493573baac133969b324a874990556146
 revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146
-analyzed_at: 2026-07-26
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced, human_review"
 matrix:
   memory_unit: "Typed Markdown atom, plan/investigation, daily capture, or full document"
@@ -443,5 +443,7 @@ The storage/search modules can be reimplemented cleanly, but the full experience
 - `PERFORMANCE.md`
 
 ## History
+
+**2026-08-06** — [`b7cc76a493573baac133969b324a874990556146`](https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146) — nothing moved, and the pin is not merely unchanged but current: no commit has landed on the repository since 18 July 2026, eight days before the first reading. Every claim stands. Screened again: 1 auto-run surface (`.cursor/rules/`, editor-injected agent context) and an `AGENTS.md` addressed to a reading agent, both read as data. Nothing was installed or run.
 
 **2026-07-26** — [`b7cc76a493573baac133969b324a874990556146`](https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146) — first reading.
