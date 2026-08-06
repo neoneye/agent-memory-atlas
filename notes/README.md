@@ -8,6 +8,13 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-07-the-atlas-as-an-agent-protocol.md](2026-08-07-the-atlas-as-an-agent-protocol.md) —
+  a seven-step proposal to turn the atlas into an agent workflow, triaged: the
+  premise is right and five of its "missing" pieces are already written down, so
+  the gap is packaging rather than knowledge. A root `AGENTS.md` is built; the
+  build brief, test ids and a `use-the-atlas` skill are scoped; a manifest field
+  carrying judgements nobody made, and the phrase "conformance", are declined on
+  precedent.
 - [2026-08-07-the-strong-form-tombstone-subset.md](2026-08-07-the-strong-form-tombstone-subset.md) —
   the nine mark-holders re-read against the pattern page's own definition: five
   refuse the write, two are durable only because nothing reads the rejection and

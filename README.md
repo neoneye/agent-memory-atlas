@@ -22,6 +22,7 @@ Questions, corrections, and systems worth adding are welcome on Discord: [neoney
 - `templates/` — the shared document-page template.
 - `assets/` — styles, behavior, and social-preview media.
 - `docs/` — generated static site published by GitHub Pages.
+- `AGENTS.md` — the entry point for an AI agent: what to read to build memory for a product, in what order, and what not to read.
 - `.agents/skills/screen-repository/` — the security screen every checkout passes before it is read or run.
 - `.agents/skills/add-memory-system/` — the repeatable workflow for researching and integrating another memory system.
 
