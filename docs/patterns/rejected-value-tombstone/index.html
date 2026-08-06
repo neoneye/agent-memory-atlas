@@ -102,11 +102,15 @@ adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, two
 built it after this page named its absence in their report, <strong>two
 have it as a side effect of a lookup that forgot to exclude the rejected
-row</strong>, and one carries the mark without yet being characterised
-here. There is no consensus behind this page, no library that provides
-the mechanism, and no shared vocabulary for it. Everything below is an
-argument, and the provenance is traced under <em>Seen in the atlas</em>
-so you can weigh it as one.</p>
+row</strong>, and one built it as ordinary plumbing in its write gate.
+Sorted by mechanism rather than by mark, <strong>five of the
+nine</strong> refuse the write — <a
+href="#the-nine-sorted-by-what-actually-stops-the-value">the table
+below</a> says which, and what the other four do instead. There is no
+consensus behind this page, no library that provides the mechanism, and
+no shared vocabulary for it. Everything below is an argument, and the
+provenance is traced under <em>Seen in the atlas</em> so you can weigh
+it as one.</p>
 </blockquote>
 <h2 id="intent">Intent</h2>
 <p>Remember not only what the system currently believes, but also which
@@ -347,19 +351,35 @@ index across every historical checkpoint on the next rebuild. There is
 no evidence the author had read Verel or RainBox; the mechanism falls
 out of content-addressed ids rather than from a red-team finding.</p>
 <p>Two differences matter, and both are on the tradeoff list above.</p>
-<p><em>It is suppression at read, not refusal at write.</em> Verel and
-RainBox refuse the write; Daimon lets the extractor re-assert the value
-into a new checkpoint on disk and stops it reaching the agent. The
-observable behaviour is the same and the failure surface is not: every
-future read path has to remember to consult the fold, and the store
-itself holds content a user asked to forget.</p>
-<p><em>The key is not normalized.</em> It is a hash of the exact text,
-so the round-9 lesson on this page — that normalization is where the
-work is — has not been learned here, and it does not take a unicode
-look-alike to defeat it. Any paraphrase produces a different id. This is
-the difference between a tombstone that stops a <em>value</em> and one
-that stops a <em>string</em>, and it is the single change that would
-move Daimon into the same class as the other two.</p>
+<p><em>It is mostly suppression at read, not refusal at write.</em>
+Verel and RainBox refuse the write; Daimon lets the extractor re-assert
+the value into a new checkpoint on disk and stops it reaching the agent.
+The observable behaviour is the same and the failure surface is not:
+every future read path has to remember to consult the fold, and the
+store itself holds content a user asked to forget. <strong>One write
+path is an exception</strong> — the supersede-candidate emitter skips
+values already in the ledger, which is a consultation the systems in the
+read-only class do not have.</p>
+<p><em>The key is normalized after all, and this page said otherwise for
+six days.</em> The original reading here was that the id is a hash of
+the exact text. The Daimon report's re-read on
+<strong>2026-07-30</strong> recorded the opposite — <em>"the tombstone
+key is canonical rather than literal text"</em> — and the report was
+corrected while this argument was not.
+<code>normalize.canonical_text</code> folds NFKC, strips invisible
+characters, collapses whitespace, casefolds and <strong>translates
+confusables</strong>, and <code>content_key</code> truncates a digest
+under a docstring naming the direction it fails in: <em>"a prefix
+collision over-blocks, the fail-safe direction for a deletion
+guarantee"</em>. That is the round-9 lesson implemented, not missed.
+What still separates Daimon from Verel and RainBox is the write path,
+above — not the key.</p>
+<p>Recorded rather than silently edited, because the failure is
+instructive: a pattern page argues from reports, the reports get
+re-read, and nothing connects the two. This one was caught by <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">re-deriving
+the strong-form subset</a>, which is a thing nobody does on a
+schedule.</p>
 <p>Everything else stops at supersession, archival, or deletion —
 mechanisms that remove a value from view without recording that it was
 <em>judged wrong</em>:</p>
@@ -521,6 +541,74 @@ it.</p>
 by re-teaching the same definition, which sets <code>confirmed</code> —
 the audited override this page's tradeoff list asks for, present because
 the same branch that blocks automatic sources admits the person.</p>
+<p><strong>The ninth is the write gate itself, and it is the plainest
+instance on this page.</strong> <a
+href="../../systems/universal-memory-engine/">Universal Memory
+Engine</a> extracts candidates and resolves them through a gate before
+anything becomes a node. Rejecting a candidate with
+<code>suppress_similar</code> calls <code>addSuppression</code> with its
+<code>canonical_key</code>; <code>memory_suppressions</code> is a real
+table indexed on <code>(user_id, kind, canonical_key)</code> with an
+optional <code>suppressed_until</code>; and the gate consults it at
+<strong>four</strong> points, a hit producing
+<code>reject(obj, "suppressed_blocked")</code>. Nothing about it is
+subtle or accidental, which is the interesting part — it is what this
+page asks for, built as ordinary plumbing by a project that does not
+appear to have read the argument.</p>
+<p>The cleanup pass writes suppressions too, so a deletion binds the
+future rather than waiting to be re-derived — the answer to the failure
+the <a href="../../systems/memoryops-ai/">MemoryOps AI</a> entry below
+describes, in the same paragraph of the same kind of system.</p>
+<h3 id="the-nine-sorted-by-what-actually-stops-the-value">The nine,
+sorted by what actually stops the value</h3>
+<p>Counting holders of the mark conflates four different mechanisms.
+Sorted by the one question that separates them — <em>does anything read
+the rejection before the write completes?</em> — and re-derived report
+by report in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md">this
+note</a>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Systems</th>
+<th>What happens on re-assertion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Consulted</strong> — the form this page argues for</td>
+<td><a href="../../systems/memsem/">memsem</a>, <a
+href="../../systems/perseus-vault/">Perseus Vault</a>, <a
+href="../../systems/universal-memory-engine/">Universal Memory
+Engine</a>, <a href="../../systems/rainbox/">RainBox</a>, <a
+href="../../systems/verel/">Verel</a></td>
+<td>The write is refused. No row, or no activation</td>
+</tr>
+<tr>
+<td><strong>Collided</strong> — durable by accident</td>
+<td><a href="../../systems/mnemosyne/">Mnemosyne</a>, <a
+href="../../systems/nova-ai/">Nova AI</a></td>
+<td>The write lands <em>on</em> the rejected row, which stays rejected.
+Held in place by a missing filter, pinned by no test</td>
+</tr>
+<tr>
+<td><strong>Suppressed</strong> — the read path hides it</td>
+<td><a href="../../systems/provem/">Provem</a></td>
+<td>A copy enters the store and is stopped on the way out</td>
+</tr>
+<tr>
+<td><strong>Hybrid</strong></td>
+<td><a href="../../systems/daimon/">Daimon</a></td>
+<td>All three at once: collided by content-addressed id, suppressed on
+every read, consulted by one emitter</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Five of the nine, then, implement the strong form</strong> —
+value-keyed, normalized, consulted before the write, refusing
+activation. The mark is broader than this page's argument, and a reader
+deciding what to build should use the table rather than the count.</p>
 <p><strong><a href="../../systems/memoryops-ai/">MemoryOps AI</a> is the
 closest any system here comes without arriving</strong>, and it is the
 best argument on this page that the expensive half of the pattern is not

@@ -8,6 +8,12 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-07-the-strong-form-tombstone-subset.md](2026-08-07-the-strong-form-tombstone-subset.md) —
+  the nine mark-holders re-read against the pattern page's own definition: five
+  refuse the write, two are durable only because nothing reads the rejection and
+  the key happens to be the value, one suppresses at read, one is all three at
+  once. Also found the pattern page contradicting the Daimon report on
+  normalization for six days, and wrote the ninth holder's missing entry.
 - [2026-08-06-rare-mechanisms-and-useful-inversions.md](2026-08-06-rare-mechanisms-and-useful-inversions.md) —
   the mechanisms this corpus holds once, each labelled with what kind of claim it
   actually supports and what the nearest prior art is. Written first as a novelty

@@ -10,8 +10,11 @@ page_kind: pattern
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
-> have it as a side effect of a lookup that forgot to exclude the rejected row**, and one
-> carries the mark without yet being characterised here.
+> have it as a side effect of a lookup that forgot to exclude the rejected row**,
+> and one built it as ordinary plumbing in its write gate.
+> Sorted by mechanism rather than by mark, **five of the nine** refuse the write
+> — [the table below](#the-nine-sorted-by-what-actually-stops-the-value) says
+> which, and what the other four do instead.
 > There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
 > vocabulary for it. Everything below is an argument, and the provenance is
@@ -203,18 +206,32 @@ finding.
 
 Two differences matter, and both are on the tradeoff list above.
 
-*It is suppression at read, not refusal at write.* Verel and RainBox refuse the
-write; Daimon lets the extractor re-assert the value into a new checkpoint on
-disk and stops it reaching the agent. The observable behaviour is the same and
-the failure surface is not: every future read path has to remember to consult
-the fold, and the store itself holds content a user asked to forget.
+*It is mostly suppression at read, not refusal at write.* Verel and RainBox
+refuse the write; Daimon lets the extractor re-assert the value into a new
+checkpoint on disk and stops it reaching the agent. The observable behaviour is
+the same and the failure surface is not: every future read path has to remember
+to consult the fold, and the store itself holds content a user asked to forget.
+**One write path is an exception** — the supersede-candidate emitter skips values
+already in the ledger, which is a consultation the systems in the read-only class
+do not have.
 
-*The key is not normalized.* It is a hash of the exact text, so the round-9
-lesson on this page — that normalization is where the work is — has not been
-learned here, and it does not take a unicode look-alike to defeat it. Any
-paraphrase produces a different id. This is the difference between a tombstone
-that stops a *value* and one that stops a *string*, and it is the single change
-that would move Daimon into the same class as the other two.
+*The key is normalized after all, and this page said otherwise for six days.*
+The original reading here was that the id is a hash of the exact text. The Daimon
+report's re-read on **2026-07-30** recorded the opposite —
+*"the tombstone key is canonical rather than literal text"* — and the report was
+corrected while this argument was not. `normalize.canonical_text` folds NFKC,
+strips invisible characters, collapses whitespace, casefolds and **translates
+confusables**, and `content_key` truncates a digest under a docstring naming the
+direction it fails in: *"a prefix collision over-blocks, the fail-safe direction
+for a deletion guarantee"*. That is the round-9 lesson implemented, not missed.
+What still separates Daimon from Verel and RainBox is the write path, above —
+not the key.
+
+Recorded rather than silently edited, because the failure is instructive: a
+pattern page argues from reports, the reports get re-read, and nothing connects
+the two. This one was caught by
+[re-deriving the strong-form subset](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md),
+which is a thing nobody does on a schedule.
 
 Everything else stops at supersession, archival, or deletion — mechanisms that
 remove a value from view without recording that it was *judged wrong*:
@@ -362,6 +379,41 @@ Nova is also the only holder here where a human can lift the refusal by
 re-teaching the same definition, which sets `confirmed` — the audited override
 this page's tradeoff list asks for, present because the same branch that blocks
 automatic sources admits the person.
+
+**The ninth is the write gate itself, and it is the plainest instance on this
+page.** [Universal Memory Engine](../../systems/universal-memory-engine/)
+extracts candidates and resolves them through a gate before anything becomes a
+node. Rejecting a candidate with `suppress_similar` calls `addSuppression` with
+its `canonical_key`; `memory_suppressions` is a real table indexed on
+`(user_id, kind, canonical_key)` with an optional `suppressed_until`; and the
+gate consults it at **four** points, a hit producing
+`reject(obj, "suppressed_blocked")`. Nothing about it is subtle or accidental,
+which is the interesting part — it is what this page asks for, built as
+ordinary plumbing by a project that does not appear to have read the argument.
+
+The cleanup pass writes suppressions too, so a deletion binds the future rather
+than waiting to be re-derived — the answer to the failure the
+[MemoryOps AI](../../systems/memoryops-ai/) entry below describes, in the same
+paragraph of the same kind of system.
+
+### The nine, sorted by what actually stops the value
+
+Counting holders of the mark conflates four different mechanisms. Sorted by the
+one question that separates them — *does anything read the rejection before the
+write completes?* — and re-derived report by report in
+[this note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md):
+
+| Kind | Systems | What happens on re-assertion |
+| --- | --- | --- |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/) | The write is refused. No row, or no activation |
+| **Collided** — durable by accident | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/) | The write lands *on* the rejected row, which stays rejected. Held in place by a missing filter, pinned by no test |
+| **Suppressed** — the read path hides it | [Provem](../../systems/provem/) | A copy enters the store and is stopped on the way out |
+| **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
+
+**Five of the nine, then, implement the strong form** — value-keyed, normalized,
+consulted before the write, refusing activation. The mark is broader than this
+page's argument, and a reader deciding what to build should use the table rather
+than the count.
 
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive

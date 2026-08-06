@@ -46,7 +46,10 @@ first version applied it to repositories and then broke it on the literature.
 **What it is.** A refusal keyed on the **value**, normalized, consulted on the
 *write* path, so a later extraction proposing the same value is refused before it
 can become active — as opposed to hiding a row, which stops a reader seeing it
-and does nothing to stop a writer recreating it.
+and does nothing to stop a writer recreating it. **Five of the nine mark-holders
+implement that form**, re-derived 2026-08-07; the other four are sorted by what
+actually stops the value in
+[the strong-form note](2026-08-07-the-strong-form-tombstone-subset.md).
 
 **What the atlas can support.** That this is a mechanism worth naming and asking
 every system about, and that asking it separates systems that otherwise look
@@ -58,10 +61,10 @@ the *strong* form. The nine are the **broader capability mark**, and the
 that the population includes read-path suppression, at least one holder where the
 behaviour appears to be a side effect, and one keyed on exact text rather than a
 normalized value. Defining the strict mechanism and then attaching the broad
-count to "it" is a definition/count mismatch. **How many of the nine implement
-the normalized write-path form has not been re-derived** — that is a re-reading,
-and until someone does it, the honest sentence is "nine earn the mark; a smaller
-subset implements the form described here."
+count to "it" is a definition/count mismatch. **Re-derived on 2026-08-07: five of
+the nine**, the other four splitting into collided (2), suppressed (1) and hybrid
+(1) — see [the strong-form note](2026-08-07-the-strong-form-tombstone-subset.md)
+for the per-system evidence and the one cell that still needs a code read.
 
 **On the field-level claim.** The first version rested it on three tokens absent
 from one survey ([arXiv:2512.13564](https://arxiv.org/abs/2512.13564): *tombstone*,
@@ -412,12 +415,15 @@ in the evening. The
 
 ## Follow-ups
 
-- **Re-derive the strong-form tombstone subset.** Which of the nine key on a
-  normalized value, consult it on the write path, and refuse activation? Until
-  that exists, the pattern page and this note both hedge in prose where a count
-  belongs. It would also settle the invention-chain numerators on
-  [the pattern page](../content/patterns/rejected-value-tombstone.md) that two
-  passes have now declined to touch.
+- ~~Re-derive the strong-form tombstone subset.~~ **Done**, 2026-08-07:
+  [five of the nine](2026-08-07-the-strong-form-tombstone-subset.md) refuse the
+  write on a normalized value key, and the other four fail in three
+  distinguishable ways — *collided* (durable because nothing reads it and the key
+  is the value), *suppressed* (read-path only), and one hybrid. The sentence in
+  Part 1 above can now be replaced by that table wherever a count is wanted. The
+  re-derivation also found the pattern page contradicting the Daimon report on
+  normalization for six days, and characterised the ninth holder, which the page
+  had listed as uncharacterised.
 - **One literature search, on one mechanism.** Entry 1 or entry 2, done properly,
   would show what upgrading "corpus-unique" to "novel" actually costs — and
   whether the atlas can afford to make the claim at all.
