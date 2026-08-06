@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **152 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **153 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -90,6 +90,9 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## J
 
 - [`juggler`](../systems/juggler/) **Juggler** — A gitignored notebook with a delete button · `juggler-ai/juggler` · Human review
+## K
+
+- [`kirocrew`](../systems/kirocrew/) **Kiro Crew** — Seven ways a write is refused · `kirodotdev/KiroCrew` · Mutation audit, Human review, Negative evals
 ## L
 
 - [`langmem`](../systems/langmem/) **LangMem** — Library primitives · `langchain-ai/langmem` · Scope enforced

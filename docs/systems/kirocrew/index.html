@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local development workspace
+whose memory writes pass an ordered gate — key shape, prefix allow-list,
+reserved namespace, confidence floor, size, injection patterns, conflict
+— each refusal typed and the security ones logged with the value
+redacted first.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kiro Crew — Agent Memory Atlas">
+    <meta property="og:description" content="A local development
+workspace whose memory writes pass an ordered gate — key shape, prefix
+allow-list, reserved namespace, confidence floor, size, injection
+patterns, conflict — each refusal typed and the security ones logged
+with the value redacted first.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kiro Crew — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local development
+workspace whose memory writes pass an ordered gate — key shape, prefix
+allow-list, reserved namespace, confidence floor, size, injection
+patterns, conflict — each refusal typed and the security ones logged
+with the value redacted first.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kiro Crew — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Seven ways a write is refused</p>
+          <h1>Kiro Crew</h1>
+          <p class="document-deck">A local development workspace whose
+memory writes pass an ordered gate — key shape, prefix allow-list,
+reserved namespace, confidence floor, size, injection patterns, conflict
+— each refusal typed and the security ones logged with the value
+redacted first.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kirodotdev/KiroCrew">
+              <span>Source</span>
+              <strong>kirodotdev/KiroCrew</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2" title="429cbad8cdb7bfbf4c10f6343374565832b176d2">
+              <span>Analyzed revision</span>
+              <code>429cbad8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-06</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (59%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kiro Crew is a local development workspace from the Kiro team —
+desktop app, web dashboard, CLI, Slack and Discord bridges — that runs
+unattended tasks and scheduled jobs on your own hardware. Apache-2.0,
+1,606 commits since 1 June 2026, 475,988 lines of Python under
+<strong>502,973 lines of tests across 1,024 files</strong>. The README's
+claim is memory: <em>"persistent, self-learning, and self-evolving…
+remembers across sessions."</em></p>
+<p>The memory is two stores with different jobs.
+<code>src/kiro_crew/memory.py</code> (528 lines) keeps
+<code>preferences.md</code>, <code>projects.md</code> and dated
+<code>history/</code> files under
+<code>~/.kiro/crew/workspace/memory/</code>, with an FTS5 index beside
+them — human-readable by design.
+<code>src/kiro_crew/vector_memory.py</code> (2,764 lines) is the
+structured half: a semantic key-value table and an episodic fragment
+table in SQLite WAL, with an optional FAISS index.</p>
+<p><strong>The reason to read this is the write path.</strong> A
+semantic write passes an ordered chain, and every refusal is a typed
+<code>SemanticRejectCode</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Refuses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key_format</code></td>
+<td>a key that is not <code>^[a-z][a-z0-9_.]*[a-z0-9]$</code>, or over
+100 chars</td>
+</tr>
+<tr>
+<td><code>allowlist_reject</code></td>
+<td>a key outside the configured prefixes</td>
+</tr>
+<tr>
+<td><code>reserved_prefix</code></td>
+<td>a <code>system.</code> key from any source but
+<code>user_explicit</code></td>
+</tr>
+<tr>
+<td><code>low_confidence</code></td>
+<td>confidence below 0.8, unless the source is
+<code>user_explicit</code></td>
+</tr>
+<tr>
+<td><code>value_size</code></td>
+<td>a value over 4,096 bytes</td>
+</tr>
+<tr>
+<td><code>injection_blocked</code></td>
+<td>a value matching the prompt-injection patterns</td>
+</tr>
+<tr>
+<td><code>conflict_skip</code></td>
+<td>a write the conflict resolver declines against the existing
+value</td>
+</tr>
+</tbody>
+</table></div>
+<p>Four of the seven are <code>_AUDITABLE_REJECT_CODES</code> and land
+in the <code>memory_events</code> table; two are
+<code>_SECURITY_REJECT_CODES</code>. A refusal here is a fact with a
+name and a record, not a silent <code>return False</code> — which is the
+difference between a gate you can operate and a gate you can only hope
+is working.</p>
+<p><strong>And one comment in that path is worth the whole
+report.</strong> Episodic text is screened for injection too, because
+<em>"a poisoned turn could persist steering instructions that get
+re-injected into future contexts."</em> When it matches, the rejection
+is logged with a snippet — and before the snippet is stored:</p>
+<pre class="python"><code># The rejected text is untrusted conversation content and the snippet
+# is surfaced verbatim on the dashboard (/api/memory/events -&gt; get_events).
+# Scrub exfiltration URLs + credentials before persisting the audit
+# snippet so poisoned text can&#39;t smuggle secrets onto that surface.
+safe_snippet, _ = redact_exfiltration_urls(text[:200])
+safe_snippet, _ = redact_credentials(safe_snippet)</code></pre>
+<p>That is second-order reasoning about a defence: having built an audit
+log for blocked injections, they asked what the audit log itself becomes
+when the thing it records is hostile and a human UI renders it.
+<strong>The atlas has not previously found a system that treats its own
+security log as an attack surface.</strong></p>
+<p><strong>The trust model is a privileged source rather than a
+status.</strong> <code>user_explicit</code> bypasses the confidence
+floor and is the only source permitted to write the reserved
+<code>system.</code> namespace. Everything else — extraction, tool
+output, conversation — is subject to the 0.8 gate. That is a clean
+two-tier hierarchy and it is expressed entirely in <code>source</code>
+string comparisons, with no field recording what the system concluded
+about a given memory.</p>
+<p><strong>The gap is the one the refusal machinery makes
+conspicuous.</strong> Every reject is recorded and none is consulted.
+<code>log_reject_event</code> writes the code, the key and the value
+into <code>memory_events</code>; nothing reads that table on the write
+path. A value blocked as an injection today can be offered again
+tomorrow and is screened afresh by the same pattern list — which works
+until the pattern list is the thing that was wrong. The material for a
+value-keyed refusal is already sitting in the audit table,
+unqueried.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two memories and they are kept deliberately unalike.</p>
+<p>The <strong>markdown half</strong> is what a person reads:
+<code>preferences.md</code> for learned user preferences,
+<code>projects.md</code> for active project context, and one file per
+day under <code>history/</code>. It seeds itself with comment markers —
+<code>&lt;!-- Learned from conversations --&gt;</code> — so an empty
+store explains what it is for. Recall over it is FTS5 plus a recency
+window, and correction is editing the file.</p>
+<p>The <strong>structured half</strong> is what the retrieval path uses:
+<code>semantic_memory</code> keyed on an allow-listed string, and
+<code>episodic_memories</code> holding conversation fragments with
+embeddings, tags and importance. Both carry <code>is_deleted</code>
+rather than being removed.</p>
+<p>A memory becomes a belief by surviving the gate, and the gate is
+where all the epistemics live. There is no candidate state, no review
+queue, no promotion: a write either passes all seven checks and lands,
+or is refused with a code. What would elsewhere be a status field is
+here a decision made once, at the door, and recorded in the event log
+rather than on the record.</p>
+<p>How a belief stops being one is thinner. <code>is_deleted</code>
+hides it, a person can delete it from the dashboard, and the conflict
+resolver can decline a replacement. Nothing marks a value as
+<em>wrong</em>, and nothing stops the same value arriving again.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Proposed: a write arrives with a source and a confidence
+    Proposed --&gt; Refused: one of seven SemanticRejectCode checks fails
+    Refused --&gt; Logged: four of the seven are auditable
+    Logged --&gt; Proposed: nothing consults the log, so the value may return
+    Proposed --&gt; Stored: all checks pass
+    Stored --&gt; Stored: conflict resolver may decline a replacement
+    Stored --&gt; Hidden: is_deleted set, by a person on the dashboard
+    Logged --&gt; Rotated: oldest rows dropped past ten thousand</code></pre>
+<p>The loop from <code>Logged</code> back to <code>Proposed</code> is
+the finding. Every other edge is a decision the system keeps; that one
+is a decision it writes down and then does not read.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Runtime.</strong> A Python backend
+(<code>src/kiro_crew/</code>) with an aiohttp dashboard, an Electron
+desktop app and a React web UI under <code>website/</code>, a CLI, and
+connection bridges. Everything runs on the operator's own hardware,
+locally or on a remote box they own.</p>
+<p><strong>Persistence.</strong> <code>~/.kiro/crew/memory.db</code> is
+SQLite in WAL mode holding <code>semantic_memory</code>,
+<code>episodic_memories</code>, <code>memory_events</code> and a
+<code>schema_version</code> table.
+<code>~/.kiro/crew/memory.faiss</code> is an optional FAISS index.
+Beside them, the markdown workspace and
+<code>~/.kiro/crew/memory_index.db</code> for FTS5 over it.</p>
+<p>The SQLite import is worth a note for anyone who has fought this: it
+prefers <code>pysqlite3</code> and falls back to the stdlib, with a
+guard for the case where a bundle prune leaves an empty
+<code>pysqlite3</code> package whose import succeeds but which has no
+<code>connect</code> — <em>"an AttributeError at first use, not an
+ImportError."</em> Someone met that failure.</p>
+<p><strong>Search stack.</strong> FAISS for vector similarity when
+embeddings exist, FTS5 otherwise, with a stemmer
+(<code>snowballstemmer</code>) on the lexical path. Retrieval applies
+time decay after relevance filtering, not before — <em>"Admission reads
+the raw <code>cosine_sim</code>, never the decay-adjusted"</em> score —
+so an old but genuinely relevant fragment is not filtered out for being
+old.</p>
+<p><strong>Background work.</strong> Unattended multi-step tasks,
+scheduled recurring jobs, heartbeats that watch a system until it needs
+attention, a self-heal path over the memory store
+(<code>test_memory_selfheal.py</code>), and <code>rotate_events</code>
+trimming the audit table past 10,000 rows.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One machine, one install script, no services to stand up — the memory
+needs SQLite and nothing else, with FAISS and embeddings optional and a
+documented degradation to FTS5 without them.</p>
+<p>The markdown half is the ergonomic win. Three files in a directory,
+readable and editable in any editor, with the database as the index
+rather than the authority for that half. When something goes wrong with
+preferences, the fix is opening a file.</p>
+<p>The structured half is a SQLite database a person can open but is not
+meant to edit by hand, and the dashboard is the intended surface for
+it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Markdown memory:</strong>
+<code>src/kiro_crew/memory.py</code> — <code>preferences.md</code>,
+<code>projects.md</code>, dated history, FTS5 index, and a 5-second
+history cache because <em>"statting + reading up to 181 daily files
+synchronously on the event loop is a per-message cost."</em></li>
+<li><strong>Structured memory:</strong>
+<code>src/kiro_crew/vector_memory.py</code> — the schema at
+<code>:151</code>, <code>SemanticRejectCode</code> at <code>:90</code>,
+the validation chain at <code>:475</code>–<code>:513</code>,
+<code>_write_semantic</code> and conflict resolution at
+<code>:625</code>, episodic screening at <code>:1066</code>,
+<code>rotate_events</code> at <code>:937</code>.</li>
+<li><strong>Constants:</strong>
+<code>src/kiro_crew/vector_memory_constants.py</code> — the injection
+patterns and <code>_contains_injection</code>.</li>
+<li><strong>Session memory:</strong>
+<code>src/kiro_crew/dashboard/session_memory.py</code>.</li>
+<li><strong>HTTP surface:</strong>
+<code>src/kiro_crew/dashboard/handlers/memory.py</code> (1,374 lines) —
+<code>api_memory_semantic_delete</code>,
+<code>api_memory_episodic_delete</code>, and the events feed the
+dashboard renders.</li>
+<li><strong>Human surface:</strong>
+<code>website/src/pages/overview/MemoryTab.tsx</code>,
+<code>MemoryGraphTab.tsx</code>, <code>VectorMemoryCard.tsx</code>,
+<code>SessionMemoryCard.tsx</code>,
+<code>website/src/apps/crew-companion/MemoriesSection.tsx</code>.</li>
+<li><strong>Tests:</strong> <code>test/test_vector_memory.py</code>,
+<code>test_memory.py</code>, <code>test_memory_graph.py</code>,
+<code>test_memory_selfheal.py</code>,
+<code>test_session_memory.py</code>,
+<code>test_perf_memory_quickwins.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>semantic_memory</code> is <code>key</code> (primary key),
+<code>value_json</code>, <code>confidence</code>, <code>source</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>is_deleted</code>. The key is the identity, which is what makes
+the allow-list meaningful: memory is a bounded namespace of things the
+system is permitted to know, not an open set.</p>
+<p><code>episodic_memories</code> is <code>id</code>,
+<code>conversation_id</code>, <code>text</code>, <code>embedding</code>
+BLOB, <code>tags</code>, <code>importance</code>,
+<code>created_at</code>, <code>last_accessed_at</code>,
+<code>is_deleted</code>.</p>
+<p><code>memory_events</code> is the third table and the interesting
+one: <code>event_type</code>, <code>memory_type</code>,
+<code>memory_key</code>, <strong><code>old_value</code>,
+<code>new_value</code></strong>, <code>source</code>,
+<code>created_at</code>. Both sides of a change, and — for the auditable
+reject codes — the value that was refused, in <code>new_value</code>,
+with nothing written to <code>memory_key</code> for an episodic reject
+because there is no key to write.</p>
+<p><strong>Provenance is a <code>source</code> string and it carries
+real authority.</strong> It is not decoration:
+<code>source != "user_explicit"</code> is the condition on both the
+confidence gate and the reserved-namespace check. A single string field
+decides whether a write is privileged, which is economical and also
+means the whole trust model rests on every caller passing that string
+honestly.</p>
+<p><strong>No scope key exists anywhere</strong> — no user, project,
+workspace or tenant column on either table. The design is one workspace
+per machine, and the read path has nothing to filter on. That is
+coherent for a local single-operator tool and it means the schema cannot
+be multi-tenanted without a migration.</p>
+<p>Temporal fields are <code>created_at</code>, <code>updated_at</code>
+and <code>last_accessed_at</code> — all record time. No validity
+interval.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Episodic search is vector similarity over FAISS with a time-decay
+factor, falling back to FTS5 with a Snowball stemmer when embeddings are
+unavailable — a documented degradation rather than a hard
+dependency.</p>
+<p>The ordering decision is the one worth copying. Relevance admission
+reads the <strong>raw</strong> cosine similarity and the decay factor is
+applied afterwards, for ranking. A comment states it directly:
+<em>"Admission reads the raw <code>cosine_sim</code>, never the
+decay-adjusted."</em> Filtering on a decayed score would silently make
+"old" and "irrelevant" the same condition, and an old fragment that
+answers the question exactly would drop below the threshold for having
+been written last year. Separating the admission test from the ranking
+function is a small change that prevents a whole class of quiet recall
+failure.</p>
+<p>Thresholds are explicit and tuned:
+<code>_EPISODIC_RELEVANCE_THRESHOLD</code> at 0.55 for short texts,
+relaxed past 300 characters, with the constant commented
+<em>"(empirical)"</em> — honest about where the number came from.</p>
+<p>Semantic recall is a keyed lookup plus a hybrid formatting path for
+prompt injection (<code>:818</code>), so the two stores serve different
+questions: the key-value side answers "what do we know about X", the
+episodic side answers "what was said that resembles this".</p>
+<p>The markdown half is read on every message turn through
+<code>read_recent_history</code>, behind a 5-second cache keyed on the
+day, so the decay window shifting at midnight invalidates naturally.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and gated. The chain in
+<code>validate_semantic</code> runs in a fixed order — key format,
+allow-list, reserved prefix, confidence, size, injection — and returns a
+<code>(code, reason)</code> pair rather than a boolean, so the caller
+and the log both learn <em>which</em> rule refused.</p>
+<p>Conflict resolution is a separate step at
+<code>_write_semantic</code>, and it is serialized: <em>"Steps 7-8
+(SELECT→conflict-resolve→UPSERT) are serialized"</em>, with a
+<code>conflict_skip</code> event carrying the existing
+<code>value_json</code> as <code>old_value</code> and the incoming one
+as <code>new_value</code>. So a declined overwrite leaves both values in
+the record, which is more than most systems keep when a write loses.</p>
+<p>Deletion is <code>is_deleted</code>, set by the dashboard endpoints.
+Both tables carry an index on that column, so the read path filters
+rather than compacts.</p>
+<p>The episodic path additionally screens text length and injection
+patterns before admission, and its dedup threshold is 0.88 cosine.</p>
+<p><strong>The audit table is bounded.</strong>
+<code>rotate_events</code> deletes the oldest rows past 10,000, so the
+event log is a rotating window rather than a permanent history. For a
+local tool that is a defensible ceiling; it does mean the record of
+<em>why</em> an early memory was refused is the first thing to go, and
+those are the events that would explain how the store came to look the
+way it does.</p>
+<p>Nothing consults <code>memory_events</code> before a write. That is
+the gap section 1 describes, and it is the difference between a system
+that refuses a value and one that refuses it <em>again</em>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The workspace is the product: desktop app, web dashboard, CLI, and
+Slack and Discord bridges that continue the same work from a chat
+surface. Kiro Crew Apps bundle an interface with agents, skills,
+schedules, integrations and backend services.</p>
+<p>The model's authority over memory is deliberately narrow. It cannot
+write outside the allow-listed key prefixes, cannot touch the
+<code>system.</code> namespace at all, and its writes are held to the
+0.8 confidence floor that a user's explicit statement is exempt from.
+What the agent <em>can</em> do freely is add episodic fragments, which
+is the lower-stakes half.</p>
+<p>The dashboard is a real review surface rather than a viewer:
+<code>MemoryTab</code>, <code>MemoryGraphTab</code> and
+<code>VectorMemoryCard</code> render the stores, the events feed shows
+refusals including blocked injections, and
+<code>api_memory_semantic_delete</code> and
+<code>api_memory_episodic_delete</code> let a person remove an entry.
+Inspect and adjudicate, after the fact rather than as a gate.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>audit_log</code> — earned, with the ceiling
+stated.</strong> <code>memory_events</code> is an explicit table in the
+system's own store recording mutations with <code>old_value</code> and
+<code>new_value</code>, plus four of the seven refusal codes.
+<code>rotate_events</code> trims past 10,000 rows, so it is a rotating
+window rather than a permanent ledger.</p>
+<p><strong><code>human_review</code> — earned.</strong> The dashboard
+renders both stores and the event feed, and the delete endpoints let a
+person act on what they see. It adjudicates after the fact rather than
+gating admission, which is the ordinary form of this mark.</p>
+<p><strong><code>negative_eval</code> — earned, and the cases are about
+the right thing.</strong> <code>test_memory_graph.py</code> asserts an
+AWS access key id is absent from a returned result's <code>text</code>
+and from its <code>conversation_id</code>;
+<code>test_perf_memory_quickwins.py</code> asserts an embedding BLOB
+never leaks into a search result, and that a specific memory is absent
+from a result set. Committed cases pinning that particular material
+stays out of a retrieval, including a credential.</p>
+<p><strong><code>tombstone</code> — not earned, and the machinery is one
+query short.</strong> Refusals are typed, audited and carry the refused
+value in <code>new_value</code>. Nothing reads that column on the write
+path, so the same value can be offered indefinitely and is re-screened
+by the same pattern list each time. A system that already records what
+it refused, keyed near enough to the value to match on, is closer to
+this mark than most of the corpus.</p>
+<p><strong><code>trust_state</code> — not earned.</strong> Confidence is
+a float, <code>source</code> is a string, and <code>is_deleted</code> is
+a flag. The two-tier hierarchy is real but lives in comparisons
+(<code>source != "user_explicit"</code>) rather than in a field, so
+nothing records what the system concluded about a given memory.</p>
+<p><strong><code>scope_enforced</code> — not found.</strong> No user,
+project or tenant key on either table.</p>
+<p><strong><code>bitemporal</code> — not found.</strong>
+<code>created_at</code>, <code>updated_at</code> and
+<code>last_accessed_at</code> are all record time.</p>
+<p>Other observations:</p>
+<ul>
+<li><strong>The injection screen runs on both stores</strong>, semantic
+and episodic, with the episodic case reasoned about explicitly as
+persistence of steering instructions across sessions.</li>
+<li><strong>The audit snippet is redacted before storage</strong>
+because the dashboard renders it verbatim — the strongest single piece
+of security reasoning in this report.</li>
+<li><strong><code>system.</code> is a reserved namespace</strong>
+requiring <code>user_explicit</code>, so the agent cannot write the keys
+that configure its own behaviour.</li>
+<li><strong>The whole trust model rests on the <code>source</code>
+string</strong> being passed honestly by every caller. There is no
+signature, no capability, and no check that a caller claiming
+<code>user_explicit</code> is one.</li>
+<li><strong>The event log rotating at 10,000</strong> means a
+long-running workspace loses its earliest refusals first.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,024 test files and 502,973 lines of test code against 475,988 lines
+of source — more test than source, which at this size is rare and worth
+stating plainly.</p>
+<p>Ten memory-named test modules, and the names track real risks rather
+than coverage: <code>test_vector_memory.py</code>,
+<code>test_memory_graph.py</code>, <code>test_memory_selfheal.py</code>,
+<code>test_memory_smoke.py</code>,
+<code>test_perf_memory_quickwins.py</code>,
+<code>test_session_memory.py</code>, <code>test_system_memory.py</code>,
+<code>test_dashboard_sessions_memory.py</code>,
+<code>test_ws_and_plan_memory_fixes.py</code>.</p>
+<p>The negative cases are the strongest part. Asserting that
+<code>AKIAIOSFODNN7EXAMPLE</code> — a well-known example AWS key id —
+does not appear in a result's text <em>or</em> its
+<code>conversation_id</code> is a redaction test written by someone who
+thought about where else the string could surface. The embedding-leak
+case is the same instinct applied to a performance change.</p>
+<p>Nothing was run for this review: seven dependency surfaces were
+inside the seven-day cooldown, and the tree carries
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> addressed to a reading
+agent, both treated as data.</p>
+<p>What is not established: no measurement of the injection pattern
+list. It is the component the whole write gate depends on, and how often
+it blocks something it should not — or misses something it should catch
+— is not answered anywhere in the repository. A pattern list is a
+classifier with no reported precision.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Type your refusals.</strong> <code>SemanticRejectCode</code>
+turns "the write didn't happen" into seven distinct, loggable facts. A
+gate that returns a boolean is a gate nobody can operate; a gate that
+returns <code>allowlist_reject</code> versus
+<code>injection_blocked</code> is a gate you can build a dashboard on —
+and they did.</li>
+<li><strong>Redact the audit record of hostile input.</strong> If you
+log what an attacker sent and then render it in a UI, your security log
+is an injection and exfiltration channel. Scrubbing URLs and credentials
+from the snippet before it is persisted is the fix, and almost nobody
+does it.</li>
+<li><strong>Make memory a bounded namespace.</strong> An allow-list of
+key prefixes, with a reserved <code>system.</code> namespace only an
+explicit human source may write, converts "what can the agent remember"
+from a prompt-level hope into a schema-level rule.</li>
+<li><strong>Admit on the raw score, rank on the decayed one.</strong>
+Filtering on a decay-adjusted similarity makes "old" and "irrelevant"
+the same condition and silently loses old material that is exactly on
+point.</li>
+<li><strong>Keep a human-editable half.</strong> Three markdown files
+with comment markers explaining what they are for, beside a database
+that is the index rather than the authority for them. Correcting a
+preference is editing a file.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Recording a refusal you never consult.</strong> Seven kinds
+of "no" written to a table that no write path reads means the same value
+can be proposed forever. One query against the refusal log, keyed on the
+value, converts a screen into a memory.</li>
+<li><strong>A trust model made of string comparisons.</strong>
+<code>source != "user_explicit"</code> carries the entire privilege
+boundary, and nothing verifies that a caller claiming that source is
+entitled to it.</li>
+<li><strong>Rotating the audit log without saying what it
+costs.</strong> Ten thousand rows is a reasonable ceiling; losing the
+<em>earliest</em> refusals first means losing the ones that explain how
+the store was shaped.</li>
+<li><strong>An unmeasured pattern list at the centre of a gate.</strong>
+Everything downstream trusts <code>_contains_injection</code>, and its
+precision is unreported.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single operator running a workspace on their own
+hardware who wants memory that is governed rather than accumulated. The
+gate is the product: if you want an agent that cannot quietly learn
+arbitrary keys about you, this is the clearest worked example in the
+corpus of stopping it at the schema.</p>
+<p>It is a whole workspace, not a library. There is no memory package to
+depend on — <code>vector_memory.py</code> is 2,764 lines coupled to the
+app's config loader, metrics and platform helpers — so adoption means
+adopting Kiro Crew, and reuse means porting the ideas.</p>
+<p>Walk away if you need multi-user or multi-project isolation. There is
+no scope key on either table and the design does not anticipate one;
+retrofitting it is a migration plus an audit of every read.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How good is the injection pattern list?</strong> It gates
+both stores and its false positive and negative rates are unreported.
+This is the number the design most needs.</li>
+<li><strong>Does anything verify a <code>source</code> claim?</strong>
+The privilege boundary is a string comparison; whether a caller can
+simply assert <code>user_explicit</code> was not traced.</li>
+<li><strong>What is the conflict resolver's policy?</strong>
+<code>conflict_skip</code> declines a write and records both values; on
+what basis it decides was not read closely here.</li>
+<li><strong>How often does <code>rotate_events</code> fire in a real
+workspace?</strong> It decides how much of the refusal history survives,
+and nothing reports on it.</li>
+<li><strong>Do the markdown half and the structured half ever
+disagree?</strong> Preferences live in a file a person edits and also,
+potentially, as <code>semantic_memory</code> keys. Nothing was found
+reconciling them.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>src/kiro_crew/vector_memory.py</code> — schema at
+<code>:151</code>, WAL SQLite, FAISS index</li>
+<li><code>src/kiro_crew/memory.py</code> — markdown workspace and the
+FTS5 index</li>
+</ul>
+<p><strong>Write gate</strong></p>
+<ul>
+<li><code>src/kiro_crew/vector_memory.py:90</code> —
+<code>SemanticRejectCode</code>, <code>_AUDITABLE_REJECT_CODES</code>,
+<code>_SECURITY_REJECT_CODES</code></li>
+<li><code>:475</code>–<code>:513</code> — the validation chain;
+<code>:625</code> — <code>_write_semantic</code> and conflict
+resolution; <code>:1066</code> — episodic injection screening and
+redacted audit snippet</li>
+<li><code>src/kiro_crew/vector_memory_constants.py</code> —
+<code>_INJECTION_PATTERNS</code>, <code>_contains_injection</code></li>
+</ul>
+<p><strong>Retrieval</strong></p>
+<ul>
+<li><code>src/kiro_crew/vector_memory.py:1335</code>–<code>:1600</code>
+— admission on raw cosine, decay applied for ranking</li>
+</ul>
+<p><strong>Lifecycle</strong></p>
+<ul>
+<li><code>:937</code> — <code>rotate_events</code></li>
+</ul>
+<p><strong>Human surface</strong></p>
+<ul>
+<li><code>src/kiro_crew/dashboard/handlers/memory.py</code>,
+<code>src/kiro_crew/dashboard/session_memory.py</code></li>
+<li><code>website/src/pages/overview/MemoryTab.tsx</code>,
+<code>MemoryGraphTab.tsx</code>, <code>VectorMemoryCard.tsx</code>,
+<code>SessionMemoryCard.tsx</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>test/test_vector_memory.py</code>,
+<code>test_memory_graph.py</code>,
+<code>test_perf_memory_quickwins.py</code>,
+<code>test_memory_selfheal.py</code>,
+<code>test_session_memory.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2"><code class="commit-id" title="429cbad8cdb7bfbf4c10f6343374565832b176d2">429cbad8…</code></a>
+— first reading. Screened before reading: 0 auto-run surfaces, 7
+build-time exec paths, 5 unpinned dependency surfaces with seven inside
+the seven-day cooldown, plus <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> addressed to a reading agent. Both read as data;
+nothing was installed, built or run. The report covers the memory
+subsystem, not the desktop app, the scheduler or the Apps platform.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

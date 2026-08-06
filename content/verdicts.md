@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 152 reports.**
+**This page covers all 153 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1425,3 +1425,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 540,721 lines of backend Python under 259,452 lines of tests across 843 unit files, a hash-chained per-user commit ledger with optimistic concurrency, an outbox that reloads canonical state before every external write, and per-user encryption at rest — six of seven capability marks.
 - Study when: you are building memory for anything that captures continuously and can then act — a wearable, a meeting recorder, a screen agent. The problems it solves arrive with ambient capture and not with a chat box.
 - Do not copy when: you need an inspectable store or a memory layer separable from its product. This is Firestore, Pinecone, a worker fleet and a device; the value transplants as design decisions, not as code.
+
+### `kirocrew`
+
+- Best idea: seven typed refusal codes on the memory write path — key format, allow-list, reserved prefix, confidence floor, size, injection, conflict — so "the write didn't happen" is seven distinct loggable facts rather than a boolean, and four of them land in an events table a dashboard renders.
+- Biggest risk: every refusal is recorded and none is consulted. A value blocked as an injection today is re-screened by the same pattern list tomorrow, and that list's precision is unmeasured — so the whole gate rests on a classifier nobody has scored.
+- Most reusable component: redacting exfiltration URLs and credentials from an audit snippet *before* persisting it, because the dashboard renders it verbatim. The only system here that treats its own security log as an attack surface.
+- Maturity impression: 475,988 lines of Python under 502,973 lines of tests across 1,024 files, 1,606 commits since 1 June 2026, Apache-2.0, with a `pysqlite3`-without-`connect` fallback that someone clearly met in the wild.
+- Study when: you want an agent that cannot quietly learn arbitrary things about you — the allow-listed key namespace and the `user_explicit`-only `system.` prefix are the clearest worked example in the corpus of stopping that at the schema.
+- Do not copy when: you need multi-user or multi-project isolation. No scope key exists on either table, and retrofitting one is a migration plus an audit of every read.

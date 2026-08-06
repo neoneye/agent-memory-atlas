@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 152 reports.</strong></p>
+<p><strong>This page covers all 153 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3443,6 +3443,34 @@ chat box.</li>
 separable from its product. This is Firestore, Pinecone, a worker fleet
 and a device; the value transplants as design decisions, not as
 code.</li>
+</ul>
+<h3 id="kirocrew"><code>kirocrew</code></h3>
+<ul>
+<li>Best idea: seven typed refusal codes on the memory write path — key
+format, allow-list, reserved prefix, confidence floor, size, injection,
+conflict — so "the write didn't happen" is seven distinct loggable facts
+rather than a boolean, and four of them land in an events table a
+dashboard renders.</li>
+<li>Biggest risk: every refusal is recorded and none is consulted. A
+value blocked as an injection today is re-screened by the same pattern
+list tomorrow, and that list's precision is unmeasured — so the whole
+gate rests on a classifier nobody has scored.</li>
+<li>Most reusable component: redacting exfiltration URLs and credentials
+from an audit snippet <em>before</em> persisting it, because the
+dashboard renders it verbatim. The only system here that treats its own
+security log as an attack surface.</li>
+<li>Maturity impression: 475,988 lines of Python under 502,973 lines of
+tests across 1,024 files, 1,606 commits since 1 June 2026, Apache-2.0,
+with a <code>pysqlite3</code>-without-<code>connect</code> fallback that
+someone clearly met in the wild.</li>
+<li>Study when: you want an agent that cannot quietly learn arbitrary
+things about you — the allow-listed key namespace and the
+<code>user_explicit</code>-only <code>system.</code> prefix are the
+clearest worked example in the corpus of stopping that at the
+schema.</li>
+<li>Do not copy when: you need multi-user or multi-project isolation. No
+scope key exists on either table, and retrofitting one is a migration
+plus an audit of every read.</li>
 </ul>
         </article>
       </div>
