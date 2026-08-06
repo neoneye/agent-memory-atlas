@@ -101,8 +101,8 @@ component is what gets reviewed and the report says so: Zep is here as
 That is genuinely less than reviewing the service, and the difference should be
 read as a gap in the atlas rather than a finding about the products.
 
-Two consequences worth stating plainly. The atlas's headline counts — three
-tombstones, six negative-eval suites — are counts *over inspectable code*, and a
+Two consequences worth stating plainly. The atlas's headline counts — nine
+tombstones, thirty negative-eval suites — are counts *over inspectable code*, and a
 closed system could hold any of these mechanisms without this method ever
 knowing. And a mechanism's absence here is weaker evidence about the field than
 its presence: finding a tombstone proves someone built one, while not finding one
@@ -2584,8 +2584,10 @@ Four engines were read for it — pgvector at
 `6868102bde454dc761136e1994490133a6a026bb`, Qdrant at
 `db8fa43fcb6aedec1e739487e17a99731b74590a`, LanceDB at
 `9e26bf3fba7b77bb32434c0f6af9dcb43248f90a`. Between them they back most of the
-retrieval in this atlas: pgvector is named in 16 reports, Chroma and Qdrant in
-11 each, LanceDB in 6.
+retrieval in this atlas. Counted as the engine named in a report's
+`matrix.storage` — the reproducible definition, since a passing mention in prose
+is not a dependency — pgvector backs 15 systems, Chroma 12, Qdrant 11 and
+LanceDB 5; counting any mention anywhere in a report gives 19, 13, 12 and 6.
 
 ```mermaid
 flowchart TD

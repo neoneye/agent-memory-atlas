@@ -8,12 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
-- [2026-08-06-what-is-actually-new-here.md](2026-08-06-what-is-actually-new-here.md) —
-  a novelty inventory: the five framings the atlas produced that the survey
-  literature does not name, the eleven mechanisms closest to being one of a kind,
-  and the shape they make — every one of them sits after a memory has been
-  believed, which is the phase no benchmark scores. Plus two stale counts found
-  while assembling it, of exactly the kind the superlative audit predicted.
+- [2026-08-06-rare-mechanisms-and-useful-inversions.md](2026-08-06-rare-mechanisms-and-useful-inversions.md) —
+  the mechanisms this corpus holds once, each labelled with what kind of claim it
+  actually supports and what the nearest prior art is. Written first as a novelty
+  inventory, which verified rarity in an opportunistic corpus and then upgraded it
+  into field-level originality; an outside review took that apart and the
+  retractions are tabled at the bottom — including the framing the atlas thought
+  it coined, which the literature had already named *false success*.
+- [2026-08-06-the-count-claim-checker.md](2026-08-06-the-count-claim-checker.md) —
+  thirteen stale numerators in one day, the checker that now guards them, and the
+  one it missed that a reader found the same evening. Every one sat beside
+  generated numbers that were correct, which is what makes the class dangerous.
 - [2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md](2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md) —
   Tycho, Retrodict, Schema and VISTA independently put an append-only record in
   charge and the model's own notes on probation — and why a third-party

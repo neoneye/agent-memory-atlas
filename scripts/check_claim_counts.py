@@ -68,6 +68,32 @@ CLAIM = re.compile(
     re.I,
 )
 
+#: A mechanism used as the countable noun itself: "three tombstones", "six
+#: negative-eval suites". The first version of this check required an atlas noun
+#: (systems, reports, repositories) or the corpus denominator, and so read
+#: straight past *"the atlas's headline counts — three tombstones, six
+#: negative-eval suites"* in the limitations, where both numbers were stale by
+#: six and twenty-four. An outside reviewer found it the day this script
+#: shipped, which is the second time the numerator has been caught by a reader.
+#:
+#: Only two mechanisms qualify, and the exclusions are the interesting part.
+#: "Four scope keys" and "three trust states" count things *inside* one system —
+#: EverOS has four scope keys, PowerMem three — so reading them as corpus counts
+#: made this check accuse five correct sentences at once on its first run. A
+#: mechanism noun is usable here only when its plural is never a within-system
+#: quantity, which is true of a tombstone and of an eval suite and of nothing
+#: else on the rubric.
+MECHANISM_NOUNS: dict[str, str] = {
+    "tombstone": r"tombstones",
+    "negative_eval": r"negative[- ]eval(?:uation)? suites|negative[- ]evals",
+}
+MECHANISM_NOUN_CLAIM = re.compile(
+    rf"\b(?P<num>{NUMBER})\s+(?P<mech>"
+    + "|".join(f"(?P<{flag}>{pattern})" for flag, pattern in MECHANISM_NOUNS.items())
+    + r")\b",
+    re.I,
+)
+
 #: How a mechanism is named in prose, as opposed to how it is named in
 #: frontmatter. Each phrase must be specific enough that its presence in the
 #: sentence identifies the mechanism — "scope" alone is not, "scope key" is.
@@ -227,7 +253,30 @@ def check(root: Path, show_list: bool) -> int:
         raw = source.read_text(encoding="utf-8")
         text = normalize(raw)
         where = source.relative_to(root)
+
+        # A number naming its mechanism directly needs no window: the subject is
+        # the noun. Recorded first so the general pass can skip the same span.
+        claimed_spans: list[tuple[int, int]] = []
+        for match in MECHANISM_NOUN_CLAIM.finditer(text):
+            flag = next(f for f in MECHANISM_NOUNS if match.group(f))
+            claimed_spans.append(match.span())
+            bound += 1
+            said = value(match.group("num"))
+            line = text[: match.start()].count("\n") + 1
+            claim = " ".join(match.group(0).split())
+            if show_list:
+                listed.append(
+                    f"{where}:{line}: '{claim}' — {LABELS[flag]}, said {said}, live {counts[flag]}"
+                )
+            if said != counts[flag]:
+                problems.append(
+                    f"{where}:{line}: '{claim}' — {LABELS[flag]} is carried by "
+                    f"{counts[flag]} of {total_reports}, not {said}"
+                )
+
         for match in CLAIM.finditer(text):
+            if any(s <= match.start() < e for s, e in claimed_spans):
+                continue
             noun = match.group("noun1") or match.group("noun2")
             denom = match.group("denom")
             # A number is a claim about the corpus if it counts atlas nouns or
