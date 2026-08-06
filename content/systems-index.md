@@ -22,7 +22,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
 - [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced
 - [`agentic-context-engine`](../systems/agentic-context-engine/) **Agentic Context Engine** — A decision not to merge, kept · `kayba-ai/agentic-context-engine` · Trust state
-- [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced
+- [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced, Mutation audit
 - [`agentrecall-x`](../systems/agentrecall-x/) **AgentRecall-X** — A correction that loses its veto · `Goldentrii/AgentRecall-X` · Trust state, Scope enforced
 - [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
 - [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals

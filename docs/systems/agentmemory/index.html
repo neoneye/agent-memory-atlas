@@ -85,17 +85,17 @@ lexical, vector, and graph retrieval.</p>
               <strong>rohitg00/agentmemory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b" title="d8b5267c367a5da07ad3619363520b7f1a506c6b">
+            <a class="meta-pill revision-pill" href="https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014" title="d60652a7058773fa9428fa720eda38942f12f014">
               <span>Analyzed revision</span>
-              <code>d8b5267c…</code>
+              <code>d60652a7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-08-06</strong>
             </div>
                       </div>
-                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (58%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (57%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -346,7 +346,21 @@ Trust</h2>
 persistence.</li>
 <li>Search indexes can be rebuilt and are dimension-checked.</li>
 <li>Deletion is propagated to persisted indexes.</li>
-<li>Structural deletion is designed to emit audit records.</li>
+<li><strong>Structural deletion emits audit records, under a written
+policy.</strong> <code>src/functions/audit.ts</code> opens with a
+coverage rule: <em>"Every structural deletion of a memory, observation,
+session, or semantic row MUST call recordAudit"</em>, in one of two
+shapes — one row per scoped call with <code>targetIds</code>, or one
+batched row per bulk sweep carrying every removed id and an evicted
+count, because <em>"per-item audit rows would flood the audit log during
+routine sweeps"</em>. The rule ends <em>"Either shape is required;
+silent deletes are not acceptable"</em>, and it instructs future
+contributors to add the <code>recordAudit</code> call
+<strong>before</strong> the <code>kv.delete</code>.
+<code>recordAudit</code> writes an <code>AuditEntry</code> — id,
+timestamp, operation, user, function, target ids, details, quality score
+— into its own <code>KV.audit</code> keyspace under a freshly generated
+id, so the log is insert-only.</li>
 <li>Non-loopback viewer access requires an API secret and allowed
 hosts.</li>
 <li>Isolated-agent retrieval fails closed when identity is absent.</li>
@@ -461,6 +475,36 @@ methodology.</li>
 small synthetic eval.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014"><code class="commit-id" title="d60652a7058773fa9428fa720eda38942f12f014">d60652a7…</code></a>
+— 8 commits on, and one published position was wrong at the previous pin
+rather than overtaken by it.</p>
+<p><code>audit_log</code> is earned and was earned before.
+<code>src/functions/audit.ts</code> was present at <code>d8b5267c</code>
+carrying the coverage policy quoted in section 9, and
+<code>recordAudit</code> writes an insert-only <code>AuditEntry</code>
+into its own <code>KV.audit</code> keyspace. The mark was not claimed,
+and the report described the mechanism as something deletion <em>"is
+designed to"</em> do — language that describes an intention rather than
+deciding whether the artifact exists. It exists.</p>
+<p><code>5023cf3</code> fixes a deletion that reported success without
+deleting: calling <code>mem::forget</code> with a lesson id
+(<code>lsn_*</code>) removed a nonexistent key from the memories
+keyspace, counted it, and returned success. The delete, the index
+cleanup and the counter are now guarded on the <code>kv.get</code>
+result, matching the <code>mem::governance-delete</code> pattern, and a
+separate <code>mem::lesson-delete</code> path soft-deletes the lesson
+and records an audit row. Worth naming beyond the fix: a forget that
+reports success without acting is the failure underneath every deletion
+claim in this atlas, and it is invisible to any test that only asserts
+the call returned.</p>
+<p>Also in this range: <code>@xenova/transformers</code> migrated to
+<code>@huggingface/transformers</code> v4, embedding-dimension handling
+extracted to <code>_dimensions.ts</code>, native hook adapters for two
+more CLIs, and a project-name override for the OpenCode integration.</p>
+<p>Screened again: 0 auto-run surfaces, 2 build-time exec paths, and an
+<code>AGENTS.md</code> addressed to a reading agent, read as data.
+Nothing was installed or run.</p>
 <p><strong>2026-07-26</strong> — <a
 href="https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b"><code class="commit-id" title="d8b5267c367a5da07ad3619363520b7f1a506c6b">d8b5267c…</code></a>
 — first reading.</p>

@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: "rohitg00/agentmemory"
 source_url: https://github.com/rohitg00/agentmemory
-revision: d8b5267c367a5da07ad3619363520b7f1a506c6b
-revision_url: https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b
-analyzed_at: 2026-07-26
-capabilities: "scope_enforced"
+revision: d60652a7058773fa9428fa720eda38942f12f014
+revision_url: https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014
+analyzed_at: 2026-08-06
+capabilities: "scope_enforced, audit_log"
 matrix:
   memory_unit: "Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records"
   storage: "iii StateModule backed by local SQLite plus persisted search projections"
@@ -254,7 +254,18 @@ Strengths:
 - Private-tag and common-secret redaction occurs before persistence.
 - Search indexes can be rebuilt and are dimension-checked.
 - Deletion is propagated to persisted indexes.
-- Structural deletion is designed to emit audit records.
+- **Structural deletion emits audit records, under a written policy.**
+  `src/functions/audit.ts` opens with a coverage rule: *"Every structural
+  deletion of a memory, observation, session, or semantic row MUST call
+  recordAudit"*, in one of two shapes — one row per scoped call with
+  `targetIds`, or one batched row per bulk sweep carrying every removed id and
+  an evicted count, because *"per-item audit rows would flood the audit log
+  during routine sweeps"*. The rule ends *"Either shape is required; silent
+  deletes are not acceptable"*, and it instructs future contributors to add the
+  `recordAudit` call **before** the `kv.delete`. `recordAudit` writes an
+  `AuditEntry` — id, timestamp, operation, user, function, target ids, details,
+  quality score — into its own `KV.audit` keyspace under a freshly generated id,
+  so the log is insert-only.
 - Non-loopback viewer access requires an API secret and allowed hosts.
 - Isolated-agent retrieval fails closed when identity is absent.
 
@@ -354,5 +365,15 @@ rather than relying on the shared default.
 - `docs/benchmarks/2026-05-20-coding-agent-life-v1.md`: small synthetic eval.
 
 ## History
+
+**2026-08-06** — [`d60652a7058773fa9428fa720eda38942f12f014`](https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014) — 8 commits on, and one published position was wrong at the previous pin rather than overtaken by it.
+
+`audit_log` is earned and was earned before. `src/functions/audit.ts` was present at `d8b5267c` carrying the coverage policy quoted in section 9, and `recordAudit` writes an insert-only `AuditEntry` into its own `KV.audit` keyspace. The mark was not claimed, and the report described the mechanism as something deletion *"is designed to"* do — language that describes an intention rather than deciding whether the artifact exists. It exists.
+
+`5023cf3` fixes a deletion that reported success without deleting: calling `mem::forget` with a lesson id (`lsn_*`) removed a nonexistent key from the memories keyspace, counted it, and returned success. The delete, the index cleanup and the counter are now guarded on the `kv.get` result, matching the `mem::governance-delete` pattern, and a separate `mem::lesson-delete` path soft-deletes the lesson and records an audit row. Worth naming beyond the fix: a forget that reports success without acting is the failure underneath every deletion claim in this atlas, and it is invisible to any test that only asserts the call returned.
+
+Also in this range: `@xenova/transformers` migrated to `@huggingface/transformers` v4, embedding-dimension handling extracted to `_dimensions.ts`, native hook adapters for two more CLIs, and a project-name override for the OpenCode integration.
+
+Screened again: 0 auto-run surfaces, 2 build-time exec paths, and an `AGENTS.md` addressed to a reading agent, read as data. Nothing was installed or run.
 
 **2026-07-26** — [`d8b5267c367a5da07ad3619363520b7f1a506c6b`](https://github.com/rohitg00/agentmemory/commit/d8b5267c367a5da07ad3619363520b7f1a506c6b) — first reading.
