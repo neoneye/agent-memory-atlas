@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 151 reports.**
+**This page covers all 152 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1416,3 +1416,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 43,559 lines with 51,407 lines of tests across 160 files, 956 commits since 5 April 2026, CI on every push including a no-optional-dependencies job, a 1,624-line doctor and a 1,036-line repair module — beside a 9,326-line `beam.py` and a tiered-degradation compressor that rewrites stored content irreversibly and has no caller.
 - Study when: you want local, private, agent-controlled memory in one SQLite file with no services, or you are migrating off a hosted memory product — the importers cover nine other systems, the widest exit path in the corpus.
 - Do not copy when: you need to explain why the agent believed something. Trust is a float and two labels, one scored backwards and one inert, with no discrete epistemic state anywhere.
+
+### `omi`
+
+- Best idea: `ACTION_POLICY` maps each epistemic status to a set of permitted *uses*, and `can_use_for_action` requires an `accepted` fact before an irreversible action — so an unreviewed memory may answer a question with a disclaimer and may not send, buy or delete anything. Trust gating capability, graded by reversibility.
+- Biggest risk: every refusal is keyed on a row while the transcript that produced it is retained by design, so a rejected fact can be re-derived from the same audio and re-enter as a fresh candidate. Ambient capture is where record-keyed correction fails fastest.
+- Most reusable component: two confidence fields with different jobs — `capture_confidence` for whether the source was heard correctly, `veracity` for whether the claim is true — beside `subject_attribution` recording whether the fact is even about the user.
+- Maturity impression: 540,721 lines of backend Python under 259,452 lines of tests across 843 unit files, a hash-chained per-user commit ledger with optimistic concurrency, an outbox that reloads canonical state before every external write, and per-user encryption at rest — six of seven capability marks.
+- Study when: you are building memory for anything that captures continuously and can then act — a wearable, a meeting recorder, a screen agent. The problems it solves arrive with ambient capture and not with a chat box.
+- Do not copy when: you need an inspectable store or a memory layer separable from its product. This is Firestore, Pinecone, a worker fleet and a device; the value transplants as design decisions, not as code.
