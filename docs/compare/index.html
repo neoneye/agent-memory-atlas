@@ -11453,6 +11453,46 @@ files matching <em>remember</em> being the "don't ask again" permission
 rule. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-30-a-reddit-thread-triaged.md">the
 thread note</a> for the rest of that triage.</li>
+<li><strong><code>rahvis/cognitive-weave</code> was examined and has no
+report, and it is the sharpest instance yet of a published number with
+nothing behind it.</strong> The repository presents itself as <em>"the
+official implementation"</em> of <a
+href="https://arxiv.org/abs/2506.08098">arXiv:2506.08098</a>, whose
+abstract claims <em>"a notable 34% average improvement in task
+completion rates and a 42% reduction in mean query latency when compared
+to state-of-the-art baselines"</em> — measured, per its section 4,
+against Standard RAG, MemGPT, <a href="../systems/a-mem/">A-MEM</a> and
+<a href="../systems/mem0/">Mem0</a> on Robotouille, Evolving-QA and
+LoCoMo, with human judges on a Likert scale. It is excluded on the
+ordinary ground rather than that one: <strong>nothing survives the
+session.</strong> <code>main.py:39</code> declares
+<code>self.memory_store: List[InsightParticle] = []</code>, the chat
+loop appends to it, and grepping the tree for <code>open(</code>,
+<code>json.dump</code>, <code>sqlite</code>, <code>pickle</code> and
+<code>write_text</code> returns nothing — the same call already made for
+<a href="../systems/pi/">Pi</a>, LlamaIndex's
+<code>ChatMemoryBuffer</code> family and OpenAI's
+<code>SQLiteSession</code>. What makes it worth recording is that the
+repository says so itself: <em>"Implement memory persistence layer"</em>
+and <em>"Implement full STRG (Spatio-Temporal Resonance Graph)
+structure"</em> are both unchecked items on its own To-Do list, and STRG
+is the mechanism in the paper's title. 568 lines of Python across five
+files, one empty; retrieval is set-intersection over a stopword-filtered
+bag of words falling back to the most recent particle;
+<code>relational_strands</code>, <code>access_frequency</code>,
+<code>importance_score</code> and two of three timestamp fields are
+declared and assigned nowhere; there is no dataset, metric, result or
+test anywhere in the tree. This does <strong>not</strong> establish that
+the experiments were not run — they may have used a fuller
+implementation that was never released. It establishes that the figures
+cannot be checked against the artifact published as their
+implementation. The licence is asserted in the README and the
+<code>LICENSE</code> file is absent, as with <a
+href="../systems/membase/">Membase</a>. No commit since 5 August 2025.
+See <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-a-paper-and-its-official-implementation.md">the
+note</a> for the component-by-component comparison against the
+paper.</li>
 <li><code>pi-chat</code> is a separate repository and was not reviewed;
 the claim that it injects two persistent memory files every turn comes
 from its documentation, not from its code.</li>

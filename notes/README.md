@@ -8,6 +8,10 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-06-a-paper-and-its-official-implementation.md](2026-08-06-a-paper-and-its-official-implementation.md) —
+  Cognitive Weave: a paper claiming 34% and 42% over MemGPT, A-MEM and Mem0,
+  and an official implementation whose title mechanism is an unchecked To-Do
+  item — plus why the To-Do list is the first thing to read.
 - [2026-07-28-atlas-kernel-proposal.md](2026-07-28-atlas-kernel-proposal.md) —
   a reference implementation of the four-pattern minimum stack, plus the paired
   broken configuration that proves each failure mode.
