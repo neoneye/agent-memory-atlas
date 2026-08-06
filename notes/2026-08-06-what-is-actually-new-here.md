@@ -324,21 +324,43 @@ diverge on what they will not do.
 
 ## Part 4 — Drift found while assembling this
 
-Two stale figures in [`content/overview.md`](../content/overview.md), both of the
+Four stale figures in [`content/overview.md`](../content/overview.md), all of the
 kind [the superlative audit](2026-08-04-the-superlative-audit-first-pass.md)
-predicted — a numerator nothing guards:
+predicted — a numerator nothing guards. **All four are now corrected**; they are
+recorded here because the pattern in them is the useful part.
 
-- **Line 61** — *"The atlas holds 148 reports across 147 repositories"*, beside
-  generated lines throughout the same page reading *of 155*. `content/systems/`
-  holds 155 files.
+- **Line 61** — *"148 reports across 147 repositories"*, beside generated lines
+  throughout the same page reading *of 155*. Counted from frontmatter:
+  `content/systems/` holds 155 reports with 154 distinct `source_url` values, the
+  one duplicate being `NousResearch/hermes-agent` — so the paragraph's *argument*
+  was right and both its numbers were a whole vintage behind.
 - **Line 115** — *"Seven systems in this entire atlas can record that a value was
-  rejected"*, where the generated capability line at 1786 lists **nine** and
-  names them. The sentence points the reader at the capability index for the live
-  count, which is the right hedge and did not stop the number going stale in
-  place.
+  rejected"*, where the generated capability line at 1786 lists **nine** and names
+  them. The sentence points the reader at the capability index for the live count,
+  which is the right hedge and did not stop the number going stale in place. This
+  is the atlas's most-quoted sentence.
+- **Line 1545** — *"filters all 148 systems"*, in the paragraph that sends a
+  reader to the capability index.
+- **Line 3816** — *"Across one hundred and fifty-four systems, almost none can
+  explain why they are shaped the way they are."*
 
-Neither is corrected here; a note is not the place to change published counts.
-Both are one-line fixes and the second is the atlas's most-quoted sentence.
+**The pattern across all four.** Every one is a hand-written count sitting on a
+page whose neighbouring numbers are generated from frontmatter and therefore
+correct. The reader has no way to tell the two apart — a spelled number and a
+generated one look identical — so a stale figure inherits the credibility of the
+machinery beside it. That is the same shape as the sweep finding: the denominator
+sweep made stale numerators look fresher, and here the generated lines make stale
+prose look checked.
+
+**One case left alone, deliberately.**
+[`rejected-value-tombstone.md:187`](../content/patterns/rejected-value-tombstone.md)
+reads *"Two of one hundred and fifty-five would suggest a hard idea that a few
+teams reach independently. One of one hundred and fifty-five…"*. Those numerators
+are not the capability count — they are the invention chain for the
+value-normalized form specifically, which is a narrower claim than the nine marks.
+Fixing it means re-deriving how many of the nine reached the strong form
+independently, which is a re-reading rather than an edit, and writing a number in
+without doing that would be the exact failure this note is about.
 
 ## Follow-ups
 

@@ -58,11 +58,11 @@ Systems reviewed and excluded on this basis, or on licence grounds, are named in
 the limitations at the end rather than quietly dropped — the exclusions are part
 of the evidence.
 
-**Why the two counts differ.** The atlas holds **148 reports across 147
+**Why the two counts differ.** The atlas holds **155 reports across 154
 repositories**: `NousResearch/hermes-agent` carries two distinct memory systems
 and is reviewed twice, as [Hermes Agent](../systems/hermes-agent/) and
 [Holographic](../systems/holographic/). It is the only repository reviewed twice,
-so a count of *systems* is 148 and a count of *repositories* is 147 — the gap is
+so a count of *systems* is 155 and a count of *repositories* is 154 — the gap is
 one, and it is that one.
 
 **How systems were selected.** Opportunistically: repositories encountered,
@@ -112,7 +112,7 @@ proves only that nobody built one *in public*.
 else:
 
 1. **Whether correction is possible at all.** Almost everything can overwrite
-   or supersede. Seven systems in this entire atlas can record that a *value*
+   or supersede. Nine systems in this entire atlas can record that a *value*
    was rejected so extraction cannot bring it back — see the
    [capability index](../capabilities/) for the live count. This is the single widest gap in
    the field, and it is invisible on every benchmark.
@@ -1542,7 +1542,7 @@ session with an identity you could later correct.
 ## 2. Comparative Matrix
 
 **Looking for a specific mechanism rather than a specific system?** The
-[capability index](../capabilities/) filters all 148 systems by the seven
+[capability index](../capabilities/) filters all 155 systems by the seven
 mechanisms judged against strict definitions, combining them with **and** — it
 answers "tombstone *and* scope enforced" in one click, which is the question this
 table cannot be sorted to answer. Two external reviews have asked for that page
@@ -3813,7 +3813,7 @@ this atlas's warning against applying one half-life to every memory kind.
 Write your memory decisions down. `gini-agent` keeps ADRs recording the
 decision, its context, and the failure that motivated it — its per-agent
 isolation ADR states plainly that a coding agent's pinned memories were
-polluting a research agent's recall. Across one hundred and fifty-four systems, almost none can
+polluting a research agent's recall. Across one hundred and fifty-five systems, almost none can
 explain why they are shaped the way they are.
 
 Make scope structurally inseparable from the query. OpenClaw composes agent scope and user filter into a single predicate so an unscoped read is not expressible, and scopes deletes the same way. This is stronger than applying a scope filter somewhere in the read path, and it is the kind of guarantee that survives refactoring.
