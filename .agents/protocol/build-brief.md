@@ -35,8 +35,8 @@ someone who read the failure modes.
 ## Schema
 
 ```yaml
-atlas_commit: 4a328bb                 # what was read, so a later review can diff it
-product_profile: personal-assistant   # a row from the stacks table, or 'none — reason'
+atlas_commit: <the atlas commit you read>   # never a literal from this template
+product_profile: personal-assistant         # a row from the stacks table, or 'none — reason'
 
 adopt:
   - pattern: scope-as-a-first-class-key
@@ -76,7 +76,7 @@ required_tests:                        # ids from .agents/protocol/tests.yaml
   - evidence.claim_resolves_to_source
   - evidence.source_delete_reaches_derived
   - retrieval.k_is_an_upper_bound
-  - prompt.recall_is_data_not_instruction
+  - prompt.recall_is_fenced_as_data
 
 known_exceptions:                      # what is knowingly not closed, and why
   - deletion does not reach the vector index until compaction; accepted because the
@@ -102,27 +102,61 @@ rows in a system that has a vector index is the one to disbelieve.
 
 ## The lock file
 
-Write `memory-atlas.lock` into the *target* repository — the brief plus the atlas
-commit it was decided against:
+Write `memory-atlas.lock` into the *target* repository. **It is the brief, not a
+summary of the brief** — an earlier draft of this document flattened it to bare
+lists, which throws away the only field a later review actually needs.
 
 ```yaml
-atlas_commit: 4a328bb
+atlas_commit: <the atlas commit you read>
 atlas_url: https://github.com/neoneye/agent-memory-atlas
 product_profile: personal-assistant
-adopted: [scope-as-a-first-class-key, evidence-before-belief, explicit-write-destination]
-deferred: [bi-temporal-fact-validity, decay-and-reinforcement]
-rejected: [rejected-value-tombstone]
-borrowed: [claude-mem@<commit>, verel@<commit>]
+
+adopted:
+  - pattern: scope-as-a-first-class-key
+    because: notes are per-project and a cross-project leak is the failure the user notices first
+  - pattern: evidence-before-belief
+    because: extraction is automatic, so a wrong fact must be repairable from its source
+
+deferred:
+  - pattern: bi-temporal-fact-validity
+    because: nothing in this product asks what was true last month
+    revisit_when: reporting or an audit view is added
+
+rejected:
+  - pattern: rejected-value-tombstone
+    because: every write is a deliberate human action; no extractor can re-assert a value
+    revisit_when: automatic capture is added
+
+invariants:
+  - every read carries project_id
+  - deleting evidence removes or invalidates every projection of it
+
+borrowed:
+  - system: claude-mem
+    commit: <commit>
+    mechanism: durable hook queue, committed before the semantic projection
+
 required_tests: [scope.cross_tenant_absent, evidence.claim_resolves_to_source]
-known_exceptions: [deletion does not reach the vector index until compaction]
+
+known_exceptions:
+  - what: deletion does not reach the vector index until compaction
+    because: single-user local store
+    revisit_when: any hosted deployment
 ```
 
-Its only job is to make the next review **small**: when the atlas moves, diff
-`atlas_commit` against HEAD and read only what touches an adopted, deferred or
-borrowed line. Without it, every atlas update invites a redesign, which is how a
-reference gets abandoned.
+Its job is to make the next review **small**: when the atlas moves, diff
+`atlas_commit` against HEAD and read only what touches an adopted, deferred,
+rejected or borrowed line. Without it, every atlas update invites a redesign,
+which is how a reference gets abandoned.
+
+**Why the reasons must survive into the lock file.** A review a year later can
+see that bi-temporal validity was deferred. That fact decides nothing. What
+decides is *why* — because no question asked about last month — and whether that
+is still true of the product. `revisit_when` is the same field pointed forward:
+it names the change that invalidates the decision, so the next review is a
+lookup rather than a re-derivation.
 
 Two honest limits. The lock file records a decision, not a guarantee — nothing
-verifies that the code still matches it. And a deferred pattern is the thing most
-likely to become wrong silently, because the reason for deferring it was a fact
-about the product, and products change.
+verifies that the code still matches it. And a **deferred** pattern is the entry
+most likely to go silently wrong, because its reason was a fact about the
+product, and products change.

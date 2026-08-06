@@ -112,6 +112,18 @@ if ! python3 "$project_dir/scripts/check_claim_counts.py" "$project_dir"; then
   exit 1
 fi
 
+# The protocol catalogue claims each test "carries the page it came from, so a
+# test whose source argument changes goes stale visibly rather than quietly".
+# Nothing made that true until this check existed, and an outside review said so.
+if ! python3 "$project_dir/scripts/check_protocol.py" --self-test; then
+  echo "check_protocol.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_protocol.py" "$project_dir"; then
+  echo "The agent protocol disagrees with the pages it cites." >&2
+  exit 1
+fi
+
 # build_site.sh wraps every <table> in .table-wrap. A hand-authored wrapper in
 # content/ nests them, and each wrapper grows its own "expand to full width"
 # toggle — which is how the capability grid ended up with two.

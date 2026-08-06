@@ -71,7 +71,7 @@ just the selection, or it becomes the checklist the pattern index refuses to be.
 sections and the two benchmark specifications are prose today. Giving them stable
 ids (`scope.cross_tenant_absent`, `correction.survives_reindex`,
 `deletion.absent_after_reindex_and_restart`, `retrieval.k_is_an_upper_bound`,
-`prompt.recall_is_data_not_instruction`) costs nothing and makes a conformance
+`prompt.recall_is_fenced_as_data`) costs nothing and makes a closure
 report checkable. Prior art to steal from, recorded in
 [the eval-suite note](2026-07-28-executable-eval-suite.md): Verel's
 `memory/rubric.py` runs a live probe per capability and emits a **proof string**
@@ -81,7 +81,7 @@ sentence tells you the suite tested the right thing."*
 **3. A `use-the-atlas` skill.** All three existing skills grow the corpus; none
 uses it. This is the real gap behind the proposal. It should do the target-repo
 inspection, propose a profile row from the stacks table, emit the brief, stop for
-approval, and produce the conformance report. It should *not* contain a second
+approval, and produce the closure report. It should *not* contain a second
 copy of the design knowledge — every step should cite the page it came from, so
 the skill goes stale loudly instead of quietly.
 
@@ -117,7 +117,8 @@ compliance framing, which remains unmet.
 **Test ids had to come before the brief**, not after — `required_tests` is a list
 of ids, so the ids are the dependency. Seventeen went in, all traceable to a
 `Tests to require` section, a benchmarks specification, or an overview
-antipattern. One is new-but-derived: `tombstone.no_second_copy`, the discriminator
+antipattern — the review below then split the prompt-safety entry in two, and
+`check_protocol.py` prints the live number rather than this paragraph. One is new-but-derived: `tombstone.no_second_memory_unit`, the discriminator
 from [yesterday's re-derivation](2026-08-07-the-strong-form-tombstone-subset.md),
 which is what tells a *consulted* tombstone from a *collided* one — assert both
 that no live record carries the value and that the store holds no second copy.
@@ -128,7 +129,7 @@ neither.
 field that took the longest to write and is the reason the file is worth having.
 `deletion.absent_after_reindex_and_restart` does not prove erasure at the storage
 engine. `scope.cross_tenant_absent` does not prove the boundary is authenticated.
-`prompt.recall_is_data_not_instruction` tests the rendering, not the model. A
+the prompt-safety test covers the rendering, not the model. A
 green test quoted as more than it is does more damage than a missing one, and
 this atlas has spent three notes on exactly that failure in its own prose.
 
@@ -144,6 +145,59 @@ next to a file that could be counted — the exact class
 `check_claim_counts.py` exists to catch, in a file that checker does not scan.
 Fixed by removing the count rather than correcting it, which is the right fix
 every time it is available.
+
+## What the review of the build found
+
+Seven findings, all valid, four of them P1. Recorded because the pattern in them
+is sharper than any single fix: **every one was a place where an artifact
+described a property it did not have.**
+
+- **The entry point said the protocol did not exist.** `AGENTS.md` still ended
+  with *"Not built yet"* under a first half that described the built thing. The
+  note's status was updated and the file it points readers at was not — the same
+  disconnect this project found six days of, between the tombstone pattern page
+  and the Daimon report.
+- **The lock file hard-coded a real commit** (`4a328bb`) as its example, so an
+  agent copying the template would have written a provenance claim that was never
+  true in someone else's repository. Now a placeholder, and
+  `check_protocol.py` fails the build if a literal hash reappears in a template.
+- **The lock file threw away the reasons.** It was described as "the brief plus
+  the atlas commit" and was in fact the brief flattened to bare lists — which
+  drops the only field a later review needs. A review can see that bi-temporal
+  validity was deferred; that decides nothing. *Why* it was deferred, and the
+  `revisit_when` that invalidates the reason, is the whole point.
+- **`tombstone.no_second_copy` contradicted evidence-before-belief.** It required
+  that the store hold no second copy of a re-asserted value, while the recommended
+  pipeline stores the raw event *before* extraction. A correct system keeps the
+  evidence, the audit row and the hash — and would have failed the test for doing
+  exactly what another pattern tells it to. Rewritten as
+  `tombstone.no_second_memory_unit`, scoped to the unit layer, with a
+  `scope_note` saying what may legitimately still hold the value. Its
+  `not_proven: Nothing further` broke the catalogue's own central rule and now
+  names four other tests.
+- **Review mode became implementation mode.** The frontmatter advertised "review
+  an existing memory design" and the workflow marched from brief approval into
+  code. Approval of a design is not authorization to write to a repository. Four
+  modes now — `decide`, `design`, `review`, `build` — and only the last touches
+  the target, after its own second go-ahead.
+- **The prompt-safety test conflated two tests.** It claimed recalled text
+  *cannot* issue instructions, asserted that the agent does not act on it, and
+  then said it tested the rendering rather than the model. Split into a
+  structural assertion over the assembled prompt and a behavioural measurement
+  that reports a count over N runs and never the word "passes".
+- **"Sources go stale loudly" was false.** The catalogue said each test carries
+  the page it came from *so that* a moved source shows up — and nothing parsed
+  the file. `scripts/check_protocol.py` now validates the schema, unique ids,
+  cited files and headings, pattern slugs, ids referenced in the templates, and
+  literal commit hashes; it has a self-test with six controls and was
+  mutation-tested against the live catalogue.
+- **The rebuild test could pass on an empty store**, because a model answers from
+  its weights. Now specified over high-entropy synthetic tokens and asserted
+  against the retrieval artifacts rather than an answer.
+
+The recurring shape — a document claiming a guarantee that nothing enforced — is
+the same one the count checker was built for, one level up. The fix in every case
+was either to build the enforcement or to stop making the claim.
 
 ## The tension worth keeping in view
 

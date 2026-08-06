@@ -109,11 +109,21 @@ loose reading is worse than no mark.
 
 ---
 
-## Not built yet
+## The protocol, and its limits
 
-Turning the above into a deterministic protocol — a product profile, a reviewable
-build brief, pattern-derived acceptance tests and a conformance report — is
-proposed and triaged in
-[`notes/2026-08-07-the-atlas-as-an-agent-protocol.md`](notes/2026-08-07-the-atlas-as-an-agent-protocol.md),
-which also says which parts of it this project has already declined to invent and
-why. Read that before proposing it again.
+The workflow above is packaged in three places: the
+[`use-the-atlas`](.agents/skills/use-the-atlas/SKILL.md) skill (modes, steps,
+rules), [`.agents/protocol/tests.yaml`](.agents/protocol/tests.yaml) (acceptance
+tests with stable ids), and
+[`.agents/protocol/build-brief.md`](.agents/protocol/build-brief.md) (brief,
+closure report, lock file). `scripts/check_protocol.py` validates the catalogue
+against the pages it cites, and runs in `scripts/test_site.sh`.
+
+Two things it deliberately does **not** do. It produces no conformance
+statement — this project certifies nothing and has run its own deletion sequence
+against no system, so the artifact is a list of which failure modes are closed
+and which are open. And it carries no machine-readable *applicability* or
+*conflicts* field per pattern, because those are uniform judgements nobody has
+made uniformly; the reasoning, and the condition that would change it, is in
+[`notes/2026-08-07-the-atlas-as-an-agent-protocol.md`](notes/2026-08-07-the-atlas-as-an-agent-protocol.md).
+Read that before proposing either again.

@@ -1,6 +1,6 @@
 ---
 name: use-the-atlas
-description: Design and build a memory system for some other product, using the Agent Memory Atlas as the reference. Use when asked to add memory, persistence, or recall to a repository, to review an existing memory design against the atlas, or to decide which memory patterns a product actually needs. Produces a reviewable build brief before any code.
+description: Design, review, or build a memory system for some other product, using the Agent Memory Atlas as the reference. Use when asked to add memory, persistence, or recall to a repository, to review an existing memory implementation against the atlas, or to decide which memory patterns a product actually needs. Runs in one of four modes — decide, design, review, build — and only the last one writes code, after its own approval.
 ---
 
 # Use the Atlas
@@ -17,6 +17,26 @@ unless something makes it.
 
 So the discipline here is subtractive. **Adopt the smallest set that closes a
 failure this product can actually suffer, and write down what you deferred.**
+
+## Pick a mode first, and do not drift out of it
+
+The four jobs people ask for are different, and three of them do not touch the
+target repository. State which one you are in before you start, and **treat
+approval of an artifact as approval of that artifact only** — a person who
+approved a build brief has approved a design, not a commit.
+
+| Mode | You produce | You may modify the target repo |
+| --- | --- | --- |
+| `decide` | which patterns this product needs, and why | no |
+| `design` | the build brief | no |
+| `review` | a closure report over the memory that already exists, with the open rows named | no |
+| `build` | brief → **separate approval to implement** → code and tests | yes, after that second approval |
+
+Default to the narrowest mode the request supports. "What does my memory design
+need?" is `decide`. "Review my memory implementation" is `review` and ends with a
+report — the gaps it finds are findings, not a work order. Moving from `design`
+to `build` needs the developer to say so after reading the brief; the brief being
+approved is not that sentence.
 
 ## What you read, and what you do not
 
@@ -62,9 +82,11 @@ Follow `.agents/protocol/build-brief.md`. Every `adopt`, `defer` and `reject`
 line carries a reason. **A brief with an empty `defer` list means the failure
 analysis did not happen** — go back to step 1.
 
-Then stop and get it approved. This is the checkpoint the whole skill exists to
-create. Do not write code first and present the brief as documentation of what
-you already built.
+Then stop. In `decide` and `design` this is where the work ends. In `build`,
+implementation needs a second, explicit go-ahead after the brief has been read —
+approval of a design is not authorization to write to someone's repository. Do
+not write code first and present the brief as documentation of what you already
+built.
 
 ### 4. Implement in an order where each stage stands alone
 
@@ -87,7 +109,13 @@ argument, and several reports are the evidence.
 
 The ids are in `.agents/protocol/tests.yaml`, each with a portable given/when/then
 and a statement of what a pass does not prove. Implement them in the target
-project's own test framework.
+project's own test framework. `scripts/check_protocol.py` validates that
+catalogue against the pages it cites, so a test whose source argument has moved
+fails this repository's build rather than misleading yours.
+
+In `review` mode you run the same ids against the implementation that already
+exists, and the output is the closure report in step 6 — including the rows that
+come back open.
 
 Two rules. **Assert absence, not ranking** — a scope test that checks the wrong
 memory ranks low has tested nothing. And **score the assembled prompt, not the
