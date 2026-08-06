@@ -5,6 +5,16 @@ on:
     branches: [main]
   pull_request:
 
+# Several commits can land in a few minutes when a batch of reports is written,
+# and each one validates the whole tree. Only the newest is informative: an older
+# run either agrees with it or is about content that has already been replaced.
+# Superseding them keeps the queue short, which matters when runner capacity is
+# degraded — on 6 August 2026 a run sat fifteen minutes without being acquired
+# while three of its predecessors were still holding slots.
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-validate:
     runs-on: ubuntu-latest
