@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 150 reports.**
+**This page covers all 151 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1407,3 +1407,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 184,000 lines of TypeScript and 4,469 commits, with a 1,519-line test file covering the baseline guard, the immutable base prompt from both directions, atomic state replacement, scope-merge collisions, malformed history lines, and cross-session rollback — none of it run for this review, because six dependency surfaces were inside the seven-day cooldown.
 - Study when: you are building a background pass that edits durable state on model judgement and want to know what making it reversible actually costs.
 - Do not copy when: you need a correction that holds against re-derivation; the undo is excellent and there is no refusal behind it.
+
+### `mnemosyne`
+
+- Best idea: extracted facts are keyed by a SHA-256 of the subject, predicate and object, and the dedup lookup before every fact write matches that triple without excluding superseded rows — so a re-extracted rejected value lands on the tombstoned row and stays rejected. The atlas's eighth value-keyed refusal, and the only one that appears to be a side effect.
+- Biggest risk: provenance is recorded twice and acted on wrongly both times. `veracity` weights `unknown` at 0.8, above `tool` at 0.5, so labelling an origin honestly costs a memory rank; `trust_tier`, documented as prompt-injection defense, coerces an unrecognized source to the highest tier and is read by no query, score or filter anywhere in the tree.
+- Most reusable component: `compute_fact_id` — a SHA-256 over NFC-normalized, length-prefixed components, with the docstring working through the truncation collision, the separator-smuggling case and the unicode-normalization case that each defeated an earlier version. Content-addressed identity done properly, in thirty lines.
+- Maturity impression: 43,559 lines with 51,407 lines of tests across 160 files, 956 commits since 5 April 2026, CI on every push including a no-optional-dependencies job, a 1,624-line doctor and a 1,036-line repair module — beside a 9,326-line `beam.py` and a tiered-degradation compressor that rewrites stored content irreversibly and has no caller.
+- Study when: you want local, private, agent-controlled memory in one SQLite file with no services, or you are migrating off a hosted memory product — the importers cover nine other systems, the widest exit path in the corpus.
+- Do not copy when: you need to explain why the agent believed something. Trust is a float and two labels, one scored backwards and one inert, with no discrete epistemic state anywhere.

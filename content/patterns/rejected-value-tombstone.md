@@ -6,10 +6,11 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Seven systems of one hundred and fifty
+> **This is not an established best practice.** Eight systems of one hundred and fifty-one
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, two built it after this page named its absence in their report, and one
+> regulation, two built it after this page named its absence in their report, one
+> has it as a side effect of a hash primary key and does not appear to know, and one
 > carries the mark without yet being characterised here.
 > There is no consensus
 > behind this page, no library that provides the mechanism, and no shared
@@ -106,7 +107,7 @@ enough.
 
 ## Seen in the atlas
 
-**Seven systems in the atlas have this.** That is still the most striking negative
+**Eight systems in the atlas have this.** That is still the most striking negative
 result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -183,9 +184,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and fifty
+That makes the negative result stronger rather than weaker. Two of one hundred and fifty-one
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and fifty, plus one adoption by a reader who went looking, suggests an idea
+one hundred and fifty-one, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -302,6 +303,36 @@ derived writers, and no committed test walks the background consolidation passes
 which is the condition under which record-keyed removal stops holding and the one
 this page cares most about.
 
+**The seventh nobody appears to have built.** [Mnemosyne](../../systems/mnemosyne/)
+gives every extracted fact a primary key of `compute_fact_id` — a SHA-256 over
+the NFC-normalized, length-prefixed subject, predicate and object. A fact that
+loses a conflict gets `superseded_by` set, and every read filters
+`superseded_by IS NULL`. The part that makes it a tombstone rather than a
+supersession is one clause that is *not* there: the lookup at the top of
+`consolidate_fact` matches on subject, predicate and object without excluding
+superseded rows, so a later extraction of the same value finds the dead row and
+updates it — raising its `mention_count` and its confidence, and leaving
+`superseded_by` exactly where it was. Nothing in the tree ever clears that
+column. The rejection outlives every re-assertion, at the write path, keyed on
+the value.
+
+It is the same route Daimon took — a content-addressed id makes the key the
+value — reached with none of the intent. No comment claims the behaviour, no
+test pins it, and the docstrings around `consolidate_fact` are entirely about
+concurrency. Add the obvious-looking `AND superseded_by IS NULL` to that lookup
+during a tidy-up and the guarantee is gone, silently, in the direction this page
+says failure always looks like success. Which is the argument for the test
+bullet below rather than against the mechanism: **a tombstone you got for free
+is one you can lose for free.**
+
+Two limits on the reach. The property covers the extracted-fact layer, not the
+memory rows — there, `_find_duplicate` matches exact content within a session
+and the dedup update preserves an existing `valid_until`, so re-asserting a
+memory you invalidated does not revive it, but the same text written from a
+different session is a new row with no expiry. And the confidence on the
+tombstoned row keeps climbing with each re-mention, so anything that ever did
+clear the flag would resurrect the value stronger than it was rejected.
+
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
 half of the pattern is not the hard half. Its records carry
@@ -384,8 +415,9 @@ nothing blocks. Rich relation modelling is not a substitute for negative memory.
   variants. Verel's round 9 was an NFKC bypass of `strip().lower()`.
 - Reject a value, rerun extraction, and prove it stays inactive. Every system
   in the atlas that carries this mechanism should have this test; Daimon, which
-  has 1,920 others, does not. A tombstone is the one mechanism whose silent
-  failure looks exactly like success.
+  has 1,920 others, does not, and neither does Mnemosyne, which has 51,407 lines
+  of them. A tombstone is the one mechanism whose silent failure looks exactly
+  like success.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.
 - Verify trusted override and tombstone reactivation are audited.

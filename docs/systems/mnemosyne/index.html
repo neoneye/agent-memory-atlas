@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-file SQLite memory engine
+that labels every write with two independent provenance fields — one of
+which ranks an unknown origin above a known one, and the other of which
+nothing ever reads — and whose only durable refusal works because a hash
+is the primary key.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemosyne — Agent Memory Atlas">
+    <meta property="og:description" content="A single-file SQLite memory
+engine that labels every write with two independent provenance fields —
+one of which ranks an unknown origin above a known one, and the other of
+which nothing ever reads — and whose only durable refusal works because
+a hash is the primary key.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemosyne — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-file SQLite
+memory engine that labels every write with two independent provenance
+fields — one of which ranks an unknown origin above a known one, and the
+other of which nothing ever reads — and whose only durable refusal works
+because a hash is the primary key.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemosyne — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Provenance recorded twice, acted on
+once</p>
+          <h1>Mnemosyne</h1>
+          <p class="document-deck">A single-file SQLite memory engine
+that labels every write with two independent provenance fields — one of
+which ranks an unknown origin above a known one, and the other of which
+nothing ever reads — and whose only durable refusal works because a hash
+is the primary key.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mnemosyne-oss/mnemosyne">
+              <span>Source</span>
+              <strong>mnemosyne-oss/mnemosyne</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01" title="bd22c0896b9726eb951a100a5015e04ae8769c01">
+              <span>Analyzed revision</span>
+              <code>bd22c089…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-06</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (61%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemosyne is a local-first memory engine for agents: 43,559 lines of
+Python under <code>mnemosyne/</code>, MIT-licensed, 956 commits between
+5 April 2026 and the pinned commit of 6 August 2026, with one runtime
+dependency (<code>PyYAML</code>) and everything else optional. It stores
+into a single SQLite file, retrieves with sqlite-vec and FTS5 inside
+that same file, and exposes forty MCP tools plus a Python SDK, a CLI, an
+OpenWebUI bridge, an OpenClaw provider and a first-party plugin for the
+Hermes Agent. Its 160 test files run to 51,407 lines — more test code
+than the atlas usually sees beside an engine this size — and CI runs
+them on every push.</p>
+<p>The atlas already carries its port. <a href="../mnemopi/">Mnemopi</a>
+is described by its own README as a Bun/TypeScript port of this engine,
+and the two share their vocabulary: banks, veracity, polyphonic recall,
+SHMR, sleep. This is the Python original, and it is the larger and
+stranger of the two.</p>
+<p><strong>Its distinguishing mechanism is a tombstone that exists
+because a hash is the primary key.</strong> Extracted facts land in
+<code>consolidated_facts</code>, whose <code>id</code> is
+<code>compute_fact_id</code> — a SHA-256 over NFC-normalized,
+length-prefixed subject/predicate/object
+(<code>mnemosyne/core/veracity_consolidation.py:38</code>). When two
+facts share a subject and predicate but differ on the object, the loser
+gets <code>superseded_by</code> set. Every read filters
+<code>superseded_by IS NULL</code>. And the dedup lookup at the top of
+<code>consolidate_fact</code> does <strong>not</strong>:</p>
+<pre class="python"><code>cursor.execute(&quot;&quot;&quot;
+    SELECT * FROM consolidated_facts
+    WHERE subject = ? AND predicate = ? AND object = ?
+&quot;&quot;&quot;, (subject, predicate, object))</code></pre>
+<p>So when an LLM re-extracts a fact that was already adjudicated as
+wrong, the lookup finds the tombstoned row, bumps its
+<code>mention_count</code> and confidence, and leaves
+<code>superseded_by</code> exactly where it was. The value is pinned by
+its own content. Nothing in the tree ever sets
+<code>superseded_by</code> back to <code>NULL</code>. This is the
+property the atlas's <code>tombstone</code> mark is for — a durable
+record of a rejected value, keyed on the value, that later extraction
+cannot undo — arrived at by an omitted
+<code>AND superseded_by IS NULL</code> rather than by design. No test
+asserts it, and adding that clause during a tidy-up would silently
+remove the guarantee. It is worth having and worth pinning.</p>
+<p><strong>Its weakest mechanism is provenance, and it is weak twice
+over.</strong> Every memory row carries two independent origin labels.
+<code>veracity</code> is one of <code>stated</code>,
+<code>inferred</code>, <code>tool</code>, <code>imported</code>,
+<code>unknown</code>, and multiplies the recall score through
+<code>VERACITY_WEIGHTS</code>:</p>
+<pre class="python"><code>VERACITY_WEIGHTS = {
+    &quot;stated&quot;: 1.0,
+    &quot;inferred&quot;: 0.7,
+    &quot;tool&quot;: 0.5,
+    &quot;imported&quot;: 0.6,
+    &quot;unknown&quot;: 0.8,
+}</code></pre>
+<p>A memory whose origin is unknown outranks one the system knows came
+from a tool, and one it knows was inferred. The atlas found this
+ordering in the Bun port and it is the same table here, in the module
+whose docstring calls it <em>"Our novel contribution"</em>. The honest
+move — labelling where a memory came from — costs it standing.</p>
+<p>The second field is worse. <code>trust_tier</code> holds
+<code>STATED</code>, <code>DERIVED</code>, <code>EXTERNAL_WRITE</code>
+or <code>IMPORTED</code>, is derived from <code>source</code> by
+<code>TRUST_TIER_MAP</code> (<code>mnemosyne/core/beam.py:152</code>),
+and is documented as <em>"Trust classification for prompt-injection
+defense."</em> Two things are true about it at this commit. Its
+fallbacks resolve upward: an unrecognized source returns
+<code>STATED</code>, an explicitly supplied value outside the four-item
+enum is coerced to <code>STATED</code>, and the map's own entry reads
+<code>"unknown": "STATED", # Unknown source, conservative default</code>
+— the highest trust tier, called conservative. And nothing reads the
+column. Across the whole tree, <code>trust_tier</code> appears in schema
+migrations, in the write statements, in the sync column allowlist, and
+in test fixtures; it appears in no WHERE clause, no score, and no
+filter. The injection defense is a label.</p>
+<p><strong>And a compressor that rewrites memories has no
+caller.</strong> <code>degrade_episodic</code> walks episodic rows past
+30 and 180 days and replaces <code>content</code> in place with an LLM
+summary capped at 400 characters, then with a regex-extracted "key
+signal" capped at 300 — destructively, with no column holding the
+original. It is carefully built: each row's rewrite and embedding
+refresh share a <code>SAVEPOINT</code> so content and vector cannot
+drift. It has five test files. It is reachable from no CLI command, no
+MCP tool, no <code>sleep</code> cycle, and no scheduler in the
+repository. Since nothing else writes <code>tier</code>, the
+<code>TIER2_WEIGHT = 0.5</code> and <code>TIER3_WEIGHT = 0.25</code>
+recall multipliers are inert too. The lossy path is a feature the
+shipped product does not have — which, given that the path is
+irreversible, is a safer failure than the alternative.</p>
+<p>Strongest, plainly: the write path is honest about being synchronous,
+<code>sleep</code> consolidation is additive rather than destructive,
+the correction primitives are enforced on the read path and tested, and
+<code>tests/test_recall_precision_regressions.py</code> asserts what
+must <em>not</em> come back.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory begins as a row in <code>working_memory</code>: content,
+source, timestamp, session, importance, a JSON metadata blob, a
+<code>veracity</code> label, a <code>trust_tier</code> label, and
+optional <code>valid_until</code> and <code>scope</code>. It is a belief
+the moment it is committed — there is no candidate state, no review
+queue, no admission gate. The agent asserts, the store accepts.</p>
+<p>From there it moves along three tracks at once, and they have
+different epistemics.</p>
+<p><strong>The row itself is append-and-annotate.</strong>
+<code>sleep()</code> finds working rows older than half the TTL, writes
+an episodic summary, and marks the sources <code>consolidated_at</code>
+rather than deleting them — the docstring is explicit that <em>"the
+source working_memory rows are NOT deleted"</em> and <em>"Originals
+remain recallable alongside the new episodic summary."</em> A row dies
+in one of three ways: <code>valid_until</code> passes,
+<code>superseded_by</code> is set, or something deletes it outright. All
+three are honored on the read path; the recall queries carry
+<code>(valid_until IS NULL OR valid_until &gt; ?) AND superseded_by IS NULL</code>.</p>
+<p><strong>The extracted facts are a separate epistemic layer with a
+real state machine.</strong> Regex extraction runs on every write and
+LLM extraction runs on request; both feed
+<code>consolidated_facts</code>, keyed by the hash of the triple.
+Confidence starts at <code>VERACITY_WEIGHTS[veracity] * 0.5</code> and
+climbs on each re-mention via <code>bayesian_update</code> —
+<code>new = old + (1 - old) * weight * 0.3</code>, a formula whose
+docstring states the intended <code>1 - 0.7^n</code> and then says it
+approximates it. Mentions are not checked for independence, so a single
+source repeating itself compounds toward 1.0 exactly as three sources
+agreeing would. When two live facts share a subject and predicate with
+different objects, a row lands in <code>conflicts</code>;
+<code>run_consolidation_pass</code> auto-resolves in favour of the
+higher confidence once a fact has more than two mentions, and
+<code>resolve_conflict_by_facts</code> writes <code>superseded_by</code>
+on the loser.</p>
+<p>That last transition is where the system is at its best. A superseded
+fact is excluded from every read, and — because the dedup lookup matches
+on the triple without excluding superseded rows — a later extraction of
+the same value updates the dead row instead of creating a live one. The
+rejection outlives the re-assertion.</p>
+<p><strong>The third track is annotation and never dies.</strong>
+<code>AnnotationStore</code> is explicitly append-only and multi-valued:
+mentions, facts, occurred-on dates and sources accumulate against a
+memory id with no invalidation, because the <code>TripleStore</code> it
+was split from auto-supersedes on <code>(subject, predicate)</code> and
+that was wrong for sibling values. The docstring says so directly:
+<em>"No invalidation. Append-only. Multi-valued by design."</em></p>
+<p>Control is agent-first with a human escape hatch. The model calls
+<code>remember</code>, <code>recall</code>, <code>invalidate</code>,
+<code>forget</code>, <code>sleep</code>; a person gets a read-only web
+browser (<code>PRAGMA query_only = 1</code>) and CLI commands. The
+<code>mnemosyne_validate</code> tool looks like a review surface but is
+not one — its schema describes <em>"Agent identifier performing the
+validation"</em> and <em>"any agent can validate any memory"</em>, and a
+SQLite trigger trims each memory's validation history to the most recent
+three entries. It is agents attesting to each other, with a three-deep
+memory of having done so.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Working: remember commits the row
+    Working --&gt; Episodic: sleep summarizes and keeps the original
+    Working --&gt; Expired: valid_until passes
+    Episodic --&gt; Expired: valid_until passes
+    Working --&gt; Replaced: invalidate sets superseded_by
+    Episodic --&gt; Replaced: invalidate sets superseded_by
+    Working --&gt; LiveFact: extraction, keyed by sha256 of the triple
+    Episodic --&gt; LiveFact: extraction, keyed by sha256 of the triple
+    LiveFact --&gt; LiveFact: re-mention raises confidence
+    LiveFact --&gt; DeadFact: loses a conflict, superseded_by set
+    DeadFact --&gt; DeadFact: re-extraction lands here and cannot revive it</code></pre>
+<p>The inner loop is the mechanism worth reading twice. Every other
+arrow in this diagram can be walked backwards by asserting the same
+thing again; that one cannot.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process, one file, no services.</p>
+<p><strong>Runtime shape.</strong> Mnemosyne is a Python library first
+(<code>from mnemosyne import remember, recall</code>), with four
+wrappers over the same core: a CLI (<code>mnemosyne/cli.py</code>, 1,732
+lines, 28 subcommands), an MCP server over stdio or SSE
+(<code>mnemosyne/mcp_server.py</code>), a read-only web dashboard
+(<code>mnemosyne/integrations/memory_browser.py</code>), and an optional
+HTTP sync server (<code>mnemosyne/core/sync_server.py</code>). Nothing
+is required to be running for memory to work.</p>
+<p><strong>Persistence.</strong> A single SQLite database, by default
+<code>~/.hermes/mnemosyne/data/mnemosyne.db</code>, holding roughly
+thirty tables. The core pair is <code>working_memory</code> and
+<code>episodic_memory</code>. Beside them sit <code>scratchpad</code>,
+the <code>memoria_*</code> family (<code>facts</code>,
+<code>timelines</code>, <code>instructions</code>,
+<code>preferences</code>, <code>kg</code>, <code>persona</code>)
+populated by always-on regex extraction, <code>consolidated_facts</code>
+and <code>conflicts</code> for the veracity layer,
+<code>gists</code>/<code>facts</code>/<code>graph_edges</code> for the
+episodic graph, <code>harmonic_beliefs</code> and
+<code>memory_resonance_log</code> for SHMR, <code>canonical_facts</code>
+for single-slot identity, <code>annotations</code>,
+<code>memory_validations</code>, <code>consolidation_log</code>,
+<code>hygiene_audit_log</code>, <code>query_cache</code>,
+<code>cost_entries</code>, and the <code>sync_*</code> family.
+<code>triples</code> and <code>annotations</code> live in a separate
+<code>triples.db</code>. Named banks
+(<code>mnemosyne/core/banks.py</code>) are separate database files under
+<code>data/banks/&lt;name&gt;/</code>, which makes tenant isolation a
+filesystem property rather than a query predicate.</p>
+<p><strong>Search stack.</strong> <code>vec_episodes</code> and
+<code>vec_working</code> are sqlite-vec virtual tables;
+<code>fts_episodes</code>, <code>fts_working</code> and
+<code>fts_facts</code> are FTS5. Vector type is probed at runtime —
+<code>_detect_vec_type</code> tries the configured <code>int8</code> or
+<code>bit</code> type, falls back to <code>int8</code>, then to
+<code>float32</code>, each probe wrapped in a <code>SAVEPOINT</code> so
+a failed <code>CREATE VIRTUAL TABLE</code> cannot roll back unrelated
+DDL. When sqlite-vec is absent entirely, embeddings fall back to a
+<code>memory_embeddings</code> blob table and
+<code>_in_memory_vec_search</code> does the cosine in NumPy.
+<code>mnemosyne/core/binary_vectors.py</code> implements the
+information-theoretic binarization the README advertises: 384 float32
+dimensions to 48 bytes, Hamming distance computed in SQLite.</p>
+<p><strong>External dependencies.</strong> <code>PyYAML</code> is the
+only required one. <code>fastembed</code> and <code>sqlite-vec</code>
+come with <code>[embeddings]</code>; <code>ctransformers</code>,
+<code>llama-cpp-python</code> and <code>huggingface-hub</code> with
+<code>[llm]</code>; <code>mcp</code> and <code>anyio</code> with
+<code>[mcp]</code>; <code>cryptography</code> with <code>[sync]</code>.
+Embeddings can instead be fetched from any OpenAI-compatible endpoint
+via <code>MNEMOSYNE_EMBEDDING_API_URL</code>, which is what makes the
+~50 MB core profile viable on a Raspberry Pi.</p>
+<p><strong>Background processing.</strong> There is none that runs on
+its own. <code>sleep</code>, <code>sleep_all_sessions</code>, SHMR
+clustering, hygiene audit and clean, persona promotion, reindexing and
+repair are all explicit calls — from the CLI, an MCP tool, or the Hermes
+plugin's lifecycle hooks. The one pass designed to run unattended,
+<code>degrade_episodic</code>, has no caller.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install mnemosyne-memory</code> and one JSON block in an
+MCP client config. No API key is required to store anything: with no
+embedding provider the system degrades to FTS5 and importance ranking,
+which is a real degradation of recall quality but not a failure.
+Everything is local and offline by default, and the README's
+no-telemetry claim matches the tree.</p>
+<p>The store is as repairable as SQLite is: readable columns, plain text
+content, no opaque blobs except the vectors. That is backed by more
+tooling than most systems here carry — <code>mnemosyne/doctor.py</code>
+(1,624 lines) diagnoses schema and index drift,
+<code>mnemosyne/repair.py</code> (1,036 lines) repairs it,
+<code>mnemosyne/dr/</code> holds disaster recovery, and
+<code>mnemosyne reindex</code>, <code>mnemosyne backup</code>,
+<code>mnemosyne verify</code> and <code>mnemosyne migrate</code> are
+first-class commands.</p>
+<p>The install surface is where the cost shows up. Seven
+optional-dependency extras, ten configuration profiles in
+<code>mnemosyne/core/profiles.py</code>, and roughly sixty environment
+variables mean two operators running "Mnemosyne" can be running
+materially different retrieval. The vector type, the three scoring
+weights, the recency half-life, cross-session scoping and every
+per-voice ablation toggle are all environment-settable at import
+time.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture/write.</strong>
+<code>mnemosyne/core/memory.py:357</code>
+(<code>Mnemosyne.remember</code>, the public facade) into
+<code>mnemosyne/core/beam.py:3384</code>
+(<code>BeamMemory.remember</code>). Veracity is clamped,
+<code>trust_tier</code> derived from source, exact-content duplicates
+found by <code>_find_duplicate</code>, then one <code>INSERT</code> and
+an immediate <code>commit()</code>. Everything after the commit is
+enrichment on the same thread.</p>
+<p><strong>Extraction/consolidation.</strong> Three extractors run from
+the write path. <code>extract_and_store_facts</code>
+(<code>beam.py:4869</code>) is the always-on regex pass that fills the
+<code>memoria_*</code> tables with no LLM cost.
+<code>_extract_and_store_entities</code> and
+<code>_extract_and_store_facts</code> are opt-in per call.
+<code>_ingest_graph_and_veracity</code> (<code>beam.py:3865</code>)
+extracts a gist and facts into the episodic graph and feeds each fact to
+<code>VeracityConsolidator.consolidate_fact</code>. All three are
+wrapped in bare <code>except: pass</code> — the comments say <em>"Graph
+failures are non-blocking"</em> and <em>"Veracity failures are
+non-blocking"</em>, and the effect is that a memory can be stored with
+none of its derived structure and no signal that this happened.</p>
+<p><strong>Retrieval.</strong> <code>BeamMemory.recall</code>
+(<code>beam.py:5640</code>) is a 1,266-line method: query tokenization,
+hyphenation expansion, CJK and Cyrillic fallbacks, FTS5, vector search
+over both tiers, MEMORIA structured routing by inferred ability, fusion,
+veracity and tier multipliers, cross-tier dedup and sandwich ordering.
+<code>recall_enhanced</code> (<code>beam.py:7036</code>) layers a query
+cache over it. <code>_recall_polyphonic</code>
+(<code>beam.py:7469</code>) hands off to
+<code>mnemosyne/core/polyphonic_recall.py</code> for the four-voice
+path.</p>
+<p><strong>Context assembly.</strong> <code>get_context</code>
+(<code>beam.py:4080</code>) returns the most recent working rows for
+prompt injection, excluding consolidated ones unless
+<code>MNEMOSYNE_CONTEXT_INCLUDE_CONSOLIDATED</code> is set.
+<code>format_context</code> and <code>_sandwich_order</code>
+(<code>beam.py:7396</code>) place the highest-scoring results at the
+beginning and end of the block.</p>
+<p><strong>Update/delete/forget/conflict.</strong>
+<code>invalidate</code> (<code>beam.py:4203</code>) sets
+<code>valid_until</code> and optionally <code>superseded_by</code>,
+trying working memory then episodic, and is scoped by
+<code>session_id = ? OR scope = 'global'</code>.
+<code>forget_working</code> (<code>beam.py:4512</code>) deletes.
+<code>_detect_conflicts</code> (<code>beam.py:4233</code>) compares
+embeddings at consolidation time above a 0.88 cosine threshold.
+<code>VeracityConsolidator.resolve_conflict</code> and
+<code>resolve_conflict_by_facts</code>
+(<code>veracity_consolidation.py:593</code>, <code>:831</code>) handle
+the fact layer. <code>mnemosyne/core/hygiene.py</code> audits and cleans
+stored noise and secrets.</p>
+<p><strong>Schema.</strong> <code>init_beam</code>
+(<code>beam.py:594</code>) is 650 lines of
+<code>CREATE TABLE IF NOT EXISTS</code> plus in-place
+<code>ALTER TABLE ... ADD COLUMN</code> migrations wrapped in
+try/except, which is how the schema has absorbed a dozen versions
+without a migration framework.
+<code>mnemosyne/migrations/e6_triplestore_split.py</code> is the one
+real migration.</p>
+<p><strong>MCP/API/SDK.</strong> <code>mnemosyne/tool_schemas.py</code>
+holds forty schemas; <code>mnemosyne/mcp_tools.py</code> (1,225 lines)
+holds the handlers; <code>mnemosyne/mcp_server.py</code> serves them
+over stdio or SSE. <code>mnemosyne/integrations/openclaw.py</code>,
+<code>openwebui_tool.py</code>, <code>auto_save_openwebui.py</code> and
+the <code>integrations/hermes/</code> package wrap the same core.</p>
+<p><strong>Tests.</strong> <code>tests/test_beam.py</code> covers the
+core; <code>tests/test_recall_precision_regressions.py</code> pins
+retrieval precision including negative cases;
+<code>tests/test_beam_e3_additive_sleep.py</code> pins the additive
+consolidation contract;
+<code>tests/test_c25_deltasync_allowlist.py</code> pins what a sync peer
+may not do; <code>tests/test_canonical.py</code> pins the single-slot
+identity semantics.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The two tiers.</strong> <code>working_memory</code> and
+<code>episodic_memory</code> share most columns — <code>id</code>,
+<code>content</code>, <code>source</code>, <code>timestamp</code>,
+<code>session_id</code>, <code>importance</code>,
+<code>metadata_json</code>, <code>veracity</code>,
+<code>created_at</code> — with episodic adding <code>summary_of</code>,
+<code>tier</code> and <code>degraded_at</code>, and both acquiring
+<code>valid_until</code>, <code>superseded_by</code>,
+<code>scope</code>, <code>author_id</code>, <code>author_type</code>,
+<code>channel_id</code>, <code>memory_type</code>,
+<code>trust_tier</code>, <code>pinned</code>,
+<code>consolidated_at</code>, <code>event_date</code> and
+<code>temporal_tags</code> through migration.</p>
+<p><strong>Scoping</strong> has three levels that do not compose. A
+<code>session_id</code> column with a <code>scope = 'global'</code>
+escape is applied as a WHERE clause by
+<code>_session_scope_filter</code> on every read path — a real enforced
+boundary, not a tag. <code>MNEMOSYNE_CROSS_SESSION</code> collapses the
+filter to <code>(1=1)</code> globally. Banks are separate files.
+<code>author_id</code>, <code>author_type</code> and
+<code>channel_id</code> record multi-agent authorship but are filters
+the caller may pass, not boundaries the system imposes.</p>
+<p><strong>Provenance</strong> is the two fields described in section 1,
+plus <code>source</code> as free text and <code>sources_json</code> on
+consolidated facts. Three overlapping notions of where a memory came
+from, one of which is scored, one of which is dead, and one of which is
+a string.</p>
+<p><strong>Temporal fields are genuinely bitemporal in two
+tables.</strong> <code>triples</code> carries <code>valid_from</code>,
+<code>valid_until</code> and <code>created_at</code>, and
+<code>TripleStore.add</code> accepts a caller-supplied
+<code>valid_from</code> while <code>query(as_of=...)</code> filters
+<code>valid_from &lt;= as_of AND (valid_until IS NULL OR valid_until &gt; as_of)</code>.
+So "Maya was assigned to auth-migration from 15 January", recorded on 3
+February, stores both times and can be asked either question.
+<code>canonical_facts</code> does the same for identity slots and adds
+the constraint that makes it a slot store:</p>
+<pre class="sql"><code>CREATE UNIQUE INDEX IF NOT EXISTS idx_canonical_current
+ON canonical_facts(owner_id, category, name) WHERE valid_until IS NULL</code></pre>
+<p>A partial unique index over the open rows only — exactly one current
+value per slot, full history in the same table, and no migration needed
+to acquire the guarantee. That is the cleanest single piece of schema
+design in the repository.</p>
+<p>The <code>memoria_facts</code> table takes a third approach,
+versioning on message index (<code>version_id</code>,
+<code>previous_value</code>, <code>valid_from_msg_idx</code>,
+<code>valid_to_msg_idx</code>) — validity measured in conversation
+position rather than time.</p>
+<p><strong>Separation of kinds</strong> is by table and it is thorough:
+episodic rows, semantic triples, consolidated facts, harmonic beliefs,
+canonical identity slots, persona entries with a
+<code>permanent</code>/<code>long_term</code>/<code>working</code> tier
+check constraint, a scratchpad, and annotations. The cost is that a
+reader must know which of six stores holds the answer, and
+<code>recall</code> has to route across them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The default path is hybrid inside SQLite: 0.5 vector similarity, 0.3
+FTS5 rank, 0.2 importance, all environment-tunable, with a recency decay
+on a 168-hour half-life and an optional temporal boost around a supplied
+query time. Language handling is more careful than most: CJK text
+without spaces falls back to character n-gram LIKE search, Cyrillic to
+trigram scoring, and hyphenated tokens are expanded into components with
+unit weights.</p>
+<p>Above that sits MEMORIA routing. <code>_classify_ability</code>
+inspects the query and dispatches to one of seven structured retrievers
+— fact, timeline, negation, entity, chronological, instruction,
+preference — each hitting its own table. This is where the BEAM
+per-ability scores in the README come from.</p>
+<p>The polyphonic path
+(<code>mnemosyne/core/polyphonic_recall.py</code>) runs four voices —
+vector, graph, fact, temporal — and fuses them with reciprocal rank
+fusion at <code>RRF_K = 60</code>. The comment claims the constant is
+<em>"proven optimal for 4-voice retrieval"</em>; 60 is the value from
+the original RRF paper and nothing in the repository tests it against
+alternatives, so read that as inherited rather than established.
+Per-voice ablation toggles exist as environment variables, which is the
+right instrument for actually establishing it.</p>
+<p>After fusion, scores are multiplied by
+<code>VERACITY_WEIGHTS[veracity]</code> and by the tier weight — the
+first of which encodes the inverted provenance ordering directly into
+the ranking, and the second of which is inert because nothing writes a
+tier other than 1.</p>
+<p>Retrieval is tool-mediated by default: the agent calls
+<code>mnemosyne_recall</code>. Automatic injection exists only through
+the Hermes plugin's lifecycle hooks and <code>get_context</code>.</p>
+<p>Failure modes visible in the code: the query cache is invalidated on
+write (the pinned commit is the fix for a
+stale-cache-after-<code>remember</code> bug), so cross-process cache
+coherence rests on that one path; <code>_find_duplicate</code> matches
+exact content only, so near-duplicates accumulate and the conflict
+detector has to catch them at 0.88 cosine later; and
+<code>_minimum_recall_relevance</code> gates on lexical overlap, which
+will drop a correct dense match phrased differently from the query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and unqueued. <code>remember</code> inserts,
+commits, then embeds inline, runs temporal extraction, runs regex
+extraction, extracts a gist and facts into the graph, consolidates each
+fact into the veracity layer, and proactively links to related memories
+— all before returning. There is no worker, no queue, and no deferred
+lag: a memory is FTS-retrievable the moment the commit lands, and
+vector-retrievable a few tens of milliseconds later when the inline
+<code>embed()</code> returns, in the same call.</p>
+<p>That is an honest design for a local single-user store, and it means
+the cost is visible. With a local <code>fastembed</code> model the write
+blocks on one embedding; with a remote endpoint it blocks on a network
+round trip; with <code>extract=True</code> it blocks on an LLM call. The
+regex extractor runs on every write regardless.</p>
+<p>Deduplication is exact-content within a session. The dedup update
+refreshes importance, timestamp, source and veracity, clears
+<code>consolidated_at</code> so the row is eligible for a fresh summary,
+and — importantly — <code>valid_until = COALESCE(?, valid_until)</code>
+preserves an existing expiry when the caller passes none. Re-asserting a
+memory you previously invalidated does not revive it. Since
+<code>_find_duplicate</code> filters on <code>session_id</code>, the
+same content written from a different session is a new row with no
+expiry, so that refusal is session-local.</p>
+<p>Consolidation is additive. <code>sleep()</code> claims candidate rows
+by setting <code>consolidated_at</code> <em>before</em> writing the
+summary, gated on the column still being <code>NULL</code>, which makes
+concurrent sleeps and mid-crash restarts both safe at the cost of a
+possible orphaned claim — a tradeoff the code names and accepts. The
+originals stay recallable.</p>
+<p>Noise and secrets are handled in two places:
+<code>mnemosyne/core/filters.py</code> has write-time ignore patterns
+and <code>detect_secrets</code>, and
+<code>mnemosyne/core/hygiene.py</code> retroactively audits and cleans
+what was written before those filters existed or through paths that
+bypassed them, logging every action to <code>hygiene_audit_log</code>
+with a 200-character preview of what it removed.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Synchronous, no lag, no background pass over the corpus.
+<code>sleep</code> reads at most <code>SLEEP_BATCH_SIZE</code> (5,000)
+working rows per call and summarizes them; its token bill scales with
+unconsolidated volume, not with corpus size, and it only runs when
+something calls it. SHMR clustering is bounded by batch size and
+iteration count. Nothing re-reads the whole store.</p>
+<p>On the read path, <code>get_context</code> returns a caller-set limit
+of recent rows (default 10) and recall returns <code>top_k</code>, so
+injection is bounded by the caller. Injected memory sits in the prompt
+where it will invalidate a prefix cache on every turn whose recalled set
+changed, which is inherent to the pattern rather than specific to this
+system.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Forty MCP tools is a wide surface, and it is organized rather than
+sprawling: core memory (<code>remember</code>, <code>recall</code>,
+<code>get</code>, <code>update</code>, <code>forget</code>,
+<code>invalidate</code>, <code>validate</code>, <code>batch</code>), a
+shared multi-agent surface (<code>shared_remember</code>,
+<code>shared_recall</code>, <code>shared_forget</code>,
+<code>shared_stats</code>), triples (<code>triple_add</code>,
+<code>triple_end</code>, <code>triple_query</code>), canonical identity
+slots (<code>remember_canonical</code>, <code>recall_canonical</code>,
+<code>forget_canonical</code>), scratchpad, graph, persona
+(<code>promote</code>, <code>demote</code>, <code>list</code>,
+<code>reinforce</code>), hygiene (<code>audit</code>,
+<code>clean</code>), sync, export/import and diagnose.</p>
+<p>The model has near-total agency. It can write, correct, invalidate,
+delete, attest to another agent's memory, promote content into the
+persona tier, and run consolidation and hygiene passes. The only thing
+it cannot do is clear a supersession.</p>
+<p><code>mnemosyne_remember_canonical</code> deserves separate mention
+as an integration affordance: it gives the agent a way to say "this is
+<em>the</em> value for this slot" rather than "here is another memory",
+and the partial unique index enforces it. Systems in this atlas that
+lack that distinction accumulate five contradictory statements of a
+user's name and rank them.</p>
+<p>Adapting to another agent framework is genuinely cheap — the
+OpenWebUI bridge is described as a one-line file, the OpenClaw
+integration is one config entry, and
+<code>hermes_memory_provider/</code> is a full worked example of a
+provider. The repository publishes an integration template, which is
+unusual and useful.</p>
+<p>The Hermes relationship is worth naming: the default data directory
+is <code>~/.hermes/mnemosyne/data</code>, <code>HERMES_HOME</code> is
+read before any Mnemosyne variable, and the plugin ships enabled.
+Mnemosyne is universal by API and Hermes-first by default path.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance</strong> is recorded and mostly not acted on, as
+section 1 details. The one place it bites is recall scoring, and there
+it bites the wrong way round.</p>
+<p><strong>Prompt-injection defense</strong> is the field named for it,
+and it is unread. In practice a memory written by an MCP tool call from
+a model that just read a hostile web page is stored with
+<code>trust_tier = 'EXTERNAL_WRITE'</code>, and is then retrieved,
+ranked and injected identically to something the user typed. The one
+real mitigation is <code>get_contaminated</code>, which surfaces every
+memory whose veracity is not <code>stated</code> for review — a useful
+triage list, exposed through <code>mnemosyne diagnose</code>, that
+nothing consults automatically.</p>
+<p><strong>Uncertainty representation</strong> is partial. Confidence is
+a float on facts, triples and beliefs; a discrete epistemic status is
+absent. A fact is live or superseded, and "we saw this once and do not
+believe it yet" is expressible only as a low number.</p>
+<p><strong>Concurrency</strong> is handled with more care than the size
+of the codebase would suggest. <code>_serialized_write</code> wraps the
+consolidator's four write methods in <code>BEGIN IMMEDIATE</code> plus
+an instance <code>RLock</code>; <code>resolve_conflict</code> has a
+first-writer-wins guard so two callers cannot mark both facts
+superseded; <code>sleep</code> claims atomically. Three test files exist
+solely for consolidator races. The docstrings name the pre-fix failure
+in each case, which makes the reasoning auditable.</p>
+<p><strong>Data loss risks.</strong> The bare <code>except: pass</code>
+around graph and veracity ingestion means derived structure can silently
+fail to appear. <code>degrade_episodic</code> would destroy original
+content irrecoverably if anything called it. <code>hygiene clean</code>
+deletes, and its audit log keeps only a 200-character preview. The
+<code>memory_validations</code> trigger discards all but the three most
+recent validations per memory.</p>
+<p><strong>Sync and multi-tenancy</strong> is where the security work
+concentrates. Payloads can be client-side encrypted with Fernet or
+PyNaCl SecretBox before transmission; the server sees event ids,
+timestamps, operation types and device ids.
+<code>test_c25_deltasync_allowlist.py</code> pins that a peer cannot
+re-route a row to another session, cannot set <code>superseded_by</code>
+on a row it does not own, and cannot write outside an allowlisted column
+set — an unusually specific threat model for a personal memory tool. The
+sync server supports API-key or HS256-JWT bearer auth plus an HMAC over
+the request body, refuses CORS deliberately, and reads secrets from
+files rather than argv when asked. But <code>_check_auth</code> returns
+<code>True</code> when neither credential is configured, so an operator
+who binds to a non-loopback address without setting one is serving an
+open memory store; the default bind is <code>127.0.0.1</code> and
+<code>--behind-tls-proxy</code> is required for cleartext elsewhere,
+which are the right guards, but the unauthenticated case is a
+configuration away rather than a refusal.</p>
+<p><strong>Backup</strong> is <code>mnemosyne backup</code>,
+<code>restore</code>, <code>verify</code>, <code>backups list</code>,
+plus JSON export/import and importers for Mem0, Zep, Letta, Honcho,
+Cognee, Supermemory, Hindsight, Holographic and agentic formats.
+Migrating <em>into</em> Mnemosyne is a first-class supported path from
+nine other systems, which is more migration surface than any other
+system in this atlas offers.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>160 test files and 51,407 lines, run in CI on every push against a
+matrix that includes a no-optional-dependencies configuration. Coverage
+is behavioral rather than nominal: tests exist for the additive-sleep
+contract, cross-tier dedup, vector/content alignment after degradation,
+embedding dimension guards, multiple consolidator race conditions, CLI
+failure modes, sync correctness and security, scope defaults,
+multilingual recall, and the doctor and repair paths.</p>
+<p><code>tests/test_recall_precision_regressions.py</code> is the one
+that earns the atlas's <code>negative_eval</code> mark. It stores six
+realistic memories and asserts both what the top result must be for
+fifteen natural-language queries and what must <em>not</em> appear —
+<code>assertNotIn("orchid care dashboard", joined)</code>,
+<code>assertNotIn("public release notes", joined)</code>. Committed
+cases asserting that particular material stays out of a result set are
+rare in this corpus, and they are the only test shape that catches a
+ranking change by regression rather than by someone noticing.</p>
+<p><strong>On the benchmark claims, the README is unusually careful
+about its own numbers.</strong> It states plainly that BEAM figures were
+measured on v3.0.0 in May 2026 and <em>"predate polyphonic recall,
+enhanced recall, SHMR, and the persona tier"</em> and <em>"have not been
+re-run since"</em>. It notes that its LongMemEval metric is Recall@All@5
+while a competitor's is Recall@5 and that <em>"the ordering should not
+be read as a strict ranking"</em>. It flags that its BEAM run used a
+different judge model than the competitor it is being compared against,
+and concludes <em>"Hindsight leads on this benchmark as published"</em>.
+It says the 20% Recall@10 is low and that <em>"the flatness rather than
+the level is the result worth citing"</em>.</p>
+<p>Conceding the comparison to a competitor in your own README table is
+the behaviour this atlas's <a href="../../benchmarks/">benchmarks
+page</a> keeps asking for and almost never finds. The measurement
+discipline is not at the level of <a href="../perseus-vault/">Perseus
+Vault</a>, which commits per-run artifacts that recompute to the
+published mean — here <code>_benchmarks/</code> holds the harnesses and
+<code>docs/beam-benchmark.md</code> the write-up, and nothing at this
+commit lets a reader recompute 65.2% from committed outputs. But the
+labelling discipline around what the numbers do and do not support is
+real, and it is stated where a reader will actually hit it.</p>
+<p><strong>What is missing.</strong> No test asserts the tombstone
+property — that re-extracting a superseded fact leaves it superseded —
+which is the single most valuable behaviour in the system and the one
+most likely to be removed by a well-intentioned cleanup. No test asserts
+that <code>trust_tier</code> affects anything, which is consistent with
+it affecting nothing. And the <code>1 - 0.7^n</code> confidence claim in
+the docstring is not checked against the implemented increment.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Key a fact table by the hash of the fact.</strong>
+<code>compute_fact_id</code> builds a SHA-256 over length-prefixed,
+NFC-normalized components, and the docstring works through why each part
+is there: truncation collided, <code>\x1f</code> in a component let two
+distinct triples produce one id, and NFC makes <code>café</code> and
+<code>café</code> agree. Getting a deterministic content-addressed id
+right is a solved problem that gets re-solved badly; this is the version
+to copy. The payoff beyond dedup is that a rejection recorded against
+that id is a rejection of the <em>value</em>.</p>
+<p><strong>Make the dedup lookup ignore the rejection flag, on
+purpose.</strong> If a re-write of a rejected value finds the tombstone
+and updates it, the rejection is permanent for free. If it filters the
+flag out and inserts a fresh row, every tombstone is one re-extraction
+away from being undone. Whichever you choose, write the test — this
+system has the good behaviour and no test holding it in place.</p>
+<p><strong>A partial unique index is how you get one current value and
+full history in one table.</strong>
+<code>WHERE valid_until IS NULL</code> on a unique index over
+<code>(owner_id, category, name)</code> costs one line, needs no
+migration to adopt, and removes a whole class of "which of these five is
+the user's actual name" retrieval bug.</p>
+<p><strong>Claim the row before you do the expensive work.</strong>
+<code>sleep</code> marks <code>consolidated_at</code> gated on it still
+being <code>NULL</code>, then summarizes. Concurrent workers and
+crash-restarts both fall out of that ordering, and the worst case is a
+claimed row with no summary rather than a duplicate.</p>
+<p><strong>Write the pre-fix failure into the docstring.</strong> The
+concurrency comments here name what raced, what the symptom was, and
+which review caught it. That is what makes a subtle invariant survive
+its author.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not give an unlabelled origin a high trust
+weight.</strong> Both provenance fields here resolve unknown upward —
+<code>unknown: 0.8</code> above <code>tool: 0.5</code>, and an
+unrecognized source mapping to <code>STATED</code>. The intent is
+charitable (do not punish legacy rows that predate the field), and the
+effect is a gradient that rewards not labelling. If a neutral prior for
+old rows is what you want, backfill the old rows and make the default
+the <em>lowest</em> tier, so the incentive points at labelling
+honestly.</p>
+<p><strong>Do not ship a trust field nothing reads.</strong> A column
+named for prompt-injection defense, populated on every write, documented
+in the API, and absent from every WHERE clause is worse than no column:
+it reads to a reviewer like the defense exists.</p>
+<p><strong>Do not leave a destructive pass wired to nothing.</strong>
+Code that rewrites stored content in place, with tests and configuration
+and no caller, is either a feature or a hazard depending on which commit
+adds the scheduler. If it is not ready, that should be visible from the
+outside.</p>
+<p><strong>Do not swallow enrichment failures silently.</strong>
+<code>except: pass</code> around graph and fact extraction means a store
+can quietly contain memories with no derived structure, and the
+retrieval quality drop shows up as "recall got worse" months later.
+Count the failures, at minimum.</p>
+<h3 id="fit">Fit</h3>
+<p>This is a maximalist single-file system, and the fit question is
+whether you want that. Six memory stores, forty tools, sixty environment
+variables and ten profiles buy you a system that runs on a Raspberry Pi
+with no services, imports from nine competitors, survives having no
+optional dependencies installed, and ships a doctor that can tell you
+what is wrong with the database. The same breadth means the retrieval
+behaviour of any two installations is a configuration question, and that
+a reader has to hold six stores in their head to predict what
+<code>recall</code> returns.</p>
+<p>Take it if you want local, private, agent-controlled memory in one
+file with no operational footprint, and you are comfortable pinning your
+configuration and treating the defaults as a starting point rather than
+a design. Take it especially if you are migrating off a hosted memory
+service — the importer coverage here is the best exit path in the
+corpus.</p>
+<p>Walk away if you need memory whose trust decisions you can reason
+about. The provenance model is two fields, one scored backwards and one
+inert, and no discrete epistemic state anywhere. A team that needs to
+answer "why did the agent believe that" will be reconstructing it from a
+float. Walk away too if you need a scheduled forgetting or compaction
+story — the design has one, and it is not connected.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the superseded-fact behaviour intended? The missing
+<code>superseded_by</code> filter in the dedup lookup produces the
+atlas's best-defined correction primitive, and no comment or test claims
+it. Asking the maintainers is the only way to know whether it is a
+design or a happy omission.</li>
+<li>Why does <code>degrade_episodic</code> have no caller? Tests,
+config, profile entries and documentation all treat tiered degradation
+as a live feature. Reading the PR history would show whether the
+scheduler was removed, never landed, or is expected to come from the
+Hermes plugin.</li>
+<li>Does anything downstream consume <code>trust_tier</code>? It is
+allowlisted for sync and present in the schema, so a consumer may exist
+outside this repository — in the Hermes Agent itself, most
+plausibly.</li>
+<li>What do the current BEAM and LongMemEval numbers look like? The
+README says the published figures predate four subsystems and have not
+been re-run. Only running the harness would answer it, and this reading
+did not run anything.</li>
+<li>Do the per-voice ablation toggles show that four voices beat two?
+The instrument is built; no committed result uses it.</li>
+<li>How much does the always-on regex extraction cost on a large write
+volume? It runs on every <code>remember</code> and populates six tables,
+and nothing here measures it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>mnemosyne/core/beam.py:594</code> — <code>init_beam</code>,
+the full schema and its in-place migrations</li>
+<li><code>mnemosyne/core/banks.py</code> — per-bank database files</li>
+<li><code>mnemosyne/core/canonical.py</code> — canonical fact slots and
+the partial unique index</li>
+<li><code>mnemosyne/core/triples.py</code> — bitemporal triple
+store</li>
+<li><code>mnemosyne/core/annotations.py</code> — append-only
+multi-valued annotations</li>
+<li><code>mnemosyne/core/binary_vectors.py</code> — MIB
+binarization</li>
+<li><code>mnemosyne/migrations/e6_triplestore_split.py</code></li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>mnemosyne/core/memory.py:357</code> — public
+<code>Mnemosyne.remember</code></li>
+<li><code>mnemosyne/core/beam.py:3384</code> —
+<code>BeamMemory.remember</code></li>
+<li><code>mnemosyne/core/beam.py:3865</code> —
+<code>_ingest_graph_and_veracity</code></li>
+<li><code>mnemosyne/core/beam.py:4869</code> — always-on MEMORIA regex
+extraction</li>
+<li><code>mnemosyne/core/veracity_consolidation.py:445</code> —
+<code>consolidate_fact</code></li>
+<li><code>mnemosyne/core/filters.py</code> — write-time noise and secret
+patterns</li>
+</ul>
+<p><strong>Retrieval path</strong></p>
+<ul>
+<li><code>mnemosyne/core/beam.py:5640</code> — <code>recall</code></li>
+<li><code>mnemosyne/core/beam.py:7036</code> —
+<code>recall_enhanced</code></li>
+<li><code>mnemosyne/core/polyphonic_recall.py</code> — four voices and
+RRF</li>
+<li><code>mnemosyne/core/shmr.py</code> — harmonic belief
+clustering</li>
+<li><code>mnemosyne/core/episodic_graph.py</code> — gists, facts,
+edges</li>
+<li><code>mnemosyne/core/query_cache.py</code></li>
+</ul>
+<p><strong>Context assembly</strong></p>
+<ul>
+<li><code>mnemosyne/core/beam.py:4080</code> —
+<code>get_context</code></li>
+<li><code>mnemosyne/core/beam.py:7396</code> —
+<code>_sandwich_order</code> and <code>format_context</code></li>
+<li><code>mnemosyne/core/persona.py</code> — persona tier extraction and
+<code>persona.md</code> rendering</li>
+</ul>
+<p><strong>Correction and maintenance</strong></p>
+<ul>
+<li><code>mnemosyne/core/beam.py:4203</code> —
+<code>invalidate</code></li>
+<li><code>mnemosyne/core/beam.py:8163</code> —
+<code>degrade_episodic</code>, the uncalled compressor</li>
+<li><code>mnemosyne/core/beam.py:8504</code> — <code>sleep</code></li>
+<li><code>mnemosyne/core/hygiene.py</code> — noise audit, cleanup,
+<code>hygiene_audit_log</code></li>
+<li><code>mnemosyne/doctor.py</code>, <code>mnemosyne/repair.py</code>,
+<code>mnemosyne/dr/recovery.py</code></li>
+</ul>
+<p><strong>MCP, API, SDK</strong></p>
+<ul>
+<li><code>mnemosyne/tool_schemas.py</code> — forty tool schemas</li>
+<li><code>mnemosyne/mcp_tools.py</code> — handlers, including
+<code>mnemosyne_validate</code></li>
+<li><code>mnemosyne/mcp_server.py</code>,
+<code>mnemosyne/cli.py</code></li>
+<li><code>mnemosyne/integrations/openclaw.py</code>,
+<code>openwebui_tool.py</code>, <code>memory_browser.py</code></li>
+<li><code>mnemosyne/core/importers/</code> — nine external-system
+importers</li>
+</ul>
+<p><strong>Sync</strong></p>
+<ul>
+<li><code>mnemosyne/core/sync.py</code>,
+<code>mnemosyne/core/sync_server.py</code></li>
+</ul>
+<p><strong>Tests and benchmarks</strong></p>
+<ul>
+<li><code>tests/test_recall_precision_regressions.py</code> — positive
+and negative retrieval cases</li>
+<li><code>tests/test_beam_e3_additive_sleep.py</code> — the additive
+consolidation contract</li>
+<li><code>tests/test_c25_deltasync_allowlist.py</code> — sync peer
+threat model</li>
+<li><code>tests/test_canonical.py</code>,
+<code>tests/test_degrade_vector.py</code>,
+<code>tests/test_consolidate_fact_sibling_races.py</code></li>
+<li><code>_benchmarks/</code>, <code>docs/beam-benchmark.md</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-06</strong> — <a
+href="https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01"><code class="commit-id" title="bd22c0896b9726eb951a100a5015e04ae8769c01">bd22c089…</code></a>
+— first reading. Screened before reading: committed
+<code>.githooks/</code>, a <code>setup.py</code> and a
+<code>tests/conftest.py</code> that execute at install and collection
+time, and a <code>pyproject.toml</code> modified within the seven-day
+dependency cooldown. Nothing was installed, built or run from the tree;
+every claim here is from source at this commit.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

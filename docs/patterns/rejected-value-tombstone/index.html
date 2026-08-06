@@ -96,12 +96,13 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Seven
-systems of one hundred and fifty carry it: one invented it under
+<p><strong>This is not an established best practice.</strong> Eight
+systems of one hundred and fifty-one carry it: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, two
-built it after this page named its absence in their report, and one
-carries the mark without yet being characterised here. There is no
+built it after this page named its absence in their report, one has it
+as a side effect of a hash primary key and does not appear to know, and
+one carries the mark without yet being characterised here. There is no
 consensus behind this page, no library that provides the mechanism, and
 no shared vocabulary for it. Everything below is an argument, and the
 provenance is traced under <em>Seen in the atlas</em> so you can weigh
@@ -220,7 +221,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Seven systems in the atlas have this.</strong> That is still
+<p><strong>Eight systems in the atlas have this.</strong> That is still
 the most striking negative result in the atlas, and it is the reason
 this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -328,11 +329,11 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-one hundred and fifty would suggest a hard idea that a few teams reach
-independently. One of one hundred and fifty, plus one adoption by a
-reader who went looking, suggests an idea that is <em>not</em> being
-reached at all — and that the way it spread was somebody reading another
-project's source.</p>
+one hundred and fifty-one would suggest a hard idea that a few teams
+reach independently. One of one hundred and fifty-one, plus one adoption
+by a reader who went looking, suggests an idea that is <em>not</em>
+being reached at all — and that the way it spread was somebody reading
+another project's source.</p>
 <p><strong>The third is an independent arrival, and it stops short in
 the two places this page predicts.</strong> <a
 href="../../systems/daimon/">Daimon</a>'s <code>daimon forget</code>
@@ -455,6 +456,39 @@ connectors and derived writers, and no committed test walks the
 background consolidation passes, which is the condition under which
 record-keyed removal stops holding and the one this page cares most
 about.</p>
+<p><strong>The seventh nobody appears to have built.</strong> <a
+href="../../systems/mnemosyne/">Mnemosyne</a> gives every extracted fact
+a primary key of <code>compute_fact_id</code> — a SHA-256 over the
+NFC-normalized, length-prefixed subject, predicate and object. A fact
+that loses a conflict gets <code>superseded_by</code> set, and every
+read filters <code>superseded_by IS NULL</code>. The part that makes it
+a tombstone rather than a supersession is one clause that is
+<em>not</em> there: the lookup at the top of
+<code>consolidate_fact</code> matches on subject, predicate and object
+without excluding superseded rows, so a later extraction of the same
+value finds the dead row and updates it — raising its
+<code>mention_count</code> and its confidence, and leaving
+<code>superseded_by</code> exactly where it was. Nothing in the tree
+ever clears that column. The rejection outlives every re-assertion, at
+the write path, keyed on the value.</p>
+<p>It is the same route Daimon took — a content-addressed id makes the
+key the value — reached with none of the intent. No comment claims the
+behaviour, no test pins it, and the docstrings around
+<code>consolidate_fact</code> are entirely about concurrency. Add the
+obvious-looking <code>AND superseded_by IS NULL</code> to that lookup
+during a tidy-up and the guarantee is gone, silently, in the direction
+this page says failure always looks like success. Which is the argument
+for the test bullet below rather than against the mechanism: <strong>a
+tombstone you got for free is one you can lose for free.</strong></p>
+<p>Two limits on the reach. The property covers the extracted-fact
+layer, not the memory rows — there, <code>_find_duplicate</code> matches
+exact content within a session and the dedup update preserves an
+existing <code>valid_until</code>, so re-asserting a memory you
+invalidated does not revive it, but the same text written from a
+different session is a new row with no expiry. And the confidence on the
+tombstoned row keeps climbing with each re-mention, so anything that
+ever did clear the flag would resurrect the value stronger than it was
+rejected.</p>
 <p><strong><a href="../../systems/memoryops-ai/">MemoryOps AI</a> is the
 closest any system here comes without arriving</strong>, and it is the
 best argument on this page that the expensive half of the pattern is not
@@ -548,8 +582,9 @@ whitespace variants. Verel's round 9 was an NFKC bypass of
 <code>strip().lower()</code>.</li>
 <li>Reject a value, rerun extraction, and prove it stays inactive. Every
 system in the atlas that carries this mechanism should have this test;
-Daimon, which has 1,920 others, does not. A tombstone is the one
-mechanism whose silent failure looks exactly like success.</li>
+Daimon, which has 1,920 others, does not, and neither does Mnemosyne,
+which has 51,407 lines of them. A tombstone is the one mechanism whose
+silent failure looks exactly like success.</li>
 <li>Correct A to B, then try to reintroduce A through a different
 source.</li>
 <li>Verify scope isolation between users, projects, and agents.</li>
