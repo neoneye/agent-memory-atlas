@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: Gentleman-Programming/engram
 source_url: https://github.com/Gentleman-Programming/engram
-revision: 44faeee1fb4fabdee4ba9619df55af485f3d06eb
-revision_url: https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb
-analyzed_at: 2026-07-26
+revision: 509e6762fdd9417ff7a39d30f426a9566220eaf0
+revision_url: https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced, human_review"
 matrix:
   memory_unit: "Observation and prompt records"
@@ -324,5 +324,7 @@ Avoid copying if your target is consumer chat personalization or multi-tenant ho
 - Tests: `engram/internal/**/*_test.go`.
 
 ## History
+
+**2026-08-06** — [`509e6762fdd9417ff7a39d30f426a9566220eaf0`](https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0) — 39 commits on, and retrieval moved. `#526` replaces the FTS5 default ranking with weighted BM25; `#586` escapes interior double-quotes in `sanitizeFTS` after they crashed FTS5, which is the kind of input a note containing a quoted string produces routinely; `#616` stops duplicate observations on import; `#600` materialises relation mutations on chunk-ingest. Beside them a cloud settings screen, an MCP project override for `mem_session_summary`, and a session delete confirmation in the TUI. The write and correction semantics this report describes are unchanged and no published claim is stale; the ranking function under them is not the one that was read. Both marks re-checked and neither moves. Screened again: 1 auto-run surface (`.devcontainer/devcontainer.json`), 2 build-time exec paths, nothing inside the cooldown.
 
 **2026-07-26** — [`44faeee1fb4fabdee4ba9619df55af485f3d06eb`](https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb) — first reading.

@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "mastra-ai/mastra"
 source_url: https://github.com/mastra-ai/mastra
-revision: 40547102f655596178346ad2f883fbde735c3333
-revision_url: https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333
-analyzed_at: 2026-07-26
+revision: 470f286e98c9ad95f4c42087e411c0af363a4a2c
+revision_url: https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
 matrix:
   memory_unit: "Raw message, dated observation group, reflected observation context"
@@ -211,5 +211,15 @@ Do not substitute observational summaries for an auditable long-term store when 
 - `packages/memory/integration-tests/`
 
 ## History
+
+**2026-08-06** — [`470f286e98c9ad95f4c42087e411c0af363a4a2c`](https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c) — 403 commits on the monorepo, 99 files touching a memory path. The observational-memory mechanism this report covers is unchanged; what moved is the reliability around it.
+
+The commit worth naming is `#17910`, *"memory list reads throw on backend failure instead of returning empty"*. A memory read that returns an empty list when its backend failed is indistinguishable, to every caller, from a memory that is genuinely empty — so an outage presents as amnesia and the agent proceeds confidently with no history. Failing loudly is the correct choice and the bug is the kind only a reviewer looking for silent degradation finds.
+
+Beside it: `#20565` retries an empty working-memory extraction, `#20788` handles failed tool states in token counting, `#17800` preserves tool-call messages when a client-side tool result is still pending, and `#19216` deduplicates observational-memory record initialisation. The Redis, Spanner and Upstash storage domains each gained memory error-propagation tests.
+
+The mark is re-checked in both directions and does not move; `audit_log` stays withheld, the memory-path matches for *audit* being working-memory utilities rather than a mutation record.
+
+Screened again: 3 auto-run surfaces (`.claude/settings.json`, `.cursor/mcp.json`, `.opencode/`), 236 unpinned dependency surfaces and 120 inside the seven-day cooldown — the largest surface in the corpus, and nothing was installed or run.
 
 **2026-07-26** — [`40547102f655596178346ad2f883fbde735c3333`](https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333) — first reading.

@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "getzep/graphiti"
 source_url: https://github.com/getzep/graphiti
-revision: 9140123a7282d44efc077a0af09179919f3defdf
-revision_url: https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf
-analyzed_at: 2026-07-26
+revision: 425bf2481b51437e43455e09d241c5f46e3d95f3
+revision_url: https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3
+analyzed_at: 2026-08-06
 capabilities: "bitemporal, scope_enforced"
 matrix:
   memory_unit: "Episode, entity, temporal relationship edge, community/saga"
@@ -215,5 +215,7 @@ For simpler personal memory, a graph may be needless complexity. Preserve source
 - `tests/`
 
 ## History
+
+**2026-08-06** — [`425bf2481b51437e43455e09d241c5f46e3d95f3`](https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3) — 24 commits on, and the memory mechanism is not among them. Most of the range is contributor-licence bot commits and documentation; the source diff is the FalkorDB driver — `fulltext.py`, `operations/graph_ops.py`, `operations/search_ops.py`, `falkordb_driver.py` and the shared `graph_operations` interface. Bi-temporal edge validity, entity resolution and the invalidation path are untouched, and no published claim is stale. Both marks re-checked in both directions and neither moves. Screened again: 0 auto-run surfaces, 4 build-time exec paths, nothing inside the cooldown.
 
 **2026-07-26** — [`9140123a7282d44efc077a0af09179919f3defdf`](https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf) — first reading.

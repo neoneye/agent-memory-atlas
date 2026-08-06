@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "basicmachines-co/basic-memory"
 source_url: https://github.com/basicmachines-co/basic-memory
-revision: 232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
-revision_url: https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b
-analyzed_at: 2026-07-26
+revision: 816accaa9befe8281668ba8819eaf74d11ce2385
+revision_url: https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
 matrix:
   memory_unit: "Canonical Markdown note; indexed entity, observation, relation"
@@ -228,5 +228,7 @@ Do not choose it merely because Markdown feels simple. Bidirectional sync is not
 - `test-int/`
 
 ## History
+
+**2026-08-06** — [`816accaa9befe8281668ba8819eaf74d11ce2385`](https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385) — 55 commits on, and the run of them worth naming is a concentrated hardening of the relation and observation write path: *reject stale relation writes*, *bound relation write statements*, *validate relation target identity*, *bound target identity reads*, *batch relation target resolution*, *separate bulk link resolution*, *lock entity before observation replacement*, *defer superseded vector generations*. Read together that is lost-update and staleness work on exactly the seam this report describes — the file-to-database reconciliation where a relation resolves against an entity that may have moved. MCP adopts FastMCP 4 beta. The markdown-as-canonical model and the rebuildable-projection claim are unchanged. `audit_log` re-checked and stays withheld: the *audit archive* in `hooks/` retires hook traces, and the file history that matters is git's, which the rubric excludes by name. Screened again: 3 auto-run surfaces (`.claude/settings.json`, `server.json`, `smithery.yaml`), 11 build-time exec paths, 2 dependency surfaces inside the cooldown, so nothing was installed.
 
 **2026-07-26** — [`232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b`](https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b) — first reading.

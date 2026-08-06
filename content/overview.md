@@ -1799,7 +1799,7 @@ that never claims to model belief.
 
 **Append-only mutation audit** — A named append-only event record of memory *mutations* in the system's own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history.
 
-*38 of 155:* [`agentmemory`](../systems/agentmemory/), [`alma-memory`](../systems/alma-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`aura`](../systems/aura/), [`core-memory`](../systems/core-memory/), [`csm`](../systems/csm/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`deepcode`](../systems/deepcode/), [`echo-agent`](../systems/echo-agent/), [`engram-alpha`](../systems/engram-alpha/), [`hippo-memory`](../systems/hippo-memory/), [`kirocrew`](../systems/kirocrew/), [`lethe`](../systems/lethe/), [`lorekit`](../systems/lorekit/), [`magic-context`](../systems/magic-context/), [`mem0`](../systems/mem0/), [`mem0sharp`](../systems/mem0sharp/), [`memledger`](../systems/memledger/), [`memora`](../systems/memora/), [`memory-project`](../systems/memory-project/), [`memoryops-ai`](../systems/memoryops-ai/), [`memsem`](../systems/memsem/), [`memvid`](../systems/memvid/), [`mnemosyne`](../systems/mnemosyne/), [`neko`](../systems/neko/), [`nova-ai`](../systems/nova-ai/), [`omi`](../systems/omi/), [`optmem`](../systems/optmem/), [`palazzo`](../systems/palazzo/), [`perseus-vault`](../systems/perseus-vault/), [`prime-agent`](../systems/prime-agent/), [`provem`](../systems/provem/), [`simplemem`](../systems/simplemem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`tokenmizer`](../systems/tokenmizer/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
+*39 of 155:* [`agentmemory`](../systems/agentmemory/), [`alma-memory`](../systems/alma-memory/), [`aukora-kernel`](../systems/aukora-kernel/), [`aura`](../systems/aura/), [`core-memory`](../systems/core-memory/), [`csm`](../systems/csm/), [`ctx`](../systems/ctx/), [`daimon`](../systems/daimon/), [`deepcode`](../systems/deepcode/), [`echo-agent`](../systems/echo-agent/), [`engram-alpha`](../systems/engram-alpha/), [`hindsight`](../systems/hindsight/), [`hippo-memory`](../systems/hippo-memory/), [`kirocrew`](../systems/kirocrew/), [`lethe`](../systems/lethe/), [`lorekit`](../systems/lorekit/), [`magic-context`](../systems/magic-context/), [`mem0`](../systems/mem0/), [`mem0sharp`](../systems/mem0sharp/), [`memledger`](../systems/memledger/), [`memora`](../systems/memora/), [`memory-project`](../systems/memory-project/), [`memoryops-ai`](../systems/memoryops-ai/), [`memsem`](../systems/memsem/), [`memvid`](../systems/memvid/), [`mnemosyne`](../systems/mnemosyne/), [`neko`](../systems/neko/), [`nova-ai`](../systems/nova-ai/), [`omi`](../systems/omi/), [`optmem`](../systems/optmem/), [`palazzo`](../systems/palazzo/), [`perseus-vault`](../systems/perseus-vault/), [`prime-agent`](../systems/prime-agent/), [`provem`](../systems/provem/), [`simplemem`](../systems/simplemem/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`tokenmizer`](../systems/tokenmizer/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/)
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
@@ -4183,8 +4183,8 @@ Privacy/deletion:
 
 - [mem0ai/mem0](https://github.com/mem0ai/mem0) at [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150)
 - [langchain-ai/langmem](https://github.com/langchain-ai/langmem) at [`7c7ebf36b5e1697001f92eed77c43e3d541decd7`](https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7)
-- [plastic-labs/honcho](https://github.com/plastic-labs/honcho) at [`eb386c3ceb77774b29108f9ab114e71d52b7d420`](https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420)
-- [Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram) at [`44faeee1fb4fabdee4ba9619df55af485f3d06eb`](https://github.com/Gentleman-Programming/engram/commit/44faeee1fb4fabdee4ba9619df55af485f3d06eb)
+- [plastic-labs/honcho](https://github.com/plastic-labs/honcho) at [`d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8`](https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8)
+- [Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram) at [`509e6762fdd9417ff7a39d30f426a9566220eaf0`](https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0)
 - [MemPalace/mempalace](https://github.com/MemPalace/mempalace) at [`afd0428823b47f9a9d1d68c450d54bb0045a4988`](https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988)
 - [Prateek816/7layermem](https://github.com/Prateek816/7layermem) at [`d3500bfd74b380585e8220f6c6f235c825bc803e`](https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e)
 - [cognicore-dev/cognicore-my-openenv](https://github.com/cognicore-dev/cognicore-my-openenv) at [`760cdde49328a6cca8c430256b072cc1c4f48247`](https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247)
@@ -4198,11 +4198,11 @@ Privacy/deletion:
 - [letta-ai/letta](https://github.com/letta-ai/letta) at [`ff19ffeafeb54bd2a7dc5d4a552f10191732a235`](https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235)
 - [supermemoryai/supermemory](https://github.com/supermemoryai/supermemory) at [`603d0512fd40e4575e2a075938c1851a898ceeb6`](https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6)
 - [amitpatole/verel](https://github.com/amitpatole/verel) at [`df44e76c6c6a919977806feed9549bc6a892932d`](https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d)
-- [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) at [`ed120a256d51d731085ec8aca724573a7f2f1e1c`](https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c)
-- [getzep/graphiti](https://github.com/getzep/graphiti) at [`9140123a7282d44efc077a0af09179919f3defdf`](https://github.com/getzep/graphiti/commit/9140123a7282d44efc077a0af09179919f3defdf)
-- [mastra-ai/mastra](https://github.com/mastra-ai/mastra) at [`40547102f655596178346ad2f883fbde735c3333`](https://github.com/mastra-ai/mastra/commit/40547102f655596178346ad2f883fbde735c3333)
+- [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) at [`f9fb3e934a459f814ac00fefb1819e675d2b5bce`](https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce)
+- [getzep/graphiti](https://github.com/getzep/graphiti) at [`425bf2481b51437e43455e09d241c5f46e3d95f3`](https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3)
+- [mastra-ai/mastra](https://github.com/mastra-ai/mastra) at [`470f286e98c9ad95f4c42087e411c0af363a4a2c`](https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c)
 - [MemTensor/MemOS](https://github.com/MemTensor/MemOS) at [`3fd109e7cbaba291af2253f107e0a595dbf62b00`](https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00)
-- [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) at [`232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b`](https://github.com/basicmachines-co/basic-memory/commit/232f2c2fc4e91564d88bcc312ed3d8bd1e8e051b)
+- [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) at [`816accaa9befe8281668ba8819eaf74d11ce2385`](https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385)
 - [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) at [`d60652a7058773fa9428fa720eda38942f12f014`](https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014)
 - [TencentCloud/tencentdb-agent-memory](https://github.com/TencentCloud/tencentdb-agent-memory) at [`45e6e80ae2e63b65fad0d89f5e13171229c8f295`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295)
 - [topoteretes/cognee](https://github.com/topoteretes/cognee) at [`325acf356a81545b9892f19ab1ea7b61c51a776b`](https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b)
@@ -4479,6 +4479,49 @@ Dated changes to this atlas's own method and reading. Per-system reading
 history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
+
+**2026-08-06** — Re-reading the ten oldest pins in one pass produced two
+findings that only a batch could produce.
+
+**The first day of reading under-claimed marks.** Two of the ten —
+[agentmemory](../systems/agentmemory/) and [Hindsight](../systems/hindsight/) —
+had an `audit_log` at the commit they were originally pinned to and were not
+credited with it. agentmemory's `src/functions/audit.ts` carries a written
+coverage policy ending *"silent deletes are not acceptable"*; Hindsight's
+`engine/audit.py` logs *"all mutating and core operations… across HTTP, MCP, and
+system transports"* with an insert-only `INSERT INTO {schema}.audit_log`. Neither
+was missed for lack of evidence: agentmemory's report names the audit module in
+three separate places and then says structural deletion *"is designed to"* emit
+records. That phrasing is the failure. **"Is designed to" describes an intention
+and stands in for a decision the report never made**, and a rubric mark is a
+decision. Every capability in the rubric now gets an explicit yes or no in
+section 9, including the ones that are absent; hedged description is not an
+answer. That these were the atlas's first-day readings, when the rubric was
+newest, is the likeliest explanation and is not an excuse — it is a reason to
+expect more of them in the 2026-07-26 and 2026-07-27 cohorts.
+
+**The second finding is about the systems, and it is a class this atlas had not
+named.** Three of the ten shipped a fix, in the same four-week window, for an
+operation that *reported success without acting*:
+
+- agentmemory `#1132` — `mem::forget` called with a lesson id deleted a
+  nonexistent key from the memories keyspace, counted it, and returned success.
+- Hindsight `#3161` — `observation_history` appended a row on an observation
+  `UPDATE` that changed zero rows, so the trail recorded a mutation that never
+  happened.
+- Mastra `#17910` — a memory list read returned an empty list when its backend
+  failed, which is indistinguishable to every caller from a memory that is
+  genuinely empty.
+
+Call it a **lying operation**: the call returns, the counter increments, the log
+appends, and nothing happened. It is worth naming because of what it does to
+every other claim here. This atlas asks whether a deleted value stays deleted;
+that question presupposes the delete occurred. It credits audit logs; an audit
+row for a mutation that did not happen is worse than no row. And the failure is
+invisible to the test shape most projects write, which asserts that a call
+returned without asserting that the store changed. **The test that catches it
+reads the store back and compares**, and it is rare. Three independent teams
+finding one each in a month suggests the base rate is not low.
 
 **2026-08-06** — Two readings on the same day produced the same lesson from
 different directions, which is what turns an incident into a rule.

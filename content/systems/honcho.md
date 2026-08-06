@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: plastic-labs/honcho
 source_url: https://github.com/plastic-labs/honcho
-revision: eb386c3ceb77774b29108f9ab114e71d52b7d420
-revision_url: https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420
-analyzed_at: 2026-07-26
+revision: d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8
+revision_url: https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8
+analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
 matrix:
   memory_unit: "Message, document/observation, representation"
@@ -325,5 +325,7 @@ Avoid if your goal is a small local memory layer. Honcho is closer to memory inf
 - Tests/evals: `honcho/tests/`.
 
 ## History
+
+**2026-08-06** — [`d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8`](https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8) — 48 commits on, none of them the mechanism. The range is operational: a configurable embedding batch size, tiktoken encoding resolved without constructing an embedding client, per-request and Gemini HTTP timeouts, podman-compatible Docker build inputs, pgvector preinstall documentation for least-privilege database roles, and updated deriver extraction examples. The peer/session model, the derived-representation pipeline and the dialectic path are untouched. `audit_log` was re-checked and stays withheld: `src/telemetry/events/` is product telemetry, not a record of memory mutations. Screened again: 2 auto-run surfaces (`.vscode/settings.json`, `.vscode/tasks.json`), 11 build-time exec paths, nothing inside the cooldown.
 
 **2026-07-26** — [`eb386c3ceb77774b29108f9ab114e71d52b7d420`](https://github.com/plastic-labs/honcho/commit/eb386c3ceb77774b29108f9ab114e71d52b7d420) — first reading.

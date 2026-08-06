@@ -6,10 +6,10 @@ root: ../..
 page_kind: system
 source_name: "vectorize-io/hindsight"
 source_url: https://github.com/vectorize-io/hindsight
-revision: ed120a256d51d731085ec8aca724573a7f2f1e1c
-revision_url: https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c
-analyzed_at: 2026-07-26
-capabilities: "scope_enforced"
+revision: f9fb3e934a459f814ac00fefb1819e675d2b5bce
+revision_url: https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce
+analyzed_at: 2026-08-06
+capabilities: "scope_enforced, audit_log"
 matrix:
   memory_unit: "Source chunk, world/experience fact, observation, reflection"
   storage: "PostgreSQL/pgvector or Oracle"
@@ -215,5 +215,15 @@ Do not copy the full architecture for a small local agent. Start with two retrie
 - `hindsight-api-slim/tests/`
 
 ## History
+
+**2026-08-06** — [`f9fb3e934a459f814ac00fefb1819e675d2b5bce`](https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce) — 141 commits on, and one mark was earned at the previous pin and not claimed.
+
+`audit_log` is added. `hindsight-api-slim/hindsight_api/engine/audit.py` was present at `ed120a25`, and its docstring states the coverage: *"fire-and-forget audit logging of all mutating and core operations (retain, recall, reflect, bank CRUD, etc.) across HTTP, MCP, and system transports."* An `AuditLogEntry` carries id, action, transport, bank id, start and end timestamps, a server-computed duration and the request, and it is written with `INSERT INTO {schema}.audit_log` — no `UPDATE` and no `DELETE` against that table anywhere outside tests. It ships with a CLI reader (`hindsight-cli/src/commands/audit.rs`) and two test files, one of them per-bank.
+
+Two limits belong beside the mark. It is **fire-and-forget**, so a failed audit write does not block the operation it was recording, which means gaps are possible and silent. And `audit_log_enabled` is hierarchical — environment, then tenant, then bank — so the log can be off.
+
+Of the 141 commits, the one this report should carry is `#3161`, *"guard observation_history append on 0-row observation UPDATE"*: the history row was appended even when the update it described changed nothing, so the trail recorded a mutation that did not happen. Beside it, `#3198` sweeps orphan entities when a delete enqueues no relink victims, `#3204` drops a stale global vector index by migration and makes reconcile hands-off, `#3191` caps reranker candidates per budget, and `#3181` keeps consolidated observations in their source facts' language.
+
+Screened again: 1 auto-run surface (`.githooks/`), 31 build-time exec paths, 30 unpinned dependency surfaces and 10 inside the seven-day cooldown, so nothing was installed or run.
 
 **2026-07-26** — [`ed120a256d51d731085ec8aca724573a7f2f1e1c`](https://github.com/vectorize-io/hindsight/commit/ed120a256d51d731085ec8aca724573a7f2f1e1c) — first reading.

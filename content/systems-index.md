@@ -83,7 +83,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`helm`](../systems/helm/) **Helm** — Confidence-ratcheted SQLite memory · `GOODMAN-PRO/helm` · Negative evals
 - [`hermes-agent`](../systems/hermes-agent/) **Hermes Agent** — Prompt-cache-bounded memory · `NousResearch/hermes-agent` · Human review
-- [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced
+- [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced, Mutation audit
 - [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit
 - [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
 - [`holographic`](../systems/holographic/) **Holographic** — Vector-symbolic memory · `NousResearch/hermes-agent`
