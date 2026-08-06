@@ -352,6 +352,31 @@ machinery beside it. That is the same shape as the sweep finding: the denominato
 sweep made stale numerators look fresher, and here the generated lines make stale
 prose look checked.
 
+**Then the checker was written, and found eight more.**
+`scripts/check_claim_counts.py` binds a number in prose to one of the seven
+rubric mechanisms and compares it with the live capability count. On its first
+run over `content/` it bound 15 claims and 8 of them were wrong — more than half:
+
+| Where | Said | Live |
+| --- | --- | --- |
+| `capabilities.md:58`, `overview.md:1817` | seven systems carry a value-level tombstone | nine |
+| `capabilities.md:65`, `overview.md:1829`, `benchmarks.md:562` | twenty-nine assert material must not be retrieved | thirty |
+| `overview.md:2429` | three repositories implement a value-level tombstone | nine |
+| `aukora-kernel.md:64` | closer on privacy than the three systems that earn it | nine |
+| `project-golem.md:70` | three systems carry one, "here is a fourth answer" | nine |
+
+All eight are corrected. Two needed a rewrite rather than a number: Aukora's
+sentence now says *a value-keyed tombstone must retain the wrong value*, because
+the count was doing no work there, and Project Golem's "a fourth answer" became
+"another answer", since its own report explains at length that it is **not** a
+tombstone.
+
+The rate is the finding. Every one of these sentences is a considered editorial
+judgement about the field, written once and never re-derived, and the mechanism
+counts underneath them move every time a report is added. **A hand-written count
+is a claim with a shelf life**, and until today nothing in this repository knew
+that.
+
 **One case left alone, deliberately.**
 [`rejected-value-tombstone.md:187`](../content/patterns/rejected-value-tombstone.md)
 reads *"Two of one hundred and fifty-five would suggest a hard idea that a few
@@ -366,8 +391,16 @@ without doing that would be the exact failure this note is about.
 
 - Decide whether Part 1 belongs on the site. It is the answer to *why should I
   read this rather than the survey*, and no page currently gives it.
-- The count-claim checker proposed by the superlative audit would have caught both
-  Part 4 items. Still unwritten.
+- The count-claim checker proposed by the superlative audit is now written and
+  wired into `test_site.sh`: `scripts/check_claim_counts.py`, plus `--self-test`,
+  which builds a two-report fixture and asserts the checker still *fails* on a
+  wrong count. Three limits worth knowing. It only checks numbers it can bind to
+  a mechanism named in the same sentence — 14 of the 131 count-shaped phrases in
+  `content/` today, and `--list` prints the other 117 so the gap is visible
+  rather than implied. It cannot check a claim whose subject is a pronoun ("nine systems
+  carry **it**"). And it says `NOTHING BOUND` and exits non-zero if a prose
+  rewrite ever moves every claim out of reach, because a green run that verified
+  nothing is the tooling form of the lying operation in Part 1.
 - Part 2 entries 1, 2 and 3 are each one implementation. That is the profile of
   the tombstone before it had three, so the useful action is to watch for a second
   instance rather than to promote them now.

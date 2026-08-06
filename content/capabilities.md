@@ -55,14 +55,14 @@ capability their design deliberately does not need.
 Three things the counts show that the reports individually do not:
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies a
-scope key when retrieving. Seven systems carry a value-level tombstone. That gap
+scope key when retrieving. Nine systems carry a value-level tombstone. That gap
 is the atlas's central finding, and it is visible here in one column pair.
 
 **Trust is usually a number, not a state.** Most systems collapse "how sure am I"
 into "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Twenty-nine repositories of one hundred and fifty-five
+**Negative evidence is almost never tested.** Thirty repositories of one hundred and fifty-five
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this atlas ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says more

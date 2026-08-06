@@ -98,6 +98,20 @@ if ! python3 "$project_dir/scripts/check_homepage.py" "$project_dir"; then
   exit 1
 fi
 
+# check_homepage.py guards the denominator, which a file count derives. The
+# numerators are the atlas's headline findings and nothing guarded them: four
+# were found stale in one page on 2026-08-06, each sitting beside generated
+# numbers that were correct. --self-test runs a positive and a negative control
+# first, because a checker that can no longer fail is worse than no checker.
+if ! python3 "$project_dir/scripts/check_claim_counts.py" --self-test; then
+  echo "check_claim_counts.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_claim_counts.py" "$project_dir"; then
+  echo "A mechanism count in content/ disagrees with the report frontmatter." >&2
+  exit 1
+fi
+
 # build_site.sh wraps every <table> in .table-wrap. A hand-authored wrapper in
 # content/ nests them, and each wrapper grows its own "expand to full width"
 # toggle — which is how the capability grid ended up with two.

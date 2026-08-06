@@ -1814,7 +1814,7 @@ Three observations follow from the counts, stated no more strongly than the
 counts support.
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies
-a scope key when retrieving, while seven systems carry a value-level tombstone.
+a scope key when retrieving, while nine systems carry a value-level tombstone.
 That is not the same as saying scope is solved — this flag measures the read
 path only. It says nothing about write authorization, whether background
 consolidation respects the same boundary, whether cache and embedding keys
@@ -1826,7 +1826,7 @@ nothing here measures that.
 "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Twenty-nine repositories of one hundred and fifty-five
+**Negative evidence is almost never tested.** Thirty repositories of one hundred and fifty-five
 assert that particular material must *not* be retrieved — the assertion every
 scope, deletion and correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says more
@@ -2426,8 +2426,8 @@ That is the sharpest form the atlas's central finding has taken. A survey
 written by the authors of a system reviewed here, working from threat models
 rather than from repositories, independently derives the capability the atlas
 counts, defines it more precisely than this atlas does, and reports that nobody
-has published it. Meanwhile three repositories here implement a value-level
-tombstone — the mechanism Verified Forgetting requires — and none of the three
+has published it. Meanwhile nine repositories here implement a value-level
+tombstone — the mechanism Verified Forgetting requires — and none of the nine
 has a paper. The literature and the code have each found half of it.
 
 The "propagated copies" clause has a partial answer too, from further outside the

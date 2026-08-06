@@ -61,8 +61,8 @@ The finding is one `if` wide. `forget` durably records that a specific
 gone — and `remember` never consults it. Write the same content again and it is
 stored again, active, as though nothing had happened. This is the closest any
 system in the atlas comes to a rejected-value tombstone without earning the
-mark, and it is closer on *privacy* than the three systems that do earn it,
-because those three must retain the wrong value in order to block it.
+mark, and it is closer on *privacy* than the systems that do earn it, because a
+value-keyed tombstone must retain the wrong value in order to block it.
 
 ## 2. Mental Model
 

@@ -67,8 +67,8 @@ getAdvice() {
 — *"the owner recently rejected: [...]. Please avoid."*
 
 This atlas has spent the whole corpus asking a version of one
-question: when a person says no, does anything remember? Three systems carry a
-value-level tombstone. Here is a fourth answer, in a file shorter than most of
+question: when a person says no, does anything remember? Nine systems carry a
+value-level tombstone. Here is another answer, in a file shorter than most of
 the imports above it: the rejected thing is recorded, it is durable across
 restarts, and it is read back into the agent's context before the next proposal.
 The mechanism is right even though the implementation is small.
