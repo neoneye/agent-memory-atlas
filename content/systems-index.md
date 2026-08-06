@@ -200,7 +200,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`voyager`](../systems/voyager/) **Voyager** — Procedural skill memory · `MineDojo/Voyager`
 ## W
 
-- [`waku-agent`](../systems/waku-agent/) **Waku Agent** — Gated memory · `ShenSeanChen/waku-agent`
+- [`waku-agent`](../systems/waku-agent/) **Waku Agent** — Gated memory · `ShenSeanChen/waku-agent` · Human review
 ## Z
 
 - [`z-waif`](../systems/z-waif/) **Z-Waif** — It caps its own voice in its own query · `SugarcaneDefender/z-waif`

@@ -1,27 +1,27 @@
 ---
 title: Waku Agent
 eyebrow: Gated memory
-description: A compact three-pillar memory whose organizing idea is refusing to do expensive work — a model gate decides whether to retrieve at all, consolidation batches, and skill bodies load only on match.
+description: A compact three-pillar memory whose organizing idea is refusing to do expensive work — a model gate decides whether to retrieve at all, consolidation batches, and skill bodies load only on match — with correction reachable by the agent and by a person, and nothing keyed on a rejected value.
 root: ../..
 page_kind: system
 source_name: ShenSeanChen/waku-agent
 source_url: https://github.com/ShenSeanChen/waku-agent
-revision: 5f638cfb5de957c14f056027833d8a9df5bbe558
-revision_url: https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558
-analyzed_at: 2026-07-27
-capabilities: ""
+revision: 51228f07a4c8bad13987cdfb9668edd3ea9ba060
+revision_url: https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060
+analyzed_at: 2026-08-06
+capabilities: "human_review"
 matrix:
   memory_unit: "Fact (semantic), episode (episodic), and SKILL.md (procedural)"
   storage: "SQLite by default; Supabase for facts, Notion for episodes"
   retrieval: "Gated — a small model decides whether to search at all, and supplies the query"
   write: "Consolidation batched after N new chats, not per message"
-  update_delete: "None found; no supersession or tombstone"
+  update_delete: "`manage_memory` lets the agent search, update and delete its own facts and episodes mid-conversation; the dashboard gives a person the same CRUD; no supersession chain and no tombstone"
   scoping: "Single user"
-  integration: "CLI agent; skills in the Anthropic Agent Skills format"
+  integration: "CLI agent with a local dashboard; three self-management tools; skills in the Anthropic Agent Skills format"
   background: "Batched consolidation into facts and episodes"
   trust: "Gate decisions carry a reason string; no trust state on memories"
-  strengths: "Refusing expensive work at three levels, and failing open when the gate errors"
-  risks: "No correction, scope, or trust model; gate adds a model call per turn"
+  strengths: "Refusing expensive work at three levels, failing open when the gate errors, and one correction path reachable by both the agent and a person"
+  risks: "Nothing is keyed on a rejected value, so a corrected fact is re-learnable on the next consolidation; no trust state or scope; gate adds a model call per turn and its accuracy is unmeasured"
 ---
 
 ## 1. Executive Summary
@@ -42,7 +42,9 @@ That structure is conventional. What makes Waku worth reading is that its design
 
 The gate's failure direction is also right, and stated: it **fails open**. If the gate errors, Waku retrieves anyway, because "a stale memory beats a lost one."
 
-The limits are what you would expect at this size: no correction, no supersession, no tombstone, no trust state, and single-user scope.
+**Correction is not where the memory package is.** `waku/memory/` has no update or delete surface at all — the mutation path lives one directory over, in `waku/tools/memory_admin.py`, which registers three tools that let the agent manage its own memory: `manage_memory` (search, update, delete over facts and episodes), `update_soul` (append a behaviour rule to `SOUL.md`, deliberately append-only so "the agent can't delete its own honesty rules") and `create_skill` (write a new `SKILL.md`). All three are registered unconditionally in `waku/tools/__init__.py:35`, and `waku/ops/dashboard.py:778` gives a person the same CRUD over the same SQLite file. A reader who takes the directory named `memory` as the boundary of the memory system will conclude this project cannot correct anything, and be wrong.
+
+The real limits are one layer up: nothing is keyed on a *rejected* value, so a fact the user just corrected can be re-extracted by the next consolidation pass with nothing to consult; there is no supersession chain, no trust state, and no scope beyond a single user.
 
 ## 2. Mental Model
 
@@ -63,25 +65,38 @@ user message
   → answer
 ```
 
-Write path:
+Write path — two doors, and only one of them is automatic:
 
 ```text
 chats accumulate unconsolidated
   → after N new chats, a cheap model reads the log and emits
         facts    → semantic store
         episode  → episodic store
+
+manage_memory(action=search|update|delete)   agent, mid-conversation
+POST /api/memory                              person, from the dashboard
+  → both mutate the same rows in place
 ```
+
+A memory therefore holds exactly two states: present and absent. An update overwrites the row, a delete removes it, and neither leaves a record that the old value was ever held or judged wrong — so the consolidation door has nothing to check when the same claim comes back through it.
 
 ## 3. Architecture
 
-`waku/memory/` (801 lines):
+`waku/memory/` (825 lines):
 
 - `retrieval_gate.py` (55) — `should_retrieve()`.
-- `__init__.py` (169) — the `Memory` facade, "the three pillars behind one small interface".
-- `consolidation.py` (75) — batched distillation into facts and episodes.
+- `__init__.py` (186) — the `Memory` facade, "the three pillars behind one small interface".
+- `consolidation.py` (82) — batched distillation into facts and episodes.
 - `semantic/store.py` (78), `semantic/supabase_store.py` (58).
 - `episodic/store.py` (57), `episodic/notion_store.py` (164).
 - `procedural/loader.py` (91), `procedural/installer.py` (54).
+
+Two files outside that package carry memory mechanism and are the reason the
+line count above understates the system:
+
+- `waku/tools/memory_admin.py` (144) — the three self-management tools.
+- `waku/ops/dashboard.py` (1,044) — a local web dashboard whose `memory_action`
+  handler is human CRUD over the same store.
 
 ```mermaid
 flowchart TD
@@ -98,7 +113,14 @@ flowchart TD
   N -->|yes| Cons["cheap model:<br/>facts + episode"]
   Cons --> Sem
   Cons --> Epi
+  Admin["manage_memory tool<br/>dashboard /api/memory"] -->|"update / delete<br/>in place"| Sem
+  Admin -->|"update / delete<br/>in place"| Epi
+  Sem -.->|"nothing records<br/>the removed value"| Cons
 ```
+
+The dotted edge is the gap. Correction reaches the store, and the store has
+nothing to hand back to the pass that will re-read the same conversation
+log.
 
 ## 4. Essential Implementation Paths
 
@@ -126,6 +148,44 @@ The stated rationale is worth separating into its two halves. Cost is the obviou
 
 This is the same instinct as [CowAgent](../cowagent/)'s daily buckets and [nanobot](../nanobot/)'s cursor over an append-only archive — give consolidation a unit large enough to be meaningful. Waku's unit is a chat count rather than a calendar day or a token threshold.
 
+### Correcting a memory
+
+`waku/tools/memory_admin.py` is where the belief store becomes editable, and
+its docstring states the intent: tools "that let the agent manage its OWN
+memory — so it feels like a personal assistant that learns, not a black box."
+
+`manage_memory` takes `action` in `search | update | delete` over `kind` in
+`fact | episode`, and its tool description instructs the model to search first
+for an id and then act on that id — an addressed lifecycle, which is the
+contract [GoodAI LTM](../goodai-ltm/) declares and several larger frameworks in
+this atlas cannot express. Episodes are delete-only: `"Only facts can be
+updated (episodes are historical)"`, which is the right asymmetry — an episode
+is a claim about what happened, and editing it is falsifying a record rather
+than correcting a belief.
+
+Two smaller decisions in the same file are worth lifting. `update_soul` is
+append-only *by construction*, with the reason in the module docstring: "the
+agent can't delete its own honesty rules"; a human does full rewrites in the
+dashboard. And `create_skill` refuses to overwrite an existing skill by name
+rather than silently replacing it. Both are cases of giving the model a write
+verb and withholding the destructive half of it.
+
+The human door is `memory_action` in `waku/ops/dashboard.py:778` — `update_fact`,
+`delete_fact`, `delete_episode`, `save_soul`, `save_skill`, writing "the same
+sqlite file the agent uses (busy_timeout covers contention); changes are live
+for the next agent turn." `save_skill` resolves the destination and rejects any
+path not inside the two skills folders, and validates the frontmatter before
+writing.
+
+What neither door does is leave a trace. `facts.update` overwrites the row and
+`facts.delete` removes it; there is no audit row, no `superseded_by`, and no
+record of the value that was there. Consolidation re-reads the chat log on its
+own schedule, so a fact a user corrected on Monday is a fact the summarizer can
+re-derive on Tuesday from the same conversation — the laundering shape the
+[rejected-value tombstone](../../patterns/rejected-value-tombstone/) page
+exists to name. The distance from here to closing it is small: the correction
+verb already exists and already knows the value being removed.
+
 ### Procedural memory as progressive disclosure
 
 `procedural/loader.py` follows the Anthropic Agent Skills format — YAML frontmatter with `name` and `description`, where the description doubles as the trigger. A comment notes the project previously used a custom `triggers:` field and dropped it once the spec settled, which is a small mark of tracking a standard rather than inventing one.
@@ -134,9 +194,9 @@ The three-stage disclosure — frontmatter always, body on match, referenced fil
 
 ## 5. Memory Data Model
 
-Facts and episodes in SQLite, with optional Supabase and Notion backends; skills as files. There is no status, confidence, provenance, supersession, or tombstone on any of them, and no scope beyond a single user.
+Facts and episodes in SQLite, with optional Supabase and Notion backends; skills as files. Rows carry a `source` — `consolidation` for the automatic path — and no status, confidence, supersession pointer or tombstone, and no scope beyond a single user.
 
-That is a reasonable position for an 800-line personal agent, and it means Waku answers "what should we retrieve?" carefully while leaving "is this still true?" entirely unanswered. A fact consolidated from a chat where the user changed their mind will sit alongside the correction with nothing distinguishing them.
+That is a reasonable position for an 800-line personal agent, and it puts the system in a specific place: Waku answers "what should we retrieve?" carefully, answers "is this still true?" *operationally* — a person or the agent can fix the row — and does not answer "has this already been judged wrong?" at all. A fact consolidated from a chat where the user changed their mind sits alongside the correction with nothing distinguishing them, and the correction can be undone by a scheduled job rather than by a person.
 
 The Notion episodic backend is the most operationally interesting choice: episodes land somewhere the user already reads and edits, which makes correction a manual but real possibility — the [Basic Memory](../basic-memory/) property of human-owned canonical state, arrived at by picking a familiar tool as the store.
 
@@ -148,11 +208,21 @@ The cost model deserves stating honestly: the gate **adds** a small-model call t
 
 ## 7. Write Mechanics
 
-Consolidation is the only path into durable memory. There is no explicit "remember this" surface in the memory package, and no actor model — whatever the summarizer extracts becomes a fact or an episode.
+Consolidation is the only *automatic* path into durable memory: there is no explicit "remember this" surface, and no actor model — whatever the summarizer extracts becomes a fact or an episode, tagged `source="consolidation"`. Writes are synchronous with the turn that triggers them, and a memory is retrievable as soon as the batch commits.
+
+The other two paths are corrective rather than additive — `manage_memory` from the agent and `memory_action` from the dashboard — and both mutate in place.
+
+The consolidation call carries a `max_tokens` of 4096, with a comment recording why the number is not the gate's: reasoning models emit a thinking block before the JSON, and this prompt "carries the whole unconsolidated log (not one short message like the retrieval gate) — 600 was measured truncating kimi-k2.6 to a thinking-only reply (stop_reason=max_tokens, zero text blocks) on a 40-row backlog." Beneath it, `if "{" not in text: return 0` recognises a reasoning-only reply instead of letting `text.index("{")` raise into the broad `except`.
+
+That guard fixes the budget and not the silence. Both branches return `0`, the caller's `notify()` only fires when `new_facts > 0`, and nothing writes a log line or a counter — so a summarizer that fails every turn and a quiet week produce the same observable, which is none. `evals/deterministic/test_consolidation.py` scripts a thinking-only response with `stop_reason=max_tokens` and pins that the log stays unconsolidated and no facts are written; what it pins is that the failure is safe, not that it is visible.
 
 ## 8. Agent Integration
 
-A CLI agent with deterministic evals under `evals/deterministic/`, including `test_working_memory.py` and `test_cli_memory.py`. Skills follow the published Agent Skills format, so procedural memory is portable to other runtimes that read it.
+A CLI agent plus a local dashboard, with fifty deterministic eval files under `evals/deterministic/`. Skills follow the published Agent Skills format, so procedural memory is portable to other runtimes that read it.
+
+The model's agency over memory is wider than the memory package suggests: it can search, correct and delete its own facts and episodes, append a standing behaviour rule to its persona, and author a new skill — the last two gated so that the destructive halves stay with the human. `waku/ops/dashboard.py:526` groups the three under `_SELFMGMT`, which is the project's own name for the boundary.
+
+The dashboard's memory tab is a review surface in the sense this atlas means: a person reads the stored facts and episodes and can rewrite or remove any of them, against the same SQLite file the agent reads on its next turn. It is not an approval queue — nothing waits for a human before entering memory — so it adjudicates after the fact rather than gating.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -166,20 +236,26 @@ Strengths:
 - **Progressive disclosure** for skills, following a published format.
 - **Deterministic evals** for memory behaviour.
 - **Pluggable backends** per memory kind, defaulting to SQLite.
+- **A correction path with two doors** — the agent's `manage_memory` and the dashboard's `memory_action` — over the same rows, with episodes deliberately delete-only.
+- **A persona file the agent may append to and not prune**, so it cannot edit away its own standing instructions.
 
 Gaps:
 
-- **No correction, supersession, or tombstone.** A superseded fact and its replacement coexist.
-- **No trust state or provenance** on facts and episodes.
+- **Nothing is keyed on a rejected value.** Correction reaches the row and stops there: `facts.update` overwrites, `facts.delete` removes, and the next consolidation pass re-reads the same chat log with nothing to consult. A user's correction is a statement about the present that a scheduled job is free to undo.
+- **No supersession chain and no audit row**, so a corrected fact cannot be traced to what it replaced or to who replaced it — the agent and the dashboard write identically.
+- **No trust state**, and provenance is one `source` string.
 - **Single-user scope.**
-- **The gate's own accuracy is unmeasured** — a false negative silently answers without memory that would have helped, and nothing detects it.
+- **The gate's own accuracy is unmeasured** — a false negative silently answers without memory that would have helped, and nothing detects it. Tracked upstream as [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77), which states the asymmetry the measurement has to preserve: a false "no" loses a fact the user supplied, a false "yes" costs one search, and a single accuracy number would hide the difference.
 - **The gate adds a call per turn**, and the net cost is asserted rather than measured.
+- **A consolidation that fails and a week with nothing to say are indistinguishable from outside.** Both return `0` and neither logs.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`evals/deterministic/test_working_memory.py` and `test_cli_memory.py` — deterministic rather than model-judged, which is the right shape for behavioural checks. Nothing was run for this review.
+Fifty deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation. Nothing was run for this review — a dependency surface was inside the seven-day cooldown.
 
-The measurement the design most needs and does not have is **gate accuracy**: how often does `should_retrieve` return false on a turn that would have benefited from memory? False positives merely cost a search; false negatives produce a confidently unmemoried answer, and are invisible without a labelled set.
+The measurement the design most needs and does not have is **gate accuracy**: how often does `should_retrieve` return false on a turn that would have benefited from memory? Eleven tests establish that the gate parses, not that it decides correctly, so the project's whole thesis rests on an unscored judgement call.
+
+`negative_eval` is withheld by a narrow margin worth naming. `test_triage_workflow.py:89` asserts `"gate" not in kinds` — that a quick turn never touches memory retrieval — which is a committed assertion that a *path* is not taken, not that particular material must not be retrieved. It is the right instinct one step away from the mark.
 
 ## 11. For Your Own Build
 
@@ -190,12 +266,14 @@ The measurement the design most needs and does not have is **gate accuracy**: ho
 - **Record the reason.** A five-word justification per decision turns a skipped search from a mystery into a log line.
 - **Batch consolidation for quality, not just cost.** A summarizer needs enough material to find something worth keeping.
 - **Progressive disclosure by default** — index always, body on match, references on demand.
-- **Budget for reasoning-model preambles** when parsing structured output from a small model.
+- **Budget for reasoning-model preambles** when parsing structured output from a small model — and size the budget per *prompt*, not per project. Waku's gate and its summarizer both wanted 600; one sees a single message and the other carries the whole unconsolidated log, and copying the constant is what broke the second.
+- **Give the model the constructive verb and keep the destructive one.** `update_soul` appends and cannot prune, because the rules it would prune are the honesty rules; a person does full rewrites in the dashboard.
 
 ### Avoid
 
 - **An unmeasured gate.** The whole design rests on the gate being right, and nothing checks it.
-- **Consolidation without correction** — facts accumulate, contradictions coexist.
+- **A correction that only reaches the row.** Update-in-place and delete are the easy half; a background pass that re-reads the source material will undo both unless something records the value as rejected.
+- **A failure path that returns the same value as a quiet success.** `return 0` for "nothing worth keeping" and `return 0` for "the model returned no text" cannot be told apart by any operator, and the second one repeats every turn.
 - **No provenance**, so a wrong fact cannot be traced to the chat that produced it.
 - **Asserted cost savings.**
 
@@ -209,15 +287,16 @@ Borrow:
 
 Do not copy:
 
-- The data model as a belief store; add correction before it matters.
+- The data model as a belief store. The correction verbs are here; what is missing is anything that makes a correction survive the next automatic write, and that is the part that matters once memory is more than a week old.
 - A gate without an accuracy measurement, if a missed retrieval is costly.
 
 ## 12. Open Questions
 
-- How often does the gate wrongly decline? Nothing labels or measures it.
+- How often does the gate wrongly decline? Nothing labels or measures it, and [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77) is open against exactly that.
 - Does the gate call cost less than the searches it avoids, in latency and tokens?
 - Should a declined retrieval be revisited if the model's answer turns out to need memory?
-- What happens when consolidation extracts a fact contradicting an existing one?
+- What happens when consolidation extracts a fact contradicting an existing one? Nothing in the summarizer prompt or the store compares against what is already held.
+- How often does a user delete a fact that consolidation then re-derives? Answering it needs a running instance and a real log, not the source.
 - Could the gate's `reason` strings be mined to improve the prompt over time?
 
 ## Appendix: File Index
@@ -228,8 +307,14 @@ Do not copy:
 - Semantic: `waku/memory/semantic/store.py`, `supabase_store.py`.
 - Episodic: `waku/memory/episodic/store.py`, `notion_store.py`.
 - Procedural: `waku/memory/procedural/loader.py`, `installer.py`.
-- Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`.
+- Self-management tools: `waku/tools/memory_admin.py` (`make_manage_memory_tool`, `make_update_soul_tool`, `make_create_skill_tool`), registered in `waku/tools/__init__.py:35`.
+- Human review: `waku/ops/dashboard.py` (`memory_action`, `_SELFMGMT`).
+- Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`, `test_retrieval_gate.py`, `test_consolidation.py`, `test_episodic_store_switch.py`, `test_skill_encoding.py`.
 
 ## History
+
+**2026-08-06** — [`51228f07a4c8bad13987cdfb9668edd3ea9ba060`](https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060) — 32 commits on. One published claim was wrong, and wrong at the previous pin rather than overtaken by it: the report asserted no correction or deletion path existed. `waku/tools/memory_admin.py` was present at `5f638cfb`, registered unconditionally at `waku/tools/__init__.py:35`, with committed tests, and `waku/ops/dashboard.py` carried human CRUD over the same store at the same commit. Both were missed because the reading scoped itself to `waku/memory/` and took the directory name as the boundary of the mechanism. `human_review` is earned on the dashboard's memory tab and is added; the correction criticism narrows to its accurate form, which is that nothing is keyed on a rejected value. Reported by the maintainer on [issue #45](https://github.com/ShenSeanChen/waku-agent/issues/45), and verified here at the previous pin as well as at this one.
+
+The gate's accuracy is still unmeasured and is now tracked upstream as [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77). `3bce69c` raised consolidation's `max_tokens` from 600 to 4096 and added a no-JSON guard, after a contributor measured a reasoning model spending the whole budget on a thinking block and returning zero text blocks against a 40-row backlog — the same constant the gate uses, in a prompt that carries the entire unconsolidated log. Both failure branches still return `0` without a log line.
 
 **2026-07-27** — [`5f638cfb5de957c14f056027833d8a9df5bbe558`](https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558) — first reading.

@@ -346,11 +346,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### `waku-agent`
 
 - Best idea: a small-model gate that decides whether to retrieve at all, returns the query when it says yes, and fails open when it errors.
-- Biggest risk: the gate's own accuracy is unmeasured, and a false negative is invisible.
+- Biggest risk: the gate's own accuracy is unmeasured, and a false negative is invisible — eleven committed cases establish that it parses, not that it decides correctly, and the project's whole thesis rests on the second.
 - Most reusable component: `should_retrieve()` — the fail-open branch and the recorded reason included.
-- Maturity impression: small, opinionated, and unusually clear about why each expensive step is conditional; deterministic evals for memory behaviour.
+- Maturity impression: 825 lines of memory code under fifty model-free eval files, unusually clear about why each expensive step is conditional, and a maintainer who files the criticism as an issue and states the error asymmetry a single accuracy number would hide.
 - Study when: retrieval runs every turn and you suspect it is hurting as often as helping.
-- Do not copy when: you need correction, scope, or trust — none of the three exists here.
+- Do not copy when: you need a correction that survives the next automatic write. `manage_memory` and the dashboard both correct a row and neither records that a value was rejected, so the consolidation pass re-reads the same chat log and can restore what the user just removed.
 
 ### `metaclaw`
 

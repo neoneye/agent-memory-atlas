@@ -5927,16 +5927,21 @@ frozen since 2023</td>
 <td>Gated — a small model decides whether to search at all, and supplies
 the query</td>
 <td>Consolidation batched after N new chats, not per message</td>
-<td>None found; no supersession or tombstone</td>
+<td><code>manage_memory</code> lets the agent search, update and delete
+its own facts and episodes mid-conversation; the dashboard gives a
+person the same CRUD; no supersession chain and no tombstone</td>
 <td>Single user</td>
-<td>CLI agent; skills in the Anthropic Agent Skills format</td>
+<td>CLI agent with a local dashboard; three self-management tools;
+skills in the Anthropic Agent Skills format</td>
 <td>Batched consolidation into facts and episodes</td>
 <td>Gate decisions carry a reason string; no trust state on
 memories</td>
-<td>Refusing expensive work at three levels, and failing open when the
-gate errors</td>
-<td>No correction, scope, or trust model; gate adds a model call per
-turn</td>
+<td>Refusing expensive work at three levels, failing open when the gate
+errors, and one correction path reachable by both the agent and a
+person</td>
+<td>Nothing is keyed on a rejected value, so a corrected fact is
+re-learnable on the next consolidation; no trust state or scope; gate
+adds a model call per turn and its accuracy is unmeasured</td>
 </tr>
 <tr>
 <td><code>z-waif</code></td>
@@ -6255,7 +6260,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>34 of 151:</em> <a
+<p><em>35 of 151:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -6289,7 +6294,8 @@ href="../systems/risuai/"><code>risuai</code></a>, <a
 href="../systems/second-me/"><code>second-me</code></a>, <a
 href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
-<a href="../systems/verel/"><code>verel</code></a></p>
+<a href="../systems/verel/"><code>verel</code></a>, <a
+href="../systems/waku-agent/"><code>waku-agent</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
@@ -10336,7 +10342,7 @@ href="https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d
 <li><a
 href="https://github.com/ShenSeanChen/waku-agent">ShenSeanChen/waku-agent</a>
 at <a
-href="https://github.com/ShenSeanChen/waku-agent/commit/5f638cfb5de957c14f056027833d8a9df5bbe558"><code class="commit-id" title="5f638cfb5de957c14f056027833d8a9df5bbe558">5f638cfb…</code></a></li>
+href="https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060"><code class="commit-id" title="51228f07a4c8bad13987cdfb9668edd3ea9ba060">51228f07…</code></a></li>
 <li><a
 href="https://github.com/agentic-box/memora">agentic-box/memora</a> at
 <a
@@ -11470,6 +11476,41 @@ gitignored and absent from the repository.</li>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-06</strong> — A maintainer's correction on <a
+href="../systems/waku-agent/">waku-agent</a> produced one method lesson,
+and it is about where a reading stops.</p>
+<p><strong>A directory named <code>memory</code> is not the boundary of
+the memory system.</strong> The waku-agent report asserted that no
+correction or deletion path existed. Both existed at the commit it was
+pinned to: <code>waku/tools/memory_admin.py</code> registers a
+<code>manage_memory</code> tool giving the agent search, update and
+delete over its own facts and episodes,
+<code>waku/tools/__init__.py</code> registers it unconditionally, and
+<code>waku/ops/dashboard.py</code> carries human CRUD over the same
+store — enough to earn <code>human_review</code>, which was also missed.
+The reading had scoped itself to <code>waku/memory/</code> and counted
+its lines (801) as the size of the mechanism, and that package genuinely
+contains no mutation surface: the error was not misreading a file but
+never opening one.</p>
+<p>What generalises is the search, not the apology. The atlas's own
+report format asks for a "update/delete/forget/conflict path", and
+answering it by grepping the memory package answers a narrower question
+than the one asked. <strong>Correction verbs live where the agent's
+tools are defined, not where its stores are</strong> —
+<code>tools/</code>, <code>mcp_tools.py</code>,
+<code>tool_schemas.py</code>, a dashboard route table — because
+correcting a memory is something an agent or a person <em>does</em>, and
+the store only holds the row. Every future reading greps the whole tree
+for the verbs (<code>delete</code>, <code>forget</code>,
+<code>update</code>, <code>supersede</code>, <code>invalidate</code>)
+before writing "none found", and the phrase "none found" now carries the
+obligation to have searched outside the obvious package.</p>
+<p>The second-order lesson is about which claims to distrust. This atlas
+already records that <em>criticisms are the claims most likely to go
+stale</em>. This one was not stale — it was wrong when published — and
+it was a criticism, which is the same category. A criticism asserts a
+negative, and a negative is the one kind of claim that a bounded search
+can get wrong without any evidence appearing.</p>
 <p><strong>2026-08-05</strong> — Re-reading <a
 href="../systems/memsem/">memsem</a> produced two method lessons, both
 about how a re-read establishes that something <em>changed</em>.</p>

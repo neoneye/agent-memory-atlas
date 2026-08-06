@@ -173,7 +173,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Mechanism | Systems carrying it |
 | --- | --- |
 | Scope enforced in retrieval | 85 of 151 |
-| Human review surface | 34 of 151 |
+| Human review surface | 35 of 151 |
 | Append-only mutation audit | 32 of 151 |
 | Negative retrieval assertion | 25 of 151 |
 | Explicit trust state | 24 of 151 |
