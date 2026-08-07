@@ -497,6 +497,33 @@ between two *ids*, not keyed on the rejected *value*, and Memora ingests
 documents and images: re-ingesting the same source produces a new row that
 nothing blocks. Rich relation modelling is not a substitute for negative memory.
 
+**One sighting outside the corpus, because of where it was found.**
+`os-factory/har` is a harness for running coding agents in isolated worktrees —
+no memory in it, no report, [recorded as an
+exclusion](../../compare/#known-limitations) — and its
+Mission Control dashboard carries an `UnregisteredRepository` table whose schema
+comment reads *"Paths removed via unregister — blocks auto-sync re-registration
+until force register."* The delete path writes the path into it before dropping
+the row; the register path consults it on every write and refuses with a 409
+unless the caller passes `force: true`, which deletes the tombstone as the same
+act that overrides it. That is the consulted form, with the audited-override
+shape this page's tradeoff list asks for. It goes one step further than any
+holder above: the client handles the 409 by dropping the path from its *own*
+local registry, so the sync loop stops re-asserting instead of failing at the
+gate forever — a tombstone that quiets the writer rather than only refusing it.
+
+Two things to take from that and one not to. The failure it closes is the one
+named at the top of this page — a periodic pass re-reading an unchanged source
+and restating what a person deleted — which is why a `deleted_at` on the row
+would not have worked and somebody noticed. It is keyed on a filesystem path, so
+it never meets the normalization problem that defeated Verel's round 9 and
+Memori's key; this is the pattern on easy mode, and the easy mode is where it
+gets built. And nothing tests it, in a tree with 87 test files, beside a
+commit gate tested across nine cases — so even here, the negative half is the
+half nobody covered. The mechanism is not hard. It is reached when a concrete
+re-assertion loop makes the need undeniable, and memory systems have exactly
+that loop and mostly have not noticed.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

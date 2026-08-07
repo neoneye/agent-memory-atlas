@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-07-a-harness-that-reinvented-the-tombstone.md](2026-08-07-a-harness-that-reinvented-the-tombstone.md) —
+  `os-factory/har` triaged and excluded — every one of its twelve tables is about
+  runs, and `recall`/`remember`/`forget`/`embedding`/`vector` appear twice in
+  16,065 lines. Recorded anyway for three mechanisms: a rejected-value tombstone
+  in its repository registry whose refusal propagates back to the sync loop that
+  would re-assert it, a validation record keyed by the tree hash it is about so
+  it invalidates itself, and a propose-review-apply gateway over `AGENTS.md` with
+  a floor on how much of the file a refresh may delete.
 - [2026-08-07-the-goedel-machine-lineage.md](2026-08-07-the-goedel-machine-lineage.md) —
   Schmidhuber's 2003 Gödel machine, the Huxley-Gödel Machine that approximates it,
   and its implementation triaged: what persists there is a tree of git commit ids
