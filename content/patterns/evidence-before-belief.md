@@ -88,6 +88,15 @@ model guesses, unexecuted plans, and unverified assumptions explicitly forbidden
 direction: a lesson and its procedure are derived from the **same consolidator
 cluster** in one LLM call, so the how-to and the why cannot drift apart.
 
+[AIMAOS](../../systems/aimaos/) makes the same separation structural in the
+cheapest way available: raw conversation chunks are their own storage category,
+and that category is listed in `DECAY_EXEMPT_CATEGORIES` so every pruning and
+confidence rule skips it by construction. The comment states the invariant —
+raw chunks are *"the raw source material that nightly review forms beliefs FROM —
+pruning one silently deletes history no later pass can recover"*. **A decay pass
+cannot forget to exempt a category it was never given**, which is a stronger
+guarantee than a `is_evidence` flag every future query has to remember to check.
+
 [Helix AGI](../../systems/helix-agi/) has the separation and shows what it costs
 when only half of it is wired. Memories live in an append-only journal and
 beliefs are derived from them nightly, with `memory_refs` on every belief and a

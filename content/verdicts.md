@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 156 reports.**
+**This page covers all 157 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1461,3 +1461,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 59,313 lines of Python, AGPL-3.0, with committed per-run benchmark artifacts and line-by-line subsystem audits in `documents/` — beside a documented nightly `compact()` that has no caller and two journal-bootstrap functions that are defined and never called.
 - Study when: you want ambient recall that costs no embedding call per turn, or a decay rule written as an equation with named terms rather than a magic half-life.
 - Do not copy when: anyone will ever ask whether a memory is gone — deletion reaches both runtime indexes and neither the journal nor the inbound references that point at it.
+
+### `aimaos`
+
+- Best idea: a phrasing-skeleton channel in the duplicate detector — same skeleton, shared anchor token, swapped value token — added to catch *"contradictions that embeddings place far apart"*, which is exactly where similarity search is weakest and where contradiction lives.
+- Biggest risk: the superseded wording is kept on the row as `previous_content` and read by nothing, so re-asserting an overwritten value supersedes back and the store oscillates with no record that either value was ever judged.
+- Most reusable component: the rule that a reversal is not corroboration — on contradiction, `verifications` resets to one and confidence is replaced rather than boosted, so a fact confirmed five times and a fact that flip-flopped five times do not look alike.
+- Maturity impression: 26,798 lines of Apache-2.0 Python across a five-agent office with an Android client, a pinned lockfile beside a floating manifest, and a release audit that retires its own earlier benchmark notes as inaccurate — beside a memory package that no committed test constructs.
+- Study when: you want contradiction detection that does not depend on an embedding model, or a memory layer already factored behind adapters for a different runtime.
+- Do not copy when: a correction has to hold — nothing consults the value it replaced — or two people share an agent, since isolation here is one directory per agent and no user axis at all.

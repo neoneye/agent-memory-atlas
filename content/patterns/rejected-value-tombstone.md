@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and fifty-six
+> **This is not an established best practice.** Nine systems of one hundred and fifty-seven
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -187,9 +187,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and fifty-six
+That makes the negative result stronger rather than weaker. Two of one hundred and fifty-seven
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and fifty-six, plus one adoption by a reader who went looking, suggests an idea
+one hundred and fifty-seven, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -435,6 +435,18 @@ new active memory with an audit entry that looks like a legitimate creation —
 because on its own terms it is one. **The gap is one predicate wide**: the same
 comparison run without the `active` filter, or a rejection table keyed on
 `(tenant_id, user_id, normalized_content)` consulted before activation.
+
+**[AIMAOS](../../systems/aimaos/) is the other near-miss, and it stores the value
+it rejected.** When its duplicate detector decides a new statement contradicts an
+existing belief rather than restating it, the row adopts the newer wording and
+keeps the old one in `previous_content` — the rejected value, retained, keyed to
+the belief it was replaced in. Nothing reads that field. Re-assert the old value
+and the same contradiction logic fires in reverse: it supersedes back, the
+evidence trail resets again, and the store oscillates between two values with no
+record that either was ever judged wrong. **The field this pattern asks for
+exists; the lookup does not** — which is the same one-predicate gap as
+[MemoryOps AI](../../systems/memoryops-ai/) above, reached from the opposite
+direction, by a system that kept the value rather than one that normalised it.
 
 Worth holding beside the rest of that system, because it makes the page's central
 claim concrete. This is a project that enforces tenancy through Postgres

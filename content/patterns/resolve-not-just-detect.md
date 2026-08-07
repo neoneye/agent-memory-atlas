@@ -191,6 +191,18 @@ into a defined vocabulary including `contradicts` as an edge between two named
 memories, and its correction pass defaults to a dry run — a report a human reads
 — but the dispositions available are supersede or nothing.
 
+[AIMAOS](../../systems/aimaos/) resolves rather than flags, and shows that
+resolution alone is not the whole of the pattern either. Its detector is
+deterministic and unusually cheap — a phrasing-skeleton match where the value
+tokens swap — and the disposition is fixed: the newer statement wins, the
+evidence trail restarts, and the replaced wording is kept on the row. Nobody
+chooses, nothing records that a conflict occurred beyond the overwritten field,
+and no write path consults the outcome. So the same value can be re-asserted and
+win the reverse decision immediately. **A disposition that is always the same one
+and is never written where a later write can see it leaves the store in the state
+this page's first group ends in** — ambiguity resolved, and nothing durable to
+show for it.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

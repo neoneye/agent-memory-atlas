@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **156 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **157 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -27,6 +27,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
 - [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals
 - [`ai-memory`](../systems/ai-memory/) **ai-memory** — Cross-harness handoff · `akitaonrails/ai-memory` · Scope enforced
+- [`aimaos`](../systems/aimaos/) **AIMAOS** — Contradictions embeddings place far apart · `munch2u-a11y/AIMAOS` · Scope enforced
 - [`alma-memory`](../systems/alma-memory/) **ALMA** — A write guard on one door of six · `RBKunnela/ALMA-memory` · Trust state, Scope enforced, Mutation audit
 - [`argo`](../systems/argo/) **ARGO** — Architecture as the memory · `derekhu0002/Argo` · Scope enforced, Negative evals
 - [`atomic-agent`](../systems/atomic-agent/) **Atomic Agent** — Evaluated memory fabric · `AtomicBot-ai/atomic-agent` · Bi-temporal
