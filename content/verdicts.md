@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 159 reports.**
+**This page covers all 161 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1488,3 +1488,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 32,104 lines of Rust across five crates, published to crates.io, MIT or Apache-2.0, with systemd service and watchdog units in `contrib/` — and the cleanest screen in this atlas: zero auto-run surfaces, zero build-time execution, zero unpinned dependencies, `Cargo.lock` fourteen days cold.
 - Study when: you want one local store for everything a coding agent knows, or the cheapest useful answer to a context window about to be cleared — a structured handoff memory written before the clear and restored after it.
 - Do not copy when: a correction has to be defensible — supersession and soft delete are both durable and neither records a reason, an actor, or a status.
+
+### `cognis`
+
+- Best idea: `fingerprint_policy` — a SHA-256 over the backend id, the resolved behaviour flags, the options and a hash of the instruction text, frozen into a per-turn `MemoryRuntimePolicy` and returned by `audit_metadata()`, so "which memory rules were in force when this happened" is a value to compare rather than a configuration to reconstruct.
+- Biggest risk: nothing epistemic crosses the provider boundary — no status, no provenance, no trust — so a backend that models belief has no way to tell the host and the host has no way to ask.
+- Most reusable component: a memory contract with `delete_memory` and `delete_memory_tool` as separate methods, `agent_id` and `user_email` on every call, a `null` backend as the copyable template, and a contract test that pins the response shape.
+- Maturity impression: 1,495 files and 802 commits under BSL 1.1, controller/executor split with Docker images for both, `uv.lock` twelve days cold — and a contract suite that asserts a JWT subject cannot be overridden by a request header.
+- Study when: memory is somebody else's service and your job is deciding when it runs, under which policy, and how to prove afterwards which policy that was.
+- Do not copy when: you want memory mechanics — the store is elsewhere, and this repository is the seam rather than the substance.
+
+### `intaris`
+
+- Best idea: a durable, versioned behavioural profile of the *agent* — risk level, alerts, summary, keyed on `(user_id, agent_id)` — derived from its own audit history and read back before the next decision. The only memory in this atlas whose subject is the actor rather than the world.
+- Biggest risk: the audit rows the profile derives from are updated in place when a human resolves them, so the history being summarised is rewritten after the fact, and the risk level it produces gates behaviour with no path for anyone to dispute it.
+- Most reusable component: `precedent.py` — mapping a call into a coarse capability family so one human approval generalises across equivalent low-risk tools *"without turning into blanket approval for all calls to the same tool name"*, with mutating verbs kept out of lookup families.
+- Maturity impression: 212 files under BSL 1.1 with a dual-dialect SQLite/Postgres schema, hierarchical sessions with an idle sweep, and one `WHERE` clause that excludes judge-authored decisions from the data it treats as authoritative human guidance.
+- Study when: you reuse human approvals and need them to generalise without becoming reflexive, or you want the one worked example here of memory about the actor.
+- Do not copy when: the profile must be correctable — nothing disputes it, and only the next analysis can disagree with the last.

@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 159 reports.</strong></p>
+<p><strong>This page covers all 161 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3641,6 +3641,60 @@ restored after it.</li>
 <li>Do not copy when: a correction has to be defensible — supersession
 and soft delete are both durable and neither records a reason, an actor,
 or a status.</li>
+</ul>
+<h3 id="cognis"><code>cognis</code></h3>
+<ul>
+<li>Best idea: <code>fingerprint_policy</code> — a SHA-256 over the
+backend id, the resolved behaviour flags, the options and a hash of the
+instruction text, frozen into a per-turn
+<code>MemoryRuntimePolicy</code> and returned by
+<code>audit_metadata()</code>, so "which memory rules were in force when
+this happened" is a value to compare rather than a configuration to
+reconstruct.</li>
+<li>Biggest risk: nothing epistemic crosses the provider boundary — no
+status, no provenance, no trust — so a backend that models belief has no
+way to tell the host and the host has no way to ask.</li>
+<li>Most reusable component: a memory contract with
+<code>delete_memory</code> and <code>delete_memory_tool</code> as
+separate methods, <code>agent_id</code> and <code>user_email</code> on
+every call, a <code>null</code> backend as the copyable template, and a
+contract test that pins the response shape.</li>
+<li>Maturity impression: 1,495 files and 802 commits under BSL 1.1,
+controller/executor split with Docker images for both,
+<code>uv.lock</code> twelve days cold — and a contract suite that
+asserts a JWT subject cannot be overridden by a request header.</li>
+<li>Study when: memory is somebody else's service and your job is
+deciding when it runs, under which policy, and how to prove afterwards
+which policy that was.</li>
+<li>Do not copy when: you want memory mechanics — the store is
+elsewhere, and this repository is the seam rather than the
+substance.</li>
+</ul>
+<h3 id="intaris"><code>intaris</code></h3>
+<ul>
+<li>Best idea: a durable, versioned behavioural profile of the
+<em>agent</em> — risk level, alerts, summary, keyed on
+<code>(user_id, agent_id)</code> — derived from its own audit history
+and read back before the next decision. The only memory in this atlas
+whose subject is the actor rather than the world.</li>
+<li>Biggest risk: the audit rows the profile derives from are updated in
+place when a human resolves them, so the history being summarised is
+rewritten after the fact, and the risk level it produces gates behaviour
+with no path for anyone to dispute it.</li>
+<li>Most reusable component: <code>precedent.py</code> — mapping a call
+into a coarse capability family so one human approval generalises across
+equivalent low-risk tools <em>"without turning into blanket approval for
+all calls to the same tool name"</em>, with mutating verbs kept out of
+lookup families.</li>
+<li>Maturity impression: 212 files under BSL 1.1 with a dual-dialect
+SQLite/Postgres schema, hierarchical sessions with an idle sweep, and
+one <code>WHERE</code> clause that excludes judge-authored decisions
+from the data it treats as authoritative human guidance.</li>
+<li>Study when: you reuse human approvals and need them to generalise
+without becoming reflexive, or you want the one worked example here of
+memory about the actor.</li>
+<li>Do not copy when: the profile must be correctable — nothing disputes
+it, and only the next analysis can disagree with the last.</li>
 </ul>
         </article>
       </div>

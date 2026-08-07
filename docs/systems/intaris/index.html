@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A guardrails service whose durable
+memory is a versioned risk profile of the agent itself — derived from
+its own audit history, read back before the next decision, and the only
+memory in this atlas whose subject is the actor rather than the world.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Intaris — Agent Memory Atlas">
+    <meta property="og:description" content="A guardrails service whose
+durable memory is a versioned risk profile of the agent itself — derived
+from its own audit history, read back before the next decision, and the
+only memory in this atlas whose subject is the actor rather than the
+world.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Intaris — Agent Memory Atlas">
+    <meta name="twitter:description" content="A guardrails service whose
+durable memory is a versioned risk profile of the agent itself — derived
+from its own audit history, read back before the next decision, and the
+only memory in this atlas whose subject is the actor rather than the
+world.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Intaris — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory about the agent, not the world</p>
+          <h1>Intaris</h1>
+          <p class="document-deck">A guardrails service whose durable
+memory is a versioned risk profile of the agent itself — derived from
+its own audit history, read back before the next decision, and the only
+memory in this atlas whose subject is the actor rather than the
+world.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/fpytloun/intaris">
+              <span>Source</span>
+              <strong>fpytloun/intaris</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0" title="d07ea183ff637c0208e87357d51aa097dd3fced0">
+              <span>Analyzed revision</span>
+              <code>d07ea183…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-07</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (56%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Intaris is a Business Source License 1.1 guardrails service — 212
+files, 261 commits — that sits between an agent and its tools and
+evaluates every call before execution: default-deny, a read-only
+allowlist fast-pathed under a millisecond, everything else through an
+LLM safety evaluation behind a five-second circuit breaker. It is the
+guard in a three-service platform by one author, beside <a
+href="../cognis/">Cognis</a> as controller and <a
+href="../mnemory/">Mnemory</a> as memory.</p>
+<p>A guard is normally outside this atlas: what it durably holds is
+decisions, and a decision about an action is not a claim that can be
+wrong. <strong>Intaris is in scope for one table.</strong>
+<code>behavioral_profiles</code> is keyed on
+<code>(user_id, agent_id)</code> and holds a <code>risk_level</code>
+from 1 to 10, <code>active_alerts</code>, a
+<code>context_summary</code>, a <code>profile_version</code> and the id
+of the analysis that produced it. A background analyzer derives it from
+the audit history; the evaluator reads it back before the next decision
+and acts on it —
+<code>if (profile.get("risk_level") or 0) &gt;= 9:</code> is a live
+branch in <code>evaluator.py</code>.</p>
+<p>That is a durable belief with an identity, replaced by a later
+version, that changes what the system does. <strong>Its subject is the
+agent itself.</strong> Every other memory in this atlas is about the
+world, the user, or a task; this one is a system's accumulated opinion
+of the actor it is policing, and no other system here has that
+shape.</p>
+<p>The second mechanism is <code>precedent.py</code>, and it is a
+careful piece of work. When a human finally approves a call, that
+approval should generalise — but generalising by tool name turns one
+<em>yes</em> into blanket approval for every future call to that tool.
+So a call is mapped into a coarse capability family and scope —
+<code>web_search</code> and <code>web_fetch</code> land together, a
+Todoist lookup with other lookup verbs, mutating verbs kept apart from
+lookup verbs, read-only bash commands enumerated. A human's approval
+then applies across the family. The doc comment states the balance
+exactly: apply the approval across equivalent low-risk tools
+<em>"without turning into blanket approval for all calls to the same
+tool name."</em></p>
+<p>The limit on that mechanism is the finding a reader most needs.
+<code>get_user_decisions</code> takes a <code>session_id</code>:
+precedent is <strong>within-session only</strong>. Approve a web fetch
+today, and tomorrow's session asks again.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two clocks run over the same audit trail.</p>
+<p><strong>Within a call, evaluation is layered and
+cheap-first.</strong> Classification splits read-only from everything
+else; the allowlist resolves in under a millisecond; what survives goes
+to an LLM judge with a circuit breaker, and the decision matrix is
+priority-ordered — critical risk auto-denies, aligned low and medium
+approve, high risk and misalignment escalate to a person.</p>
+<p><strong>Within a session, human decisions are authoritative and only
+human ones.</strong> <code>get_user_decisions</code> returns final human
+resolutions and <em>excludes judge-authored decisions</em>, so what the
+evaluator treats as authoritative guidance cannot be something the model
+decided earlier and then read back as if a person had said it. That
+exclusion is the whole reason the data can be trusted, and it is one
+line of SQL.</p>
+<p><strong>Across sessions, the analyzer builds a profile.</strong>
+Behavioural analyses run as scheduled tasks over the audit history and
+write a new <code>behavioral_profiles</code> row, version incremented.
+That profile is the only thing that survives the session.</p>
+<pre class="mermaid"><code>flowchart TD
+    TC[&quot;Tool call&quot;] --&gt; CL{&quot;Classifier:&lt;br/&gt;read-only allowlist?&quot;}
+    CL -- &quot;yes&quot; --&gt; OK[&quot;Approved, sub-millisecond&quot;]
+    CL -- &quot;no&quot; --&gt; P[&quot;Precedent match:&lt;br/&gt;capability family + scope&quot;]
+    P --&gt; J{&quot;LLM judge&lt;br/&gt;5s circuit breaker&quot;}
+    J -- &quot;critical&quot; --&gt; DENY[&quot;Denied&quot;]
+    J -- &quot;aligned low/medium&quot; --&gt; OK
+    J -- &quot;high risk or misaligned&quot; --&gt; ESC[&quot;Escalate to a human&quot;]
+    ESC --&gt; HR[&quot;Final human decision&quot;]
+    HR --&gt; AL[(&quot;audit_log&quot;)]
+    OK --&gt; AL
+    DENY --&gt; AL
+    AL -- &quot;within this session only&quot; --&gt; P
+    AL --&gt; AN[&quot;Background analyzer&quot;]
+    AN --&gt; BP[(&quot;behavioral_profiles&lt;br/&gt;(user_id, agent_id)&lt;br/&gt;risk_level, version&quot;)]
+    BP --&gt; J</code></pre>
+<p>The two edges out of <code>audit_log</code> are the design: one feeds
+the current session and expires with it, the other feeds a profile that
+does not.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single Python process, SQLite or Postgres, no dependency beyond an
+LLM API key. The schema is dual-dialect — the migration helpers build
+<code>behavioral_profiles</code>, <code>behavioral_analyses</code>,
+<code>analysis_tasks</code> and <code>session_summaries</code> in both
+SQLite and Postgres forms, with <code>TIMESTAMPTZ</code> where Postgres
+wants it — which is unusual care for a service that could reasonably
+have picked one.</p>
+<p>Sessions are hierarchical with parent/child links, intention
+tracking, lifecycle states and an idle sweep. WebSocket streaming
+carries live decisions to a monitor. The licence is BSL 1.1: readable
+and analysable, with the change date and additional-use grant worth
+checking before building on it.</p>
+<p>The screen found unpinned dependency surfaces and files inside the
+seven-day cooldown, so nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Precedent</strong> — <code>intaris/precedent.py</code>:
+<code>PrecedentSignature</code>, <code>build_precedent_signature</code>,
+verb and command sets; consumed by
+<code>evaluator.py:_apply_authoritative_user_precedent</code> and by
+<code>judge.py</code>.</li>
+<li><strong>Authoritative decisions</strong> —
+<code>intaris/audit.py:get_user_decisions</code>, session scoped,
+judge-authored rows excluded.</li>
+<li><strong>Profile write</strong> —
+<code>intaris/analyzer.py:3187</code> inserts, with
+<code>profile_version</code> read back at <code>:3213</code>.</li>
+<li><strong>Profile read</strong> —
+<code>intaris/evaluator.py:747-770</code>, and the risk branch at
+<code>:403</code>.</li>
+<li><strong>Schema</strong> — <code>intaris/db.py</code>: table creation
+from <code>:1097</code>, dual-dialect migrations from
+<code>:505</code>.</li>
+<li><strong>Redaction</strong> — <code>intaris/redactor.py</code> with
+<code>tests/test_redactor.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The profile is the memory unit and it is small: a tenant, an agent, a
+risk level bounded 1–10 by a <code>CHECK</code> constraint, alerts, a
+summary, a version, and the analysis id it came from.
+<code>PRIMARY KEY (user_id, agent_id)</code> means one current profile
+per pair — history lives in <code>behavioral_analyses</code>, not in the
+profile table.</p>
+<p>What it lacks is an epistemic status: a profile is a number and a
+summary, so <em>this agent is risky</em> and <em>we have not yet
+analysed this agent</em> are told apart only by the default of 1.
+Nothing records that a profile was disputed, corrected by a person, or
+overridden — the next analysis simply replaces it.</p>
+<p>The audit row is the evidence layer, carrying
+<code>args_redacted</code>, the decision, the human decision, a note,
+who resolved it, the risk, the reasoning, the evaluation path, the
+intention and an <code>args_hash</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no query language here — retrieval is two keyed lookups. The
+profile is fetched by <code>(user_id, agent_id)</code>. Human decisions
+are fetched by <code>(user_id, session_id)</code>, newest first, capped
+at five, and then matched by signature rather than by equality: the
+precedent family is what turns a lookup into a generalisation.</p>
+<p><code>args_hash</code> sits on the audit row beside
+<code>args_redacted</code>, so an identical call can be recognised
+without keeping the raw arguments — the same instinct as a digest-keyed
+record elsewhere in this atlas, used here for matching rather than for
+suppression.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every evaluated call writes a row, and the row is <strong>updated in
+place when a human resolves it</strong> — <code>UPDATE audit_log</code>
+appears twice in <code>audit.py</code>. That is the right shape for a
+work queue and the wrong shape for an audit, and it is why this report
+withholds the <code>audit_log</code> mark: the record the profile is
+derived from can change after the fact, and nothing preserves what it
+said before.</p>
+<p>Profile writes are background and unattended. A new analysis replaces
+the current profile wholesale; the version increments; the previous one
+is recoverable only through <code>behavioral_analyses</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP-compatible, with named support for OpenCode, Claude Code and
+OpenClaw. The service is in the path of every tool call, which is the
+strongest integration position a guard can have and the reason the
+profile is worth building at all — it sees everything the agent tried,
+not only what it succeeded at.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The exclusion of judge-authored decisions is the best single
+line here.</strong> A system that reads its own past model outputs back
+as authoritative guidance is the harness-output-as-evidence antipattern
+this atlas records elsewhere; one <code>WHERE</code> clause prevents it,
+and the docstring says why.</p>
+<p><strong>Precedent generalises deliberately and stops
+deliberately.</strong> Families group equivalent low-risk capabilities;
+mutating verbs are kept out of lookup families; read-only bash commands
+are enumerated rather than pattern-matched. The design resists the two
+easy errors — approving a tool name forever, and refusing to generalise
+at all.</p>
+<p><strong>Escalation earns <code>human_review</code> outright.</strong>
+A person adjudicates, their decision is stored with a note and an actor,
+and it is treated as outranking the model's.</p>
+<p><strong>Scope reaches every query.</strong> <code>user_id</code> is
+threaded through as a tenant identifier and sits in the profile's
+primary key beside <code>agent_id</code>.</p>
+<p><strong>What is missing is a record that anything was ever
+wrong.</strong> A profile can be too high or too low and nothing says
+so; there is no dispute, no correction and no expiry.
+<code>risk_level &gt;= 9</code> gates behaviour, so a profile that
+drifts high is a standing brake with no released path other than the
+next analysis disagreeing with the last.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests cover the redactor, path policy, search, the API and the
+classifier; <code>tools/benchmark/</code> holds scenario worlds for
+exercising the guard.</p>
+<p><code>negative_eval</code> is <strong>withheld</strong>, and the
+near-miss is specific. <code>tests/test_redactor.py</code> asserts an
+OpenAI key, an AWS key and a GitHub token are absent from redacted
+commands and environments — genuinely valuable, and an assertion about
+what enters the store rather than about what a read path returns.
+<code>tests/test_api.py</code> has one assertion that
+<code>args_redacted</code> is absent or null in a listing, which is
+closer, and one assertion is thinner than this mark should rest on. A
+committed case asserting that one tenant's audit or profile is
+unreachable under another <code>user_id</code> would earn it
+immediately, and the schema is already shaped for it.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Keep a profile of the actor, not only of the
+content.</strong> A durable, versioned opinion about the agent — derived
+from what it tried, read back before the next decision — is a memory
+shape this atlas has one instance of, and the instance is cheap: six
+columns and a background job.</p>
+<p><strong>Exclude your own model's past decisions from the evidence you
+call authoritative.</strong> One <code>WHERE</code>, and it stops a
+system laundering its own judgement into a human's.</p>
+<p><strong>Generalise an approval by capability family, not by tool
+name.</strong> Map the call into a family and a scope, keep mutating
+verbs apart from lookups, and enumerate the read-only commands.</p>
+<p><strong>Store a hash of the arguments beside the redacted
+ones.</strong> Matching without retention.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not update audit rows in place if a profile derives from
+them.</strong> The resolution overwrites the record of what was
+originally decided, which is exactly the history the analyzer is
+summarising.</p>
+<p><strong>Do not let precedent die with the session</strong> unless you
+mean to. Asking a person the same question every session is how
+approvals become reflexive, which is the failure the whole default-deny
+posture exists to prevent.</p>
+<p><strong>Do not gate on a number nothing can dispute.</strong>
+<code>risk_level &gt;= 9</code> is a strong behavioural consequence
+attached to a value with no correction path.</p>
+<h3 id="fit">Fit</h3>
+<p>This is the right shape for one operator running agents with real
+tool access who wants a default-deny gate and a record of what was
+allowed. Take the precedent families and the judge-exclusion rule
+regardless of the rest — both are small and both address failures that
+show up anywhere a human approval is reused.</p>
+<p>It is not a memory system for an agent's knowledge, and the platform
+does not pretend otherwise: that is Mnemory's job. Read this one for the
+profile and for what it costs to build a memory whose subject is the
+actor.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A mutable audit trail underneath a derived
+profile.</strong></li>
+<li><strong>Session-bound precedent</strong>, so the same human
+judgement is re-requested.</li>
+<li><strong>A risk level with no dispute path</strong> driving a hard
+behavioural gate.</li>
+<li><strong>No test that one tenant cannot read another's
+history</strong>, in a service whose whole schema is tenant-keyed.</li>
+<li><strong>BSL 1.1</strong>, which constrains use rather than
+reading.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow <code>precedent.py</code> — it is self-contained, model-free,
+and the balance it strikes is the hard part of reusing human approvals.
+Borrow the judge-exclusion clause.</p>
+<p>The profile is worth <em>copying the idea of</em> rather than the
+implementation: give it a status, a way for a person to disagree with
+it, and an append-only trail underneath, and it becomes the mechanism
+this atlas has been looking for on the action side.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Was session-scoped precedent a deliberate limit or an artefact of
+where the data was easiest to read?</li>
+<li>Can a person correct a behavioural profile directly, or only by
+waiting for the next analysis?</li>
+<li>What does the idle sweep do to sessions whose decisions have not
+been resolved?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>intaris/precedent.py</code></td>
+<td>Capability families, scopes, signature matching</td>
+</tr>
+<tr>
+<td><code>intaris/audit.py</code></td>
+<td><code>get_user_decisions</code>, the human-only clause, in-place
+resolution updates</td>
+</tr>
+<tr>
+<td><code>intaris/analyzer.py</code></td>
+<td>Behavioural analysis and profile writes with versioning</td>
+</tr>
+<tr>
+<td><code>intaris/evaluator.py</code></td>
+<td>Profile read, the <code>risk_level &gt;= 9</code> branch, precedent
+application</td>
+</tr>
+<tr>
+<td><code>intaris/db.py</code></td>
+<td>Dual-dialect schema and migrations</td>
+</tr>
+<tr>
+<td><code>tests/test_redactor.py</code></td>
+<td>Secret redaction assertions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0"><code class="commit-id" title="d07ea183ff637c0208e87357d51aa097dd3fced0">d07ea183…</code></a>
+— first reading. Screened before reading: unpinned dependency surfaces
+and files inside the seven-day cooldown, so nothing was installed, built
+or run. Licensed BSL 1.1, recorded as a caveat rather than an exclusion.
+Admitted on <code>behavioral_profiles</code> alone: a guard's decision
+record is not a belief, but a versioned profile of the agent that the
+evaluator reads back and acts on is one, and it is the only memory in
+this atlas whose subject is the actor.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
