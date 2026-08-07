@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
-revision: 4f8bf4df77868ff9a86531539276cea11c28093d
-revision_url: https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d
-analyzed_at: 2026-08-04
+revision: 78140714426d66b01246eb9cdefae00d7d93f74f
+revision_url: https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f
+analyzed_at: 2026-08-07
 capabilities: "trust_state, human_review"
 matrix:
   memory_unit: "A Markdown page in an adopter's vault, carrying frontmatter with four independent status axes; Cambium ships no pages"
@@ -488,6 +488,8 @@ which have neither.
 - Licensing: `LICENSE.md`, `LICENSES/`, `NOTICE`, `ATTRIBUTION.md`.
 
 ## History
+
+**2026-08-07** — [`78140714426d66b01246eb9cdefae00d7d93f74f`](https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f) — 32 commits and 52,570 inserted lines on, and the work is the project auditing its own distinguishing property. Screened first: 0 auto-run surfaces, 1 build-time execution path, 0 unpinned surfaces, nothing inside the cooldown; nothing was built or run. Marks are unchanged. Seven remediation batches left 106 findings open, and the commit that matters separates them: most were wording and ownership consistency, while six *"had the same shape as the S1s this work started by fixing, which is that something passes by saying nothing"* — the failure class this report already credits the project for naming. The worked example is the vocabulary gate: `compose_vocab` was the one artifact writer not going through `atomic_write_text`, and `check_vocab` only asked whether the file existed, so **a zero-byte `vocab.yaml` made every controlled frontmatter value legal and exited 0**. Both sides now share one predicate — the artifact must parse, be a mapping, and carry a non-empty field set — and CI was added that would have caught the original two findings. A separate batch closes *"the bypasses an independent review found in the new checks"*, which is the second-order version of the same discipline: the checks that catch vacuous passes were themselves checked for vacuous passes.
 
 **2026-08-04** — [`4f8bf4df77868ff9a86531539276cea11c28093d`](https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d) — second reading, four commits on, prompted by the project's author. `profiles/examples/agent-atlas/` is a 603-line filled reference profile carrying no placeholder markers, and it was present at the previously pinned commit; `check_profile.py` passes on it — `slots=10 bound_ok=10`, `sentinel_hits(fail)=0`, 13 files scanned. Verified at the old pin before the re-pin. `compose_vocab.py` still refuses to build a vocabulary from it, because `K00/03` carries four uninstantiated `{{ }}` placeholders and adoption is a governance act the public repository declines to simulate, so `check_vocab.py` continues to exit 1 and `check_freshness.py` continues to report `NOTHING CHECKED`. Since the old pin: `ROADMAP.md` gains a typed-dependency-runtime section, and the example's adoption wording is rewritten — where it previously described the live Agent Systems Atlas corpus as "migration inputs to a future adoption task", it now records that the Atlas has completed a separate formal adoption of Cambium `3.0.0` against a materialized `profiles/agent-atlas/`, while adding that this example "remains a reference rather than an adoption certificate or proof of corpus-wide acceptance". That private instance state is not distributed, so nothing about it is checkable here.
 

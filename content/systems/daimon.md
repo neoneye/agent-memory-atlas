@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 3025ee3edecd1958e9e9181fe607a5b1a30309bf
-revision_url: https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf
-analyzed_at: 2026-08-03
+revision: 4222243e40352691b957d6e3242b5aed25e8c851
+revision_url: https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851
+analyzed_at: 2026-08-07
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
@@ -20,7 +20,7 @@ matrix:
   integration: "Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only stdio MCP"
   background: "Detached serialize child, retry ledger with self-heal, index rebuild"
   trust: "verbatim vs inferred as a stored field, verified by code against the transcript — with corroboration as a separate axis that can never become a trust class"
-  strengths: "The model's trust claims are checked by code; an eleven-step deletion-durability protocol committed as one deterministic test, every step paired with a never-forgotten twin; a replay A/B rig with a placebo arm that has published refutations of the project's own features"
+  strengths: "A surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; an eleven-step deletion protocol with a never-forgotten twin per step; a placebo arm that has refuted the project's own features"
   risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value"
 ---
 
@@ -689,6 +689,32 @@ a stubbed signer with a fixed clock, at zero model quota.
 The benchmark harness also scores a forbidden-hit dimension against the assembled
 brief, of the kind [open-cowork](../open-cowork/)'s `forbiddenHits` provides.
 
+**Two mechanisms sit above that test and are the stronger claim, because a test
+proves a case while these bind the design.**
+
+*Every file shape daimon writes is declared, with a delete strategy.*
+`surfaces.py` is a registry of every shape written under `~/.daimon`, each row
+stating whether it can hold item plaintext, which walker owns it, and how
+deletion reaches it — `rewrite`, `append-tombstone`, `wholesale-purge`, `reap`,
+`exempt-no-plaintext`, or **`known-gap` with an issue number**. The write-audit
+guard then asserts that every observed write shape is declared
+(`test_every_observed_write_shape_is_declared`), with **a sensitivity twin
+proving the alarm rings against an empty registry**, so a new store cannot ship
+without saying how forgetting reaches it. `known-gap` being a legal value is the
+part worth copying: the registry records what is not covered rather than leaving
+it undeclared, which is the difference between a gap and a surprise.
+
+*And the contract is audited in the field, with a third exit code.*
+`daimon audit privacy` is a read-only residue audit that, in its own words,
+*"proves forget's contract instead of trusting it"* — with the parenthetical that
+matters, *"a passing test once asserted the residue"*. It exits **0 proven clean,
+1 residue found, and 3 cannot-prove**, and the source states why the third exists:
+*"'could not check' must never look like 'all clean'"*. The usage tags are split
+the same way, because *"'the auditor ran' and 'the auditor found residue' answer
+different questions"*. This is [Cambium](../cambium/)'s refusal to return an
+unearned pass, applied to deletion durability by a system that had already
+shipped the most complete deletion test here and then declined to trust it.
+
 **The deletion protocol is also structurally cheap here, and the reason
 generalizes.** Step 8 asserts absence from "recall's SQLite rows", and that is
 the *whole* index — there is no embedding anywhere in `plugin/daimon_briefing/`,
@@ -895,6 +921,8 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-08-07** — [`4222243e40352691b957d6e3242b5aed25e8c851`](https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851) — 42 commits on, and the deletion contract is where nearly all of them landed. Screened first: 0 auto-run surfaces, 2 build-time execution paths, 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent — and the mechanisms behind two of them grew materially. `surfaces.py` now declares every file shape written under `~/.daimon` with its delete strategy, and a guard asserts every observed write shape is declared with a sensitivity twin against an empty registry, so a new store cannot ship without stating how deletion reaches it. `daimon audit privacy` adds a read-only residue audit with a three-valued exit code whose third value exists so that *"could not check" must never look like "all clean"*. `forget` now reaches quote, scene, links and topic fields and redacts the event ledger; the serializer crash log and the Windsurf adapter's own transcript store were brought inside the deletion contract; and a forget in team mode publishes a hash-only `{ts, key, author}` row so teammates suppress the value by default, never carrying the text. A CLI trust inspector was added. The project's own scars file records the methodological rule behind the auditor — residue tests must not enumerate through the scrubber's own walk — which is the same failure this atlas records as a search scoped to the place the answer ought to be.
 
 **2026-08-03** — [`3025ee3edecd1958e9e9181fe607a5b1a30309bf`](https://github.com/Daily-Nerd/daimon/commit/3025ee3edecd1958e9e9181fe607a5b1a30309bf) — 41 commits on. The mechanism did not move — the eleven-step deletion-durability protocol and its three sibling tests are byte-identical, and no capability mark changed. One published claim was stale: item ids are minted at 12 hex through a `(12, 16, 24, 40)` width ladder in `policy.stamp_item_ids`, not at 6 hex in `store.py`, because the project measured a ~2.4% cross-session collision rate at 6 hex over ~2k texts per project whose consequence is `forget` withholding an unrelated live memory. What is new is not a memory mechanism but a measuring instrument: a replay A/B harness with a placebo arm, self-verification, and committed refutations including one of a shipped feature.
 
