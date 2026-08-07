@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 163 reports.**
+**This page covers all 164 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1524,3 +1524,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 299,740 lines of Go across 995 files serving MCP, REST, gRPC and a binary protocol from one dependency-free binary, with replication and backup as first-class packages, clock-skew tests beside both the decay and activation suites, and dated design notes in `.claude/deep-review/` arguing the tuning decisions.
 - Study when: you want cognitively-motivated decay and activation implemented *in* a store rather than around one, or a retrieval path that is allowed to abstain and is tested as a measured component.
 - Do not copy when: you need to build freely on decay, Hebbian learning or Bayesian confidence — read the patent notice first — or you need a value-keyed refusal, which everything here is shaped for and nothing implements.
+
+### `iai-pme`
+
+- Best idea: a head-to-head against [MemPalace](../systems/mempalace/) run in one harness on identical data, with a matched-embedder row isolating the retrieval design from the embedding model, published as *"an **exact tie** … **No win claimed** — an honest tie is the strong, defensible statement"* — and followed by naming what the benchmark it just used does not measure.
+- Biggest risk: no trust state, no provenance and no tombstone, so a wrong memory and a stale one are indistinguishable and the only remedies are fade and re-teach.
+- Most reusable component: fade-and-rescue — forgetting is a queued intention with a visible undo window rather than a confirmation dialog, measured at Rescue@10 1.000 with superseded wording still retrievable.
+- Maturity impression: 702 test files against 264 source files, a Rust core beside the Python one, AES-256-GCM at rest with no telemetry, committed PyTorch-versus-Rust embedder comparisons with an environment snapshot, and preflight and checkpoint tests around the benchmark runner itself.
+- Study when: you want the benchmark posture — one harness, a matched control, a published tie, a stated limitation of the instrument — or an interface where forgetting can be taken back.
+- Do not copy when: memory is shared by more than one person; the project says so itself and points elsewhere.
