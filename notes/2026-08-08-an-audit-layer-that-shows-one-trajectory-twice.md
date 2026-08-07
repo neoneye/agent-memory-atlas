@@ -1,0 +1,145 @@
+# An audit layer that shows one trajectory twice
+
+**Status:** done. Not a system report — the subject is not agent memory, and the
+[exclusion is recorded in the limitations](../content/overview.md). This note
+exists because the *failure shape* is one the atlas already names twice and had
+not yet seen in this form.
+
+**Subject:** *Recursive Synthesis for Long-Horizon Terminal Tasks*
+([arXiv:2608.05466v1](https://arxiv.org/abs/2608.05466), 5 August 2026, CC BY
+4.0) and its
+[project site](https://zhongzhi660.github.io/recursive-verified-synthesis-site/),
+whose fifth section is an "Audit layer" headed *"Don't just trust our metrics.
+Inspect the task change, model trajectory, and rubric decision for the same case
+yourself."*
+
+**Method:** the site read directly in a browser, values taken from the live DOM
+rather than from prose. Every number below is re-checkable by opening a case and
+stepping the turn selector. The paper's internals were read through the arXiv
+HTML rendering; no PDF text extractor was available here, so paper-internal
+claims in this note are weaker evidence than the site claims and are marked
+where they matter.
+
+## What the audit layer promises
+
+Three tabs per case, ten cases: **Task Diff** (source → runtime file changes),
+**Trajectory Diff** (*"compare a failed baseline execution with a Harbor
+trajectory that received verifier reward 1.0"*), and **Rubric** (the scoring
+decision). It is the answer to the obvious objection that synthetic training
+data is easy to distrust, and it is the right instinct — publishing the artifact
+beside the number is exactly what this atlas asks of everyone else.
+
+## What it contains
+
+**1. The two trajectory columns are the same trajectory.** In case
+`jobs-diff-01-3341b098`, every turn where both columns render is byte-identical
+— command, response, and observation — through turn 6, including the closing
+`<action>done</action>`. Checked again in three more cases; identical at every
+turn where both sides have content.
+
+| Case | Baseline turns | Harbor turns | Turns identical where both render |
+| --- | ---: | ---: | --- |
+| 1 (`jobs-diff-01`) | 6 | 21 | all |
+| 2 | 11 | 19 | all sampled (1, 2, 4) |
+| 3 | 2 | 17 | all sampled (1, 2) |
+| 5 | 5 | 16 | all sampled (1, 2, 4) |
+
+**2. The turns that would explain the reward are empty.** Rendered panel length
+per turn, case 1:
+
+```
+turns 1–5   2680, 2476, 2686, 2414, 2740   full content
+turn 6       594                            the "done"
+turns 7–21   413, 413, 413, 414 … 414       Commands / Response / Observation all blank
+```
+
+The cutoff lands exactly at the baseline's turn count in every case measured —
+case 2's baseline is 11 turns and 12–19 are empty, case 3's is 2 and 3–17 are
+empty, case 5's is 5 and 6–16 are empty. The successful trajectory exists as
+turn *slots* carrying no data.
+
+The viewer is capable of saying data is missing: the left column prints **"No
+Left turn at this index"** past the baseline's end. The right column renders
+empty fields instead, so absence reads as an empty turn rather than as absence.
+
+**3. The rubric is a template with scores attached.** Case 1 scores 94.5/100
+across five capability profiles. All six A-criteria carry **confidence 86%**,
+cite the same evidence — `turn:1 turn:2 turn:3`, on a 21-turn trajectory — and
+end in the same generated sentence with the criterion name substituted:
+
+> "This is an evidence-linked deterministic assessment for the selected
+> trajectory."
+
+Recommendations are the same mail-merge; anchors are one of two fixed strings. A
+scoring surface that calls itself evidence-linked while pointing every criterion
+at the same three turns is asserting the property it exists to demonstrate.
+
+**4. One incidental leak.** The task diff for case 1 is three added lines in
+total, one of which is
+`docker_image = "/tmp/et_qwen35_9b_train_rollout_sifs/task_000000_3341b098.sif"`
+— an absolute `/tmp` path, so the bundle as shown is not reproducible, and a
+**9B** model in a train-rollout directory when the paper's model list is
+Qwen3.5-27B and Qwen3.5-122B-A10B. Either a smaller model collected rollouts and
+is unreported, or the fixture comes from a different run than the paper. A
+question, not a finding.
+
+## Why this is not an accusation
+
+The [viewer repository](https://github.com/alexhuang13/viewer) states it ships
+*"source code and small fixtures only"*, with Harbor jobs, trajectories and
+artifacts kept outside the checkout. So these are fixtures behaving as fixtures.
+Nothing here suggests the underlying runs do not exist.
+
+The gap is between what the fixtures are and the sentence they are published
+under. *"Don't just trust our metrics — inspect it yourself"* is a claim about
+what a reader can verify, and on this data a reader can verify nothing about the
+successful run. A fixture that renders as evidence is worse than no audit layer,
+because the audit layer is what a sceptical reader is directed to.
+
+## The failure shape, which is why the atlas keeps this
+
+The comparative report already names two versions of this:
+[the harness's own output captured as
+evidence](../content/overview.md) and [published benchmark numbers without
+committed artifacts](../content/overview.md). This is a third: **an audit
+surface whose fixtures do not contain the artifact it audits.** It is the most
+persuasive of the three, because the first two look like missing work and this
+one looks like completed work.
+
+The atlas should read its own surfaces against it. The relevant question is not
+"is there an evidence link" but "does following the link reach the thing". The
+[capability evidence block](../content/methodology/atlas-rubric.md) added on
+2026-08-07 is the atlas's version of the same promise, and its `test: unknown`
+values exist precisely so that a record cannot claim a test it does not have.
+
+## What the paper gets right, recorded so this note is not a hit piece
+
+Read through the arXiv HTML, the published figures are internally consistent.
+Every growth ratio reproduces from its own medians — commands 40 → 244.5 is
+6.1×, solution lines 67 → 374 is 5.6×, CLI tools 17 → 71 is 4.2×, assertions
+17 → 57 is 3.4×, instruction length 85 → 122 is 1.4×. The RL relative gains
+reproduce exactly from the absolute scores: 49.44/41.20 = 1.200, 32.00/22.67 =
+1.412, 22.07/18.10 = 1.219 against claimed +20%, +41%, +22%. The site also
+prints *"These numbers use different units"* directly under its cost comparison,
+which is more than most pages do.
+
+Two of its own numbers cut against the headline, and both are worth more than
+anything above. Median **requirement coverage runs 0.42 → 0.57** across rounds,
+so at the final round roughly two fifths of what the verifier checks is still
+not stated in the public instruction — which is the paper's own contract-validity
+gate failing to bind. And hidden-check protection starts at 38.2%. The flagship
+result is a fixed solver falling from 90% to 2.5% pass@4, read as tasks getting
+harder; under-specified tasks produce the same curve, and the alignment audit is
+the control that would separate them.
+
+## Not a memory system
+
+Recorded here rather than as a report because nothing in it survives a session
+with a correctable identity. It is adjacent in one specific way. Accepted tasks
+persist across all fifteen rounds with parent lineage and, by the paper's own
+description, **no retroactive removal** — a task accepted in R3 against a
+verifier later shown under-specified stays in the R1–R15 RL pool and stays in
+every descendant's ancestry. That is the
+[rejected-value tombstone](../content/patterns/rejected-value-tombstone.md) gap
+arriving in a training-data pipeline: the correction cannot propagate backwards
+because nothing is keyed on what was wrong.

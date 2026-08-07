@@ -45,6 +45,21 @@ when the work happens.
   build brief, test ids and a `use-the-atlas` skill were then built the same day;
   a manifest field carrying judgements nobody made, and the phrase
   "conformance", are declined on precedent.
+- [2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md](2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md) —
+  a task-synthesis paper's project site publishes an "Audit layer" inviting the
+  reader not to trust its metrics; read in a browser, the failed baseline and the
+  successful run are byte-identical at every turn that renders, every turn past
+  the baseline's length is blank on the successful side, and the rubric scores
+  94.5/100 with every criterion at the same confidence citing the same three
+  turns. They are fixtures behaving as fixtures — the gap is the sentence they
+  are published under. A third variant of a failure the atlas already names
+  twice, and the most persuasive, because it looks like finished work.
+- [2026-08-08-what-the-negative-eval-mark-actually-counts.md](2026-08-08-what-the-negative-eval-mark-actually-counts.md) —
+  all 37 mark-holders re-read against the rubric's own wording after a review
+  argued the mark had drifted: 27 assert about a read path, 20 about a value and
+  7 about a boundary, while 10 keep material out of a projection, a preamble, a
+  summarization, a file or a write. One report asserts the mark and cites no case
+  at all. The flags stay at 37 and the split is published instead.
 - [2026-08-07-the-strong-form-tombstone-subset.md](2026-08-07-the-strong-form-tombstone-subset.md) —
   the nine mark-holders re-read against the pattern page's own definition: five
   refuse the write, two are durable only because nothing reads the rejection and
