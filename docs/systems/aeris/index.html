@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A deterministic simulation engine
+whose agents hold beliefs with a five-value status enum and memories
+with no text at all — and whose only channel to a language model is a
+projection a validator refuses to hand over if it contains an engine
+identifier.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Aeris — Agent Memory Atlas">
+    <meta property="og:description" content="A deterministic simulation
+engine whose agents hold beliefs with a five-value status enum and
+memories with no text at all — and whose only channel to a language
+model is a projection a validator refuses to hand over if it contains an
+engine identifier.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Aeris — Agent Memory Atlas">
+    <meta name="twitter:description" content="A deterministic simulation
+engine whose agents hold beliefs with a five-value status enum and
+memories with no text at all — and whose only channel to a language
+model is a projection a validator refuses to hand over if it contains an
+engine identifier.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Aeris — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The model never touches the state</p>
+          <h1>Aeris</h1>
+          <p class="document-deck">A deterministic simulation engine
+whose agents hold beliefs with a five-value status enum and memories
+with no text at all — and whose only channel to a language model is a
+projection a validator refuses to hand over if it contains an engine
+identifier.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Cedrick-Coto/Aeris">
+              <span>Source</span>
+              <strong>Cedrick-Coto/Aeris</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db" title="68a2bd6d11a12beab705ce400e5c3a052d7f71db">
+              <span>Analyzed revision</span>
+              <code>68a2bd6d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-07</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (57%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Aeris is a 16,700-line GPL-3.0 cognitive simulation engine in C# on
+.NET 10, built on an entity-component-system and documented in Spanish
+across nineteen design documents and eight architecture decision
+records. Its stated purpose is a simulated world in which narrative
+emerges from simulation rather than from a prompt, and its central
+architectural commitment is stated in the README as a rule about the
+model: <em>"El LLM nunca modifica el estado del mundo; únicamente
+interpreta y expresa el estado interno"</em> — the model never modifies
+world state, it only interprets and expresses the internal state.</p>
+<p>That rule is enforced rather than asserted, which is what makes the
+system worth a report. The engine builds a <code>SemanticState</code> —
+identity, situation, internal state, world model, attention, working
+memory, long-term memory, social context and directives — and
+<code>SemanticValidator</code> refuses it if it contains any of eighteen
+engine identifiers: <code>EntityId</code>, <code>Entity(</code>,
+<code>Arch.</code>, <code>MemoryStore</code>, <code>BeliefData</code>
+and the rest. Committed tests assert on the <em>serialized</em> payload
+that <code>EntityId</code>, <code>Arch.</code> and <code>Store</code> do
+not appear in it. The boundary between what the simulation knows and
+what a model is allowed to see is a checked property.</p>
+<p>The memory model is unusual in this corpus in a way that cuts both
+directions. A <code>MemoryData</code> is a struct with no text: type,
+category, emotional weight, importance, certainty, timestamp, the entity
+involved, the location, a forgotten flag and a decay start. Nothing
+stores <em>what</em> was remembered. A <code>BeliefData</code> is
+similarly compact, and carries what most systems here do not — a
+discrete <code>BeliefStatus</code> of
+<code>Active | Weakening | Revised | Abandoned | Contradicted</code>, a
+<code>BeliefSource</code> of
+<code>DirectObservation | ToldByTrusted | ToldByUntrusted | CulturalTradition | InferredFromEvidence | Assumed</code>,
+and two pointers: <code>SupportingMemoryId</code> and
+<code>ContradictingMemoryId</code>.</p>
+<p>So a belief here knows how it was acquired, which memory supports it,
+which memory contradicts it, and whether it currently stands — and
+neither the belief nor the memory contains a sentence. Correction is a
+status transition on a numeric record, not a repair of content, because
+there is no content to repair.</p>
+<p><strong>Why it is in scope.</strong> The stores are world resources,
+and <code>JsonPersistence</code> serializes every resource except four
+runtime ones into a <code>WorldSnapshot</code> that
+<code>LoadWorld</code> restores. Beliefs and memories therefore survive
+the session with stable ids and a status that can later change, which is
+the atlas's admission test. That the agent is a simulated character
+rather than an assistant is the same situation as the roleplay clients
+already here.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A tick moves state through ordered phases, and belief is what
+survives the journey.</p>
+<p><strong>Perception writes memories.</strong>
+<code>PerceptionSystem</code> produces percepts,
+<code>AttentionSystem</code> selects among them by a swappable strategy,
+and <code>WorkingMemorySystem</code> holds what is currently active.</p>
+<p><strong>Consolidation and decay run on the clock, not on
+judgement.</strong> <code>MemoryConsolidationSystem</code> promotes, and
+<code>LongTermMemorySystem</code> walks every entity's memories,
+computes <code>EffectiveImportance</code> — importance halved per
+half-life of simulation time — and flips <code>Forgotten</code> when it
+falls below <code>0.05</code>. Nothing is deleted; a forgotten memory
+keeps its row and stops being relevant.</p>
+<p><strong>Belief is downstream of memory and carries its
+provenance.</strong> A belief points at the memory that supports it and
+at the memory that contradicts it, and its status moves rather than its
+content changing.</p>
+<p><strong>And the model sits outside all of it.</strong>
+<code>SemanticExtractor</code> builds a projection,
+<code>SemanticValidator</code> checks it for engine leakage, entity ids
+and token budget, and something not present in this repository is
+expected to render it. The model has no write path by construction:
+there is no API through which it could return state.</p>
+<pre class="mermaid"><code>flowchart TD
+    P[&quot;Perception → attention → working memory&quot;] --&gt; M[(&quot;MemoryStore&lt;br/&gt;keyed by entity, no text&quot;)]
+    M --&gt; D[&quot;Decay: EffectiveImportance &lt; 0.05&quot;]
+    D --&gt; F[&quot;Forgotten = true&lt;br/&gt;row retained&quot;]
+    M -- &quot;supports / contradicts&quot; --&gt; B[(&quot;BeliefStore&lt;br/&gt;status + source&quot;)]
+    B --&gt; S[&quot;SemanticExtractor&quot;]
+    M --&gt; S
+    S --&gt; V{&quot;SemanticValidator&lt;br/&gt;18 engine identifiers,&lt;br/&gt;entity ids, token budget&quot;}
+    V -- &quot;invalid&quot; --&gt; R[&quot;Rejected: errors returned&quot;]
+    V -- &quot;valid&quot; --&gt; OUT[&quot;SemanticState for a model&quot;]
+    OUT -. &quot;no client exists in the tree&quot; .-x LLM[&quot;Language model&quot;]
+    LLM -. &quot;no write path by construction&quot; .-x M</code></pre>
+<p>Both dotted edges are findings. The model cannot write back — that is
+the design. And nothing in the repository sends it anything — that is
+the gap.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library and a benchmark project, no application.
+<code>Aeris.Engine</code> holds the ECS world, the systems and the
+stores; <code>Aeris.Benchmarks</code> runs BenchmarkDotNet over the
+engine; <code>Aeris.Engine.Tests</code> is 9,834 lines of xUnit across
+27 files with FluentAssertions and FsCheck property tests.</p>
+<p>Operational discipline is well above the median for this corpus. All
+eight NuGet package references are exactly pinned. GitHub Actions are
+pinned to commit SHAs with the version in a trailing comment. There are
+four workflows — CI, documentation, OSSF Scorecard, and a separate
+<strong>Determinism Check</strong> that runs only the tests whose names
+match <code>Determinis</code>. <code>Directory.Build.props</code> sets
+<code>TreatWarningsAsErrors</code> and
+<code>EnforceCodeStyleInBuild</code> for every project.</p>
+<p>Eight ADRs record the choices, including
+<code>0002-use-sqlite-json</code> and
+<code>0006-self-model-reconstructed</code>. The second is load-bearing:
+the self is not a stored component but a <code>SelfSnapshot</code>
+rebuilt each tick, so there is no accumulating identity record to drift.
+The first has not landed — persistence at this commit is JSON files, and
+no SQLite dependency exists.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Memory</strong> —
+<code>src/Aeris.Engine/MemoryData.cs</code>: the struct,
+<code>EffectiveImportance</code>, and <code>MemoryStore</code> keyed by
+entity.</li>
+<li><strong>Decay and forgetting</strong> —
+<code>LongTermMemorySystem.cs</code>, threshold <code>0.05</code>,
+half-life defaulting to one simulated day.</li>
+<li><strong>Belief</strong> — <code>BeliefData.cs</code>:
+<code>BeliefStatus</code>, <code>BeliefSource</code>,
+<code>SupportingMemoryId</code>,
+<code>ContradictingMemoryId</code>.</li>
+<li><strong>Retrieval</strong> —
+<code>IMemoryRetrievalStrategy.cs</code> and
+<code>MemoryRetrievalSystem.cs</code>, with interchangeability covered
+by its own test file.</li>
+<li><strong>Projection</strong> — <code>SemanticExtractor.cs</code>,
+<code>SemanticState.cs</code>, <code>SemanticFact.cs</code>.</li>
+<li><strong>The boundary</strong> — <code>SemanticValidator.cs</code>:
+<code>EcsLeakPatterns</code>, <code>ValidateNoEntityIds</code>,
+<code>ValidateTokenBudget</code>, <code>ValidateStructure</code>.</li>
+<li><strong>Persistence</strong> — <code>JsonPersistence.cs</code>:
+<code>CreateSnapshot</code>, the four excluded resource types,
+<code>SaveWorld</code>/<code>LoadWorld</code>, tick-interval
+checkpointing.</li>
+<li><strong>Trace</strong> — <code>CognitiveTrace.cs</code>:
+<code>Record(system, input, output, why)</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryType</code> is
+<code>Observed | Experienced | Learned | Inferred | Forgotten</code> and
+<code>MemoryCategory</code> is
+<code>Social | Environmental | Combat | Discovery | Emotional | Quest</code>.
+Both are single bytes, and the whole record is a value type — this is
+data-oriented design applied to memory, and it is the cleanest example
+of that shape in the atlas.</p>
+<p>The absence of content is the defining property. A memory says <em>an
+event of this kind, involving this entity, at this place, mattered this
+much and I am this certain of it</em>. What actually happened lives in
+the simulation that produced it and in the projection assembled for the
+model, not in the row.</p>
+<p><code>BeliefStatus</code> is the strongest part of the model and
+earns <code>trust_state</code> outright. <code>Weakening</code> is a
+state most systems here express, if at all, as a falling number;
+<code>Revised</code> and <code>Abandoned</code> distinguish two outcomes
+that a single <code>active</code> boolean collapses; and
+<code>Contradicted</code> is a withholding state with a pointer to the
+memory that caused it. <code>IsActive</code> requires both the status
+and a confidence floor, so the enum gates reachability rather than
+decorating it.</p>
+<p><code>SemanticFact</code> — subject, predicate, object, certainty,
+source — is the only place text appears, and it is a projection type
+rather than a stored one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>IMemoryRetrievalStrategy</code> takes a context carrying the
+working-memory store and returns a <code>RetrievalResult</code>;
+strategies are swappable, and
+<code>MemoryRetrievalInterchangeabilityTests</code> exists to assert
+that swapping one does not change the engine's contract. The same
+interchangeability discipline covers planning, reasoning and attention —
+four strategy interfaces, each with a test file dedicated to
+substitutability.</p>
+<p>Scoring is importance decayed against simulation time. There is no
+embedding, no index, and no similarity anywhere in the tree, which is
+coherent: with no text in a memory there is nothing to embed.</p>
+<p>Scope is structural. Every store is a
+<code>Dictionary&lt;uint, List&lt;...&gt;&gt;</code> keyed by entity,
+and every read is <code>GetBeliefs(entityId)</code> or the memory
+equivalent, so one simulated agent reaching another's memory would
+require a different call rather than a forgotten predicate. That earns
+<code>scope_enforced</code> on the same basis as the file-boundary cases
+already here, with the same limit: it is partitioning inside one
+process, not authorisation, and there is no user or tenant axis at
+all.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, deterministic and ordered.
+<code>SystemManager</code> runs systems by <code>SystemPhase</code> and
+<code>Priority</code> within a tick; nothing is asynchronous, nothing
+retries, and no model call sits on any write path. Write-to-retrievable
+lag is one tick by construction.</p>
+<p>Persistence is a checkpoint rather than a journal.
+<code>ShouldCheckpoint</code> fires on a tick interval,
+<code>SaveWorld</code> serializes every entity's components and every
+resource except <code>TimeResource</code>, <code>EngineStats</code>,
+<code>EventBus</code> and <code>SchedulerResource</code>, and
+<code>LoadWorld</code> clears and reapplies. A save is a full snapshot;
+there is no incremental write, and no record anywhere of a single memory
+or belief having changed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is none to review, and that is worth stating plainly rather
+than implying. <code>docs/06-llm-contract.md</code> specifies the
+contract, <code>SemanticState</code> implements the payload,
+<code>ExtractionOptions</code> carries a token budget and
+<code>EstimatedTokens</code> is computed — and no HTTP client, provider
+SDK or model interface exists anywhere in the repository. The engine is
+one half of an integration, built to a specification, with the other
+half absent at this commit.</p>
+<p>For a reader that is a feature as much as a gap: the projection is
+inspectable and testable without any model in the loop, which is exactly
+why the leak assertions can be ordinary unit tests.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The validator is the mechanism to take away.</strong>
+Eighteen forbidden identifiers, a check for bare entity ids, a
+token-budget check and a structural check, all returning a
+<code>ValidationResult</code> with errors and warnings rather than
+throwing. The threat it addresses is not prompt injection but
+<em>representation leakage</em> — the model being handed the engine's
+own vocabulary and reasoning about <code>EntityId</code> values as
+though they were facts about the world. Nothing else in this atlas
+checks that boundary in code.</p>
+<p><strong>Determinism is a CI job, not a claim.</strong> A dedicated
+workflow runs the determinism-named tests on every push, which is the
+kind of thing usually asserted in a README and left unverified.</p>
+<p><strong>The trace explains and does not persist.</strong>
+<code>CognitiveTraceLog.Record</code> takes a system name, an input
+summary, an output summary and a <strong><code>why</code></strong>,
+links entries by <code>ParentTraceId</code>, and is cleared each tick.
+It is the best-shaped explanation record in the corpus for a single
+decision and it is not an audit: it does not survive the tick, and no
+memory mutation is recorded anywhere.</p>
+<p><strong>Nothing can be wrong in a way that needs correcting.</strong>
+A memory has no claim in it, so a wrong memory is a wrong
+<em>weight</em>, and the repair is decay. This is internally consistent
+and it means the mechanisms this atlas most often looks for —
+tombstones, supersession chains, provenance on content — have nothing to
+attach to here.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>9,834 lines of tests over 16,719 lines of engine, in 27 files.
+FsCheck brings property-based tests; FluentAssertions the readability;
+and the naming shows what the project considers risky —
+<code>CognitiveStressTests</code>, <code>E2EPipelineTests</code>,
+<code>ModelInterchangeabilityTests</code>, four separate
+strategy-interchangeability suites.</p>
+<p><code>negative_eval</code> is earned on
+<code>SemanticExtractorTests</code>, which serializes the extracted
+state and asserts <code>DoesNotContain("EntityId")</code>,
+<code>DoesNotContain("Arch.")</code> and
+<code>DoesNotContain("Store")</code>, alongside a named
+<code>Validation_NoEcsLeaks_InExtractedState</code>. The assertion is on
+the assembled payload rather than on the extractor's return value, which
+is the form this atlas asks for and rarely finds.</p>
+<p><code>Aeris.Benchmarks</code> runs BenchmarkDotNet over the engine.
+No results are committed, and none is quoted anywhere — a benchmark
+harness with no published number is a cleaner position than the
+reverse.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Validate what the model is allowed to see, by name.</strong>
+A list of internal identifiers, a check on the serialized projection,
+and unit tests asserting absence. Any system that assembles context from
+an internal store can do this in an afternoon, and it catches the class
+of bug where a schema field name, a row id or a store name reaches the
+prompt and becomes something the model reasons about.</p>
+<p><strong>Give a belief a status enum, not a confidence score.</strong>
+Five values, of which three are ways of not being believed, and
+<code>IsActive</code> requiring the status <em>and</em> a floor. The
+distinction between <code>Revised</code> and <code>Abandoned</code> is
+the sort of thing a float cannot carry.</p>
+<p><strong>Point a belief at both its supporting and its contradicting
+evidence.</strong> Two ids on a struct give a <em>why</em> and a <em>why
+not</em> for the price of eight bytes.</p>
+<p><strong>Put determinism in its own CI job</strong> if you claim
+it.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let the explanation trace be the only record and then
+clear it.</strong> The <code>why</code> field is the most useful thing
+in the trace, and it exists only until the next tick.</p>
+<p><strong>Do not leave an ADR's storage decision unimplemented without
+saying so.</strong> The repository chose SQLite in ADR-0002 and persists
+JSON snapshots; a reader following the ADRs will design against a store
+that is not there.</p>
+<p><strong>Do not assume a snapshot is a memory system's persistence
+story.</strong> Whole-world serialization at a tick interval means a
+crash loses everything since the last checkpoint, and nothing
+distinguishes a memory written a second ago from one written a thousand
+ticks ago in terms of durability.</p>
+<h3 id="fit">Fit</h3>
+<p>This is a good engine for a simulated world and a poor starting point
+for an assistant's memory, and the reason is the same in both cases:
+memories have no content. If what you want is agents whose behaviour
+emerges from decaying weighted experience under a deterministic clock,
+the ECS shape, the status enum and the validator are all directly
+usable. If you want an agent that can be told it was wrong about a fact,
+there is no fact here to be wrong about, and the parts that would hold
+one — a store keyed by value, a supersession record, an audit — are the
+parts this design deliberately does not have.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>No durable mutation record.</strong> The trace is per-tick
+and the persistence is a whole-world snapshot, so "when did this belief
+become contradicted" is unanswerable after the fact.</li>
+<li><strong>Checkpoint-only durability</strong>, with everything since
+the last tick interval lost on a crash.</li>
+<li><strong>An ADR that does not match the code</strong> on the storage
+engine.</li>
+<li><strong>A specified integration with no implementation</strong>, so
+the contract has never been exercised against a real model.</li>
+<li><strong><code>RemoveEntity</code> drops an entity's entire memory
+and belief lists</strong> with no record that it happened — the only
+destructive path, and it is unlogged.</li>
+<li><strong>Spanish-only documentation</strong> against an English-named
+public API, which is a contribution barrier rather than a defect.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the validator, the status enum and the dual evidence pointers.
+All three are small, independent of the ECS, and portable to any memory
+layer that assembles context for a model.</p>
+<p>Do not borrow the storage model unless you are also building a
+simulation: value structs in per-entity dictionaries serialized whole
+are exactly right for a deterministic tick loop and exactly wrong for a
+store that must answer questions about its own past.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the SQLite persistence of ADR-0002 planned, and would it record
+mutations or continue to snapshot?</li>
+<li>Does anything intend to consume <code>SemanticState</code>, and will
+the validator run in that caller or in the engine?</li>
+<li>What sets <code>ContradictingMemoryId</code>, and does any system
+move a belief to <code>Contradicted</code> today, or is the state
+currently only expressible?</li>
+<li>Should the trace survive a tick? The <code>why</code> field is the
+part a debugger would want after the fact, and it is the part that is
+discarded.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/Aeris.Engine/MemoryData.cs</code></td>
+<td>Memory struct, decay function, per-entity store</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/BeliefData.cs</code></td>
+<td>Status and source enums, evidence pointers, per-entity store</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/LongTermMemorySystem.cs</code></td>
+<td>Decay pass that flips <code>Forgotten</code> and destroys
+nothing</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/MemoryRetrievalSystem.cs</code></td>
+<td>Retrieval over one entity's list, strategy-driven</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/SemanticExtractor.cs</code></td>
+<td>Builds the model-facing projection</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/SemanticValidator.cs</code></td>
+<td>Eighteen forbidden identifiers, entity ids, token budget</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/JsonPersistence.cs</code></td>
+<td>World snapshots, resource inclusion rules, checkpointing</td>
+</tr>
+<tr>
+<td><code>src/Aeris.Engine/CognitiveTrace.cs</code></td>
+<td>Per-tick explanation trace with a <code>why</code></td>
+</tr>
+<tr>
+<td><code>tests/Aeris.Engine.Tests/SemanticExtractorTests.cs</code></td>
+<td>The committed leak assertions</td>
+</tr>
+<tr>
+<td><code>docs/adr/</code></td>
+<td>Eight decision records, including the unimplemented storage
+choice</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db"><code class="commit-id" title="68a2bd6d11a12beab705ce400e5c3a052d7f71db">68a2bd6d…</code></a>
+— first reading. The screen returned <strong>NOTHING SCANNED</strong> —
+this is a .NET tree and the tool parses no <code>.csproj</code> — so the
+execution surface was read by hand instead: all eight
+<code>PackageReference</code> entries are exactly pinned,
+<code>Directory.Build.props</code> declares properties only and no
+targets, no <code>.envrc</code>, devcontainer, editor task or git hook
+exists, and the four GitHub workflows pin every action to a commit SHA
+with the version in a trailing comment. Nothing was restored, built or
+run; the analysis is static. <code>NOTHING SCANNED</code> is recorded
+here as a finding about the screen's coverage rather than as a clean
+result.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

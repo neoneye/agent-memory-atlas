@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **157 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **158 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -18,6 +18,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`a-mem`](../systems/a-mem/) **A-MEM** — Evolving Zettelkasten memory · `agiresearch/A-mem`
 - [`acontext`](../systems/acontext/) **Acontext** — Memory as skill files · `memodb-io/Acontext` · Scope enforced, Human review
 - [`adk-python`](../systems/adk-python/) **Google ADK** — A contract with no delete · `google/adk-python` · Scope enforced
+- [`aeris`](../systems/aeris/) **Aeris** — The model never touches the state · `Cedrick-Coto/Aeris` · Trust state, Scope enforced, Negative evals
 - [`agent-afk`](../systems/agent-afk/) **agent-afk** — A citation or an [unverified] tag · `griffinwork40/agent-afk` · Negative evals
 - [`agent-framework`](../systems/agent-framework/) **Microsoft Agent Framework** — The contract AutoGen became · `microsoft/agent-framework` · Scope enforced
 - [`agent-memory-supabase`](../systems/agent-memory-supabase/) **Agent Memory on Supabase** — One table, argued for · `reescalder/agent-memory-supabase` · Bi-temporal, Scope enforced

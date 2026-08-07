@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 157 reports.**
+**This page covers all 158 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1470,3 +1470,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 26,798 lines of Apache-2.0 Python across a five-agent office with an Android client, a pinned lockfile beside a floating manifest, and a release audit that retires its own earlier benchmark notes as inaccurate — beside a memory package that no committed test constructs.
 - Study when: you want contradiction detection that does not depend on an embedding model, or a memory layer already factored behind adapters for a different runtime.
 - Do not copy when: a correction has to hold — nothing consults the value it replaced — or two people share an agent, since isolation here is one directory per agent and no user axis at all.
+
+### `aeris`
+
+- Best idea: a validator that refuses to hand a language model the engine's own vocabulary — eighteen forbidden identifiers, a bare-entity-id check and a token budget, asserted by committed tests on the *serialized* projection rather than on the extractor's return value.
+- Biggest risk: a memory carries no text, so nothing can be corrected about what was remembered — a wrong memory is a wrong weight, and the repair is decay.
+- Most reusable component: `BeliefData` — a five-value status enum where three values are ways of not being believed, a provenance enum running from direct observation to assumption, and two ids giving the belief a why and a why-not for eight bytes.
+- Maturity impression: 9,834 lines of xUnit and FsCheck over 16,719 lines of engine, eight ADRs, every NuGet reference exactly pinned and every GitHub action pinned to a commit SHA, with determinism enforced in a workflow of its own — beside an ADR selecting SQLite that the code has not implemented.
+- Study when: you assemble context for a model from an internal store and want the boundary between engine state and model-visible state checked rather than assumed.
+- Do not copy when: an agent has to be told it was wrong about a fact — there is no fact here to be wrong about, and the store is built so that there could not be.
