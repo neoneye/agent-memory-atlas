@@ -53,7 +53,10 @@ when the work happens.
   94.5/100 with every criterion at the same confidence citing the same three
   turns. They are fixtures behaving as fixtures — the gap is the sentence they
   are published under. A third variant of a failure the atlas already names
-  twice, and the most persuasive, because it looks like finished work.
+  twice, and the most persuasive, because it looks like finished work. Revised
+  the same day against the paper's LaTeX source, which corrected one claim this
+  atlas had backwards and found the paper's flagship RL score stated as 49.44 in
+  its table and abstract and 46.07 in its conclusion.
 - [2026-08-08-what-the-negative-eval-mark-actually-counts.md](2026-08-08-what-the-negative-eval-mark-actually-counts.md) —
   all 37 mark-holders re-read against the rubric's own wording after a review
   argued the mark had drifted: 27 assert about a read path, 20 about a value and
