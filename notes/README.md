@@ -8,6 +8,13 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-07-the-goedel-machine-lineage.md](2026-08-07-the-goedel-machine-lineage.md) —
+  Schmidhuber's 2003 Gödel machine, the Huxley-Gödel Machine that approximates it,
+  and its implementation triaged: what persists there is a tree of git commit ids
+  and their utility measures, read by the search loop and by nothing at task time,
+  so it is an optimizer's state rather than a memory. Two things worth taking
+  anyway — judging a node by what its descendants achieve, and getting undo for
+  free by versioning every self-modification as a commit.
 - [2026-08-07-the-atlas-as-an-agent-protocol.md](2026-08-07-the-atlas-as-an-agent-protocol.md) —
   a seven-step proposal to turn the atlas into an agent workflow, triaged: the
   premise is right and five of its "missing" pieces are already written down, so

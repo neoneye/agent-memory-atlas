@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 158 reports.**
+**This page covers all 159 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1479,3 +1479,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 9,834 lines of xUnit and FsCheck over 16,719 lines of engine, eight ADRs, every NuGet reference exactly pinned and every GitHub action pinned to a commit SHA, with determinism enforced in a workflow of its own — beside an ADR selecting SQLite that the code has not implemented.
 - Study when: you assemble context for a model from an internal store and want the boundary between engine state and model-visible state checked rather than assumed.
 - Do not copy when: an agent has to be told it was wrong about a fact — there is no fact here to be wrong about, and the store is built so that there could not be.
+
+### `mimir`
+
+- Best idea: typed memories, doc chunks and code symbols are rows in one `node` table with a `kind`, so a note about a function and the function itself are ranked against each other in one query instead of merged by a caller afterwards.
+- Biggest risk: the normalized content hash that would refuse a returning value is consulted under `AND deleted_at IS NULL`, so a deleted memory does not match its own hash and is re-created on the next restatement.
+- Most reusable component: eval fixtures carrying `forbidden_ids` beside `expected_ids`, resolved against a built store — the negative half of a retrieval eval, committed.
+- Maturity impression: 32,104 lines of Rust across five crates, published to crates.io, MIT or Apache-2.0, with systemd service and watchdog units in `contrib/` — and the cleanest screen in this atlas: zero auto-run surfaces, zero build-time execution, zero unpinned dependencies, `Cargo.lock` fourteen days cold.
+- Study when: you want one local store for everything a coding agent knows, or the cheapest useful answer to a context window about to be cleared — a structured handoff memory written before the clear and restored after it.
+- Do not copy when: a correction has to be defensible — supersession and soft delete are both durable and neither records a reason, an actor, or a status.

@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 158 reports.</strong></p>
+<p><strong>This page covers all 159 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -3613,6 +3613,33 @@ checked rather than assumed.</li>
 <li>Do not copy when: an agent has to be told it was wrong about a fact
 — there is no fact here to be wrong about, and the store is built so
 that there could not be.</li>
+</ul>
+<h3 id="mimir"><code>mimir</code></h3>
+<ul>
+<li>Best idea: typed memories, doc chunks and code symbols are rows in
+one <code>node</code> table with a <code>kind</code>, so a note about a
+function and the function itself are ranked against each other in one
+query instead of merged by a caller afterwards.</li>
+<li>Biggest risk: the normalized content hash that would refuse a
+returning value is consulted under <code>AND deleted_at IS NULL</code>,
+so a deleted memory does not match its own hash and is re-created on the
+next restatement.</li>
+<li>Most reusable component: eval fixtures carrying
+<code>forbidden_ids</code> beside <code>expected_ids</code>, resolved
+against a built store — the negative half of a retrieval eval,
+committed.</li>
+<li>Maturity impression: 32,104 lines of Rust across five crates,
+published to crates.io, MIT or Apache-2.0, with systemd service and
+watchdog units in <code>contrib/</code> — and the cleanest screen in
+this atlas: zero auto-run surfaces, zero build-time execution, zero
+unpinned dependencies, <code>Cargo.lock</code> fourteen days cold.</li>
+<li>Study when: you want one local store for everything a coding agent
+knows, or the cheapest useful answer to a context window about to be
+cleared — a structured handoff memory written before the clear and
+restored after it.</li>
+<li>Do not copy when: a correction has to be defensible — supersession
+and soft delete are both durable and neither records a reason, an actor,
+or a status.</li>
 </ul>
         </article>
       </div>

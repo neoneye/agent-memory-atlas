@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **158 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **159 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -137,6 +137,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
 - [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review
 - [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
+- [`mimir`](../systems/mimir/) **Mimir** — One graph, three node kinds · `MakerViking/mimir` · Scope enforced, Negative evals
 - [`minecontext`](../systems/minecontext/) **MineContext** — Prospective memory, inferred · `volcengine/MineContext`
 - [`mirix`](../systems/mirix/) **MIRIX** — Multi-agent typed memory · `Mirix-AI/MIRIX` · Scope enforced, Negative evals
 - [`mnemopi`](../systems/mnemopi/) **Mnemopi** — A decay curve per memory type · `can1357/oh-my-pi` · Negative evals
