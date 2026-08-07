@@ -12447,8 +12447,24 @@ href="#not-in-scope-conversation-window-management">OWASP Agent Memory
 Guard</a> above, addressed at the boundary where a party with an
 interest in the outcome rewrites the record. Unenforced by any code, and
 still the only instance in this round that treats summarisation as an
-epistemic hazard rather than a compression problem. Recorded with the
-compaction details in <a
+epistemic hazard rather than a compression problem. <strong>Its cron
+subsystem is the nearest thing to a durable agent-authored record in
+either repository and still is not memory</strong> —
+<code>CronCreate</code>/<code>CronList</code>/<code>CronDelete</code>
+are agent tools writing
+<code>{id, cron, prompt, createdAt, recurring, lastFiredAt}</code> to a
+workspace-scoped document store, but the tool's own documentation says
+tasks <em>"survive a resume of the same session but do not bleed into
+new sessions"</em>, and a schedule is an intent that cannot be false.
+Two moves in it transfer anyway: the model is told to
+<strong>re-enumerate from the store after a compaction rather than trust
+what survived in the summary</strong> — the right relationship between a
+lossy context and a durable record, and the opposite of how most
+extraction pipelines treat a compacted transcript — and a stale
+recurring task gets one final delivery flagged <code>stale: true</code>
+before deletion, so expiry arrives as a renewal offer to the party
+holding enough context to judge it, rather than firing silently while
+nobody is looking. Recorded with the compaction details in <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
 note</a>.</li>
 <li><strong><code>rezabyt.github.io/blogposts/sigreg-tutorial.html</code>

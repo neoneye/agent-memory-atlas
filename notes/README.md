@@ -17,7 +17,12 @@ when the work happens.
   agent-chosen time travel back to a context checkpoint with a note to its past
   self, which the TypeScript successor did not carry over. What `kimi-code`
   built instead is a compaction prompt that asks the model to carry unverified
-  claims through the summary *as* unverified.
+  claims through the summary *as* unverified. Second pass on `kimi-code`'s cron
+  subsystem — durable, agent-authored, workspace-scoped, and still not memory,
+  because a schedule is an intent that cannot be false — for two moves that
+  transfer: re-enumerate from the store after a compaction instead of trusting
+  the summary, and deliver expiry as a renewal offer rather than firing it
+  silently. No runtime skill authoring in any of the three.
 - [2026-08-07-a-harness-that-reinvented-the-tombstone.md](2026-08-07-a-harness-that-reinvented-the-tombstone.md) —
   `os-factory/har` triaged and excluded — every one of its twelve tables is about
   runs, and `recall`/`remember`/`forget`/`embedding`/`vector` appear twice in

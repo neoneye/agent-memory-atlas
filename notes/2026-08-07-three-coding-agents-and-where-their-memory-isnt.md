@@ -231,6 +231,76 @@ tokens, cron tasks, the wire log, plans, tasks and blobs. `contextMemory` is the
 conversation. `packages/minidb` is an impressive amount of engineering aimed at
 holding sessions, not beliefs.
 
+### The nearest thing to a durable agent-authored record, and why it still isn't one
+
+Second pass, because `kimi-code`'s cron subsystem is the one place the agent
+writes a durable record of its own — and it is worth reading precisely, since it
+has scope, identity, retrieval and deletion and is still not memory.
+
+`CronCreate`, `CronList` and `CronDelete` are **agent tools**
+(`packages/agent-core-v2/src/agent/tools/cron/`). A task is
+`{id, cron, prompt, createdAt, recurring, lastFiredAt, tags}`, persisted by
+`CronTaskPersistenceService` as an atomic JSON document at
+`<workspaceId>/<id>.json` — a real scope key on a real store, not a tag. When it
+fires, `deliverFire` injects a message into the agent's context with origin kind
+`cron_job`; a firing that was due while nothing was listening arrives as
+`cron_missed`.
+
+The scope call is settled by the tool's own documentation: *"Cron tasks survive a
+resume of the same session but do not bleed into new sessions."* That is
+resumption, not survival — the same property a checkpoint has. And the stored
+thing is an **intent**, not a claim: "run this prompt at 09:00" cannot be true or
+false, so there is nothing for a correction to attach to. Same call as the
+task-database boundary this atlas draws at beads.
+
+Three mechanisms in it transfer to systems that *are* in scope.
+
+**The store is the authority after compaction, and the prompt says to go back to
+it.** `cron-list.md` tells the model to use the returned `prompt` field *"to
+recall what a task is for after a context compaction"*, and, *"After a context
+compaction, or whenever you are unsure which cron jobs are live, call this tool
+to re-enumerate them rather than guessing ids from earlier in the
+conversation."* That is the right relationship between a lossy summary and a
+durable record: keep the authoritative copy outside the context, keep a pointer
+inside it, and re-read after the compression instead of trusting what survived.
+Memory systems that extract from a transcript and then let the transcript be
+compacted have the same problem and mostly resolve it the other way.
+
+**Expiry is delivered rather than silent, with a renewal the model has to
+choose.** A recurring task older than seven days is `stale`; `deliverDue`
+(`packages/agent-core-v2/src/session/cron/sessionCronServiceImpl.ts:446`) fires
+it one last time and *then* deletes it, and the fire carries `stale: true` so
+the model knows this delivery is the final one. `cron-list.md` documents the
+*"refresh ritual"* — the `prompt` row exists so the schedule can be re-created
+verbatim — which means the decision about whether the intent is still live is
+handed to the party holding the context to judge it, at the moment it can. That
+is [decay and reinforcement](../content/patterns/decay-and-reinforcement.md)
+with the renewal step made explicit rather than inferred from access frequency,
+and it is a better shape than a TTL that expires something while nobody is
+looking.
+
+**It is the anti-editing-surface, stated outright.** *"Users cannot directly
+manage cron tasks themselves; if they want to cancel or modify a schedule, route
+the request through the model."* Durable state the agent owns, that a person can
+only change by asking. Read beside Cline's Memory Bank — durable state a person
+owns, that the agent changes by editing the same file — the two repositories
+land on opposite ends of the same axis, and neither has the middle: a store with
+both paths and a rule for what happens when they disagree.
+
+**No runtime skill authoring in any of the three**, checked because
+[skills as procedural memory](../content/patterns/skills-as-procedural-memory.md)
+is the pattern these repositories look closest to. `kimi-code`'s `Skill` tool
+*invokes* an entry from a registered listing and nothing more — its description
+is one paragraph about not re-invoking a skill already expanded in the
+conversation — and the catalogue is assembled from builtin sources and user
+files (`packages/agent-core-v2/src/app/skillCatalog/`). Cline's skills live in a
+`.cline/skills` config directory discovered the same way. In both, an agent can
+of course write a skill file, because both have an editor tool and a filesystem;
+what neither has is a gate, a provenance record, or anything that distinguishes
+a skill the agent authored from one a person did. That is the same shape as
+Memory Bank, and the same answer: the file is reachable, the mechanism is not
+there.
+
 ## The scope call, stated once for all three
 
 The atlas admits a system when something it stores survives the session with an
