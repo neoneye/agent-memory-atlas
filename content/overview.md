@@ -4328,7 +4328,7 @@ Privacy/deletion:
 - [Whooptie/NOVA_AI](https://github.com/Whooptie/NOVA_AI) at [`c4c000b17487683deecb06cf810dc82c17ef0894`](https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894)
 - [WindSeries69/memsem](https://github.com/WindSeries69/memsem) at [`16c28a940beac69fc060eb6bf5828061ad881d1a`](https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a)
 - [KimGLee/Cambium](https://github.com/KimGLee/Cambium) at [`4f8bf4df77868ff9a86531539276cea11c28093d`](https://github.com/KimGLee/Cambium/commit/4f8bf4df77868ff9a86531539276cea11c28093d)
-- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/5d6cecf9a5c2a95d90b9e96faadc45fa8ebec601)
+- [Perseus-Computing-LLC/perseus-vault](https://github.com/Perseus-Computing-LLC/perseus-vault) at [`4008228ee4fb1846bef562d91037b4be11356de4`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4)
 - [BernhardJackiewicz/provem](https://github.com/BernhardJackiewicz/provem) at [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5)
 - [derekhu0002/Argo](https://github.com/derekhu0002/Argo) at [`9cd3e70fa28f4336b6df1181a771af9289f0f0f7`](https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7)
 - [Renkasha/Sovereign](https://github.com/Renkasha/Sovereign) at [`86018d651acb6500ea4d3c79acf5acbbaf547a76`](https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76)
