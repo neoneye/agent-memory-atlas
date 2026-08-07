@@ -331,10 +331,27 @@ the system's actual logic, and testing them as artefacts rather than trusting
 them is the right instinct.
 
 `benchmarks/locomo/` is a complete harness — `ingest.py`, `answer.py`,
-`evaluate.py`, `report.py`, `dataset.py`, `config.py` — so LoCoMo can be run
-against the store. **No scored result was located in the tree**, so this sits in
-the atlas's usual category: a reproducible harness is not a reproduced result,
-and a reader cannot tell from this repository how mnemory performs.
+`evaluate.py`, `report.py`, `dataset.py`, `config.py`, `runner.py`, `search.py` —
+so LoCoMo can be run against the store, and **the README publishes the scores it
+produced**: 63.1 single-hop, 53.1 multi-hop, 74.8 temporal, 78.2 open-domain,
+73.2 overall, over 10 multi-session dialogues and 1,540 questions, with the
+configuration named (`gpt-5-mini` for extraction, `text-embedding-3-small` for
+vectors) and a second row for a cheaper `gpt-oss-120b` alternative at ~5× lower
+cost.
+
+**The table is a comparison the project does not win, and that is the notable
+part.** Memobase is placed above it at 75.8 overall, with Mem0-Graph, Mem0, Zep
+and LangMem below. Publishing a scoreboard whose top row belongs to someone else
+is rare enough in this corpus to name — [Palazzo](../palazzo/) and
+[ReMe](../reme/) are the other instances — and it is the strongest evidence a
+reader has that the numbers were not tuned into existence.
+
+What is not in the tree is the *artifact*: no per-run report, scored output or
+committed result file exists under `benchmarks/`, so the figures are reproducible
+in principle by running the harness and not recomputable from anything committed.
+That is the atlas's published-numbers-without-committed-artifacts shape, one step
+better than usual because the harness that produced them is here and the model
+configuration is stated.
 
 Nothing was run for this review. The screen was clean of cooldown findings, but
 `AGENTS.md` is addressed to a reading agent and was treated as data, and no
@@ -406,8 +423,10 @@ decision rather than a technical one.
 - **How accurate is the fsck?** Phases 1 and 2 are LLM judgements that can be
   applied automatically to stored memories, and nothing measures how often they
   are right.
-- **What does the LoCoMo harness report?** It is complete and no result is
-  committed.
+- **Will a LoCoMo run be committed as an artifact?** The scores are published
+  and the harness is here; a per-run report under `benchmarks/` would make them
+  recomputable rather than reproducible, which is the difference between a
+  reader checking the arithmetic and a reader paying for model calls.
 - **How often does the regex phase flag a legitimate memory?** It gates
   escalation to the LLM stages and its false-positive rate is unreported.
 - **Does anything reconcile the artifact store with the vector index?** A
@@ -443,5 +462,7 @@ decision rather than a technical one.
 - `benchmarks/locomo/`
 
 ## History
+
+**2026-08-07** — same pin, corrected after the project's author reviewed the report. The published claim that no scored LoCoMo result existed in the tree was wrong at the pinned commit: `README.md` carries a `## Benchmark` section with a six-system comparison table, the configuration used, and mnemory placed second of six. The search behind that claim was scoped to `benchmarks/locomo/` — the directory that ought to hold results — and never grepped the README, which is the third instance of this atlas's *none-found-is-a-claim-about-a-search* hazard and the second caught by a maintainer. Section 10 now carries the figures and the distinction the original sentence was reaching for: the numbers are published and no per-run artifact is committed.
 
 **2026-08-06** — [`cd196704bb3dd148c314a81a32d96752204be5c1`](https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1) — first reading. The pinned commit is dated 9 June 2026. Screened before reading: 0 auto-run surfaces, 2 build-time exec paths, 2 unpinned dependency surfaces, none inside the seven-day cooldown, and an `AGENTS.md` addressed to a reading agent, treated as data. Nothing was installed, built or run.

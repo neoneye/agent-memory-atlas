@@ -417,11 +417,29 @@ rather than trusting them is the right instinct.</p>
 <p><code>benchmarks/locomo/</code> is a complete harness —
 <code>ingest.py</code>, <code>answer.py</code>,
 <code>evaluate.py</code>, <code>report.py</code>,
-<code>dataset.py</code>, <code>config.py</code> — so LoCoMo can be run
-against the store. <strong>No scored result was located in the
-tree</strong>, so this sits in the atlas's usual category: a
-reproducible harness is not a reproduced result, and a reader cannot
-tell from this repository how mnemory performs.</p>
+<code>dataset.py</code>, <code>config.py</code>, <code>runner.py</code>,
+<code>search.py</code> — so LoCoMo can be run against the store, and
+<strong>the README publishes the scores it produced</strong>: 63.1
+single-hop, 53.1 multi-hop, 74.8 temporal, 78.2 open-domain, 73.2
+overall, over 10 multi-session dialogues and 1,540 questions, with the
+configuration named (<code>gpt-5-mini</code> for extraction,
+<code>text-embedding-3-small</code> for vectors) and a second row for a
+cheaper <code>gpt-oss-120b</code> alternative at ~5× lower cost.</p>
+<p><strong>The table is a comparison the project does not win, and that
+is the notable part.</strong> Memobase is placed above it at 75.8
+overall, with Mem0-Graph, Mem0, Zep and LangMem below. Publishing a
+scoreboard whose top row belongs to someone else is rare enough in this
+corpus to name — <a href="../palazzo/">Palazzo</a> and <a
+href="../reme/">ReMe</a> are the other instances — and it is the
+strongest evidence a reader has that the numbers were not tuned into
+existence.</p>
+<p>What is not in the tree is the <em>artifact</em>: no per-run report,
+scored output or committed result file exists under
+<code>benchmarks/</code>, so the figures are reproducible in principle
+by running the harness and not recomputable from anything committed.
+That is the atlas's published-numbers-without-committed-artifacts shape,
+one step better than usual because the harness that produced them is
+here and the model configuration is stated.</p>
 <p>Nothing was run for this review. The screen was clean of cooldown
 findings, but <code>AGENTS.md</code> is addressed to a reading agent and
 was treated as data, and no dependency was installed.</p>
@@ -491,8 +509,11 @@ technical one.</p>
 <li><strong>How accurate is the fsck?</strong> Phases 1 and 2 are LLM
 judgements that can be applied automatically to stored memories, and
 nothing measures how often they are right.</li>
-<li><strong>What does the LoCoMo harness report?</strong> It is complete
-and no result is committed.</li>
+<li><strong>Will a LoCoMo run be committed as an artifact?</strong> The
+scores are published and the harness is here; a per-run report under
+<code>benchmarks/</code> would make them recomputable rather than
+reproducible, which is the difference between a reader checking the
+arithmetic and a reader paying for model calls.</li>
 <li><strong>How often does the regex phase flag a legitimate
 memory?</strong> It gates escalation to the LLM stages and its
 false-positive rate is unreported.</li>
@@ -543,6 +564,18 @@ penalties at <code>:2110</code></li>
 <li><code>benchmarks/locomo/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — same pin, corrected after the project's
+author reviewed the report. The published claim that no scored LoCoMo
+result existed in the tree was wrong at the pinned commit:
+<code>README.md</code> carries a <code>## Benchmark</code> section with
+a six-system comparison table, the configuration used, and mnemory
+placed second of six. The search behind that claim was scoped to
+<code>benchmarks/locomo/</code> — the directory that ought to hold
+results — and never grepped the README, which is the third instance of
+this atlas's <em>none-found-is-a-claim-about-a-search</em> hazard and
+the second caught by a maintainer. Section 10 now carries the figures
+and the distinction the original sentence was reaching for: the numbers
+are published and no per-run artifact is committed.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1"><code class="commit-id" title="cd196704bb3dd148c314a81a32d96752204be5c1">cd196704…</code></a>
 — first reading. The pinned commit is dated 9 June 2026. Screened before

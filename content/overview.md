@@ -4578,6 +4578,34 @@ contain X.** Positive claims fail loudly, because the code contradicts them.
 Negative ones fail silently, because absence of evidence in the wrong place
 looks exactly like absence.
 
+**2026-08-07** — A maintainer's correction on [mnemory](../systems/mnemory/),
+and it is the third instance of one hazard and the second time a maintainer, not
+this project, was the one to notice.
+
+The report said no scored LoCoMo result existed in the tree. `README.md` at the
+pinned commit carries a `## Benchmark` section with a six-system comparison
+table, the model configuration used, and mnemory's overall 73.2 placed second
+behind Memobase's 75.8. The claim was wrong when published, not stale: the pin
+was and remains the repository's head.
+
+**The search was scoped to `benchmarks/locomo/`.** That is the directory a scored
+result ought to live in, the harness there is genuinely complete, and no result
+file is genuinely committed under it — so every observation behind the sentence
+was true and the sentence was false, because the numbers were published one
+directory up in the file every reader opens first.
+
+Two things follow. The rule already recorded here — *before publishing any
+sentence of the form "nothing does X", grep the entire repository for X* — needs
+its most obvious instance spelled out, because three failures in, the file that
+keeps being skipped is the **README**. A benchmark claim in particular is a claim
+about a *project*, and projects publish results in prose long before they commit
+artifacts. And the correction improved the finding rather than only fixing it:
+the accurate statement distinguishes published numbers from committed artifacts,
+which is a distinction this report already makes elsewhere and the original
+sentence collapsed. The table also turned out to place the project second of six,
+which is the kind of evidence about a benchmark's honesty that only exists when
+somebody publishes a comparison they do not win.
+
 **2026-08-06** — A maintainer's correction on [waku-agent](../systems/waku-agent/)
 produced one method lesson, and it is about where a reading stops.
 
