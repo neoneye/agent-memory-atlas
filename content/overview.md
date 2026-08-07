@@ -8,8 +8,10 @@ page_kind: comparison
 
 ## In Short
 
-164 open-source memory systems, each read at a pinned commit and judged against
-seven mechanisms with strict definitions. Corpus last extended **6 August 2026**.
+164 memory systems with publicly readable source, each read at a pinned commit
+and judged against seven mechanisms with strict definitions. Not all 164 are
+open source — see [what the licences actually say](#what-the-licences-actually-say).
+Corpus last extended **6 August 2026**.
 Five findings, with the counts they rest on:
 
 1. **Correction is the phase that goes unbuilt.** 9 systems of 164 carry a
@@ -68,9 +70,36 @@ one, and it is that one.
 **How systems were selected.** Opportunistically: repositories encountered,
 suggested, or found while looking for the ones already here. This is not a
 sample of a population and no sampling frame is claimed. It skews toward
-actively developed open-source projects, toward things adjacent to coding
+actively developed public repositories, toward things adjacent to coding
 agents, and toward whatever was visible in mid-2026. Absence from this atlas is
 not evidence of anything.
+
+### What the licences actually say
+
+This page said "164 open-source memory systems" until an outside review pointed
+out that the sentence is false, and it was false in the way that matters: a
+reader deciding whether they can *use* something acts on it. **Fifteen of the
+164 carry a licence that is not open source**, each named in its own report and
+now collected here:
+
+| Licence | Systems |
+| --- | --- |
+| Elastic License 2.0 — no hosted service, no licence-key circumvention | [AgentSwarms](../systems/agentswarms/), [ByteRover](../systems/byterover/), [Dexto](../systems/dexto/) |
+| Business Source License 1.1 — source-available, converts later | [Cognis](../systems/cognis/), [Empryo](../systems/empryo/), [Intaris](../systems/intaris/), [MuninnDB](../systems/muninndb/), [Skales](../systems/skales/) |
+| Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence) |
+| Conditional MIT — a royalty clause and an "ethical treatment" clause, revocable | [Z-Waif](../systems/z-waif/) |
+| All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (no licence file, which defaults to this) |
+
+Two things this table is not. It is **not a complete licence taxonomy of the
+corpus**: it collects what the reports happened to record, and a report is
+written about mechanisms, so a permissive licence usually goes unmentioned. The
+149 not listed here have not each been checked — the honest claim is that
+fifteen are known non-open-source and the rest are unrecorded, not that the rest
+are MIT. And it is **not a reason to skip those fifteen**: every mechanism in
+this atlas is described so it can be re-implemented rather than copied, which is
+the only way a restrictively licensed system can be read usefully. What changes
+is what you may do with the code afterwards, and that is worth knowing before
+you open the file rather than after.
 
 **What an absence claim means.** "There is no trust state", "no tombstone was
 found", "no benchmark exists" all mean the same thing: *not found in the
@@ -114,8 +143,13 @@ else:
 1. **Whether correction is possible at all.** Almost everything can overwrite
    or supersede. Nine systems in this entire atlas can record that a *value*
    was rejected so extraction cannot bring it back — see the
-   [capability index](../capabilities/) for the live count. This is the single widest gap in
-   the field, and it is invisible on every benchmark.
+   [capability index](../capabilities/) for the live count. This is the widest
+   gap this atlas has found, and it is invisible on every benchmark. *Widest
+   gap found*, not widest gap in the field: the corpus is opportunistic, so a
+   ratio over it describes what has been read and cannot be quoted as
+   prevalence — and four of the five strongest implementations
+   [arrived through this atlas's own orbit](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md),
+   which is the opposite of an independent measurement.
 2. **Whether evidence outlives its derivations.** Systems that keep the raw
    event and treat summaries, profiles, and graphs as rebuildable projections
    can repair a bad extraction. Systems that discard the source cannot.

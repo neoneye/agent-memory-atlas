@@ -11,7 +11,7 @@ inferring it.
 
 ## The question
 
-The atlas says nine systems of 155 carry a rejected-value tombstone. The
+The atlas says nine systems of 164 carry a rejected-value tombstone. The
 [pattern page](../content/patterns/rejected-value-tombstone.md) defines the
 mechanism more narrowly than the mark does: a record **keyed on the value**,
 **normalized**, **consulted on the write path**, **refusing activation**. Both

@@ -256,6 +256,54 @@ def value(token: str) -> int:
     return int(token) if token.isdigit() else WORDS[token.lower()]
 
 
+#: Below this, a count of atlas nouns is a finding rather than a denominator —
+#: "nine systems", "eleven reports". Above it, nothing in this atlas counts that
+#: many of anything except the corpus itself, which is what makes the check safe
+#: without a corpus marker in the sentence. The marker was tried first and it
+#: missed the case this branch was written for: *"It is a statement about 46
+#: repositories, not about the whole field"* is a complete sentence with no
+#: marker in it, sitting on a page whose other numbers are all machine-checked.
+#: It had been stale since the corpus was 46 and the corpus had more than
+#: tripled.
+CORPUS_FLOOR = 40
+
+#: A history entry opens with its date, and everything inside it is a statement
+#: about a past state — *"the scope section claimed 140 reports across 135
+#: repositories"*, *"the 62 repositories the atlas then held"*. Those are the
+#: sentences that record drift, so a check that reads them as live claims
+#: accuses the atlas of exactly the honesty it is trying to enforce. Four of
+#: them were the entire first-run output of the corpus branch.
+#:
+#: One character class, not `\s*(?:[-*]\s+)?\s*`. `normalize` blanks generated
+#: blocks to runs of spaces and turns every `*` into one, so a page can hold a
+#: single "paragraph" thousands of whitespace characters long — and two adjacent
+#: `\s*` groups backtrack quadratically over it. The first version of this line
+#: hung the checker for minutes on `overview.md`.
+DATED_ENTRY = re.compile(r"^[ \t\n*-]*\d{4}-\d{2}-\d{2}\b")
+
+
+def historical_spans(text: str) -> list[tuple[int, int]]:
+    """Character ranges of dated history entries, which state past counts."""
+    spans, cursor = [], 0
+    for para in text.split("\n\n"):
+        if DATED_ENTRY.match(para):
+            spans.append((cursor, cursor + len(para)))
+        cursor += len(para) + 2
+    return spans
+
+
+def corpus_total(noun: str | None, reports: int, repos: int) -> int | None:
+    """Which live total a bare count of atlas nouns should be read against.
+
+    Reports and repositories differ by one — `hermes-agent` carries two memory
+    systems and is reviewed twice — so a check that conflated them would accuse
+    one correct sentence every time it read the other.
+    """
+    if not noun:
+        return None
+    return repos if "repositor" in noun.lower() else reports
+
+
 def check(root: Path, show_list: bool) -> int:
     counts, total_reports, total_repos = live_counts(root)
     problems: list[str] = []
@@ -267,6 +315,7 @@ def check(root: Path, show_list: bool) -> int:
             continue
         raw = source.read_text(encoding="utf-8")
         text = normalize(raw)
+        past = historical_spans(text)
         where = source.relative_to(root)
 
         # A number naming its mechanism directly needs no window: the subject is
@@ -326,6 +375,23 @@ def check(root: Path, show_list: bool) -> int:
                 )
 
             if flag is None:
+                total = corpus_total(noun, total_reports, total_repos)
+                if (
+                    total is not None
+                    and value(match.group("num")) >= CORPUS_FLOOR
+                    and not any(s <= match.start() < e for s, e in past)
+                ):
+                    bound += 1
+                    said = value(match.group("num"))
+                    if show_list:
+                        listed.append(
+                            f"{where}:{line}: '{claim}' — corpus total, said {said}, live {total}"
+                        )
+                    if said != total:
+                        problems.append(
+                            f"{where}:{line}: '{claim}' — the corpus is {total}, not {said}"
+                        )
+                    continue
                 if show_list:
                     listed.append(f"{where}:{line}: '{claim}' — unbound, not checked")
                 continue

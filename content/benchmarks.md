@@ -1501,8 +1501,11 @@ not publish, is still the right order to do these things in.
   descriptions, not from re-reading their datasets here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 46 repositories,
-  not about the whole field.
+  [comparative report](../compare/). It is a statement about 163 repositories,
+  not about the whole field. That number read **46** until 2026-08-07, having
+  been written when the corpus was that size and never revised as it more than
+  tripled — the same class of stale numerator this page's own counts are
+  machine-checked against, in the one sentence that scopes them.
 - The criticism of LoCoMo's difficulty in §3 is a summary of a known objection,
   not an independent finding.
 - The predicted outcomes in §7 are inferences from reading code, not results.

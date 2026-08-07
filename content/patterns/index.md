@@ -181,10 +181,11 @@ Where the atlas has an exact count — the seven mechanisms on
 | Rejected-value tombstone | 9 of 164 |
 <!-- END GENERATED SPREAD -->
 
-Read the bottom two rows as what they are. A mechanism present in two or three
-systems out of one hundred and sixty-four is **not a best practice**. There is no consensus
-behind it, no library that gives it to you, no shared vocabulary, and nobody to
-ask when your implementation has a hole. Adopting it means building it.
+Read the bottom two rows as what they are. A mechanism present in seventeen
+systems of one hundred and sixty-four — or in nine — is **not a best
+practice**. There is no consensus behind it, no library that gives it to you, no
+shared vocabulary, and nobody to ask when your implementation has a hole.
+Adopting it means building it.
 
 And in the tombstone's case the provenance is narrower still. It was not
 designed by anyone: a red team walked a rejected value back to verified in three

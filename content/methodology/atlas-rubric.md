@@ -53,9 +53,11 @@ value, so later extraction cannot silently re-assert it.
 status on a row. Those are all keyed on a *record*; re-extraction produces a new
 record and walks straight past them.
 
-**Why it is on the list:** it is the single widest gap in the field, it is
-invisible on every published benchmark, and it is the mechanism that decides
-whether "forget that" survives the next background pass.
+**Why it is on the list:** it is the widest gap *this corpus has found* — nine
+of 164, and the corpus is an opportunistic collection rather than a sample, so
+that is a fact about what has been read and not a prevalence figure for the
+field. It is invisible on every published benchmark, and it is the mechanism
+that decides whether "forget that" survives the next background pass.
 
 ### Explicit trust state
 
@@ -133,10 +135,24 @@ outside.
 **Not this:** ordinary recall tests, however thorough.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
-this atlas ultimately rests on an assertion of this shape, and three repositories
-of the whole corpus make one. Two of the three assert it about a *boundary*; only
-[Verel](../../systems/verel/) asserts it about a value that was corrected, which
-is the harder and more useful version.
+this atlas ultimately rests on an assertion of this shape. Thirty-seven
+repositories of one hundred and sixty-four carry the mark, and they are not all
+asserting the same thing: the
+[benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
+separates the ones asserting about *content* from the ones asserting about a
+*scope boundary*, and only [Verel](../../systems/verel/) is recorded asserting it
+about a value that was corrected, which is the harder and more useful version.
+
+**This paragraph read "three repositories" until 2026-08-07** — true when the
+mark was rare, left standing as the count reached thirty-seven, and sitting
+directly under the definition it was supposed to scope. It is worth naming
+rather than quietly correcting, because the drift is not only arithmetic: an
+outside review reading three marks against this definition argued that some of
+them stretch it — a projection filter and a summarize-the-summary guard are
+tests, but they are not obviously *retrieval* assertions. That is a live
+objection. A re-score of all thirty-seven against this wording is
+[open work](#open-work-on-this-rubric), and until it is done the count should be
+read as "carries a committed must-not test", which is weaker than the heading.
 
 ## Why these seven
 
@@ -226,3 +242,41 @@ that no amount of automation removes.
   mechanism was reached by need or by checklist. Where the atlas can date that,
   it says so: the [tombstone's provenance](../../patterns/rejected-value-tombstone/)
   is traced to a red-team finding rather than a rubric, and it predates this page.
+
+## Open work on this rubric
+
+Named here rather than in a private list, because a known defect that is not
+written down is indistinguishable from one nobody has found. Each of these came
+from an outside review of this page and none of them is fixed yet.
+
+- **Re-score all thirty-seven `negative_eval` marks against one wording.** The
+  definition says *material must not be retrieved*. Some marks were awarded for
+  adjacent shapes — material excluded from a serialized projection, a summary
+  kept out of a second summarization pass, an instruction file kept out of an
+  assembled preamble. Those are real committed tests and the last is arguably
+  retrieval; the middle one is not. Until the pass is done the count is "carries
+  a committed must-not test".
+- **A mark names a capability but not the subsystem it protects.** `capabilities`
+  is a flat comma-separated string, so a system whose scope filter guards its
+  conversation store and whose negative test guards a different path presents in
+  the capability index as one coherent system with both.
+  [DeepCode](../../systems/deepcode/) is the clearest case and its own report
+  says so in prose that the frontmatter cannot carry. Filtering the corpus by two
+  marks can therefore return a system where no single memory path has both. The
+  fix is a per-capability record — subsystem, file, symbol, covering test — and
+  it is a change to every report's frontmatter.
+- **The admission rule and the corpus disagree at the edges.** The rule asks for
+  something that survives the session with an identity that can later be
+  corrected. [AutoGen](../../systems/autogen/)'s `MemoryContent` has no
+  identifier field and [Sovereign](../../systems/sovereign/)'s episodes have
+  none either, and both are in. The defensible reason is that a widely-adopted
+  interface with no delete is evidence about the field and belongs in it; the
+  rule as written does not say that, so either the rule or the inclusion should
+  move.
+- **No second reader.** Every mark on every report comes from one LLM reviewer
+  directed by one person, with no blinded re-review and no inter-rater agreement
+  figure. The [methodology hazards
+  note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-methodology-hazards.md)
+  records what that has already cost — five of seven `audit_log` marks failing a
+  re-audit among them. An agreement study over twenty to thirty of them would
+  put a number on the error rate instead of a list of anecdotes.
