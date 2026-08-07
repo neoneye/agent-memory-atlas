@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 162 reports.**
+**This page covers all 163 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1515,3 +1515,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 22 files and 19 commits under Apache-2.0, a 522-line zero-dependency library under 452 lines of tests, six fixed root pages whose history is deliberately git rather than a timeline, and a linter that exempts the append-only layer on stated grounds.
 - Study when: you keep project knowledge in the repository and want the reason a belief changed to be structurally inseparable from the change.
 - Do not copy when: memory must be searched rather than navigated, several agents write concurrently, or a reversed claim must be unable to return — a reversal is recorded and nothing stops the same truth being compiled back tomorrow.
+
+### `muninndb`
+
+- Best idea: the provenance record — source type, agent id, an operation verb, the caller's stated *reason*, the predecessor id and the valid-time boundary — under a struct comment that names which format changes are additive, that an absent field must read as absent *"never a zero-value pretending to be data"*, and the only two changes that would need a version byte.
+- Biggest risk: a provisional patent asserted over the core cognitive primitives beside a BSL 1.1 licence, so the mechanisms are published and readable while their reuse is constrained twice — and the reader has to assess that separately from the engineering.
+- Most reusable component: a 64×64 precomputed matrix of contradicting relation types with a severity function, which makes structural contradiction a table lookup rather than a model call.
+- Maturity impression: 299,740 lines of Go across 995 files serving MCP, REST, gRPC and a binary protocol from one dependency-free binary, with replication and backup as first-class packages, clock-skew tests beside both the decay and activation suites, and dated design notes in `.claude/deep-review/` arguing the tuning decisions.
+- Study when: you want cognitively-motivated decay and activation implemented *in* a store rather than around one, or a retrieval path that is allowed to abstain and is tested as a measured component.
+- Do not copy when: you need to build freely on decay, Hebbian learning or Bayesian confidence — read the patent notice first — or you need a value-keyed refusal, which everything here is shaped for and nothing implements.

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A code-grounded comparison of one
-hundred and sixty-two agent memory architectures, their retrieval
+hundred and sixty-three agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
@@ -13,15 +13,15 @@ mechanics, trust models, and operational tradeoffs.">
     <meta property="og:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta property="og:description" content="A code-grounded comparison
-of one hundred and sixty-two agent memory architectures, their retrieval
-mechanics, trust models, and operational tradeoffs.">
+of one hundred and sixty-three agent memory architectures, their
+retrieval mechanics, trust models, and operational tradeoffs.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Agent Memory Systems Comparative
 Report — Agent Memory Atlas">
     <meta name="twitter:description" content="A code-grounded comparison
-of one hundred and sixty-two agent memory architectures, their retrieval
-mechanics, trust models, and operational tradeoffs.">
+of one hundred and sixty-three agent memory architectures, their
+retrieval mechanics, trust models, and operational tradeoffs.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Agent Memory Systems Comparative
 Report — Agent Memory Atlas</title>
@@ -80,7 +80,7 @@ Report — Agent Memory Atlas</title>
           <p class="eyebrow">Cross-system synthesis</p>
           <h1>Agent Memory Systems Comparative Report</h1>
           <p class="document-deck">A code-grounded comparison of one
-hundred and sixty-two agent memory architectures, their retrieval
+hundred and sixty-three agent memory architectures, their retrieval
 mechanics, trust models, and operational tradeoffs.</p>
                             </div>
         <div class="hero-contours" aria-hidden="true">
@@ -97,13 +97,13 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>162 open-source memory systems, each read at a pinned commit and
+<p>163 open-source memory systems, each read at a pinned commit and
 judged against seven mechanisms with strict definitions. Corpus last
 extended <strong>6 August 2026</strong>. Five findings, with the counts
 they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 9
-systems of 162 carry a rejected-value tombstone — a record keyed on the
+systems of 163 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -116,14 +116,14 @@ the embedding survives the delete until an unscheduled compaction — see
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 93 of 162 apply a scope key as a filter on the read
+shallowest.</strong> 94 of 163 apply a scope key as a filter on the read
 path. It is also the mark most often satisfied by a single predicate
 that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 35 of 162
+<li><strong>Negative evidence is almost never tested.</strong> 36 of 163
 commit a case asserting that particular material must <em>not</em> be
 retrieved — the assertion every scope, deletion and correction claim
 ultimately rests on.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 29 of 162
+<li><strong>Trust is usually a number, not a state.</strong> 30 of 163
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -154,13 +154,13 @@ Systems reviewed and excluded on this basis, or on licence grounds, are
 named in the limitations at the end rather than quietly dropped — the
 exclusions are part of the evidence.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>162 reports across 161 repositories</strong>:
+<strong>163 reports across 162 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
 href="../systems/holographic/">Holographic</a>. It is the only
-repository reviewed twice, so a count of <em>systems</em> is 162 and a
-count of <em>repositories</em> is 161 — the gap is one, and it is that
+repository reviewed twice, so a count of <em>systems</em> is 163 and a
+count of <em>repositories</em> is 162 — the gap is one, and it is that
 one.</p>
 <p><strong>How systems were selected.</strong> Opportunistically:
 repositories encountered, suggested, or found while looking for the ones
@@ -200,7 +200,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-nine tombstones, thirty-five negative-eval suites — are counts <em>over
+nine tombstones, thirty-six negative-eval suites — are counts <em>over
 inspectable code</em>, and a closed system could hold any of these
 mechanisms without this method ever knowing. And a mechanism's absence
 here is weaker evidence about the field than its presence: finding a
@@ -222,8 +222,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 93 of
-162 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 94 of
+163 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -242,8 +242,8 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and sixty-two systems do not fall into one hundred and
-sixty-two categories. They cluster around eight architectural
+<p>One hundred and sixty-three systems do not fall into one hundred and
+sixty-three categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
 also be a hosted service. The families below are lenses, not bins.</p>
@@ -1479,7 +1479,8 @@ how connected the graph is.</p>
 trust-first memory</h3>
 <p><code>verel</code>, <code>rainbox</code>, <code>magic-context</code>,
 <code>metaclaw</code>, <code>gini-agent</code>,
-<code>core-memory</code>, <code>daimon</code>, <code>intaris</code></p>
+<code>core-memory</code>, <code>daimon</code>, <code>intaris</code>,
+<code>muninndb</code></p>
 <p>These treat memory as a trust problem before a retrieval problem.
 <strong>Verel</strong> separates confidence, retrieval strength, and
 verification state, carries rejected values forward, and fences recall
@@ -2111,7 +2112,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 162 systems by the seven mechanisms judged against strict
+filters all 163 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. Two external reviews
@@ -5200,6 +5201,42 @@ and inspectable</td>
 <td>Transcripts and curated notes rank identically; no trust state</td>
 </tr>
 <tr>
+<td><code>muninndb</code></td>
+<td>An engram — a ULID-keyed record with a discrete
+<code>TrustLevel</code>, importance and two strengths, valid-from and
+valid-until, and typed edges to other engrams under a workspace
+prefix</td>
+<td>Pebble key-value store with prefixed keyspaces, an archive tier for
+evicted edges, tiered caches, and replication and backup as first-class
+packages</td>
+<td>ACT-R style activation over the engram graph — base-level decay,
+spreading activation across Hebbian edges, and an abstention gate that
+can decline</td>
+<td>Explicit writes over MCP, REST, gRPC and a binary protocol, with
+background workers deriving Hebbian weights, transitions, consolidation
+and confidence</td>
+<td><code>evolve</code> supersedes and records the predecessor,
+<code>Forget</code> and <code>BatchForget</code> are first-class API
+verbs, and a deleted-engram listing exists on the REST surface</td>
+<td>A workspace prefix threaded through the storage API, plus vaults at
+the transport layer with committed tests that a session on one cannot
+touch another</td>
+<td>One binary serving MCP, REST, gRPC and a custom binary protocol,
+with SDKs, semantic triggers that push rather than wait, and a web
+console</td>
+<td>Hebbian long-term potentiation, transition recording, consolidation,
+decay and confidence workers, each on its own lifecycle</td>
+<td><code>TrustLevel</code> as a discrete label — unset, verified,
+inferred, external, untrusted — feeding use-time effective importance
+rather than replacing it</td>
+<td>Cognitive primitives implemented in the engine rather than around
+it, a provenance record whose format comment reasons about its own
+extensibility, and valid time kept apart from record time</td>
+<td>A provisional patent is asserted over the core primitives and the
+licence is BSL 1.1, so the mechanisms are readable and their use is
+constrained twice over</td>
+</tr>
+<tr>
 <td><code>nanobot</code></td>
 <td>Markdown durable files plus JSONL summary lines</td>
 <td><code>SOUL.md</code>, <code>USER.md</code>,
@@ -6567,7 +6604,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>9 of 162:</em> <a
+<p><em>9 of 163:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
@@ -6580,7 +6617,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>29 of 162:</em> <a
+<p><em>30 of 163:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
@@ -6599,6 +6636,7 @@ href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
+href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
@@ -6612,7 +6650,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>16 of 162:</em> <a
+<p><em>17 of 163:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -6624,6 +6662,7 @@ href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/omi/"><code>omi</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
@@ -6634,7 +6673,7 @@ href="../systems/verel/"><code>verel</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>93 of 162:</em> <a
+<p><em>94 of 163:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -6705,6 +6744,7 @@ href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/mnemory/"><code>mnemory</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
@@ -6732,7 +6772,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>40 of 162:</em> <a
+<p><em>41 of 163:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -6760,6 +6800,7 @@ href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
@@ -6776,7 +6817,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>40 of 162:</em> <a
+<p><em>40 of 163:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -6820,7 +6861,7 @@ href="../systems/waku-agent/"><code>waku-agent</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>35 of 162:</em> <a
+<p><em>36 of 163:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -6846,6 +6887,7 @@ href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mirix/"><code>mirix</code></a>, <a
 href="../systems/mnemopi/"><code>mnemopi</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
+href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
@@ -6874,12 +6916,12 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong>
-Thirty-five repositories of one hundred and sixty-two assert that
-particular material must <em>not</em> be retrieved — the assertion every
-scope, deletion and correction claim in this document ultimately rests
-on. Read together rather than one at a time, they split cleanly in two,
-and the split says more than the count.</p>
+<p><strong>Negative evidence is almost never tested.</strong> Thirty-six
+repositories of one hundred and sixty-three assert that particular
+material must <em>not</em> be retrieved — the assertion every scope,
+deletion and correction claim in this document ultimately rests on. Read
+together rather than one at a time, they split cleanly in two, and the
+split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -6947,7 +6989,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of one hundred and sixty-two is the real figure for the second
+Eleven of one hundred and sixty-three is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -10319,7 +10361,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and sixty-two systems, almost none can explain why they are shaped the
+and sixty-three systems, almost none can explain why they are shaped the
 way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -11356,6 +11398,10 @@ href="https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa09
 href="https://github.com/mindmuxai/brain.md">mindmuxai/brain.md</a> at
 <a
 href="https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543"><code class="commit-id" title="5cecfdd4154687751f80e2d40f3a70a4fdca4543">5cecfdd4…</code></a></li>
+<li><a
+href="https://github.com/scrypster/muninndb">scrypster/muninndb</a> at
+<a
+href="https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca7980a341551"><code class="commit-id" title="fc16e786970c7ef31a6e5244cfdca7980a341551">fc16e786…</code></a></li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -11681,7 +11727,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>four</strong> of one hundred and sixty-two — <a
+<strong>four</strong> of one hundred and sixty-three — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, the <a href="../systems/pydantic-ai-harness/">Pydantic
