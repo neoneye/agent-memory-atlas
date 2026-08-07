@@ -143,16 +143,30 @@ separates the ones asserting about *content* from the ones asserting about a
 *scope boundary*, and only [Verel](../../systems/verel/) is recorded asserting it
 about a value that was corrected, which is the harder and more useful version.
 
+**What the 37 actually are, since an outside review was right that they are not
+all the same thing.** Every one of them is a committed case asserting that
+material must not appear somewhere. **27 of the 37 assert it about a read
+path**, which is this definition; 20 about a particular value and 7 about a scope
+boundary. The other 10 keep material out of something that is not a retrieval
+result — a serialized projection, an assembled preamble, the next summarization,
+a file on disk, a write decision. Those are real tests and several are the most
+interesting thing in their report. They are not negative *retrieval* assertions,
+and a reader who wants this heading read strictly should use **27**. The full
+re-score, system by system, is in
+[what the negative_eval mark actually counts](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md);
+it also names the one mark that cites no case at all and should probably be
+dropped.
+
+The flags are unchanged at 37 deliberately. Dropping ten would delete the fact
+that ten more systems ship committed must-not tests, which is rare enough to be
+worth counting; renaming the mark would move a goalpost under a published
+number. The split is published instead, and
+`capability_evidence:`'s `subsystem` field carries it per report as the
+[migration](#open-work-on-this-rubric) proceeds.
+
 **This paragraph read "three repositories" until 2026-08-07** — true when the
 mark was rare, left standing as the count reached thirty-seven, and sitting
-directly under the definition it was supposed to scope. It is worth naming
-rather than quietly correcting, because the drift is not only arithmetic: an
-outside review reading three marks against this definition argued that some of
-them stretch it — a projection filter and a summarize-the-summary guard are
-tests, but they are not obviously *retrieval* assertions. That is a live
-objection. A re-score of all thirty-seven against this wording is
-[open work](#open-work-on-this-rubric), and until it is done the count should be
-read as "carries a committed must-not test", which is weaker than the heading.
+directly under the definition it was supposed to scope.
 
 ## Why these seven
 
@@ -249,13 +263,14 @@ Named here rather than in a private list, because a known defect that is not
 written down is indistinguishable from one nobody has found. Each of these came
 from an outside review of this page and none of them is fixed yet.
 
-- **Re-score all thirty-seven `negative_eval` marks against one wording.** The
-  definition says *material must not be retrieved*. Some marks were awarded for
-  adjacent shapes — material excluded from a serialized projection, a summary
-  kept out of a second summarization pass, an instruction file kept out of an
-  assembled preamble. Those are real committed tests and the last is arguably
-  retrieval; the middle one is not. Until the pass is done the count is "carries
-  a committed must-not test".
+- **~~Re-score all thirty-seven `negative_eval` marks against one wording.~~
+  Done, 2026-08-08.** 27 of the 37 assert about a read path; 10 assert about a
+  projection, a preamble, a summarization, a file, or a write. The split is
+  stated under the definition above and the working is in
+  [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md).
+  One follow-up remains open: [Pydantic AI
+  Harness](../../systems/pydantic-ai-harness/) is the only report that asserts
+  the mark and cites no case, and needs a re-read at its pin.
 - **A mark names a capability but not the subsystem it protects.** `capabilities`
   is a flat comma-separated string, so a system whose scope filter guards its
   conversation store and whose negative test guards a different path presents in
@@ -285,14 +300,21 @@ from an outside review of this page and none of them is fixed yet.
   guessed: the report named the mechanism and did not name a test for it, and
   inventing one here would repeat the fabrication this atlas has already caught
   itself at. The remaining 259 need a re-read each.
-- **The admission rule and the corpus disagree at the edges.** The rule asks for
-  something that survives the session with an identity that can later be
-  corrected. [AutoGen](../../systems/autogen/)'s `MemoryContent` has no
-  identifier field and [Sovereign](../../systems/sovereign/)'s episodes have
-  none either, and both are in. The defensible reason is that a widely-adopted
-  interface with no delete is evidence about the field and belongs in it; the
-  rule as written does not say that, so either the rule or the inclusion should
-  move.
+- **~~The admission rule and the corpus disagree at the edges.~~ Resolved,
+  2026-08-08 — the rule moved, not the corpus.** [AutoGen](../../systems/autogen/),
+  [Sovereign](../../systems/sovereign/) and [Google ADK](../../systems/adk-python/)
+  store something durable with no correctable identity and are in anyway. The
+  [comparative report](../../compare/#reading-this-report) now states the
+  exception in the rule instead of leaving it to be found by reading four
+  reports against it: a memory contract widely built against is admitted
+  *because* it cannot express a correction, since excluding those would remove
+  the clearest cases of the gap this atlas exists to describe. Two things
+  follow. It is an editorial judgement, not a mechanical test, so the corpus
+  boundary is reproducible only to the extent that someone agrees with it. And
+  a review noted that [Aeris](../../systems/aeris/) was named as a fourth case
+  of this — it is not: its beliefs carry a status enum that moves
+  `Active | Weakening | Revised | Abandoned | Contradicted`, which is correction
+  with identity. Storing no *text* is not the same as having nothing to correct.
 - **No second reader.** Every mark on every report comes from one LLM reviewer
   directed by one person, with no blinded re-review and no inter-rater agreement
   figure. The [methodology hazards

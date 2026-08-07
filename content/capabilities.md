@@ -63,10 +63,14 @@ into "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
 **Negative evidence is almost never tested.** Thirty-seven repositories of one hundred and sixty-four
-assert that particular material must *not* be retrieved — the assertion every
+assert that particular material must *not* appear — the assertion every
 scope, deletion and correction claim in this atlas ultimately rests on. Read together
-rather than one at a time, they split cleanly in two, and the split says more
-than the count.
+rather than one at a time, they split cleanly, and the split says more
+than the count. A [full re-score](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md)
+on 2026-08-08 found 27 of the 37 assert about a **read path** — 20 about a
+particular value, 7 about a scope boundary — while ten assert about a
+projection, a preamble, a summarization, a file or a write. All ten are real
+committed tests. Only the 27 are negative *retrieval* assertions.
 
 **Five assert a boundary:** that a principal cannot retrieve another
 principal's material. [MIRIX](../systems/mirix/)'s `test_filter_tags_db.py`

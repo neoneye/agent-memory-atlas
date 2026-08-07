@@ -221,18 +221,32 @@ ones asserting about a <em>scope boundary</em>, and only <a
 href="../../systems/verel/">Verel</a> is recorded asserting it about a
 value that was corrected, which is the harder and more useful
 version.</p>
+<p><strong>What the 37 actually are, since an outside review was right
+that they are not all the same thing.</strong> Every one of them is a
+committed case asserting that material must not appear somewhere.
+<strong>27 of the 37 assert it about a read path</strong>, which is this
+definition; 20 about a particular value and 7 about a scope boundary.
+The other 10 keep material out of something that is not a retrieval
+result — a serialized projection, an assembled preamble, the next
+summarization, a file on disk, a write decision. Those are real tests
+and several are the most interesting thing in their report. They are not
+negative <em>retrieval</em> assertions, and a reader who wants this
+heading read strictly should use <strong>27</strong>. The full re-score,
+system by system, is in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md">what
+the negative_eval mark actually counts</a>; it also names the one mark
+that cites no case at all and should probably be dropped.</p>
+<p>The flags are unchanged at 37 deliberately. Dropping ten would delete
+the fact that ten more systems ship committed must-not tests, which is
+rare enough to be worth counting; renaming the mark would move a
+goalpost under a published number. The split is published instead, and
+<code>capability_evidence:</code>'s <code>subsystem</code> field carries
+it per report as the <a href="#open-work-on-this-rubric">migration</a>
+proceeds.</p>
 <p><strong>This paragraph read "three repositories" until
 2026-08-07</strong> — true when the mark was rare, left standing as the
 count reached thirty-seven, and sitting directly under the definition it
-was supposed to scope. It is worth naming rather than quietly
-correcting, because the drift is not only arithmetic: an outside review
-reading three marks against this definition argued that some of them
-stretch it — a projection filter and a summarize-the-summary guard are
-tests, but they are not obviously <em>retrieval</em> assertions. That is
-a live objection. A re-score of all thirty-seven against this wording is
-<a href="#open-work-on-this-rubric">open work</a>, and until it is done
-the count should be read as "carries a committed must-not test", which
-is weaker than the heading.</p>
+was supposed to scope.</p>
 <h2 id="why-these-seven">Why these seven</h2>
 <p>They were chosen against one filter: <strong>does its absence cause a
 failure the system cannot detect?</strong></p>
@@ -331,14 +345,16 @@ is not written down is indistinguishable from one nobody has found. Each
 of these came from an outside review of this page and none of them is
 fixed yet.</p>
 <ul>
-<li><p><strong>Re-score all thirty-seven <code>negative_eval</code>
-marks against one wording.</strong> The definition says <em>material
-must not be retrieved</em>. Some marks were awarded for adjacent shapes
-— material excluded from a serialized projection, a summary kept out of
-a second summarization pass, an instruction file kept out of an
-assembled preamble. Those are real committed tests and the last is
-arguably retrieval; the middle one is not. Until the pass is done the
-count is "carries a committed must-not test".</p></li>
+<li><p><strong><del>Re-score all thirty-seven <code>negative_eval</code>
+marks against one wording.</del> Done, 2026-08-08.</strong> 27 of the 37
+assert about a read path; 10 assert about a projection, a preamble, a
+summarization, a file, or a write. The split is stated under the
+definition above and the working is in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md">the
+note</a>. One follow-up remains open: <a
+href="../../systems/pydantic-ai-harness/">Pydantic AI Harness</a> is the
+only report that asserts the mark and cites no case, and needs a re-read
+at its pin.</p></li>
 <li><p><strong>A mark names a capability but not the subsystem it
 protects.</strong> <code>capabilities</code> is a flat comma-separated
 string, so a system whose scope filter guards its conversation store and
@@ -373,16 +389,25 @@ the ten and is written rather than guessed: the report named the
 mechanism and did not name a test for it, and inventing one here would
 repeat the fabrication this atlas has already caught itself at. The
 remaining 259 need a re-read each.</p></li>
-<li><p><strong>The admission rule and the corpus disagree at the
-edges.</strong> The rule asks for something that survives the session
-with an identity that can later be corrected. <a
-href="../../systems/autogen/">AutoGen</a>'s <code>MemoryContent</code>
-has no identifier field and <a
-href="../../systems/sovereign/">Sovereign</a>'s episodes have none
-either, and both are in. The defensible reason is that a widely-adopted
-interface with no delete is evidence about the field and belongs in it;
-the rule as written does not say that, so either the rule or the
-inclusion should move.</p></li>
+<li><p><strong><del>The admission rule and the corpus disagree at the
+edges.</del> Resolved, 2026-08-08 — the rule moved, not the
+corpus.</strong> <a href="../../systems/autogen/">AutoGen</a>, <a
+href="../../systems/sovereign/">Sovereign</a> and <a
+href="../../systems/adk-python/">Google ADK</a> store something durable
+with no correctable identity and are in anyway. The <a
+href="../../compare/#reading-this-report">comparative report</a> now
+states the exception in the rule instead of leaving it to be found by
+reading four reports against it: a memory contract widely built against
+is admitted <em>because</em> it cannot express a correction, since
+excluding those would remove the clearest cases of the gap this atlas
+exists to describe. Two things follow. It is an editorial judgement, not
+a mechanical test, so the corpus boundary is reproducible only to the
+extent that someone agrees with it. And a review noted that <a
+href="../../systems/aeris/">Aeris</a> was named as a fourth case of this
+— it is not: its beliefs carry a status enum that moves
+<code>Active | Weakening | Revised | Abandoned | Contradicted</code>,
+which is correction with identity. Storing no <em>text</em> is not the
+same as having nothing to correct.</p></li>
 <li><p><strong>No second reader.</strong> Every mark on every report
 comes from one LLM reviewer directed by one person, with no blinded
 re-review and no inter-rater agreement figure. The <a

@@ -26,6 +26,20 @@ for path in "${required[@]}"; do
   fi
 done
 
+# This suite validates the *rendered* site in docs/, which is a committed build
+# rather than a fresh one — so an edit to content/ that has not been rebuilt is
+# checked against the previous build's HTML. That is not a theoretical gap: on
+# 2026-08-08 a fragment link to an id that does not exist passed a full run and
+# failed the next one, because the run that should have caught it read HTML
+# written before the link was added. A green suite over stale output is the
+# lying-operation failure this atlas names in other people's code.
+stale="$(find "$project_dir/content" "$project_dir/templates" -type f \
+  -newer "$site_dir/index.html" -print -quit 2>/dev/null || true)"
+if [[ -n "$stale" ]]; then
+  echo "docs/ is older than $stale — run 'npm run build' before 'npm test'." >&2
+  exit 1
+fi
+
 expected_systems="$(find "$project_dir/content/systems" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
 expected_patterns="$(find "$project_dir/content/patterns" -maxdepth 1 -name '*.md' ! -name 'index.md' | wc -l | tr -d ' ')"
 

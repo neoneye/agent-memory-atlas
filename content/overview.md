@@ -29,8 +29,11 @@ Five findings, with the counts they rest on:
    the mark most often satisfied by a single predicate that a background job
    then ignores.
 4. **Negative evidence is almost never tested.** 37 of 164 commit a case
-   asserting that particular material must *not* be retrieved — the assertion
-   every scope, deletion and correction claim ultimately rests on.
+   asserting that particular material must *not* appear — the assertion every
+   scope, deletion and correction claim ultimately rests on. A 2026-08-08
+   re-score puts 27 of the 37 on a **read path**; the other ten keep material
+   out of a projection, a preamble, a summarization or a write, which is a
+   different and weaker thing. Use 27 for the strict reading.
 5. **Trust is usually a number, not a state.** 30 of 164 record a discrete
    epistemic status. The rest store a confidence float, which cannot express
    *rejected* and so cannot survive being wrong.
@@ -59,6 +62,21 @@ excludes a sophisticated chat-buffer compactor, however good the compaction is.
 Systems reviewed and excluded on this basis, or on licence grounds, are named in
 the limitations at the end rather than quietly dropped — the exclusions are part
 of the evidence.
+
+**And one deliberate exception, because an outside review found the corpus
+breaking its own rule.** A handful of systems here store something durable with
+*no* identity at all — [AutoGen](../systems/autogen/)'s `MemoryContent` has no
+id field, so `clear()` is the only removal the protocol can express, and
+[Sovereign](../systems/sovereign/)'s episodes carry none either. Under the test
+as written they do not qualify. They are in because **a memory interface an
+ecosystem builds against is evidence about the field even when — especially
+when — its contract cannot express a correction**, and the same argument admits
+[Google ADK](../systems/adk-python/), whose contract has no delete, no update
+and no expiry. Excluding them would remove the clearest cases of the gap this
+atlas exists to describe. The rule is therefore: *durable with a correctable
+identity*, **or** *a memory contract widely built against, admitted precisely
+because it lacks one*. That is an editorial judgement and it is stated here
+rather than left to be discovered by reading four reports against the rule.
 
 **Why the two counts differ.** The atlas holds **164 reports across 163
 repositories**: `NousResearch/hermes-agent` carries two distinct memory systems

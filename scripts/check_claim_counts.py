@@ -145,6 +145,12 @@ MECHANISM_PHRASES: dict[str, list[str]] = {
         r"negative evals?",
         r"negative[- ]eval",
         r"must not be retrieved",
+        # The 2026-08-08 re-score found ten of the 37 keep material out of a
+        # projection or a preamble rather than out of a query result, so the
+        # headline verb changed from "retrieved" to "appear" — and the claim it
+        # sits in silently fell out of this checker's reach for one commit.
+        # A phrase list is only as good as the prose it was written against.
+        r"must not appear",
         r"forbidden ?hits",
         r"asserting that particular material must",
     ],
