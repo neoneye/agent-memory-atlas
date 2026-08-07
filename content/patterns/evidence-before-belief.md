@@ -88,6 +88,19 @@ model guesses, unexecuted plans, and unverified assumptions explicitly forbidden
 direction: a lesson and its procedure are derived from the **same consolidator
 cluster** in one LLM call, so the how-to and the why cannot drift apart.
 
+[Helix AGI](../../systems/helix-agi/) has the separation and shows what it costs
+when only half of it is wired. Memories live in an append-only journal and
+beliefs are derived from them nightly, with `memory_refs` on every belief and a
+`get_justification_chain` that walks back to the material — real provenance, of
+the kind this page asks for. But **the evidence layer never learns about a
+deletion**: removing a belief rewrites its category file and clears the runtime
+indexes while the journal keeps the content, and `preconscious._resolve_memory_content`
+falls back to the journal when the belief store misses. Keeping the evidence is
+what makes a wrong belief repairable; it is also what makes a *deleted* belief
+recoverable, and those are the same property viewed from two sides. **A system
+that retains evidence owes a deletion path that reaches it** — otherwise the
+pattern's benefit and its worst failure are the same mechanism.
+
 [Nova AI](../../systems/nova-ai/) reaches the same separation with no model
 anywhere in the system, which makes the boundary unusually easy to see. A
 sentence parsed into a candidate relation is held in a single `pending_relation`

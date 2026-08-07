@@ -158,6 +158,17 @@ unhelpful ratings put a fact below every default retrieval path — permanently,
 with no tombstone and no record that suppression occurred. Reinforcement became
 deletion because reachability and belief were the same number.
 
+[Helix AGI](../../systems/helix-agi/) is the only system here that documents
+finding this loop in its own running store and cutting it. A belief's mass
+originally included its relation count; related beliefs get co-injected, and
+co-injection creates more relations, so the comment in `memory/belief_store.py`
+records the cycle it produced — *"relations → mass ↑ → gravity ↑ → co-injection →
+more relations"* — and the fix, which is to leave cluster gravity to emerge from
+spatial density instead of inflating an individual score. The general lesson is
+narrow and reusable: **a reinforcement signal that is itself caused by
+reachability is a feedback loop, not a measurement**, and the way to find one is
+to ask which of your inputs the previous ranking already decided.
+
 [Verel](../../systems/verel/) remains the reference for the separation itself.
 [Atomic Agent](../../systems/atomic-agent/) suggests the safest implementation
 shape: keep votes as append-only events and derive the score, so a reinforcement

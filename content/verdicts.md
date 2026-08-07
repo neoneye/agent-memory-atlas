@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 155 reports.**
+**This page covers all 156 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1452,3 +1452,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: alpha and says so, 25,521 lines of Rust across three crates, shipping on three editor marketplaces with a browser demo of the real pane, and 71 committed evaluation artifacts including an ablation that labels its shipped row `<- ships today` and shows pure RAG beating it on recall.
 - Study when: you are deciding which signals may move an agent's trust. The policy module is a few hundred lines of constants and rationale and is the clearest answer in this corpus.
 - Do not copy when: you need multi-project or multi-tenant memory — there is no scope key on either table — or a stable API.
+
+### `helix-agi`
+
+- Best idea: the comment that records why relation count was removed from a belief's mass — *"relations → mass ↑ → gravity ↑ → co-injection → more relations"* — a self-reinforcing loop between reachability and importance, found in a running system and cut on purpose, with cluster gravity left to emerge from spatial density instead.
+- Biggest risk: the append-only journal its own docstring calls *"the single source of truth"* is the one store no delete path writes to, and the preconscious resolves content out of it when the belief store misses — so a removed belief's text can still reach the prompt.
+- Most reusable component: `BeliefDetector`, a per-pulse local-model gate that answers one yes/no question and writes a pulse id to a pending file, doing *"NO extraction, classification, embedding, or comparison"* until the nightly pass.
+- Maturity impression: 59,313 lines of Python, AGPL-3.0, with committed per-run benchmark artifacts and line-by-line subsystem audits in `documents/` — beside a documented nightly `compact()` that has no caller and two journal-bootstrap functions that are defined and never called.
+- Study when: you want ambient recall that costs no embedding call per turn, or a decay rule written as an equation with named terms rather than a magic half-life.
+- Do not copy when: anyone will ever ask whether a memory is gone — deletion reaches both runtime indexes and neither the journal nor the inbound references that point at it.

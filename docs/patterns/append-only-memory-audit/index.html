@@ -224,6 +224,29 @@ an adversary with disk access. And the log path defaults to
 <code>$HOME</code>, so a process without one has no log at all: deletes
 then fail loudly, which is correct, while stores go silently unlogged,
 which is not.</p>
+<p><strong><a href="../../systems/helix-agi/">Helix AGI</a> is the
+counterexample that shows why the <em>coverage</em> question comes
+before the tamper-evidence question.</strong> Its
+<code>CognitiveJournal</code> is append-only JSONL, one SHA-256 per
+line, and its module docstring calls it <em>"the single source of truth
+for all Helix memories, beliefs, and thought snapshots"</em>. Every
+belief write appends a full snapshot to it. Both paths that remove a
+belief — <code>remove_belief</code>, which rewrites the category file
+and clears the runtime indexes, and <code>archive_belief</code>, which
+pins mass at <code>0.01</code> — append nothing. So the log is a
+complete record of everything the system has believed <strong>except
+what it was asked to forget</strong>, which is the one entry an audit
+exists for.</p>
+<p>Two details make it worth studying rather than merely citing. The
+checksum is recomputed on read and a line that fails it is <em>silently
+skipped</em> — integrity is detected and the result discarded, so a
+truncated log reads as a shorter log. And the nightly
+<code>compact()</code> named in the same docstring has no caller
+anywhere in the tree, so the file grows one embedding-bearing snapshot
+per belief update, which is the failure mode on the opposite side of the
+retention question from <a href="../../systems/palazzo/">Palazzo</a>'s.
+<strong>Check what your log does on delete before you check whether
+anyone could forge it.</strong></p>
 <p><a href="../../systems/atomic-agent/">Atomic Agent</a> is now the
 clearest implementation, and its shape is the one to copy:</p>
 <pre class="sql"><code>vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)

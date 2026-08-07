@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-agent runtime that gives
+every belief a mass and an 8-D position, recomputes confidence nightly
+from a written equation, and keeps an append-only journal it calls the
+single source of truth — which never hears about a deletion.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Helix AGI — Agent Memory Atlas">
+    <meta property="og:description" content="A single-agent runtime that
+gives every belief a mass and an 8-D position, recomputes confidence
+nightly from a written equation, and keeps an append-only journal it
+calls the single source of truth — which never hears about a deletion.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Helix AGI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-agent runtime
+that gives every belief a mass and an 8-D position, recomputes
+confidence nightly from a written equation, and keeps an append-only
+journal it calls the single source of truth — which never hears about a
+deletion.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Helix AGI — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Belief physics on a journal</p>
+          <h1>Helix AGI</h1>
+          <p class="document-deck">A single-agent runtime that gives
+every belief a mass and an 8-D position, recomputes confidence nightly
+from a written equation, and keeps an append-only journal it calls the
+single source of truth — which never hears about a deletion.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/munch2u-a11y/Helix-AGI">
+              <span>Source</span>
+              <strong>munch2u-a11y/Helix-AGI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425" title="54cbbdd86e426c13e48f2fdb20145fb199d54425">
+              <span>Analyzed revision</span>
+              <code>54cbbdd8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-07</strong>
+            </div>
+                      </div>
+                              <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (57%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Helix AGI is a 59,000-line single-agent runtime, AGPL-3.0, built
+around a continuous four-state pulse loop rather than a request/response
+chain. Its memory layer has two halves that do not share a storage
+model. <strong>Beliefs</strong> live in seven JSON files, one per
+category, in a two-tier epistemic topology: an outer tier formed during
+the pulse (premises, propositions, preferences) and an inner tier
+crystallised nightly by a Curator (people, skills, desires, concepts).
+<strong>Memories</strong> live nowhere but an append-only JSONL journal
+— <code>MemoryManager.store</code> says so in its own docstring: <em>"No
+SQLite or ChromaDB writes are performed."</em></p>
+<p>Retrieval is split, and the split is the best structural idea here.
+An 8-D manifold carries ambient "gravity" for preconscious injection,
+deliberately cheap; a lossless 384-D index (numpy brute force, upgrading
+to FAISS <code>IndexIVFFlat</code> past 5,000 vectors) serves explicit
+recall. Ambient and precise are different jobs with different costs, and
+most systems in this atlas run both through one index.</p>
+<p>What separates this system from its neighbours is that its epistemics
+are <em>written down as equations</em> and recomputed on a schedule. A
+belief's mass is <code>m_s + m_a</code> — structural confidence plus an
+affective charge derived from the somatic state at encoding — and
+confidence is recomputed nightly by a stated attrition equation over
+time held, reliance, verifications and stability. The code explains what
+it excluded and why: relation count was removed from individual mass
+because it produced <em>"relations → mass ↑ → gravity ↑ → co-injection →
+more relations"</em> (<code>memory/belief_store.py:44-47</code>), a
+self-reinforcing popularity loop caught and cut.</p>
+<p>Against that, one gap runs through the whole design.
+<code>CognitiveJournal</code>'s module docstring calls it <em>"the
+single source of truth for all Helix memories, beliefs, and thought
+snapshots"</em>, and <strong>nothing that deletes ever writes to
+it.</strong> <code>remove_belief</code> rewrites a category file and
+clears the two runtime indexes; <code>archive_belief</code> sets mass to
+<code>0.01</code> and adds a tag. Neither appends a line. The journal
+therefore holds the content of every belief the system has ever had,
+including the ones it was told to forget, and
+<code>preconscious._resolve_memory_content</code> reads content out of
+it as a live fallback. Memories have no delete path at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A thought becomes a belief in four moves, and stops being one in a
+way that depends on which store you ask.</p>
+<p><strong>Capture is model-free.</strong> Every pulse writes a memory
+line to the journal with its 8-D position and the Lagrangian snapshot of
+the somatic state at encoding. No extraction, no embedding call, no
+database.</p>
+<p><strong>Tagging is cheap and local.</strong>
+<code>BeliefDetector</code> runs as a post-pulse hook and asks a local
+Ollama model exactly one question — <em>"does this thought contain a
+durable belief realization?"</em> — in two passes, one over the internal
+monologue and one over expressive tool output. It does <em>"NO
+extraction, classification, embedding, or comparison"</em>; a yes writes
+the pulse id into <code>data/pending_beliefs.json</code> with
+<code>status: pending</code>. The expensive work is deferred to the
+night.</p>
+<p><strong>Crystallisation is nightly and consolidative.</strong> The
+Curator collects raw memories, extracts candidate beliefs with a
+frontier model, builds relations, merges against the existing store, and
+compounds higher-order beliefs from UMAP/HDBSCAN clusters before
+integrating. Only beliefs that pass consolidation proceed — except when
+consolidation raises, where the handler is explicit that <em>"on
+failure, all beliefs pass through unmerged"</em>.</p>
+<p><strong>Decay is arithmetic, not judgement.</strong> Confidence is
+recomputed from
+<code>C = min(1.0, (Base + w_T + w_R + w_V) × (0.5 + S))</code>. Nothing
+sets a status; a belief becomes irrelevant by losing mass, and
+<code>archive_belief</code> accelerates that by pinning mass at
+<code>0.01</code>.</p>
+<p><strong>And forgetting is where the two stores diverge.</strong> A
+<code>remove_belief</code> is honest about the belief file and the
+runtime indexes and silent to the journal.</p>
+<pre class="mermaid"><code>flowchart TD
+    P[&quot;Pulse: thought or tool output&quot;] --&gt; J[(&quot;cognitive_journal.jsonl&lt;br/&gt;append-only, checksummed&quot;)]
+    P --&gt; D{&quot;BeliefDetector&lt;br/&gt;local model, one question&quot;}
+    D -- &quot;yes&quot; --&gt; PEND[&quot;pending_beliefs.json&quot;]
+    PEND --&gt; C[&quot;Nightly Curator&lt;br/&gt;extract, relate, consolidate, compound&quot;]
+    C --&gt; B[(&quot;beliefs/*.json&lt;br/&gt;seven categories&quot;)]
+    B -- &quot;snapshot on every write&quot; --&gt; J
+    B --&gt; IDX[&quot;8-D manifold + 384-D index&quot;]
+    R[&quot;remove_belief&quot;] --&gt; B
+    R --&gt; IDX
+    R -. &quot;nothing is written&quot; .-x J
+    J -- &quot;content fallback&quot; --&gt; PC[&quot;preconscious injection&quot;]</code></pre>
+<p>The dotted edge is the finding. Every other arrow into the journal is
+a write; the delete path has none, and the journal still feeds the
+prompt.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>An operator stands up a single agent on one machine.
+<code>Helix Setup Wizard.sh</code> and a Tkinter wizard collect
+credentials and model choices; <code>main.py</code> starts the pulse
+loop; state lives under a <code>data/</code> directory beside the code.
+There is no server, no multi-user surface and no migration system — a
+category file is read, rewritten in full, and written back.</p>
+<p>Models are pluggable across Gemini, Anthropic, Ollama and llama.cpp,
+with a <code>local_conscious</code> provider for fully offline
+operation. The design leans on that split: the frontier model does
+nightly extraction, a small local model does the per-pulse gate, and
+<code>all-MiniLM-L6-v2</code> produces the 384-D embeddings.</p>
+<p>Reach is unusually wide for a memory system — Discord, Slack,
+Telegram, WhatsApp and webhook channels; Google Calendar, Drive, Gmail
+and Tasks; a browser and desktop-control tool; a tool factory that
+writes new tools into <code>tools/custom/</code>. The operational
+consequence is that the memory layer ingests from many mouths and has
+one lock-free JSON file per belief category behind them.</p>
+<p><code>requirements.txt</code> pins nothing — 29 requirements are
+declared with <code>&gt;=</code>, including <code>chromadb</code>,
+<code>sentence-transformers</code> and three model SDKs — and
+<code>setup.py</code> executes at install time. The screen of this
+checkout reported one build-time execution surface, two unpinned
+dependency surfaces and one manifest changed inside the seven-day
+window; nothing from the tree was installed or run for this report.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture</strong> — <code>memory/memory_manager.py:199</code>
+<code>store()</code>: appends to the journal, optionally registers a
+384-D embedding, returns an incrementing short-term id.</li>
+<li><strong>Belief write</strong> —
+<code>memory/belief_store.py:314</code> <code>add_belief()</code> →
+<code>_normalize_belief</code> → <code>_write_category</code> →
+<code>_sync_runtime</code> → <code>_append_belief_snapshot</code>.</li>
+<li><strong>Journal</strong> — <code>memory/cognitive_journal.py</code>:
+<code>append</code> (line 61), <code>load_all</code> (118),
+<code>latest_by_id</code> (137), <code>compact</code> (151).</li>
+<li><strong>Delete</strong> — <code>memory/belief_store.py:440</code>
+<code>remove_belief</code>, <code>:453</code>
+<code>archive_belief</code>; <code>core/physics_engine.py:471</code>
+<code>_remove_point</code> clears both the spatial space and the
+semantic index.</li>
+<li><strong>Correction</strong> — <code>:529</code>
+<code>update_belief</code>, <code>:715</code>
+<code>adjust_confidence</code>, <code>:752</code>
+<code>find_near_duplicates</code>, <code>:776</code>
+<code>merge_beliefs</code>.</li>
+<li><strong>Nightly</strong> — <code>core/curator.py:82</code>
+<code>_run_nightly_cycle</code>.</li>
+<li><strong>Gate</strong> — <code>core/belief_detector.py</code>,
+tagging only.</li>
+<li><strong>Injection</strong> — <code>core/preconscious.py</code>, with
+<code>_resolve_memory_content</code> at <code>:673</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A belief carries <code>id</code>, <code>content</code>,
+<code>mass</code>, <code>confidence</code>, <code>verifications</code>,
+<code>stability_index</code>, <code>relations</code>,
+<code>memory_refs</code>, <code>position_8d</code>,
+<code>encoding_lagrangian</code>, <code>created_at</code>,
+<code>last_accessed</code>, <code>access_count</code>,
+<code>source</code> and <code>tags</code>. Categories are files, not a
+column: <code>premises</code>, <code>propositions</code>,
+<code>preferences</code> in the outer tier; <code>people</code>,
+<code>skills</code>, <code>desires</code>, <code>concepts</code> in the
+inner one.</p>
+<p>Two absences matter. There is <strong>no status field</strong> —
+nothing in the schema can say <em>candidate</em>, <em>verified</em> or
+<em>rejected</em>, so every epistemic distinction has to be expressed as
+a number. And there is <strong>no scope key of any kind</strong>: no
+user, no project, no agent, no tenant. This is a single-agent design and
+says so, but it means the memory layer has no boundary to enforce if the
+design ever grows one.</p>
+<p>A journal line carries <code>id</code>, <code>type</code>
+(<code>memory</code>, <code>belief</code>, <code>thought</code>),
+<code>content</code>, <code>position_8d</code>, <code>pulse_id</code>,
+<code>lagrangian</code>, <code>metadata</code>, an optional 384-float
+embedding, a timestamp and a SHA-256 <code>checksum</code>.</p>
+<p><code>memory_refs</code> gives a belief provenance back to the
+memories that formed it, and <code>get_justification_chain</code>
+(<code>:626</code>) walks it. That is real provenance, and it is the
+reason the deletion gap bites: nothing repairs an inbound
+<code>memory_refs</code> or <code>relations</code> pointer when the
+target is removed, while <code>merge_beliefs</code> explicitly does
+repair <em>"all relation pointers"</em> when two beliefs become one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Ambient recall never runs a query. The preconscious assembles context
+from what is <em>near</em> the current attention centre in the 8-D
+manifold, weighted by mass — the README's claim is that this injects
+roughly 30 tokens per turn against about 1,900 for flat semantic
+RAG.</p>
+<p>Explicit recall goes to <code>SemanticIndex</code>: cosine over
+uncompressed 384-D vectors, brute force under 5,000 vectors and FAISS
+<code>IndexIVFFlat</code> above, with a read-write lock so the pulse
+loop can write while a tool reads. The strategy upgrade is automatic and
+the thresholds are stated in the module docstring.</p>
+<p><code>get_surface_by_topic</code>, <code>search_beliefs</code> and
+<code>get_related</code> serve belief lookups directly from the category
+files, and <code>recall_with_somatic_echo</code> blends the affective
+state at encoding into memory recall — retrieval conditioned on how the
+agent felt, which is unusual and coherent with the rest of the
+design.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes do not block on a model.</strong> A pulse's memory
+reaches the journal immediately; the belief detector's model call
+happens in a post-pulse hook, and nothing about capture depends on it.
+Write-to-retrievable lag for a <em>memory</em> is effectively zero when
+an embedding is supplied, and for a <em>belief</em> it is one night: a
+tagged pulse is not a belief until the Curator runs.</p>
+<p><strong>A background pass rewrites a large part of the
+store.</strong> The nightly cycle extracts, merges and compounds;
+<code>merge_beliefs</code> consolidates duplicates and rewrites relation
+pointers; the attrition pass recomputes confidence across every belief.
+All of it is unattended, and none of it is reviewable before it takes
+effect.</p>
+<p>Every belief write also appends a full snapshot to the journal,
+including the 384-float embedding. <strong>The nightly compaction that
+would bound this does not run</strong> — <code>compact()</code> is
+defined at <code>cognitive_journal.py:151</code> and has no caller
+anywhere in the tree, so the journal grows one complete snapshot per
+belief update forever.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is the product; there is no SDK to embed. Memory is
+reachable through tools (<code>memory_recall</code>), through the
+automatic preconscious injection, and through the dashboard, which reads
+<code>data/</code> and renders state. The dashboard is a
+<strong>monitor, not a review surface</strong> — nothing in it approves,
+edits, rejects or deletes a belief, which is why
+<code>human_review</code> is withheld.</p>
+<p>A separate MCP plugin (<code>plugins/helix-agent-lab/</code>) exists
+for running prompt cases against agents. It is testing infrastructure
+rather than a memory surface.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Integrity is computed, checked, and then discarded.</strong>
+Every journal line carries a SHA-256 over its own JSON.
+<code>load_all</code> recomputes it and, on a mismatch, <em>"we simply
+skip the corrupted line"</em> — no error, no counter, no log line. A
+truncated or edited journal reads as a shorter journal. The mechanism to
+detect tampering is present and its result is thrown away.</p>
+<p><strong>Deletion does not propagate to the store the system calls
+authoritative.</strong> <code>remove_belief</code> clears the manifold
+and the semantic index, so a removed belief will not come back through
+either retrieval surface. It remains in the journal with its content,
+and <code>preconscious._resolve_memory_content</code> tries the belief
+store first and the journal second — so an id that survives in an affect
+surface or a dangling <code>relations</code> entry resolves the deleted
+belief's text and injects it as <em>"emotionally resonant"</em>.</p>
+<p>Two functions would make that worse and are not currently wired:
+<code>CognitiveSpace.bootstrap_from_journal</code> and
+<code>SpatialMind.bootstrap</code> both replay <code>load_all()</code> —
+every historical snapshot, not <code>latest_by_id()</code> — and neither
+has a caller. They are one call site from turning a delete into a no-op
+across restarts.</p>
+<p><strong>Trust is numbers.</strong> Confidence, mass, verifications
+and stability index, with no discrete state, so <em>rejected</em> is not
+expressible. The only occurrence of "contradiction" in the belief store
+is a comment on a <code>-0.10</code> stability nudge
+(<code>:480</code>): a contradiction is detected, subtracts a tenth, and
+leaves no record that a conflict happened.</p>
+<p><strong>Consolidation fails open.</strong> When the merge phase
+raises, <em>"all beliefs pass through unmerged"</em> — an extraction
+error becomes duplicate beliefs rather than a paused night.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Roughly forty test files, plus sandboxes for LoCoMo, StateBench,
+belief extrapolation and tool creation.
+<code>tests/test_belief_operations.py</code> covers the store's
+arithmetic; <code>tests/test_runtime_integrity.py</code> exercises
+journal round-trips.</p>
+<p>The one committed negative assertion in the memory layer is
+<code>tests/test_scratchpad_postpone.py:130</code>: remove a note, then
+assert its id is absent from the file on disk. That is a
+deletion-durability assertion against the store's only read surface, and
+it earns <code>negative_eval</code> — narrowly. <strong>Nothing asserts
+that a removed belief is absent</strong>, and the test that would matter
+most is the one this design would fail: a removed belief's content is
+still in the journal, and the journal is a read path.</p>
+<p><code>tests/test_simulated_safety_benchmark.py:209</code> asserts
+that episode metadata, goals and titles stay out of the prompt an agent
+sees — harness hygiene, and the right instinct, but about the benchmark
+rather than about memory.</p>
+<p>Benchmark artifacts are committed rather than merely quoted: per-run
+JSON and markdown under <code>documents/benchmark/</code>, including a
+comparative run against a Codex baseline. Read them for what they are —
+the composite is 90/90, graded by a model against the system's own
+rubric, so it measures the harness's agreement with itself.</p>
+<p><strong>The headline retrieval claim has no artifact.</strong>
+<em>"~30 tokens per turn … versus ~1,900 … a 63× reduction"</em> appears
+three times in the README, and no file under
+<code>documents/benchmark/</code> contains a token measurement. The
+mechanism makes the direction plausible; the number is unsupported in
+the tree.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Cut the loop between reachability and importance, and write
+down why.</strong> The comment at <code>belief_store.py:44-47</code>
+records that relation count was removed from individual mass because
+related beliefs got co-injected, which created more relations, which
+raised mass again. Cluster gravity now emerges from spatial density
+instead. Most systems that ship this loop never name it.</p>
+<p><strong>Put a cheap local gate in front of the expensive nightly
+pass.</strong> <code>BeliefDetector</code> answers one yes/no question
+with a small local model and writes a pulse id to a pending file.
+Extraction, classification, embedding and comparison all happen later,
+in one batch, on a bigger model.</p>
+<p><strong>Separate the ambient surface from the precise one.</strong>
+An 8-D manifold for what should drift into attention, a lossless 384-D
+index for what was explicitly asked for. They have different accuracy
+requirements and different per-turn budgets, and merging them is how
+ambient recall gets expensive.</p>
+<p><strong>Write the decay rule as an equation with named
+terms.</strong> Time held, reliance, verifications, stability — each
+visible, each tunable, each auditable against a belief's stored
+fields.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not call a store the single source of truth unless
+deletion writes to it.</strong> Every other mutation appends a snapshot;
+only forgetting is silent, which makes the journal a complete history of
+everything except what a user asked to remove.</p>
+<p><strong>Do not verify a checksum and discard the result.</strong>
+Skipping a corrupted line converts an integrity failure into silent data
+loss.</p>
+<p><strong>Do not ship a documented maintenance pass with no
+caller.</strong> The compaction that bounds journal growth exists as a
+method and never runs.</p>
+<p><strong>Do not resolve content through a fallback that outlives your
+delete.</strong> The preconscious tries the store, then the journal — so
+the second path serves what the first one was told to forget.</p>
+<h3 id="fit">Fit</h3>
+<p>This is a design for one person running one agent on one machine, and
+on those terms it is coherent: no scope key is the right answer for a
+single-tenant desktop system, JSON files are inspectable, and the
+physics metaphor buys a cheap ambient recall path that genuinely avoids
+per-turn embedding calls. Take the equations and the gate.</p>
+<p>It is the wrong starting point for anything with a second user, a
+compliance obligation, or an operator who will be asked <em>"is it
+gone?"</em> — not because the mechanisms are unsophisticated, but
+because the layer that would answer that question is the one the delete
+path skips. A reader who wants the same ambient recall with a defensible
+forget story should copy the manifold and put a real store under it.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A source of truth that never hears a delete.</strong> The
+central risk, and the cheapest to close: append a tombstone line on
+<code>remove_belief</code> and teach <code>latest_by_id</code> to honour
+it.</li>
+<li><strong>Silent checksum failures</strong>, which hide the corruption
+they detect.</li>
+<li><strong>Unbounded journal growth</strong>, one embedding-bearing
+snapshot per belief write, with the bounding pass unwired.</li>
+<li><strong>Dangling references after delete</strong>, because
+<code>remove_belief</code> does not repair inbound
+<code>relations</code>/<code>memory_refs</code> while
+<code>merge_beliefs</code> does.</li>
+<li><strong>Published numbers without artifacts</strong> — the 63×
+context claim.</li>
+<li><strong>A model grading its own system</strong> in the committed
+comparative benchmark.</li>
+<li><strong>Consolidation that fails open</strong>, turning an
+extraction error into duplicates.</li>
+<li><strong>Full-file rewrites</strong> of belief categories with no
+lock, under a runtime with five inbound message channels.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the <em>shape</em>: model-free capture, a cheap local gate, a
+nightly consolidator, and two retrieval surfaces with different cost
+profiles. That combination is well-reasoned and unusually well
+documented in comments.</p>
+<p>Do not borrow the storage layer. Seven JSON files rewritten whole, an
+unbounded journal, and a delete that reaches two indexes and not the log
+are three separate things to replace, and each is straightforward to
+replace independently — the belief schema itself would sit unchanged on
+SQLite with a status column and a mutation log.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is <code>bootstrap_from_journal</code> intended as the restart path?
+If it is wired later, every deleted belief returns, and every historical
+snapshot returns with it, since it replays <code>load_all()</code>
+rather than <code>latest_by_id()</code>.</li>
+<li>Was <code>compact()</code> ever called, and what is journal size in
+a long-running install?</li>
+<li>What produced the ~30 versus ~1,900 token figures, and can the
+harness be committed?</li>
+<li>Is the <code>-0.10</code> contradiction nudge ever the <em>only</em>
+consequence of a detected conflict, or does a downstream pass act on
+it?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory/belief_store.py</code></td>
+<td>Seven-category belief store, mass and confidence arithmetic, merge,
+remove, archive</td>
+</tr>
+<tr>
+<td><code>memory/cognitive_journal.py</code></td>
+<td>Append-only JSONL journal, checksums, <code>compact()</code></td>
+</tr>
+<tr>
+<td><code>memory/memory_manager.py</code></td>
+<td>Journal-only memory writes, semantic and contextual search</td>
+</tr>
+<tr>
+<td><code>memory/semantic_index.py</code></td>
+<td>384-D index, numpy → FAISS upgrade, save/load</td>
+</tr>
+<tr>
+<td><code>core/curator.py</code></td>
+<td>Nightly extraction, consolidation, compounding, integration</td>
+</tr>
+<tr>
+<td><code>core/belief_detector.py</code></td>
+<td>Per-pulse local-model gate that tags without extracting</td>
+</tr>
+<tr>
+<td><code>core/belief_consolidator.py</code></td>
+<td>Relation building and duplicate merging</td>
+</tr>
+<tr>
+<td><code>core/preconscious.py</code></td>
+<td>Ambient injection assembly;
+<code>_resolve_memory_content</code></td>
+</tr>
+<tr>
+<td><code>core/physics_engine.py</code></td>
+<td>Point registration and removal across both indexes</td>
+</tr>
+<tr>
+<td><code>core/cognitive_space.py</code>,
+<code>core/spatial_mind.py</code></td>
+<td>8-D manifold and KD-trees; unwired journal bootstraps</td>
+</tr>
+<tr>
+<td><code>dashboard/dashboard.py</code></td>
+<td>Read-only state monitor</td>
+</tr>
+<tr>
+<td><code>tests/test_scratchpad_postpone.py</code></td>
+<td>The one committed absence assertion</td>
+</tr>
+<tr>
+<td><code>documents/benchmark/</code></td>
+<td>Committed per-run benchmark JSON and reports</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-07</strong> — <a
+href="https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425"><code class="commit-id" title="54cbbdd86e426c13e48f2fdb20145fb199d54425">54cbbdd8…</code></a>
+— first reading. Screened before reading: 0 auto-run surfaces, 1
+build-time execution surface (<code>setup.py</code>), 2 unpinned
+dependency surfaces including 29 <code>&gt;=</code> requirements, and
+one manifest changed the same day — inside the seven-day cooldown.
+Nothing was installed, built or run; every claim here is from static
+reading. The pinned commit is the head of a repository whose most recent
+work is an MCP testing plugin rather than the memory layer.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

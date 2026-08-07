@@ -6,7 +6,7 @@ root: ../..
 page_kind: pattern
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and fifty-five
+> **This is not an established best practice.** Nine systems of one hundred and fifty-six
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -126,9 +126,9 @@ two rather than filtering the read like the middle two, and puts the mechanism
 behind a human decision — discussed below.
 [Perseus Vault](../../systems/perseus-vault/) is the sixth and the only one that
 refuses a value without storing it — discussed below.
-[Universal Memory Engine](../../systems/universal-memory-engine/) carries the
-mark and is not yet characterised on this page — its paragraph is owed, and the
-gap is recorded here rather than papered over.
+[Universal Memory Engine](../../systems/universal-memory-engine/) is the ninth
+and the plainest — a suppression table the write gate consults at four points,
+discussed below.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
@@ -187,9 +187,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and fifty-five
+That makes the negative result stronger rather than weaker. Two of one hundred and fifty-six
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and fifty-five, plus one adoption by a reader who went looking, suggests an idea
+one hundred and fifty-six, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
