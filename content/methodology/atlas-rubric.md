@@ -262,9 +262,29 @@ from an outside review of this page and none of them is fixed yet.
   the capability index as one coherent system with both.
   [DeepCode](../../systems/deepcode/) is the clearest case and its own report
   says so in prose that the frontmatter cannot carry. Filtering the corpus by two
-  marks can therefore return a system where no single memory path has both. The
-  fix is a per-capability record — subsystem, file, symbol, covering test — and
-  it is a change to every report's frontmatter.
+  marks can therefore return a system where no single memory path has both.
+
+  **Partly addressed.** Reports may now carry a `capability_evidence:` block —
+  one record per mark, `subsystem | file | symbol | test` — and
+  `scripts/check_capability_evidence.py` validates its shape, refuses to let
+  coverage fall, and prints every report whose marks name more than one
+  subsystem. Four reports are migrated: DeepCode, [Aeris](../../systems/aeris/),
+  [Prime Agent](../../systems/prime-agent/) and
+  [Microsoft Agent Framework](../../systems/agent-framework/). The three carrying
+  more than one mark all came out **split**, which is the point: Aeris earns
+  `negative_eval` on a model-facing projection rather than on retrieval, Prime
+  Agent earns it on conversation compaction, and DeepCode's scope and audit marks
+  cover a SQLite conversation store that its Markdown notes never touch. Agent
+  Framework carries a single mark and so cannot split, but its record says the
+  thing that matters anyway — `scope_enforced` sits on an in-tree harness while
+  the framework contract the report is named for has no scope at all. Every one
+  of those facts was already in the prose. None of it was in the data.
+
+  **Ten of 269 marks are covered**, so the number to watch is coverage, not the
+  four. `test: unknown` appears in six of the ten and is written rather than
+  guessed: the report named the mechanism and did not name a test for it, and
+  inventing one here would repeat the fabrication this atlas has already caught
+  itself at. The remaining 259 need a re-read each.
 - **The admission rule and the corpus disagree at the edges.** The rule asks for
   something that survives the session with an identity that can later be
   corrected. [AutoGen](../../systems/autogen/)'s `MemoryContent` has no

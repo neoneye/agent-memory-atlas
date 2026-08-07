@@ -10,6 +10,10 @@ revision: 68a2bd6d11a12beab705ce400e5c3a052d7f71db
 revision_url: https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db
 analyzed_at: 2026-08-07
 capabilities: "trust_state, scope_enforced, negative_eval"
+capability_evidence:
+  trust_state: "belief store | src/Aeris.Engine/BeliefData.cs | BeliefStatus | unknown"
+  scope_enforced: "per-entity memory and belief stores | src/Aeris.Engine/MemoryRetrievalSystem.cs | per-entity dictionary key required on every read | unknown"
+  negative_eval: "model-facing projection, not the memory store | src/Aeris.Engine/SemanticValidator.cs | EcsLeakPatterns asserted on the serialized SemanticState | SemanticExtractorTests"
 matrix:
   memory_unit: "A fixed-size struct — type, category, importance, certainty, emotional weight, involved entity, location, a forgotten flag — carrying no text at all, beside a belief struct with a status enum and pointers to the memories supporting and contradicting it"
   storage: "In-process stores keyed by entity id, serialized whole into JSON world snapshots at a tick interval; no database, despite an ADR selecting SQLite"

@@ -112,6 +112,19 @@ if ! python3 "$project_dir/scripts/check_claim_counts.py" "$project_dir"; then
   exit 1
 fi
 
+# Both checks above guard the *count* of marks. Neither says what a mark points
+# at, and a mark that names no subsystem is how three correct marks add up to a
+# profile no memory path in the system has. The evidence block is the fix and it
+# is being filled report by report, so this ratchets rather than gates.
+if ! python3 "$project_dir/scripts/check_capability_evidence.py" --self-test; then
+  echo "check_capability_evidence.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_capability_evidence.py" "$project_dir"; then
+  echo "Capability evidence is malformed, or coverage fell below the floor." >&2
+  exit 1
+fi
+
 # The protocol catalogue claims each test "carries the page it came from, so a
 # test whose source argument changes goes stale visibly rather than quietly".
 # Nothing made that true until this check existed, and an outside review said so.

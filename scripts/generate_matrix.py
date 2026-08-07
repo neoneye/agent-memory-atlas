@@ -135,6 +135,57 @@ def read_capabilities(path: Path) -> set[str] | None:
     return None
 
 
+#: One record per mark, as four pipe-separated fields in the quoted-scalar shape
+#: the rest of this frontmatter already uses:
+#:
+#:     capability_evidence:
+#:       scope_enforced: "conversation store | core/sessions/store.py | list_threads | tests/test_memory.py"
+#:
+#: **subsystem | file | symbol | test**, in that order. `test: none` is a real
+#: answer and the common one; writing it is the point, because "the mechanism
+#: exists and nothing pins it" is the finding.
+#:
+#: The field that earns the block is the **subsystem**. `capabilities:` is a flat
+#: list, so a report whose scope filter guards a conversation store and whose
+#: negative test guards a different path renders in the capability index as one
+#: coherent system carrying both — and a reader filtering for two marks at once
+#: gets back a union no single memory path in that system possesses. DeepCode's
+#: own report says so in prose the frontmatter had no way to carry. An outside
+#: review found it by reading the prose against the grid.
+EVIDENCE_FIELDS = ("subsystem", "file", "symbol", "test")
+
+
+def read_capability_evidence(path: Path) -> dict[str, dict[str, str]]:
+    """Per-mark evidence records, or `{}` where a report has not been migrated.
+
+    Absent is not an error here, unlike `capabilities:`. The block was added
+    after 164 reports already existed and each record has to come from a real
+    re-read, so coverage climbs by ratchet rather than by a flag day.
+    """
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 3)
+    if end == -1:
+        return {}
+
+    records: dict[str, dict[str, str]] = {}
+    inside = False
+    for line in text[4:end].splitlines():
+        if line.startswith("capability_evidence:"):
+            inside = True
+            continue
+        if inside:
+            match = _MATRIX_LINE.match(line)
+            if not match:
+                break
+            flag, packed = match.groups()
+            parts = [part.strip() for part in packed.split("|")]
+            parts += [""] * (len(EVIDENCE_FIELDS) - len(parts))
+            records[flag] = dict(zip(EVIDENCE_FIELDS, parts))
+    return records
+
+
 _REVISION = re.compile(r"^revision:\s*\"?([^\"\s]+)\"?\s*$", re.M)
 _REVISION_URL = re.compile(r"^revision_url:\s*\"?(\S+?)\"?\s*$", re.M)
 _FULL_SHA = re.compile(r"^[0-9a-f]{40}$")

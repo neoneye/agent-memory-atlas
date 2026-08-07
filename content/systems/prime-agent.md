@@ -10,6 +10,10 @@ revision: c98941a2a5cf40faecf9b4648ac3c304abf48fd3
 revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3
 analyzed_at: 2026-08-05
 capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "session listing for resume and branch, not the refinement store | packages/coding-agent/src/core/session-manager.ts | sessionHeaderMatchesCwd | unknown"
+  audit_log: "continual-refinement harness | packages/coding-agent/src/core/refinement/refinement.ts | appendGlobalRefinement writing harness/refinements.jsonl | unknown"
+  negative_eval: "conversation compaction, not memory retrieval | packages/coding-agent/test/compaction.test.ts | assertion that messagesToSummarize excludes the earlier summary | packages/coding-agent/test/compaction.test.ts"
 matrix:
   memory_unit: "A `HarnessEntry` — id, kind of `prompt` / `memory` / `skill` / `subagent`, title, content, path, scope, reference and argument contracts, source and a monotonic `version`"
   storage: "`harness_state.json` written atomically through temp-and-rename at mode 0600, in a global directory under `~/.prime/agent/harness/` and a local one under the session's artifact directory, beside an append-only `refinements.jsonl`"

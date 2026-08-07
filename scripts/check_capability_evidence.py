@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""Validate per-mark evidence records, and report where a system's marks split.
+
+`capabilities:` is a flat list of flags. It says a mechanism was found somewhere
+in the repository; it does not say *which memory path* the mechanism protects,
+and for a system with more than one durable store those are different claims.
+An outside review made the case with DeepCode: its scope filter and its audit
+log both guard the conversation store, its negative test guards instruction-file
+assembly, and none of the three reaches the Markdown notes the report is largely
+about. All three marks are correct. The profile they add up to is not a thing
+that exists, and a reader filtering the capability index for two marks at once
+can be handed a union no single path in that system has.
+
+`capability_evidence:` is the fix — subsystem, file, symbol, covering test, one
+record per mark. This script does three jobs:
+
+  1. **Shape.** Every record names a known flag the report actually carries, and
+     fills all four fields. A half-written record is worse than none, because it
+     looks migrated.
+  2. **Ratchet.** Coverage may not fall. The block arrived after 164 reports
+     existed and every record has to come from a real re-read, so this migrates
+     report by report instead of by flag day — and a ratchet is what stops
+     "incremental" from meaning "abandoned".
+  3. **Split subsystems.** Where a report's marks do not all name the same
+     subsystem, say so. That is not an error. It is the finding the block was
+     added to make visible, and it belongs in the open where the grid is.
+
+Usage:
+    check_capability_evidence.py [root] [--list] [--self-test]
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from generate_matrix import (  # noqa: E402
+    CAPABILITIES,
+    EVIDENCE_FIELDS,
+    read_capabilities,
+    read_capability_evidence,
+)
+
+FLAGS = {flag for flag, _, _ in CAPABILITIES}
+
+#: Marks carrying an evidence record, as of the last time this was raised. The
+#: number is the whole mechanism: it can only go up, and it is edited by hand in
+#: the same commit that earns it, so raising it is a deliberate act with a diff
+#: rather than a side effect of a build.
+COVERAGE_FLOOR = 10
+
+#: A test field says what pins the mechanism. These two are the honest answers
+#: when nothing does, and they are common — writing one is the point, because
+#: "the mechanism is real and no test holds it in place" is a finding this atlas
+#: makes constantly in prose and has never been able to count.
+NO_TEST = {"none", "unknown"}
+
+
+def audit(root: Path) -> tuple[list[str], list[str], int, int]:
+    """Problems, notes, marks covered, marks total."""
+    problems: list[str] = []
+    notes: list[str] = []
+    covered = total = 0
+
+    for path in sorted((root / "content" / "systems").glob("*.md")):
+        where = f"content/systems/{path.name}"
+        marks = read_capabilities(path) or set()
+        records = read_capability_evidence(path)
+        total += len(marks)
+        covered += len(marks & set(records))
+
+        for flag, record in sorted(records.items()):
+            if flag not in FLAGS:
+                problems.append(f"{where}: '{flag}' is not one of the seven capabilities")
+                continue
+            if flag not in marks:
+                problems.append(
+                    f"{where}: evidence for '{flag}' but the report does not carry that mark"
+                )
+            missing = [f for f in EVIDENCE_FIELDS if not record.get(f)]
+            if missing:
+                problems.append(
+                    f"{where}: '{flag}' record is missing {', '.join(missing)} — "
+                    f"expected \"subsystem | file | symbol | test\""
+                )
+
+        subsystems = {
+            record["subsystem"] for flag, record in records.items() if record.get("subsystem")
+        }
+        if len(subsystems) > 1:
+            notes.append(
+                f"{where}: marks split across {len(subsystems)} subsystems — "
+                + "; ".join(sorted(subsystems))
+            )
+        untested = sorted(
+            flag for flag, record in records.items() if record.get("test", "").lower() in NO_TEST
+        )
+        if untested:
+            notes.append(f"{where}: no test recorded for {', '.join(untested)}")
+
+    return problems, notes, covered, total
+
+
+def check(root: Path, show_list: bool) -> int:
+    problems, notes, covered, total = audit(root)
+
+    if show_list:
+        print("\n".join(notes) or "no split subsystems and no untested marks recorded")
+        print()
+
+    if covered < COVERAGE_FLOOR:
+        problems.append(
+            f"capability evidence covers {covered} marks; the floor is {COVERAGE_FLOOR}. "
+            "Coverage may not fall — restore the records or lower the floor deliberately."
+        )
+
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    if problems:
+        return 1
+
+    split = sum(1 for note in notes if "split across" in note)
+    print(
+        f"{covered} of {total} capability marks carry an evidence record "
+        f"(floor {COVERAGE_FLOOR}); {split} reports have marks that guard different subsystems."
+    )
+    if covered > COVERAGE_FLOOR:
+        print(f"COVERAGE_FLOOR can be raised to {covered}.")
+    return 0
+
+
+FIXTURE = """---
+title: "Fixture"
+capabilities: "{caps}"
+capability_evidence:
+{records}---
+
+Body.
+"""
+
+
+def self_test() -> int:
+    """Controls, because a validator that cannot fail is not a validator.
+
+    The ratchet is deliberately not exercised here — it reads a module constant
+    against the real corpus — but every shape rule is, including the one that
+    matters most: an evidence record for a mark the report does not carry, which
+    is how a migration quietly invents a capability.
+    """
+    import tempfile
+
+    cases = [
+        ('scope_enforced', '  scope_enforced: "store | a/b.py | q | none"\n', 0,
+         "complete record passes"),
+        ('scope_enforced', '  scope_enforced: "store | a/b.py | q"\n', 1,
+         "missing test field fails"),
+        ('scope_enforced', '  audit_log: "store | a/b.py | q | none"\n', 1,
+         "evidence for an uncarried mark fails"),
+        ('scope_enforced', '  invented: "store | a/b.py | q | none"\n', 1,
+         "unknown flag fails"),
+        ('scope_enforced', '  scope_enforced: " | a/b.py | q | none"\n', 1,
+         "empty subsystem fails"),
+    ]
+
+    failures = []
+    for caps, records, expected, label in cases:
+        with tempfile.TemporaryDirectory() as tmp:
+            systems = Path(tmp) / "content" / "systems"
+            systems.mkdir(parents=True)
+            (systems / "fixture.md").write_text(
+                FIXTURE.format(caps=caps, records=records), encoding="utf-8"
+            )
+            problems, _, _, _ = audit(Path(tmp))
+            if bool(problems) != bool(expected):
+                failures.append(f"{label}: expected {expected}, got {problems}")
+
+    for failure in failures:
+        print(failure, file=sys.stderr)
+    if failures:
+        return 1
+    print(f"self-test: {len(cases)} controls passed")
+    return 0
+
+
+def main() -> int:
+    flags = {a for a in sys.argv[1:] if a.startswith("--")}
+    if "--self-test" in flags:
+        return self_test()
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    root = Path(args[0]) if args else Path(__file__).resolve().parent.parent
+    return check(root, "--list" in flags)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -10,6 +10,10 @@ revision: 69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 revision_url: https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 analyzed_at: 2026-08-05
 capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "conversation store (SQLite) | core/sessions/store.py | WHERE project_id = ? on the thread read path | unknown"
+  audit_log: "conversation store (SQLite) | core/persistence/database.py | event_log, append-only with per-thread sequence heads | unknown"
+  negative_eval: "instruction-file assembly | tests/test_memory.py | test_project_instructions_no_repo_reads_only_workspace | tests/test_memory.py::test_project_instructions_no_repo_reads_only_workspace"
 matrix:
   memory_unit: "A markdown file in a flat per-workspace namespace, plus an event-sourced `item` inside a persisted conversation thread"
   storage: "Three stores that never meet — markdown notes under `<workspace>/.deepcode/memory/`, JSON and JSONL session transcripts, and a SQLite database at `~/.deepcode/state/deepcode.sqlite3` holding projects, threads and an append-only event log"

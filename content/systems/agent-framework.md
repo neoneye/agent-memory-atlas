@@ -10,6 +10,8 @@ revision: 28389df805b97f846ca21d857e291602a7adc0a4
 revision_url: https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
 matrix:
   memory_unit: "A `MemoryTopicRecord` — topic, slug, summary, a list of memory bullets, `updated_at`, and the `session_ids` that contributed to it — serialised as one Markdown file per topic"
   storage: "A `MemoryStore` ABC with a file-backed implementation: per-owner, per-source directory trees holding topic files, an index, state, and a transcript archive. Separate packages back Azure Cosmos DB and the hosted Foundry service"

@@ -331,15 +331,15 @@ is not written down is indistinguishable from one nobody has found. Each
 of these came from an outside review of this page and none of them is
 fixed yet.</p>
 <ul>
-<li><strong>Re-score all thirty-seven <code>negative_eval</code> marks
-against one wording.</strong> The definition says <em>material must not
-be retrieved</em>. Some marks were awarded for adjacent shapes —
-material excluded from a serialized projection, a summary kept out of a
-second summarization pass, an instruction file kept out of an assembled
-preamble. Those are real committed tests and the last is arguably
-retrieval; the middle one is not. Until the pass is done the count is
-"carries a committed must-not test".</li>
-<li><strong>A mark names a capability but not the subsystem it
+<li><p><strong>Re-score all thirty-seven <code>negative_eval</code>
+marks against one wording.</strong> The definition says <em>material
+must not be retrieved</em>. Some marks were awarded for adjacent shapes
+— material excluded from a serialized projection, a summary kept out of
+a second summarization pass, an instruction file kept out of an
+assembled preamble. Those are real committed tests and the last is
+arguably retrieval; the middle one is not. Until the pass is done the
+count is "carries a committed must-not test".</p></li>
+<li><p><strong>A mark names a capability but not the subsystem it
 protects.</strong> <code>capabilities</code> is a flat comma-separated
 string, so a system whose scope filter guards its conversation store and
 whose negative test guards a different path presents in the capability
@@ -347,10 +347,33 @@ index as one coherent system with both. <a
 href="../../systems/deepcode/">DeepCode</a> is the clearest case and its
 own report says so in prose that the frontmatter cannot carry. Filtering
 the corpus by two marks can therefore return a system where no single
-memory path has both. The fix is a per-capability record — subsystem,
-file, symbol, covering test — and it is a change to every report's
-frontmatter.</li>
-<li><strong>The admission rule and the corpus disagree at the
+memory path has both.</p>
+<p><strong>Partly addressed.</strong> Reports may now carry a
+<code>capability_evidence:</code> block — one record per mark,
+<code>subsystem | file | symbol | test</code> — and
+<code>scripts/check_capability_evidence.py</code> validates its shape,
+refuses to let coverage fall, and prints every report whose marks name
+more than one subsystem. Four reports are migrated: DeepCode, <a
+href="../../systems/aeris/">Aeris</a>, <a
+href="../../systems/prime-agent/">Prime Agent</a> and <a
+href="../../systems/agent-framework/">Microsoft Agent Framework</a>. The
+three carrying more than one mark all came out <strong>split</strong>,
+which is the point: Aeris earns <code>negative_eval</code> on a
+model-facing projection rather than on retrieval, Prime Agent earns it
+on conversation compaction, and DeepCode's scope and audit marks cover a
+SQLite conversation store that its Markdown notes never touch. Agent
+Framework carries a single mark and so cannot split, but its record says
+the thing that matters anyway — <code>scope_enforced</code> sits on an
+in-tree harness while the framework contract the report is named for has
+no scope at all. Every one of those facts was already in the prose. None
+of it was in the data.</p>
+<p><strong>Ten of 269 marks are covered</strong>, so the number to watch
+is coverage, not the four. <code>test: unknown</code> appears in six of
+the ten and is written rather than guessed: the report named the
+mechanism and did not name a test for it, and inventing one here would
+repeat the fabrication this atlas has already caught itself at. The
+remaining 259 need a re-read each.</p></li>
+<li><p><strong>The admission rule and the corpus disagree at the
 edges.</strong> The rule asks for something that survives the session
 with an identity that can later be corrected. <a
 href="../../systems/autogen/">AutoGen</a>'s <code>MemoryContent</code>
@@ -359,15 +382,15 @@ href="../../systems/sovereign/">Sovereign</a>'s episodes have none
 either, and both are in. The defensible reason is that a widely-adopted
 interface with no delete is evidence about the field and belongs in it;
 the rule as written does not say that, so either the rule or the
-inclusion should move.</li>
-<li><strong>No second reader.</strong> Every mark on every report comes
-from one LLM reviewer directed by one person, with no blinded re-review
-and no inter-rater agreement figure. The <a
+inclusion should move.</p></li>
+<li><p><strong>No second reader.</strong> Every mark on every report
+comes from one LLM reviewer directed by one person, with no blinded
+re-review and no inter-rater agreement figure. The <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-28-methodology-hazards.md">methodology
 hazards note</a> records what that has already cost — five of seven
 <code>audit_log</code> marks failing a re-audit among them. An agreement
 study over twenty to thirty of them would put a number on the error rate
-instead of a list of anecdotes.</li>
+instead of a list of anecdotes.</p></li>
 </ul>
         </article>
       </div>
