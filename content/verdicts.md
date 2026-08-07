@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 161 reports.**
+**This page covers all 162 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1506,3 +1506,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 212 files under BSL 1.1 with a dual-dialect SQLite/Postgres schema, hierarchical sessions with an idle sweep, and one `WHERE` clause that excludes judge-authored decisions from the data it treats as authoritative human guidance.
 - Study when: you reuse human approvals and need them to generalise without becoming reflexive, or you want the one worked example here of memory about the actor.
 - Do not copy when: the profile must be correctable — nothing disputes it, and only the next analysis can disagree with the last.
+
+### `brain-md`
+
+- Best idea: `update-truth` rewrites a page's compiled truth and appends its timeline entry in one command, so *"a compiled_truth rewrite can never silently skip its timeline entry"* — belief and the reason it changed are one operation rather than a convention.
+- Biggest risk: the correct-by-construction guarantee holds only while nobody hand-edits a file, there is deliberately no validator, and the pre-commit hook that would catch it is optional and locates its own CLI by searching four paths.
+- Most reusable component: the page format — a current-knowledge section over an append-only timeline typed `decision | evidence | reversal | note` — which drops into any markdown memory without the code.
+- Maturity impression: 22 files and 19 commits under Apache-2.0, a 522-line zero-dependency library under 452 lines of tests, six fixed root pages whose history is deliberately git rather than a timeline, and a linter that exempts the append-only layer on stated grounds.
+- Study when: you keep project knowledge in the repository and want the reason a belief changed to be structurally inseparable from the change.
+- Do not copy when: memory must be searched rather than navigated, several agents write concurrently, or a reversed claim must be unable to return — a reversal is recorded and nothing stops the same truth being compiled back tomorrow.

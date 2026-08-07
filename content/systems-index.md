@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **161 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **162 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -38,6 +38,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## B
 
 - [`basic-memory`](../systems/basic-memory/) **Basic Memory** — Human-editable Markdown graph · `basicmachines-co/basic-memory` · Scope enforced
+- [`brain-md`](../systems/brain-md/) **brain.md** — Compiled truth over an append-only timeline · `mindmuxai/brain.md` · Scope enforced, Mutation audit, Negative evals
 - [`buzz`](../systems/buzz/) **Buzz** — Memory as an encrypted protocol · `block/buzz` · Scope enforced
 - [`byterover`](../systems/byterover/) **ByteRover** — Curated coding-agent memory · `campfirein/cipher`
 ## C
