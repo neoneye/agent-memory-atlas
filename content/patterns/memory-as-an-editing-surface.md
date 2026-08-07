@@ -130,6 +130,32 @@ Elsewhere in the atlas, `human_review` is held by a minority of systems, and mos
 of those are approval of a queue rather than editing of the store — a reviewer
 says yes or no to what the extractor proposed and cannot rewrite it.
 
+**One sighting outside the corpus takes the pattern to its limit: an editing
+surface with nothing behind it.** Cline's **Memory Bank** — six markdown files in
+the user's own repository, read at the start of a session and rewritten at the
+end — carries every verb on this page for free. A person edits the file, and
+that edit *is* the memory; the model's write goes through the same file with the
+same tools; a diff shows what changed; a PR review catches a bad one; git holds
+the history. There is no store to fall out of sync with the editor because there
+is no store. It gets no report — [recorded as an
+exclusion](../../compare/#known-limitations) — for the reason that makes it
+useful here: grepping the checkout for the mechanism returns two files and both
+are documentation, so what implements it is a prompt plus the agent's ordinary
+file tools.
+
+Read against the systems above, it isolates what the pattern is actually buying.
+SillyTavern is hand-authored and needs no correction path; RisuAI built a real
+editor over machine-written memory and it took a modal with five verbs; Soul of
+Waifu wrote the API and never wired it up. Memory Bank skips all of that by
+making the memory a document in the first place — and pays for it in the one
+place a document cannot help: **nothing consults the file before a write.** A
+deletion holds until the next update pass re-derives the same paragraph from the
+same conversation, because no record survives saying it was removed on purpose.
+That is the [rejected-value tombstone](../rejected-value-tombstone/) gap, arrived
+at from the direction of having no database at all, and it is the argument that
+editability and negative memory are separate properties rather than two views of
+one.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

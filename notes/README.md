@@ -8,6 +8,16 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-07-three-coding-agents-and-where-their-memory-isnt.md](2026-08-07-three-coding-agents-and-where-their-memory-isnt.md) —
+  `cline/cline`, `MoonshotAI/kimi-code` and `MoonshotAI/kimi-cli` triaged
+  together and all excluded. Cline's Memory Bank, the most-cited memory in
+  coding agents, appears in exactly two files and both are in `docs/` — it is a
+  prompt plus the agent's ordinary file tools. Of the two Moonshot repos the
+  interesting one is the one being wound down: `kimi-cli` ships `SendDMail`,
+  agent-chosen time travel back to a context checkpoint with a note to its past
+  self, which the TypeScript successor did not carry over. What `kimi-code`
+  built instead is a compaction prompt that asks the model to carry unverified
+  claims through the summary *as* unverified.
 - [2026-08-07-a-harness-that-reinvented-the-tombstone.md](2026-08-07-a-harness-that-reinvented-the-tombstone.md) —
   `os-factory/har` triaged and excluded — every one of its twelve tables is about
   runs, and `recall`/`remember`/`forget`/`embedding`/`vector` appear twice in

@@ -12370,6 +12370,87 @@ self-invalidating key is the one a memory system cannot copy and should
 read anyway: bi-temporal validity, decay and re-verification exist
 because memories are keyed by subject rather than by content, and this
 is what the alternative buys.</li>
+<li><strong><code>cline/cline</code> was examined and has no report, and
+the finding is where its memory turned out to live.</strong> Apache-2.0,
+at <a
+href="https://github.com/cline/cline/commit/6e6befdb65e4472fa7f2860a6b295a1325469417"><code class="commit-id" title="6e6befdb65e4472fa7f2860a6b295a1325469417">6e6befdb…</code></a>.
+<strong>Memory Bank</strong> — six markdown files
+(<code>projectbrief.md</code>, <code>productContext.md</code>,
+<code>activeContext.md</code>, <code>systemPatterns.md</code>,
+<code>techContext.md</code>, <code>progress.md</code>) that the agent
+reads at the start of a session and rewrites at the end — is the most
+frequently cited long-term memory in coding agents, and the repository
+describes it in its own words as <em>"a documentation methodology"</em>.
+Grepping the whole checkout for <code>memory.bank</code> or
+<code>memorybank</code>, case-insensitively, returns <strong>two files,
+both under <code>docs/</code></strong>: the page itself and the
+navigation entry listing it. Nothing in <code>sdk/</code>,
+<code>apps/</code> or <code>evals/</code> mentions it, its setup
+instructions are to paste custom instructions into
+<code>.clinerules/memory-bank.md</code>, and the tool executors are
+<code>bash</code>, <code>editor</code>, <code>file-read</code>,
+<code>search</code>, <code>apply-patch</code> and <code>web-fetch</code>
+— so the mechanism is a prompt plus ordinary file editing, with git as
+the only durability guarantee. <strong>That is worth stating precisely
+rather than dismissively</strong>, because it is <a
+href="../patterns/memory-as-an-editing-surface/">memory as an editing
+surface</a> with nothing behind the surface, and the properties it does
+get — diffable, reviewable in a PR, correctable in an editor, portable
+to any agent that reads files — are ones most stores here do not have.
+What it cannot do is consult itself before a write: nothing records that
+a claim was rejected, so a deletion survives only until the next update
+pass re-derives the same file. What Cline persists durably is the run —
+session versioning, <code>checkpoint-diff.ts</code> /
+<code>checkpoint-restore.ts</code>, and a <code>.cline</code> config
+tree of rules, skills, workflows, agents and hooks beside an
+<code>AGENTS.md</code>. Details in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
+note</a>.</li>
+<li><strong><code>MoonshotAI/kimi-code</code> and
+<code>MoonshotAI/kimi-cli</code> were examined together and neither
+earns a report, and the interesting one is the one being
+retired.</strong> They are one lineage: <code>kimi-cli</code>'s README
+states that it <em>"is evolving into Kimi Code CLI"</em> and <em>"will
+be gradually wound down"</em>. The successor is far larger — 107,465
+lines in <code>packages/agent-core-v2/src</code> and its own embedded
+storage engine in <code>packages/minidb</code> — and what both persist
+is the run: config, workspace state, a session index, cron tasks, the
+wire log, plans and blobs. <code>contextMemory</code> is the
+conversation. But <code>kimi-cli</code> (Apache-2.0, at <a
+href="https://github.com/MoonshotAI/kimi-cli/commit/cbc15c076d17f70fec9f89c90c0502e68657f505"><code class="commit-id" title="cbc15c076d17f70fec9f89c90c0502e68657f505">cbc15c07…</code></a>)
+ships <strong><code>SendDMail</code></strong> — a tool, backed by a
+class called <code>DenwaRenji</code>, that raises
+<code>BackToTheFuture</code> — with which the agent picks a prior
+checkpoint in its own append-only context file, folds everything after
+it away, and leaves a message for its past self. <strong>The cut point
+is chosen by the agent rather than by a token threshold</strong>, which
+is what separates it from every compaction in this corpus; the reverted
+trajectory is <em>rotated</em> to <code>context_1.jsonl</code> rather
+than deleted, so the abandoned branch is retained (unboundedly — nothing
+prunes it); and the prompt names the seam that context-level undo always
+has, warning the past self that <em>"your future self has already done
+something in the current working directory"</em>. Two caveats belong
+beside it: the mechanism instructs the model twice never to mention the
+rewind to the user, and it is commented out in the default agent,
+enabled only in a built-in agent named <code>okabe</code>. The successor
+dropped it — no <code>SendDMail</code>, <code>DenwaRenji</code> or
+<code>BackToTheFuture</code> anywhere in <code>kimi-code</code> — and
+replaced agent-initiated time travel with
+<strong>user</strong>-initiated <code>undo(turns)</code>, which is not
+in the tool registry. What it built instead is a full-compaction prompt
+that asks the model to carry the epistemic status of its own prior
+claims through the summary: <em>"If an earlier step claimed something
+was done but was never verified (tests 'passing', a fix 'working', a
+file 'created'), say so plainly and treat it as unverified rather than
+fact"</em> — the self-reinforcement failure named under <a
+href="#not-in-scope-conversation-window-management">OWASP Agent Memory
+Guard</a> above, addressed at the boundary where a party with an
+interest in the outcome rewrites the record. Unenforced by any code, and
+still the only instance in this round that treats summarisation as an
+epistemic hazard rather than a compression problem. Recorded with the
+compaction details in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
+note</a>.</li>
 <li><strong><code>rezabyt.github.io/blogposts/sigreg-tutorial.html</code>
 was examined and has no report, and it is not a repository.</strong> It
 is a tutorial on <strong>SIGReg</strong>, the anti-collapse regularizer
