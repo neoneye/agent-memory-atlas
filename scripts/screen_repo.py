@@ -107,6 +107,49 @@ BUILD_EXEC_PATHS = [
     ("Makefile", "check the default target before running bare `make`"),
 ]
 
+# ---------------------------------------------------------------- hook payloads
+
+# Git hook *names*, wherever they appear in a tree. A hook is only live in
+# `.git/hooks/` or wherever `core.hooksPath` points, so a file called
+# `pre-commit` sitting in a skill's asset directory executes nothing on clone —
+# but it is a payload waiting for an installer, and a screen that reports
+# NOTHING SCANNED over a tree containing one has told the reader something false
+# by omission. Found on `mindmuxai/brain.md`, whose setup skill ships
+# `skills/brain-setup/hooks/pre-commit`.
+GIT_HOOK_NAMES = {
+    "pre-commit", "prepare-commit-msg", "commit-msg", "post-commit",
+    "pre-rebase", "post-checkout", "post-merge", "pre-push",
+    "pre-receive", "update", "post-receive", "post-update",
+    "pre-auto-gc", "post-rewrite", "pre-applypatch", "post-applypatch",
+    "applypatch-msg", "push-to-checkout", "sendemail-validate",
+}
+
+# ---------------------------------------------------------------- .NET
+
+# MSBuild projects declare dependencies and can run arbitrary commands. Found
+# missing on `Cedrick-Coto/Aeris`, where the screen reported NOTHING SCANNED
+# over a tree whose eight package references were all exactly pinned — a clean
+# result the tool could not see and therefore could not report.
+MSBUILD_GLOBS = ("*.csproj", "*.fsproj", "*.vbproj", "*.props", "*.targets")
+#: Matched as a tag first and read attribute-by-attribute second. One combined
+#: pattern with an optional `Version` group looks tidier and is wrong: the
+#: optional group matches empty against the lazy prefix, so every reference
+#: reads as unpinned. The two-step form was arrived at after the one-liner
+#: reported nothing at all on a fixture built to make it fire.
+PACKAGE_REFERENCE_TAG = re.compile(r'<PackageReference\b[^>]*>', re.I)
+XML_ATTR = re.compile(r'([A-Za-z_][\w.-]*)\s*=\s*"([^"]*)"')
+#: A version MSBuild will float: a wildcard, a range, or no Version attribute at
+#: all — the last resolving from a central `Directory.Packages.props` if one
+#: exists and from whatever the feed offers if it does not. A reference whose
+#: version sits in a child `<Version>` element rather than an attribute is not
+#: parsed, and is this scanner's known gap.
+FLOATING_MSBUILD = re.compile(r"[*\[\]()]|^$")
+MSBUILD_EXEC = re.compile(r"<(Exec|PreBuildEvent|PostBuildEvent)\b", re.I)
+
+# Ecosystems this screen can parse. Printed with NOTHING SCANNED so the reader
+# knows what the silence covers rather than assuming it covers everything.
+KNOWN_ECOSYSTEMS = "npm, Python, Rust, Go, Ruby, PHP, MSBuild/.NET, git hooks, agent harnesses"
+
 # ---------------------------------------------------------------- pinning
 
 LOCKFILES = [
@@ -245,6 +288,70 @@ def scan_build_exec(root: Path, out: list) -> int:
     return scanned
 
 
+def scan_hook_payloads(root: Path, out: list) -> int:
+    """Git-hook-shaped files anywhere in the tree.
+
+    A hook under `.git/hooks/` is live and this screen never reads `.git/`; a
+    hook under `.githooks/` is covered by the auto-run table. This catches the
+    third case: a hook payload shipped as an installable asset, which executes
+    nothing today and everything after a setup script copies it.
+    """
+    scanned = 0
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.name not in GIT_HOOK_NAMES:
+            continue
+        parts = set(p.parts)
+        if parts & {"node_modules", ".venv", "venv", ".git"}:
+            continue
+        where = rel(root, p)
+        if where.startswith((".githooks/", ".git-hooks/")):
+            continue  # already reported by the auto-run table
+        scanned += 1
+        out.append((
+            "NOTE ",
+            where,
+            "git hook payload, not installed here — inert until something copies it "
+            "into .git/hooks or points core.hooksPath at it; read it before running any setup",
+        ))
+    return scanned
+
+
+def scan_msbuild(root: Path, out: list) -> int:
+    """MSBuild projects: floating PackageReferences and build-time Exec tasks."""
+    scanned = 0
+    for glob in MSBUILD_GLOBS:
+        for p in sorted(root.rglob(glob)):
+            if any(part in ("node_modules", ".venv", "venv", ".git", "obj", "bin") for part in p.parts):
+                continue
+            text = read(p)
+            if not text:
+                continue
+            scanned += 1
+            floating = []
+            for tag in PACKAGE_REFERENCE_TAG.findall(text):
+                attrs = {k.lower(): v for k, v in XML_ATTR.findall(tag)}
+                name = attrs.get("include") or attrs.get("update")
+                if not name:
+                    continue
+                version = attrs.get("version", "")
+                if FLOATING_MSBUILD.search(version):
+                    floating.append(f"{name}={version or 'no Version attribute'}")
+            if floating:
+                out.append((
+                    "FLOAT",
+                    rel(root, p),
+                    f"{len(floating)} MSBuild reference(s) not pinned to an exact version: "
+                    + ", ".join(floating[:6]),
+                ))
+            if MSBUILD_EXEC.search(text):
+                out.append((
+                    "EXEC ",
+                    rel(root, p),
+                    "MSBuild Exec or Pre/PostBuildEvent runs a command during `dotnet build`",
+                ))
+    return scanned
+
+
 def scan_gitattributes(root: Path, out: list) -> int:
     """`filter=` in .gitattributes runs a smudge/clean command on checkout.
 
@@ -372,6 +479,8 @@ def main() -> int:
     scanned += scan_npm(root, findings)
     scanned += scan_python(root, findings)
     scanned += scan_build_exec(root, findings)
+    scanned += scan_msbuild(root, findings)
+    scanned += scan_hook_payloads(root, findings)
     scanned += scan_gitattributes(root, findings)
     scanned += scan_dependency_age(root, findings)
     scan_lockfiles(root, findings)
@@ -391,7 +500,10 @@ def main() -> int:
         if scanned == 0:
             print("\n  Conclusion: NOTHING SCANNED — no manifest, hook or agent file was found at\n"
                   "  any path this screen knows about. That is not evidence of safety; it means\n"
-                  "  this tool could not see the execution surface. Read the tree by hand.")
+                  "  this tool could not see the execution surface. Read the tree by hand.\n"
+                  f"  What it can parse: {KNOWN_ECOSYSTEMS}. Anything outside that list is\n"
+                  "  unscreened rather than clean — check the build files by hand and say so\n"
+                  "  in the report.")
             return 2
         runs = sum(1 for f in findings if f[0] == "RUNS")
         execs = sum(1 for f in findings if f[0] == "EXEC")

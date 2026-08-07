@@ -113,11 +113,13 @@ allows a sidecar brain outside the repository, and the hook skips folding in tha
 case — a small correctness detail that many hook scripts would get wrong.
 
 **A screening note that is about this atlas's tooling rather than about this
-project.** `screen_repo.py` returned `NOTHING SCANNED` here, and this tree ships
-`skills/brain-setup/hooks/pre-commit`. The hook is an *asset to be installed*
-rather than an active hook in the checkout, so nothing executes on clone — but
-the screen missed a hook payload because it looks at canonical install paths, and
-that is a blind spot worth recording where it was found.
+project.** The first screen of this tree returned `NOTHING SCANNED` while
+`skills/brain-setup/hooks/pre-commit` sat in it. The hook is an *asset to be
+installed* rather than an active hook in the checkout, so nothing executes on
+clone — but a screen that reports nothing over a tree containing a hook payload
+has told the reader something false by omission. `screen_repo.py` now reports
+hook-shaped files wherever they appear, with that distinction in the finding
+text, and this tree is the fixture the change was verified against.
 
 ## 4. Essential Implementation Paths
 
