@@ -1990,6 +1990,43 @@ visibly when it silently stops working.
 
 ## 3. End-to-End Memory Lifecycle Comparison
 
+The eight subsections below are one path walked twice. The first six stages run
+in one direction and are where almost every system in this atlas spends its
+design effort; the last two run backwards through everything the first six
+produced, and are where the same systems get thin. The reason is structural
+rather than a matter of care: capture creates one row, while consolidation and
+indexing create copies of it that no longer look like it, and a correction is
+only finished when it has reached every one of them.
+
+```mermaid
+flowchart TD
+    EV["Evidence<br/>transcripts, files, tool output"]
+    EV --> CAP["Capture"]
+    CAP --> EXT["Extraction"]
+    EXT --> CON["Consolidation"]
+    CON --> DER["Derived copies<br/>summaries, profiles, graph edges,<br/>vectors, keyword index, prompt cache"]
+    DER --> RET["Retrieval"]
+    RET --> INJ["Context injection"]
+    INJ --> CTX["What the model sees"]
+
+    CTX -.->|"that is wrong"| COR["Correction"]
+    CTX -.->|"forget that"| FOR["Forgetting"]
+    COR --> DER
+    FOR --> DER
+    FOR -.->|"the step most often missing"| EV
+    COR -.->|"the step most often missing"| EV
+```
+
+The dotted edge back to evidence is the one worth checking in your own system.
+If the transcript that produced a belief is retained and the extractor is ever
+re-run over it, a correction that stopped at the belief row is a correction with
+an expiry date — the next background pass rediscovers the original claim and
+writes it as new. Deleting the row does not help, because the new write is a
+different row saying the same wrong thing. That is the failure the
+[rejected-value tombstone](../patterns/rejected-value-tombstone/) pattern exists
+for, and the reason the *Correction* and *Forgetting* subsections below are
+longer and more negative than the six above them.
+
 ### Capture
 
 `mem0`, `letta`, `langmem`, and `supermemory` expose direct tool/SDK surfaces for adding memory. `cognee` supports both explicit permanent writes and a session-hot capture path through `remember`. `claude-mem` writes hook events to a durable queue before invoking its observer. `a-mem` accepts direct Python note writes but runs LLM evolution before the new note is durable. `hindsight` retains documents/chunks before extracting facts. `graphiti` stores episodes before deriving entities and temporal relationships. `mastra-observational-memory` persists messages before compressing covered ranges. `memos` routes items into configured memory cubes. `basic-memory` accepts Markdown writes from MCP/API or human file edits and reconciles indexes. `rainbox` captures through explicit memory commands, assistant memory actions, and review UI mutations. `engram` captures via MCP tools and can also store prompt/session metadata. `mempalace` captures by mining files/conversations and by MCP drawer writes, preserving verbatim text. `swafra` captures titled text via one MCP tool, then stores chunks in local JSON — or in SQLite once a corpus passes five thousand chunks. `llm-wiki-memory` combines explicit MCP/CLI writes with lifecycle hooks. `honcho` captures messages as the primary event stream, then derives observations. `verel` routes captured percepts through a trust gate. `agentmemory` combines cheap hook capture with explicit `mem::remember`; compression is optional. `tencentdb-agent-memory` records raw conversation evidence, then extracts higher layers from successful turns. `redis-agent-memory-server` writes messages into TTL-scoped working memory first and defers extraction behind a debounce. `hermes-agent` captures curated memory only through explicit tool calls, because a hard character budget makes automatic capture self-defeating. `openclaw` and `holographic` both capture without a model — OpenClaw after sanitizing its own message envelope, Holographic by regex over user turns when auto-extraction is enabled.

@@ -115,6 +115,33 @@ already know which mechanism you need.</p>
 <p>Filters combine with <strong>and</strong> — "tombstone <em>and</em>
 scope enforced" is the question worth asking, and it is the one a
 per-column view cannot answer.</p>
+<p><strong>Which one you need depends on where your memory
+breaks</strong>, and the seven do not intervene at the same place. Three
+of them guard the write, two describe what the store is able to say, one
+guards the read, and one is the test that keeps the other six honest.
+Read as a row of seven equal boxes they look like a scorecard; read
+against the path a memory takes they are seven different answers to
+seven different questions:</p>
+<pre class="mermaid"><code>flowchart TD
+    EV[&quot;Evidence&lt;br/&gt;messages, files, tool output&quot;] --&gt; WR{&quot;Write path&quot;}
+    WR --&gt; ST[(&quot;Store&quot;)]
+    ST --&gt; RD{&quot;Read path&quot;}
+    RD --&gt; CX[&quot;Context&lt;br/&gt;what the model sees this turn&quot;]
+    CX -.-&gt;|&quot;that is wrong, forget it&quot;| CO[&quot;Correction&quot;]
+    CO --&gt; WR
+
+    T[&quot;Rejected-value tombstone&lt;br/&gt;refuses the value, not the row&quot;] -.-&gt; WR
+    H[&quot;Human review surface&lt;br/&gt;a person adjudicates, not just views&quot;] -.-&gt; WR
+    A[&quot;Append-only mutation audit&lt;br/&gt;what changed, in the system&#39;s own store&quot;] -.-&gt; WR
+    TS[&quot;Explicit trust state&lt;br/&gt;may this be acted on&quot;] -.-&gt; ST
+    BT[&quot;Bi-temporal validity&lt;br/&gt;true-when, apart from recorded-when&quot;] -.-&gt; ST
+    SC[&quot;Scope enforced in retrieval&lt;br/&gt;the filter that is actually applied&quot;] -.-&gt; RD
+    NE[&quot;Negative retrieval assertion&lt;br/&gt;a committed test that this must not come back&quot;] -.-&gt; RD</code></pre>
+<p>The loop is the part worth staring at. A correction re-enters through
+the same write path that created the belief, which is why a mark on the
+write side is worth more than it looks: it is the only place that sees
+both the original claim and the attempt to reassert it after you thought
+it was gone.</p>
 <div class="filter-row capability-row" role="group" aria-label="Filter by capability" id="capability-filters">
   <span class="filter-legend">Has</span>
   <button class="filter-chip cap-filter" type="button" aria-pressed="false" data-capability="tombstone">Tombstone</button>

@@ -26,6 +26,36 @@ which mechanism you need.
 Filters combine with **and** — "tombstone *and* scope enforced" is the question
 worth asking, and it is the one a per-column view cannot answer.
 
+**Which one you need depends on where your memory breaks**, and the seven do not
+intervene at the same place. Three of them guard the write, two describe what the
+store is able to say, one guards the read, and one is the test that keeps the
+other six honest. Read as a row of seven equal boxes they look like a scorecard;
+read against the path a memory takes they are seven different answers to seven
+different questions:
+
+```mermaid
+flowchart TD
+    EV["Evidence<br/>messages, files, tool output"] --> WR{"Write path"}
+    WR --> ST[("Store")]
+    ST --> RD{"Read path"}
+    RD --> CX["Context<br/>what the model sees this turn"]
+    CX -.->|"that is wrong, forget it"| CO["Correction"]
+    CO --> WR
+
+    T["Rejected-value tombstone<br/>refuses the value, not the row"] -.-> WR
+    H["Human review surface<br/>a person adjudicates, not just views"] -.-> WR
+    A["Append-only mutation audit<br/>what changed, in the system's own store"] -.-> WR
+    TS["Explicit trust state<br/>may this be acted on"] -.-> ST
+    BT["Bi-temporal validity<br/>true-when, apart from recorded-when"] -.-> ST
+    SC["Scope enforced in retrieval<br/>the filter that is actually applied"] -.-> RD
+    NE["Negative retrieval assertion<br/>a committed test that this must not come back"] -.-> RD
+```
+
+The loop is the part worth staring at. A correction re-enters through the same
+write path that created the belief, which is why a mark on the write side is
+worth more than it looks: it is the only place that sees both the original claim
+and the attempt to reassert it after you thought it was gone.
+
 <div class="filter-row capability-row" role="group" aria-label="Filter by capability" id="capability-filters">
   <span class="filter-legend">Has</span>
   <button class="filter-chip cap-filter" type="button" aria-pressed="false" data-capability="tombstone">Tombstone</button>

@@ -34,6 +34,30 @@ not that a system was judged and found unremarkable — the same distinction the
 [rubric](../methodology/atlas-rubric/) enforces for capability marks, where the
 build *does* fail if a report omits the key.
 
+That distinction runs through the whole site, and it is worth seeing once
+because it decides how much weight a completeness claim on any page can carry:
+
+```mermaid
+flowchart TD
+    R["165 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R --> GEN["generate_index.py<br/>generate_matrix.py"]
+    R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
+    GEN --> AZ["A–Z index"]
+    GEN --> MX["Comparative matrix"]
+    GEN --> CI["Capability index"]
+    AZ --> CONST["Complete by construction<br/>a new report shows up without anyone writing a line"]
+    MX --> CONST
+    CI --> CONST
+    HAND --> TODAY["Complete as a fact about today<br/>a new report shows up only if someone writes the paragraph"]
+    CHK["check_verdict_anchors.py<br/>check_homepage.py"] -.->|"catches a dead link or a stale count"| TODAY
+    CHK -.->|"cannot notice a verdict nobody wrote"| TODAY
+```
+
+The dotted edges are the honest part. A check can tell you that something
+written went wrong; nothing tells you that something was never written. So the
+generated pages are a guarantee and this one is a report on a state of affairs,
+and the two should not be read with the same confidence.
+
 <div class="filter-row" role="group" aria-label="Find a system verdict">
   <label class="filter-legend" for="verdict-search">Find</label>
   <input class="matrix-search" id="verdict-search" type="search" autocomplete="off"

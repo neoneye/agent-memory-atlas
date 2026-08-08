@@ -111,8 +111,9 @@ def main() -> int:
         "",
         f"Every one of the **{len(rows)} reports**, by slug. Generated from each "
         "report's own frontmatter, so this list cannot drift from what the atlas "
-        "actually holds — unlike the [comparative report](../compare/)'s verdict "
-        "section, which is hand-written.",
+        "actually holds — unlike the [verdicts](../verdicts/), which are "
+        "hand-written, and where the difference between *complete by "
+        "construction* and *complete as a fact about today* is drawn out.",
         "",
         "Looking for something else? The [capability index](../capabilities/) "
         "groups systems by the seven rubric mechanisms, the "
