@@ -2106,6 +2106,19 @@ nothing is scoped, corrected, verified, or forgotten on request. A
 system whose memory is a window has no answer to "why do you believe
 that?" or "forget what I told you last week", because it never claimed
 to remember.</p>
+<p><strong>One caveat, from the excluded pile rather than from this
+list.</strong> The boundary is about what the window <em>is</em>, not
+about how carefully it is maintained, and the best-argued forgetting
+mechanism this atlas has read belongs to a system on the wrong side of
+it. <code>Untrivial-ai/agent-orchestrator</code> — a harness, recorded
+with the other exclusions at the end of this report — mirrors a
+provider's chat history into SQLite, and when the provider drops turns
+it propagates that deletion through five statements in one transaction,
+reaching a queue, a legacy row shape written by an older build, a
+derived summary column, and a blocked approval. Nothing there outlives
+the session, so it earns no report. The discipline does transfer, and
+most stores that <em>do</em> claim durable memory stop at the first of
+those five.</p>
 <p>The most sophisticated instance of the category is worth naming,
 because it shows the boundary is about <em>architecture</em> rather than
 about effort. ByteDance and Tsinghua's <a
@@ -13095,6 +13108,62 @@ href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-a
 note</a>, which also records what the paper gets right and why its
 lineage-without-retroactive-removal is the tombstone gap in a training
 pipeline.</li>
+<li><strong><code>Untrivial-ai/agent-orchestrator</code> was examined
+and has no report, and it is the atlas's own thesis implemented by
+something that is not a memory system.</strong> Apache-2.0, at <a
+href="https://github.com/Untrivial-ai/agent-orchestrator/commit/b6609ae610e809309be86fce56c0845cc45628cb"><code class="commit-id" title="b6609ae610e809309be86fce56c0845cc45628cb">b6609ae6…</code></a>:
+a meta-harness running Claude Code, Codex, Cursor and others in
+parallel, each in its own git worktree, routing CI failures, review
+comments and merge conflicts back to the right session. The scope call
+is settled by the schema and confirmed by the vocabulary. Sixty-five
+migrations produce sessions, worktrees, cleanup facts, conversations,
+turns, messages, activities, provider events, projects, PRs, checks,
+comments, reviews, review runs, notifications, model usage and terminals
+— every one a record of what happened or what must happen next, none of
+them a claim that could be false — and across roughly 117,000 lines of
+non-test Go, <code>recall</code> appears <strong>twice</strong> and
+<code>forget</code> six times, every instance about the chat window or a
+terminal attachment. Neither the README, the design document nor
+<code>AGENTS.md</code> uses the word <em>memory</em> about the product
+at all. Same boundary as <code>os-factory/har</code> and
+<code>shepherd-agents/shepherd</code> above. <strong>What makes it worth
+recording is that AO is a derived copy of somebody else's memory, and it
+treats upstream forgetting as an obligation.</strong> When a person
+rolls back a turn the provider genuinely drops that turn and everything
+after it from the history it reasons over — <em>"It changes what the
+agent remembers. AO's rows have to follow"</em> — and following means
+five statements in one transaction: mark the turns
+<code>rolled_back_at</code> rather than deleting them, because
+<em>"'this exchange happened and was then taken back' is a different and
+more useful fact than 'this exchange never existed'"</em>; settle a
+discarded-but-undispatched turn as <code>interrupted</code> rather than
+leaving it queued against a history it was never written for; correlate
+compaction rows written by <strong>older AO builds without a provider
+turn id</strong> so the rolled-back filter hides them too;
+<strong>recompute</strong> the parent row's derived
+<code>compacted_at</code> from the surviving activities rather than
+patching it; and fail pending approvals inside discarded turns, a
+statement the comment says exists <em>"so the invariant is enforced
+rather than argued"</em>. The read side filters a rolled-back turn's
+prose from the snapshot because <em>"a person must never be shown prose
+the agent has forgotten"</em>, keeps AO's own bookkeeping rows visible
+because <em>"hiding what AO cannot prove belonged to the discarded range
+would be a guess"</em>, and never renumbers <code>sequence</code>,
+because <em>"renumbering to close the gap would rewrite history to look
+like it never happened"</em>. That is the enumerated-derived-copies
+discipline this atlas asks about in every report and finds in almost
+none — written out as a list of every place the discarded fact had
+already been projected. Two smaller mechanisms are in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-09-a-mirror-that-agrees-to-forget.md">the
+note</a>: <code>applied_title</code> as a compare-and-set witness
+holding <em>"what I last wrote"</em> so an automatic rename can tell its
+own value from a human's without a <code>was_edited</code> flag, which
+is the auto-update-versus-human-edit problem every generated profile
+field has; and compaction stored as a timeline row plus a state column,
+with the migration arguing why a parallel table was rejected. The doc
+comment says <em>"the three statements commit together"</em> and there
+are five, which is the ordinary fate of a count written in prose beside
+code that grew.</li>
 <li>Helm was read, not run. Three claims in its report are inferences
 from code that a live database would settle: that
 <code>getAutonomyMode</code> returns the stale pre-supersession row

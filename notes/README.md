@@ -8,6 +8,19 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-09-a-mirror-that-agrees-to-forget.md](2026-08-09-a-mirror-that-agrees-to-forget.md) —
+  `Untrivial-ai/agent-orchestrator` triaged and excluded on the
+  harness-is-not-a-store boundary: sixty-five migrations, none of them holding a
+  claim that could be false, and no memory claim anywhere in its own docs. Kept
+  because it is a *derived copy* of a provider's chat history that treats
+  upstream forgetting as an obligation — a rollback propagates through five
+  statements in one transaction, reaching a queue, rows written by an older
+  build, a recomputed summary column and a blocked approval, with the read side
+  filtering discarded prose and refusing to renumber the sequence. The
+  enumerated-derived-copies discipline the atlas asks for, from something that
+  never claimed to remember. Two smaller mechanisms: `applied_title` as a
+  compare-and-set witness for auto-update-versus-human-edit, and compaction split
+  into a timeline row plus a state column.
 - [2026-08-07-three-coding-agents-and-where-their-memory-isnt.md](2026-08-07-three-coding-agents-and-where-their-memory-isnt.md) —
   `cline/cline`, `MoonshotAI/kimi-code` and `MoonshotAI/kimi-cli` triaged
   together and all excluded. Cline's Memory Bank, the most-cited memory in
