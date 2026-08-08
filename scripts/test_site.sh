@@ -87,6 +87,37 @@ if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; the
   exit 1
 fi
 
+# Every verdict heading links to that system's report, so a reader weighing an
+# entry can open the evidence behind it. Two ways for that to rot silently: a
+# heading added without the link, and a link whose target moved. Neither is a
+# fragment, so check_anchors.py does not see them, and nothing else here checks a
+# relative href resolves.
+if ! python3 - "$site_dir" <<'PY'
+import re, sys
+from pathlib import Path
+
+page = Path(sys.argv[1]) / "verdicts" / "index.html"
+html = page.read_text(encoding="utf-8")
+headings = re.findall(r'<h3 id="([^"]+)">(.*?)</h3>', html, re.S)
+problems = []
+for slug, inner in headings:
+    match = re.match(r'\s*<a\s+href="([^"]+)"', inner, re.S)
+    if not match:
+        problems.append(f"verdict heading '{slug}' is not a link to its report")
+        continue
+    target = (page.parent / match.group(1) / "index.html").resolve()
+    if not target.is_file():
+        problems.append(f"verdict heading '{slug}' links to {match.group(1)}, which does not exist")
+
+if problems:
+    print("\n".join(problems), file=sys.stderr)
+    raise SystemExit(1)
+print(f"{len(headings)} verdict headings link to a report that exists.")
+PY
+then
+  exit 1
+fi
+
 # --check does more than compare the generated tables: it also validates matrix
 # values, capability flags, and revision pins. Discarding its stderr and printing
 # one hardcoded message reported every one of those as a stale matrix and told
