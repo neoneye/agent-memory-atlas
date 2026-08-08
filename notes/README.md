@@ -45,6 +45,15 @@ when the work happens.
   build brief, test ids and a `use-the-atlas` skill were then built the same day;
   a manifest field carrying judgements nobody made, and the phrase
   "conformance", are declined on precedent.
+- [2026-08-08-the-guidance-was-already-in-context.md](2026-08-08-the-guidance-was-already-in-context.md) —
+  four process failures in one session, all of the same class: the instruction
+  existed, was correct, and was already loaded. A standing commit authorization
+  asked around three times, the repository's own skills not invoked, a negative
+  control run with `git checkout` in the working tree that destroyed four
+  uncommitted fixes, and a claim published backwards from a rendering when the
+  paper shipped its source. Companion to the methodology hazards note, which
+  covers failures of evidence rather than of following guidance — and the point
+  is that the build stayed green through all four.
 - [2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md](2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md) —
   a task-synthesis paper's project site publishes an "Audit layer" inviting the
   reader not to trust its metrics; read in a browser, the failed baseline and the
