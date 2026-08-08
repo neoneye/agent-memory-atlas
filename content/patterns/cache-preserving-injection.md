@@ -122,7 +122,7 @@ than in a prompt-engineering note.
 - **The bounded variant hands editorial control to the model.** Hermes's refusal
   loop makes the model choose what to discard under time pressure, with no review
   and no record of what was dropped — which is the failure
-  [append-only memory audit](./append-only-memory-audit/) exists to prevent.
+  [append-only memory audit](../append-only-memory-audit/) exists to prevent.
 - **Attention position is not free.** Material moved out of the system prompt and
   into the user turn is in a different position, and whether that changes how the
   model weighs it is not something this atlas has measured.

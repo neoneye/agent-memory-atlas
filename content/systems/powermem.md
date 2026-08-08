@@ -345,7 +345,7 @@ No test asserts that particular material must not be retrieved. The isolation
 tests that come closest — `test_oceanbase_graph.py:122` and `:131` — assert that
 the *schema* includes user isolation and that legacy unscoped tables are
 recreated. That is a claim about DDL, not about what a query returns, so
-`negative_eval` is withheld. (Compare [MIRIX](./mirix/), which creates a row under
+`negative_eval` is withheld. (Compare [MIRIX](../mirix/), which creates a row under
 one scope, queries under another, and asserts the id is absent.)
 
 `benchmark/locomo/` commits a full harness — `run_experiments.py`, `evals.py`,
@@ -363,7 +363,7 @@ note applies, and so does the caution about
 [vendor-run comparisons](../../benchmarks/#vendor-run-comparisons-compare-them-with-them-plus-us),
 since a 65.9% *relative* improvement over an unnamed baseline is the shape that
 section is about. The harness is committed, so this is fixable by running it and
-committing the output — which [ReMe](./reme/) does.
+committing the output — which [ReMe](../reme/) does.
 
 The test I would want: add a memory, search until `should_forget` fires, then
 re-run the extraction that produced it and assert what happens. Nothing of that

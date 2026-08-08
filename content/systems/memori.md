@@ -272,7 +272,7 @@ lexical path. `recall()` and `recall_summary()` are the public entry points, wit
 a score threshold (`_score_for_recall_threshold`) and a resolved limit.
 
 The frequency index means repetition is a ranking signal, and here — unlike
-[Memary](./memary/), where the equivalent sort runs backwards — the index is
+[Memary](../memary/), where the equivalent sort runs backwards — the index is
 declared `num_times DESC` and used that way. That is the correct version of the
 same idea.
 
@@ -303,7 +303,7 @@ cannot inspect, run offline, or reproduce.
 
 Correction does not exist, and the shape of its absence is unusual. The upsert is
 deliberately non-destructive — it never rewrites `content`, which is the opposite
-of [Memobase](./memobase/)'s in-place rewrite and avoids that whole class of loss.
+of [Memobase](../memobase/)'s in-place rewrite and avoids that whole class of loss.
 But the same choice means a fact can never be *fixed*: if the extractor produces
 "User lives in Berlin" and the user moves, a later "User lives in Lisbon" is a
 different `uniq`, so both rows exist, both are ranked, and nothing marks either as

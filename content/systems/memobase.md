@@ -139,7 +139,7 @@ flowchart LR
 ### Deployment and ergonomics
 
 One service and one database. That is a genuinely modest ask, and materially
-cheaper than [MIRIX](./mirix/)'s four containers for a comparable job.
+cheaper than [MIRIX](../mirix/)'s four containers for a comparable job.
 
 An LLM key is required to store anything durable — blobs land without one, but
 nothing becomes a profile until the extractor runs, so an outage means the buffer
@@ -348,7 +348,7 @@ assertions and are not, and the distinction is worth recording because it is whe
 the atlas's rubric earns its strictness. Lines 347–361 assert that filtering by a
 non-existent tag, or by `emotion=angry` when no event carries it, returns zero
 events. No particular material is being excluded — the filter simply has no matches.
-Compare [MIRIX](./mirix/), which creates a specific memory under one scope, queries
+Compare [MIRIX](../mirix/), which creates a specific memory under one scope, queries
 under another, and asserts *that memory's id* is absent from the result. The first
 tests that a filter does not over-return; only the second asserts that named
 material must not be retrieved. **`negative_eval` is withheld.**

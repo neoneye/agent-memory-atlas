@@ -176,7 +176,7 @@ if owner and owner.lower() != signer.lower():
 The override is only half of it — the warning is what tells a caller relying on
 the old arbitrary-owner behaviour that it stopped working, instead of letting
 writes succeed against the wrong account. This is the *boundary* level of the
-three the [comparison](../../overview/) distinguishes in its reading notes —
+three the [comparison](../../compare/) distinguishes in its reading notes —
 tag, filter, boundary — and it costs an operator a key rather than an identity
 service. It is worth separating from the rest of that
 implementation, whose read path is the weakest the atlas has catalogued.

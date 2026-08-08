@@ -29,7 +29,7 @@ matrix:
 Acontext is a skill-memory layer: it watches agent sessions, waits for a task to
 finish, distils what worked and what did not, and writes the result into **agent
 skill files** — Markdown directories with a `SKILL.md` whose schema you define. It
-is from the same organization as [Memobase](./memobase/) and is close to its
+is from the same organization as [Memobase](../memobase/) and is close to its
 opposite in philosophy. Memobase compiles conversations into the smallest possible
 profile behind an API. Acontext writes files you can `git diff`.
 
@@ -91,7 +91,7 @@ First, **failure is a first-class input.** `failed` triggers learning exactly as
 `success` does, and the distillation prompt is described as inferring "what
 worked, what failed". Most of this atlas records only what succeeded — the
 comparative report makes the same observation about
-[Neo4j Agent Memory](./neo4j-agent-memory/) storing failures by default — and it
+[Neo4j Agent Memory](../neo4j-agent-memory/) storing failures by default — and it
 is the difference between an agent that stops repeating a mistake and one that
 only accumulates recipes.
 
@@ -260,7 +260,7 @@ claim.
 
 Correction is the weak half. The skill agent decides "existing skill or new" and
 rewrites files. There is no diff guard on that rewrite — nothing asserts that
-content survived, in contrast to [ReMe](./reme/), which at least states an
+content survived, in contrast to [ReMe](../reme/), which at least states an
 additive-update rule even if it does not enforce it. And there is no tombstone: a
 user who deletes a wrong skill from the dashboard has removed a file, not recorded
 a rejection, so the next terminal task on the same subject can distil it back.
@@ -310,8 +310,8 @@ was learned, file by file, and remove it. Under the rubric — a place a person
 inspects or adjudicates memory content, as opposed to a UI that only displays —
 that qualifies. It is the weak form of the capability: delete-only, after the
 fact, with no approve-before-effect step and no record of the removal. Compare
-[MIRIX](./mirix/), whose dashboard renders six memory types and wires no mutation
-at all, and [MineContext](./minecontext/), whose server implements a delete
+[MIRIX](../mirix/), whose dashboard renders six memory types and wires no mutation
+at all, and [MineContext](../minecontext/), whose server implements a delete
 endpoint the UI never calls.
 
 Prompt injection has a narrower path than in the capture-driven systems, because

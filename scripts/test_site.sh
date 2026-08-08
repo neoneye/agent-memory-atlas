@@ -87,11 +87,43 @@ if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; the
   exit 1
 fi
 
+# check_anchors.py follows fragments and stops there, so a relative href that
+# points at nothing has never been checked. Thirty were broken when this was
+# written — mostly sibling reports written `./verel/` from inside
+# `systems/memary/`, which resolves one level too deep — plus a pattern page
+# linking `../../overview/` at a page that renders to `/compare/`. Every one of
+# them was a reader clicking through to inspect a claim and landing on a 404.
+if ! python3 - "$site_dir" <<'PY'
+import re, sys
+from pathlib import Path
+
+site = Path(sys.argv[1])
+broken = []
+for page in sorted(site.rglob("*.html")):
+    html = page.read_text(encoding="utf-8")
+    for href in sorted(set(re.findall(r'href="([^"#:]+)(?:#[^"]*)?"', html))):
+        # Absolute and off-site links are somebody else's problem; `href="/"`
+        # has its own check below.
+        if not href or href.startswith(("http", "//", "mailto", "/")):
+            continue
+        target = (page.parent / href).resolve()
+        if not (target.is_file() or (target / "index.html").is_file()):
+            broken.append(f"{page.relative_to(site)} -> {href}")
+
+if broken:
+    print("\n".join(broken), file=sys.stderr)
+    print(f"{len(broken)} relative links point at nothing.", file=sys.stderr)
+    raise SystemExit(1)
+print("every relative link in the site resolves.")
+PY
+then
+  exit 1
+fi
+
 # Every verdict heading links to that system's report, so a reader weighing an
 # entry can open the evidence behind it. Two ways for that to rot silently: a
-# heading added without the link, and a link whose target moved. Neither is a
-# fragment, so check_anchors.py does not see them, and nothing else here checks a
-# relative href resolves.
+# heading added without the link, and a link whose target moved. The check above
+# proves a heading's target exists; this proves the heading has one at all.
 if ! python3 - "$site_dir" <<'PY'
 import re, sys
 from pathlib import Path

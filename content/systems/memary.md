@@ -178,7 +178,7 @@ There is no id, no source, no scope, no confidence, no validity interval, and no
 link from either record to the graph triplet it came from. The entity string *is*
 the key, which means the identity of a memory is a name produced by an extractor —
 "Paris" and "paris" are two entities, and there is no `canonical_text()` seam of
-the kind [Verel](./verel/) hardened.
+the kind [Verel](../verel/) hardened.
 
 Scoping deserves a precise statement because it is a near-miss rather than an
 absence. With FalkorDB, `base_agent.py:87` constructs

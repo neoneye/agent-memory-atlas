@@ -75,8 +75,8 @@ replaced by building another from L0 rather than repaired in place.
 a `version` foreign key into `l1_versions`, so the whole biography is a numbered
 generation over retained source rather than a mutable summary. Regenerating after
 adding documents produces version *n+1* and leaves version *n* intact and
-comparable. The atlas praises [Basic Memory](./basic-memory/) and
-[Cognee](./cognee/) for treating derived state as a rebuildable projection; this
+comparable. The atlas praises [Basic Memory](../basic-memory/) and
+[Cognee](../cognee/) for treating derived state as a rebuildable projection; this
 goes one step further by giving each rebuild an identity.
 
 The state machine is entirely about *processing*, not about belief:
@@ -91,7 +91,7 @@ l1_versions.status         (pipeline state)
 
 Four CHECK-constrained status columns and none of them says whether a memory is
 true, disputed or superseded. This is the same observation as
-[Acontext](./acontext/)'s: a codebase can be full of statuses and have no trust
+[Acontext](../acontext/)'s: a codebase can be full of statuses and have no trust
 model, because pipeline state and epistemic state are different things that look
 alike in a schema.
 

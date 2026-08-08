@@ -32,7 +32,7 @@ seven typed context stores plus generated daily and weekly reports. It is a
 ByteDance/Volcengine project, shipped as an Electron app over a FastAPI server
 with SQLite and a vector backend.
 
-Architecturally it is [MIRIX](./mirix/)'s neighbour: passive multimodal capture,
+Architecturally it is [MIRIX](../mirix/)'s neighbour: passive multimodal capture,
 typed memory, LLM extraction, a local database. Two things make it worth its own
 entry.
 
@@ -77,7 +77,7 @@ Each type carries a written `purpose` in `ContextSimpleDescriptions` and a longe
 `ContextDescriptions` entry with `key_indicators` used to classify. Making the
 taxonomy a documented artifact the classifier reads is a better practice than
 hiding it in a prompt string, and it is close to what
-[GenericAgent](./genericagent/) does with written axioms.
+[GenericAgent](../genericagent/) does with written axioms.
 
 The data model keeps evidence:
 
@@ -147,7 +147,7 @@ flowchart TD
 
 A desktop application. You install it, enter an API key, and press record. That is
 a genuinely low barrier compared with the four containers
-[MIRIX](./mirix/) wants for a similar job, and the README's privacy section
+[MIRIX](../mirix/) wants for a similar job, and the README's privacy section
 documents a local-model path.
 
 The consequences of "desktop app" run through the rest of this report: single

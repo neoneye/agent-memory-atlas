@@ -35,7 +35,7 @@ and voice, rather than for a chat turn.
 
 The lineage is visible: `mirix/orm/` carries `sqlalchemy_base.py`,
 `organization.py`, `block.py` and an actor-scoped `read()`, which is
-[Letta](./letta/)'s shape. What MIRIX adds is the typing — one table, one manager,
+[Letta](../letta/)'s shape. What MIRIX adds is the typing — one table, one manager,
 one agent, one prompt per memory kind — and a multi-tenant scope model that is
 materially stronger than Letta's.
 
@@ -295,7 +295,7 @@ Correction is destructive, and the good intention is in the wrong place. The
 (`mirix/prompts/system/base/auto_dream_agent/experience.txt`) says: "Resolve
 conflicts conservatively, preferring the more recent or more detailed item. If
 uncertain, keep both and record the discrepancy in the merged details/caption."
-That is close to the best correction policy in this atlas — [Memanto](./memanto/)'s
+That is close to the best correction policy in this atlas — [Memanto](../memanto/)'s
 `keep_both` is the same idea — except Memanto's is an enum a validator enforces and
 MIRIX's is a sentence in a prompt. When the model does not follow it, the tool it
 calls is `episodic_memory_replace`, and the row is hard-deleted.
@@ -375,8 +375,8 @@ cross-user search, and explicit assertions that user3 (different scope) and user
 
 That is a **negative retrieval assertion** under the
 [rubric](../../methodology/atlas-rubric/)'s definition, and the route is new.
-[open-cowork](./open-cowork/) arrived via `forbiddenHits` in a relevance harness
-and [Verel](./verel/) via a red-team regression; MIRIX arrived by testing
+[open-cowork](../open-cowork/) arrived via `forbiddenHits` in a relevance harness
+and [Verel](../verel/) via a red-team regression; MIRIX arrived by testing
 multi-tenant access control, which is a discipline with its own literature and no
 connection to memory research. That is mildly encouraging for the atlas's argument:
 the assertion shape is reachable from ordinary engineering practice, not only from

@@ -70,7 +70,7 @@ deleted message vanishes from every listing and stays in the index that
 `LTMemory.retrieve` actually queries.
 
 One thing to know before installing: `README.md:271` states "MIT License. See
-[LICENSE](./LICENSE) for details." and links to a file that is not in the
+`[LICENSE](./LICENSE)` for details." and links to a file that is not in the
 repository at this commit. The licence is asserted and absent, which is a worse
 position for a reader than a licence merely missing, because the README gives a
 grant the repository does not.

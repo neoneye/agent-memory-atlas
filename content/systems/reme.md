@@ -30,7 +30,7 @@ ReMe is a local-first memory layer built on the idea that memory should be
 Markdown you can read: notes with YAML frontmatter and `[[wikilinks]]`, indexed by
 FAISS and BM25, consolidated by scheduled pipelines called auto-memory,
 auto-resource and auto-dream. Architecturally it sits beside
-[Basic Memory](./basic-memory/) and [llm-wiki-memory](./llm-wiki-memory/) — files
+[Basic Memory](../basic-memory/) and [llm-wiki-memory](../llm-wiki-memory/) — files
 canonical, indexes disposable.
 
 Two things make it worth reading past that.
@@ -207,7 +207,7 @@ appears only in the integration prompts, where the agent is told to append to it
 and never to remove entries. So the corpus can trace a digest back to its sources
 exactly as reliably as the model followed instructions — which is a real mechanism
 with a real failure mode, and worth distinguishing from
-[Memori](./memori/)'s foreign key or [Basic Memory](./basic-memory/)'s parsed
+[Memori](../memori/)'s foreign key or [Basic Memory](../basic-memory/)'s parsed
 relations.
 
 Scoping is where the report has to be blunt. `workspace_dir` is a single string on
@@ -262,7 +262,7 @@ and they are the right rules:
   wikilinks or derived_from entries."
 
 An additive-only update rule is exactly the guard that would prevent the loss
-[Memobase](./memobase/) takes on every profile rewrite, and the inline
+[Memobase](../memobase/) takes on every profile rewrite, and the inline
 contradiction note is a durable record pointing at its cause. But nothing compares
 the file before and after. A model that removes a `derived_from` entry, or that
 returns `CORROBORATE` while rewriting a paragraph, produces a valid

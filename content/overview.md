@@ -202,9 +202,9 @@ characterized in place rather than given a category of its own.
 
 ### Embeddable memory libraries
 
-`mem0`, `langmem`, `llamaindex`, `cognee`, `a-mem`, `memori`, `goodai-ltm`,
-`pydantic-ai-harness`, `camel`, `crewai`, `agent-memory-supabase`, `cosmonapse`,
-`mem0sharp`, `membase`, `mnemosyne`
+[`mem0`](../systems/mem0/), [`langmem`](../systems/langmem/), [`llamaindex`](../systems/llamaindex/), [`cognee`](../systems/cognee/), [`a-mem`](../systems/a-mem/), [`memori`](../systems/memori/), [`goodai-ltm`](../systems/goodai-ltm/),
+[`pydantic-ai-harness`](../systems/pydantic-ai-harness/), [`camel`](../systems/camel/), [`crewai`](../systems/crewai/), [`agent-memory-supabase`](../systems/agent-memory-supabase/), [`cosmonapse`](../systems/cosmonapse/),
+[`mem0sharp`](../systems/mem0sharp/), [`membase`](../systems/membase/), [`mnemosyne`](../systems/mnemosyne/)
 
 Called from an application that owns the agent loop. Easy to adopt; weak
 authority over when memory is written or how recall is used.
@@ -309,10 +309,10 @@ calls the right tool, verifies a fact, or uses recall safely.
 
 ### Hosted and service memory
 
-`honcho`, `supermemory`, `hindsight`, `redis-agent-memory-server`, `openviking`,
-`memanto`, `memory-engine`, `memu`, `elastic-atlas`, `mirix`, `memobase`,
-`powermem`, `memmachine`, `gobii`, `cortex`, `lorekit`, `agentswarms`,
-`universal-memory-engine`, `omi`, `mnemory`
+[`honcho`](../systems/honcho/), [`supermemory`](../systems/supermemory/), [`hindsight`](../systems/hindsight/), [`redis-agent-memory-server`](../systems/redis-agent-memory-server/), [`openviking`](../systems/openviking/),
+[`memanto`](../systems/memanto/), [`memory-engine`](../systems/memory-engine/), [`memu`](../systems/memu/), [`elastic-atlas`](../systems/elastic-atlas/), [`mirix`](../systems/mirix/), [`memobase`](../systems/memobase/),
+[`powermem`](../systems/powermem/), [`memmachine`](../systems/memmachine/), [`gobii`](../systems/gobii/), [`cortex`](../systems/cortex/), [`lorekit`](../systems/lorekit/), [`agentswarms`](../systems/agentswarms/),
+[`universal-memory-engine`](../systems/universal-memory-engine/), [`omi`](../systems/omi/), [`mnemory`](../systems/mnemory/)
 
 Multi-user, API-first, with background derivation. **Honcho** models workspaces,
 peers, sessions, and derived representations rather than flat facts.
@@ -394,10 +394,10 @@ holding. Its `ACTION_POLICY` is the mechanism worth taking from this family
 entirely — see [Omi](../systems/omi/).
 ### Agent-runtime memory
 
-`letta`, `rainbox`, `memos`, `mastra-observational-memory`, `claude-mem`, `npcpy`, `juggler`, `gitlord`, `tokenmizer`, `zerostack`,
-`agentmemory`, `tencentdb-agent-memory`, `nanobot`, `cowagent`, `genericagent`,
-`mercury-agent`, `atomic-agent`, `mateclaw`, `waku-agent`, `loongflow`, `buzz`,
-`openhuman`, `aukora-kernel`, `helm`, `neko`, `sillytavern`, `risuai`, `soul-of-waifu`, `z-waif`, `virtualwife`, `aura`, `memledger`, `agentic-context-engine`, `deer-flow`, `helix-agi`, `aimaos`
+[`letta`](../systems/letta/), [`rainbox`](../systems/rainbox/), [`memos`](../systems/memos/), [`mastra-observational-memory`](../systems/mastra-observational-memory/), [`claude-mem`](../systems/claude-mem/), [`npcpy`](../systems/npcpy/), [`juggler`](../systems/juggler/), [`gitlord`](../systems/gitlord/), [`tokenmizer`](../systems/tokenmizer/), [`zerostack`](../systems/zerostack/),
+[`agentmemory`](../systems/agentmemory/), [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/), [`nanobot`](../systems/nanobot/), [`cowagent`](../systems/cowagent/), [`genericagent`](../systems/genericagent/),
+[`mercury-agent`](../systems/mercury-agent/), [`atomic-agent`](../systems/atomic-agent/), [`mateclaw`](../systems/mateclaw/), [`waku-agent`](../systems/waku-agent/), [`loongflow`](../systems/loongflow/), [`buzz`](../systems/buzz/),
+[`openhuman`](../systems/openhuman/), [`aukora-kernel`](../systems/aukora-kernel/), [`helm`](../systems/helm/), [`neko`](../systems/neko/), [`sillytavern`](../systems/sillytavern/), [`risuai`](../systems/risuai/), [`soul-of-waifu`](../systems/soul-of-waifu/), [`z-waif`](../systems/z-waif/), [`virtualwife`](../systems/virtualwife/), [`aura`](../systems/aura/), [`memledger`](../systems/memledger/), [`agentic-context-engine`](../systems/agentic-context-engine/), [`deer-flow`](../systems/deer-flow/), [`helix-agi`](../systems/helix-agi/), [`aimaos`](../systems/aimaos/)
 
 Memory is part of the runtime: compiled into context, mutated through
 first-class actions, tied to agent state. **Letta** separates core, archival,
@@ -604,10 +604,10 @@ memory to the framework, prompt assembly, and tool loop.
 
 ### Host runtimes with pluggable memory
 
-Hosts: `hermes-agent`, `openclaw`, `pi`, `mateclaw`, `opencode`, `nemoclaw`,
-`tigrimosr`, `adk-python`, `autogen`, `agno`, `agent-framework`, `dexto`, `cognis`
-Plugins mounted on them: `holographic`, `magic-context`, `metaclaw`,
-`byterover`, `tencentdb-agent-memory`, plus hosted providers
+Hosts: [`hermes-agent`](../systems/hermes-agent/), [`openclaw`](../systems/openclaw/), [`pi`](../systems/pi/), [`mateclaw`](../systems/mateclaw/), [`opencode`](../systems/opencode/), [`nemoclaw`](../systems/nemoclaw/),
+[`tigrimosr`](../systems/tigrimosr/), [`adk-python`](../systems/adk-python/), [`autogen`](../systems/autogen/), [`agno`](../systems/agno/), [`agent-framework`](../systems/agent-framework/), [`dexto`](../systems/dexto/), [`cognis`](../systems/cognis/)
+Plugins mounted on them: [`holographic`](../systems/holographic/), [`magic-context`](../systems/magic-context/), [`metaclaw`](../systems/metaclaw/),
+[`byterover`](../systems/byterover/), [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/), plus hosted providers
 
 The runtime ships an interface, not a memory model. **Hermes** bounds its own
 curated Markdown hard and freezes it into the prompt at session start while
@@ -708,11 +708,11 @@ behaviour and enforcing one.
 
 ### Local coding-agent memory
 
-`engram`, `mempalace`, `llm-wiki-memory`, `basic-memory`, `moltis`,
-`open-cowork`, `byterover`, `magic-context`, `swafra`, `memora`, `ai-memory`,
-`ctx`, `optmem`, `openworker`, `qwen-code`, `daimon`, `reme`, `acontext`,
-`logseq`, `everos`, `ecc`, `skales`, `csm`, `graphify`, `clio`, `empryo`,
-`project-golem`, `openyak`, `memento`, `palazzo`, `memex-zero-rag`, `agentrecall-x`, `terse-memory`, `ean-agentos`, `memsem`, `cambium`, `perseus-vault`, `provem`, `sovereign`, `memoryops-ai`, `deepcode`, `prime-agent`, `kirocrew`, `engram-alpha`, `mimir`, `brain-md`, `iai-pme`
+[`engram`](../systems/engram/), [`mempalace`](../systems/mempalace/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`basic-memory`](../systems/basic-memory/), [`moltis`](../systems/moltis/),
+[`open-cowork`](../systems/open-cowork/), [`byterover`](../systems/byterover/), [`magic-context`](../systems/magic-context/), [`swafra`](../systems/swafra/), [`memora`](../systems/memora/), [`ai-memory`](../systems/ai-memory/),
+[`ctx`](../systems/ctx/), [`optmem`](../systems/optmem/), [`openworker`](../systems/openworker/), [`qwen-code`](../systems/qwen-code/), [`daimon`](../systems/daimon/), [`reme`](../systems/reme/), [`acontext`](../systems/acontext/),
+[`logseq`](../systems/logseq/), [`everos`](../systems/everos/), [`ecc`](../systems/ecc/), [`skales`](../systems/skales/), [`csm`](../systems/csm/), [`graphify`](../systems/graphify/), [`clio`](../systems/clio/), [`empryo`](../systems/empryo/),
+[`project-golem`](../systems/project-golem/), [`openyak`](../systems/openyak/), [`memento`](../systems/memento/), [`palazzo`](../systems/palazzo/), [`memex-zero-rag`](../systems/memex-zero-rag/), [`agentrecall-x`](../systems/agentrecall-x/), [`terse-memory`](../systems/terse-memory/), [`ean-agentos`](../systems/ean-agentos/), [`memsem`](../systems/memsem/), [`cambium`](../systems/cambium/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`sovereign`](../systems/sovereign/), [`memoryops-ai`](../systems/memoryops-ai/), [`deepcode`](../systems/deepcode/), [`prime-agent`](../systems/prime-agent/), [`kirocrew`](../systems/kirocrew/), [`engram-alpha`](../systems/engram-alpha/), [`mimir`](../systems/mimir/), [`brain-md`](../systems/brain-md/), [`iai-pme`](../systems/iai-pme/)
 
 Durable local state for a developer workflow: hooks, MCP, project scopes, exact
 search. **Engram** is the small no-extraction baseline over SQLite and FTS.
@@ -1037,8 +1037,8 @@ stand up, and still exactly one scope axis.
 
 ### Graph, temporal, and symbolic memory
 
-`graphiti`, `cognee`, `hipporag`, `holographic`, `gini-agent`, `memvid`,
-`neo4j-agent-memory`, `memary`, `m-flow`, `nova-ai`, `argo`
+[`graphiti`](../systems/graphiti/), [`cognee`](../systems/cognee/), [`hipporag`](../systems/hipporag/), [`holographic`](../systems/holographic/), [`gini-agent`](../systems/gini-agent/), [`memvid`](../systems/memvid/),
+[`neo4j-agent-memory`](../systems/neo4j-agent-memory/), [`memary`](../systems/memary/), [`m-flow`](../systems/m-flow/), [`nova-ai`](../systems/nova-ai/), [`argo`](../systems/argo/)
 
 Structure is the retrieval mechanism. **Graphiti** tracks transaction time and
 real-world validity separately, invalidating facts by closing an interval
@@ -1101,8 +1101,8 @@ is.
 
 ### Verification and trust-first memory
 
-`verel`, `rainbox`, `magic-context`, `metaclaw`, `gini-agent`, `core-memory`,
-`daimon`, `intaris`, `muninndb`
+[`verel`](../systems/verel/), [`rainbox`](../systems/rainbox/), [`magic-context`](../systems/magic-context/), [`metaclaw`](../systems/metaclaw/), [`gini-agent`](../systems/gini-agent/), [`core-memory`](../systems/core-memory/),
+[`daimon`](../systems/daimon/), [`intaris`](../systems/intaris/), [`muninndb`](../systems/muninndb/)
 
 These treat memory as a trust problem before a retrieval problem. **Verel**
 separates confidence, retrieval strength, and verification state, carries
@@ -1128,8 +1128,8 @@ failures simpler systems discover in production.
 
 ### Research lineage
 
-`generative-agents`, `voyager`, `hipporag`, `a-mem`, `memoryos`, `nooa-memory`,
-`second-me`, `simplemem`, `livingfeed`, `mnemopi`, `aeris`
+[`generative-agents`](../systems/generative-agents/), [`voyager`](../systems/voyager/), [`hipporag`](../systems/hipporag/), [`a-mem`](../systems/a-mem/), [`memoryos`](../systems/memoryos/), [`nooa-memory`](../systems/nooa-memory/),
+[`second-me`](../systems/second-me/), [`simplemem`](../systems/simplemem/), [`livingfeed`](../systems/livingfeed/), [`mnemopi`](../systems/mnemopi/), [`aeris`](../systems/aeris/)
 
 Artifacts the practical systems are largely responses to. **Generative Agents**
 established the observation/reflection/planning stream and the
