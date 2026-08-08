@@ -21,7 +21,7 @@ matrix:
   background: "A non-blocking Ray future fired at every step boundary, executing on the actor every tenth step when at least twenty failures are pending"
   trust: "Usefulness counters only. `is_seed` protects a card from eviction, and there is no state that withholds a card from being handed to the solver"
   strengths: "A negative usefulness signal that is actually wired to deletion — `hurt_count` is written by the same rollout scoring that trains the model, and a card that keeps losing is removed"
-  risks: "Eviction leaves nothing behind, so a re-observed failure regenerates the card the bank just decided was harmful; the anti-leakage parameter is implemented and never called; the pending queue is cleared before generation, so one judge outage discards up to 300 failures"
+  risks: "Eviction leaves nothing behind, so a re-observed failure regenerates the card the bank just decided was harmful; the anti-leakage parameter is implemented and never called; the pending queue is cleared before generation, so one judge outage discards up to 300 failures; the paper's 157-skill seed bank ships nowhere in the tree"
 ---
 
 ## 1. Executive Summary
@@ -54,6 +54,15 @@ the outcome of a rollout that may have been decided by one of them. And
 every generated card for exactly that purpose, and **nothing in the repository
 ever passes it**, so a card distilled from a question can be retrieved for that
 same question later in the run.
+
+The work has a paper — [arXiv:2607.29468](https://arxiv.org/abs/2607.29468),
+31 July 2026 — cited in the README, and it is worth reading beside the code for
+two reasons. It describes the memory mechanism exactly as the code implements it,
+down to the 0.93 dedup threshold and the evict-after-three-retrievals rule, which
+is not the usual case in this atlas. And it ablates the bank: removing failure
+distillation costs 2.7 points of seven-benchmark average, the largest of three
+components. What the paper starts from and the repository does not ship is a
+157-skill seed bank; both are discussed in section 10.
 
 There is no `LICENSE` file in the tree, and the vendored `verl/` directory
 carries none either. Everything below is read from source at the pinned commit;
@@ -146,7 +155,16 @@ Two config paths exist and nothing in the tree fills them. `seed_skills_path`
 loads a YAML of human-curated seed skills and `warm_start_path` loads a prior
 `skills.jsonl`; the repository ships neither a seed file nor a checkpointed bank,
 so a first run starts empty and the `is_seed` protection that runs through the
-eviction code has nothing to protect.
+eviction code has nothing to protect. The paper's runs do not start empty, which
+is what makes this a gap rather than a default — see section 10.
+
+The launcher also sets `self_play.separate_models.enable=True`, creating a second
+worker group for the solver from `SOLVER_PATH`, which defaults to the proposer's
+checkpoint. So the two roles are separately parameterized from a shared
+initialization, and **only the solver ever sees a skill** — retrieval happens in
+`problem_extraction.py` while it assembles the solver's message. The memory is
+one role's, not the loop's, which is the arrangement the paper's argument
+depends on.
 
 ## 4. Essential Implementation Paths
 
@@ -352,9 +370,47 @@ takes a config dict and the embedder is the only external dependency — so the
 absence is a choice about effort, not a structural obstacle.
 
 The README reports the trained model on Hugging Face, and the repository contains
-evaluation dataset preprocessing under `examples/data_preprocess/`. No result in
-the tree separates the contribution of the skill bank from the contribution of
-self-play, and no ablation is present.
+evaluation dataset preprocessing under `examples/data_preprocess/`. **No result
+is committed to the tree** — no score, no log, no ablation output.
+
+The evaluation is in the paper instead: *Self-Play Meets Skill Evolution:
+Self-Evolving Search Agents that Pose, Solve, and Remember*
+([arXiv:2607.29468](https://arxiv.org/abs/2607.29468), 31 July 2026), which the
+README cites. Three things in it matter for a reader of this report.
+
+**The mechanism described in the paper is the mechanism in the tree.** The paper
+states the retrieval as "the top three E5-base-v2 records", the dedup rule as
+"cosine similarity is at most 0.93", the cap as "overflow beyond 800 entries
+removes the lowest-scoring non-seed skills", the counters as "a correct answer
+increments helpfulness for each retrieved skill, whereas a substantive incorrect
+answer increments hurt", and the eviction rule as "evicted after at least three
+retrievals if its helpful count minus hurt count is negative". Every one of those
+is `skill_bank.py` as read above. That agreement is worth stating because it is
+not the usual case in this atlas.
+
+**The skill bank is ablated, and it is the largest of the three components.**
+Table 3 removes one component at a time and reports a seven-benchmark average —
+NQ, TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, MuSiQue, Bamboogle — of 56.2 for
+the full system against 54.7 without memory priming, 54.0 without frontier
+shaping and **53.5 without failure distillation**, a 2.7-point drop. The abstract
+also splits the memory's value two ways: a solver trained with retrieval but
+deployed without it (SESA-Off) keeps 1.8–2.2 points over the SSP baseline, and
+re-enabling the bank at inference adds a further 0.5–1.0. That is an unusually
+direct measurement of something this atlas has otherwise only seen in
+[Second Me](../second-me/) — how much of an external memory's benefit ends up in
+the weights and how much stays in the store.
+
+**The bank the paper starts from is not in the repository.** The paper says SESA
+initializes the bank "with 15 hand-written skills covering recurring search
+patterns and 142 deduplicated skills mined during an earlier self-play
+bootstrap", 157 entries that "anchor the granularity of later skill
+distillation". `seed_skills_path` and `warm_start_path` are the two config keys
+that would load them, the launcher sets neither, and no seed file exists in the
+tree. A run started from this checkout begins with an empty bank, and the
+`is_seed` protection woven through `_evict_negatives` and
+`_enforce_size_limit_for_new` protects nothing.
+
+None of these numbers were reproduced here; they are read from the paper.
 
 ## 11. For Your Own Build
 
@@ -412,8 +468,14 @@ need them.
 
 ## 12. Open Questions
 
-- Was the skill bank ablated? Nothing in the tree separates its effect from
-  self-play's, and the mechanism's whole claim is that it compounds.
+- **Where are the 157 seed skills?** They are the paper's starting bank and the
+  thing that sets the granularity every distilled card is judged against, and no
+  file in the tree provides them. This is the gap between the artifact and the
+  experiment that a reader can act on.
+- **Is there an inference path?** The paper offers SESA-On, the trained solver
+  with the bank still retrieving at deployment, and scores it. The only
+  retrieval call site in the repository is inside problem extraction on the
+  training loop; nothing here serves a bank to a deployed model.
 - What did the counters actually look like after a run? `stats()` reports
   `skills_used_at_least_once`, which would answer whether an 800-card bank is
   mostly dead weight, and no logged run is committed.
@@ -435,5 +497,7 @@ need them.
 | `quarl/utils/sesa_data_manager.py` | 319 | In-process problem pool; not persisted, so not memory by this atlas's bar |
 
 ## History
+
+**2026-08-09** — the paper was read after the first pass and corrected one claim in it. Section 10 said no ablation was present; that is true of the repository and false of the work — [arXiv:2607.29468](https://arxiv.org/abs/2607.29468) Table 3 isolates failure distillation at 2.7 points of seven-benchmark average, and the abstract splits the memory's value between the trained weights and the retained bank. The section now carries the paper's evaluation, the finding that the paper's mechanism description matches the code exactly, and the finding that its 157-skill seed bank is absent from the tree. Nothing was reproduced; the numbers are read from the paper.
 
 **2026-08-09** — [`74de5d77a19774cfba53d6950d47633a2d632430`](https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430) — first reading. The screen reported one build-time execution surface (`verl/setup.py`) and three unpinned dependency surfaces, no auto-running hooks, and nothing inside the seven-day cooldown. Nothing was installed, built or run; the analysis is static over the tree. No `LICENSE` file exists at the repository root or in the vendored `verl/` directory, so the terms are unstated rather than permissive.

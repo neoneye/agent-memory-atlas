@@ -1856,15 +1856,33 @@ written by the same rollout reward that trains the model, and a card
 whose net score has gone negative after at least three retrievals is
 <strong>deleted</strong>. Nothing else here has a negative usefulness
 signal wired to eviction rather than to ranking; the skill libraries in
-this corpus grow and are pruned, if at all, by age or by hand. The two
-failures beside it are as instructive as the mechanism. Eviction leaves
-nothing behind and the duplicate check compares only against the live
-bank, so the next similar failure regenerates the card the system just
-measured as harmful, starting again at zero. And the anti-leakage
-control is written and never called: <code>retrieve()</code> accepts
-<code>exclude_uids</code>, every generated card stores the
-<code>source_uid</code> it came from, and no caller in the repository
-passes either. See <a href="../systems/sesa/">SESA</a>.</p>
+this corpus grow and are pruned, if at all, by age or by hand. Its paper
+(<a href="https://arxiv.org/abs/2607.29468">arXiv:2607.29468</a>, 31
+July 2026) is worth reading beside the code, for something this atlas
+rarely gets. It describes the memory mechanism exactly as implemented —
+the 0.93 dedup threshold, the 800-entry cap, the top-three E5 retrieval,
+the evict-after-three-retrievals rule — and then measures it: removing
+failure distillation costs 2.7 points of seven-benchmark average, the
+largest of three ablated components, and the abstract splits the
+memory's value between a solver deployed <em>without</em> retrieval,
+which keeps 1.8–2.2 points over the baseline, and the bank re-enabled at
+inference, which adds 0.5–1.0 more. That is a direct measurement of how
+much of an external memory's benefit ends up in the weights, which this
+atlas has otherwise only seen argued at <a
+href="../systems/second-me/">Second Me</a>. The gap between paper and
+artifact is one item long and specific: the paper initializes the bank
+with 15 hand-written skills and 142 mined during a bootstrap, and
+neither the seed file nor the warm-start bank exists in the repository,
+so a run started from the checkout begins empty.</p>
+<p>The two failures beside it are as instructive as the mechanism.
+Eviction leaves nothing behind and the duplicate check compares only
+against the live bank, so the next similar failure regenerates the card
+the system just measured as harmful, starting again at zero. And the
+anti-leakage control is written and never called:
+<code>retrieve()</code> accepts <code>exclude_uids</code>, every
+generated card stores the <code>source_uid</code> it came from, and no
+caller in the repository passes either. See <a
+href="../systems/sesa/">SESA</a>.</p>
 <p>Tradeoff: the ideas are unusually legible because no production
 concern obscures them, and none of these has scope, correction,
 deletion, or a trust model. Voyager and Generative Agents have been
@@ -6503,7 +6521,8 @@ trains the model, and a card that keeps losing is removed</td>
 <td>Eviction leaves nothing behind, so a re-observed failure regenerates
 the card the bank just decided was harmful; the anti-leakage parameter
 is implemented and never called; the pending queue is cleared before
-generation, so one judge outage discards up to 300 failures</td>
+generation, so one judge outage discards up to 300 failures; the paper's
+157-skill seed bank ships nowhere in the tree</td>
 </tr>
 <tr>
 <td><code>sillytavern</code></td>
