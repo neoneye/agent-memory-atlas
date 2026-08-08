@@ -520,7 +520,6 @@ assertions in this atlas.
 - **Make a capability claim executable.** A probe that writes, corrupts, and reads
   back is worth more than a checklist, because it fails when the behaviour
   regresses rather than when someone remembers to update a document.
-
 - Separate truth confidence from retrieval strength.
 - Candidate/verified/rejected trust state.
 - Correction chains instead of silent overwrites.

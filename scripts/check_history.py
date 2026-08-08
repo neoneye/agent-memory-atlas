@@ -76,6 +76,31 @@ def main(root: str) -> int:
                 f"{', '.join(dates)}"
             )
 
+    # The comparative report keeps a History of its own, on the same
+    # newest-first convention and under the same heading — and it was not checked
+    # here, because this loop only walks content/systems. It drifted: a 2026-08-07
+    # entry sat third, below two dated 2026-08-06, and a reader taking the top
+    # line as current got a stale one. There is no analyzed_at to bind it to, so
+    # only the ordering half of the invariant applies.
+    overview = Path(root) / "content" / "overview.md"
+    if overview.is_file():
+        text = overview.read_text(encoding="utf-8")
+        heading = HEADING.search(text)
+        if not heading:
+            problems.append("overview.md: no '## History' section")
+        else:
+            dates = ENTRY.findall(text[heading.end():])
+            if not dates:
+                problems.append("overview.md: '## History' has no dated entries")
+            elif dates != sorted(dates, reverse=True):
+                out_of_place = [
+                    d for d, s in zip(dates, sorted(dates, reverse=True)) if d != s
+                ]
+                problems.append(
+                    "overview.md: History entries are not newest-first — "
+                    f"{', '.join(out_of_place[:4])} out of place"
+                )
+
     if problems:
         print("History sections are out of step with the reports they date:",
               file=sys.stderr)

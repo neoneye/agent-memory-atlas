@@ -215,7 +215,7 @@ if ! python3 - "$site_dir" <<'PY'
 import re, sys
 from pathlib import Path
 
-BASELINE = 4  # loose lists of 10+ items, as of 2026-08-08. This may only go down.
+BASELINE = 0  # loose lists of 10+ items. This may only go down.
 
 found = []
 for page in sorted(Path(sys.argv[1]).rglob("index.html")):

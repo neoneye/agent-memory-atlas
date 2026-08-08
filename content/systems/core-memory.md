@@ -364,7 +364,6 @@ Strengths:
 - **Committed benchmark harnesses** for LoCoMo, LongMemEval, and causal
   continuity, plus KPI targets and a dreamer eval.
 - **Secret redaction and encryption** modules with dedicated tests.
-
 - **An append-only edge event log.** `core_memory/graph/core.py` appends
   `edge_add`, `edge_update` and `edge_deactivate` records to a JSONL through
   `append_jsonl`; deactivation is an appended event rather than a deletion, and
@@ -516,7 +515,6 @@ Do not copy:
   `core_memory/graph/`.
 - Benchmarks: `benchmarks/locomo/`, `benchmarks/longmemeval/`,
   `benchmarks/causal_continuity/`, `eval/kpi_set.json`.
-
 - Retrieval projections: `core_memory/graph/junctions.py`,
   `core_memory/graph/roadmap.py`, `core_memory/retrieval/roadmap.py`,
   `core_memory/persistence/junction_roadmap.py`

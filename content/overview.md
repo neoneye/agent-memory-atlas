@@ -2622,7 +2622,6 @@ Visible deletion varies from hard API deletion to lifecycle state:
   inspected modules.
 - `openclaw`: exact agent-scoped delete, undermined by auto-capture, which can
   restore the same content from a later matching message.
-
 - `magic-context`: archive plus `supersededByMemoryId` and `mergedFrom` lineage,
   with age decay owning memories that cannot be verified; no tombstone.
 - `pi`: no memory to forget; deleting a session removes its JSONL file.
@@ -4614,6 +4613,57 @@ history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
 
+**2026-08-08** — An outside review of the whole atlas produced four method
+changes and one retraction, and the day's lesson is that every one of them was
+already visible in this project's own prose. **The headline said "164
+open-source memory systems" and 15 of the 164 are not open source** — each named
+correctly in its own report, aggregated into a word none of them qualifies for.
+Disclosing a limitation is not the same as not committing it. **A mark names a
+capability but not the subsystem it protects**, so three correct marks can add up
+to a profile no memory path in the system has; `capability_evidence` now records
+subsystem, file, symbol and covering test per mark, ratcheted, and where a report
+named no test the record says `unknown` rather than a plausible filename.
+**Re-scoring all 37 `negative_eval` marks put 27 on a read path** and found one
+that cites no case at all. **The admission rule now states its exception** rather
+than leaving it to be found by reading four reports against it. Three tooling
+failures fell out: a headline verb changed and its claim silently left the count
+checker's reach; `npm test` validated the committed `docs/` build, so a broken
+fragment link passed a full run and failed the next; and one list item holding
+blank-separated paragraphs made 93 siblings loose, valid markdown and valid HTML
+at both ends. The last is the shape worth keeping — **a green suite over stale or
+reflowed output is the lying operation this atlas names in other people's code.**
+Reading a paper's LaTeX source rather than a rendering of it also corrected a
+claim made here and found a contradiction in the paper's own flagship number that
+no rendering would have shown.
+
+**2026-08-07** — A maintainer's correction on [mnemory](../systems/mnemory/),
+and it is the third instance of one hazard and the second time a maintainer, not
+this project, was the one to notice.
+
+The report said no scored LoCoMo result existed in the tree. `README.md` at the
+pinned commit carries a `## Benchmark` section with a six-system comparison
+table, the model configuration used, and mnemory's overall 73.2 placed second
+behind Memobase's 75.8. The claim was wrong when published, not stale: the pin
+was and remains the repository's head.
+
+**The search was scoped to `benchmarks/locomo/`.** That is the directory a scored
+result ought to live in, the harness there is genuinely complete, and no result
+file is genuinely committed under it — so every observation behind the sentence
+was true and the sentence was false, because the numbers were published one
+directory up in the file every reader opens first.
+
+Two things follow. The rule already recorded here — *before publishing any
+sentence of the form "nothing does X", grep the entire repository for X* — needs
+its most obvious instance spelled out, because three failures in, the file that
+keeps being skipped is the **README**. A benchmark claim in particular is a claim
+about a *project*, and projects publish results in prose long before they commit
+artifacts. And the correction improved the finding rather than only fixing it:
+the accurate statement distinguishes published numbers from committed artifacts,
+which is a distinction this report already makes elsewhere and the original
+sentence collapsed. The table also turned out to place the project second of six,
+which is the kind of evidence about a benchmark's honesty that only exists when
+somebody publishes a comparison they do not win.
+
 **2026-08-06** — Re-reading the ten oldest pins in one pass produced two
 findings that only a batch could produce.
 
@@ -4684,34 +4734,6 @@ does X", grep the entire repository for X, not the part of it that ought to
 contain X.** Positive claims fail loudly, because the code contradicts them.
 Negative ones fail silently, because absence of evidence in the wrong place
 looks exactly like absence.
-
-**2026-08-07** — A maintainer's correction on [mnemory](../systems/mnemory/),
-and it is the third instance of one hazard and the second time a maintainer, not
-this project, was the one to notice.
-
-The report said no scored LoCoMo result existed in the tree. `README.md` at the
-pinned commit carries a `## Benchmark` section with a six-system comparison
-table, the model configuration used, and mnemory's overall 73.2 placed second
-behind Memobase's 75.8. The claim was wrong when published, not stale: the pin
-was and remains the repository's head.
-
-**The search was scoped to `benchmarks/locomo/`.** That is the directory a scored
-result ought to live in, the harness there is genuinely complete, and no result
-file is genuinely committed under it — so every observation behind the sentence
-was true and the sentence was false, because the numbers were published one
-directory up in the file every reader opens first.
-
-Two things follow. The rule already recorded here — *before publishing any
-sentence of the form "nothing does X", grep the entire repository for X* — needs
-its most obvious instance spelled out, because three failures in, the file that
-keeps being skipped is the **README**. A benchmark claim in particular is a claim
-about a *project*, and projects publish results in prose long before they commit
-artifacts. And the correction improved the finding rather than only fixing it:
-the accurate statement distinguishes published numbers from committed artifacts,
-which is a distinction this report already makes elsewhere and the original
-sentence collapsed. The table also turned out to place the project second of six,
-which is the kind of evidence about a benchmark's honesty that only exists when
-somebody publishes a comparison they do not win.
 
 **2026-08-06** — A maintainer's correction on [waku-agent](../systems/waku-agent/)
 produced one method lesson, and it is about where a reading stops.
