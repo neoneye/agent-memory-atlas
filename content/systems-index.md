@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **164 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
+Every one of the **165 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [comparative report](../compare/)'s verdict section, which is hand-written.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -171,6 +171,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`openworker`](../systems/openworker/) **OpenWorker** — Policy over machinery · `andrewyng/openworker` · Scope enforced
 - [`openyak`](../systems/openyak/) **OpenYak** — One document per workspace · `openyak/openyak` · Scope enforced, Human review
 - [`optmem`](../systems/optmem/) **OptMem** — No background work · `VictorTaelin/OptMem` · Mutation audit
+- [`ostk-recall`](../systems/ostk-recall/) **ostk-recall** — A tombstone the write path never reads · `os-tack/ostk-recall` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review
 ## P
 
 - [`palazzo`](../systems/palazzo/) **Palazzo** — An audit log that can refuse a delete · `calibrae/palazzo` · Mutation audit

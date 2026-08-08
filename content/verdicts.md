@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 164 reports.**
+**This page covers all 165 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1369,3 +1369,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 702 test files against 264 source files, a Rust core beside the Python one, AES-256-GCM at rest with no telemetry, committed PyTorch-versus-Rust embedder comparisons with an environment snapshot, and preflight and checkpoint tests around the benchmark runner itself.
 - Study when: you want the benchmark posture — one harness, a matched control, a published tie, a stated limitation of the instrument — or an interface where forgetting can be taken back.
 - Do not copy when: memory is shared by more than one person; the project says so itself and points elsewhere.
+
+### [`ostk-recall`](../systems/ostk-recall/)
+
+- Best idea: edge conductance derived from confidence and recency rather than stored, so there is no weight to drift and no background pass whose failure freezes the graph.
+- Biggest risk: `forget` returns a warning asserting an anti-resurrection tombstone, while the suppression is keyed on the claim id, excluded from conflict detection, and never consulted when the same value is asserted again.
+- Most reusable component: the promoted-bridge rule — a latent similarity edge is reified as weak and must earn its conductance through use or decay away.
+- Maturity impression: 1,028 test functions over roughly 90,000 lines of Rust with a dense audit surface and receipts on every mutation, self-described pre-alpha, and no committed case asserting that a suppressed claim stays out of a recall result.
+- Study when: you want one local binary over your own files and sessions, and the concept ledger rather than the claim table is the part you are shopping for.
+- Do not copy when: a correction has to hold against re-extraction — everything else here is careful enough that the gap is easy to miss.
