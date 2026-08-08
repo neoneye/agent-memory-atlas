@@ -4005,8 +4005,11 @@ Testing:
 - UI for memory review and conflict resolution.
 - Retrieval telemetry dashboards and feedback/eval promotion.
 - Temporal reasoning and decay.
+- A corpus-tuned adapter for schema and house style, under the condition below and not otherwise.
 
 Do not add background summarization before raw-evidence retrieval and correction semantics exist. Summaries are compressed belief; if the system cannot explain and repair a belief, summarization hides the problem.
+
+Do not train an adapter on the corpus your memory system stores. The prior is real — retrieval returns the right record and a model that has never seen your data shape still writes the next one back malformed, which is a gap no reranker closes. But the natural implementation trains on the memory corpus, and at that moment the adapter has memorised part of it and become a second store with no delete, no scope and no audit — the properties set out in the [limitations](#known-limitations). The condition is mechanical, not advisory: the training corpus is **disjoint from the memory corpus and the build enforces the disjointness**, the adapter is **probed for verbatim recall of memory records before it ships**, and the system can **state in advance what a deletion request will not reach**. Nothing in this atlas does any of the three, and nothing measures the second at all. Only the third is cheap today, so this recommends something nobody here has built correctly.
 
 ## 9. Repo-by-Repo Verdicts
 
@@ -4455,14 +4458,39 @@ No internet sources were used for this report. The analysis is based on the chec
   carries it, so the entry is sound today, but the omission was the review's and
   the same gap may be waiting in other early reports. Nothing in
   `scripts/test_site.sh` enforces it.
-- **Memory held in model weights is covered by exactly one system.**
-  [Second Me](../systems/second-me/) is the atlas's only parametric-memory entry,
-  and one system is a data point rather than coverage. Model editing, KV-cache
+- **Memory held in model weights is covered by exactly one system, and that is a
+  fact about this corpus rather than about the field.**
+  [Second Me](../systems/second-me/) is the only system here whose memory *is*
+  weights — [MemOS](../systems/memos/) mounts a parametric module alongside four
+  other memory forms, which is a different claim — and one system is a data point
+  rather than coverage. Model editing, KV-cache
   reuse and weight-space personalization are a substantial branch of the
   literature and are essentially unrepresented here — which also means the seven
   rubric capabilities have only been exercised against token stores. Whether a
   tombstone, a scope key or an audit trail even has a referent in a fine-tuned
   model is an open question this corpus cannot answer.
+
+  **The technique is not exploratory, which is what makes the gap serious.**
+  Low-rank adapters are commodity, published and exchanged as artifacts, and the
+  way they are distributed answers the question above in the negative at every
+  point. A delta is **opaque** — there is no read path that reports what it
+  learned from a given document, so no audit trail has a referent. It is **welded
+  to the base model** it was trained against, carrying one timestamp and no
+  validity interval, so bi-temporality has none either. **Merging is routine and
+  one-way**, so supersession has none. And withdrawing a published adapter
+  reaches neither the copies already taken nor the merges downstream of them, so
+  deletion has none. None of that rests on how many adapters exist or how popular
+  any host is — it rests on the shape of the artifact, which is the only thing
+  worth resting on. The build-side consequence is in
+  [what I would build](#add-later), and the two should be read together.
+
+  **The distributional escape does not work either.** It is tempting to hold that
+  an adapter trained for *shape* — schema, vocabulary, house style — stores
+  nothing correctable and so escapes all of this. Style adapters demonstrably
+  encode the sources they were trained on; that is why withdrawal requests are
+  made about them at all. Distribution and content are a spectrum, not a
+  boundary, and a system that treats the distinction as a safety argument has
+  made an unmeasured assumption.
 - Four dimensions that matter operationally are not covered systematically here,
   and a reader choosing a system should investigate them directly. **Behaviour
   under embedding-model change or vector-store migration**: only a few systems

@@ -10648,11 +10648,29 @@ cascading deletion.</li>
 <li>UI for memory review and conflict resolution.</li>
 <li>Retrieval telemetry dashboards and feedback/eval promotion.</li>
 <li>Temporal reasoning and decay.</li>
+<li>A corpus-tuned adapter for schema and house style, under the
+condition below and not otherwise.</li>
 </ul>
 <p>Do not add background summarization before raw-evidence retrieval and
 correction semantics exist. Summaries are compressed belief; if the
 system cannot explain and repair a belief, summarization hides the
 problem.</p>
+<p>Do not train an adapter on the corpus your memory system stores. The
+prior is real — retrieval returns the right record and a model that has
+never seen your data shape still writes the next one back malformed,
+which is a gap no reranker closes. But the natural implementation trains
+on the memory corpus, and at that moment the adapter has memorised part
+of it and become a second store with no delete, no scope and no audit —
+the properties set out in the <a
+href="#known-limitations">limitations</a>. The condition is mechanical,
+not advisory: the training corpus is <strong>disjoint from the memory
+corpus and the build enforces the disjointness</strong>, the adapter is
+<strong>probed for verbatim recall of memory records before it
+ships</strong>, and the system can <strong>state in advance what a
+deletion request will not reach</strong>. Nothing in this atlas does any
+of the three, and nothing measures the second at all. Only the third is
+cheap today, so this recommends something nobody here has built
+correctly.</p>
 <h2 id="9-repo-by-repo-verdicts">9. Repo-by-Repo Verdicts</h2>
 <p>Moved to its own page: <strong><a href="../verdicts/">repo-by-repo
 verdicts</a></strong> — one entry per system with its best idea, biggest
@@ -11555,33 +11573,60 @@ href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/f555013dfccf
 on the checked-out code in this workspace.</p>
 <h3 id="known-limitations">Known Limitations</h3>
 <ul>
-<li>Supermemory's hosted backend implementation was not visible in this
-checkout; its report emphasizes schemas, clients, SDKs, MCP, and graph
-UI.</li>
-<li>Some mem0 advanced capabilities appear to be managed-platform-only
-in the inspected OSS code.</li>
-<li>This is an implementation-oriented static review, not a runtime
-benchmark.</li>
-<li><strong>The licence check has not been applied uniformly.</strong>
-The atlas declines repositories that ship no licence file —
-<code>general-agentic-memory</code> and <code>MemEngine</code> are both
-named above partly on that basis — but the check was performed at review
-time rather than as a build invariant, and at least one report was
-published against a commit that carried no licence. Swafra's original
-pin, <code>24dba18a</code>, had none; MIT landed later and the current
-pin carries it, so the entry is sound today, but the omission was the
-review's and the same gap may be waiting in other early reports. Nothing
-in <code>scripts/test_site.sh</code> enforces it.</li>
-<li><strong>Memory held in model weights is covered by exactly one
-system.</strong> <a href="../systems/second-me/">Second Me</a> is the
-atlas's only parametric-memory entry, and one system is a data point
-rather than coverage. Model editing, KV-cache reuse and weight-space
-personalization are a substantial branch of the literature and are
-essentially unrepresented here — which also means the seven rubric
-capabilities have only been exercised against token stores. Whether a
-tombstone, a scope key or an audit trail even has a referent in a
-fine-tuned model is an open question this corpus cannot answer.</li>
-<li>Four dimensions that matter operationally are not covered
+<li><p>Supermemory's hosted backend implementation was not visible in
+this checkout; its report emphasizes schemas, clients, SDKs, MCP, and
+graph UI.</p></li>
+<li><p>Some mem0 advanced capabilities appear to be
+managed-platform-only in the inspected OSS code.</p></li>
+<li><p>This is an implementation-oriented static review, not a runtime
+benchmark.</p></li>
+<li><p><strong>The licence check has not been applied
+uniformly.</strong> The atlas declines repositories that ship no licence
+file — <code>general-agentic-memory</code> and <code>MemEngine</code>
+are both named above partly on that basis — but the check was performed
+at review time rather than as a build invariant, and at least one report
+was published against a commit that carried no licence. Swafra's
+original pin, <code>24dba18a</code>, had none; MIT landed later and the
+current pin carries it, so the entry is sound today, but the omission
+was the review's and the same gap may be waiting in other early reports.
+Nothing in <code>scripts/test_site.sh</code> enforces it.</p></li>
+<li><p><strong>Memory held in model weights is covered by exactly one
+system, and that is a fact about this corpus rather than about the
+field.</strong> <a href="../systems/second-me/">Second Me</a> is the
+only system here whose memory <em>is</em> weights — <a
+href="../systems/memos/">MemOS</a> mounts a parametric module alongside
+four other memory forms, which is a different claim — and one system is
+a data point rather than coverage. Model editing, KV-cache reuse and
+weight-space personalization are a substantial branch of the literature
+and are essentially unrepresented here — which also means the seven
+rubric capabilities have only been exercised against token stores.
+Whether a tombstone, a scope key or an audit trail even has a referent
+in a fine-tuned model is an open question this corpus cannot answer.</p>
+<p><strong>The technique is not exploratory, which is what makes the gap
+serious.</strong> Low-rank adapters are commodity, published and
+exchanged as artifacts, and the way they are distributed answers the
+question above in the negative at every point. A delta is
+<strong>opaque</strong> — there is no read path that reports what it
+learned from a given document, so no audit trail has a referent. It is
+<strong>welded to the base model</strong> it was trained against,
+carrying one timestamp and no validity interval, so bi-temporality has
+none either. <strong>Merging is routine and one-way</strong>, so
+supersession has none. And withdrawing a published adapter reaches
+neither the copies already taken nor the merges downstream of them, so
+deletion has none. None of that rests on how many adapters exist or how
+popular any host is — it rests on the shape of the artifact, which is
+the only thing worth resting on. The build-side consequence is in <a
+href="#add-later">what I would build</a>, and the two should be read
+together.</p>
+<p><strong>The distributional escape does not work either.</strong> It
+is tempting to hold that an adapter trained for <em>shape</em> — schema,
+vocabulary, house style — stores nothing correctable and so escapes all
+of this. Style adapters demonstrably encode the sources they were
+trained on; that is why withdrawal requests are made about them at all.
+Distribution and content are a spectrum, not a boundary, and a system
+that treats the distinction as a safety argument has made an unmeasured
+assumption.</p></li>
+<li><p>Four dimensions that matter operationally are not covered
 systematically here, and a reader choosing a system should investigate
 them directly. <strong>Behaviour under embedding-model change or
 vector-store migration</strong>: only a few systems visibly stamp
@@ -11596,120 +11641,125 @@ memories were returned: why they outranked others, and what was dropped
 by budget truncation. <strong>Cost and latency under realistic
 load</strong>, which is treated separately in <a
 href="../benchmarks/">benchmarking agent memory</a> — as an absence,
-because it is almost never measured.</li>
-<li>The capability flags in the index are the reviewer's judgements
+because it is almost never measured.</p></li>
+<li><p>The capability flags in the index are the reviewer's judgements
 against strict definitions, applied to code read at the pinned commits.
 A flag's absence means the mechanism was not found, not that it is
-impossible to build on that system.</li>
-<li>Retrieval quality and extraction quality were not independently
+impossible to build on that system.</p></li>
+<li><p>Retrieval quality and extraction quality were not independently
 re-measured; committed benchmark artifacts were inspected for MemPalace
-but not rerun.</li>
-<li>Swafra was reviewed at commit <code>24dba18</code>; its full
+but not rerun.</p></li>
+<li><p>Swafra was reviewed at commit <code>24dba18</code>; its full
 LongMemEval run was not rerun. Static inspection, committed artifact
 analysis, and a small hash-embedder smoke check exposed the
-<code>k</code> mismatch and same-title source behavior.</li>
-<li><code>llm-wiki-memory</code> was reviewed at commit
+<code>k</code> mismatch and same-title source behavior.</p></li>
+<li><p><code>llm-wiki-memory</code> was reviewed at commit
 <code class="commit-id" title="b7cc76a493573baac133969b324a874990556146">b7cc76a4…</code>; its broad test
 tree and committed latency report were inspected, but the suites and
-benchmarks were not rerun.</li>
-<li>RainBox was reviewed as an application-integrated memory subsystem;
-unrelated assistant/product features were not exhaustively
-analyzed.</li>
-<li>The reports prioritize memory-management code paths over unrelated
-framework/application code.</li>
-<li>Hindsight, Graphiti, Mastra, MemOS, and Basic Memory were reviewed
-statically at the pinned revisions above; their dependency-heavy
-integration suites and published benchmarks were not rerun.</li>
-<li>Mastra analysis is intentionally limited to
+benchmarks were not rerun.</p></li>
+<li><p>RainBox was reviewed as an application-integrated memory
+subsystem; unrelated assistant/product features were not exhaustively
+analyzed.</p></li>
+<li><p>The reports prioritize memory-management code paths over
+unrelated framework/application code.</p></li>
+<li><p>Hindsight, Graphiti, Mastra, MemOS, and Basic Memory were
+reviewed statically at the pinned revisions above; their
+dependency-heavy integration suites and published benchmarks were not
+rerun.</p></li>
+<li><p>Mastra analysis is intentionally limited to
 <code>packages/memory</code> and the core contracts it directly
-uses.</li>
-<li>MemOS behavior varies materially by memory cube, backend, model, and
-search configuration; the report does not imply one universal MemOS
-pipeline.</li>
-<li>agentmemory's source tests and benchmarks were inspected but not
-rerun; its documented LongMemEval-S numbers are retrieval-only.</li>
-<li>TencentDB Agent Memory's published benchmark gains could not be
+uses.</p></li>
+<li><p>MemOS behavior varies materially by memory cube, backend, model,
+and search configuration; the report does not imply one universal MemOS
+pipeline.</p></li>
+<li><p>agentmemory's source tests and benchmarks were inspected but not
+rerun; its documented LongMemEval-S numbers are retrieval-only.</p></li>
+<li><p>TencentDB Agent Memory's published benchmark gains could not be
 traced to a committed harness or raw result artifacts in the inspected
-repository.</li>
-<li>Cognee's dependency-heavy suites and BEAM evaluation were not rerun.
-The committed 100K report uses a held-out conversation; its 10M routed
-result is explicitly exploratory and selected on the reported
-questions.</li>
-<li>Claude-Mem's Bun suite and optional service integrations were not
-run; no committed end-to-end recall-quality benchmark was found.</li>
-<li>A-MEM's tests were not run because they may download embedding
+repository.</p></li>
+<li><p>Cognee's dependency-heavy suites and BEAM evaluation were not
+rerun. The committed 100K report uses a held-out conversation; its 10M
+routed result is explicitly exploratory and selected on the reported
+questions.</p></li>
+<li><p>Claude-Mem's Bun suite and optional service integrations were not
+run; no committed end-to-end recall-quality benchmark was
+found.</p></li>
+<li><p>A-MEM's tests were not run because they may download embedding
 models and call an external LLM. The paper reproduction code and results
-are outside the inspected package.</li>
-<li><code>holographic</code> and <code>hermes-agent</code> are two
+are outside the inspected package.</p></li>
+<li><p><code>holographic</code> and <code>hermes-agent</code> are two
 reports over one repository at one commit: the first covers the in-tree
 HRR memory plugin, the second covers Hermes's own built-in memory and
-provider contract. Neither report's suites were run.</li>
-<li>Two open Hermes issues (#4781, #31263) report that the holographic
-plugin registers without its tools or context injection firing. Only the
-issue titles were read; they are not treated here as established defects
-in the inspected code.</li>
-<li>OpenViking's published LoCoMo and tau2-bench figures could not be
+provider contract. Neither report's suites were run.</p></li>
+<li><p>Two open Hermes issues (#4781, #31263) report that the
+holographic plugin registers without its tools or context injection
+firing. Only the issue titles were read; they are not treated here as
+established defects in the inspected code.</p></li>
+<li><p>OpenViking's published LoCoMo and tau2-bench figures could not be
 reproduced or traced to committed raw artifacts at the inspected commit;
 the harness is committed, the results are not. Those figures are also
 vendor-run comparisons judged by an LLM, and the native-memory baselines
 for OpenClaw, Hermes, and Claude Code were not independently
-verified.</li>
-<li>The <code>openclaw</code> figures quoted from OpenViking's benchmark
-are third-party claims about OpenClaw's native memory, not measurements
-taken from the OpenClaw repository.</li>
-<li>ByteRover was reviewed at a commit where the repository is licensed
-under the Elastic License 2.0 and packaged as
+verified.</p></li>
+<li><p>The <code>openclaw</code> figures quoted from OpenViking's
+benchmark are third-party claims about OpenClaw's native memory, not
+measurements taken from the OpenClaw repository.</p></li>
+<li><p>ByteRover was reviewed at a commit where the repository is
+licensed under the Elastic License 2.0 and packaged as
 <code>byterover-cli</code>; descriptions of it as open source are
 inaccurate as of this commit. No tests were found for its memory or
-knowledge modules.</li>
-<li>Redis Agent Memory Server's <code>V0/</code> tree is the open
+knowledge modules.</p></li>
+<li><p>Redis Agent Memory Server's <code>V0/</code> tree is the open
 reference implementation adjacent to a managed Redis offering;
 conclusions here apply only to the inspected code, and the managed
-product may differ.</li>
-<li>Retrieval quality was not measured for any of the six systems added
-in this round.</li>
-<li>Voyager and Generative Agents are frozen research artifacts, last
+product may differ.</p></li>
+<li><p>Retrieval quality was not measured for any of the six systems
+added in this round.</p></li>
+<li><p>Voyager and Generative Agents are frozen research artifacts, last
 committed in July and August 2023 respectively. Their reports are
 historical architectural reviews, not assessments of maintained
-software.</li>
-<li>HippoRAG's <code>reproduce/</code> tree provides benchmark
+software.</p></li>
+<li><p>HippoRAG's <code>reproduce/</code> tree provides benchmark
 scaffolding, but no raw result artifacts are committed and no published
-numbers were reproduced here.</li>
-<li>Voyager's and Generative Agents' published evaluations measure task
-completion and human believability, not retrieval quality; neither
-repository contains a memory-quality benchmark.</li>
-<li>Generative Agents' retrieval gain weights
+numbers were reproduced here.</p></li>
+<li><p>Voyager's and Generative Agents' published evaluations measure
+task completion and human believability, not retrieval quality; neither
+repository contains a memory-quality benchmark.</p></li>
+<li><p>Generative Agents' retrieval gain weights
 (<code>gw = [0.5, 3, 2]</code>) have no committed ablation; the atlas
-treats them as hand-tuned constants rather than a derived result.</li>
-<li>No suites were run for the three systems added in this round, and no
-retrieval quality was independently measured.</li>
-<li>Magic Context's verification precision — how often the verify task
-correctly marks a stale memory stale, and how often it wrongly confirms
-one — is not measured anywhere in that repository, and was not measured
-here. It is the central claim of the design.</li>
-<li>Magic Context reads OpenCode's native session database read-only for
-its retrospective scanner; that behaviour was read in code but not
-exercised, and the user-consent story around it was not assessed.</li>
-<li>Pi has no memory subsystem, so its report covers session
+treats them as hand-tuned constants rather than a derived
+result.</p></li>
+<li><p>No suites were run for the three systems added in this round, and
+no retrieval quality was independently measured.</p></li>
+<li><p>Magic Context's verification precision — how often the verify
+task correctly marks a stale memory stale, and how often it wrongly
+confirms one — is not measured anywhere in that repository, and was not
+measured here. It is the central claim of the design.</p></li>
+<li><p>Magic Context reads OpenCode's native session database read-only
+for its retrospective scanner; that behaviour was read in code but not
+exercised, and the user-consent story around it was not
+assessed.</p></li>
+<li><p>Pi has no memory subsystem, so its report covers session
 persistence, compaction, and the extension surface only. Third-party Pi
 memory plugins other than Magic Context were not reviewed; the db0
 integration has a closed backend and is not reviewable on this atlas's
-terms.</li>
-<li>MetaClaw's committed benchmark fixtures and memory ablation scripts
-were inspected but not run, and no published numbers were reproduced.
-Its replay metrics are lexical-overlap proxies; no evidence linking them
-to task outcomes was found in the repository.</li>
-<li>No memory tests or memory-quality benchmarks were located for
+terms.</p></li>
+<li><p>MetaClaw's committed benchmark fixtures and memory ablation
+scripts were inspected but not run, and no published numbers were
+reproduced. Its replay metrics are lexical-overlap proxies; no evidence
+linking them to task outcomes was found in the repository.</p></li>
+<li><p>No memory tests or memory-quality benchmarks were located for
 nanobot, CowAgent, or GenericAgent. Nothing was run for any of the four
-systems added in this round.</li>
-<li>GenericAgent's memory documentation is written in Chinese; the
+systems added in this round.</p></li>
+<li><p>GenericAgent's memory documentation is written in Chinese; the
 axioms and rules quoted in its report are the reviewer's translations,
 with key terms given in the original. Its cited arXiv technical report
-was not retrieved or assessed.</li>
-<li>Waku Agent's evals were not run, and its retrieval gate's accuracy
-was not measured — the false-negative rate, which is the figure that
-matters, is unknown. No system in the atlas measures its gate.</li>
-<li>Nine repositories examined in the same round have no reports.
+was not retrieved or assessed.</p></li>
+<li><p>Waku Agent's evals were not run, and its retrieval gate's
+accuracy was not measured — the false-negative rate, which is the figure
+that matters, is unknown. No system in the atlas measures its
+gate.</p></li>
+<li><p>Nine repositories examined in the same round have no reports.
 <code>razzant/ouroboros</code> is cited in the append-only-memory-audit
 pattern for its "honest journal" fix rather than given a report.
 (<code>truffle-ai/dexto</code>, <code>Arvincreator/project-golem</code>
@@ -11727,12 +11777,12 @@ it ships. <code>husu/loom</code> is an AI JSON Schema documentation
 generator, <code>AaronWong1999/hermesclaw</code> a launcher for running
 Hermes Agent, OpenClaw, and OpenCode on one WeChat account, and
 <code>KeyID-AI/agent-kit</code> gives MCP clients an email address; none
-is agent memory.</li>
-<li>Neither Atomic Agent's nor MateClaw's suites were run, and Atomic
+is agent memory.</p></li>
+<li><p>Neither Atomic Agent's nor MateClaw's suites were run, and Atomic
 Agent's evaluation campaign was read but not executed; no scored results
 were found committed for it. MateClaw's scoping and retrieval ranking
-were not traced in full.</li>
-<li>Eight repositories examined in the same round have no reports.
+were not traced in full.</p></li>
+<li><p>Eight repositories examined in the same round have no reports.
 <code>beita6969/ScienceClaw</code> is an OpenClaw derivative whose
 memory extensions are OpenClaw's <code>memory-core</code> and
 <code>memory-lancedb</code>, already covered — its runtime skill
@@ -11751,24 +11801,24 @@ swappable adapters is cited in the pluggable-provider pattern rather
 than given a report. <code>rush86999/atom</code> has roughly 976 lines
 of memory-named Python inside a 459 MB repository dominated by
 deployment scripts; no coherent memory design was established, and that
-is a weaker conclusion than the others here.</li>
-<li>LlamaIndex ships two APIs under the name "memory": the newer
+is a weaker conclusion than the others here.</p></li>
+<li><p>LlamaIndex ships two APIs under the name "memory": the newer
 block-based <code>Memory</code> reviewed here, and an older
 <code>ChatMemoryBuffer</code> family that is conversation-window
 management and out of scope. Its tests were not run and no memory
-benchmark was found.</li>
-<li>No suites or benchmarks were run for open-cowork, Gini, Moltis, or
-Mercury. open-cowork's eval harness was read but not executed, and no
-scored results were found committed.</li>
-<li>Gini reimplements the Hindsight memory model locally rather than
+benchmark was found.</p></li>
+<li><p>No suites or benchmarks were run for open-cowork, Gini, Moltis,
+or Mercury. open-cowork's eval harness was read but not executed, and no
+scored results were found committed.</p></li>
+<li><p>Gini reimplements the Hindsight memory model locally rather than
 depending on Hindsight; its recall module cites the source paper's
 equation numbers, but no check was made that this implementation
-reproduces the published behaviour.</li>
-<li>Moltis's session sanitization was identified from its module
+reproduces the published behaviour.</p></li>
+<li><p>Moltis's session sanitization was identified from its module
 documentation; exactly what it strips was not traced, which matters
 because transcripts can carry secrets, tool output, and previously
-injected memory blocks.</li>
-<li>Five further repositories examined in this round have no reports:
+injected memory blocks.</p></li>
+<li><p>Five further repositories examined in this round have no reports:
 <code>he-yufeng/CoreCoder</code> (1,166 lines whose
 <code>context.py</code> is conversation-window compaction with nothing
 persisted), <code>chrysb/alphaclaw</code> (an OpenClaw deployment
@@ -11780,8 +11830,8 @@ chat context and caches but no durable memory), <code>neomjs/neo</code>
 and <code>AgentsMesh/AgentsMesh</code> (a real pgvector-backed block
 memory with a <code>memory.retrieve</code> MCP tool, set aside for now
 because it is licensed under Business Source License 1.1 rather than an
-open-source licence).</li>
-<li>Three repositories examined in the same round were judged out of
+open-source licence).</p></li>
+<li><p>Three repositories examined in the same round were judged out of
 scope and have no reports: <code>KnockOutEZ/wigolo</code> (a web crawl,
 search, and extraction MCP server whose cache holds external content
 rather than agent belief), <code>siyuan-note/siyuan</code> (a note
@@ -11789,15 +11839,15 @@ application whose agent kernel contains no memory concept — only
 conversation compaction — and whose MCP surface is note CRUD), and
 <code>netease-youdao/LobsterAI</code> (which operates OpenClaw's memory
 rather than having its own, and is covered inside the OpenClaw
-report).</li>
-<li>Nothing was run for memora or LoongFlow. Memora's pair classifier is
-the component that matters — its precision determines which memories get
-hidden — and no measurement of it was found; the dry-run mode makes
+report).</p></li>
+<li><p>Nothing was run for memora or LoongFlow. Memora's pair classifier
+is the component that matters — its precision determines which memories
+get hidden — and no measurement of it was found; the dry-run mode makes
 exactly that measurable, and nothing indicates it has been done.
 LoongFlow's tests exist under <code>tests/agentsdk/memory</code> but
 were not run, and no comparison of adaptive against fixed temperature
-was found, though the code is parameterized for it.</li>
-<li>Six repositories examined in the same round have no reports.
+was found, though the code is parameterized for it.</p></li>
+<li><p>Six repositories examined in the same round have no reports.
 <code>TeleAI-UAGI/Awesome-Agent-Memory</code> is a survey, cited in the
 correction discussion rather than reviewed as a system.
 <code>webbrain-one/webbrain</code> (368 lines) and
@@ -11806,10 +11856,10 @@ mechanism. <code>AgentTeam-TaichuAI/ScienceClaw</code> is 78 lines with
 no licence file, and is a different repository from the OpenClaw-derived
 <code>beita6969/ScienceClaw</code> noted above.
 <code>ArtificialAnalysis/Stirrup</code> and
-<code>howl-anderson/agentsilex</code> have no memory subsystem.</li>
-<li>Nothing was run for the six systems added in this round. OptMem is
-reviewed <strong>without a licence file</strong> — all rights reserved
-by default — as a deliberate exception to the rule applied to
+<code>howl-anderson/agentsilex</code> have no memory subsystem.</p></li>
+<li><p>Nothing was run for the six systems added in this round. OptMem
+is reviewed <strong>without a licence file</strong> — all rights
+reserved by default — as a deliberate exception to the rule applied to
 <code>openyak</code> and others, because it carries mechanisms the atlas
 has not otherwise found; the exception covers reading it, not reusing
 it. MemAgent, HiAgent, Mi-Memory and langchain-ai/memory-agent were
@@ -11818,9 +11868,10 @@ conversation-window management (MemAgent is discussed in the
 scope-boundary section), <code>Darwin-Agent/Mi-Memory</code> is a paper
 PDF and a landing page with no implementation, and
 <code>langchain-ai/memory-agent</code> is a 235-line LangGraph template
-whose substantive counterpart, LangMem, is already reviewed here.</li>
-<li><strong>The framework-native gap is now closed</strong>, and closing
-it corrected the bullet that named it. <a
+whose substantive counterpart, LangMem, is already reviewed
+here.</p></li>
+<li><p><strong>The framework-native gap is now closed</strong>, and
+closing it corrected the bullet that named it. <a
 href="../systems/crewai/">CrewAI</a> — the most-cited omission on that
 side — is reviewed, as are <a href="../systems/agno/">Agno</a>, <a
 href="../systems/camel/">CAMEL</a>, the <a
@@ -11845,14 +11896,15 @@ href="../systems/autogen/">AutoGen</a> and <a
 href="../systems/langmem/">LangMem</a> — already read, this atlas no
 longer has a named framework-native omission. That is a statement about
 this list, not about the field: the next one will arrive the way all of
-these did, from somebody naming it.</li>
-<li><strong>MemGPT is here under its current name.</strong> The project
-renamed to Letta, so the OS-style tiered-memory reference implementation
-is the <a href="../systems/letta/">Letta report</a>, and a reader
-searching this atlas for "MemGPT" will otherwise find only a passing
-mention in the correction discussion. Recorded because the rename makes
-the lineage hard to find, not because anything is missing.</li>
-<li><code>Cohexa-ai/agent-coherence</code> was examined and has no
+these did, from somebody naming it.</p></li>
+<li><p><strong>MemGPT is here under its current name.</strong> The
+project renamed to Letta, so the OS-style tiered-memory reference
+implementation is the <a href="../systems/letta/">Letta report</a>, and
+a reader searching this atlas for "MemGPT" will otherwise find only a
+passing mention in the correction discussion. Recorded because the
+rename makes the lineage hard to find, not because anything is
+missing.</p></li>
+<li><p><code>Cohexa-ai/agent-coherence</code> was examined and has no
 report. It is MESI cache-coherence for shared agent artifacts —
 single-writer ownership, commit-CAS, a read-generation fence, pinned
 snapshot sessions — and it stores no memory:
@@ -11895,8 +11947,8 @@ href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-a
 note</a> for what is unusually honest about it, and for the
 read-generation fence, which is the one mechanism there that memory
 systems with restartable background passes appear to need and none here
-has.</li>
-<li><strong>Nothing was run for Nova AI, and its own suite would not
+has.</p></li>
+<li><p><strong>Nothing was run for Nova AI, and its own suite would not
 have helped.</strong> Its 21 test files carry five assertions between
 them, all in one file, against roughly 230 <code>print</code> calls —
 manual scripts a person reads the output of. Nothing asserts the
@@ -11906,18 +11958,19 @@ nothing pins the refusal path that earns it two capability marks. Its
 licence is <em>"Viewable, Not Reusable"</em> — all rights reserved —
 reviewed under the same exception applied to OptMem, because the
 mechanisms are ones the atlas has not otherwise found in a system that
-calls no model at all.</li>
-<li><strong>Two repositories examined in this round have no reports, and
-both are the same misread.</strong> <code>showjihyun/bvwebchat</code>
-and <code>showjihyun/bvcounterchat</code> are, respectively, a
-multi-room web chat server and a browser 3D FPS game; neither
-application stores agent memory, and every <code>memory</code> match in
-the latter's source is SQLite's <code>:memory:</code> DSN against a
-kill/death/playtime stats table. What is substantial in both is the
-<strong>Claude Code development harness</strong> beside the app, and the
-two differ sharply there: bvwebchat keeps <code>.harness/state/</code>
-with a <code>session.json</code> of goal, next steps and open questions,
-an append-only <code>decisions.jsonl</code> with a single writer,
+calls no model at all.</p></li>
+<li><p><strong>Two repositories examined in this round have no reports,
+and both are the same misread.</strong>
+<code>showjihyun/bvwebchat</code> and
+<code>showjihyun/bvcounterchat</code> are, respectively, a multi-room
+web chat server and a browser 3D FPS game; neither application stores
+agent memory, and every <code>memory</code> match in the latter's source
+is SQLite's <code>:memory:</code> DSN against a kill/death/playtime
+stats table. What is substantial in both is the <strong>Claude Code
+development harness</strong> beside the app, and the two differ sharply
+there: bvwebchat keeps <code>.harness/state/</code> with a
+<code>session.json</code> of goal, next steps and open questions, an
+append-only <code>decisions.jsonl</code> with a single writer,
 HMAC-signed state that demotes to a fail-closed <code>IDLE</code> when
 tampered, and a <code>SessionStart</code> hook that injects a ≤15-line
 digest of "what git does not know"; bvcounterchat has none of that
@@ -11928,8 +11981,8 @@ survives is <em>workflow control state</em>: a phase is not a claim that
 can be true or false, and there is nothing for a correction to be about.
 Recorded rather than dropped because it is the cleanest example yet of
 the boundary this atlas draws between a harness that persists and a
-memory that believes.</li>
-<li><strong>A published claim about <a
+memory that believes.</p></li>
+<li><p><strong>A published claim about <a
 href="../systems/cambium/">Cambium</a> was wrong and is
 retracted.</strong> The report stated the repository had "no worked
 instance" of its profile interface and that "an adopter is the first
@@ -11942,8 +11995,8 @@ report, is that the repository selects no profile <em>of its own</em>,
 which is what blocks <code>compose_vocab.py</code> and leaves everything
 downstream of a composed vocabulary undemonstrated. Reported by the
 project's author; verified here at the atlas's own pinned commit before
-correcting.</li>
-<li><strong>A <a href="../systems/perseus-vault/">Perseus Vault</a>
+correcting.</p></li>
+<li><p><strong>A <a href="../systems/perseus-vault/">Perseus Vault</a>
 claim was overstated and is corrected.</strong> The report described its
 tool count as "stale by eleven", which asserts that the documented
 command's 76 is the canonical figure. It is not: parsing the registry
@@ -11951,9 +12004,9 @@ the command is meant to count returns 88, and the canonical/legacy split
 is synthesized at runtime rather than present in the source, so no
 static count settles it. What is established is that the count
 definition and its verification command have drifted apart. Reported by
-the project's author; verified at the atlas's pinned commit.</li>
-<li><strong><code>HKUDS/Auto-Deep-Research</code> was examined and has
-no report, because its memory layer is present in the tree and
+the project's author; verified at the atlas's pinned commit.</p></li>
+<li><p><strong><code>HKUDS/Auto-Deep-Research</code> was examined and
+has no report, because its memory layer is present in the tree and
 unreachable from it.</strong> It is a deep-research agent built on the
 AutoAgent framework — 11,115 lines of Python, dormant since October 2025
 — and it does inherit a memory package: <code>autoagent/memory/</code>
@@ -11979,10 +12032,10 @@ system that stores carelessly. Worth recording rather than dropping
 because it is a shape the corpus has not previously named:
 <strong>inherited memory machinery, complete and disabled</strong>, in a
 fork whose parent presumably uses it. A reader evaluating the parent
-framework should not conclude anything about it from this.</li>
-<li><strong><a href="../systems/empryo/">Empryo</a>'s maintainer reports
-substantial changes in a tree this atlas cannot verify, and the report
-is unchanged because of it.</strong> They opened a pull request
+framework should not conclude anything about it from this.</p></li>
+<li><p><strong><a href="../systems/empryo/">Empryo</a>'s maintainer
+reports substantial changes in a tree this atlas cannot verify, and the
+report is unchanged because of it.</strong> They opened a pull request
 rewriting the report against commit <code>aa963f28</code>, in which the
 memory layer has moved from <code>src/core/memory/</code> into a
 standalone <code>packages/memory/</code> workspace that is
@@ -12001,48 +12054,49 @@ unexplained gap between synthetic and real-data recall. None of it is
 checkable from outside, so none of it is in the report; the maintainer
 said the same thing first and marked the PR draft. Recorded here so a
 reader knows the pin is current with the public tree and may lag the
-project, which is a different claim from the pin being stale.</li>
-<li>Core Memory's grounding ceiling, Memanto's conflict-detection
+project, which is a different claim from the pin being stale.</p></li>
+<li><p>Core Memory's grounding ceiling, Memanto's conflict-detection
 precision, Memory Engine's agent clamp, ai-memory's cross-harness
 continuity claim, ctx's disclosure reachability, and OptMem's cover loss
-are all directly testable and none was measured here.</li>
-<li>Nothing was run for the four systems added in this round.
+are all directly testable and none was measured here.</p></li>
+<li><p>Nothing was run for the four systems added in this round.
 <code>gastownhall/beads</code> and
 <code>VectorSpaceLab/general-agentic-memory</code> were examined and
 have no reports, for the reasons given in the scope section; GAM
 additionally has no licence file. <code>langchain-ai/memory-agent</code>
 and <code>akitaonrails/ai-memory</code> were re-submitted in this round
 and were already handled — the first rejected as a 235-line template,
-the second reviewed.</li>
-<li>Memvid's headline figures ("+35% SOTA on LoCoMo", "+76% multi-hop",
-"+56% temporal") could not be traced to committed raw artifacts at the
-inspected commit and are recorded as claims. MemoryOS commits the LoCoMo
-dataset beside its harness but no scored results were found. Neither was
-run here.</li>
-<li>SimpleMem is the same finding at six figures rather than three. Its
-README claims a 26.4% average F1 gain and roughly 30× token reduction on
-LoCoMo, LoCoMo F1 = 0.613 and Mem-Gallery F1 = 0.810 for Omni-SimpleMem,
-and +25.7% on LoCoMo with +18.9% on MemBench for EvolveMem, and offers a
-benchmark runner per pillar. The repository contains <strong>no
-<code>.json</code>, <code>.jsonl</code> or <code>.csv</code> file of any
-kind</strong> at the inspected commit, so no scored result, prediction
-dump or metrics table backs any of the six. Nothing was run here either.
-Its 311 test functions were not executed, and the transforms carrying
-its contribution — coreference resolution and time absolutisation in the
-extraction prompt — have no test or metric anywhere in the repository,
-so how often they are correct is unknown and is the number the whole
-design rests on.</li>
-<li>OpenWorker's stated finding — that models without when-to-remember
-guidance "either never call <code>remember</code> or save noise" — is
-quoted from a source comment. Whether it was measured, and by how much
-guidance moves behaviour, is not established in the repository.</li>
-<li><code>OpenHands/OpenHands</code> was examined and has no report. At
-the inspected commit that repository is <strong>Agent Canvas</strong>,
-an Electron desktop application: four Python files, and the only
-"memory" references are a <code>MemoryIcon</code>, a React
+the second reviewed.</p></li>
+<li><p>Memvid's headline figures ("+35% SOTA on LoCoMo", "+76%
+multi-hop", "+56% temporal") could not be traced to committed raw
+artifacts at the inspected commit and are recorded as claims. MemoryOS
+commits the LoCoMo dataset beside its harness but no scored results were
+found. Neither was run here.</p></li>
+<li><p>SimpleMem is the same finding at six figures rather than three.
+Its README claims a 26.4% average F1 gain and roughly 30× token
+reduction on LoCoMo, LoCoMo F1 = 0.613 and Mem-Gallery F1 = 0.810 for
+Omni-SimpleMem, and +25.7% on LoCoMo with +18.9% on MemBench for
+EvolveMem, and offers a benchmark runner per pillar. The repository
+contains <strong>no <code>.json</code>, <code>.jsonl</code> or
+<code>.csv</code> file of any kind</strong> at the inspected commit, so
+no scored result, prediction dump or metrics table backs any of the six.
+Nothing was run here either. Its 311 test functions were not executed,
+and the transforms carrying its contribution — coreference resolution
+and time absolutisation in the extraction prompt — have no test or
+metric anywhere in the repository, so how often they are correct is
+unknown and is the number the whole design rests on.</p></li>
+<li><p>OpenWorker's stated finding — that models without
+when-to-remember guidance "either never call <code>remember</code> or
+save noise" — is quoted from a source comment. Whether it was measured,
+and by how much guidance moves behaviour, is not established in the
+repository.</p></li>
+<li><p><code>OpenHands/OpenHands</code> was examined and has no report.
+At the inspected commit that repository is <strong>Agent
+Canvas</strong>, an Electron desktop application: four Python files, and
+the only "memory" references are a <code>MemoryIcon</code>, a React
 <code>MemoryRouter</code>, and runtime RAM status. The OpenHands agent
-platform is a different repository and was not reviewed here.</li>
-<li><code>aindilis/autonomous-ai-agent</code> and
+platform is a different repository and was not reviewed here.</p></li>
+<li><p><code>aindilis/autonomous-ai-agent</code> and
 <code>aindilis/free-life-planner</code> were examined and have no
 reports. Both are components of FRDCSA, a long-running symbolic-AI
 project. The first is AgentSpeak(L) BDI agents over SWI-Prolog with
@@ -12055,8 +12109,9 @@ declarations. Neither contains a memory subsystem: no capture,
 retrieval, consolidation, or lifecycle. Both are also <strong>not
 self-contained</strong>, carrying 50 and 352 distinct absolute paths
 respectively into a <code>/var/lib/myfrdcsa/</code> installation that is
-not in either repository, so neither can be evaluated as it stands.</li>
-<li><code>elizaOS/agentmemory</code> is listed as a representative
+not in either repository, so neither can be evaluated as it
+stands.</p></li>
+<li><p><code>elizaOS/agentmemory</code> is listed as a representative
 open-source memory framework in the open-source table of <em>Memory in
 the Age of AI Agents</em> (<a
 href="https://arxiv.org/abs/2512.13564">arXiv:2512.13564</a>), and the
@@ -12066,17 +12121,17 @@ Note also the name collision: this atlas's <a
 href="../systems/agentmemory/">agentmemory</a> report is
 <code>rohitg00/agentmemory</code>, a different project, and anyone
 reconciling the two lists by name rather than by URL will merge
-them.</li>
-<li><code>nuster1128/MemEngine</code> appears in the same table and
+them.</p></li>
+<li><p><code>nuster1128/MemEngine</code> appears in the same table and
 earned no report: it has no persistence layer at all, as set out in the
-scope section above, and no licence file.</li>
-<li>Oracle's <code>oracleagentmemory</code> was suggested for review and
-has <strong>no public source repository</strong> — a GitHub search
+scope section above, and no licence file.</p></li>
+<li><p>Oracle's <code>oracleagentmemory</code> was suggested for review
+and has <strong>no public source repository</strong> — a GitHub search
 returns only third-party demos consuming the SDK. It cannot be reviewed
 on this atlas's terms, which require inspectable code at a pinned
-commit, and is recorded here rather than silently omitted.</li>
-<li>Agno was read, not run, and its 304 memory-related unit tests were
-not executed. Three things a live install would settle: whether the
+commit, and is recorded here rather than silently omitted.</p></li>
+<li><p>Agno was read, not run, and its 304 memory-related unit tests
+were not executed. Three things a live install would settle: whether the
 supersession judge's default threshold is calibrated against anything,
 since no calibration was found; how often a typical deployment sets
 <code>background_executor</code>, which decides whether extraction
@@ -12086,8 +12141,8 @@ number that decides whether the mode means anything and which nothing in
 the repository measures. Its two memory subsystems —
 <code>agno/memory/</code> and <code>agno/learn/</code> — overlap, and
 which one a given deployment is using was not established beyond noting
-that the AgentOS HTTP routes serve the older one.</li>
-<li><strong>Seven repositories submitted together on 2026-07-30 were
+that the AgentOS HTTP routes serve the older one.</p></li>
+<li><p><strong>Seven repositories submitted together on 2026-07-30 were
 examined and every one is out of scope — the first batch this round to
 produce no report, and instructive for why.</strong> Three of the seven
 have "memory" in a file path and none of the three is agent memory. <a
@@ -12122,9 +12177,9 @@ to <a href="../systems/lethe/">Lethe</a>'s signed purge receipts in
 intent, and a container format rather than a memory system. <strong>The
 pattern is the point:</strong> the word <em>memory</em> in a path
 predicted the wrong answer three times out of three, which is the whole
-argument for reading code instead of file listings.</li>
-<li>Six repositories submitted alongside TokenMizer and ZeroStack were
-examined and have no reports. <code>Bino5150/lumina</code>'s memory
+argument for reading code instead of file listings.</p></li>
+<li><p>Six repositories submitted alongside TokenMizer and ZeroStack
+were examined and have no reports. <code>Bino5150/lumina</code>'s memory
 module opens with <em>"persistent memory across sessions via SQLite.
 <strong>Write-through to MemPalace on save.</strong> Flat table
 preserved for migration + fallback"</em> — so its durable store is <a
@@ -12154,18 +12209,19 @@ user toggle <code>capture_conversations</code>,
 <code>capture_notes</code> independently, so <em>what is eligible to be
 remembered</em> is a user preference rather than an extractor's
 judgement — a small instance of the who-decides divergence, at a scale
-that does not earn a report.</li>
-<li>Four repositories submitted alongside Cortex, Mnemopi and agent-afk
-were examined and have no reports. <code>omnigent-ai/omnigent</code>
-mounts <a href="../systems/hindsight/">Hindsight</a> as a built-in tool
-exposing its retain/recall/reflect operations, so its memory is a client
-for a system this atlas already reviews; the one detail worth keeping is
-that the memory bank is resolved per invocation from the agent spec,
-falling back to the run identity, so a single declaration isolates
-memory per agent. <code>opsyhq/wolli</code> (233 lines of session memory
-storage) and <code>fischerf/aar</code> (a 165-line session store) are
-both too small to carry a mechanism. <code>Fagoon-AI/upgrade</code> was
-read at <code>f027d614</code> and falls outside the inclusion test. Its
+that does not earn a report.</p></li>
+<li><p>Four repositories submitted alongside Cortex, Mnemopi and
+agent-afk were examined and have no reports.
+<code>omnigent-ai/omnigent</code> mounts <a
+href="../systems/hindsight/">Hindsight</a> as a built-in tool exposing
+its retain/recall/reflect operations, so its memory is a client for a
+system this atlas already reviews; the one detail worth keeping is that
+the memory bank is resolved per invocation from the agent spec, falling
+back to the run identity, so a single declaration isolates memory per
+agent. <code>opsyhq/wolli</code> (233 lines of session memory storage)
+and <code>fischerf/aar</code> (a 165-line session store) are both too
+small to carry a mechanism. <code>Fagoon-AI/upgrade</code> was read at
+<code>f027d614</code> and falls outside the inclusion test. Its
 <code>WorkflowMemory</code> is a message row — <code>workflow_id</code>,
 <code>conversation_id</code>, <code>role</code> from a five-value set,
 <code>content</code>, metadata, an estimated token count and a TTL — and
@@ -12183,8 +12239,8 @@ href="../systems/camel/">CAMEL</a>, which <em>did</em> earn a report on
 a similar-looking message store: CAMEL's <code>VectorDBMemory</code>
 embeds messages and recalls them by similarity across sessions, which is
 retrieval; this lists them by key, which is storage. The line between
-the two is one index.</li>
-<li>Three repositories submitted in the same round were examined and
+the two is one index.</p></li>
+<li><p>Three repositories submitted in the same round were examined and
 have no reports. <code>ahmadvh/octochains</code> is a framework for
 <em>parallel isolated</em> multi-agent reasoning whose stated premise is
 that shared chat history contaminates independent judgement — it has no
@@ -12200,8 +12256,8 @@ been cited as one. <code>Gitlawb/zero</code> was re-examined at
 <code>d37de9214b</code> after growing to roughly 332,000 lines of Go
 since the earlier pass, and the earlier conclusion holds:
 <code>internal/background</code> and <code>internal/swarm</code>
-coordinate work, and there is still no memory module.</li>
-<li><strong>A mark that was wrong, and how it was found.</strong> <a
+coordinate work, and there is still no memory module.</p></li>
+<li><p><strong>A mark that was wrong, and how it was found.</strong> <a
 href="../systems/mem0sharp/">Mem0Sharp</a> earned <code>audit_log</code>
 on 30 July for a history table written only by <code>INSERT</code>. The
 atlas's <a href="../systems/mem0/">Mem0</a> report, of the system that
@@ -12221,8 +12277,8 @@ invisible for two months and surfaced only because an independent
 reimplementation of the same design was reviewed and marked differently.
 A corpus wide enough to contain a system twice is a corpus that can
 check itself, and nothing in this atlas's process was doing that
-deliberately.</li>
-<li><code>ThunderAgent-org/ThunderAgent</code> was examined on
+deliberately.</p></li>
+<li><p><code>ThunderAgent-org/ThunderAgent</code> was examined on
 2026-07-31 at <code>7ddc8610</code> and is out of scope: it is an
 agentic <em>inference</em> scheduler, not agent memory. Three
 occurrences of the word <em>memory</em> in 3,360 lines, all three GPU
@@ -12230,9 +12286,9 @@ capacity telemetry; no persistence primitive of any kind. It is filed
 under the KV-cache scope boundary above rather than dismissed, because
 it is the clearest instance of that particular collision — an ICML
 Spotlight whose whole purpose is reusing an agent's state across turns,
-and which stores nothing.</li>
-<li><code>unibaseio/membase</code> was excluded here on licence grounds
-and has since been reviewed — see <a
+and which stores nothing.</p></li>
+<li><p><code>unibaseio/membase</code> was excluded here on licence
+grounds and has since been reviewed — see <a
 href="../systems/membase/">Membase</a>. Its licence position is
 unchanged and stated in that report's first section:
 <code>README.md</code> grants MIT and links to a <code>LICENSE</code>
@@ -12240,9 +12296,9 @@ file that is not in the repository, so the grant is asserted and absent.
 That is a caveat for a reader, not a reason to leave the mechanisms
 unread, and the mechanisms turned out to be the point — the retrieval
 threshold selects the least similar documents, and deletion never
-reaches the vector index retrieval reads.</li>
-<li><strong>Five repositories named in a Reddit thread were examined on
-2026-07-31; one became a report and the thread was wrong about
+reaches the vector index retrieval reads.</p></li>
+<li><p><strong>Five repositories named in a Reddit thread were examined
+on 2026-07-31; one became a report and the thread was wrong about
 which.</strong> <a href="../systems/graphify/">Graphify</a> was
 dismissed in that thread as one of the repos that "cut down how much has
 to be remembered" rather than memory — and it carries the corroboration
@@ -12278,11 +12334,11 @@ nothing, and its own store — <code>conversations</code>,
 files matching <em>remember</em> being the "don't ask again" permission
 rule. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-30-a-reddit-thread-triaged.md">the
-thread note</a> for the rest of that triage.</li>
-<li><strong><code>rahvis/cognitive-weave</code> was examined and has no
-report, and it is the sharpest instance yet of a published number with
-nothing behind it.</strong> The repository presents itself as <em>"the
-official implementation"</em> of <a
+thread note</a> for the rest of that triage.</p></li>
+<li><p><strong><code>rahvis/cognitive-weave</code> was examined and has
+no report, and it is the sharpest instance yet of a published number
+with nothing behind it.</strong> The repository presents itself as
+<em>"the official implementation"</em> of <a
 href="https://arxiv.org/abs/2506.08098">arXiv:2506.08098</a>, whose
 abstract claims <em>"a notable 34% average improvement in task
 completion rates and a 42% reduction in mean query latency when compared
@@ -12318,13 +12374,13 @@ href="../systems/membase/">Membase</a>. No commit since 5 August 2025.
 See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-a-paper-and-its-official-implementation.md">the
 note</a> for the component-by-component comparison against the
-paper.</li>
-<li><strong><code>vista-research.github.io</code> was examined and has
-no report, and it is the corpus's best argument that a published trace
-can stand in for source.</strong> VISTA is a visual harness from five
-MIT authors, posted 5 August 2026, reporting all 25 public ARC-AGI-3
-games won with a perfect efficiency score. Its memory design is
-three-part — raw frames as observation, two markdown notes, and a
+paper.</p></li>
+<li><p><strong><code>vista-research.github.io</code> was examined and
+has no report, and it is the corpus's best argument that a published
+trace can stand in for source.</strong> VISTA is a visual harness from
+five MIT authors, posted 5 August 2026, reporting all 25 public
+ARC-AGI-3 games won with a perfect efficiency score. Its memory design
+is three-part — raw frames as observation, two markdown notes, and a
 <em>"lossless visual memory"</em> holding every frame the environment
 returned, indexed by turn, recalled through <code>inspect</code> and
 <code>read_pixels</code> on the model's own decision, which the page
@@ -12351,8 +12407,8 @@ to measure, and the difference is not rigour of prose but whether the
 evidence was published. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-a-harness-whose-traces-are-published-and-whose-code-is-not.md">the
 note</a>, including the check that a cheap reading of the note rewrites
-would have produced a finding that inspection does not support.</li>
-<li><strong>Three further ARC-AGI-3 harnesses were examined alongside
+would have produced a finding that inspection does not support.</p></li>
+<li><p><strong>Three further ARC-AGI-3 harnesses were examined alongside
 VISTA and none earns a report, but together they are the corpus's
 clearest case of convergent memory design.</strong>
 <code>NIMI-research/Tycho</code> (Apache-2.0, 24,829 lines of Python),
@@ -12391,9 +12447,9 @@ recomputes, and Schema publishes neither scorecard nor source for a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-06-four-arc-agi-3-harnesses-converge-on-the-same-memory.md">the
 note</a>, including Retrodict's <code>containment.json</code> — a
 per-run artifact proving the game engine cannot be imported, which is
-the only self-proving negative capability check in the corpus.</li>
-<li><strong><code>shepherd-agents/shepherd</code> was examined and has
-no report, and it is the cleanest instance yet of the
+the only self-proving negative capability check in the corpus.</p></li>
+<li><p><strong><code>shepherd-agents/shepherd</code> was examined and
+has no report, and it is the cleanest instance yet of the
 harness-is-not-a-store boundary.</strong> MIT, 120 commits since 25 June
 2026, with a paper (<a
 href="https://arxiv.org/abs/2605.10913">arXiv:2605.10913</a>): a runtime
@@ -12418,10 +12474,10 @@ completely with a memory system's while the subject matter does not. Its
 reversibility work is genuinely relevant to memory systems with
 restartable background passes — the read-generation fence question
 recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
-— but a reader looking for agent memory here will not find it.</li>
-<li><strong><code>os-factory/har</code> was examined and has no report,
-and it is the same boundary carrying the atlas's rarest mechanism
-anyway.</strong> Apache-2.0, at <a
+— but a reader looking for agent memory here will not find it.</p></li>
+<li><p><strong><code>os-factory/har</code> was examined and has no
+report, and it is the same boundary carrying the atlas's rarest
+mechanism anyway.</strong> Apache-2.0, at <a
 href="https://github.com/os-factory/har/commit/d16a5eb6e68aad46a2b3aee0e3e4fa036bd1f042"><code class="commit-id" title="d16a5eb6e68aad46a2b3aee0e3e4fa036bd1f042">d16a5eb6…</code></a>:
 a harness that gives each coding agent its own git worktree, ports and
 database, runs the project's own checks through one pipeline, and keeps
@@ -12462,10 +12518,10 @@ with a floor on how much a regenerating writer may delete. The
 self-invalidating key is the one a memory system cannot copy and should
 read anyway: bi-temporal validity, decay and re-verification exist
 because memories are keyed by subject rather than by content, and this
-is what the alternative buys.</li>
-<li><strong><code>cline/cline</code> was examined and has no report, and
-the finding is where its memory turned out to live.</strong> Apache-2.0,
-at <a
+is what the alternative buys.</p></li>
+<li><p><strong><code>cline/cline</code> was examined and has no report,
+and the finding is where its memory turned out to live.</strong>
+Apache-2.0, at <a
 href="https://github.com/cline/cline/commit/6e6befdb65e4472fa7f2860a6b295a1325469417"><code class="commit-id" title="6e6befdb65e4472fa7f2860a6b295a1325469417">6e6befdb…</code></a>.
 <strong>Memory Bank</strong> — six markdown files
 (<code>projectbrief.md</code>, <code>productContext.md</code>,
@@ -12498,8 +12554,8 @@ session versioning, <code>checkpoint-diff.ts</code> /
 tree of rules, skills, workflows, agents and hooks beside an
 <code>AGENTS.md</code>. Details in <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
-note</a>.</li>
-<li><strong><code>MoonshotAI/kimi-code</code> and
+note</a>.</p></li>
+<li><p><strong><code>MoonshotAI/kimi-code</code> and
 <code>MoonshotAI/kimi-cli</code> were examined together and neither
 earns a report, and the interesting one is the one being
 retired.</strong> They are one lineage: <code>kimi-cli</code>'s README
@@ -12559,8 +12615,8 @@ before deletion, so expiry arrives as a renewal offer to the party
 holding enough context to judge it, rather than firing silently while
 nobody is looking. Recorded with the compaction details in <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-three-coding-agents-and-where-their-memory-isnt.md">the
-note</a>.</li>
-<li><strong><code>rezabyt.github.io/blogposts/sigreg-tutorial.html</code>
+note</a>.</p></li>
+<li><p><strong><code>rezabyt.github.io/blogposts/sigreg-tutorial.html</code>
 was examined and has no report, and it is not a repository.</strong> It
 is a tutorial on <strong>SIGReg</strong>, the anti-collapse regularizer
 introduced in LeJEPA, developed from characteristic functions through
@@ -12576,9 +12632,9 @@ the same place. What SIGReg governs is whether an encoder's
 representations stay spread out during training; what this atlas asks is
 whether a thing an agent stored last week can be found, scoped and
 corrected today. The first is a property of a loss function and the
-second is a property of a store.</li>
-<li><strong><code>xataio/xata</code> was examined and has no report: it
-is a Postgres platform.</strong> The repository is a Go microservices
+second is a property of a store.</p></li>
+<li><p><strong><code>xataio/xata</code> was examined and has no report:
+it is a Postgres platform.</strong> The repository is a Go microservices
 system — 340 files under <code>services/</code>, Helm charts, kustomize
 overlays, protobuf definitions — whose README states the two use cases
 plainly: <em>"create your own internal Postgres-as-a-Service for your
@@ -12593,9 +12649,9 @@ alongside the <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">layer
 below delete</a> reading of four vector engines. Recorded by name
 because a reader meeting a database company's open-source platform in a
-list of memory candidates deserves to find that out here.</li>
-<li><strong><code>metauto-ai/HGM</code> was examined and has no report:
-what persists is an optimizer's state.</strong> The <a
+list of memory candidates deserves to find that out here.</p></li>
+<li><p><strong><code>metauto-ai/HGM</code> was examined and has no
+report: what persists is an optimizer's state.</strong> The <a
 href="https://arxiv.org/abs/2510.21614">Huxley-Gödel Machine</a> is a
 practical approximation of Schmidhuber's <a
 href="https://people.idsia.ch/~juergen/goedelmachine.html">Gödel
@@ -12620,8 +12676,8 @@ credit-assignment discipline this report argues for on the memory side
 and finds nowhere, and versioning every self-modification as a git
 commit gets for free the undo <a href="../systems/prime-agent/">Prime
 Agent</a> builds by hand. It would enter this atlas the day a generation
-reads a durable record of what its ancestors tried.</li>
-<li><strong><code>agentplugins/agent-plugins-site</code> was examined
+reads a durable record of what its ancestors tried.</p></li>
+<li><p><strong><code>agentplugins/agent-plugins-site</code> was examined
 and has no report: it is a documentation website.</strong> 120 files of
 Next.js and MDX serving <em>"the official website for the Agent Plugins
 specification"</em>, with the spec itself pulled in through
@@ -12663,11 +12719,11 @@ is filed under the slug <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>. Anyone
 reconciling lists by project name rather than by URL will merge them,
 exactly as the <code>agentmemory</code> collision recorded above
-invites.</li>
-<li><code>pi-chat</code> is a separate repository and was not reviewed;
-the claim that it injects two persistent memory files every turn comes
-from its documentation, not from its code.</li>
-<li><strong><code>arXiv:2608.05466</code> was examined and has no
+invites.</p></li>
+<li><p><code>pi-chat</code> is a separate repository and was not
+reviewed; the claim that it injects two persistent memory files every
+turn comes from its documentation, not from its code.</p></li>
+<li><p><strong><code>arXiv:2608.05466</code> was examined and has no
 report, and its project site is the atlas's first sighting of an audit
 surface whose fixtures do not contain the artifact.</strong> <a
 href="https://arxiv.org/abs/2608.05466">Recursive Synthesis for
@@ -12724,8 +12780,8 @@ is commented out in the source. See <a
 href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md">the
 note</a>, which also records what the paper gets right and why its
 lineage-without-retroactive-removal is the tombstone gap in a training
-pipeline.</li>
-<li>Helm was read, not run. Three claims in its report are inferences
+pipeline.</p></li>
+<li><p>Helm was read, not run. Three claims in its report are inferences
 from code that a live database would settle: that
 <code>getAutonomyMode</code> returns the stale pre-supersession row
 (argued from SQLite's partial-index eligibility and rowid scan order,
@@ -12738,7 +12794,7 @@ download and all three tiers produce the same output shape. Helm's third
 memory surface could not be reviewed at all: twelve
 <code>cortex.*</code> tools are registered and documented as a
 five-layer memory stack, and <code>workspace/cortex/</code> is
-gitignored and absent from the repository.</li>
+gitignored and absent from the repository.</p></li>
 </ul>
 <h2 id="history">History</h2>
 <p>Dated changes to this atlas's own method and reading. Per-system
