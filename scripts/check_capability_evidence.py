@@ -25,6 +25,16 @@ record per mark. This script does three jobs:
      subsystem, say so. That is not an error. It is the finding the block was
      added to make visible, and it belongs in the open where the grid is.
 
+**Read the split count carefully: it compares strings, not stores.** A system
+whose marks sit on different *layers* of one store — a write gate, a recall
+path, a journal, an approval queue, all over the same SQLite file — reports as
+split in exactly the same way as DeepCode, whose marks genuinely never reach the
+notes the report is about. Perseus Vault made this concrete: seven marks, six
+distinct names, one memory path. Naming a layer after the store it belongs to
+("entity store — recall and journal listing") is what keeps the signal
+meaningful, and the checker cannot enforce it. The number says *look here*, not
+*this is wrong*.
+
 Usage:
     check_capability_evidence.py [root] [--list] [--self-test]
 """
@@ -48,7 +58,7 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: number is the whole mechanism: it can only go up, and it is edited by hand in
 #: the same commit that earns it, so raising it is a deliberate act with a diff
 #: rather than a side effect of a build.
-COVERAGE_FLOOR = 10
+COVERAGE_FLOOR = 17
 
 #: A test field says what pins the mechanism. These two are the honest answers
 #: when nothing does, and they are common — writing one is the point, because

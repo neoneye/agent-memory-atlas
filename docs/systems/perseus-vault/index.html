@@ -94,14 +94,14 @@ tombstone stores a digest rather than the value it refuses.</p>
               <strong>Perseus-Computing-LLC/perseus-vault</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4" title="4008228ee4fb1846bef562d91037b4be11356de4">
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785" title="60d7ac4fc41bff182a6a53826f0b230bc6b9b785">
               <span>Analyzed revision</span>
-              <code>4008228e…</code>
+              <code>60d7ac4f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-07</strong>
+              <strong>2026-08-08</strong>
             </div>
                       </div>
                               <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (55%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -120,7 +120,7 @@ tombstone stores a digest rather than the value it refuses.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Perseus Vault is roughly 59,000 lines of Rust over 660 commits,
+<p>Perseus Vault is roughly 63,000 lines of Rust over 666 commits,
 MIT-licensed, shipping one binary and one SQLite file with no services.
 It exposes memory through an MCP stdio server plus LangGraph, CrewAI and
 AutoGen adapters, stores entities with bi-temporal bounds, retrieves
@@ -550,7 +550,7 @@ story is manual.</p></li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>536 <code>#[test]</code> functions inline across <code>src/</code>,
+<p>592 <code>#[test]</code> functions inline across <code>src/</code>,
 plus three integration files under <code>tests/</code>. Nothing was run
 for this review — the suite is Rust and the benchmark harness calls
 <code>gpt-4o-2024-08-06</code> for both answering and judging, so
@@ -674,6 +674,73 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-08</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785"><code class="commit-id" title="60d7ac4fc41bff182a6a53826f0b230bc6b9b785">60d7ac4f…</code></a>
+— re-pinned three commits after the previous reading, which was one day
+old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read
+against the previous pin.</p>
+<p><strong>A claim in this report was wrong at the pin it was made on,
+and is retracted.</strong> The scoping row said
+<code>workspace_hash</code> was applied in read queries on entities
+<em>and journal rows</em>. At <code>4008228</code> it was not:
+<code>get_recent_journal(limit)</code> selected
+<code>FROM journal ORDER BY created_at_unix_ms DESC LIMIT ?1</code> with
+no workspace predicate and blanked the field on the way out, under a
+comment reading <em>"Not selected by this listing query; purge-scoping
+metadata only."</em> A caller in one workspace listing recent journal
+events received every workspace's. <code>8e26619</code> (#877) fixed it
+upstream: the reader now takes a <code>workspace_hash</code>, and the
+unscoped variant is <code>get_recent_journal_admin</code>, gated on an
+in-process <code>JournalAdminAuthorization</code> whose own comment says
+no public transport mints one. The <code>scope_enforced</code> mark
+stands — entity recall was scoped throughout, and the rubric's mark
+measures the memory read path — but the matrix sentence overstated it
+and now says which pin changed it.</p>
+<p><strong>Three mechanisms arrived that the previous reading could not
+have seen.</strong> <code>#880</code> adds an
+<code>epistemic_state</code> column at schema v27 —
+<code>candidate</code>, <code>verified</code>,
+<code>corroborated</code>, <code>rejected</code>,
+<code>defensively_recalled</code> — explicitly orthogonal to the
+lifecycle <code>status</code>, with
+<code>recall_filters_by_epistemic_state_on_all_paths</code> committed
+beside it. <code>defensively_recalled</code> is the one this atlas has
+no other instance of: every trust state in the corpus withholds a
+memory, and this one serves it while framing it as untrusted.
+<code>#864</code> adds a <code>RecallOutcome</code> carrying
+<code>abstained</code>, a machine-readable <code>reason</code>
+(<code>no_match</code>, <code>db_unhealthy</code>,
+<code>embedding_unavailable</code>, <code>deadline_elapsed</code>,
+<code>partial_arms</code>), a deadline flag and embedding-backend health
+— so an empty recall now distinguishes <em>nothing matched</em> from
+<em>the backend was down</em>, which the <a
+href="../../benchmarks/">benchmarks page</a> records as measured
+nowhere. And <code>#865</code> splits
+<code>memory.read</code>/<code>propose</code>/<code>commit</code>, types
+retrieved memory as untrusted below <code>verified</code>, and adds
+versioned per-agent authority manifests; the split is documented
+<strong>fail-open when no manifest exists</strong>, which is why it is
+in the risks row rather than the strengths one. The admission evaluator
+also gained a <code>proposed</code> outcome, keeping an unvalidated
+authoritative claim a reviewable proposal rather than a fact.</p>
+<p><strong><code>#878</code> is the one worth copying.</strong> A
+memory-quality scorecard, blocking on any pull request touching vault
+behaviour, whose <code>release_ready</code> demands accuracy of exactly
+1.0 over a committed 24-case manifest and requires every category to be
+present: long-horizon recall, contradiction and supersession,
+shared-memory visibility, adversarial contamination, temporal validity,
+scope validity, and provenance. That list is close to the acceptance
+suite this atlas publishes and has never run against anything.</p>
+<p><strong>Said plainly, because the atlas would otherwise be marking
+its own homework.</strong> These commits use this atlas's vocabulary —
+admission contract, epistemic trust axis, recall outcome, untrusted
+recall — and the <a href="../../methodology/atlas-rubric/">rubric</a>
+already warns that a mark count partly measures who has read it. Two
+things bound that here. This report carried all seven marks
+<em>before</em> these commits, so no mark was added by them and none
+could be. And the commits carry the project's own issue numbers, which
+is evidence of an internal plan rather than of a checklist. What changed
+is the prose, and the prose now says when.</p>
 <p><strong>2026-08-07</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4"><code class="commit-id" title="4008228ee4fb1846bef562d91037b4be11356de4">4008228e…</code></a>
 — one commit past the previous pin, and it adds a file rather than

@@ -6,27 +6,35 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
-revision: 4008228ee4fb1846bef562d91037b4be11356de4
-revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4
-analyzed_at: 2026-08-07
+revision: 60d7ac4fc41bff182a6a53826f0b230bc6b9b785
+revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785
+analyzed_at: 2026-08-08
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "entity store — remember-path write gate | src/db.rs | normalize_rejected_value + rejected_value_digest against rejected_value_tombstones | src/db.rs::rejected_value_tombstone_blocks_same_value_under_any_key_in_scope"
+  trust_state: "entity store | src/models.rs | epistemic_state, schema v27 vocabulary candidate/verified/corroborated/rejected/defensively_recalled | src/db.rs::recall_filters_by_epistemic_state_on_all_paths"
+  bitemporal: "entity store | src/schema.rs | valid_from_unix_ms and valid_to_unix_ms beside recorded_at_unix_ms | CI Bi-temporal gate"
+  scope_enforced: "entity store — recall and journal listing | src/db.rs | workspace_hash predicate on recall; get_recent_journal(workspace_hash, limit) since #877 | src/db.rs::rejected_value_tombstone_scopes_isolate_workspaces"
+  audit_log: "entity store — hash-chained journal | src/db.rs | journal() chaining prev_hash from genesis | src/db.rs::purge_erases_history_and_redacts_journal_for_purged_entities"
+  human_review: "entity store — action approval | src/mcp.rs | mimir_action_approve with mimir_action_resolve_timeout defaulting to deny | unknown"
+  negative_eval: "entity store — purge and journal redaction | src/db.rs | purge_erases_history_and_redacts_journal_for_purged_entities, paired with purge_does_not_redact_other_workspace_live_journal_rows | both are the tests"
 matrix:
   memory_unit: "An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds"
   storage: "One SQLite file with FTS5, AES-256-GCM bodies encrypted by default on a fresh install, an entity history table, a hash-chained journal, sign-bit embedding signatures, and a rejected-value tombstone table holding digests"
-  retrieval: "Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query"
+  retrieval: "Hybrid BM25 (FTS5) plus dense vectors fused by RRF, with a Hamming prefilter on embedding sign bits and workspace filters applied in the query; every recall carries a `RecallOutcome` naming why it is empty or degraded"
   write: "MCP tool calls into a Rust binary; supersession writes history rows and sets `superseded_by`, with a trust-admission path in front"
   update_delete: "Supersede, correct, demote, archive with a reason, forget, and purge — purge erases history and redacts the journal; a rejected value is refused on every remember-path write by a digest-keyed tombstone, with an audited trusted override"
-  scoping: "`workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in read queries"
+  scoping: "`workspace_hash` on entities and journal rows, a `(category, key, workspace_hash)` identity index, and a `visibility` column; applied in entity read queries, and — as of this pin, not the previous one — in the journal listing too"
   integration: "An MCP stdio server with ninety canonical tools, plus LangGraph, CrewAI, AutoGen, PydanticAI and Praison adapters; one binary, no services"
   background: "Decay ticks, cohere and dream passes, consolidation, hygiene scans, community detection"
-  trust: "A discrete `status`, a separate `verified` flag, a `certainty` float and a `source` field — three distinct axes rather than one score"
-  strengths: "Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, a claims audit that retires what it cannot back, and a count check derived from source and run in CI"
-  risks: "A database created before the default flipped stays plaintext until an explicit `init --rekey`, and the encryption key sits beside the database it protects"
+  trust: "A discrete `status`, a separate `epistemic_state` (`candidate`/`verified`/`corroborated`/`rejected`/`defensively_recalled`), a `verified` flag, a `certainty` float and a `source` field — four distinct axes rather than one score"
+  strengths: "Three full benchmark runs per prompt variant with a config stamp, published means that recompute exactly, a claims audit that retires what it cannot back, and a blocking memory-quality gate whose required categories read like an acceptance suite"
+  risks: "A database created before the default flipped stays plaintext until an explicit `init --rekey`, the encryption key sits beside the database it protects, and the new capability split is documented fail-open when no authority manifest exists"
 ---
 
 ## 1. Executive Summary
 
-Perseus Vault is roughly 59,000 lines of Rust over 660 commits, MIT-licensed,
+Perseus Vault is roughly 63,000 lines of Rust over 666 commits, MIT-licensed,
 shipping one binary and one SQLite file with no services. It exposes memory
 through an MCP stdio server plus LangGraph, CrewAI and AutoGen adapters, stores
 entities with bi-temporal bounds, retrieves with BM25 and dense vectors fused by
@@ -434,7 +442,7 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-536 `#[test]` functions inline across `src/`, plus three integration files under
+592 `#[test]` functions inline across `src/`, plus three integration files under
 `tests/`. Nothing was run for this review — the suite is Rust and the benchmark
 harness calls `gpt-4o-2024-08-06` for both answering and judging, so reproducing
 the LongMemEval figure means paying for 500 questions × 3 runs × 2 model calls.
@@ -544,6 +552,16 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-08-08** — [`60d7ac4fc41bff182a6a53826f0b230bc6b9b785`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785) — re-pinned three commits after the previous reading, which was one day old. Nothing was run; the delta is +5,093/-420 lines over 17 files, read against the previous pin.
+
+**A claim in this report was wrong at the pin it was made on, and is retracted.** The scoping row said `workspace_hash` was applied in read queries on entities *and journal rows*. At `4008228` it was not: `get_recent_journal(limit)` selected `FROM journal ORDER BY created_at_unix_ms DESC LIMIT ?1` with no workspace predicate and blanked the field on the way out, under a comment reading *"Not selected by this listing query; purge-scoping metadata only."* A caller in one workspace listing recent journal events received every workspace's. `8e26619` (#877) fixed it upstream: the reader now takes a `workspace_hash`, and the unscoped variant is `get_recent_journal_admin`, gated on an in-process `JournalAdminAuthorization` whose own comment says no public transport mints one. The `scope_enforced` mark stands — entity recall was scoped throughout, and the rubric's mark measures the memory read path — but the matrix sentence overstated it and now says which pin changed it.
+
+**Three mechanisms arrived that the previous reading could not have seen.** `#880` adds an `epistemic_state` column at schema v27 — `candidate`, `verified`, `corroborated`, `rejected`, `defensively_recalled` — explicitly orthogonal to the lifecycle `status`, with `recall_filters_by_epistemic_state_on_all_paths` committed beside it. `defensively_recalled` is the one this atlas has no other instance of: every trust state in the corpus withholds a memory, and this one serves it while framing it as untrusted. `#864` adds a `RecallOutcome` carrying `abstained`, a machine-readable `reason` (`no_match`, `db_unhealthy`, `embedding_unavailable`, `deadline_elapsed`, `partial_arms`), a deadline flag and embedding-backend health — so an empty recall now distinguishes *nothing matched* from *the backend was down*, which the [benchmarks page](../../benchmarks/) records as measured nowhere. And `#865` splits `memory.read`/`propose`/`commit`, types retrieved memory as untrusted below `verified`, and adds versioned per-agent authority manifests; the split is documented **fail-open when no manifest exists**, which is why it is in the risks row rather than the strengths one. The admission evaluator also gained a `proposed` outcome, keeping an unvalidated authoritative claim a reviewable proposal rather than a fact.
+
+**`#878` is the one worth copying.** A memory-quality scorecard, blocking on any pull request touching vault behaviour, whose `release_ready` demands accuracy of exactly 1.0 over a committed 24-case manifest and requires every category to be present: long-horizon recall, contradiction and supersession, shared-memory visibility, adversarial contamination, temporal validity, scope validity, and provenance. That list is close to the acceptance suite this atlas publishes and has never run against anything.
+
+**Said plainly, because the atlas would otherwise be marking its own homework.** These commits use this atlas's vocabulary — admission contract, epistemic trust axis, recall outcome, untrusted recall — and the [rubric](../../methodology/atlas-rubric/) already warns that a mark count partly measures who has read it. Two things bound that here. This report carried all seven marks *before* these commits, so no mark was added by them and none could be. And the commits carry the project's own issue numbers, which is evidence of an internal plan rather than of a checklist. What changed is the prose, and the prose now says when.
 
 **2026-08-07** — [`4008228ee4fb1846bef562d91037b4be11356de4`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/4008228ee4fb1846bef562d91037b4be11356de4) — one commit past the previous pin, and it adds a file rather than changing one: a 251-line research memo under `docs/research/`. No source, schema, test or manifest moved, so every published claim and all seven marks stand unexamined by this reading rather than re-confirmed by it. Screened first: 2 auto-run surfaces (`server.json`, `smithery.yaml`), 1 build-time exec (`build.rs`), 8 unpinned surfaces and 2 files inside the seven-day cooldown — the same shape as the previous screen, with the auto-run pair still the MCP publication manifests. Nothing was built or run. The memo is worth one sentence because of what it argues rather than what it changes: it reviews five 2026 memory papers and concludes that *"memory is a state machine, not just a search index"*, listing revision, forgetting, temporal validity and provenance as the properties that matter — which is a description of the mechanisms this system already carries marks for, arrived at from the literature rather than from the code. It also repeats the [MemoryAgentBench mislabel](https://arxiv.org/abs/2507.05257) this atlas has traced twice before, citing the benchmark as evaluating *"selective forgetting"* where the repository itself calls that competency conflict resolution.
 
