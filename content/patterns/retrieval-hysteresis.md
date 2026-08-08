@@ -4,6 +4,7 @@ eyebrow: Pattern · Retrieval
 description: Give a memory unit its own activation state so it neither repeats every turn nor vanishes mid-thread.
 root: ../..
 page_kind: pattern
+stance: category-bound
 ---
 
 ## Intent

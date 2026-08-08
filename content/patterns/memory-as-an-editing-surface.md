@@ -4,6 +4,7 @@ eyebrow: Pattern · Control
 description: Treat the memory store as a document a person edits, not a database a person is shown.
 root: ../..
 page_kind: pattern
+stance: category-bound
 ---
 
 ## Intent

@@ -4,6 +4,7 @@ eyebrow: Pattern · Cost
 description: Decide whether the expensive memory operation is worth doing before doing it, and fail open so a broken gate degrades to the old behaviour rather than to silence.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

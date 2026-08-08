@@ -4,6 +4,7 @@ eyebrow: Pattern · Provenance
 description: Persist raw events and source text before deriving the compact memories that influence an agent.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

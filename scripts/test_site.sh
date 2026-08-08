@@ -214,6 +214,18 @@ if ! python3 "$project_dir/scripts/check_protocol.py" "$project_dir"; then
   exit 1
 fi
 
+# Every pattern page states its epistemic status in its header, and the patterns
+# index states the same classification in prose. Two copies of one claim drift,
+# and drifting *this* claim relabels an argument as a consensus.
+if ! python3 "$project_dir/scripts/check_pattern_stance.py" --self-test; then
+  echo "check_pattern_stance.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_pattern_stance.py" "$project_dir"; then
+  echo "A pattern's stance pill contradicts the patterns index." >&2
+  exit 1
+fi
+
 # build_site.sh wraps every <table> in .table-wrap. A hand-authored wrapper in
 # content/ nests them, and each wrapper grows its own "expand to full width"
 # toggle — which is how the capability grid ended up with two.

@@ -4,6 +4,7 @@ eyebrow: Pattern · Reliability
 description: Preserve inputs and checkpoints so extraction, consolidation, embedding, and indexing failures become retryable work instead of silent memory loss.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

@@ -4,6 +4,7 @@ eyebrow: Pattern · Procedure
 description: Remember what worked as a reusable procedure rather than as a fact, and gate the write on evidence that it actually worked.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

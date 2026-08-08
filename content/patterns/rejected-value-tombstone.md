@@ -4,6 +4,7 @@ eyebrow: Pattern · Correction
 description: Preserve rejected values as negative memory so automatic extraction cannot silently reintroduce a known-wrong belief.
 root: ../..
 page_kind: pattern
+stance: advocacy
 ---
 
 > **This is not an established best practice.** Nine systems of one hundred and sixty-five

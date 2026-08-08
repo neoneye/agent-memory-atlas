@@ -4,6 +4,7 @@ eyebrow: Pattern · Governance
 description: Route every durable belief mutation through one transactional path that enforces actor, trust, conflict, provenance, and tombstone policy.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

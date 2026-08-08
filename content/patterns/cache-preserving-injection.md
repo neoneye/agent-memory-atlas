@@ -4,6 +4,7 @@ eyebrow: Pattern · Cost
 description: Split injected memory by how often it changes, so a per-turn recall block cannot invalidate the provider's prompt-prefix cache on every request.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 > **This is a cost pattern, and it is here on a narrow argument.** The

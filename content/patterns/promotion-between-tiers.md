@@ -4,6 +4,7 @@ eyebrow: Pattern · Lifecycle
 description: Almost every memory system has tiers. Far fewer can say what moves a memory up one — and a tier boundary with no stated rule is a place where memory quietly stops improving.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

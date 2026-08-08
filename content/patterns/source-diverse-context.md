@@ -4,6 +4,7 @@ eyebrow: Pattern · Context assembly
 description: Select context across sessions, documents, or sources so one dense neighborhood does not crowd out the rest of memory.
 root: ../..
 page_kind: pattern
+stance: mixed
 ---
 
 ## Intent

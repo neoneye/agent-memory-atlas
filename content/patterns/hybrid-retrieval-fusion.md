@@ -4,6 +4,7 @@ eyebrow: Pattern · Retrieval
 description: Combine semantic similarity, lexical exactness, metadata filters, and bounded reranking instead of trusting one retrieval signal.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

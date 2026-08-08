@@ -4,6 +4,7 @@ eyebrow: Pattern · Lifecycle
 description: Let reachability weaken or strengthen over time without silently turning use, age, or popularity into truth.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

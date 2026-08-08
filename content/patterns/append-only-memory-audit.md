@@ -4,6 +4,7 @@ eyebrow: Pattern · Observability
 description: Record memory mutations and retrieval use as immutable events while keeping telemetry separate from the truth state of memory.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

@@ -4,6 +4,7 @@ eyebrow: Pattern · Federation
 description: Let reads fan out across allowed memory stores while requiring every mutation to name one concrete private or shared destination.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

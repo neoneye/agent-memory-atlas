@@ -4,6 +4,7 @@ eyebrow: Pattern · Time
 description: Track when a fact was true separately from when the memory system learned, changed, or expired it.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

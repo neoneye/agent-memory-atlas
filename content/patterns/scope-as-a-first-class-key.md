@@ -4,6 +4,7 @@ eyebrow: Pattern · Boundaries
 description: Make memory ownership and visibility part of identity, storage, conflict detection, and retrieval—not an optional metadata filter.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

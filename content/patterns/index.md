@@ -208,19 +208,37 @@ named — which is either the atlas being early or the atlas being wrong about
 what matters, and one survey cannot tell you which.
 
 So this library is doing two different jobs at once, and it is worth knowing
-which one you are reading:
+which one you are reading. Every page now carries its answer as a pill under its
+title, so the distinction survives a reader who arrives by search and never sees
+this section. The list below is the same classification, complete:
 
-- **Reporting.** [Promotion between tiers](./promotion-between-tiers/),
-  [hybrid retrieval fusion](./hybrid-retrieval-fusion/),
-  [scope as a first-class key](./scope-as-a-first-class-key/),
+- **Reporting an established practice.**
+  [Append-only memory audit](./append-only-memory-audit/),
+  [bi-temporal fact validity](./bi-temporal-fact-validity/),
+  [cache-preserving injection](./cache-preserving-injection/),
+  [decay and reinforcement](./decay-and-reinforcement/),
   [evidence before belief](./evidence-before-belief/),
-  [zero-LLM capture](./zero-llm-capture/) and
-  [recoverable background work](./recoverable-background-work/) describe things
+  [explicit write destination](./explicit-write-destination/),
+  [gate the expensive path](./gate-the-expensive-path/),
+  [governed write gateway](./governed-write-gateway/),
+  [hybrid retrieval fusion](./hybrid-retrieval-fusion/),
+  [pluggable memory provider](./pluggable-memory-provider/),
+  [promotion between tiers](./promotion-between-tiers/),
+  [recoverable background work](./recoverable-background-work/),
+  [scope as a first-class key](./scope-as-a-first-class-key/),
+  [skills as procedural memory](./skills-as-procedural-memory/),
+  [trust state machine](./trust-state-machine/) and
+  [zero-LLM capture](./zero-llm-capture/) describe things
   many systems already do. The pattern refines a practice that exists.
-- **Advocacy.** [Rejected-value tombstone](./rejected-value-tombstone/),
-  [resolve, don't just detect](./resolve-not-just-detect/) and the negative-eval
-  discipline inside [source-diverse context](./source-diverse-context/) rest on
-  one or two instances. The atlas is arguing for them, not reporting them.
+- **Advocacy — one or two instances.**
+  [Rejected-value tombstone](./rejected-value-tombstone/) and
+  [resolve, don't just detect](./resolve-not-just-detect/) rest on one or two
+  instances. The atlas is arguing for them, not reporting them.
+- **Reporting, with one advocacy claim.**
+  [Source-diverse context](./source-diverse-context/) is the mixed case: the
+  quota mechanism itself is ordinary retrieval engineering that several systems
+  run, while the negative-eval discipline inside it is an argument with almost
+  nothing behind it.
 
 The advocacy patterns are the ones this atlas thinks matter most, which is
 exactly why they need the disclosure rather than the benefit of the doubt. A
@@ -228,11 +246,11 @@ reader who assumed they were industry practice — as their author did until
 tracing the history — would be adopting them on the strength of an argument, not
 a consensus. That may still be the right call. It is a different decision.
 
-**A third case, added later and needing its own label.**
+**A fourth case, added later and needing its own label.**
 [Retrieval hysteresis](./retrieval-hysteresis/) and
 [memory as an editing surface](./memory-as-an-editing-surface/) are neither
-advocacy nor general reporting. They are **well-established inside one category
-and unknown outside it.** Both are mature, refined against very large user bases,
+advocacy nor general reporting. They are **mature in one category and unknown
+outside it.** Both are mature, refined against very large user bases,
 and almost every instance is a roleplay or companion client — SillyTavern,
 RisuAI, N.E.K.O., Soul of Waifu, Z-Waif. No extraction-based system in this atlas
 carries per-unit activation state, and the systems that hold `human_review`

@@ -4,6 +4,7 @@ eyebrow: Pattern · Federation
 description: Let a host runtime mount swappable memory backends behind one interface, and decide who owns trust, correction, and deletion before the first plugin ships.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

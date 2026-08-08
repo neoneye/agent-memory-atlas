@@ -4,6 +4,7 @@ eyebrow: Pattern · Trust
 description: Model memory as candidate, verified, rejected, or stale instead of placing every extracted fact in one truth bucket.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent

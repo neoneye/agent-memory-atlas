@@ -4,6 +4,7 @@ eyebrow: Pattern · Conflict
 description: Give contradiction detection somewhere to go — a disposition, an actor, and a record — or the status field you added becomes a queue nobody drains.
 root: ../..
 page_kind: pattern
+stance: advocacy
 ---
 
 ## Intent

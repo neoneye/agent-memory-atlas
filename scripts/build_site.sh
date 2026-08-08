@@ -64,6 +64,23 @@ render_document() {
   analyzed_at="${analyzed_at#\"}"
   analyzed_at="${analyzed_at%\"}"
 
+  # A pattern page declares one `stance:` slug and the label is derived here, so
+  # the prose on the page and the pill above it cannot drift into disagreeing
+  # about what the page is. `check_pattern_stance.py` binds the slug to the
+  # bucket the patterns index lists the page under; this only spells it.
+  local stance
+  local stance_label=""
+  stance="$(sed -n 's/^stance:[[:space:]]*//p' "$input" | head -n 1)"
+  stance="${stance//\"/}"
+  case "$stance" in
+    reporting) stance_label="Reporting an established practice" ;;
+    advocacy) stance_label="Advocacy — one or two instances" ;;
+    category-bound) stance_label="Mature in one category, unknown outside it" ;;
+    mixed) stance_label="Reporting, with one advocacy claim" ;;
+    "") ;;
+    *) echo "unknown stance '$stance' in $input" >&2; exit 1 ;;
+  esac
+
   local capability_strip=""
   if [[ "$input" == *"/content/systems/"* ]]; then
     capability_strip="$(python3 "$project_dir/scripts/capability_strip.py" "$input")"
@@ -81,6 +98,7 @@ render_document() {
     --variable="revision_short:$revision_short" \
     --variable="analyzed_at_text:$analyzed_at" \
     --variable="capability_strip:$capability_strip" \
+    --variable="stance_label:$stance_label" \
     --output="$destination"
 }
 

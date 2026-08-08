@@ -4,6 +4,7 @@ eyebrow: Pattern · Capture
 description: Durably record memory-worthy events without putting a model call on the synchronous write path.
 root: ../..
 page_kind: pattern
+stance: reporting
 ---
 
 ## Intent
