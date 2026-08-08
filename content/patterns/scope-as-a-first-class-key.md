@@ -304,7 +304,28 @@ lessons belong to the team" is a row rather than a convention, and a personal
 write into a shared scope becomes a shared memory automatically instead of
 silently staying private.
 
-The counterweight, and the reason this is not simply the best entry here: the
+[OpenSRE](../../systems/opensre/) contributes the failure mode nobody else on
+this page has hit, because it is the one an *ambient* scope key creates. The
+scope is a `ContextVar` bound for the duration of a turn, and every path to the
+store funnels through one `memory_dir()`, so no call site can forget to pass a
+key — which is the strongest form of this pattern and its own trap. **A
+background thread does not inherit a `ContextVar`.** The session-end extractor
+runs on a daemon worker, and without `contextvars.copy_context()` the worker
+sees no scope and resolves to the org root, filing one user's extracted facts
+where their own in-scope turns will never read them. The repository names the bug
+in a comment, fixes it with a context copy, and pins it with a test whose
+docstring calls itself a regression guard. If your scope key is implicit rather
+than a parameter, every thread, task, and executor boundary is a place it can be
+dropped silently — and the read path will keep working, which is why it is worth
+a test rather than a review.
+
+The same system shows what it costs to be honest about an incomplete boundary:
+memory is **off by default** on Slack and Telegram, because Slack storage is
+per-user while Telegram is still host-global. Disabling the feature where the key
+does not yet reach is a third option beside enforcing and leaking, and it is
+rarely taken.
+
+The counterweight, and the reason LoreKit is not simply the best entry here: the
 scope *hierarchy* is not enforced anywhere. LoreKit's own README describes agents
 reading branch, then repo, then global and merging — and `memory.list` filters on
 one exact scope. The ladder is three separate calls a skill file instructs the

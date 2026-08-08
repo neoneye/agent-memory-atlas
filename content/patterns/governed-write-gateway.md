@@ -111,6 +111,19 @@ governed; a dry-run default lets them be *reviewed* first, which is the one
 control this pattern otherwise lacks for operations whose blast radius is
 unknowable in advance.
 
+[OpenSRE](../../systems/opensre/) is the smallest complete instance here, and it
+is worth reading for what it puts in the gate rather than for the gate itself.
+Two writers — an agent tool and an automatic post-turn extractor — reach one
+`save_memory`, which takes a directory lock, preserves `created_at`, writes
+through a temp file and an atomic replace. The policy in front of it is what
+distinguishes it: a closed type vocabulary, a **model-free grounding check**
+requiring an extracted infrastructure or incident claim to share distinctive
+tokens with text the user typed, a refusal of anything extracted from a
+transcript containing the product's own demo scenarios, and a secret filter whose
+rejection names the rule rather than echoing the value. Only the proposal step is
+a language model; every gate after it is deterministic and testable, which is
+what makes the committed negative cases possible.
+
 [Verel](../../systems/verel/) gates promotion rather than writing;
 [engram](../../systems/engram/) surfaces conflict candidates for judgment.
 

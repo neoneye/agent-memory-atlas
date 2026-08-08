@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and sixty-six
+> **This is not an established best practice.** Nine systems of one hundred and sixty-seven
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -188,9 +188,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and sixty-six
+That makes the negative result stronger rather than weaker. Two of one hundred and sixty-seven
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and sixty-five, plus one adoption by a reader who went looking, suggests an idea
+one hundred and sixty-six, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -460,6 +460,16 @@ problems, and building the first extremely well does not build the second.**
 - [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
   is closer than most, but nothing keyed on the value: an equivalent claim can be
   retained again under a new id.
+- [OpenSRE](../../systems/opensre/) is where the re-extraction this page warns
+  about runs on a **timer**. Its automatic extractor reads the last thirty turns
+  after every recorded turn; `forget` unlinks the file and records nothing. So a
+  user who asks the agent to forget a fact they stated earlier in the same
+  session has removed the row while leaving the sentence that produced it inside
+  the window the next pass reads — and the grounding gate that admitted it will
+  admit it again, for the same reason. The prompt's only defence is an
+  instruction not to extract what an existing memory already covers, which is
+  exactly false for a memory that was just deleted. Everything else in that write
+  path is gated carefully, which is what makes the omission legible.
 - [SESA](../../systems/sesa/) is the case with the strongest *evidence* for a
   tombstone and none of the machinery. A skill card is deleted only after it has
   been retrieved at least three times and its measured net usefulness has gone

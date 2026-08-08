@@ -135,19 +135,19 @@ outside.
 **Not this:** ordinary recall tests, however thorough.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
-this atlas ultimately rests on an assertion of this shape. Thirty-seven
-repositories of one hundred and sixty-six carry the mark, and they are not all
+this atlas ultimately rests on an assertion of this shape. Thirty-eight
+repositories of one hundred and sixty-seven carry the mark, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a
 *scope boundary*, and only [Verel](../../systems/verel/) is recorded asserting it
 about a value that was corrected, which is the harder and more useful version.
 
-**What the 37 actually are, since an outside review was right that they are not
-all the same thing.** Every one of them is a committed case asserting that
-material must not appear somewhere. **27 of the 37 assert it about a read
-path**, which is this definition; 20 about a particular value and 7 about a scope
-boundary. The other 10 keep material out of something that is not a retrieval
+**What the marks actually are, since an outside review was right that they are
+not all the same thing.** Every one of them is a committed case asserting that
+material must not appear somewhere. The 2026-08-08 re-score put **27 of the
+then-37 on a read path**, which is this definition; 20 about a particular value
+and 7 about a scope boundary. The rest keep material out of something that is not a retrieval
 result — a serialized projection, an assembled preamble, the next summarization,
 a file on disk, a write decision. Those are real tests and several are the most
 interesting thing in their report. They are not negative *retrieval* assertions,

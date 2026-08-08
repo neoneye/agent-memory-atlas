@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 166 reports.**
+**This page covers all 167 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["166 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["167 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1411,3 +1411,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a 617-line research module with no tests of any kind, two configured warm-start paths that nothing in the tree fills, a batch retrieval function and an anti-leakage parameter that no caller invokes, and no `LICENSE` file at the root.
 - Study when: you have a cheap, automatic, honest outcome signal — a test result, a task reward, a checked answer — and want to see what a memory store can do with one.
 - Do not copy when: your outcome signal is user sentiment; `hurt_count` becomes a proxy for irritation and eviction becomes noise amplification.
+
+### [`opensre`](../systems/opensre/)
+
+- Best idea: the grounding gate — an extracted infrastructure or incident memory is refused unless its distinctive tokens also appear in text the user typed, computed without a model, so the agent's own output cannot become the user's durable knowledge.
+- Biggest risk: `forget` unlinks the file and records nothing, while extraction re-runs over a thirty-turn window after every turn, so the statement that justified the deleted memory is still in front of the next pass.
+- Most reusable component: `core/domain/memory/safety.py` — one regex module that both refuses a credential entry to the store and redacts the transcript before it reaches the extraction provider.
+- Maturity impression: Apache-2.0 public alpha, but the memory corner is disciplined — a directory `FileLock` with atomic replace, 0700/0600 with the octal explained, a signature-keyed parse cache, and twenty extraction tests whose useful cases are negative.
+- Study when: you run automatic extraction over transcripts that contain your own tool output, your own demo data, or credentials — all three are addressed here and most systems address none.
+- Do not copy when: you need to explain why the agent believes something; there is no provenance field, no trust state and no mutation record once the gate has passed.

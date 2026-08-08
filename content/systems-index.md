@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **166 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **167 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -167,6 +167,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`openclaw`](../systems/openclaw/) **OpenClaw** — Host-runtime plugin memory · `openclaw/openclaw` · Scope enforced
 - [`opencode`](../systems/opencode/) **OpenCode** — Hooks, no contract · `anomalyco/opencode`
 - [`openhuman`](../systems/openhuman/) **OpenHuman** — Taint-gated memory · `tinyhumansai/openhuman` · Scope enforced
+- [`opensre`](../systems/opensre/) **OpenSRE** — Grounding as the write gate · `Tracer-Cloud/opensre` · Scope enforced, Human review, Negative evals
 - [`openviking`](../systems/openviking/) **OpenViking** — Filesystem context database · `volcengine/OpenViking` · Scope enforced
 - [`openworker`](../systems/openworker/) **OpenWorker** — Policy over machinery · `andrewyng/openworker` · Scope enforced
 - [`openyak`](../systems/openyak/) **OpenYak** — One document per workspace · `openyak/openyak` · Scope enforced, Human review
