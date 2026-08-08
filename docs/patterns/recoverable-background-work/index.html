@@ -215,6 +215,20 @@ href="../../systems/tencentdb-agent-memory/">TencentDB</a> checkpoints
 capture, but its JSONL/store update path is not atomic. <a
 href="../../systems/basic-memory/">Basic Memory</a> rebuilds projections
 through startup reconciliation.</p>
+<p><a href="../../systems/sesa/">SESA</a> is the compact counterexample,
+and the mistake is three lines long. <code>maybe_apply_updates</code>
+snapshots the pending-failure queue, <strong>clears it</strong>,
+releases the lock, and only then calls a remote judge model to turn
+those failures into skill cards. The whole call is wrapped in a
+<code>try</code> that logs the exception and returns
+<code>{'error': ...}</code>, so one judge timeout discards up to three
+hundred failed rollouts — each of which cost a full multi-turn search
+rollout to produce. The queue is also a <code>deque(maxlen=300)</code>
+that silently drops its oldest entry when full, immediately before a
+priority function that tries to pick the <em>most informative</em>
+failures from whatever survived. The cheapest fix on this page applies
+exactly: advance the cursor after the work lands, not before it
+starts.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

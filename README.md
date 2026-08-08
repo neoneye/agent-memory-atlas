@@ -2,7 +2,7 @@
 
 A code-grounded field guide to memory systems for AI agents.
 
-The atlas compares memory units, storage models, write paths, retrieval mechanics, correction semantics, trust models, agent integrations, and operational risks across systems whose source is publicly readable — most open source, fifteen of them not, which the atlas names rather than averages over. Every report links to the exact Git commit that was analyzed.
+The atlas compares memory units, storage models, write paths, retrieval mechanics, correction semantics, trust models, agent integrations, and operational risks across systems whose source is publicly readable — most open source, sixteen of them not, which the atlas names rather than averages over. Every report links to the exact Git commit that was analyzed.
 
 ## Read the atlas
 

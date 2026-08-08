@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 165 reports.**
+**This page covers all 166 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["165 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["166 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1402,3 +1402,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 1,028 test functions over roughly 90,000 lines of Rust with a dense audit surface and receipts on every mutation, self-described pre-alpha, and no committed case asserting that a suppressed claim stays out of a recall result.
 - Study when: you want one local binary over your own files and sessions, and the concept ledger rather than the claim table is the part you are shopping for.
 - Do not copy when: a correction has to hold against re-extraction — everything else here is careful enough that the gap is easy to miss.
+
+### [`sesa`](../systems/sesa/)
+
+- Best idea: `hurt_count` — a negative usefulness signal written from the same rollout reward that trains the model, and wired to deletion rather than to ranking, so a skill card that keeps losing is removed instead of demoted.
+- Biggest risk: eviction leaves nothing behind, and the duplicate check compares only against the live bank, so the next similar failure regenerates the card the system just measured as harmful — at score zero, needing three more losses to go again.
+- Most reusable component: the pending-failure priority function, which ranks a failure higher *because* skills were retrieved and it failed anyway, in four lines of arithmetic and no model call.
+- Maturity impression: a 617-line research module with no tests of any kind, two configured warm-start paths that nothing in the tree fills, a batch retrieval function and an anti-leakage parameter that no caller invokes, and no `LICENSE` file at the root.
+- Study when: you have a cheap, automatic, honest outcome signal — a test result, a task reward, a checked answer — and want to see what a memory store can do with one.
+- Do not copy when: your outcome signal is user sentiment; `hurt_count` becomes a proxy for irritation and eviction becomes noise amplification.

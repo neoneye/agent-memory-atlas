@@ -255,6 +255,29 @@ into induced candidate rules and requires promotion gates before they
 become trusted. Read together with Voyager, the two halves of the
 missing system are visible — Voyager verifies successes and discards
 failures; Verel mines failures and gates promotion.</p>
+<p><a href="../../systems/sesa/">SESA</a> closes the pruning question
+this page has been holding open, and shows what it costs. Its skill bank
+writes a card <strong>only from a failure</strong> — the exact inversion
+of Voyager's gate — and then measures every card it hands out:
+<code>retrieved_count</code>, <code>helpful_count</code> and
+<code>hurt_count</code>, all three written by the same rollout reward
+that trains the model. A card whose net score has gone negative after at
+least three retrievals is <strong>deleted</strong>, not demoted. That is
+the utility signal the ScienceClaw entry above says nothing here has,
+and the reason it works is a precondition worth stating plainly: SESA is
+a training loop, so the outcome is a scored answer rather than a guess
+about whether the user was pleased. A library without that signal cannot
+borrow the mechanism, only the wish for it.</p>
+<p>Two failures sit beside it and both generalise. The eviction leaves
+<strong>no record</strong> — <code>_evict_negatives</code> drops the
+row, and <code>_add_new_with_dedup</code> compares new cards only
+against the live bank, so a similar failure regenerates the card the
+system just measured as harmful, back at score zero and needing three
+more losses to leave again. And credit is assigned uniformly: all three
+retrieved cards receive the outcome of one rollout, so a harmful card is
+rewarded whenever it rides along with two good ones. The similarity
+score that would support weighted attribution is computed on every
+retrieval and attached to each card, and no caller reads it.</p>
 <p><a href="../../systems/neo4j-agent-memory/">Neo4j Agent Memory</a>
 supplies the half this pattern's gate leaves out. Its reasoning tier
 records traces through a context manager, so on a raised exception the

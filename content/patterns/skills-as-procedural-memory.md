@@ -100,6 +100,27 @@ ScienceClaw, an [OpenClaw](../../systems/openclaw/) derivative, demonstrates the
 
 [Verel](../../systems/verel/) approaches the same territory from the opposite direction: it clusters *failures* into induced candidate rules and requires promotion gates before they become trusted. Read together with Voyager, the two halves of the missing system are visible — Voyager verifies successes and discards failures; Verel mines failures and gates promotion.
 
+[SESA](../../systems/sesa/) closes the pruning question this page has been
+holding open, and shows what it costs. Its skill bank writes a card **only from a
+failure** — the exact inversion of Voyager's gate — and then measures every card
+it hands out: `retrieved_count`, `helpful_count` and `hurt_count`, all three
+written by the same rollout reward that trains the model. A card whose net score
+has gone negative after at least three retrievals is **deleted**, not demoted.
+That is the utility signal the ScienceClaw entry above says nothing here has, and
+the reason it works is a precondition worth stating plainly: SESA is a training
+loop, so the outcome is a scored answer rather than a guess about whether the
+user was pleased. A library without that signal cannot borrow the mechanism, only
+the wish for it.
+
+Two failures sit beside it and both generalise. The eviction leaves **no record**
+— `_evict_negatives` drops the row, and `_add_new_with_dedup` compares new cards
+only against the live bank, so a similar failure regenerates the card the system
+just measured as harmful, back at score zero and needing three more losses to
+leave again. And credit is assigned uniformly: all three retrieved cards receive
+the outcome of one rollout, so a harmful card is rewarded whenever it rides along
+with two good ones. The similarity score that would support weighted attribution
+is computed on every retrieval and attached to each card, and no caller reads it.
+
 [Neo4j Agent Memory](../../systems/neo4j-agent-memory/) supplies the half this
 pattern's gate leaves out. Its reasoning tier records traces through a context
 manager, so on a raised exception the error becomes the trace's outcome — meaning

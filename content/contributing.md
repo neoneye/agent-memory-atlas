@@ -61,7 +61,9 @@ Two things that look like criteria and are not:
   reversed.
 - **A restrictive licence is a caveat, not an exclusion.** BSL, ELv2, PolyForm
   and "all rights reserved" are stated in section 1 so a reader knows what they
-  may do with what they read. Fifteen of the systems here are not open source.
+  may do with what they read. A table in the
+  [comparative report](../compare/#what-the-licences-actually-say) collects
+  every system here whose licence is not an open-source one.
 
 The genuine exclusions are narrow: nothing survives the session, the mechanism
 is closed-source behind an open wrapper, or there is no inspectable code at a

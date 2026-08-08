@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and sixty-five
+> **This is not an established best practice.** Nine systems of one hundred and sixty-six
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -188,9 +188,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and sixty-five
+That makes the negative result stronger rather than weaker. Two of one hundred and sixty-six
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and sixty-four, plus one adoption by a reader who went looking, suggests an idea
+one hundred and sixty-five, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -460,6 +460,14 @@ problems, and building the first extremely well does not build the second.**
 - [Gini](../../systems/gini-agent/) has a `rejected` **status** on a unit, which
   is closer than most, but nothing keyed on the value: an equivalent claim can be
   retained again under a new id.
+- [SESA](../../systems/sesa/) is the case with the strongest *evidence* for a
+  tombstone and none of the machinery. A skill card is deleted only after it has
+  been retrieved at least three times and its measured net usefulness has gone
+  negative — a rejection backed by more observation than any judgement on this
+  page — and then the row is dropped, the duplicate check compares only against
+  the live bank, and the next similar failure regenerates the card at score zero.
+  The system pays three rollouts to learn the value is harmful and forgets that
+  it learned it.
 - [Atomic Agent](../../systems/atomic-agent/) deprecates lessons and retains the
   row — good for history, silent on re-distillation from the same cluster.
 - [Mercury](../../systems/mercury-agent/) has a `dismissed` boolean on the record.

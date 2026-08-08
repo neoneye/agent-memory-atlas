@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-play RL trainer whose
+durable memory is a skill bank written only from the solver's failures,
+retrieved by embedding similarity, and evicted when the skills it handed
+over kept losing.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SESA — Agent Memory Atlas">
+    <meta property="og:description" content="A self-play RL trainer
+whose durable memory is a skill bank written only from the solver's
+failures, retrieved by embedding similarity, and evicted when the skills
+it handed over kept losing.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SESA — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-play RL trainer
+whose durable memory is a skill bank written only from the solver's
+failures, retrieved by embedding similarity, and evicted when the skills
+it handed over kept losing.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SESA — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Failure-distilled skill memory</p>
+          <h1>SESA</h1>
+          <p class="document-deck">A self-play RL trainer whose durable
+memory is a skill bank written only from the solver's failures,
+retrieved by embedding similarity, and evicted when the skills it handed
+over kept losing.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents">
+              <span>Source</span>
+              <strong>Zenghuang-Fu/SESA-Self-Evolving-Search-Agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430" title="74de5d77a19774cfba53d6950d47633a2d632430">
+              <span>Analyzed revision</span>
+              <code>74de5d77…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (55%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SESA is a self-play reinforcement-learning framework for multi-hop
+search agents: a <strong>Proposer</strong> composes questions hard
+enough to require several sequential searches, a <strong>Solver</strong>
+answers them, and both are trained with GRPO on a vendored fork of <a
+href="https://github.com/volcengine/verl">verl</a>. The memory system is
+one file — <code>quarl/utils/skill_bank.py</code>, 617 lines — and it is
+the only thing in the repository that survives a training run.</p>
+<p>What makes it worth a report is not that an agent writes skills for
+itself; <a href="../voyager/">Voyager</a> established that shape and
+several systems here repeat it. It is the direction of the write and the
+existence of a negative signal. <strong>A card is only ever written from
+a failure</strong>, and every card carries <code>helpful_count</code>,
+<code>hurt_count</code> and a derived <code>net_score</code> that the
+rollout scorer updates from the same reward the model is trained on. A
+card retrieved at least three times whose net score has gone negative is
+deleted. The <a
+href="../../patterns/skills-as-procedural-memory/">skills-as-procedural-memory</a>
+pattern records that nothing in this atlas had a utility signal that
+would work across a large library; this is the first instance where the
+signal exists, is negative as well as positive, and is wired to eviction
+rather than to ranking.</p>
+<p>The same file shows why that is harder than it looks. The eviction
+leaves no record: <code>_evict_negatives</code> drops the row and dedup
+compares new cards only against the <em>current</em> bank, so the next
+failure that resembles the deleted one regenerates it. Credit assignment
+is uniform — all three retrieved cards receive the outcome of a rollout
+that may have been decided by one of them. And <code>retrieve()</code>
+accepts an <code>exclude_uids</code> argument, and
+<code>source_uid</code> is stored on every generated card for exactly
+that purpose, and <strong>nothing in the repository ever passes
+it</strong>, so a card distilled from a question can be retrieved for
+that same question later in the run.</p>
+<p>There is no <code>LICENSE</code> file in the tree, and the vendored
+<code>verl/</code> directory carries none either. Everything below is
+read from source at the pinned commit; nothing was installed or run.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of the skill bank as a <strong>lesson book written only from
+losses, priced by whether the lessons help, and pruned when they do
+not.</strong></p>
+<p>Three phases per training step, stated in the module docstring and
+true of the code:</p>
+<ul>
+<li><strong>rollout</strong> — <code>retrieve(question)</code> is
+read-only and deterministic given the bank state.</li>
+<li><strong>reward</strong> — <code>add_pending_failure(failure)</code>
+is append-only, and <code>update_usage_stats</code> writes
+counters.</li>
+<li><strong>boundary</strong> —
+<code>maybe_apply_updates(global_step)</code> evicts, generates and
+persists.</li>
+</ul>
+<p>The separation matters for a reason specific to RL rather than to
+memory: a rollout that mutated the bank mid-batch would make the
+advantage estimate depend on the order rollouts finished. The design
+keeps the read path frozen for the duration of a step and does all
+mutation at the boundary, which is the same discipline a serving system
+needs for a different reason.</p>
+<pre class="mermaid"><code>flowchart TD
+    Q[&quot;Proposer question&quot;] --&gt; RET[&quot;SkillBank.retrieve&lt;br/&gt;e5-base-v2 cosine, top 3, no floor&quot;]
+    RET --&gt;|&quot;string-prepended to the solver prompt&quot;| SOL[&quot;Solver rollout&quot;]
+    SOL --&gt; SC{&quot;token_level_scores&quot;}
+    SC --&gt;|&quot;score &gt; 0&quot;| HELP[&quot;helpful_count += 1&lt;br/&gt;on every retrieved card&quot;]
+    SC --&gt;|&quot;score == 0, substantive output&quot;| HURT[&quot;hurt_count += 1&lt;br/&gt;on every retrieved card&quot;]
+    SC --&gt;|&quot;score == 0, first per uid&quot;| PQ[&quot;pending_failures&lt;br/&gt;deque, maxlen 300&quot;]
+    PQ --&gt;|&quot;every 10th step, 20+ pending&quot;| DRAIN[&quot;snapshot, then clear the queue&quot;]
+    DRAIN --&gt; GEN[&quot;judge model writes a Skill Card&lt;br/&gt;30 per update, 8 threads&quot;]
+    GEN --&gt; DEDUP{&quot;cosine &gt; 0.93 against&lt;br/&gt;the current bank&quot;}
+    DEDUP --&gt;|&quot;yes&quot;| DROP[&quot;dropped&quot;]
+    DEDUP --&gt;|&quot;no&quot;| ADD[&quot;appended&quot;]
+    HELP --&gt; EV{&quot;net_score &lt; 0 and&lt;br/&gt;retrieved_count &gt;= 3&quot;}
+    HURT --&gt; EV
+    EV --&gt;|&quot;and not is_seed&quot;| GONE[&quot;removed, nothing left behind&quot;]
+    ADD --&gt; PER[(&quot;skills.jsonl&lt;br/&gt;skills_step_N.jsonl&lt;br/&gt;meta.json&quot;)]
+    GONE --&gt; PER</code></pre>
+<p>The dashed truth of that diagram is the missing edge: nothing runs
+from <code>GONE</code> back to <code>DEDUP</code>. Deletion and the
+duplicate check do not know about each other.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The bank is a <strong>detached, named Ray actor</strong> —
+<code>@ray.remote(name='sesa_skill_bank', lifetime='detached', max_concurrency=8)</code>
+at <code>quarl/utils/skill_bank.py:111</code> — obtained through
+<code>get_or_create_skill_bank</code>, which calls
+<code>ray.get_actor</code> first and constructs only on
+<code>ValueError</code>. Detached lifetime means the bank outlives the
+driver that created it, so a trainer restart against a live Ray cluster
+attaches to the same in-memory bank rather than reloading from disk.</p>
+<p>State inside the actor is three fields: <code>self.skills</code>, a
+Python list of dicts; <code>self.embeddings</code>, an
+<code>(n, 768)</code> float32 NumPy array positionally aligned with that
+list; and <code>self.pending_failures</code>, a
+<code>deque(maxlen=300)</code>. A <code>threading.Lock</code> guards all
+three, and <code>max_concurrency=8</code> means the actor really does
+serve concurrent calls.</p>
+<p>The embedder is loaded on the actor at construction —
+<code>AutoModel</code> and <code>AutoTokenizer</code> for e5-base-v2,
+explicitly on CPU with a comment giving the reason: <em>"to avoid GPU
+contention with training"</em>, at roughly 10 ms per query. For a
+trainer already saturating its GPUs that is the correct trade, and it is
+the kind of decision most memory systems in this atlas never have to
+make.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The bank is <strong>off unless a launcher turns it on</strong>.
+<code>rl_config.yaml</code> contains no <code>skill_bank</code> block at
+all; the trainer reads <code>self.sp_config.get("skill_bank", {})</code>
+and takes <code>enable=False</code> as the default
+(<code>quarl/trainer/ppo/sesa_ray_trainer.py:116</code>). Every
+parameter is supplied by <code>examples/train_sesa.sh:337-352</code> as
+Hydra <code>+</code> overrides — <code>retrieve_top_k=3</code>,
+<code>update_freq=10</code>, <code>pending_queue_max=300</code>,
+<code>gen_per_update=30</code>, <code>max_bank_size=800</code>,
+<code>dedup_threshold=0.93</code>,
+<code>min_retrieved_for_evict=3</code>. A reader who studies only the
+config file will conclude the system has no memory.</p>
+<p>Initialisation is wrapped in a <code>try</code> that logs and sets
+the handle back to <code>None</code> on any failure, so a missing
+embedding model or judge endpoint degrades to a trainer with no memory
+rather than a crash. <code>judge_token</code> is the one exception: it
+is read as <code>os.environ['JUDGE_TOKEN']</code> with a bare subscript,
+so an unset token raises <code>KeyError</code> <em>inside</em> the
+guarded block and is caught by the same handler — the bank silently
+disables itself.</p>
+<p>Two config paths exist and nothing in the tree fills them.
+<code>seed_skills_path</code> loads a YAML of human-curated seed skills
+and <code>warm_start_path</code> loads a prior
+<code>skills.jsonl</code>; the repository ships neither a seed file nor
+a checkpointed bank, so a first run starts empty and the
+<code>is_seed</code> protection that runs through the eviction code has
+nothing to protect.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>File</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retrieve</td>
+<td><code>quarl/utils/skill_bank.py:273-290</code></td>
+<td>Embeds the question, dots against the whole matrix, sorts, returns
+top-k with <code>_retrieval_sim</code> attached</td>
+</tr>
+<tr>
+<td>Inject</td>
+<td><code>quarl/utils/problem_extraction.py:354-392</code></td>
+<td>Renders the cards and prepends the block to
+<code>user_content</code>; records <code>retrieved_skill_ids</code> in
+<code>extra_info</code></td>
+</tr>
+<tr>
+<td>Score usage</td>
+<td><code>quarl/trainer/ppo/sesa_ray_trainer.py:2088-2164</code></td>
+<td>Turns <code>token_level_scores</code> into
+<code>(skill_id, helpful, hurt)</code> triples, one uid counted
+once</td>
+</tr>
+<tr>
+<td>Queue failure</td>
+<td><code>quarl/trainer/ppo/sesa_ray_trainer.py:2002-2083</code></td>
+<td>Pushes one summary per failed uid, skipping format failures and
+dummy questions</td>
+</tr>
+<tr>
+<td>Boundary hook</td>
+<td><code>quarl/trainer/ppo/sesa_ray_trainer.py:1068-1107</code></td>
+<td>Fires all of the above plus a non-blocking
+<code>maybe_apply_updates</code> future</td>
+</tr>
+<tr>
+<td>Generate</td>
+<td><code>quarl/utils/skill_bank.py:411-483</code></td>
+<td>Eight-thread <code>ThreadPoolExecutor</code> over the judge, parsing
+a strict line-oriented format</td>
+</tr>
+<tr>
+<td>Evict</td>
+<td><code>quarl/utils/skill_bank.py:485-513</code></td>
+<td>Negative-score eviction, then forced eviction to fit the size
+cap</td>
+</tr>
+<tr>
+<td>Dedup and add</td>
+<td><code>quarl/utils/skill_bank.py:515-542</code></td>
+<td>Cosine against the existing bank and against cards added in the same
+pass</td>
+</tr>
+<tr>
+<td>Persist</td>
+<td><code>quarl/utils/skill_bank.py:546-565</code></td>
+<td>Whole-file rewrite of <code>skills.jsonl</code>, a step-stamped
+copy, and <code>meta.json</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One record type. A generated card, from
+<code>_generate_correctives</code>:</p>
+<pre class="text"><code>skill_id          auto_&lt;8 hex&gt;          (seeds keep their yaml id)
+category          one of eight, model-chosen
+pattern           what kind of question this applies to
+common_confusion  what typically gets mistaken
+key_distinction   the concrete disambiguating signal
+trigger_keywords  list[str]
+queries           up to three search templates
+example_question  first 200 chars of the failing question
+source_uid        the failing rollout&#39;s uid
+created_step      global step
+retrieved_count / helpful_count / hurt_count / net_score
+is_seed           present only on seeds</code></pre>
+<p>Two things are absent and both are load-bearing. There is <strong>no
+scope key</strong> — no run id, no task family, no dataset — so a bank
+warm-started from a previous experiment mixes with the current one and
+nothing can separate them again. And there is <strong>no validity
+interval</strong>: <code>created_step</code> records when a card was
+written, never the window in which it was useful, so a card that helped
+for two hundred steps and then stopped is indistinguishable from one
+that never helped, except through the counters, which are cumulative and
+never decay.</p>
+<p>The schema is enforced by parsing rather than by a type.
+<code>_parse_skill_response</code> partitions each line on the first
+colon and ignores lines without one; a card is rejected only if
+<code>pattern</code> or <code>queries</code> came back empty. A judge
+response that invents a ninth category, or writes
+<code>KEY_DISTINCTION</code> as three lines, degrades silently into a
+card with missing fields.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>retrieve()</code> embeds the question with the
+<code>query: </code> prefix e5 expects, dots it against the full matrix,
+sorts every index by similarity and slices the top three.</p>
+<p><strong>There is no score floor.</strong> If the bank holds eight
+hundred cards about temporal disambiguation and the question is a
+geographic lookup, the three nearest temporal cards are still prepended
+to the prompt, under the heading <em>"Past learnings from similar
+failures"</em>. The retrieved similarity is computed and attached to
+each returned card as <code>_retrieval_sim</code>, and no caller reads
+it. This is the same failure the atlas records against <a
+href="../voyager/">Voyager</a> — retrieval with no threshold —
+reappearing in a system that otherwise measures much more than Voyager
+does.</p>
+<p><strong>The usefulness counters do not affect ranking.</strong>
+<code>net_score</code> is read in exactly two places, both inside
+eviction. A card with a net score of +40 and one with −2 that has been
+retrieved twice rank purely by cosine. The system has a quality signal
+and spends it entirely on deletion.</p>
+<p>Ranking is over the whole bank on every call. At the 800-card cap
+that is an 800×768 dot product per question, which is nothing next to a
+rollout; the cost that matters is the CPU embedding of the query itself,
+and the author measured it at about 10 ms.</p>
+<p><code>retrieve_batch</code> exists, vectorises the same work across a
+list of questions, and is never called. So is
+<code>exclude_uids</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write path has four gates and they are unusually well chosen.</p>
+<p><strong>Gate one: only failures.</strong>
+<code>_skillbank_collect_failures</code> walks the solver batch and
+skips anything with <code>scores[i] != 0</code>. Successes teach nothing
+here, which is a defensible position — <a href="../voyager/">Voyager</a>
+takes the opposite one and stores only successes — and the two together
+frame the choice better than either alone.</p>
+<p><strong>Gate two: only substantive failures.</strong> A failed
+rollout must not be flagged <code>extraction_failed</code>, must have a
+question that does not contain <code>dummy</code>, and must contain both
+an <code>&lt;information&gt;</code> and an <code>&lt;answer&gt;</code>
+block, matched by regex over the decoded response. A model that failed
+to produce the output format is a training problem, not a memory-worthy
+lesson, and the code says so.</p>
+<p><strong>Gate three: one per uid.</strong>
+<code>seen_failed_uid</code> means five failed rollouts of the same
+question contribute one queue entry, not five.</p>
+<p><strong>Gate four: cosine dedup at 0.93</strong>, against both the
+existing bank and the cards already accepted in the same pass — the
+second check matters, because a batch of thirty failures of one kind
+would otherwise produce thirty near-identical cards that individually
+pass the first check.</p>
+<p>Between the queue and generation sits a priority function,
+<code>_pick_top_failures</code>, that scores each pending failure: +10
+if skills were retrieved and it failed anyway, +5 if the same uid failed
+more than once in the batch, +3 if the retrieved material was long. The
+first term is the interesting one — <strong>a failure that happened
+despite the memory is worth more than one that happened without
+it</strong> — and it is expressed in four lines of arithmetic rather
+than in a model call.</p>
+<p>The generation prompt (<code>skill_bank.py:34-68</code>) is worth
+reading in full for one requirement: it passes the previously retrieved
+cards in as
+<code>[Previous skills given to the agent (which DIDN'T help)]</code>
+and instructs the judge to <em>"address what the previous skills MISSED
+(don't repeat them)"</em>, then forbids vacuous advice and forbids
+naming entities from the failing question. The last of those is a
+leakage control in prose — the card is meant to generalise, not to
+memorise the answer — and it is the only place the leakage risk is
+addressed at all.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Per update: up to thirty judge completions at
+<code>judge_max_tokens</code> 4500 in the launcher, eight in flight.
+Every update re-embeds <strong>the whole bank</strong> —
+<code>_rebuild_embeddings</code> throws the matrix away and recomputes
+it from scratch after each mutation, so an 800-card bank costs 800 CPU
+embeddings every tenth step to add perhaps a dozen rows. The incremental
+alternative is one <code>np.vstack</code> and a deletion mask.</p>
+<p>Persistence rewrites <code>skills.jsonl</code> whole on every update
+and writes a second full copy as <code>skills_step_N.jsonl</code>. Over
+a thousand-step run at <code>update_freq=10</code> that is a hundred
+complete snapshots of the bank — accidentally the best audit trail in
+the design, and the reason the missing mutation log costs less here than
+it would in a serving system.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent-facing API, no MCP server and no tool. The bank is
+reachable only as a Ray actor handle, held in two places: the trainer,
+and the problem extractor via <code>set_skill_bank_handle</code>.</p>
+<p>Injection is string concatenation.
+<code>problem_extraction.py:363-367</code> formats the cards and does
+<code>user_content = skill_block + "\n\n" + user_content</code>, so the
+memory lands at the top of the <em>user</em> message rather than in the
+system prompt. For a training rollout that is fine — the whole message
+varies per question anyway — but it is worth noting for anyone lifting
+this into a serving path, where the same choice would sit in front of
+the varying content and defeat prefix caching in the way <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> describes.</p>
+<p>The solver never sees a card id and cannot cite, reject or request
+one. The only feedback channel from solver to bank is the scalar
+reward.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Failures are consumed before they are used.</strong>
+<code>maybe_apply_updates</code> snapshots
+<code>pending_failures</code>, clears the deque, releases the lock, and
+only then calls the judge. If generation raises, the handler logs and
+returns <code>{'error': ...}</code> — and the snapshot is gone. Up to
+three hundred failed rollouts, each of which cost a full multi-turn
+search rollout to produce, are discarded by one judge timeout. The <a
+href="../../patterns/recoverable-background-work/">recoverable
+background work</a> pattern's cheapest form — a consumption cursor
+advanced only after the work lands — would cost a few lines here.</p>
+<p><strong>The queue is lossy by design.</strong>
+<code>deque(maxlen=300)</code> silently drops the oldest entry when
+full. With <code>update_freq=10</code> and a batch producing more than
+thirty failures per step, the queue is at capacity before the boundary
+and the failures that survive are the most recent, not the most
+informative — which inverts the priority function that runs immediately
+afterwards.</p>
+<p><strong>Eviction is not correction.</strong>
+<code>_evict_negatives</code> removes the row and stops. Nothing records
+that the value was rejected, and <code>_add_new_with_dedup</code>
+compares only against <code>self.skills</code>, so the next failure that
+resembles the deleted card's origin regenerates a card the bank has
+already measured as harmful — and the new card starts at
+<code>net_score</code> 0 with <code>retrieved_count</code> 0, so it must
+lose three more rollouts to be removed again. This is the exact failure
+the <a href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> pattern exists for, in a system that has the measurement
+to populate one.</p>
+<p><strong>Credit assignment is uniform.</strong> All three retrieved
+cards receive the same <code>helpful</code>/<code>hurt</code> from one
+outcome. A genuinely harmful card retrieved alongside two good ones is
+credited positively whenever the rollout happens to succeed, and two
+good cards are punished whenever it does not. The
+<code>_retrieval_sim</code> already attached to each card would support
+a similarity-weighted attribution for free.</p>
+<p><strong><code>hurt</code> is a coarse definition.</strong> It fires
+whenever a scored rollout returns 0 with substantive output, which
+includes questions no skill could have saved. The counter measures "was
+present when the agent lost", not "contributed to the loss". The author
+bounded the noise where it was cheap to do so — format failures are
+excluded, one uid counts once — and did not bound it where it is
+hard.</p>
+<p>There is no scope, no trust state that withholds a card, no
+provenance beyond <code>source_uid</code>, and no path by which a person
+inspects or approves what the judge wrote.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There are none for the memory system.</strong>
+<code>quarl/</code> contains no test file of any kind. The vendored
+<code>verl/</code> directory in this checkout is trimmed to
+<code>pyproject.toml</code>, <code>requirements.txt</code>,
+<code>setup.py</code> and the package itself, so the upstream test suite
+is not present either.</p>
+<p>Nothing asserts that an evicted card stays evicted, that dedup
+rejects a near-duplicate, that a card is not retrieved for the question
+it was distilled from, or that the counters move in the direction the
+eviction rule assumes. Every one of those is a pure-function test over
+the actor's own methods — the bank takes a config dict and the embedder
+is the only external dependency — so the absence is a choice about
+effort, not a structural obstacle.</p>
+<p>The README reports the trained model on Hugging Face, and the
+repository contains evaluation dataset preprocessing under
+<code>examples/data_preprocess/</code>. No result in the tree separates
+the contribution of the skill bank from the contribution of self-play,
+and no ablation is present.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>The negative usefulness counter, wired to deletion.</strong>
+<code>helpful_count</code> and <code>hurt_count</code> written from the
+same signal that trains the model, with eviction gated on
+<code>net_score &lt; 0</code> <em>and</em> a minimum retrieval count so
+a card is not removed on one unlucky draw. Most systems in this atlas
+track only positive usage, which cannot distinguish a memory that is
+unused from one that is actively wrong.</li>
+<li><strong>Failure as the write trigger.</strong> Writing only from
+losses keeps the store small and every entry corrective by construction.
+The mirror-image choice in <a href="../voyager/">Voyager</a> — write
+only from verified successes — is equally defensible, and the pair is
+the clearest statement of the trade in this atlas.</li>
+<li><strong>The priority function on the pending queue.</strong> Ranking
+a failure higher <em>because memory was retrieved and it failed
+anyway</em> is a four-line heuristic that points generation at the cases
+where the store is demonstrably inadequate.</li>
+<li><strong>Passing the failed skills into the generation
+prompt</strong> with an instruction not to repeat them, which is a cheap
+defence against a library that grows in volume without growing in
+coverage.</li>
+<li><strong>The read-only-during-rollout, mutate-at-boundary
+discipline</strong>, and the reason for it: a store that mutates
+mid-batch makes results depend on completion order.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deleting with no tombstone when you already know the value
+was harmful.</strong> The bank measures a card into negative territory
+over at least three rollouts, removes it, and then lets an equivalent
+card back in at score zero.</li>
+<li><strong>A parameter that implements a safety property and is never
+passed.</strong> <code>exclude_uids</code> and <code>source_uid</code>
+exist to stop a card being retrieved for the question it came from. No
+caller uses them. An unused defence reads as a present one.</li>
+<li><strong>Retrieval with no score floor.</strong> Three cards are
+always injected, however far away, and the similarity that would gate
+them is computed and discarded.</li>
+<li><strong>Draining a work queue before the work succeeds.</strong>
+Snapshot, clear, then call a remote model, with the failure handler
+logging and returning.</li>
+<li><strong>Recomputing the entire embedding matrix on every
+mutation.</strong></li>
+<li><strong>Configuration that exists only in a shell script.</strong>
+The feature is invisible in <code>rl_config.yaml</code> and off by
+default.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Copy the counter-and-eviction mechanism if you have a <strong>cheap,
+automatic, and honest outcome signal</strong> — a test result, a task
+reward, a checked answer. That is what makes this design work, and it is
+what most assistant-shaped products do not have: without a real outcome,
+<code>hurt_count</code> becomes a proxy for user irritation and eviction
+becomes noise amplification.</p>
+<p>Do not copy the shape wholesale into a serving system. There is no
+scope key, no per-user boundary, no review surface and no deletion path
+a person can invoke, and all four are absent because a single-tenant
+training loop genuinely does not need them.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was the skill bank ablated? Nothing in the tree separates its effect
+from self-play's, and the mechanism's whole claim is that it
+compounds.</li>
+<li>What did the counters actually look like after a run?
+<code>stats()</code> reports <code>skills_used_at_least_once</code>,
+which would answer whether an 800-card bank is mostly dead weight, and
+no logged run is committed.</li>
+<li>Why is <code>retrieve_batch</code> unused when the rollout retrieves
+per question in a loop, and <code>exclude_uids</code> unused when
+<code>source_uid</code> is written for it? Both read as a designed
+second pass that was not finished.</li>
+<li>Does the detached actor's survival across driver restarts help or
+hurt? A bank that outlives the trainer will carry counters earned by a
+different policy.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>quarl/utils/skill_bank.py</code></td>
+<td>617</td>
+<td>The entire memory system: actor, embedder, retrieval, generation,
+dedup, eviction, persistence</td>
+</tr>
+<tr>
+<td><code>quarl/trainer/ppo/sesa_ray_trainer.py</code></td>
+<td>2494</td>
+<td>Self-play trainer; the memory hooks are at 116-150, 1068-1107,
+2002-2164</td>
+</tr>
+<tr>
+<td><code>quarl/utils/problem_extraction.py</code></td>
+<td>571</td>
+<td>Question extraction and the only injection site, 354-392</td>
+</tr>
+<tr>
+<td><code>quarl/config/rl_config.yaml</code></td>
+<td>124</td>
+<td>Self-play configuration, containing no <code>skill_bank</code>
+block</td>
+</tr>
+<tr>
+<td><code>examples/train_sesa.sh</code></td>
+<td>—</td>
+<td>The only place every skill-bank parameter is set, 337-352</td>
+</tr>
+<tr>
+<td><code>quarl/utils/sesa_data_manager.py</code></td>
+<td>319</td>
+<td>In-process problem pool; not persisted, so not memory by this
+atlas's bar</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430"><code class="commit-id" title="74de5d77a19774cfba53d6950d47633a2d632430">74de5d77…</code></a>
+— first reading. The screen reported one build-time execution surface
+(<code>verl/setup.py</code>) and three unpinned dependency surfaces, no
+auto-running hooks, and nothing inside the seven-day cooldown. Nothing
+was installed, built or run; the analysis is static over the tree. No
+<code>LICENSE</code> file exists at the repository root or in the
+vendored <code>verl/</code> directory, so the terms are unstated rather
+than permissive.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

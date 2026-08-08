@@ -116,6 +116,18 @@ JSONL/store update path is not atomic.
 [Basic Memory](../../systems/basic-memory/) rebuilds projections through startup
 reconciliation.
 
+[SESA](../../systems/sesa/) is the compact counterexample, and the mistake is
+three lines long. `maybe_apply_updates` snapshots the pending-failure queue,
+**clears it**, releases the lock, and only then calls a remote judge model to
+turn those failures into skill cards. The whole call is wrapped in a `try` that
+logs the exception and returns `{'error': ...}`, so one judge timeout discards up
+to three hundred failed rollouts — each of which cost a full multi-turn search
+rollout to produce. The queue is also a `deque(maxlen=300)` that silently drops
+its oldest entry when full, immediately before a priority function that tries to
+pick the *most informative* failures from whatever survived. The cheapest fix on
+this page applies exactly: advance the cursor after the work lands, not before it
+starts.
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.
