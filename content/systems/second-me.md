@@ -1,6 +1,6 @@
 ---
 title: "Second Me"
-eyebrow: "The atlas's only parametric memory"
+eyebrow: "The atlas's only memory that is weights"
 description: "Documents to a versioned biography to LoRA weights — and a deletion that cleans the vector store thoroughly while the trained model keeps what it learned."
 root: ../..
 page_kind: system
@@ -34,8 +34,11 @@ fine-tuning followed by DPO, merges the adapter, and converts the result to GGUF
 for local inference. It is a 2025 research prototype from Mindverse with a paper
 behind it, and its last commit at the analyzed revision is September 2025.
 
-**It is the only system in this atlas with parametric memory**, and that is why
-it earns an entry despite its age. Every other report here describes memory as
+**It is the only system in this atlas whose memory *is* weights**, and that is why
+it earns an entry despite its age. [MemOS](../memos/) mounts a parametric module
+beside textual, graph, preference and KV-cache memory, so it is not the only
+report here that touches the form; it is the only one where the form *is* the
+memory. Every other report describes memory as
 rows, files or graph edges that a query returns. Second Me's L2 layer holds memory
 in weights: nothing is retrieved, the model simply answers as though it knows.
 That makes it the atlas's one data point on a whole branch of the field — and one

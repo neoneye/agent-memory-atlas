@@ -193,7 +193,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
 ## S
 
-- [`second-me`](../systems/second-me/) **Second Me** — The atlas's only parametric memory · `mindverse/Second-Me` · Human review
+- [`second-me`](../systems/second-me/) **Second Me** — The atlas's only memory that is weights · `mindverse/Second-Me` · Human review
 - [`sillytavern`](../systems/sillytavern/) **SillyTavern** — Memory people write by hand · `SillyTavern/SillyTavern`
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`

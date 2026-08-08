@@ -199,6 +199,51 @@ if [[ -n "$broken_anchors" ]]; then
   exit 1
 fi
 
+# Pandoc decides loose-vs-tight per LIST, not per item: one bullet containing
+# blank-line-separated paragraphs wraps EVERY sibling `<li>` in `<p>`, and
+# `.prose p` then adds a 19px bottom margin to all of them. On 2026-08-08 a
+# single expanded bullet did that to all 93 Known Limitations items — a
+# site-wide spacing change and most of a 6,000-line HTML diff, invisible to
+# every other check here because the markdown and the HTML are both valid.
+# Long prose belongs in a subsection, not inside a list item.
+#
+# Ratcheted rather than absolute, because four lists were already loose when this
+# check was written — 45 items on the comparative report, 15 on Verel, 13 and 12
+# on Core Memory. Those are recorded rather than exempted; the floor is the
+# number that may not grow, and lowering it is a deliberate edit with a diff.
+if ! python3 - "$site_dir" <<'PY'
+import re, sys
+from pathlib import Path
+
+BASELINE = 4  # loose lists of 10+ items, as of 2026-08-08. This may only go down.
+
+found = []
+for page in sorted(Path(sys.argv[1]).rglob("index.html")):
+    html = page.read_text(encoding="utf-8")
+    for match in re.finditer(r"<ul>.*?</ul>", html, re.S):
+        block = match.group(0)
+        items = block.count("<li>")
+        loose = len(re.findall(r"<li>\s*<p>", block))
+        if items >= 10 and loose:
+            found.append(f"{page}: a {items}-item list is loose ({loose} items wrapped in <p>)")
+
+if len(found) > BASELINE:
+    print("\n".join(found), file=sys.stderr)
+    print(
+        f"{len(found)} loose lists of 10+ items; the baseline is {BASELINE}. "
+        "A list item holding blank-line-separated paragraphs makes every sibling "
+        "item loose — move the prose into a subsection.",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+print(f"{len(found)} loose lists of 10+ items (baseline {BASELINE}).")
+if len(found) < BASELINE:
+    print(f"BASELINE can be lowered to {len(found)}.")
+PY
+then
+  exit 1
+fi
+
 missing_dates="$(grep -RLs '^analyzed_at:' "$project_dir/content/systems" --include='*.md' || true)"
 if [[ -n "$missing_dates" ]]; then
   echo "System reports missing analyzed_at frontmatter:" >&2

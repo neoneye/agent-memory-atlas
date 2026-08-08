@@ -1140,8 +1140,9 @@ established procedural skill memory with an execution-verified write gate.
 the only system here whose memory ends up in *weights*: documents become a
 versioned biography, the biography becomes synthesized training data, and LoRA
 fine-tuning plus DPO produce a local model that answers without retrieving
-anything. It is the atlas's single instance of parametric memory — see the limitations for
-what one instance is and is not evidence of. **NOOA Memory** implements the cognitive models the others
+anything. It is the atlas's single instance of memory that *is* weights — [MemOS](../systems/memos/)
+mounts a parametric module beside four other forms — and the limitations say what one
+instance is and is not evidence of. **NOOA Memory** implements the cognitive models the others
 approximate — ACT-R base-level activation with spreading activation for
 retrieval, the Ebbinghaus curve for forgetting — and stores the score
 components of every retrieval on the memory that was retrieved. **MemoryOS** is
@@ -4009,7 +4010,7 @@ Testing:
 
 Do not add background summarization before raw-evidence retrieval and correction semantics exist. Summaries are compressed belief; if the system cannot explain and repair a belief, summarization hides the problem.
 
-Do not train an adapter on the corpus your memory system stores. The prior is real — retrieval returns the right record and a model that has never seen your data shape still writes the next one back malformed, which is a gap no reranker closes. But the natural implementation trains on the memory corpus, and at that moment the adapter has memorised part of it and become a second store with no delete, no scope and no audit — the properties set out in the [limitations](#known-limitations). The condition is mechanical, not advisory: the training corpus is **disjoint from the memory corpus and the build enforces the disjointness**, the adapter is **probed for verbatim recall of memory records before it ships**, and the system can **state in advance what a deletion request will not reach**. Nothing in this atlas does any of the three, and nothing measures the second at all. Only the third is cheap today, so this recommends something nobody here has built correctly.
+Do not train an adapter on the corpus your memory system stores. The prior is real — retrieval returns the right record and a model that has never seen your data shape still writes the next one back malformed, which is a gap no reranker closes. But the natural implementation trains on the memory corpus, and at that moment the adapter has memorised part of it and become a second store whose corrections can only be made a whole adapter at a time — the granularity problem set out under [weights as memory](#weights-as-memory-at-adapter-granularity). Three conditions, of which only the last is both cheap and sufficient. **Keep the training corpus disjoint from the memory corpus and have the build enforce it** — necessary, and weaker than it sounds, because disjointness by record identity says nothing about two records that carry the same fact. **Probe the adapter for verbatim recall of memory records before it ships** — this is a negative check only: failing it is disqualifying, passing it establishes very little, since a model can paraphrase a memory, expose its substance, or act on it while reproducing nothing verbatim. A sufficient gate would have to evaluate semantic extraction and behavioural influence, and this atlas has neither a method for that nor a system that attempts one. **State in advance what a deletion request will not reach** — cheap, sufficient for its own purpose, and the one worth doing today. Nothing in this atlas does any of the three, so this recommends something nobody here has built correctly.
 
 ## 9. Repo-by-Repo Verdicts
 
@@ -4458,39 +4459,7 @@ No internet sources were used for this report. The analysis is based on the chec
   carries it, so the entry is sound today, but the omission was the review's and
   the same gap may be waiting in other early reports. Nothing in
   `scripts/test_site.sh` enforces it.
-- **Memory held in model weights is covered by exactly one system, and that is a
-  fact about this corpus rather than about the field.**
-  [Second Me](../systems/second-me/) is the only system here whose memory *is*
-  weights — [MemOS](../systems/memos/) mounts a parametric module alongside four
-  other memory forms, which is a different claim — and one system is a data point
-  rather than coverage. Model editing, KV-cache
-  reuse and weight-space personalization are a substantial branch of the
-  literature and are essentially unrepresented here — which also means the seven
-  rubric capabilities have only been exercised against token stores. Whether a
-  tombstone, a scope key or an audit trail even has a referent in a fine-tuned
-  model is an open question this corpus cannot answer.
-
-  **The technique is not exploratory, which is what makes the gap serious.**
-  Low-rank adapters are commodity, published and exchanged as artifacts, and the
-  way they are distributed answers the question above in the negative at every
-  point. A delta is **opaque** — there is no read path that reports what it
-  learned from a given document, so no audit trail has a referent. It is **welded
-  to the base model** it was trained against, carrying one timestamp and no
-  validity interval, so bi-temporality has none either. **Merging is routine and
-  one-way**, so supersession has none. And withdrawing a published adapter
-  reaches neither the copies already taken nor the merges downstream of them, so
-  deletion has none. None of that rests on how many adapters exist or how popular
-  any host is — it rests on the shape of the artifact, which is the only thing
-  worth resting on. The build-side consequence is in
-  [what I would build](#add-later), and the two should be read together.
-
-  **The distributional escape does not work either.** It is tempting to hold that
-  an adapter trained for *shape* — schema, vocabulary, house style — stores
-  nothing correctable and so escapes all of this. Style adapters demonstrably
-  encode the sources they were trained on; that is why withdrawal requests are
-  made about them at all. Distribution and content are a spectrum, not a
-  boundary, and a system that treats the distinction as a safety argument has
-  made an unmeasured assumption.
+- **Memory held in model weights is covered by exactly one system, and that is a fact about this corpus rather than about the field.** [Second Me](../systems/second-me/) is the only system here whose memory *is* weights — [MemOS](../systems/memos/) mounts a parametric module alongside four other memory forms, which is a different claim — and one system is a data point rather than coverage. Model editing, KV-cache reuse and weight-space personalization are a substantial branch of the literature and are essentially unrepresented here, which also means the seven rubric capabilities have only been exercised against token stores. What a low-rank adapter does and does not settle about those capabilities is set out in [weights as memory, at adapter granularity](#weights-as-memory-at-adapter-granularity) below, because the argument needs more than a bullet.
 - Four dimensions that matter operationally are not covered systematically here,
   and a reader choosing a system should investigate them directly. **Behaviour
   under embedding-model change or vector-store migration**: only a few systems
@@ -4594,6 +4563,49 @@ No internet sources were used for this report. The analysis is based on the chec
 - `pi-chat` is a separate repository and was not reviewed; the claim that it injects two persistent memory files every turn comes from its documentation, not from its code.
 - **`arXiv:2608.05466` was examined and has no report, and its project site is the atlas's first sighting of an audit surface whose fixtures do not contain the artifact.** [Recursive Synthesis for Long-Horizon Terminal Tasks](https://arxiv.org/abs/2608.05466) (5 August 2026, CC BY 4.0) synthesises 37,484 executable terminal-agent tasks over fifteen recursive rounds, and is out of scope on the ordinary basis: what persists is a task corpus, not a store an agent writes beliefs into. It is recorded because of its [project site](https://zhongzhi660.github.io/recursive-verified-synthesis-site/), whose fifth section is an "Audit layer" headed *"Don't just trust our metrics. Inspect the task change, model trajectory, and rubric decision for the same case yourself."* Read in a browser, the Trajectory Diff's two columns — a failed baseline and a successful run that earned verifier reward 1.0 — are **byte-identical at every turn where both render**, across four cases checked, and every turn past the baseline's length is blank on the successful side: in case 1 the baseline is 6 turns, the successful run is 21, and turns 7–21 carry no command, no response and no observation. The viewer prints "No Left turn at this index" when the *baseline* runs out, so absence is expressible and is not used on the other side. The rubric tab scores that case 94.5/100 with all six of its first criteria at the same 86% confidence, citing the same three turns, under a generated sentence calling itself an *"evidence-linked deterministic assessment"*. The [viewer repository](https://github.com/alexhuang13/viewer) says it ships "source code and small fixtures only", so these are fixtures behaving as fixtures and nothing here says the underlying runs do not exist — the gap is between what the fixtures are and the sentence they are published under. This atlas already names [the harness's own output captured as evidence](#the-harnesss-own-output-captured-as-evidence) and [published benchmark numbers without committed artifacts](#published-benchmark-numbers-without-committed-artifacts); this is the third and the most persuasive, because the first two look like missing work and this one looks like finished work. The paper was then read from its LaTeX source rather than from a rendering, which corrected this atlas's own first reading and found more than it did. **Its flagship number disagrees with itself**: the RL table and the abstract both give Qwen3.5-27B-RL as 49.44 on Terminal-Bench 2 for a relative gain of +20.00%, and the conclusion says 46.07 for +11.82% — both internally consistent against the 41.20 base, so one is a stale draft figure surviving into the conclusion of a published paper, in the headline cell of the headline result. That is the same hand-written-number-beside-generated-ones class this atlas spent three days removing from its own prose. **Hidden-check protection reaches 63.5% at the final round**, so roughly 36.5% of tasks still let the verifier check what the instruction does not establish — which is what the contract-validity gate exists to forbid, and it leaves under-specification as an unexcluded explanation for the headline difficulty result of a fixed solver falling from 90% to 2.5% pass@4. Neither that metric nor requirement coverage is defined anywhere in the paper. There is no ablation, no limitations section, and the line `We release all synthesized tasks, sampled trajectories, and trained checkpoints` is commented out in the source. See [the note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-an-audit-layer-that-shows-one-trajectory-twice.md), which also records what the paper gets right and why its lineage-without-retroactive-removal is the tombstone gap in a training pipeline.
 - Helm was read, not run. Three claims in its report are inferences from code that a live database would settle: that `getAutonomyMode` returns the stale pre-supersession row (argued from SQLite's partial-index eligibility and rowid scan order, and consistent with the 82 duplicate supersessions of that one key recorded in the project's own changelog); that the 500-row recall window is reached in practice, which depends on a fact count that is gitignored; and which of the three retrieval quality tiers a typical install actually runs, since the MiniLM model is an explicit opt-in download and all three tiers produce the same output shape. Helm's third memory surface could not be reviewed at all: twelve `cortex.*` tools are registered and documented as a five-layer memory stack, and `workspace/cortex/` is gitignored and absent from the repository.
+
+#### Weights as memory, at adapter granularity
+
+Low-rank adapters are commodity rather than exploratory, published and exchanged
+as artifacts, so the question of whether this atlas's capabilities have a
+referent in a fine-tuned model is not hypothetical. The answer is that **the unit
+of identity is the adapter, never the record inside it**, and that single fact
+decides which capabilities survive the move into weights and which do not.
+
+**Four of the seven survive at adapter granularity**, and the corpus already
+proves it. Scope is enforceable by routing — which adapter loads for which user
+or project — and [MemOS](../systems/memos/) carries the `scope_enforced` mark on
+exactly that basis while mounting a parametric module. A training manifest can
+record which corpus and which base-model version produced an adapter, which is a
+real audit trail over training mutations. Adapter *v2* superseding *v1* at
+deployment is real supersession, and discarding an adapter is a real deletion.
+Validity intervals over adapter versions are ordinary bi-temporality.
+
+**What fails is anything that needs record identity**, and that is the atlas's
+admission test rather than a side issue. A delta is opaque: no read path reports
+what it learned from a given document, so "why does the system believe this" has
+no answer at the level the question is asked. Nothing can be superseded inside an
+adapter — only the whole adapter. Nothing can be deleted from one; a deletion
+request that names a record is answered by retraining without it, which requires
+still holding the corpus the request asked you to destroy. And a merged adapter
+carries its contributions irreversibly, while a withdrawn one reaches neither the
+copies already taken nor the merges downstream of them.
+
+So the honest statement is not that weights cannot carry these mechanisms. It is
+that **weights carry them at a granularity coarser than the thing a correction
+names**, and that no implementation reviewed here closes the gap. None of this
+rests on how many adapters exist or how popular any host is — it rests on the
+shape of the artifact and on what the reviewed systems actually do, which are the
+only things worth resting on.
+
+**The distributional escape does not work either.** It is tempting to hold that
+an adapter trained for *shape* — schema, vocabulary, house style — stores nothing
+correctable and so escapes all of this. Style adapters demonstrably encode the
+sources they were trained on; that is why withdrawal requests are made about them
+at all. Distribution and content are a spectrum, not a boundary, and a system
+that treats the distinction as a safety argument has made an unmeasured
+assumption. The build-side consequence is in
+[what I would build](#add-later), and the two should be read together.
 
 ## History
 
