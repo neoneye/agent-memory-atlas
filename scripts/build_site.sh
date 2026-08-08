@@ -108,6 +108,7 @@ render_document "$project_dir/content/patterns/index.md" "$output_dir/patterns/i
 render_document "$project_dir/content/benchmarks.md" "$output_dir/benchmarks/index.html"
 render_document "$project_dir/content/capabilities.md" "$output_dir/capabilities/index.html"
 render_document "$project_dir/content/verdicts.md" "$output_dir/verdicts/index.html"
+render_document "$project_dir/content/contributing.md" "$output_dir/contributing/index.html"
 
 for input in "$project_dir"/content/systems/*.md; do
   slug="$(basename "$input" .md)"

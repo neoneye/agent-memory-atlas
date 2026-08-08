@@ -28,6 +28,10 @@ Questions, corrections, and systems worth adding are welcome on Discord: [neoney
 - `.agents/skills/screen-repository/` — the security screen every checkout passes before it is read or run.
 - `.agents/skills/add-memory-system/` — the repeatable workflow for researching and integrating another memory system.
 
+## Contribute
+
+[CONTRIBUTING.md](CONTRIBUTING.md) covers the three useful contributions — correcting a report, proposing a system, arguing with a pattern — and what the build refuses. The reader-facing version is [neoneye.github.io/agent-memory-atlas/contributing/](https://neoneye.github.io/agent-memory-atlas/contributing/).
+
 ## Add a memory system
 
 Screen the checkout first — `python3 scripts/screen_repo.py <path>` reports auto-executing hooks, build-time execution and unpinned dependency surfaces without running anything from the tree. Then invoke the repository-local `$add-memory-system` skill with the path to a source checkout. It pins the analyzed commit, scaffolds the report, guides the code review, updates applicable design patterns, integrates the comparison and homepage, and validates the generated site.
