@@ -529,3 +529,31 @@ this atlas would not match those patterns. Both halves are now on the
 
 Fifty-five entries read, seven reports.
 
+### Batch 12 — the coding agents, and a repository that is no longer what its entry says
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `facebook/mcpguard-dynamic` | `f36a2f59` | Out of scope: a kernel-level eBPF sandbox for MCP. `ebpf/`, `proxy/`, `policies/`, `runner/` — nothing durable that an agent reads back |
+| `Aider-AI/aider` | `5dc9490b` | Out of scope: the repo map is a per-run tags cache (`CACHE_VERSION = 3`) and the chat history file is a transcript for a human. No commit since 22 May 2026 |
+| `cline/cline` | — | Out of scope, and **already dispositioned** on 7 August 2026 in [three coding agents](2026-08-07-three-coding-agents-and-where-their-memory-isnt.md) |
+| `OpenHands/OpenHands` | `68de5c58` | Out of scope — and not what the entry describes |
+| `opensquilla/claw-swe-bench` | `fcece5f4` | Out of scope: a 35-file harness measuring how much adapter design swings Pass@1 |
+
+The OpenHands case is a corpus-drift finding rather than a scope one. The list
+describes *"an MIT-licensed open-source coding-agent platform with a free local
+mode"*, and the repository at this commit is **Agent Canvas** — a self-hosted
+control centre whose README's first line is *"the self-hosted developer control
+center for coding agents and automations"* and which runs OpenHands, Claude Code,
+Codex or any ACP-compatible agent as a backend. It is a React front end: 2,005
+files under `src/routes`, `src/icons`, `electron/` and four Playwright configs.
+The one memory-shaped artifact is `src/routes/condenser-settings.tsx`, a settings
+page for configuring somebody else's condenser.
+
+So the agent runtime the entry is about is no longer in the repository the entry
+links to. Nothing was mis-triaged; the corpus moved. This is the second time in
+this pass that a repository's contents and its one-line description have parted
+company — [Serena](../content/systems/serena.md) in the other direction, with
+1,218 lines of memory the entry never mentioned.
+
+Sixty entries read, seven reports.
+
