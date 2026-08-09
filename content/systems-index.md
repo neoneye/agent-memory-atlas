@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **191 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **192 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -237,6 +237,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`verel`](../systems/verel/) **Verel** — Verification-first memory · `amitpatole/verel` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`vestige`](../systems/vestige/) **Vestige** — Backward reach and reversible merges · `samvallad33/vestige` · Bi-temporal, Mutation audit, Human review
 - [`vibe-cognition`](../systems/vibe-cognition/) **Vibe Cognition** — Journal first, graph second · `haagndaazer/vibe-cognition` · Mutation audit
+- [`virtual-context`](../systems/virtual-context/) **virtual-context** — A tag vocabulary that reorganises itself · `virtual-context/virtual-context` · Scope enforced, Mutation audit
 - [`virtualwife`](../systems/virtualwife/) **VirtualWife** — normalize_scores does not normalize · `yakami129/VirtualWife`
 - [`voyager`](../systems/voyager/) **Voyager** — Procedural skill memory · `MineDojo/Voyager`
 ## W

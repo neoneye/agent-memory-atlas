@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An LLM-built tag vocabulary that
+converges rather than sprawling, splits a tag that grows too broad, and
+keeps aliases so retrieval survives the reorganisation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="virtual-context — Agent Memory Atlas">
+    <meta property="og:description" content="An LLM-built tag vocabulary
+that converges rather than sprawling, splits a tag that grows too broad,
+and keeps aliases so retrieval survives the reorganisation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="virtual-context — Agent Memory Atlas">
+    <meta name="twitter:description" content="An LLM-built tag
+vocabulary that converges rather than sprawling, splits a tag that grows
+too broad, and keeps aliases so retrieval survives the reorganisation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>virtual-context — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A tag vocabulary that reorganises
+itself</p>
+          <h1>virtual-context</h1>
+          <p class="document-deck">An LLM-built tag vocabulary that
+converges rather than sprawling, splits a tag that grows too broad, and
+keeps aliases so retrieval survives the reorganisation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/virtual-context/virtual-context">
+              <span>Source</span>
+              <strong>virtual-context/virtual-context</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/virtual-context/virtual-context/commit/6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d" title="6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d">
+              <span>Analyzed revision</span>
+              <code>6566ec7d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>virtual-context frames itself as operating-system virtual memory for
+an LLM: "Your agent addresses a 20M-token window; the model sees 60K of
+curated signal." AGPL-3.0 with a commercial-licence contact, roughly
+257,000 lines of Python, deployed as a proxy in front of the provider
+API so no client changes are needed.</p>
+<p><strong>It is in scope for this atlas, and the check is worth
+stating</strong> because the framing invites the opposite conclusion. A
+system that only decides which messages stay in the current window is
+context management, not memory. Here segments are rows in SQLite keyed
+on <code>conversation_id</code>, tag summaries persist, and the README's
+claim is explicit: facts "persist across the whole conversation and
+across sessions, platforms, and models". Something survives the session
+with an identity, so it qualifies.</p>
+<p><strong>The mechanism worth the report is the tag vocabulary, and
+specifically what happens when it goes wrong.</strong></p>
+<p>Tags are not a fixed taxonomy. An LLM tagger reads each completed
+turn and generates semantic tags, with a vocabulary feedback loop that
+"makes it reuse <code>storage</code> instead of inventing
+<code>data-persistence</code>", a canonicaliser that catches synonyms,
+and — the part nothing else here has — <strong>a splitter</strong>.</p>
+<p><code>core/tag_splitter.py</code> sends an overly-broad tag to the
+model with the count of turns it covers and asks a structured question:
+do these turns cover two or more distinct sub-topics? If no,
+<code>{"splittable": false, "reason": "..."}</code>. If yes, group them
+and mint compound subtags.</p>
+<p>And then the reorganisation does not break existing retrieval,
+because <code>tag_aliases</code> maps
+<code>(alias, conversation_id) → canonical</code>. A query that used the
+old broad tag still resolves after the split.</p>
+<p>That is a real and rare property: <strong>a vocabulary that can
+reorganise itself without invalidating what was written against the old
+shape.</strong> Every system in this atlas that lets a model invent tags
+eventually accumulates <code>data-persistence</code>,
+<code>persistence</code>, <code>storage</code> and <code>db</code> as
+four names for one thing. This one converges them, and when convergence
+produces a tag that is too coarse, it splits it and keeps the old name
+working.</p>
+<p>The second thing worth crediting is that the local embedding tagger
+runs on the request path "so retrieval never waits on a model". The
+expensive tagger runs after the response; the cheap one runs before
+it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>segment</strong> is a compacted span of turns carrying both
+a <code>summary</code> and the <code>full_text</code>, with a
+<code>compression_ratio</code> and the <code>compaction_model</code>
+that produced it recorded on the row. Keeping both representations plus
+the ratio means the compaction is auditable — a reader can see what was
+thrown away and by which model.</p>
+<p>Segments carry a <code>primary_tag</code> and a set in
+<code>segment_tags</code>. Each tag accumulates a
+<code>tag_summaries</code> row with <code>covers_through_turn</code>,
+<code>source_segment_refs</code> and <code>source_turn_numbers</code> —
+so a per-tag summary knows exactly which material it covers and where it
+stops.</p>
+<pre class="mermaid"><code>flowchart TD
+    T[&quot;completed turn&quot;] --&gt; LT[&quot;LLM tagger — semantic tags&quot;]
+    LT --&gt; VF[&quot;vocabulary feedback loop:&lt;br/&gt;reuse &#39;storage&#39;, do not invent &#39;data-persistence&#39;&quot;]
+    VF --&gt; CAN[&quot;canonicaliser — synonyms folded&quot;]
+    CAN --&gt; SEG[&quot;segment stored: summary + full_text + compression_ratio&quot;]
+    SEG --&gt; BROAD{&quot;tag covers too many turns?&quot;}
+    BROAD --&gt;|&quot;splittable: false + reason&quot;| KEEP[&quot;left alone&quot;]
+    BROAD --&gt;|&quot;splittable: true&quot;| SPL[&quot;split into compound subtags&quot;]
+    SPL --&gt; AL[&quot;tag_aliases: old tag → canonical&quot;]
+    AL --&gt; CONT[&quot;old queries still resolve&quot;]
+    Q[&quot;incoming request&quot;] --&gt; ET[&quot;local embedding tagger, milliseconds, no LLM&quot;]
+    ET --&gt; R[&quot;tag-directed retrieval&quot;]
+    F[&quot;new fact contradicts an old one&quot;] --&gt; SS[&quot;supersession checker marks it&quot;]</code></pre>
+<p>The two paths into retrieval are the design: the expensive tagger
+runs after the response, the cheap one before it, and the vocabulary
+they share is the same.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A proxy (<code>virtual_context/proxy/</code>) sitting between the
+client and the provider, so an existing agent gains the behaviour
+without code changes. Beside it an MCP server, a CLI, a TUI, an OpenClaw
+integration and import adapters.</p>
+<p>Storage is SQLite — <code>segments</code>, <code>segment_tags</code>,
+<code>tag_aliases</code>, <code>tag_summaries</code>,
+<code>engine_state</code>, <code>conversation_lifecycle</code> and a
+<code>cost_log</code> — with Redis holding session state and
+conversation tombstones.</p>
+<p>The Redis tombstone deserves a note because it is not a memory
+mechanism and a grepping reader will find it first.
+<code>proxy/handlers.py:2546</code> describes "eviction</p>
+<ul>
+<li>tombstone clearance, never row deletion": a deleted conversation
+gets a Redis tombstone with a 24-hour TTL and a version of
+<code>2**53</code> so a stale write cannot resurrect it, and
+<code>undelete</code> clears it. That is a distributed-systems fencing
+token, not a rejected-value record, and this report does not count
+it.</li>
+</ul>
+<p><code>engine_state</code> persisting
+<code>compacted_prefix_messages</code>, <code>turn_count</code> and
+<code>turn_tag_entries</code> per conversation is what lets the proxy be
+restarted without losing where it was in a long conversation.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest</strong> — <code>ingest/</code> →
+<code>core/tagging_pipeline.py</code> →
+<code>core/tag_generator.py</code> (LLM) with the vocabulary feedback
+loop → <code>core/llm_utils.normalize_tag</code> → storage.</p>
+<p><strong>Split</strong> — <code>core/tag_splitter.py</code>, prompting
+with the tag, its turn count out of the total, and the turn list, and
+requiring a structured verdict with a reason on the negative case.</p>
+<p><strong>Retrieve</strong> — the local embedding tagger on the request
+path → <code>core/semantic_search.py</code> → tag-directed segment
+selection under a token budget.</p>
+<p><strong>Supersede</strong> — <code>ingest/supersession.py</code>, a
+"fact supersession checker: detect and mark contradicted facts", with a
+stopword list tuned to the domain and a
+<code>RelationType</code>/<code>FactLink</code> model.</p>
+<p><strong>Compact</strong> — segments compacted under budget pressure,
+with the ratio and the model recorded.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>segments</code> keeps <code>summary</code> <em>and</em>
+<code>full_text</code> — a design choice with a real cost in storage and
+a real benefit: compaction is reversible and inspectable, and
+<code>compression_ratio</code> plus <code>compaction_model</code> on the
+row means a bad compaction model is identifiable after the fact.</p>
+<p><code>tag_summaries</code> is the more unusual table. It holds a
+rolling per-tag summary with <code>covers_through_turn</code>,
+<code>source_segment_refs</code>, <code>source_turn_numbers</code> and
+<code>generated_by_turn_id</code> — so a summary is not an opaque blob
+but a claim about a specific, enumerated set of turns, with a watermark.
+Incremental summarisation that records its own coverage boundary is how
+you avoid re-summarising or double-counting, and very few systems here
+do it.</p>
+<p><code>cost_log</code> records input and output tokens per event with
+the provider and model. A memory layer that meters its own spend is well
+placed to answer whether it is worth running, and the README's benchmark
+uses exactly this to report cost per question.</p>
+<p>Every table carries <code>conversation_id</code>, including
+<code>tag_aliases</code> — so the vocabulary is per-conversation, and
+two conversations can canonicalise the same synonym differently. That is
+the right scope for a vocabulary learned from context.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Tag-directed rather than similarity-first. The local embedding tagger
+assigns tags to the incoming request in milliseconds, those tags select
+segments and tag summaries, and the working set is assembled under a
+token budget with cold topics collapsing to their summaries under
+pressure and the model able to expand them through tools when it needs
+detail.</p>
+<p><code>conversation_id</code> is on every table and in every query
+path, which earns <code>scope_enforced</code>; the boundary here is a
+conversation rather than a tenant, and the design does not claim
+otherwise.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Tagging happens after the response, so the agent does not wait for
+it. Compaction happens under budget pressure. Supersession runs at
+ingest.</p>
+<p>Correction is <code>ingest/supersession.py</code> marking a
+contradicted fact, with typed links between facts. There is no
+rejected-value record, no trust state and no review surface — a
+superseded fact is marked, and the same claim can arrive again.</p>
+<p>The interesting failure surface is the vocabulary itself. Splitting a
+tag is an LLM judgement; canonicalising a synonym is an LLM judgement;
+whether two turns are "distinct sub-topics" is an LLM judgement. The
+aliases mean a wrong split does not break retrieval — the old tag still
+resolves — which is a real safety property, and it means a wrong split
+is also <em>invisible</em>, because nothing degrades loudly.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The proxy is the integration, and it is the strongest argument for
+the design: an existing agent gets a 20M-token virtual window by
+changing a base URL. An MCP server, a CLI, a TUI, presets (including a
+coding preset with its own patterns) and import adapters sit
+alongside.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded</strong>, per section 6.</p>
+<p><strong>Audit log — awarded, with its shape stated.</strong>
+<code>cost_log</code> is an append-only per-event record of what was
+spent, and <code>tag_summaries</code> carries the provenance of every
+derived summary (<code>source_segment_refs</code>,
+<code>source_turn_numbers</code>, <code>generated_by_turn_id</code>,
+<code>covers_through_turn</code>). Between them a reader can reconstruct
+what was derived from what and what it cost. It is not a mutation log of
+the memory itself, and it is more than most systems here keep about
+their own derivations.</p>
+<p><strong>Trust state, tombstone, bitemporal, human review, negative
+eval — no.</strong> The Redis conversation tombstone is a fencing token,
+as section 3 describes.</p>
+<p><strong>The concentration of judgement is the risk.</strong> Tag
+assignment, vocabulary convergence, splitting, summarisation and
+supersession are all model calls, and the only committed measurement is
+end-to-end answer accuracy. A vocabulary that converges wrongly, or a
+split that groups badly, would show up as a small accuracy loss and
+nothing else — there is no per-mechanism evaluation.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, and the most thoroughly reported benchmark
+section in this batch.</p>
+<p><code>benchmarks/</code> holds harnesses for LongMemEval, LoCoMo,
+BEAM, AMB and MRCR — in the tree, not in another repository — with a
+judge, a baseline, a dataset loader, a cost module and an
+<code>autopsy_report.py</code>.</p>
+<p>The published run is 100 questions from LongMemEval-500, and the
+reporting is careful in the ways that matter: it names the sampling ("5
+batches of 20, seeds 42/99/777/1234/2025"), names all three models by
+role (MiMo-V2-Flash for ingestion, Claude Sonnet 4.5 as reader, Gemini 3
+Pro Preview as judge), states the baseline as the <em>same reader</em>
+with full history, and breaks accuracy down by question type — 95/100
+against 33/100, at 52,347 versus 117,582 tokens per question and $0.16
+versus $0.36.</p>
+<p>Two caveats belong beside it, and one of them the project states
+itself. It states that "a full LoCoMo run is not yet published; the
+figures above are LongMemEval results" — an explicit note about which
+suite the numbers come from. The one it does not state is that the run
+samples a fifth of the suite, and the per-category counts (17
+knowledge-update, 26 multi-session, 28 temporal-reasoning) are small
+enough that a category figure moves several points per question.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give your tag vocabulary a feedback loop.</strong> Showing
+the tagger what already exists, so it reuses <code>storage</code> rather
+than inventing <code>data-persistence</code>, is the difference between
+a vocabulary and a pile of near-synonyms.</li>
+<li><strong>Split a tag that grows too broad, and keep an
+alias.</strong> The split is the obvious half; <code>tag_aliases</code>
+mapping the old name to the canonical one is what makes the
+reorganisation safe for everything already written.</li>
+<li><strong>Make the splitter answer a structured question with a reason
+on the negative.</strong>
+<code>{"splittable": false, "reason": "..."}</code> means a no is
+inspectable, not just an absence.</li>
+<li><strong>Run a cheap tagger on the request path and the expensive one
+after the response.</strong> Retrieval never waits on a model, and the
+two share a vocabulary.</li>
+<li><strong>Record the coverage boundary on a rolling summary.</strong>
+<code>covers_through_turn</code> plus the enumerated source refs is how
+an incremental summary avoids re-summarising and double-counting.</li>
+<li><strong>Keep the summary and the full text, with the ratio and the
+model.</strong> A bad compaction model is identifiable afterwards only
+if you wrote down which one ran.</li>
+<li><strong>Meter your own cost.</strong> <code>cost_log</code> per
+event with provider and model is what turns "is this worth running" into
+a query.</li>
+<li><strong>Scope the vocabulary to the conversation.</strong> Two
+conversations can reasonably canonicalise the same word
+differently.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let every judgement be a model call with only
+end-to-end measurement.</strong> Tagging, convergence, splitting,
+summarising and supersession are five model-driven mechanisms and one
+accuracy number; a regression in any of them looks the same.</li>
+<li><strong>Do not mistake the Redis conversation tombstone for a memory
+mechanism.</strong> It is a fencing token with a TTL and a version,
+doing exactly the job it should.</li>
+<li><strong>Do not read a 100-question sample's per-category rates as
+stable.</strong> Some categories carry seventeen questions.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who wants a long virtual context without changing
+their agent — the proxy is the product, and the benchmark, sampling
+caveats aside, is the most completely reported in this batch.</p>
+<p>It is not a governed memory. There is no trust state, no review, no
+rejected-value record, and correction is a mark on a contradicted fact.
+If what you need is a memory you can defend, this is the wrong shape; if
+what you need is a 20M-token window that costs less and answers better,
+the evidence for that is in the tree.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often does a split fire, and how often is it
+wrong?</strong> The aliases make a bad split harmless to queries and
+invisible to everyone.</li>
+<li><strong>Does the vocabulary converge or oscillate?</strong> A
+feedback loop that reuses existing tags and a splitter that mints new
+ones are opposing forces, and nothing reports the equilibrium.</li>
+<li><strong>What does supersession do to retrieval?</strong> Facts are
+marked contradicted; whether a marked fact is excluded, demoted, or
+merely annotated was not traced.</li>
+<li><strong>What is the LoCoMo result?</strong> The project says it is
+not yet published and the harness is committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The vocabulary</strong> —
+<code>virtual_context/core/tag_generator.py</code>,
+<code>tag_splitter.py</code> (the prompt and the structured verdict
+<code>:12-30</code>), <code>tagging_pipeline.py</code>,
+<code>llm_utils.py</code> (<code>normalize_tag</code>)</p>
+<p><strong>Schema</strong> —
+<code>virtual_context/storage/sqlite.py:85</code>
+(<code>segments</code>), <code>:102</code> (<code>segment_tags</code>),
+<code>:109</code> (<code>tag_aliases</code>), <code>:116</code>
+(<code>cost_log</code>), <code>:126</code> (<code>tag_summaries</code>
+with <code>covers_through_turn</code>), <code>:142</code>
+(<code>engine_state</code>), <code>conversation_lifecycle</code></p>
+<p><strong>Retrieval</strong> —
+<code>virtual_context/core/semantic_search.py</code>,
+<code>temporal_resolver.py</code>,
+<code>virtual_context/engine.py</code>,
+<code>virtual_context/token_counter.py</code></p>
+<p><strong>Correction</strong> —
+<code>virtual_context/ingest/supersession.py</code></p>
+<p><strong>Proxy and session state</strong> —
+<code>virtual_context/proxy/handlers.py:2540-2660</code> (eviction, the
+Redis tombstone and <code>undelete</code>),
+<code>virtual_context/conversation_identity.py</code></p>
+<p><strong>Integration</strong> — <code>virtual_context/mcp/</code>,
+<code>virtual_context/cli/</code>, <code>virtual_context/tui/</code>,
+<code>virtual_context/openclaw/</code>,
+<code>virtual_context/import_adapters/</code>,
+<code>virtual_context/presets/</code></p>
+<p><strong>Benchmarks</strong> — <code>benchmarks/longmemeval/</code>
+(<code>judge.py</code>, <code>baseline.py</code>,
+<code>dataset.py</code>, <code>cost.py</code>,
+<code>autopsy_report.py</code>), <code>benchmarks/locomo/</code>,
+<code>benchmarks/beam/</code>, <code>benchmarks/amb/</code>,
+<code>benchmarks/mrcr/</code>, <code>docs/benchmarks.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/virtual-context/virtual-context/commit/6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d"><code class="commit-id" title="6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d">6566ec7d…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

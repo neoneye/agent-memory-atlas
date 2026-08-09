@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 191 reports.**
+**This page covers all 192 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["191 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["192 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1636,3 +1636,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 53,000 lines with 70 test files including a named storage-parity suite, an SBOM workflow and a security-scanning workflow — and a committed design spec arguing against its own append-only log because "the data structure is fighting the biological model", still marked Proposed.
 - Study when: you want the log-versus-directory argument made concretely, by a project that hit the sync failure that motivates it.
 - Do not copy when: a wrong memory must be retractable rather than left to fade; decay cannot tell false from unused.
+
+### [`virtual-context`](../systems/virtual-context/)
+
+- Best idea: a tag vocabulary that reorganises itself without breaking what was written against the old shape — a feedback loop that makes the tagger reuse `storage` rather than invent `data-persistence`, a splitter that breaks up a tag grown too broad, and `tag_aliases` mapping the old name to the canonical one so existing queries still resolve.
+- Biggest risk: tagging, convergence, splitting, summarising and supersession are five model-driven judgements measured by one end-to-end accuracy number, and the aliases that make a bad split harmless to queries also make it invisible.
+- Most reusable component: `tag_summaries` with `covers_through_turn` plus enumerated `source_segment_refs` and `source_turn_numbers` — a rolling summary that records exactly which material it covers and where it stops, which is how incremental summarisation avoids double-counting.
+- Maturity impression: 257,000 lines of Python deployed as a proxy so an existing agent needs no changes, AGPL-3.0 with a commercial contact, benchmark harnesses for five suites committed in-tree, and a LongMemEval run reporting its seeds, all three model roles and a per-category breakdown.
+- Study when: you let a model invent tags and your vocabulary has started to sprawl.
+- Do not copy when: you need memory you can defend — correction is a mark on a contradicted fact, and there is no trust state or review.
