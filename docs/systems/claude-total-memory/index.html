@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A second retrieval against an
+inverted query, scored for contradiction, so a strong conflict makes the
+question unanswerable instead of picking a side.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="total-agent-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A second retrieval against
+an inverted query, scored for contradiction, so a strong conflict makes
+the question unanswerable instead of picking a side.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="total-agent-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A second retrieval against
+an inverted query, scored for contradiction, so a strong conflict makes
+the question unanswerable instead of picking a side.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>total-agent-memory — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Search for what would refute the answer</p>
+          <h1>total-agent-memory</h1>
+          <p class="document-deck">A second retrieval against an
+inverted query, scored for contradiction, so a strong conflict makes the
+question unanswerable instead of picking a side.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vbcherepanov/claude-total-memory">
+              <span>Source</span>
+              <strong>vbcherepanov/claude-total-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09" title="616d9a6f8b507c16b4cdfef4e823af59d949cc09">
+              <span>Analyzed revision</span>
+              <code>616d9a6f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>total-agent-memory is a 68,000-line MIT Python memory layer for
+coding agents, distributed through PyPI, npm, Homebrew, GHCR and nine
+IDE installers. It is pinned here at
+<code>vbcherepanov/claude-total-memory</code>, the URL it was cloned
+from; the package, the README title and the project's own container
+badge all say <code>total-agent-memory</code>, so the repository has
+been renamed and GitHub is redirecting. This report uses the new name
+and the old URL.</p>
+<p>Most of it is the familiar stack: a hybrid retriever, a knowledge
+graph, background enrichment workers, a dashboard.</p>
+<p><strong>Three things in it are worth the read.</strong></p>
+<p><strong>First, negative-evidence retrieval.</strong>
+<code>src/memory_core/negative_retrieval.py</code> performs "a
+deliberate <strong>second</strong> retrieval against an
+<em>inverted</em> query — one phrased to surface facts that would
+CONTRADICT the most likely answer." Each (positive, negative) pair is
+scored by the contradiction detector, and the maximum score picks one of
+three outcomes: below 0.30 nothing conflicts, between 0.30 and 0.60 the
+answer "should hedge", at or above 0.60 "the router should treat the
+question as unanswerable and emit IDK rather than pick a side."</p>
+<p>The module docstring states the failure it exists for, with an
+example: memory holds "Alice loves teal" and "Alice told Bob she
+actually hates teal now", and positive retrieval surfaces near-matches
+"which sound supportive while a contradicting fact sits one sentence
+away."</p>
+<p>Almost everything in this atlas retrieves what matches. This
+retrieves what would <em>disagree</em>, and lets the disagreement
+win.</p>
+<p><strong>Second, lossy compression with an un-loseable class.</strong>
+<code>src/content_filter.py</code> is a declarative pipeline configured
+by eleven TOML files under <code>filters/</code> — one per tool output
+shape (<code>pytest.toml</code>, <code>stack_trace.toml</code>,
+<code>git_status.toml</code>, <code>docker_ps.toml</code>,
+<code>sql_explain.toml</code> and so on). Under
+<code>safety = "strict"</code>, URLs, absolute paths, <code>~/</code>
+paths, inline code and code fences are extracted <strong>before</strong>
+filtering and any that the filter dropped are re-appended with a
+<code>preserved:</code> tag.</p>
+<p>So the filter may be as aggressive as its author likes and a declared
+class of high-value tokens still provably survives. Every rule also
+declares <code>on_empty</code> — <code>pytest.toml</code> says
+<code>on_empty = "(all tests passed)"</code> — so filtering to nothing
+produces a statement rather than a silence.</p>
+<p><strong>Third, a measured false-veto and the fix kept beside the
+original.</strong> <code>src/ai_layer/verifier.py</code>
+<code>_decide()</code> carries two profiles. The default is the legacy
+"strict <code>p_contradict &gt; 0.6</code> veto, no margin… the path the
+legacy test suite exercises". The calibrated profile requires
+<code>p_contradict &gt;= τ_c AND (p_contradict - p_entail) &gt;= margin</code>,
+because "the margin stops moderate-confidence 'contradicts' from vetoing
+answers the model also weakly supports — the dominant false-veto failure
+mode on dialogue evidence."</p>
+<p>A named dominant failure mode, a threshold change derived from it,
+and the old behaviour retained rather than silently replaced.</p>
+<p><strong>The claim to discount is the competitive one</strong>,
+section 10.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Facts are assertions with a validity interval. Writing a conflicting
+assertion does not edit anything: it closes the old one
+(<code>valid_to = now</code>, <code>superseded_by = new id</code>) and
+appends the new. Invalidation without replacement sets
+<code>valid_to</code> and an <code>invalidation_reason</code>.</p>
+<p>Answering is a pipeline: retrieve positively, ask whether the
+evidence supports an answer at all, retrieve negatively against an
+inverted query, score the conflict, and let a hard contradiction
+override the answer.</p>
+<pre class="mermaid"><code>flowchart TD
+    T[&quot;tool output&quot;] --&gt; CF{&quot;content filter, safety=strict&quot;}
+    CF --&gt; W[&quot;stash URLs, abs paths, ~/paths,&lt;br/&gt;inline code, fences&quot;]
+    CF --&gt; P[&quot;strip_ansi → replace → strip_lines →&lt;br/&gt;keep_lines → truncate → head/tail → max_lines&quot;]
+    P --&gt; EM{&quot;filtered to nothing?&quot;}
+    EM --&gt;|yes| ON[&quot;on_empty text, e.g. &#39;(all tests passed)&#39;&quot;]
+    EM --&gt;|no| OUT[&quot;filtered text&quot;]
+    W --&gt; RE[&quot;re-append anything dropped as &#39;preserved: …&#39;&quot;]
+    ON --&gt; RE
+    OUT --&gt; RE
+    RE --&gt; FA[&quot;fact_assertions, append-only&quot;]
+    FA --&gt;|&quot;conflict&quot;| CL[&quot;close prior: valid_to = now, superseded_by = new&quot;]
+    Q[&quot;question&quot;] --&gt; POS[&quot;6-stage hybrid retrieval, project-scoped, valid_to IS NULL&quot;]
+    POS --&gt; ANS{&quot;answerability: does this evidence support an answer?&quot;}
+    ANS --&gt; INV[&quot;invert the question via one Haiku call&lt;br/&gt;(retry once, then a deterministic template)&quot;]
+    INV --&gt; NEG[&quot;second retrieval for contradicting facts&quot;]
+    NEG --&gt; SC[&quot;score every positive x negative pair, clipped 5x5&quot;]
+    SC --&gt;|&quot;max &amp;lt; 0.30&quot;| OK[&quot;no_contradiction — answer&quot;]
+    SC --&gt;|&quot;0.30 to 0.60&quot;| HG[&quot;soft_contradict — hedge&quot;]
+    SC --&gt;|&quot;&amp;ge; 0.60&quot;| IDK[&quot;hard_contradict — emit IDK&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/</code> holds 68 modules outside tests:
+<code>memory_core</code> (with <code>temporal</code> and
+<code>episodes</code>), <code>ai_layer</code>, <code>graph</code>,
+<code>ingestion</code>, <code>reflection</code>,
+<code>associative</code>, <code>cognitive</code>,
+<code>ast_ingest</code>, <code>workers</code>,
+<code>memory_systems</code>, <code>tools</code>,
+<code>metrics</code>.</p>
+<p>There is an enforced layer wall: <code>negative_retrieval</code>
+"lives in <code>memory_core</code> and therefore must not import
+<code>ai_layer.*</code> (enforced by
+<code>tests/test_v11_layer_separation</code>)". Collaborators arrive as
+<code>Protocol</code>-typed callables — <code>search_fn</code>,
+<code>contradiction_fn</code>, <code>llm_client</code>. A dependency
+direction asserted by a test rather than by convention is worth naming;
+few systems here do it.</p>
+<p>Three separate work queues (<code>deep_enrichment_queue</code>,
+<code>triple_extraction_queue</code>,
+<code>representations_queue</code>) and a consolidation daemon run
+behind the write path. Their <code>status='pending'</code> values are
+queue states, not epistemic ones.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Filter</strong> — <code>src/content_filter.py</code>:
+<code>_extract_whitelist()</code>, <code>run_pipeline()</code>,
+<code>_append_preserved()</code>, <code>filter_with_stats()</code>;
+rules in <code>filters/*.toml</code>.</p>
+<p><strong>Assert</strong> — <code>src/temporal_kg.py</code>: append
+with <code>valid_from</code>, close the prior with
+<code>valid_to</code>/<code>superseded_by</code>, invalidate with
+<code>invalidation_reason</code>.</p>
+<p><strong>Verify</strong> — <code>src/ai_layer/verifier.py</code>
+<code>_decide()</code>, the two calibration profiles.</p>
+<p><strong>Refute</strong> —
+<code>src/memory_core/negative_retrieval.py</code>: invert, retrieve,
+score, bucket.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>fact_assertions</code> is append-only.
+<code>valid_to IS NULL</code> means currently valid;
+<code>valid_from</code> and <code>created_at</code> are both stored,
+which is what makes the as-of query meaningful rather than decorative.
+<code>superseded_by</code> links a closed assertion to its replacement,
+and <code>invalidation_reason</code> records why an assertion was closed
+without one.</p>
+<p>There is no status enum on a fact, no provenance beyond
+<code>source</code>, <code>context</code> and <code>project</code>, and
+no record of a value that was <em>rejected</em> — a wrong assertion is
+closed, not marked as refuted, so re-ingesting the same wrong text
+writes it again as a fresh assertion.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Six stages — BM25, semantic, fuzzy, graph, cross-encoder, MMR — then
+the answerability classifier, then the negative pass.</p>
+<p>The negative pass has three engineering details worth copying. The
+inverted query is "a small Haiku prompt; we retry once on bad output
+(empty / multi-line garbage / echoing the original question) and then
+fall back to a deterministic template" — so a bad LLM response degrades
+to a working query rather than an exception. Both evidence lists "are
+clipped to 5 entries before the cross-product so we never run more than
+25 evaluations per call". And an empty positive list short-circuits
+"without an LLM call".</p>
+<p>The as-of query is real:
+<code>valid_from &lt;= timestamp AND (valid_to IS NULL OR valid_to &gt; timestamp)</code>,
+so history can be read at a past point rather than only as a current
+view. That, with the separately stored <code>created_at</code>, earns
+<code>bitemporal</code>.</p>
+<p><code>project = ?</code> sits in the same WHERE clause as
+<code>valid_to IS NULL</code> on the assertion reads — a stored key
+applied as a read-path predicate, which earns
+<code>scope_enforced</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes append. Correction closes and supersedes. Deletion, in the
+assertion store, is closing with a reason.</p>
+<p>Enrichment is queued rather than inline, with three queues and a
+consolidation daemon, so the write path stays cheap and the expensive
+work is retryable.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a CLI, hooks, installers for nine IDEs, Docker and
+GHCR images, launchd and systemd units, and a skill directory.
+<code>CLAUDE.md.template</code>, <code>AGENTS.md.template</code>,
+<code>codex-global-rules.md.template</code> and
+<code>agent-rules.md.template</code> ship the instruction side alongside
+the server.</p>
+<p>The <code>filters/*.toml</code> set is the integration detail that
+matters: it is where tool output is cut down before it becomes memory,
+and it is configuration a user can read and edit without touching
+Python.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Bitemporal — awarded.</strong> As-of query plus separately
+stored assertion time.</p>
+<p><strong>Scope enforced — awarded.</strong> <code>project</code> on
+the read path.</p>
+<p><strong>Negative eval — awarded</strong>, on two counts:
+<code>tests/test_negative_retrieval.py</code> is a committed suite whose
+subject is a mechanism that exists to produce IDK on adversarial
+questions, with tests for the threshold boundaries
+(<code>test_score_just_above_soft_threshold_is_soft_contradict</code>,
+<code>test_decision_thresholds_match_spec</code>), the failure paths
+(<code>test_search_failure_is_swallowed_into_no_contradiction</code>),
+and the LLM degradation path
+(<code>test_inverted_query_falls_back_to_template_on_llm_failures</code>).
+<code>benchmarks/analyze_failures.py</code> and the committed
+<code>evals/embedding-ab-2026-04-27.json</code> are the measurement side
+of the same instinct.</p>
+<p><strong>Tombstone — no.</strong> Closing an assertion does not stop
+the same value being asserted again.</p>
+<p><strong>Trust state — no.</strong> <code>confidence</code> is a
+float; the <code>status</code> columns are queue states.</p>
+<p><strong>Human review — no.</strong> Nothing found that routes a
+memory to a person.</p>
+<p><strong>Audit log — no.</strong> <code>fact_assertions</code> is
+append-only and carries <code>invalidation_reason</code>, which is
+close, but it is the store itself rather than a separate record of who
+changed what; there is no audit table.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> 150 test files in <code>tests/</code> (the
+README badge says 1,769 tests passing), a benchmarks directory with
+LoCoMo and LongMemEval harnesses, an ensemble judge, a failure analyser,
+an embedding A/B, and <strong>dated result JSONs committed to the
+repository</strong> — <code>evals/longmemeval-2026-04-17.json</code>,
+<code>longmemeval-v8-baseline-2026-04-24.json</code> and its log,
+<code>embedding-ab-2026-04-27.json</code>.</p>
+<p>Committing the result file, with <code>dataset_source</code>,
+<code>run_date</code>, version, mode, <code>k</code>,
+<code>questions_evaluated</code>, <code>questions_skipped</code> and a
+stated <code>skip_reason</code>, is better practice than most of this
+corpus manages. The self-reported numbers are
+<code>r_at_5_recall_any</code> 0.9617, <code>r_at_5_recall_all</code>
+0.8447, nDCG@5 0.8244, 38.8 ms average, over 470 questions.</p>
+<p><strong>The comparative claim is where to be careful.</strong> The
+README badge and <code>docs/vs-competitors.md</code> headline
+"<strong>+10.8 pp over Supermemory's published 85.4%</strong> on the
+same dataset". That subtracts this project's <code>recall_any@5</code> —
+at least one required fragment in the top five — from another project's
+overall headline figure, and nothing in the repository establishes that
+the two numbers measure the same quantity.</p>
+<p>To the project's credit, the caveat is printed directly underneath:
+it defines both recall variants and states that its own strict
+<code>recall_all@5</code> is 84.5%, which is <em>below</em> the 85.4% it
+is being compared against. The document calls that "still at parity". A
+reader who takes the badge without the footnote gets a different
+impression than a reader who takes both.</p>
+<p>The other detail: the 30 skipped questions are the
+<strong>abstention</strong> type, "excluded by bench (not a recall
+task)". That exclusion is the benchmark's, not this project's — but
+abstention is precisely what negative retrieval was built for, so the
+headline recall figure cannot speak to the mechanism this report finds
+most interesting. Nothing in the tree measures the IDK path end to
+end.</p>
+<p><strong>I ran nothing.</strong> The numbers above are what the
+repository reports about itself.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Retrieve for the refutation, not just the match.</strong>
+One inverted query, one extra search, a contradiction score, and three
+buckets — answer, hedge, IDK. It addresses the failure that similarity
+search cannot see: the contradicting fact that does not resemble the
+question.</li>
+<li><strong>Let the hard contradiction win.</strong> "Treat the question
+as unanswerable and emit IDK rather than pick a side" is a policy most
+memory layers never state.</li>
+<li><strong>Bound the extra cost before you add it.</strong> Both lists
+clipped to five before the cross-product, at most 25 scores; one LLM
+call with one retry and a deterministic template fallback; an
+empty-positive short circuit that skips the LLM entirely. This is how
+you add a second retrieval pass without doubling the bill.</li>
+<li><strong>Give lossy compression an un-loseable class.</strong>
+Extract URLs, absolute paths and code spans before filtering; re-append
+what the filter dropped. The rules can then be aggressive without anyone
+auditing them for what they might eat.</li>
+<li><strong>Make every filter declare <code>on_empty</code>.</strong>
+<code>"(all tests passed)"</code> turns "filtered to nothing" from an
+ambiguous silence into a fact.</li>
+<li><strong>Keep the old threshold profile when you
+recalibrate.</strong> Two named profiles, the legacy one still exercised
+by the legacy suite, and a docstring saying which failure mode the new
+one addresses.</li>
+<li><strong>Assert the layer wall with a test.</strong>
+<code>memory_core</code> must not import <code>ai_layer</code>, enforced
+by <code>tests/test_v11_layer_separation</code>, with collaborators
+passed as <code>Protocol</code> callables.</li>
+<li><strong>Commit the result file, not the number.</strong>
+<code>dataset_source</code>, <code>run_date</code>, version, retrieval
+mode, <code>k</code>, questions evaluated <em>and skipped</em> with the
+reason. A badge is a claim; this is evidence.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not headline a cross-system delta between
+differently-defined metrics.</strong> The footnote here is honest and
+the badge is not, and the badge is what gets read. If the like-for-like
+number is 84.5% against 85.4%, that is the comparison, and the honest
+headline is "comparable".</li>
+<li><strong>Do not let closing an assertion stand in for rejecting a
+value.</strong> <code>valid_to</code> plus <code>superseded_by</code>
+records that a belief ended; nothing prevents the same wrong text being
+re-asserted by the next ingest.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Good for a local-first coding agent where you control the machine and
+want the retrieval stack, the filters and the temporal store as one
+installed thing. The distribution surface is unusually complete for a
+single-maintainer project.</p>
+<p><code>negative_retrieval.py</code> and <code>content_filter.py</code>
+are worth reading even if you adopt nothing else. Both are
+self-contained, both are ideas rather than plumbing, and both address
+failures the rest of this atlas mostly does not name.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the IDK path measured?</strong> The mechanism targets
+abstention; the benchmark excludes abstention questions. Nothing found
+closes that gap.</li>
+<li><strong>Which verifier profile ships by default?</strong>
+<code>_decide()</code> defaults to the legacy strict veto when no
+<code>calibration</code> is passed; which callers pass it was not
+traced.</li>
+<li><strong>What is <code>safety = "semantic"</code>?</strong> The
+docstring lists strict, semantic and off; only strict's whitelist
+behaviour was read.</li>
+<li><strong>Does the filter apply before or after the assertion is
+written?</strong> The ordering determines whether the un-loseable class
+is guaranteed in storage or only in what the agent sees.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Negative evidence</strong> —
+<code>src/memory_core/negative_retrieval.py</code> (the design notes
+<code>:1-58</code>, <code>THRESHOLD_SOFT</code> /
+<code>THRESHOLD_HARD</code>, <code>negative_retrieve</code>),
+<code>tests/test_negative_retrieval.py</code>,
+<code>tests/fixtures/negative_retrieval_fixtures.json</code></p>
+<p><strong>Content filter</strong> — <code>src/content_filter.py</code>
+(whitelist patterns <code>:42-47</code>, <code>_extract_whitelist</code>
+<code>:122</code>, <code>run_pipeline</code> <code>:151</code>,
+<code>_append_preserved</code> <code>:134</code>),
+<code>filters/pytest.toml</code>, <code>stack_trace.toml</code>,
+<code>git_status.toml</code>, <code>cargo.toml</code>,
+<code>docker_ps.toml</code>, <code>http_log.toml</code>,
+<code>json_blob.toml</code>, <code>markdown_doc.toml</code>,
+<code>npm_yarn.toml</code>, <code>sql_explain.toml</code>,
+<code>generic_logs.toml</code></p>
+<p><strong>Temporal store</strong> — <code>src/temporal_kg.py</code>
+(append and close <code>:58-115</code>, invalidate
+<code>:144-165</code>, as-of query <code>:201-210</code>)</p>
+<p><strong>Verification</strong> — <code>src/ai_layer/verifier.py</code>
+(<code>_decide</code> <code>:385-432</code>),
+<code>src/ai_layer/answerability.py</code>,
+<code>src/contradiction_detector.py</code></p>
+<p><strong>Queues and workers</strong> —
+<code>src/deep_enrichment_queue.py</code>,
+<code>src/triple_extraction_queue.py</code>,
+<code>src/representations_queue.py</code>,
+<code>src/enrichment_worker.py</code>,
+<code>src/workers/consolidation_daemon.py</code></p>
+<p><strong>Evaluation</strong> —
+<code>benchmarks/longmemeval_bench.py</code>,
+<code>locomo_bench.py</code>, <code>locomo_bench_llm.py</code>,
+<code>analyze_failures.py</code>, <code>embedding_ab.py</code>,
+<code>ensemble_judge.py</code>, <code>temporal_filter.py</code>,
+<code>v11_pipeline.py</code>,
+<code>evals/longmemeval-2026-04-17.json</code>,
+<code>evals/embedding-ab-2026-04-27.json</code>,
+<code>evals/longmemeval-v8-baseline-2026-04-24.json</code></p>
+<p><strong>Claims</strong> — <code>docs/vs-competitors.md</code> (the
+benchmark table <code>:95-101</code>, the "+10.8 pp" line
+<code>:119</code>, the "How to read this" note
+<code>:121-125</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09"><code class="commit-id" title="616d9a6f8b507c16b4cdfef4e823af59d949cc09">616d9a6f…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

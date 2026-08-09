@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 199 reports.**
+**This page covers all 200 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["199 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["200 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1708,3 +1708,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a ~377,000-line monorepo with nineteen subsystems of which memory is ~38,500 lines, 446 test files, codecov, a `Dockerfile.test` and OpenSSF badges — and five surfacing constants (0.3, 5, 10, 300) with nothing in the tree measuring them.
 - Study when: your agent injects everything that passes a similarity cutoff and you have never asked how often it should interrupt.
 - Do not copy when: you need the memory module alone — it is bound to branches, drones and templates, and the governance state resets to zero on every `new_state()`.
+
+### [`claude-total-memory`](../systems/claude-total-memory/)
+
+- Best idea: a deliberate second retrieval against an *inverted* query — one phrased to surface facts that would contradict the likely answer — scored pairwise, where a max above 0.60 makes the question unanswerable and the router emits IDK rather than picking a side. Retrieval for the refutation, with the refutation allowed to win.
+- Biggest risk: the badge and the headline read "+10.8 pp over Supermemory's published 85.4%", subtracting this project's `recall_any@5` from another project's overall figure; the footnote beneath it gives the strict `recall_all@5` as 84.5%, which is below the number being beaten.
+- Most reusable component: `content_filter.py` — a declarative per-tool-output filter where `safety = "strict"` extracts URLs, absolute paths and code spans *before* filtering and re-appends anything the rules dropped, so aggressive compression cannot eat the tokens that matter, and every rule declares an `on_empty` string so filtering to nothing says something.
+- Maturity impression: 68,000 lines, 150 test files, an append-only `fact_assertions` log with a real as-of query, a layer wall enforced by a test, and dated benchmark result JSONs committed with dataset source, run date, `k` and the count of questions skipped with the reason.
+- Study when: your retriever returns what matches the question and you have no way to notice the contradicting fact one sentence away.
+- Do not copy when: you need abstention measured — the mechanism targets it and the benchmark excludes abstention questions.

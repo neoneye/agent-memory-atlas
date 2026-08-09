@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 199 reports.</strong></p>
+<p><strong>This page covers all 200 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;199 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;200 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4873,6 +4873,37 @@ cutoff and you have never asked how often it should interrupt.</li>
 <li>Do not copy when: you need the memory module alone — it is bound to
 branches, drones and templates, and the governance state resets to zero
 on every <code>new_state()</code>.</li>
+</ul>
+<h3 id="claude-total-memory"><a
+href="../systems/claude-total-memory/"><code>claude-total-memory</code></a></h3>
+<ul>
+<li>Best idea: a deliberate second retrieval against an
+<em>inverted</em> query — one phrased to surface facts that would
+contradict the likely answer — scored pairwise, where a max above 0.60
+makes the question unanswerable and the router emits IDK rather than
+picking a side. Retrieval for the refutation, with the refutation
+allowed to win.</li>
+<li>Biggest risk: the badge and the headline read "+10.8 pp over
+Supermemory's published 85.4%", subtracting this project's
+<code>recall_any@5</code> from another project's overall figure; the
+footnote beneath it gives the strict <code>recall_all@5</code> as 84.5%,
+which is below the number being beaten.</li>
+<li>Most reusable component: <code>content_filter.py</code> — a
+declarative per-tool-output filter where <code>safety = "strict"</code>
+extracts URLs, absolute paths and code spans <em>before</em> filtering
+and re-appends anything the rules dropped, so aggressive compression
+cannot eat the tokens that matter, and every rule declares an
+<code>on_empty</code> string so filtering to nothing says
+something.</li>
+<li>Maturity impression: 68,000 lines, 150 test files, an append-only
+<code>fact_assertions</code> log with a real as-of query, a layer wall
+enforced by a test, and dated benchmark result JSONs committed with
+dataset source, run date, <code>k</code> and the count of questions
+skipped with the reason.</li>
+<li>Study when: your retriever returns what matches the question and you
+have no way to notice the contradicting fact one sentence away.</li>
+<li>Do not copy when: you need abstention measured — the mechanism
+targets it and the benchmark excludes abstention questions.</li>
 </ul>
         </article>
       </div>
