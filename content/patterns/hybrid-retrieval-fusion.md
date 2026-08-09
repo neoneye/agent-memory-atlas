@@ -15,6 +15,8 @@ Retrieve both conceptually related memory and exact facts, while enforcing scope
 
 Vector search is good at paraphrase and topical similarity but weak on exact names, identifiers, dates, paths, and negation. Lexical search catches exact strings but misses paraphrase. Either signal alone produces avoidable blind spots.
 
+The size of that blind spot is measurable. On LIMIT, a benchmark built to expose single-vector retrieval, BM25 reaches Recall@20 of 0.9490 where Contriever reaches 0.0265 ([Clavié et al., *Latent Terms*, arXiv:2605.29384](https://arxiv.org/abs/2605.29384), 28 May 2026). The same paper shows the lexical capability is *present* in the dense model and hidden by its scoring function — a sparse autoencoder trained on frozen activations recovers that 0.0265 to 0.5100 — which is a reason to keep a lexical index, not to expect the embedding to grow one.
+
 ## The pattern
 
 Apply hard filters first, retrieve candidates through independent channels, normalize or rank their outputs, then fuse and cap the final context:
@@ -32,7 +34,9 @@ flowchart TD
     X --> B["Diversity +<br/>token budget"]
 ```
 
-Reciprocal-rank fusion is a useful baseline because it combines rankings without pretending incomparable scores share a calibrated scale. Weighted score fusion can work when every component has measured, bounded behavior.
+Reciprocal-rank fusion is a useful baseline because it combines rankings without pretending incomparable scores share a calibrated scale — the property its authors claim for it, "without regard to the arbitrary scores returned by particular ranking methods" ([Cormack, Clarke and Büttcher, SIGIR '09](https://dl.acm.org/doi/10.1145/1571941.1572114)). Weighted score fusion can work when every component has measured, bounded behavior.
+
+**The constant is not a law, and it was fixed for many more arms than you have.** `k = 60` comes from a pilot that fused *thirty* rankings and swept `k` over a curve flat from 30 to 100; the paper's own words are that 60 "was near-optimal, but that the choice was not critical", and 80 scored fractionally higher in the table it comes from. The arm count changes what `k` does. A document that `m` arms rank at `r` outranks a document one arm ranks first whenever `r < m(k+1) − k` — so with two arms at `k = 60`, agreement at rank **61** beats a lone first-place hit, and the entire rank signal inside one arm's top 60 spans a factor of 1.967× against a 2× bonus for merely appearing in a second arm. Two-arm RRF at 60 behaves closer to a presence vote than a rank aggregation, which is how a lone weak lexical match outranks a good semantic one, and how an exact-identifier hit that only the lexical arm found gets buried. The one published sweep on two arms puts the default last: convex combination at α = 0.5 scores Recall@5 0.726, RRF at `k = 10` scores 0.716, RRF at `k = 60` scores 0.695 ([Akarsu et al., arXiv:2604.01733](https://arxiv.org/abs/2604.01733), 2 April 2026, §IV-C — one domain, financial text-and-table QA). Keep 60 as a default if you have nothing to tune against; do not defend it as measured.
 
 ## Why it works
 
@@ -107,7 +111,9 @@ Nobody has shown their weights are right. [MetaClaw](../../systems/metaclaw/) is
 the only system in the atlas that could — it replays candidate policies against
 past turns and promotes one only on non-regression across eight metrics.
 Everyone else, including [Generative Agents](../../systems/generative-agents/)
-with its hand-tuned `gw = [0.5, 3, 2]`, ships constants nobody has defended.
+with its hand-tuned `gw = [0.5, 3, 2]`, ships constants nobody has defended —
+starting with the fusion constant itself, which no report in this atlas records a
+system sweeping.
 
 [Helm](../../systems/helm/) is the smallest correct instance — both arms and the
 fusion are about sixty lines of JavaScript over rows already in memory, with no
@@ -136,6 +142,7 @@ channel ran.
 - Exact identifiers, paraphrases, dates, negation, and typo cases.
 - Scope leakage and lifecycle filtering before ranking.
 - Ablations for each retrieval channel.
+- A sweep of the fusion constant at *your* arm count, not the paper's — the cheapest experiment on this page and the one nobody in this corpus has run.
 - Hard assertions that `@k` evaluates exactly the first `k` results.
 - Token-volume and latency reporting.
 - Stable tie-breaking and bounded heuristic contributions.
