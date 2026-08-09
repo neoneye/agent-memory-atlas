@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 215 reports.**
+**This page covers all 216 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["215 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["216 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1852,6 +1852,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a mem0 drop-in with a tech report, CI, an MCP server on the current spec, and `tests/test_contract.py` where each test is named after the API promise it enforces — including two that assert negatives, that `infer=False` calls no LLM and that telemetry is opt-in.
 - Study when: you are about to publish a comparison table and have not decided what would make it defensible.
 - Do not copy when: you need correction — everything epistemic is inherited from mem0, and the unscoped-write fallback into a shared `events` scope is readable by every character.
+
+### [`mengram`](../systems/mengram/)
+
+- Best idea: a regression test for memory. Before promoting a revised procedure, `find_regressions` asks which other current procedures share its surface and whether the revision adds a precondition they do not satisfy — and on a hit it sets `status = "needs_review"`, skips retiring the old version, and writes the new one `is_current = FALSE`, so "the last known-good version stays authoritative until review". Every other system in this atlas applies a correction and hopes nothing depended on the old memory.
+- Biggest risk: nothing surfaces the quarantine. No endpoint lists `needs_review` or approves a gated revision, so the safe behaviour is a dead end — including when the revision was right and the dependent procedure was what needed updating. And the gate fails open: an exception in it logs "regression gate skipped" and promotes.
+- Most reusable component: `benchmark/procinterfere/` — a public benchmark for cross-procedure interference, with **silent-regression rate** reported beside **false-quarantine** so over-flagging is measurable, 18 cases in one JSONL, runnable with no account because the gate is pure functions. The contribution is the metric and the case format; the 0% score is against self-authored cases and two unchecked baselines.
+- Maturity impression: Postgres with versioned procedures, a GIN index on entities, an evolution log carrying each diff and its originating episode, both-polarity unit tests including "a negated mention does not count as satisfying" — and a spec still headed `Status: design` for a gate that shipped.
+- Study when: your agent revises what it learned and you have never asked what depended on the old version.
+- Do not copy when: you need the review half — the quarantine is written and never read.
+
 
 
 

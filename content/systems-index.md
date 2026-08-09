@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **215 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **216 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -168,6 +168,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memsem`](../systems/memsem/) **memsem** — A tombstone only a human can set · `WindSeries69/memsem` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`memu`](../systems/memu/) **memU** — Documented decisions · `NevaMind-AI/memU`
 - [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
+- [`mengram`](../systems/mengram/) **Mengram** — Regression tests for memory · `alibaizhanov/mengram` · Trust state, Scope enforced
 - [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review
 - [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
 - [`midas`](../systems/midas/) **Midas** — A guard on memory-justified action · `vornicx/Midas` · Bi-temporal, Scope enforced, Mutation audit, Negative evals

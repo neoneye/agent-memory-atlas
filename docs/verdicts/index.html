@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 215 reports.</strong></p>
+<p><strong>This page covers all 216 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;215 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;216 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5376,6 +5376,40 @@ decided what would make it defensible.</li>
 <li>Do not copy when: you need correction — everything epistemic is
 inherited from mem0, and the unscoped-write fallback into a shared
 <code>events</code> scope is readable by every character.</li>
+</ul>
+<h3 id="mengram"><a
+href="../systems/mengram/"><code>mengram</code></a></h3>
+<ul>
+<li>Best idea: a regression test for memory. Before promoting a revised
+procedure, <code>find_regressions</code> asks which other current
+procedures share its surface and whether the revision adds a
+precondition they do not satisfy — and on a hit it sets
+<code>status = "needs_review"</code>, skips retiring the old version,
+and writes the new one <code>is_current = FALSE</code>, so "the last
+known-good version stays authoritative until review". Every other system
+in this atlas applies a correction and hopes nothing depended on the old
+memory.</li>
+<li>Biggest risk: nothing surfaces the quarantine. No endpoint lists
+<code>needs_review</code> or approves a gated revision, so the safe
+behaviour is a dead end — including when the revision was right and the
+dependent procedure was what needed updating. And the gate fails open:
+an exception in it logs "regression gate skipped" and promotes.</li>
+<li>Most reusable component: <code>benchmark/procinterfere/</code> — a
+public benchmark for cross-procedure interference, with
+<strong>silent-regression rate</strong> reported beside
+<strong>false-quarantine</strong> so over-flagging is measurable, 18
+cases in one JSONL, runnable with no account because the gate is pure
+functions. The contribution is the metric and the case format; the 0%
+score is against self-authored cases and two unchecked baselines.</li>
+<li>Maturity impression: Postgres with versioned procedures, a GIN index
+on entities, an evolution log carrying each diff and its originating
+episode, both-polarity unit tests including "a negated mention does not
+count as satisfying" — and a spec still headed
+<code>Status: design</code> for a gate that shipped.</li>
+<li>Study when: your agent revises what it learned and you have never
+asked what depended on the old version.</li>
+<li>Do not copy when: you need the review half — the quarantine is
+written and never read.</li>
 </ul>
         </article>
       </div>
