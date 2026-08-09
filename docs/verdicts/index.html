@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 205 reports.</strong></p>
+<p><strong>This page covers all 206 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;205 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;206 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5062,6 +5062,39 @@ it.</li>
 <li>Do not copy when: you need the quarantine verdict to mean anything
 at read time — it is a halved float and a <code>[QUARANTINED: …]</code>
 marker appended into the free-text field the model reads back.</li>
+</ul>
+<h3 id="memoir"><a
+href="../systems/memoir/"><code>memoir</code></a></h3>
+<ul>
+<li>Best idea: the collision policy is chosen by what kind of memory the
+taxonomy path implies — working replaces, episodic appends under a cap,
+semantic is confidence-gated, procedural is LLM-merged — in a module
+that is pure by construction, with <code>LLM_MERGE</code> inverted so
+the caller makes the model call and the decision table stays
+unit-testable.</li>
+<li>Biggest risk: <code>benchmarks/locomo/</code> is a complete
+LoCoMo-Plus harness — the paper's own judge reused verbatim, a
+full-context baseline as the anchor, both models named, the paper's
+no-disclosure prompt protocol, resume and incremental flush — and no
+result is committed anywhere in the tree.</li>
+<li>Most reusable component: <code>git_safety.py</code>. prollytree
+stores tree nodes as dangling git objects that gc is free to delete, so
+<code>harden_git_config</code> sets <code>gc.auto=0</code> and
+<code>gc.pruneExpire=never</code> on create and on every open so
+existing stores are retrofitted — then states the residual unprompted:
+an explicit <code>git gc --prune=now</code> still prunes, and the File
+backend is the only fully bulletproof option.</li>
+<li>Maturity impression: 55,000 lines implementing LangGraph's
+<code>BaseStore</code>, Merkle inclusion proofs delegated to prollytree
+rather than hand-rolled, <code>memoir blame</code> returning commit,
+author, date and message per key, a lazy v1→v2 schema lift with a
+byte-identical compatibility separator, and 35 test files.</li>
+<li>Study when: your store answers "a write landed on an occupied key"
+the same way for a scratchpad value and a stated fact.</li>
+<li>Do not copy when: you need a rejected-value record —
+<code>REPLACE</code> drops prior entries from the blob and they survive
+only in git history, recoverable but never consulted on the next
+write.</li>
 </ul>
         </article>
       </div>

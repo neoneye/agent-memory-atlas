@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 205 reports.**
+**This page covers all 206 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["205 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["206 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1762,6 +1762,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 67,000 lines, 136 advertised MCP tools against 26 test files, two memory schemas live at once mid-migration, a `provenance` table specifying `quoted_span`, `content_hash`, `commit_sha` and `line_range` with no writer, and `venv311/` committed.
 - Study when: your dedup or correction path decides by cosine similarity and you have not asked what a contradiction looks like to it.
 - Do not copy when: you need the quarantine verdict to mean anything at read time — it is a halved float and a `[QUARANTINED: …]` marker appended into the free-text field the model reads back.
+
+### [`memoir`](../systems/memoir/)
+
+- Best idea: the collision policy is chosen by what kind of memory the taxonomy path implies — working replaces, episodic appends under a cap, semantic is confidence-gated, procedural is LLM-merged — in a module that is pure by construction, with `LLM_MERGE` inverted so the caller makes the model call and the decision table stays unit-testable.
+- Biggest risk: `benchmarks/locomo/` is a complete LoCoMo-Plus harness — the paper's own judge reused verbatim, a full-context baseline as the anchor, both models named, the paper's no-disclosure prompt protocol, resume and incremental flush — and no result is committed anywhere in the tree.
+- Most reusable component: `git_safety.py`. prollytree stores tree nodes as dangling git objects that gc is free to delete, so `harden_git_config` sets `gc.auto=0` and `gc.pruneExpire=never` on create and on every open so existing stores are retrofitted — then states the residual unprompted: an explicit `git gc --prune=now` still prunes, and the File backend is the only fully bulletproof option.
+- Maturity impression: 55,000 lines implementing LangGraph's `BaseStore`, Merkle inclusion proofs delegated to prollytree rather than hand-rolled, `memoir blame` returning commit, author, date and message per key, a lazy v1→v2 schema lift with a byte-identical compatibility separator, and 35 test files.
+- Study when: your store answers "a write landed on an occupied key" the same way for a scratchpad value and a stated fact.
+- Do not copy when: you need a rejected-value record — `REPLACE` drops prior entries from the blob and they survive only in git history, recoverable but never consulted on the next write.
+
 
 
 
