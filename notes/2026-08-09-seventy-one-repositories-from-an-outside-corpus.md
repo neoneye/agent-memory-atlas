@@ -1,9 +1,9 @@
 # Seventy-one repositories from an outside corpus — the join, the probe, and what came back
 
-**Status:** in progress. Sixty-one reports written and pushed across fifteen
+**Status:** in progress. Sixty-six reports written and pushed across sixteen
 batches; every remaining candidate cloned, screened and probed at code level,
 with the evidence tabulated below and no verdict claimed for anything unread.
-Ten of the tabulated candidates remain unread.
+Five of the tabulated candidates remain unread.
 **Origin:** [issue #17](https://github.com/neoneye/agent-memory-atlas/issues/17),
 submitted 2026-08-09 by the author of
 [AlexisOlson/somnigraph](https://github.com/AlexisOlson/somnigraph), pointing at
@@ -91,7 +91,7 @@ rejected-value records. The one that was —
 
 ## What has been written
 
-Sixty-one reports across fifteen batches. The six that changed something in the
+Sixty-six reports across sixteen batches. The six that changed something in the
 corpus rather than adding to it:
 
 - **[Wenlan](../content/systems/wenlan.md)** — the atlas's tenth tombstone, and
@@ -285,7 +285,8 @@ the third distinct repository of that name in the atlas), AgentWorkingMemory,
 Second Brain, Context Mem and MoltBrain; then Fidelis, TeleMem, Mengram,
 OpenCode Memory and OpenMemory; then Ori Mnemos, YourMemory, cortex-engine,
 obsidian-mind and vir; then DiffMem, MemSearch, mnemos, Nocturne Memory and
-Claudest. Ten remain.*
+Claudest; then agentmemory V4, memv, MemCP, ArcRift and Memlayer. Five
+remain.*
 
 Every one of these is cloned, screened with `screen_repo.py`, and measured.
 The six read and dispositioned above are excluded.
@@ -378,7 +379,7 @@ Four rows deserve a note now rather than after a reading:
 
 ## What came of it
 
-- **61 reports added**, taking the corpus from 167 to 228.
+- **66 reports added**, taking the corpus from 167 to 233.
 - **Marks added**: 18 `scope_enforced`, 18 `audit_log`, 9 `trust_state`,
   5 `bitemporal`, 5 `negative_eval`, 5 `human_review`, and **2 `tombstone`** —
   the first two added since the

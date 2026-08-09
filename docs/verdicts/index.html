@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 232 reports.</strong></p>
+<p><strong>This page covers all 233 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;232 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;233 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5934,6 +5934,37 @@ neighbour's secret by name.</li>
 <li>Do not copy when: you expect contradiction handled — thirty
 conversations about one auth flow accumulate every intermediate position
 at equal standing, and the answer offered is more context.</li>
+</ul>
+<h3 id="memlayer"><a
+href="../systems/memlayer/"><code>memlayer</code></a></h3>
+<ul>
+<li>Best idea: salience defined by example rather than by prompt. Two
+hand-written lists of prototype sentences — what counts as worth
+keeping, what counts as noise — with incoming text scored by similarity,
+and a regex fast path so bare greetings never reach the embedder. The
+decision boundary is readable, diffable, editable data rather than
+something inside a model.</li>
+<li>Biggest risk: <code>SALIENT_PROTOTYPES</code> includes
+<code>"The user's API key is sk-12345."</code> as an example of <em>what
+to remember</em>, alongside an email address and an internal IP — so
+credential-shaped text scores toward storage, in a tree with no secret
+screen anywhere. Four systems read in the same batch block or redact
+secrets on the write path; this one treats one as exemplary.</li>
+<li>Most reusable component: the mode enum whose comments are the
+trade-off — <code>LOCAL # default, slow startup</code>,
+<code>ONLINE # fast startup, API cost</code>,
+<code>LIGHTWEIGHT # no embeddings, instant startup</code> — so a caller
+chooses at the point of choosing, and the lightweight path makes the
+first run work with no model download.</li>
+<li>Maturity impression: 9,200 lines with wrappers per provider
+delivering the three-line adoption claim, three retrieval tiers with
+published latency budgets, and an observability module to check them —
+against 12 test files and no evaluation of the gate itself.</li>
+<li>Study when: your write path asks a model how important something
+is.</li>
+<li>Do not copy when: you need anything to change after the door — the
+gate decides entry and nothing decides whether a stored fact is still
+true.</li>
 </ul>
         </article>
       </div>

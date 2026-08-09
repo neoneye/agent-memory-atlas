@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 232 reports.**
+**This page covers all 233 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["232 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["233 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2005,6 +2005,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: four committed audit reports, recall measured against a 1,000-chunk noise haystack rather than a corpus of only relevant documents, a per-engine contribution table answering which arm of the hybrid actually found each fact, and benchmark documents that state what they do not cover.
 - Study when: your multi-tenant boundary has never been asked for the neighbour's secret by name.
 - Do not copy when: you expect contradiction handled — thirty conversations about one auth flow accumulate every intermediate position at equal standing, and the answer offered is more context.
+
+### [`memlayer`](../systems/memlayer/)
+
+- Best idea: salience defined by example rather than by prompt. Two hand-written lists of prototype sentences — what counts as worth keeping, what counts as noise — with incoming text scored by similarity, and a regex fast path so bare greetings never reach the embedder. The decision boundary is readable, diffable, editable data rather than something inside a model.
+- Biggest risk: `SALIENT_PROTOTYPES` includes `"The user's API key is sk-12345."` as an example of *what to remember*, alongside an email address and an internal IP — so credential-shaped text scores toward storage, in a tree with no secret screen anywhere. Four systems read in the same batch block or redact secrets on the write path; this one treats one as exemplary.
+- Most reusable component: the mode enum whose comments are the trade-off — `LOCAL # default, slow startup`, `ONLINE # fast startup, API cost`, `LIGHTWEIGHT # no embeddings, instant startup` — so a caller chooses at the point of choosing, and the lightweight path makes the first run work with no model download.
+- Maturity impression: 9,200 lines with wrappers per provider delivering the three-line adoption claim, three retrieval tiers with published latency budgets, and an observability module to check them — against 12 test files and no evaluation of the gate itself.
+- Study when: your write path asks a model how important something is.
+- Do not copy when: you need anything to change after the door — the gate decides entry and nothing decides whether a stored fact is still true.
+
 
 
 
