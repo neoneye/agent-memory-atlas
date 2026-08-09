@@ -144,8 +144,8 @@ separates the ones asserting about *content* from the ones asserting about a
 *scope boundary*, and only [Verel](../../systems/verel/) is recorded asserting it
 about a value that was corrected, which is the harder and more useful version.
 
-**What the marks actually are, since an outside review was right that they are
-not all the same thing.** Every one of them is a committed case asserting that
+**What the marks actually are, because they are not all the same thing.**
+Every one of them is a committed case asserting that
 material must not appear somewhere. The 2026-08-08 re-score put **27 of the
 then-37 on a read path**, which is this definition; 20 about a particular value
 and 7 about a scope boundary. The rest keep material out of something that is not a retrieval
@@ -158,17 +158,15 @@ re-score, system by system, is in
 it also names the one mark that cites no case at all and should probably be
 dropped.
 
-**The three numbers in the paragraph above are not the same kind of number, and
-an outside review was right that presenting them together reads as
-inconsistency.** Fifty is live, generated from report frontmatter on every
-build. Thirty-seven and twenty-seven are dated: they are what the corpus held
-and what the re-score found *on 2026-08-08*. Every mark awarded since was judged
-against the strict definition at the top of this section, and **the read-path
-share has not been recomputed since that date** — so "27 for a strict reading"
-is a fact about 2026-08-08 and not a current figure. Recomputing it means
-re-reading fifty test suites, which is the work `capability_evidence:`'s
-`subsystem` field exists to spread across future readings rather than do in one
-pass.
+**Three numbers appear above and they are not the same kind of number.** Fifty
+is live, generated from report frontmatter on every build. Thirty-seven and
+twenty-seven are dated: what the corpus held, and what the re-score found in it,
+on 2026-08-08. Every mark awarded since was judged against the strict definition
+at the top of this section, but **the read-path share has not been recomputed** —
+so 27 describes a smaller corpus and is not a current strict reading.
+Recomputing it means re-reading fifty test suites, which is what
+`capability_evidence:`'s `subsystem` field exists to spread across future
+readings rather than do in one pass.
 
 The flags were left unchanged at the re-score deliberately. Dropping ten would
 delete the fact that ten more systems ship committed must-not tests, which is
@@ -232,9 +230,8 @@ that no amount of automation removes.
 
 - **Marks are assigned by one reviewer** reading code, not by running it — and
   that reviewer is a language model working from the repository, directed and
-  reviewed by one person who commits the result. This was not stated here until
-  30 July 2026, when an outside reader inferred it correctly from the reports and
-  the atlas noticed it had never said so. It belongs on this page because it
+  reviewed by one person who commits the result. This page did not say so until
+  30 July 2026. It belongs here because it
   changes how a mark should be weighed: the reading is fast, consistent about
   applying a definition, and prone to a specific failure — producing something
   *plausible* where the code says something adjacent. Three instances from a
@@ -273,8 +270,8 @@ that no amount of automation removes.
 ## Open work on this rubric
 
 Named here rather than in a private list, because a known defect that is not
-written down is indistinguishable from one nobody has found. Each of these came
-from an outside review of this page and none of them is fixed yet.
+written down is indistinguishable from one nobody has found. None of these is
+fixed yet.
 
 - **~~Re-score all thirty-seven `negative_eval` marks against one wording.~~
   Done, 2026-08-08.** 27 of the 37 assert about a read path; 10 assert about a

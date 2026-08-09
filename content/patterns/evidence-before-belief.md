@@ -66,8 +66,8 @@ it.
 
 ## Seen in the atlas
 
-[nanobot](../../systems/nanobot/) states the principle better than this page
-originally did. Its documentation says of the append-only summary archive:
+[nanobot](../../systems/nanobot/) states the principle more plainly than this
+page does. Its documentation says of the append-only summary archive:
 *"It is not the final memory. It is the material from which final memory is
 shaped."* The layout enforces it — `memory/history.jsonl` holds evidence,
 `SOUL.md`/`USER.md`/`memory/MEMORY.md` hold belief, and only the Dream pass moves

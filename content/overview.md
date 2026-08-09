@@ -63,8 +63,8 @@ Systems reviewed and excluded on this basis, or on licence grounds, are named in
 the limitations at the end rather than quietly dropped — the exclusions are part
 of the evidence.
 
-**And one deliberate exception, because an outside review found the corpus
-breaking its own rule.** A handful of systems here store something durable with
+**And one deliberate exception, where the corpus breaks its own rule.** A
+handful of systems here store something durable with
 *no* identity at all — [AutoGen](../systems/autogen/)'s `MemoryContent` has no
 id field, so `clear()` is the only removal the protocol can express, and
 [Sovereign](../systems/sovereign/)'s episodes carry none either. Under the test
@@ -94,9 +94,9 @@ not evidence of anything.
 
 ### What the licences actually say
 
-This page said "164 open-source memory systems" until an outside review pointed
-out that the sentence is false, and it was false in the way that matters: a
-reader deciding whether they can *use* something acts on it. **Sixteen of the
+This page said "164 open-source memory systems" until 7 August 2026. The
+sentence was false in the way that matters: a reader deciding whether they can
+*use* something acts on it. **Sixteen of the
 166 carry a licence that is not open source**, each named in its own report and
 now collected here:
 
@@ -1695,8 +1695,8 @@ session with an identity you could later correct.
 [capability index](../capabilities/) filters all 238 systems by the seven
 mechanisms judged against strict definitions, combining them with **and** — it
 answers "tombstone *and* scope enforced" in one click, which is the question this
-table cannot be sorted to answer. Two external reviews have asked for that page
-without finding it, so it is linked here as well as from the homepage.
+table cannot be sorted to answer. It is linked here as well as from the
+homepage, because this table is where that question gets asked.
 
 One column needs a caveat before the table is read. **Update/delete model
 describes what a system's own code does**, and stops at the storage engine's
