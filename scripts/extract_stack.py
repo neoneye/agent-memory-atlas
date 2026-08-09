@@ -263,10 +263,10 @@ def render_section(dist: dict) -> str:
     lines += [
         "",
         f"Counted across {dist['total']} reports, each of which may name more "
-        f"than one store. {dist['reviewed']} of the {dist['total']} stack rows "
-        f"have been confirmed against the tree; the remaining {dist['seeded']} "
-        "were derived from the review's own summary lines and carry "
-        '`stack_source: "seeded"` until someone checks them.',
+        f"than one store. {dist['reviewed']} of {dist['total']} rows were read "
+        f"off the code at the pinned commit; the other {dist['seeded']} were "
+        "derived from the review's own summary lines and are labelled "
+        "`seeded` rather than `reviewed`.",
         "",
         END,
     ]

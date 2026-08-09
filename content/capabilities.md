@@ -210,25 +210,20 @@ cases. The ones worth knowing:
 
 ## What these systems are built on
 
-The seven marks above are about mechanisms. This is the other question people
-arrive with — *what do these systems actually store memory in* — and the atlas
-had no answer to it until every report started declaring the engine and the
-retrieval arms in its own frontmatter, which is where these counts come from.
+The seven marks above are about mechanisms. This is the other question: what
+these systems store memory in, and which retrieval channels they run. Both come
+from each report's frontmatter, so the table cannot drift from the reviews.
 
-**Read this as a census, not a recommendation.** It says what the corpus
-contains and nothing about what works. This project has a standing rule against
-citing adoption as evidence about a mechanism, and a distribution is the easiest
-possible way to break it: the largest number below is a plurality of under half,
-and no row here has been shown to retrieve better than any other row. The
-[build page](../build/) declines to pick an engine for you on purpose, and this
-table is not a way around that.
+**It is a census, not a recommendation.** It says what the corpus contains and
+nothing about what works: the largest row is a plurality of under half, and no
+row here has been shown to retrieve better than another. Choosing an engine
+from a distribution is the mistake this table is most likely to cause.
 
-Two rows are worth reading before the big ones. **Delegated to the adopter**
-counts reports whose storage is an adapter their user binds — a framework's
-`BaseStore`, an ORM, "application-chosen" — so a measurable part of the corpus
-is database-agnostic by design too. And **no arm named** counts reviews whose
-retrieval summary named neither a lexical nor a vector nor a graph channel,
-which is a gap in the review, not a system without retrieval.
+Two rows need reading before the big ones. **Delegated to the adopter** is a
+system whose storage is an adapter its user binds — a framework's `BaseStore`,
+an ORM, "application-chosen" — so it has no engine of its own to count. **No
+arm named** is a review whose retrieval summary named neither a lexical, vector
+nor graph channel; that is a gap in the review, not a system without retrieval.
 
 <!-- BEGIN GENERATED STACK -->
 
@@ -252,6 +247,6 @@ which is a gap in the review, not a system without retrieval.
 | Pinecone | 1 | |  |  |
 | DuckDB | 1 | |  |  |
 
-Counted across 238 reports, each of which may name more than one store. 0 of the 238 stack rows have been confirmed against the tree; the remaining 238 were derived from the review's own summary lines and carry `stack_source: "seeded"` until someone checks them.
+Counted across 238 reports, each of which may name more than one store. 0 of 238 rows were read off the code at the pinned commit; the other 238 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`.
 
 <!-- END GENERATED STACK -->
