@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Merge candidates classified by
+Fellegi-Sunter record linkage into match, possible and non-match, where
+the uncertain classes need an explicit confirmation and every applied
+operation carries its own undo payload.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Vestige — Agent Memory Atlas">
+    <meta property="og:description" content="Merge candidates classified
+by Fellegi-Sunter record linkage into match, possible and non-match,
+where the uncertain classes need an explicit confirmation and every
+applied operation carries its own undo payload.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vestige — Agent Memory Atlas">
+    <meta name="twitter:description" content="Merge candidates
+classified by Fellegi-Sunter record linkage into match, possible and
+non-match, where the uncertain classes need an explicit confirmation and
+every applied operation carries its own undo payload.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Vestige — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Backward reach and reversible merges</p>
+          <h1>Vestige</h1>
+          <p class="document-deck">Merge candidates classified by
+Fellegi-Sunter record linkage into match, possible and non-match, where
+the uncertain classes need an explicit confirmation and every applied
+operation carries its own undo payload.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/samvallad33/vestige">
+              <span>Source</span>
+              <strong>samvallad33/vestige</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e" title="a8b0a75661faaa396fa4519c82fcc369f0ddef8e">
+              <span>Analyzed revision</span>
+              <code>a8b0a756…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Vestige is a local-first memory layer for MCP agents: one 25MB Rust
+binary, one SQLite file, AGPL-3.0, about 97,000 lines across two crates
+with 1,088 test functions. It models memory on cognitive science —
+FSRS-6 spaced repetition, the Bjork dual-strength model, ACT-R
+activation, top-down inhibitory suppression — and cites the papers in
+the code.</p>
+<p>Three things earn the report.</p>
+<p><strong>Merge decisions use record-linkage theory instead of a
+similarity threshold.</strong>
+<code>crates/vestige-core/src/advanced/merge_supersede.rs</code> applies
+Fellegi-Sunter with two thresholds, classifying every candidate pair as
+<code>match</code>, <code>possible</code> or <code>non_match</code>. The
+header says why: a single cosine threshold "over-merges and destroys the
+audit trail". The consequence reaches the tool surface — the
+<code>dedup</code> tool's <code>apply</code> action accepts a
+<code>match</code> plan directly, and
+<code>'possible'/'non_match' need confirm=true</code>. Uncertainty is
+routed to a person rather than resolved by rounding.</p>
+<p><strong>Every applied operation carries the payload that reverses
+it.</strong> <code>merge_operations</code> is described in the migration
+as "the 'git reflog for your agent's memory'": one row per applied merge
+or supersede, with <code>undo_payload</code> holding "everything needed
+to reverse it", <code>signals</code> recording "why the memories
+combined", and an <code>undo</code> op type that points back at what it
+reverted. The tool description states the invariant plainly — "Old
+memories are invalidated, never deleted."</p>
+<p><strong>And there is a <code>protect</code> action</strong> that pins
+a memory against auto-merge, supersede and forget — an explicit opt-out
+from every automatic lifecycle mechanism, which is a thing this atlas
+asks for and rarely finds.</p>
+<p>The caveat a reader needs first: the benchmark the README leads with,
+<strong>Silent Rotation</strong>, is not in this tree. It lives on a
+separate branch (<code>benchmark/silent-rotation</code>), and the
+reported result — 20/23 converged correct for Vestige against 0/25 for
+no memory and 4/23 for dense cosine RAG, across 6 models, 25 trials and
+246 published transcripts — <strong>cannot be verified from the pinned
+commit</strong>. What can be said from here is that the README publishes
+its own losses ("the trials where a plain cosine baseline ties Vestige
+and the trial Vestige loses") and separates the theoretical claim it
+borrows from the measurement it made, which is better practice than most
+benchmark sections in this corpus.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>knowledge_node</code> carrying an unusual amount
+of cognitive state: FSRS-6 stability, difficulty, reps and lapses; the
+Bjork dual-strength triple of storage, retrieval and retention strength;
+sentiment score and magnitude for emotional weighting; and an ACT-R
+activation value computed during consolidation.</p>
+<p>Beside it, <code>memory_states</code> holds a four-value
+<strong>availability</strong> state — <code>active</code>,
+<code>dormant</code>, <code>silent</code>, <code>unavailable</code> —
+with <code>suppression_until</code> and a <code>suppressed_by</code>
+JSON array naming which other memories are inhibiting this one. That
+last field is the design's core idea: memories compete, and losing
+competition is a recorded event rather than a lower score.</p>
+<p>The flagship retrieval primitive is <code>backfill</code>, and it
+inverts the usual direction. When a failure is recorded, it reaches
+<strong>backward</strong> in time to promote the earlier memory that
+caused it — selected by shared entity (the same file, environment
+variable or service) rather than by similarity, because, in the tool's
+own words, the root cause is one "a vector search structurally cannot
+surface because it isn't similar to the failure, only causally
+upstream". It is described as a faithful port of Cai 2024 and is
+backward-only by construction.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Active: captured
+    Active --&gt; Dormant: time_decay
+    Dormant --&gt; Active: access or cue_reactivation
+    Active --&gt; Silent: competition_loss
+    Silent --&gt; Active: interference_resolved
+    Active --&gt; Unavailable: user_suppression, compounds per call
+    Unavailable --&gt; Active: suppression_expired or reverse within 24h
+    Active --&gt; Active: manual_override
+    Dormant --&gt; Active: backfill promotes it as an upstream cause
+    Active --&gt; Merged: plan classified match, applied
+    Active --&gt; Merged: plan classified possible, applied with confirm=true
+    Merged --&gt; Active: undo, from the stored undo_payload
+    Active --&gt; Purged: irreversible, content-free tombstone row remains
+    Purged --&gt; [*]</code></pre>
+<p>Every transition on that diagram writes a
+<code>state_transitions</code> row with a <code>reason_type</code> from
+a nine-value vocabulary — the labels on the arrows are the literal
+values in the schema.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two crates: <code>vestige-core</code> (62,000 lines) holds storage,
+the neuroscience modules, search, merge/supersede and the dream cycle;
+<code>vestige-mcp</code> (35,000 lines) is the tool surface. The result
+is a single binary with an <code>npx</code> installer, an offline
+embedding model downloaded once, no API key and no telemetry.</p>
+<p>The schema is fifteen-plus numbered migrations with a
+<code>schema_version</code> table and assertions in the migration code
+itself — migration V13's test block checks that
+<code>deletion_tombstones</code> exists after it runs.</p>
+<p>One migration comment deserves quoting in full, because it is the
+correct handling of a defect this atlas keeps finding in other
+systems:</p>
+<blockquote>
+<p>DEPRECATED (v2.0.5): <code>knowledge_edges</code> is unused. All
+graph edges use <code>memory_connections</code> (migration V3). This
+table was designed for bi-temporal edge support but was never wired.
+Retained for schema compatibility with existing databases. Do NOT add
+queries against this table.</p>
+</blockquote>
+<p>An unwired table, labelled as unwired, with the reason, the
+replacement and an instruction. Four systems in this atlas ship the same
+situation without the comment; a reader auditing this schema cannot be
+misled.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — the <code>memory</code> tool →
+<code>SqliteStorage</code> insert
+(<code>crates/vestige-core/src/storage/sqlite.rs:874-935</code>), which
+writes <code>valid_from</code>/<code>valid_until</code> from the caller
+when supplied.</p>
+<p><strong>Recall</strong> — hybrid search with a validity boost
+(<code>crates/vestige-core/src/search/temporal.rs:121</code>) and
+spreading activation via the <code>graph</code> tool's
+<code>associations</code> action.</p>
+<p><strong>Point in time</strong> — <code>sqlite.rs:3686</code>: `SELECT
+* FROM knowledge_nodes WHERE (valid_from IS NULL OR valid_from &lt;= ?1)
+AND (valid_until IS NULL OR valid_until</p>
+<blockquote>
+<p>= ?1)<code>, with </code>KnowledgeNode::is_valid_at` as the in-memory
+equivalent and unit tests for the future-dated and past-dated cases.</p>
+</blockquote>
+<p><strong>Merge</strong> — <code>dedup</code> <code>scan</code>
+(read-only, cosine clusters plus Fellegi-Sunter) →
+<code>plan_merge</code>/<code>plan_supersede</code> (a
+<code>merge_plans</code> row, status <code>pending</code>) →
+<code>apply</code> (guarded by <code>confirm=true</code> for
+<code>possible</code> and <code>non_match</code>) →
+<code>merge_operations</code> with the undo payload →
+<code>undo</code>.</p>
+<p><strong>Suppress</strong> — the <code>suppress</code> tool applies
+top-down inhibition; a background Rac1 worker cascades decay to
+co-activated neighbours; reversible within 24 hours.</p>
+<p><strong>Backfill</strong> — from a recorded failure, reach backward
+by shared entity and promote the causal antecedent.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Twenty-five-plus tables. The ones that carry the design:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>knowledge_nodes</code></td>
+<td>Content plus FSRS-6, dual-strength, sentiment, activation,
+<code>valid_from</code>/<code>valid_until</code></td>
+</tr>
+<tr>
+<td><code>memory_states</code></td>
+<td><code>active | dormant | silent | unavailable</code>, with
+<code>suppression_until</code> and <code>suppressed_by</code></td>
+</tr>
+<tr>
+<td><code>state_transitions</code></td>
+<td>Append-only, <code>from_state</code>, <code>to_state</code>, a
+nine-value <code>reason_type</code>, <code>reason_data</code></td>
+</tr>
+<tr>
+<td><code>merge_plans</code></td>
+<td><code>pending | applied | cancelled</code>, with the Fellegi-Sunter
+<code>confidence</code> and <code>classification</code></td>
+</tr>
+<tr>
+<td><code>merge_operations</code></td>
+<td>The reflog: <code>undo_payload</code>, <code>signals</code>,
+<code>reason</code>, <code>reverts_op_id</code></td>
+</tr>
+<tr>
+<td><code>deletion_tombstones</code></td>
+<td>Content-free: id, time, reason, node type, tags, and counts of what
+the purge touched</td>
+</tr>
+<tr>
+<td><code>memory_access_log</code></td>
+<td><code>search_hit | promote | demote</code>, timestamped</td>
+</tr>
+<tr>
+<td><code>fsrs_cards</code>, <code>fsrs_config</code></td>
+<td>Scheduling state and per-user parameters</td>
+</tr>
+<tr>
+<td><code>composition_events</code>, <code>composition_members</code>,
+<code>composition_outcomes</code></td>
+<td>Which memories were used together, and what happened next</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>deletion_tombstones</code> is worth reading carefully because
+of what it deliberately does not keep. The migration comment: purge
+"permanently removes memory content and embeddings, but keeps a
+content-free audit/sync record so users can verify that a memory was
+removed without Vestige retaining the text it was told to forget." The
+row keeps the counts of what the purge affected — edges pruned, insights
+rewritten, insights deleted, children orphaned — so the blast radius is
+auditable without the content being retained. That is a genuinely
+thoughtful resolution of the tension between an audit trail and a right
+to erasure.</p>
+<p>The composition tables are the other unusual idea: recording which
+memories were retrieved <em>together</em>, what produced the
+composition, and what happened afterwards, with the comment noting that
+<code>memory_id</code> values are "intentionally historical references
+instead of foreign keys" so the record survives the memories it
+describes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid search over embeddings and FTS, with three things layered on
+top that are not common here.</p>
+<p>A <strong>validity boost</strong> (<code>search/temporal.rs</code>)
+modulates the score by whether the node's interval contains the query
+time, rather than filtering hard — so a memory that has stopped being
+valid ranks lower rather than vanishing, while the dedicated
+point-in-time query filters hard when a caller asks for an instant.</p>
+<p><strong>Spreading activation</strong> through
+<code>memory_connections</code> gives the <code>graph</code> tool its
+<code>associations</code>, <code>chain</code> and <code>bridges</code>
+actions — a reasoning path from one memory to another rather than a
+ranked list.</p>
+<p><strong>Backward reach.</strong> <code>backfill</code> is the
+flagship and the honest description of its own necessity is the
+interesting part: the causal memory "ranks 7th of 8 under both dense
+cosine <em>and</em> BM25, while the decoy ranks 1st" on the verbatim
+queries agents typed. The mechanism exists because the ranking
+demonstrably fails, and the project measured its own ranking failing
+before building around it.</p>
+<p>There is no tenant or namespace scope. Tags are the only partition,
+and the error message at <code>sqlite.rs:8445</code> — "Filter by tags
+to reduce scope" — is about scan cost rather than isolation.
+<code>scope_enforced</code> is withheld: this is a single-user store by
+design.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are local and synchronous; there is no cloud call and no model
+call on the write path beyond embedding.</p>
+<p>Correction is a three-step pipeline and the steps are separated on
+purpose. <code>scan</code> is read-only. <code>plan_merge</code> and
+<code>plan_supersede</code> produce a preview — a
+<code>merge_plans</code> row with the diff in <code>payload</code> and
+no mutation. <code>apply</code> executes one, and refuses without
+<code>confirm=true</code> when the classification is anything weaker
+than <code>match</code>.</p>
+<p><strong>Purge is the one irreversible operation and it is gated
+behind <code>confirm=true</code></strong> as well. It removes content
+and embeddings, scrubs <code>insights.source_memories</code>, detaches
+temporal-summary children, prunes graph edges, and writes the
+content-free tombstone.</p>
+<p>What the tombstone does not do is prevent re-assertion. It is keyed
+on the memory id, and its consultation point is portable sync — "Hard
+purge tombstones win over newer local edits during portable sync" — so
+importing a database that still has the memory will not resurrect it.
+Writing the same content again through the normal capture path will.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Thirteen MCP tools, consolidated from a larger set with the folding
+documented in comments: <code>recall</code>, <code>memory</code>,
+<code>codebase</code>, <code>intention</code>,
+<code>smart_ingest</code>, <code>source_sync</code>,
+<code>memory_status</code>, <code>maintain</code>, <code>dedup</code>,
+<code>graph</code>, <code>session_start</code>, <code>suppress</code>,
+<code>backfill</code>. <code>session_start</code> combines search,
+intentions, status, predictions and codebase context into one
+token-budgeted call, "instead of 5 separate calls".</p>
+<p>A dashboard, connectors with cursor checkpoints and upstream
+reconciliation, and a portable export/import that merges into a
+non-empty database while applying tombstones and keeping newer local
+rows on timestamp conflicts.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Bitemporal — awarded.</strong> <code>valid_from</code> and
+<code>valid_until</code> are separate columns from
+<code>created_at</code>/<code>updated_at</code>, written from
+caller-supplied values on insert, read by a dedicated point-in-time
+query, used as a ranking boost, and unit-tested with future-dated and
+past-dated cases.</p>
+<p><strong>Audit log — awarded, and it is well-motivated.</strong>
+<code>state_transitions</code> is append-only, indexed on memory and
+time, and every row names <em>why</em> the state moved from a fixed
+vocabulary — <code>access</code>, <code>time_decay</code>,
+<code>cue_reactivation</code>, <code>competition_loss</code>,
+<code>interference_resolved</code>, <code>user_suppression</code>,
+<code>suppression_expired</code>, <code>manual_override</code>,
+<code>system_init</code>. <code>merge_operations</code> is a second
+append-only record with the reversal payload, and
+<code>memory_access_log</code> a third for reads. A reader can
+reconstruct why a memory is where it is.</p>
+<p><strong>Human review — awarded.</strong> The confirmation gate is
+real and it is graded by uncertainty rather than applied uniformly: a
+<code>match</code> applies, a <code>possible</code> or
+<code>non_match</code> requires an explicit <code>confirm=true</code>
+from the caller. <code>protect</code> lets a person exempt a memory from
+every automatic lifecycle mechanism, and <code>undo</code> reverses an
+applied operation from its stored payload.</p>
+<p><strong>Trust state — withheld, and the distinction is worth
+naming.</strong> <code>memory_states</code> is a four-value field
+consulted on the read path, which is the shape of the mark. It fails the
+definition because the axis is <em>availability</em>, not credence:
+<code>silent</code> means another memory outcompeted this one,
+<code>unavailable</code> means someone suppressed it. Nothing says
+whether a memory is true. <code>merge_plans</code> has an
+epistemic-looking <code>classification</code> —
+<code>match | possible | non_match</code> — but that is a judgement
+about whether two memories are the same thing, not about whether either
+is correct.</p>
+<p><strong>Tombstone — withheld.</strong>
+<code>deletion_tombstones</code> is content-free by design and keyed on
+the memory id, and it is consulted during portable sync rather than on
+capture. It is a deletion receipt for replication, and it is a good
+one.</p>
+<p><strong>Negative eval — no.</strong> 1,088 test functions, and none
+found asserting that particular material must not be retrieved. The
+Silent Rotation benchmark's "converged <strong>wrong</strong>" column is
+the nearest thing in spirit — it measures the fleet adopting a planted
+decoy — and it is not in this tree.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper of its own</strong>, and an unusually dense set of
+citations to other people's: DeepMind on the limits of single-vector
+retrieval (<a
+href="https://arxiv.org/abs/2508.21038">arXiv:2508.21038</a>), Cai 2024
+for backward salience, Anderson et al. 2025 and Davis on Rac1 for
+suppression, Bjork &amp; Bjork 1992 for dual strength, FSRS-6 for
+scheduling, Fellegi-Sunter for record linkage. The mechanisms are named
+after the papers in the code, which makes them checkable in a way
+"cognitive-science-inspired" usually is not.</p>
+<p>1,088 test functions across the two crates, plus
+<code>tests/e2e</code>, <code>tests/hooks</code> and
+<code>tests/phase_1</code>. <strong>I did not run them.</strong> The
+screen flagged <code>server.json</code> as an auto-run manifest and
+twelve dependency manifests inside the seven-day cooldown including
+<code>Cargo.lock</code> and <code>pnpm-lock.yaml</code>.</p>
+<p><strong>The benchmark is not at this commit.</strong> Silent Rotation
+lives on the <code>benchmark/silent-rotation</code> branch. Nothing
+about its numbers can be confirmed from the pinned tree, and this report
+does not confirm them. What the README's description shows is a
+well-designed <em>shape</em> of benchmark: a fact that exists only in
+the memory layer, a planted decoy, and three outcome classes where
+"converged wrong" — tests pass, merge is clean, production breaks — is
+named as the dangerous one rather than folded into a failure rate.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Use two thresholds, not one, and route the middle to a
+person.</strong> Fellegi-Sunter's
+<code>match | possible | non_match</code> with <code>confirm=true</code>
+on the uncertain classes is the cheapest correct answer to "when is a
+merge safe" — and the header's argument, that a single threshold
+"over-merges and destroys the audit trail", generalises to every dedup
+gate in this atlas.</li>
+<li><strong>Store the undo payload with the operation.</strong> One JSON
+column turns every merge into a reversible one and gives you a reflog
+for free.</li>
+<li><strong>Record why memories combined, not just that they
+did.</strong> <code>signals</code> alongside <code>undo_payload</code>
+is what makes a later "why is this one memory now" answerable.</li>
+<li><strong>Give the user a <code>protect</code> flag.</strong> One
+boolean exempting a memory from auto-merge, supersede and forgetting is
+the escape hatch every automatic lifecycle needs and almost none
+has.</li>
+<li><strong>Keep a content-free deletion receipt.</strong> Id, time,
+reason, and the counts of what the purge touched — enough to prove the
+deletion and audit its blast radius, without retaining the text you were
+told to forget.</li>
+<li><strong>Name the reason for every state transition from a fixed
+vocabulary.</strong> Nine values covering decay, competition, user
+action and system init means the log answers "why" and not only
+"when".</li>
+<li><strong>Label your unwired tables in the schema.</strong> "Designed
+for bi-temporal edge support but was never wired… Do NOT add queries
+against this table" is the single most useful comment in this report,
+and four other systems in this atlas would have avoided a finding by
+writing it.</li>
+<li><strong>Measure your ranking failing before you build around
+it.</strong> The backfill feature exists because the causal memory
+measurably ranks 7th of 8 under both dense and lexical retrieval.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not put your headline benchmark on another
+branch.</strong> A reader pinning the main line cannot check any of it,
+and a claim that cannot be checked at the commit is a claim about a
+different artifact.</li>
+<li><strong>Do not mistake availability states for trust
+states.</strong> <code>silent</code> and <code>unavailable</code> say a
+memory lost a competition or was suppressed; neither says it is wrong,
+and a system with four states and no notion of correctness can look more
+epistemically equipped than it is.</li>
+<li><strong>Do not expect a deletion receipt to stop a
+re-write.</strong> The tombstone here wins during sync and is silent
+during capture.</li>
+<li><strong>Do not ship this shape without a scope story if more than
+one person will use it.</strong> Tags are a convention; there is no
+boundary.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for one developer on one machine who wants their agent to
+stop re-learning the same lesson, and who is willing to run a 25MB
+binary and trust a lot of cognitive-science machinery they will not
+read. AGPL-3.0 matters for anyone considering embedding it in a
+service.</p>
+<p>The parts worth lifting even if you never run it are small and
+separable: the two-threshold merge classification, the undo payload, and
+the content-free deletion receipt. Each is a table and a policy.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does any tool expose <code>valid_from</code>?</strong> The
+storage layer writes it from the caller and the query reads it; whether
+an agent can set a fact's validity through MCP was not traced, and it
+decides whether the bi-temporal axis is used or merely available.</li>
+<li><strong>How often does <code>possible</code> actually
+occur?</strong> The whole confirmation design rests on the middle class
+being non-empty and rare; no distribution is published.</li>
+<li><strong>What clears <code>suppressed_by</code>?</strong> Suppression
+compounds per call and reverses within 24 hours; the longer-term
+behaviour of the array was not traced.</li>
+<li><strong>What do the composition outcome tables drive?</strong> They
+record which memories were used together and what happened; whether
+anything reads them back into ranking is unclear from the tool
+surface.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Merge and supersede</strong> —
+<code>crates/vestige-core/src/advanced/merge_supersede.rs</code> (the
+Fellegi-Sunter rationale at <code>:19-41</code>, the three-way
+classification <code>:62</code>),
+<code>crates/vestige-mcp/src/tools/dedup.rs</code>,
+<code>crates/vestige-core/src/storage/migrations.rs:804-853</code>
+(<code>merge_plans</code>, <code>merge_operations</code>)</p>
+<p><strong>Deletion</strong> — <code>migrations.rs:750-770</code>
+(<code>deletion_tombstones</code> and its rationale),
+<code>sync_tombstones</code> <code>:735</code></p>
+<p><strong>States and transitions</strong> —
+<code>migrations.rs:292-311</code> (<code>memory_states</code>),
+<code>:349-362</code> (<code>state_transitions</code> and the reason
+vocabulary), <code>:483-495</code> (<code>memory_access_log</code>)</p>
+<p><strong>Bi-temporality</strong> — <code>migrations.rs:211-215</code>,
+<code>crates/vestige-core/src/storage/sqlite.rs:3686</code> (the
+point-in-time query), <code>:874-935</code> (the insert),
+<code>crates/vestige-core/src/memory/node.rs:336</code>
+(<code>is_valid_at</code>) and <code>:494-506</code> (its tests),
+<code>crates/vestige-core/src/memory/temporal.rs</code>,
+<code>crates/vestige-core/src/search/temporal.rs</code></p>
+<p><strong>The labelled dead table</strong> —
+<code>migrations.rs:377-400</code> (<code>knowledge_edges</code>)</p>
+<p><strong>Neuroscience modules</strong> —
+<code>crates/vestige-core/src/neuroscience/</code>
+(<code>hippocampal_index.rs</code>), the FSRS tables
+<code>migrations.rs:313</code>, <code>:507</code>, the dream cycle
+<code>:532</code>, <code>consolidation_history</code>
+<code>:332</code></p>
+<p><strong>Composition</strong> — <code>migrations.rs:854-900</code>
+(<code>composition_events</code>, <code>composition_members</code>,
+<code>composition_outcomes</code>)</p>
+<p><strong>Tool surface</strong> —
+<code>crates/vestige-mcp/src/server.rs:247-420</code> (the thirteen
+tools, with the folding history in comments),
+<code>crates/vestige-mcp/src/tools/</code></p>
+<p><strong>Tests</strong> — 1,088 test functions in
+<code>crates/</code>, plus <code>tests/e2e</code>,
+<code>tests/hooks</code>, <code>tests/phase_1</code></p>
+<p><strong>Not in this tree</strong> —
+<code>benchmarks/silent-rotation/</code> lives on the
+<code>benchmark/silent-rotation</code> branch</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e"><code class="commit-id" title="a8b0a75661faaa396fa4519c82fcc369f0ddef8e">a8b0a756…</code></a>
+— first reading. Screened before reading: one auto-run surface
+(<code>server.json</code>), build-time execution in an npm manifest, and
+twelve dependency manifests inside the seven-day cooldown including
+<code>Cargo.lock</code> and <code>pnpm-lock.yaml</code>. The tree was
+read, never built, and no test or benchmark was run. The Silent Rotation
+benchmark is on a different branch and was not obtained.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 177 reports.**
+**This page covers all 182 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["177 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["182 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1510,3 +1510,48 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 42,000 lines of Python with 32 test files including end-to-end tenant isolation, two CI workflows — and a split licence where the default native engine is proprietary, downloaded from another repository, and absent from the tree.
 - Study when: you run many agents for many tenants and want the isolation enforced below the application.
 - Do not copy when: you need to read or change how retrieval works at the default backend, or you need correction semantics of any kind.
+
+### [`vestige`](../systems/vestige/)
+
+- Best idea: Fellegi-Sunter record linkage classifying every merge candidate as `match`, `possible` or `non_match`, with the two uncertain classes requiring an explicit `confirm=true` — the header's argument being that a single cosine threshold "over-merges and destroys the audit trail".
+- Biggest risk: the headline benchmark lives on a different branch, so none of Silent Rotation's numbers — 20/23 converged correct against 0/25 with no memory — can be checked at the pinned commit.
+- Most reusable component: `merge_operations`, described in its own migration as "the git reflog for your agent's memory", where `undo_payload` carries everything needed to reverse an applied merge and `signals` records why the memories combined.
+- Maturity impression: 97,000 lines of Rust in a 25MB single binary, AGPL-3.0, 1,088 test functions, twenty-five-plus tables — and a deprecated table labelled in the schema as "designed for bi-temporal edge support but was never wired … Do NOT add queries against this table", which is the correct handling of a defect four other systems here ship silently.
+- Study when: your automatic merge or supersede has one similarity threshold and you have never asked what it does at the boundary.
+- Do not copy when: more than one person will use the store; there is no scope beyond tags.
+
+### [`shodh-memory`](../systems/shodh-memory/)
+
+- Best idea: `docs/graph-construction-audit.md` — a 677-line self-audit whose evidence rules are this atlas's own ("Doc comments in this codebase are frequently stale, so nothing here rests on one"), every claim carrying a `file:line`, finding a resolver with zero production callers, a header contradicting its own code, and a PMI gate the upsert path voids entirely.
+- Biggest risk: those findings are real and unfixed at this commit — the co-activation layer "returns 0 for every call" by default, typing is skipped silently under lock contention, and the audit's own section 2.6 is titled "The read path filters nothing".
+- Most reusable component: `src/decay.rs` — exponential decay for the first three days and power-law after, with the cliff that pure exponential produces written out in numbers.
+- Maturity impression: 153,000 lines of Rust with no LLM anywhere, published to four registries, an in-tree recall harness with NDCG/MRR/MAP and dedicated forgetting, lineage and multi-hop suites — and no committed benchmark result.
+- Study when: you want an associative memory with zero inference cost, or you want to see what a project auditing itself to this standard produces.
+- Do not copy when: you need correction semantics — a wrong memory here fades if nothing reinforces it and strengthens if something does.
+
+### [`token-savior`](../systems/token-savior/)
+
+- Best idea: `was_visible` on every ledger event, which separates "the memory was injected and ignored" from "the memory was never injected" — opposite evidence about the ranker that almost every feedback loop in this atlas folds together.
+- Biggest risk: the LinUCB weights persist to `linucb_model.json` with no versioning against the `FEATURE_NAMES` tuple they were trained on, so changing the feature vector silently reinterprets a trained model.
+- Most reusable component: `linucb_injector.py` — a ten-feature contextual bandit deciding which memory to inject, with a Gauss-Jordan inverse in pure Python and no numpy.
+- Maturity impression: 32,600 lines of Python with 173 test files, a Beta-distributed validity score with quarantine and stale-suspected thresholds, and freshness checked by shelling out to `git log -S` — with the headline tsbench number in a separate repository.
+- Study when: you inject memory automatically and have no way to tell whether it helped.
+- Do not copy when: you need the benchmark claim verified; it is not in this tree.
+
+### [`recall-substrate`](../systems/recall-substrate/)
+
+- Best idea: per-actor Brier calibration — an actor's stated confidence scored against whether their writes survived or were contradicted, folded into a `[0.5, 1]` multiplier on everything they write afterwards. Every other system here weights by *what kind* of source a memory came from; this one weights by how well-calibrated that writer has actually been.
+- Biggest risk: `requiresReview` is validated, rendered, expanded in the compiled context and emitted as a `review_required` marker — and set to `true` only in three test files, so the context advertises a state the system cannot enter.
+- Most reusable component: `lastSalientAt` kept distinct from `updatedAt`, so "a read reinforces attention without refreshing freshness" — a one-field fix for a bug most stores in this atlas have.
+- Maturity impression: 13,200 lines of TypeScript with a `.test.ts` beside every single source module, an eight-pattern credential firewall that reclassifies rather than rejects, and an agent-integrity gate that holds the turn open until memory was consulted.
+- Study when: multiple writers of differing reliability write to one store and you weight them by a fixed constant.
+- Do not copy when: you need a curation surface — the README says there is nothing for a human to curate, and the code agrees.
+
+### [`core-redplanet`](../systems/core-redplanet/)
+
+- Best idea: splitting statement storage on whether the fact decomposes — `Identity`/`Knowledge`/`Event` become subject-predicate-object triples, while `Directive`/`Preference`/`Belief` stay whole "since they carry meaning that does not decompose cleanly into triples". Triple-ifying a preference throws away the phrasing that carries its force.
+- Biggest risk: an invalidated statement can be re-extracted from a new episode and become current again — correct for a memory over the user's own mail, and the wrong default for anything an agent writes.
+- Most reusable component: `invalidatedBy` beside `invalidAt`, which names the statement that ended this one and turns a set of timestamped rows into a walkable history.
+- Maturity impression: 152,800 lines across a monorepo with forty-plus connectors, a pluggable graph provider behind a three-value enum, six vector namespaces and nine pages of accurate documentation — beside 25 test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number published in a different repository.
+- Study when: your memory holds both facts and directives and you are storing them the same way.
+- Do not copy when: you need lexical retrieval; V2 dropped BM25 and the pipeline that has it is version-gated.

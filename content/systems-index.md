@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **177 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **182 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -52,6 +52,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
 - [`cognis`](../systems/cognis/) **Cognis** — A memory policy with a fingerprint · `fpytloun/cognis` · Scope enforced, Negative evals
 - [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
+- [`core-redplanet`](../systems/core-redplanet/) **CORE** — Reified temporal knowledge graph · `RedPlanetHQ/core` · Bi-temporal, Scope enforced
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
 - [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`
 - [`cowagent`](../systems/cowagent/) **CowAgent** — Daily-distilled memory · `zhayujie/CowAgent` · Scope enforced
@@ -198,6 +199,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## R
 
 - [`rainbox`](../systems/rainbox/) **RainBox** — Operator-governed memory · `neoneye/RainBox` · Tombstone, Trust state, Scope enforced, Human review
+- [`recall-substrate`](../systems/recall-substrate/) **Recall** — Push memory with an integrity gate · `H-XX-D/recall-memory-substrate` · Trust state
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
 - [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
@@ -205,6 +207,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`second-me`](../systems/second-me/) **Second Me** — The atlas's only memory that is weights · `mindverse/Second-Me` · Human review
 - [`sesa`](../systems/sesa/) **SESA** — Failure-distilled skill memory · `Zenghuang-Fu/SESA-Self-Evolving-Search-Agents`
+- [`shodh-memory`](../systems/shodh-memory/) **Shodh-Memory** — A cognitive substrate with no LLM · `varun29ankuS/shodh-memory` · Mutation audit
 - [`sillytavern`](../systems/sillytavern/) **SillyTavern** — Memory people write by hand · `SillyTavern/SillyTavern`
 - [`simplemem`](../systems/simplemem/) **SimpleMem** — Compression-first research memory · `aiming-lab/SimpleMem` · Scope enforced, Mutation audit
 - [`skales`](../systems/skales/) **Skales** — Ask it to forget · `skalesapp/skales`
@@ -217,6 +220,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/) **TencentDB Agent Memory** — Layered symbolic memory · `TencentCloud/tencentdb-agent-memory`
 - [`terse-memory`](../systems/terse-memory/) **TERSE Memory** — A linter where the verbs should be · `terse-lang/terse` · Trust state
 - [`tigrimosr`](../systems/tigrimosr/) **TigrimOSR** — Proposed skills, staged on disk · `Sompote/TigrimOSR` · Trust state, Scope enforced, Human review
+- [`token-savior`](../systems/token-savior/) **Token Savior** — A learned injection ranker · `Mibayy/token-savior` · Scope enforced, Mutation audit
 - [`tokenmizer`](../systems/tokenmizer/) **TokenMizer** — A status for not knowing · `Shweta-Mishra-ai/tokenmizer` · Trust state, Mutation audit
 ## U
 
@@ -224,6 +228,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## V
 
 - [`verel`](../systems/verel/) **Verel** — Verification-first memory · `amitpatole/verel` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
+- [`vestige`](../systems/vestige/) **Vestige** — Backward reach and reversible merges · `samvallad33/vestige` · Bi-temporal, Mutation audit, Human review
 - [`virtualwife`](../systems/virtualwife/) **VirtualWife** — normalize_scores does not normalize · `yakami129/VirtualWife`
 - [`voyager`](../systems/voyager/) **Voyager** — Procedural skill memory · `MineDojo/Voyager`
 ## W

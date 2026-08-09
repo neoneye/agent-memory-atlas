@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 177 reports.</strong></p>
+<p><strong>This page covers all 182 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;177 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;182 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4264,6 +4264,140 @@ another repository, and absent from the tree.</li>
 isolation enforced below the application.</li>
 <li>Do not copy when: you need to read or change how retrieval works at
 the default backend, or you need correction semantics of any kind.</li>
+</ul>
+<h3 id="vestige"><a
+href="../systems/vestige/"><code>vestige</code></a></h3>
+<ul>
+<li>Best idea: Fellegi-Sunter record linkage classifying every merge
+candidate as <code>match</code>, <code>possible</code> or
+<code>non_match</code>, with the two uncertain classes requiring an
+explicit <code>confirm=true</code> — the header's argument being that a
+single cosine threshold "over-merges and destroys the audit trail".</li>
+<li>Biggest risk: the headline benchmark lives on a different branch, so
+none of Silent Rotation's numbers — 20/23 converged correct against 0/25
+with no memory — can be checked at the pinned commit.</li>
+<li>Most reusable component: <code>merge_operations</code>, described in
+its own migration as "the git reflog for your agent's memory", where
+<code>undo_payload</code> carries everything needed to reverse an
+applied merge and <code>signals</code> records why the memories
+combined.</li>
+<li>Maturity impression: 97,000 lines of Rust in a 25MB single binary,
+AGPL-3.0, 1,088 test functions, twenty-five-plus tables — and a
+deprecated table labelled in the schema as "designed for bi-temporal
+edge support but was never wired … Do NOT add queries against this
+table", which is the correct handling of a defect four other systems
+here ship silently.</li>
+<li>Study when: your automatic merge or supersede has one similarity
+threshold and you have never asked what it does at the boundary.</li>
+<li>Do not copy when: more than one person will use the store; there is
+no scope beyond tags.</li>
+</ul>
+<h3 id="shodh-memory"><a
+href="../systems/shodh-memory/"><code>shodh-memory</code></a></h3>
+<ul>
+<li>Best idea: <code>docs/graph-construction-audit.md</code> — a
+677-line self-audit whose evidence rules are this atlas's own ("Doc
+comments in this codebase are frequently stale, so nothing here rests on
+one"), every claim carrying a <code>file:line</code>, finding a resolver
+with zero production callers, a header contradicting its own code, and a
+PMI gate the upsert path voids entirely.</li>
+<li>Biggest risk: those findings are real and unfixed at this commit —
+the co-activation layer "returns 0 for every call" by default, typing is
+skipped silently under lock contention, and the audit's own section 2.6
+is titled "The read path filters nothing".</li>
+<li>Most reusable component: <code>src/decay.rs</code> — exponential
+decay for the first three days and power-law after, with the cliff that
+pure exponential produces written out in numbers.</li>
+<li>Maturity impression: 153,000 lines of Rust with no LLM anywhere,
+published to four registries, an in-tree recall harness with
+NDCG/MRR/MAP and dedicated forgetting, lineage and multi-hop suites —
+and no committed benchmark result.</li>
+<li>Study when: you want an associative memory with zero inference cost,
+or you want to see what a project auditing itself to this standard
+produces.</li>
+<li>Do not copy when: you need correction semantics — a wrong memory
+here fades if nothing reinforces it and strengthens if something
+does.</li>
+</ul>
+<h3 id="token-savior"><a
+href="../systems/token-savior/"><code>token-savior</code></a></h3>
+<ul>
+<li>Best idea: <code>was_visible</code> on every ledger event, which
+separates "the memory was injected and ignored" from "the memory was
+never injected" — opposite evidence about the ranker that almost every
+feedback loop in this atlas folds together.</li>
+<li>Biggest risk: the LinUCB weights persist to
+<code>linucb_model.json</code> with no versioning against the
+<code>FEATURE_NAMES</code> tuple they were trained on, so changing the
+feature vector silently reinterprets a trained model.</li>
+<li>Most reusable component: <code>linucb_injector.py</code> — a
+ten-feature contextual bandit deciding which memory to inject, with a
+Gauss-Jordan inverse in pure Python and no numpy.</li>
+<li>Maturity impression: 32,600 lines of Python with 173 test files, a
+Beta-distributed validity score with quarantine and stale-suspected
+thresholds, and freshness checked by shelling out to
+<code>git log -S</code> — with the headline tsbench number in a separate
+repository.</li>
+<li>Study when: you inject memory automatically and have no way to tell
+whether it helped.</li>
+<li>Do not copy when: you need the benchmark claim verified; it is not
+in this tree.</li>
+</ul>
+<h3 id="recall-substrate"><a
+href="../systems/recall-substrate/"><code>recall-substrate</code></a></h3>
+<ul>
+<li>Best idea: per-actor Brier calibration — an actor's stated
+confidence scored against whether their writes survived or were
+contradicted, folded into a <code>[0.5, 1]</code> multiplier on
+everything they write afterwards. Every other system here weights by
+<em>what kind</em> of source a memory came from; this one weights by how
+well-calibrated that writer has actually been.</li>
+<li>Biggest risk: <code>requiresReview</code> is validated, rendered,
+expanded in the compiled context and emitted as a
+<code>review_required</code> marker — and set to <code>true</code> only
+in three test files, so the context advertises a state the system cannot
+enter.</li>
+<li>Most reusable component: <code>lastSalientAt</code> kept distinct
+from <code>updatedAt</code>, so "a read reinforces attention without
+refreshing freshness" — a one-field fix for a bug most stores in this
+atlas have.</li>
+<li>Maturity impression: 13,200 lines of TypeScript with a
+<code>.test.ts</code> beside every single source module, an
+eight-pattern credential firewall that reclassifies rather than rejects,
+and an agent-integrity gate that holds the turn open until memory was
+consulted.</li>
+<li>Study when: multiple writers of differing reliability write to one
+store and you weight them by a fixed constant.</li>
+<li>Do not copy when: you need a curation surface — the README says
+there is nothing for a human to curate, and the code agrees.</li>
+</ul>
+<h3 id="core-redplanet"><a
+href="../systems/core-redplanet/"><code>core-redplanet</code></a></h3>
+<ul>
+<li>Best idea: splitting statement storage on whether the fact
+decomposes —
+<code>Identity</code>/<code>Knowledge</code>/<code>Event</code> become
+subject-predicate-object triples, while
+<code>Directive</code>/<code>Preference</code>/<code>Belief</code> stay
+whole "since they carry meaning that does not decompose cleanly into
+triples". Triple-ifying a preference throws away the phrasing that
+carries its force.</li>
+<li>Biggest risk: an invalidated statement can be re-extracted from a
+new episode and become current again — correct for a memory over the
+user's own mail, and the wrong default for anything an agent
+writes.</li>
+<li>Most reusable component: <code>invalidatedBy</code> beside
+<code>invalidAt</code>, which names the statement that ended this one
+and turns a set of timestamped rows into a walkable history.</li>
+<li>Maturity impression: 152,800 lines across a monorepo with forty-plus
+connectors, a pluggable graph provider behind a three-value enum, six
+vector namespaces and nine pages of accurate documentation — beside 25
+test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number
+published in a different repository.</li>
+<li>Study when: your memory holds both facts and directives and you are
+storing them the same way.</li>
+<li>Do not copy when: you need lexical retrieval; V2 dropped BM25 and
+the pipeline that has it is version-gated.</li>
 </ul>
         </article>
       </div>
