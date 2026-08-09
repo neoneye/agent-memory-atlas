@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 231 reports.**
+**This page covers all 232 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["231 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["232 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1996,6 +1996,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 14,300 lines with a three-layer delegation, a four-relation SQLite graph with Hebbian strengthening and configurable-half-life decay, secret blocking on the write path, and **two** required dependencies with NER, embeddings and sub-agent extraction all optional.
 - Study when: your feedback loop treats "this helped" and "this misled me" as mirror images.
 - Do not copy when: you need the benchmark — "knowledge retained after a context wipe" is a property every external store has by construction, and a plain text file scores 100%.
+
+### [`arcrift`](../systems/arcrift/)
+
+- Best idea: the tenant isolation audit plants a **named canary** in each of ten projects and asks the wrong one for it — `forbiddenKey: "SECRET_BETA_88"`, `success: !leaked` — against a **live spawned MCP process** under **concurrent** JSON-RPC, with the report committed. A row count cannot catch a partial leak, a mock cannot reproduce a session-layer one, and a sequential test cannot reach a race.
+- Biggest risk: capture depends on seven other companies' DOM and the weekly Playwright check covers three of them, with a silent failure mode — "if Save Chat returns 0 messages… check this file first". The multi-strategy resolver limits the blast radius; the gap between the monitored set and the supported set does not close itself.
+- Most reusable component: knowing your most fragile dependency, documenting its symptom, monitoring it on a cron, and letting the monitor file your bug — "if any selector fails, it auto-creates a GitHub issue tagged `bug` + `selector-stale`".
+- Maturity impression: four committed audit reports, recall measured against a 1,000-chunk noise haystack rather than a corpus of only relevant documents, a per-engine contribution table answering which arm of the hybrid actually found each fact, and benchmark documents that state what they do not cover.
+- Study when: your multi-tenant boundary has never been asked for the neighbour's secret by name.
+- Do not copy when: you expect contradiction handled — thirty conversations about one auth flow accumulate every intermediate position at equal standing, and the answer offered is more context.
+
 
 
 

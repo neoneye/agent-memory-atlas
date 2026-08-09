@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An isolation test that plants a
+named secret in every project, spawns a live server, and asks each
+tenant for another's key under concurrent load — with the report
+committed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ArcRift — Agent Memory Atlas">
+    <meta property="og:description" content="An isolation test that
+plants a named secret in every project, spawns a live server, and asks
+each tenant for another's key under concurrent load — with the report
+committed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ArcRift — Agent Memory Atlas">
+    <meta name="twitter:description" content="An isolation test that
+plants a named secret in every project, spawns a live server, and asks
+each tenant for another's key under concurrent load — with the report
+committed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ArcRift — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A canary secret in each of ten tenants</p>
+          <h1>ArcRift</h1>
+          <p class="document-deck">An isolation test that plants a named
+secret in every project, spawns a live server, and asks each tenant for
+another's key under concurrent load — with the report committed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/eshaan-nair/arcrift">
+              <span>Source</span>
+              <strong>eshaan-nair/arcrift</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88" title="5424ea14dd9a848dcbcfb49586f348324999af88">
+              <span>Analyzed revision</span>
+              <code>5424ea14…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ArcRift captures conversations from seven web AI products via a
+browser extension <em>and</em> from four coding tools via MCP, into one
+local store — "Memory saved in a browser chat is instantly available in
+your coding tool, and vice versa" — with a knowledge graph, hybrid
+retrieval and automatic context injection. Local-first,
+<code>npx arcrift-setup</code>.</p>
+<p><strong>Two things here are better than the corpus average, and both
+are about verifying rather than asserting.</strong></p>
+<p><strong>The multi-tenant isolation test plants a canary.</strong>
+<code>mcp-stress-test.ts</code> "writes secret keys into 10 separate
+projects and actively runs queries to ensure that none of the projects
+can access another project's secret key", by spawning a <strong>live MCP
+process</strong> and issuing <strong>concurrent JSON-RPC
+requests</strong>. In the source:</p>
+<pre class="typescript"><code>testSteps.push({ type: &quot;cross_leak&quot;, project: &quot;PROJ_ALPHA&quot;,
+                 query: &quot;What is the beta key?&quot;, forbiddenKey: &quot;SECRET_BETA_88&quot; });
+…
+const leaked = text.includes(step.forbiddenKey);
+results.push({ step: &quot;Cross-Leak Check&quot;, project: step.project, success: !leaked });</code></pre>
+<p>A named secret that must not appear, asked for from the wrong tenant,
+against a real server under concurrency. Most isolation tests in this
+atlas run in-process against a mock and assert a count; this one asks
+for the neighbour's secret by name and passes only if the string is
+absent.</p>
+<p><strong>And the fragile dependency is monitored on a
+schedule.</strong> Browser capture depends on other companies' DOM, and
+<code>PLATFORM_SELECTORS.md</code> says so first:</p>
+<blockquote>
+<p>"These selectors can go stale when a platform updates its DOM.
+<strong>If Save Chat returns 0 messages, or context injection does
+nothing — check this file first.</strong>"</p>
+</blockquote>
+<p>Then a weekly Playwright job "every Monday at 9 AM UTC. If any
+selector fails, it <strong>auto-creates a GitHub issue</strong> tagged
+<code>bug</code> + <code>selector-stale</code>." Plus a multi-strategy
+resolver — ordered fallback strategies per platform, first match wins —
+so a single DOM change degrades rather than breaks.</p>
+<p>Knowing your most brittle dependency, documenting the symptom that
+means it broke, monitoring it on a cron, and having the monitor file
+your bug report is about as good as a scraping-based integration
+gets.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Conversations are captured from wherever they happen, extracted into
+facts and graph triples, chunked and embedded locally, and the most
+relevant material is prepended to the next prompt — in the browser or in
+the coding tool.</p>
+<pre class="mermaid"><code>flowchart TD
+    W[&quot;browser extension:&lt;br/&gt;Claude · ChatGPT · Gemini · DeepSeek ·&lt;br/&gt;Grok · Copilot · Mistral&quot;] --&gt; RES{&quot;multi-strategy selector resolver —&lt;br/&gt;ordered strategies, first match wins&quot;}
+    RES --&gt; CAP[&quot;captured conversation&quot;]
+    M[&quot;MCP: Claude Code · Cursor ·&lt;br/&gt;Windsurf · Claude Desktop&quot;] --&gt; CAP
+    CAP --&gt; EX[&quot;extract structured facts&quot;]
+    EX --&gt; G[&quot;knowledge graph triples&quot;]
+    EX --&gt; CH[&quot;chunks + embeddings&quot;]
+    G --&gt; DB[&quot;local SQLite (FTS5 + vectors),&lt;br/&gt;Neo4j adapter alongside&quot;]
+    CH --&gt; DB
+    Q[&quot;new prompt&quot;] --&gt; H[&quot;hybrid: FTS5 + vector + HyDE&quot;]
+    DB --&gt; H
+    H --&gt; TRIM[&quot;sentence-level trimming&quot;]
+    TRIM --&gt; INJ[&quot;prepended to the prompt&quot;]
+    CI[&quot;weekly Playwright job, Mondays 09:00 UTC&quot;] -.-&gt;|&quot;selector fails →&lt;br/&gt;auto-file issue: bug + selector-stale&quot;| RES
+    IT[&quot;mcp-stress-test: 10 projects,&lt;br/&gt;a named secret in each,&lt;br/&gt;live process, concurrent JSON-RPC&quot;] -.-&gt;|&quot;success = forbidden key absent&quot;| DB</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>backend/</code>, <code>extension/</code>,
+<code>dashboard/</code>, <code>bin/</code>, <code>scripts/</code>, with
+Docker Compose in full and "lite" variants, install scripts for both
+shells, and an unusually complete documentation set:
+<code>ARCHITECTURE.md</code>, <code>BENCHMARKS.md</code>,
+<code>RAG_PIPELINE.md</code>, <code>MCP_SETUP.md</code>,
+<code>PLATFORM_SELECTORS.md</code>, <code>SELF_HOSTING.md</code>,
+<code>TROUBLESHOOTING.md</code>, <code>ROADMAP.md</code>,
+<code>SECURITY.md</code>.</p>
+<p>Four CI workflows — <code>ci</code>, <code>integration-tests</code>,
+<code>release</code>, <code>selector-check</code> — and four
+<strong>committed audit reports</strong> under
+<code>reports/</code>.</p>
+<p>10,300 lines of TypeScript.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Prove isolation</strong> —
+<code>backend/scripts/mcp-stress-test.ts</code> (the
+<code>cross_leak</code> step <code>:65</code>, the leak assertion
+<code>:99-101</code>), <code>reports/mcp_stress_test.md</code>.</p>
+<p><strong>Resolve selectors</strong> —
+<code>extension/src/platform/resolver.ts</code>
+(<code>INPUT_SELECTOR_STRATEGIES</code>),
+<code>PLATFORM_SELECTORS.md</code>,
+<code>.github/workflows/selector-check.yml</code>.</p>
+<p><strong>Retrieve</strong> — the hybrid pipeline described in
+<code>RAG_PIPELINE.md</code>, <code>backend/rag-audit.ts</code>,
+<code>reports/benchmark_web.md</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Facts extracted from captured conversations, graph triples, and
+chunks with embeddings, in SQLite with FTS5 — with a Neo4j adapter for
+the graph as an alternative engine.</p>
+<p>There is no status field, no confidence, no supersession and no
+tombstone. Capture is the focus and correction is not addressed: the
+README's own framing mentions an AI that "gives you advice that
+contradicts decisions you made two weeks ago", and the fix offered is
+<em>more context</em>, not a way to mark the earlier decision
+superseded. A store fed by thirty conversations about the same auth flow
+will hold every intermediate position with equal standing.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid FTS5 plus vector plus HyDE, then <strong>sentence-level
+trimming</strong> before injection — the MCP benchmark measures "prompt
+compression rates, precision, and agent latency using surgical
+sentence-level trimming", and the web report records 95% compression,
+"reduced payload from 55,350 chars down to 2,784".</p>
+<p>Compressing at sentence granularity rather than dropping whole chunks
+is the right unit for injection: a chunk usually contains one relevant
+sentence and four that cost tokens.</p>
+<p><strong>Project is the tenant key</strong> and it is audited rather
+than assumed — see section 9. That earns <code>scope_enforced</code>,
+and the audit is what makes it more than a <code>WHERE</code>
+clause.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture from the browser via DOM selectors, or from a coding tool via
+MCP, into one store. The <code>SECURITY.md</code>,
+<code>SELF_HOSTING.md</code> and local-first framing are the answer to
+the obvious question about an extension that reads seven AI products'
+conversations; this report did not audit the extension's permissions or
+network behaviour, and a reader installing it should.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The widest capture surface in this atlas: seven web products through
+the extension and four coding tools through MCP, sharing one local
+store, with <code>npx arcrift-setup</code> as the entry point and a
+dashboard for browsing.</p>
+<p>The cross-surface claim — save in a browser chat, use it in Cursor —
+is the differentiator, and it is the reason the selector fragility
+matters: four of the eleven integration points are stable protocol
+clients and seven are someone else's markup.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Two marks: negative eval and scope enforced.</strong></p>
+<p><strong>The isolation audit is the best-shaped tenant test in the
+corpus</strong>, on four counts. It uses a <strong>named canary</strong>
+(<code>SECRET_BETA_88</code>) rather than counting rows, so a partial
+leak is caught. It runs against a <strong>live spawned process</strong>
+rather than an in-process mock, so the transport and session layers are
+in scope. It issues <strong>concurrent</strong> requests, so a race that
+crosses tenants is reachable. And the <strong>report is
+committed</strong> — <code>reports/mcp_stress_test.md</code>, ten
+projects, a per-project log, "Isolation Integrity 100.0%".</p>
+<p>Compare <a href="../openmemory/">OpenMemory</a>, whose isolation test
+is good but in-process and sequential, and this atlas's repeated
+observation that an unexercised boundary is indistinguishable from an
+absent one.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log, human review —
+no.</strong></p>
+<p><strong>The residual risk is the one the project documents.</strong>
+Seven capture platforms, a weekly check on <strong>three</strong>.
+<code>PLATFORM_SELECTORS.md</code> says the Playwright job runs "on all
+three platforms", against a README listing seven — so four capture paths
+have no scheduled staleness check, and the failure mode for a stale
+selector is silent: "Save Chat returns 0 messages". The multi-strategy
+resolver limits the blast radius, and the gap between the monitored set
+and the supported set is the thing to watch.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Four audits, all with committed reports</strong>, and
+<code>BENCHMARKS.md</code> describing each with its command, target
+script, scope and output file:</p>
+<ul>
+<li><strong>Graph density stress test</strong> — 1,200+ nodes with hubs,
+clusters and orphans, against a stated render target of under 1.5
+s.</li>
+<li><strong>RAG recall audit</strong> — hybrid FTS5 + vector against "a
+massive 1,000-chunk noise haystack".
+<code>reports/benchmark_web.md</code> records <strong>Recall@1 90%, MRR
+0.806</strong>, 95% context compression, and a per-engine contribution
+breakdown answering "when a fact was successfully retrieved, which
+engines contributed to finding it?"</li>
+<li><strong>MCP compression benchmark</strong> — compression rate,
+precision and agent latency.</li>
+<li><strong>MCP isolation test</strong> — section 9.</li>
+</ul>
+<p>Two details raise this above a self-run number. The <strong>noise
+haystack</strong> means recall is measured against distractors rather
+than against a corpus of only relevant documents. And the
+<strong>per-engine contribution table</strong> is an ablation in
+disguise: it says which arm of the hybrid actually found each fact,
+which is the question that decides whether the third arm earns its
+cost.</p>
+<p>The reports also carry their own scope limits — the web benchmark
+notes "Benchmarking for the MCP Toolchain context pipelines will be
+conducted in a separate future audit" rather than implying the number
+covers both paths.</p>
+<p>What is missing is any measure of capture <em>fidelity</em>: whether
+the extension extracts the conversation correctly is upstream of every
+number here, and the selector job checks that selectors match, not that
+what they capture is right.</p>
+<p><strong>I ran nothing.</strong> The figures are read from the
+repository's committed reports.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Plant a named canary in each tenant and ask the wrong one
+for it.</strong> <code>forbiddenKey: "SECRET_BETA_88"</code> with
+<code>success: !leaked</code> catches a partial leak that a row count
+would not.</li>
+<li><strong>Run the isolation test against a live process,
+concurrently.</strong> A mock cannot reproduce a session-layer or
+race-condition leak, which is where cross-tenant bugs actually
+live.</li>
+<li><strong>Commit the audit report.</strong> Ten projects, a
+per-project log, a status line.</li>
+<li><strong>Name your most fragile dependency in a document, with its
+symptom.</strong> "If Save Chat returns 0 messages… check this file
+first" is the sentence that saves an hour of debugging.</li>
+<li><strong>Monitor it on a schedule and let the monitor file the
+bug.</strong> A weekly Playwright run that auto-creates an issue tagged
+<code>selector-stale</code> turns silent breakage into a
+notification.</li>
+<li><strong>Use ordered fallback strategies, not one selector.</strong>
+First match wins means a single DOM change degrades instead of
+breaking.</li>
+<li><strong>Measure recall against a noise haystack.</strong> A thousand
+distractor chunks is the difference between measuring retrieval and
+measuring that your documents exist.</li>
+<li><strong>Publish which engine found each fact.</strong> A per-arm
+contribution table is the ablation that tells you whether the third
+retrieval arm is earning its latency.</li>
+<li><strong>Trim at sentence granularity before injection.</strong> A
+chunk is usually one useful sentence and four expensive ones.</li>
+<li><strong>State what your benchmark does not cover.</strong>
+"Benchmarking for the MCP Toolchain… will be conducted in a separate
+future audit."</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not monitor a subset and describe it as the set.</strong>
+Seven supported capture platforms, three checked weekly, and a stale
+selector fails silently.</li>
+<li><strong>Do not answer contradiction with more context.</strong> The
+README's own example is an AI contradicting a decision made two weeks
+ago; a store that accumulates thirty conversations with no supersession
+keeps every intermediate position at equal standing.</li>
+<li><strong>Do not leave capture fidelity unmeasured.</strong> Every
+retrieval number here sits downstream of whether the extension read the
+conversation correctly, and the selector check verifies matching, not
+content.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The one to look at if you use several AI products and want them to
+share memory — nothing else in this atlas spans browser chat and coding
+tool with one local store. The audit discipline is real and the reports
+are in the repository.</p>
+<p>Read <code>backend/scripts/mcp-stress-test.ts</code> for the canary
+pattern whatever you build; it is a better tenant test than most
+production systems have.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Which three platforms does the weekly check cover?</strong>
+<code>PLATFORM_SELECTORS.md</code> says three; the README lists
+seven.</li>
+<li><strong>What does the extension send, and where?</strong>
+Local-first is stated; the extension's permissions and network behaviour
+were not audited here.</li>
+<li><strong>Is capture fidelity measured anywhere?</strong> The selector
+job checks matching.</li>
+<li><strong>Does the Neo4j adapter share the isolation
+guarantees?</strong> The audit ran against the default engine.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Isolation audit</strong> —
+<code>backend/scripts/mcp-stress-test.ts</code> (the
+<code>cross_leak</code> step with its forbidden key <code>:65</code>,
+the leak assertion <code>:99-101</code>),
+<code>reports/mcp_stress_test.md</code> (ten projects, the per-project
+log, the summary table)</p>
+<p><strong>Selectors</strong> — <code>PLATFORM_SELECTORS.md</code> (the
+staleness warning and triage instruction, the weekly CI description, the
+resolver contract), <code>extension/src/platform/resolver.ts</code>
+(<code>INPUT_SELECTOR_STRATEGIES</code>),
+<code>.github/workflows/selector-check.yml</code></p>
+<p><strong>Benchmarks</strong> — <code>BENCHMARKS.md</code> (the audit
+table with command, script, scope and report per row),
+<code>backend/rag-audit.ts</code>,
+<code>backend/mcp-benchmark.ts</code>,
+<code>backend/generate-stress-test.ts</code>,
+<code>reports/benchmark_web.md</code> (Recall@1, MRR, compression,
+per-engine contribution), <code>reports/benchmark_mcp.md</code>,
+<code>reports/graph_stress_test.md</code></p>
+<p><strong>Documentation</strong> — <code>README.md</code>,
+<code>ARCHITECTURE.md</code>, <code>RAG_PIPELINE.md</code>,
+<code>MCP_SETUP.md</code>, <code>SELF_HOSTING.md</code>,
+<code>TROUBLESHOOTING.md</code>, <code>SECURITY.md</code>,
+<code>ROADMAP.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88"><code class="commit-id" title="5424ea14dd9a848dcbcfb49586f348324999af88">5424ea14…</code></a>
+— first reading. Screened before reading; the tree was read, nothing was
+installed, no audit was run, and the browser extension's permissions and
+network behaviour were not examined.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
