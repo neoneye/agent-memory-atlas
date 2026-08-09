@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 211 reports.**
+**This page covers all 212 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["211 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["212 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1816,6 +1816,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: TypeScript on Workers, D1, Vectorize and KV with 125 test files, contradiction resolution that deprecates the loser *and* deletes its vectors from the index, and graph expansion tested to skip deprecated neighbours on the higher-weight edge.
 - Study when: one exponential decay is quietly vetoing facts that were never going to change.
 - Do not copy when: you need multi-user scoping — isolation here is one deployment per person, with no key on the read path.
+
+### [`context-mem`](../systems/context-mem/)
+
+- Best idea: forgetting as loss of resolution rather than deletion — verbatim for 7 days, key sentences to 30, summarizer-level to 90, facts-only after, with `pinned` never compressing and `importance >= 0.8` skipping one tier, over fourteen content-aware summarizers because a stack trace and a JSON config have different salvageable structure.
+- Biggest risk: a gold `LongMemEval — 100% (500/500)` badge. The README's own table qualifies it as **R@5** under an optional LLM-judge blend (97.8% without), while LongMemEval's published headline metric is QA accuracy — and this repository commits its own measurement of that, `e2e-qa-real-500q-T5full.json`, at **46.6%**, with knowledge-update at 28.2%. To its credit the repository committed that file, and its competitor table says in bold "do not compare them directly".
+- Most reusable component: `error_patterns_absent` in the regression fingerprint — a known-good snapshot that records which errors were *not* happening, so "what changed since it worked" is answerable in a way a list of present facts cannot manage.
+- Maturity impression: six benchmark harnesses with dated result JSONs in the repository, 99 test files, `init` writing the right config for nine editors, and a plugin architecture where each of the fourteen summarizers is replaceable.
+- Study when: your context bill comes from keeping tool output verbatim forever, and deleting it is the only alternative you have implemented.
+- Do not copy when: you need the compression to be reversible — distillation is a one-way transformation of the stored content, gated by an importance classifier with no committed accuracy figure.
+
 
 
 
