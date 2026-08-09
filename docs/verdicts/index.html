@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 200 reports.</strong></p>
+<p><strong>This page covers all 201 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;200 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;201 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4904,6 +4904,40 @@ skipped with the reason.</li>
 have no way to notice the contradicting fact one sentence away.</li>
 <li>Do not copy when: you need abstention measured — the mechanism
 targets it and the benchmark excludes abstention questions.</li>
+</ul>
+<h3 id="omnimemory"><a
+href="../systems/omnimemory/"><code>omnimemory</code></a></h3>
+<ul>
+<li>Best idea: a default-deny AST gate that tests its own checker — six
+positive and negative controls added after "a verifier demonstrated the
+<code>apply_instance_discriminator</code> laundering hole live" — on the
+stated principle that a gate whose discrimination is never exercised is
+indistinguishable from a gate that always passes. Beside it, a test that
+asserts in executable form what the suite does <em>not</em> prove.</li>
+<li>Biggest risk: <code>create_lifecycle_dispatch_handler</code> returns
+the no-op handler, which logs and acknowledges
+<code>expire-memory</code> and <code>archive-memory</code> commands
+without acting; its docstring records that it "previously" raised
+<code>RuntimeError</code> and was changed so upstream commands are
+"gracefully acknowledged instead of crashing the service". The crash was
+information.</li>
+<li>Most reusable component: the expire SQL —
+<code>WHERE id = ? AND lifecycle_revision = ? AND lifecycle_state = 'active'</code>,
+<code>rows_affected == 0</code> reported as a conflict, and a comment
+explaining why EXPIRED is excluded from the retry's valid source states.
+Optimistic concurrency and an illegal-transition guard in one
+statement.</li>
+<li>Maturity impression: 119,000 lines, mypy strict, Pydantic
+throughout, a frozen five-state transition map with DELETED terminal —
+and a fully specified audit model with no constructor anywhere in
+<code>src</code>, a trust enum derived from a float by threshold, and
+<code>OMNIMEMORY_USE_STUB_HANDLERS</code> defaulting to
+<code>"true"</code>.</li>
+<li>Study when: you assert an invariant in CI and have never proved the
+assertion fails when violated.</li>
+<li>Do not copy when: you want a memory system to adopt — this is a
+platform domain package, and the lifecycle it specifies is not
+running.</li>
 </ul>
         </article>
       </div>

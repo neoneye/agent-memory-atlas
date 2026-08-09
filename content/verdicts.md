@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 200 reports.**
+**This page covers all 201 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["200 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["201 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1717,3 +1717,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 68,000 lines, 150 test files, an append-only `fact_assertions` log with a real as-of query, a layer wall enforced by a test, and dated benchmark result JSONs committed with dataset source, run date, `k` and the count of questions skipped with the reason.
 - Study when: your retriever returns what matches the question and you have no way to notice the contradicting fact one sentence away.
 - Do not copy when: you need abstention measured — the mechanism targets it and the benchmark excludes abstention questions.
+
+### [`omnimemory`](../systems/omnimemory/)
+
+- Best idea: a default-deny AST gate that tests its own checker — six positive and negative controls added after "a verifier demonstrated the `apply_instance_discriminator` laundering hole live" — on the stated principle that a gate whose discrimination is never exercised is indistinguishable from a gate that always passes. Beside it, a test that asserts in executable form what the suite does *not* prove.
+- Biggest risk: `create_lifecycle_dispatch_handler` returns the no-op handler, which logs and acknowledges `expire-memory` and `archive-memory` commands without acting; its docstring records that it "previously" raised `RuntimeError` and was changed so upstream commands are "gracefully acknowledged instead of crashing the service". The crash was information.
+- Most reusable component: the expire SQL — `WHERE id = ? AND lifecycle_revision = ? AND lifecycle_state = 'active'`, `rows_affected == 0` reported as a conflict, and a comment explaining why EXPIRED is excluded from the retry's valid source states. Optimistic concurrency and an illegal-transition guard in one statement.
+- Maturity impression: 119,000 lines, mypy strict, Pydantic throughout, a frozen five-state transition map with DELETED terminal — and a fully specified audit model with no constructor anywhere in `src`, a trust enum derived from a float by threshold, and `OMNIMEMORY_USE_STUB_HANDLERS` defaulting to `"true"`.
+- Study when: you assert an invariant in CI and have never proved the assertion fails when violated.
+- Do not copy when: you want a memory system to adopt — this is a platform domain package, and the lifecycle it specifies is not running.
+
