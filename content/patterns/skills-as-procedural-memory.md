@@ -130,6 +130,32 @@ four times has learned nothing if nothing wrote the failures down. Outcomes carr
 an indexable error kind, and a retrieved step arrives with its parent trace's
 outcome attached, so a step from a failed attempt cannot be read as precedent.
 
+**[Ollama](../../systems/ollama/) is the smallest complete instance, and the only
+one that treats loading a skill as a privileged act.** Its whole procedural memory
+is four files: discovery across four roots, a 1 MiB ceiling and front-matter
+validation, an `<available_skills>` block of names and descriptions in the prompt,
+and a `skill` tool that loads a body by exact name. Two decisions transfer.
+
+`agent/tools/skill.go` returns an unconditional `true` from `RequiresApproval`,
+with the reason in the comment — *"Model-initiated loads require approval because
+a skill's instructions can influence the rest of the run"* — while explicit user
+activation goes through a synthetic tool call that bypasses the gate. Voyager and
+Hermes gate the *write*; this gates the *read*, which is the operation that
+actually changes the agent's behaviour. Its limit is that the approval prompt
+shows a name, so the person approving has probably not read what they are
+approving.
+
+The second is the trust disclaimer, said twice to two audiences. The Go type
+comment reads *"It never grants tool permissions; it is supplied to the model as
+ordinary tool-result content"*, and the system prompt tells the model the same
+thing: *"Skills only provide instructions; use ordinary tools for filesystem or
+network access, with their normal approval rules."* That costs one line and
+answers the question a retrieved instruction document always raises.
+
+Against all of that, Ollama has no verification gate of any kind — no critic, no
+success signal, no usage tracking — because it also has no write path. A skill
+exists because a person wrote the file.
+
 ## Tests to require
 
 - Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.

@@ -199,6 +199,22 @@ returning LLM-rewritten facts cannot report. It also publishes the cost of the
 bet rather than hiding it: whole-conversation aggregation and summarisation are
 listed as out of scope by design, "because top-k retrieval can't cover it".
 
+**[Context Mode](../../systems/context-mode/) is the widest deployment of the
+idea in this atlas**, and it shows what the ceiling costs. `src/session/extract.ts`
+is 2,960 lines of parsers over hook payloads from seventeen different harnesses,
+turning a `PostToolUse` into typed events — `file_read`, `error_tool`,
+`git_branch`, `decision`, `task`, the plan-mode transitions — with no model
+consulted anywhere and no extraction prompt in the tree. Capture is therefore free
+and complete, and the entire quality of the memory is the quality of those
+parsers: a harness whose payload shape drifts stops producing events, and nothing
+notices, because there is no downstream signal that a session was thin.
+
+It is also the clearest case of the pattern's other consequence. Because nothing
+judged the material on the way in, nothing can judge it later either — there is no
+`UPDATE` on the event table and no confidence to revise. A zero-LLM capture path
+tends to arrive with a zero-correction store, and the two are the same decision
+seen twice.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

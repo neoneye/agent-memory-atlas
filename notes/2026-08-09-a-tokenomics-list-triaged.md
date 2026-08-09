@@ -230,3 +230,54 @@ memory one.
 
 Twenty entries read, one report, one pattern page and one scope boundary.
 
+### Batch 5 — the caches, the engines, and two reports
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `LMCache/LMCache` | `9fc6e1af` | Out of scope: a KV-cache layer beneath vLLM — the boundary `content/overview.md` already draws |
+| `messkan/prompt-cache` | `dd6c41fc` | Out of scope: a Go proxy with a three-tier semantic cache. No memory vocabulary in source at all |
+| `ggml-org/llama.cpp` | `74ce1574` | Out of scope: an inference engine. Every hit is UI state, multimodal or speculative decoding |
+| **`ollama/ollama`** | `acdf8151` | **Report written** — [Ollama](../content/systems/ollama.md) |
+| **`mksglu/context-mode`** | `ff5f911d` | **Report written** — [Context Mode](../content/systems/context-mode.md) |
+
+Both reports came out of a probe hit that the entry text gave no reason to expect,
+which is the argument for probing source rather than reading descriptions.
+
+**Ollama's entry on the list is about local inference.** Its `agent/` package is a
+session loop, a tool registry, an approval gate, a compactor and a skill catalog,
+and the catalog is durable cross-session state. Two mechanisms earned the report.
+`SkillCatalog.SystemContext()` puts one name-and-description line per skill in the
+prompt and loads the body only on demand — the
+[cache-preserving injection](../content/patterns/cache-preserving-injection.md)
+page now carries this as a third shape, *index in the prefix, body after it*,
+reached from a token argument rather than a caching one. And
+`agent/tools/skill.go` requires approval for a model-initiated load because *"a
+skill's instructions can influence the rest of the run"*, while explicit user
+activation bypasses it. Gating recall rather than the write is the right way round
+when the memory is instructions, and almost nothing else in the atlas does it.
+
+No capability marks. Nothing the agent learns survives a run — approvals live on
+the session struct, compaction writes nothing to disk, and no tool can create or
+edit a skill.
+
+**Context Mode's entry is about a 98% cut in tool-output tokens.** Underneath, hooks
+in seventeen harnesses write typed events into a per-project SQLite database, and
+the next session opens with a `<session_knowledge>` block built from them. It
+carries `scope_enforced` and `negative_eval`, and both come from the same bug:
+six `SessionStart` adapters were calling `getLatestSessionEvents(db)`, which
+returns whichever session started most recently regardless of project, so a second
+worktree leaked into a resumed session. `tests/session/cross-session-bleed.test.ts`
+pins the *function's* contract rather than the six callers', in the negative, with
+the reasoning in its header: *"If either contract regresses, all 6 SessionStart
+adapters silently leak again. These tests fail loudly instead."*
+
+Its other move belongs on the scope page beside CSM. `buildCtxSearchSchema`
+spreads the cross-project `project` field into the `ctx_search` schema only in
+shared-database mode; in the default layout the field does not exist, which the
+comment defends as *"a stronger guarantee than runtime"* validation.
+
+Twenty-five entries read, three reports, four pattern pages changed and one scope
+boundary drawn. The cost-list hypothesis has now failed in the direction it was
+expected to hold — the memory systems are here, they are just filed under
+inference and token savings.
+

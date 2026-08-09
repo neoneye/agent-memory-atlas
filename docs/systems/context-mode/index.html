@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A tool-output sandbox for coding
+agents whose real durable artifact is a per-project SQLite event log,
+replayed into the next session as a session_knowledge block — with a
+committed test that another session's events must not appear in it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Context
+Mode — Agent Memory Atlas">
+    <meta property="og:description" content="A tool-output sandbox for
+coding agents whose real durable artifact is a per-project SQLite event
+log, replayed into the next session as a session_knowledge block — with
+a committed test that another session's events must not appear in it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Context
+Mode — Agent Memory Atlas">
+    <meta name="twitter:description" content="A tool-output sandbox for
+coding agents whose real durable artifact is a per-project SQLite event
+log, replayed into the next session as a session_knowledge block — with
+a committed test that another session's events must not appear in it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Context Mode — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Session knowledge across seventeen
+harnesses</p>
+          <h1>Context Mode</h1>
+          <p class="document-deck">A tool-output sandbox for coding
+agents whose real durable artifact is a per-project SQLite event log,
+replayed into the next session as a session_knowledge block — with a
+committed test that another session's events must not appear in it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mksglu/context-mode">
+              <span>Source</span>
+              <strong>mksglu/context-mode</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mksglu/context-mode/commit/ff5f911d5732a036336c59684c27f4514f211edf" title="ff5f911d5732a036336c59684c27f4514f211edf">
+              <span>Analyzed revision</span>
+              <code>ff5f911d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Context Mode sells itself as a token-saving MCP server: it runs a
+tool call in a sandbox and returns the distilled result rather than the
+raw output, with a headline of 315 KB down to 5.4 KB. That is the
+product. The memory system is underneath it and is the more interesting
+half.</p>
+<p>Every tool call in a supported harness fires a hook, and the hook
+writes a typed event — <code>file_read</code>, <code>error_tool</code>,
+<code>git_branch</code>, <code>decision</code>, <code>task</code>,
+<code>plan_enter</code>/<code>plan_approved</code>/<code>plan_rejected</code>
+— into a <strong>per-project SQLite database</strong> whose filename is
+a canonical hash of the project directory. At the start of the next
+session, <code>hooks/session-directive.mjs</code> reads that session's
+events back and assembles a <code>&lt;session_knowledge&gt;</code>
+block: last request, pending tasks (completed ones deliberately
+excluded), key decisions, plan-mode status, files touched. Alongside it,
+<code>src/search/auto-memory.ts</code> reads the harness's own
+instruction files and a project-scoped memory directory. The result is
+cross-session memory for seventeen different coding agents, none of
+which had to agree on anything.</p>
+<p>What makes it worth reading is not the shape, which is common, but
+two decisions about <strong>scope</strong>, both taken after the failure
+rather than before it.</p>
+<p>The first is a committed regression test. Issue #398 records that
+every <code>SessionStart</code> adapter called
+<code>getLatestSessionEvents(db)</code> — the session with the most
+recent <code>started_at</code>, whichever project it belonged to — so a
+second worktree or a second IDE window would leak its files and errors
+into the resumed session's knowledge block. The fix passes the resuming
+session's own id. The test that pins it asserts, in the negative, that
+session B's <code>file_read</code> and <code>error_tool</code> events
+must <strong>not</strong> appear in session A's set, and that an unknown
+session id returns <code>[]</code> rather than falling back. That is the
+shape the <a href="../../capabilities/">capability index</a> counts as a
+negative evaluation, and this is one of the few reports that earns
+it.</p>
+<p>The second is <code>src/search/ctx-search-schema.ts</code>, which
+builds the <code>ctx_search</code> input schema conditionally. The
+cross-project <code>project</code> parameter is spread in only when the
+host runs in shared-database mode. In the default per-project layout the
+field <strong>does not exist in the tool schema</strong>, which the
+comment defends as <em>"a stronger guarantee than runtime"</em>
+validation. A model cannot ask for another project's memory because
+there is no argument in which to ask.</p>
+<p>Where it is weakest is correction. There is no update path and no
+per-item delete. <code>ctx_purge</code> wipes every artifact for a
+project directory — database, WAL and SHM sidecars, events file, both
+hash variants on case-insensitive filesystems — and that is the only
+forgetting the system has. A wrong decision event stays in the knowledge
+block of every future session in that project until someone destroys the
+whole store.</p>
+<p>The licence is Elastic License 2.0, so the code is readable and
+modifiable but may not be offered as a hosted service.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>something a hook saw</strong>, not something
+a model judged worth keeping. That single decision explains most of the
+design.</p>
+<p><code>src/session/extract.ts</code> — 2,960 lines — is a set of
+parsers over hook payloads from seventeen harnesses. It turns a
+<code>PostToolUse</code> payload into zero or more
+<code>SessionEvent</code>s with a <code>type</code>, a
+<code>category</code>, a <code>priority</code>, and a <code>data</code>
+string. No model is consulted, and there is no extraction prompt
+anywhere in the tree. The consequence is the one <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> predicts:
+capture is complete and cheap, and precision is entirely a function of
+how good the parsers are.</p>
+<p>The state machine is short, and its shortness is the finding:</p>
+<ul>
+<li><strong>Written.</strong> An event is inserted with
+<code>session_id</code>, <code>project_dir</code>,
+<code>created_at</code>, an <code>attribution_source</code> and an
+<code>attribution_confidence</code>. It is never edited afterwards;
+there is no <code>UPDATE</code> on <code>session_events</code> in the
+tree.</li>
+<li><strong>Selected, or not.</strong> At the next
+<code>SessionStart</code> the events for <em>that session id</em> are
+grouped by category and rendered. Some categories are filtered on their
+way in — a task whose latest status is <code>completed</code>,
+<code>deleted</code> or <code>failed</code> is dropped from the
+<em>Pending Tasks</em> list, with the reason in a comment: <em>"the
+model should not re-work them."</em> That is the only content judgement
+made anywhere on the read path.</li>
+<li><strong>Gone.</strong> Only by <code>ctx_purge</code>, and only per
+project directory.</li>
+</ul>
+<p>So a memory has no truth value, no confidence that can change, no
+supersession and no rejection. It has a timestamp and a session. The
+system does model <em>attribution</em> — <code>attribution_source</code>
+and a numeric <code>attribution_confidence</code> recording how sure it
+is which project an event belongs to — but that is confidence about the
+event's address, not about its content.</p>
+<p>Control is neither the agent's nor the user's. The agent cannot write
+a memory: there is no <code>remember</code> tool. The user cannot edit
+one except by editing an instruction file, which is a different lane.
+The hooks decide, and they decide by firing.</p>
+<pre class="mermaid"><code>flowchart TD
+    T[&quot;tool call in any of 17 harnesses&quot;] --&gt; H[&quot;PostToolUse hook&quot;]
+    H --&gt; E[&quot;extract.ts parses the payload&lt;br/&gt;no model involved&quot;]
+    E --&gt; W[&quot;INSERT into session_events&lt;br/&gt;session_id, project_dir, priority&quot;]
+    W --&gt; DB[(&quot;per-project SQLite&lt;br/&gt;named by hash of project dir&quot;)]
+    S[&quot;SessionStart / PreCompact&quot;] --&gt; G{&quot;which session&lt;br/&gt;is resuming?&quot;}
+    G -- &quot;id from hook input&quot; --&gt; R[&quot;getSessionEvents(db, sessionId)&quot;]
+    G -- &quot;id unknown&quot; --&gt; Z[&quot;[] — no fallback to latest&quot;]
+    DB --&gt; R
+    R --&gt; B[&quot;render session_knowledge:&lt;br/&gt;last request, pending tasks,&lt;br/&gt;decisions, plan status&quot;]
+    B --&gt; C[&quot;prepended to the new session&quot;]
+    P[&quot;ctx_purge(projectDir)&quot;] -.-&gt;|&quot;the only delete:&lt;br/&gt;whole store, sidecars included&quot;| DB</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two processes, and the split matters.</p>
+<p><strong>The hooks</strong> are plain <code>.mjs</code> files invoked
+by the harness — <code>sessionstart.mjs</code>,
+<code>pretooluse.mjs</code>, <code>posttooluse.mjs</code>,
+<code>precompact.mjs</code>, <code>userpromptsubmit.mjs</code>,
+<code>stop.mjs</code>, plus <code>session-directive.mjs</code> which
+builds the knowledge block. They run in a fresh process per event, do
+their own SQLite open and close, and share code through pre-bundled
+<code>*.bundle.mjs</code> files so that a hook has no install step.</p>
+<p><strong>The MCP server</strong> (<code>src/server.ts</code>) exposes
+the product surface: <code>ctx_execute</code>,
+<code>ctx_execute_file</code>, <code>ctx_batch_execute</code>,
+<code>ctx_search</code>, <code>ctx_fetch_and_index</code>,
+<code>ctx_purge</code>. It runs the sandboxed command, chunks the
+output, indexes it, and returns a summary.</p>
+<p>The two never share a process, which produces one of the more honest
+comments in the tree. <code>src/session/retrieval-marker.ts</code>
+exists because <em>"context-mode's OWN MCP retrieval tools never fire a
+PostToolUse hook for the plugin's own server"</em>, so the server writes
+the byte count of each retrieval into a temp marker keyed by the session
+database's basename, and the next ordinary <code>PostToolUse</code>
+picks it up. The note records that this was <em>"verified empirically: 0
+<code>mcp_tool_call</code> events locally"</em> — a measurement gap
+found in production and worked around rather than assumed away.</p>
+<p>Persistence is SQLite via <code>src/db-base.ts</code>.
+<code>src/session/db.ts</code> (1,726 lines) owns
+<code>session_events</code>, <code>session_meta</code>,
+<code>session_resume</code> and <code>tool_calls</code>.
+<code>src/store.ts</code> (2,071 lines) owns the content store: two FTS5
+virtual tables, <code>chunks</code> for word matching and
+<code>chunks_trigram</code> for substring matching, both ranked with
+<code>bm25(…, 5.0, 1.0)</code> so the title column outweighs the
+body.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Node, SQLite, and nothing else. No API key is needed to store
+anything, no embedding model is called, and the whole thing runs offline
+— the only network path is <code>ctx_fetch_and_index</code>, which is a
+feature rather than a dependency. Installation is the harness's own
+plugin or MCP mechanism; the seventeen adapters under
+<code>src/adapters/</code> exist precisely so that each host's config
+file is written in its own dialect.</p>
+<p>The store is inspectable with <code>sqlite3</code> and the derived
+events file is Markdown. Repair by hand is possible for the events file
+and awkward for the FTS tables, which is the normal trade for using
+FTS5.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>hooks/posttooluse.mjs</code> →
+<code>extractEvents(rawInput)</code> in
+<code>src/session/extract.ts</code> →
+<code>db.insertEvent(sessionId, event, sourceHook)</code> in
+<code>src/session/db.ts</code>. Project attribution runs in
+<code>src/session/project-attribution.ts</code> and lands as
+<code>attribution_source</code> and <code>attribution_confidence</code>
+columns on the row.</p>
+<p><strong>Context assembly.</strong>
+<code>hooks/sessionstart.mjs</code> →
+<code>getSessionEvents(db, sessionId)</code> →
+<code>buildSessionDirective(source, eventMeta, toolNamer)</code> in
+<code>hooks/session-directive.mjs</code>, which emits
+<code>&lt;session_knowledge source="compact|continue"&gt;</code> with a
+nested <code>&lt;session_guide&gt;</code>. The same module writes a
+human-readable <code>events.md</code> sidecar.</p>
+<p><strong>Retrieval.</strong> <code>ctx_search</code> →
+<code>searchAllSources</code> in <code>src/search/unified.ts</code>,
+which merges three origins — <code>current-session</code> chunks from
+the content store, <code>prior-session</code> events from the session
+database, and <code>auto-memory</code> from instruction files — under
+<code>sort: "relevance"</code> (content store only, bm25) or
+<code>sort: "timeline"</code> (all three, chronological).</p>
+<p><strong>Auto-memory.</strong> <code>searchAutoMemory</code> in
+<code>src/search/auto-memory.ts</code> reads, in order:
+<code>&lt;projectDir&gt;/&lt;instructionFile&gt;</code> for each file
+the adapter names,
+<code>&lt;configDir&gt;/&lt;instructionFile&gt;</code>, then
+<code>&lt;memoryDir&gt;/*.md</code>. <code>getMemoryDir</code> is
+documented as required to return a <em>project-scoped</em> path, and the
+adapterless legacy fallback applies <code>hashProjectDirCanonical</code>
+itself so the contract holds at both call sites — issue #663 in the
+comment.</p>
+<p><strong>Delete.</strong> <code>purgeSession</code> in
+<code>src/session/purge.ts</code>. Every path is derived
+deterministically from the input <code>projectDir</code> with, in its
+own words, <em>"NO <code>readdirSync</code> + glob-filter loop"</em>, so
+two worktrees cannot collapse onto each other. It unlinks the
+<code>.db</code>, <code>-wal</code> and <code>-shm</code> triple
+unconditionally and sweeps both the canonical lowercased hash and the
+legacy raw-cased one, because a partial upgrade on a case-insensitive
+filesystem otherwise leaves orphans.</p>
+<p><strong>Scope on the tool surface.</strong>
+<code>buildCtxSearchSchema</code> in
+<code>src/search/ctx-search-schema.ts</code> spreads the
+<code>project</code> field into the Zod object only when
+<code>isSharedMode</code> is true.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>session_events</code> is the memory table:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code>, <code>project_dir</code></td>
+<td>the two scope keys</td>
+</tr>
+<tr>
+<td><code>type</code>, <code>category</code>, <code>priority</code></td>
+<td>what kind of event, and how much it matters</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>the payload, a string — sometimes JSON, sometimes a path</td>
+</tr>
+<tr>
+<td><code>attribution_source</code>,
+<code>attribution_confidence</code></td>
+<td>how the project was determined, and how sure</td>
+</tr>
+<tr>
+<td><code>bytes_avoided</code>, <code>bytes_returned</code></td>
+<td>the product's own accounting</td>
+</tr>
+<tr>
+<td><code>source_hook</code>, <code>created_at</code>,
+<code>data_hash</code></td>
+<td>provenance and dedupe</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three indexes exist and all three lead with <code>session_id</code>,
+which is the schema saying what the read path is.</p>
+<p><code>session_meta</code> holds one row per session with
+<code>project_dir</code>, <code>started_at</code>,
+<code>last_event_at</code>, <code>event_count</code> and
+<code>compact_count</code>. <code>session_resume</code> holds one
+snapshot per session with a <code>consumed</code> flag, so a resume is
+used once. <code>tool_calls</code> aggregates per
+<code>(session_id, tool)</code>.</p>
+<p>There is no validity interval, no supersession pointer, no trust
+field and no tombstone. <code>data_hash</code> is present and is a
+dedupe key, not a correction mechanism. Episodic material (events) and
+reference material (instruction files, the memory directory) live in
+different substrates entirely and meet only in
+<code>searchAllSources</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms, both lexical, no embeddings anywhere.</p>
+<p>The content store runs FTS5 twice over the same chunks: a word index
+and a trigram index, each ranked <code>bm25(chunks, 5.0, 1.0)</code>.
+The trigram table is what makes a substring or an identifier fragment
+findable, which is the right second arm for code and a better choice
+than a vector index for a store that must work offline with no
+model.</p>
+<p>The session arm is not a search at all under the default path — it is
+<code>SELECT … WHERE session_id = ? ORDER BY created_at ASC</code>, the
+whole session in order. Ranking happens only in the rendering, by
+category and by the <code>priority</code> column.</p>
+<p><code>searchAllSources</code> merges the three origins and tags each
+result <code>current-session</code>, <code>prior-session</code> or
+<code>auto-memory</code>, so the caller can see where a hit came from.
+Under <code>projectScope</code>, content-store results are restricted
+with a two-step <code>IN</code> clause: the session database translates
+a <code>project_dir</code> into a list of session ids, and chunks are
+filtered to those plus legacy <code>session_id = ''</code> rows.</p>
+<p>The failure modes are the ones a lexical, complete-capture design
+produces. A long session yields a long knowledge block, bounded only by
+the per-item truncations in the renderer — the last prompt is cut at 300
+characters, a decision at 150. Nothing scores whether an event is still
+relevant. And the knowledge block is assembled from whatever the parsers
+recognised, so a harness whose payload shape drifts loses material
+silently.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>synchronous inside a hook</strong> and cost no
+model call. The hook process opens SQLite, inserts, and exits. A memory
+written by the <code>PostToolUse</code> of one tool call is readable by
+the next one, so the lag is a process spawn rather than a consolidation
+cycle.</p>
+<p>There is no deduplication beyond <code>data_hash</code>, no
+consolidation, and no background pass — nothing in this tree runs on a
+timer, and the absence is a deliberate fit with the hook model rather
+than an omission.</p>
+<p>Filtering of noisy input happens at two places and neither is about
+truth. <code>src/security.ts</code> and the server's
+<code>checkFilePathDenyPolicy</code> / <code>checkProjectBoundary</code>
+decide what the sandbox may execute and read.
+<code>src/search/flood-guard.ts</code> bounds the search side. Neither
+asks whether an event is <em>correct</em>, because nothing in the design
+has an opinion about that.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path is <strong>zero-token</strong>. No extraction model,
+no summarisation, no embedding — the entire capture path is regular
+expressions and JSON parsing over hook payloads.</p>
+<p>The read path is where the bill lands, and it is a fixed prepend
+rather than a per-turn injection: the
+<code>&lt;session_knowledge&gt;</code> block is emitted once at
+<code>SessionStart</code> and once at <code>PreCompact</code>. That is
+the friendly shape for <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> — the block is byte-stable for the whole session because
+nothing re-renders it mid-run, so it sits in the cached prefix rather
+than invalidating it every turn. Whether that was reasoned about or fell
+out of the hook lifecycle, the tree does not say.</p>
+<p>The block's size is bounded only by per-item truncation, so a session
+with many decisions produces a large one, and the cost is paid at every
+cache miss for the rest of that session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Seventeen adapters, and the list is the point:
+<code>claude-code</code>, <code>codex</code>, <code>cursor</code>,
+<code>gemini-cli</code>, <code>qwen-code</code>, <code>kimi</code>,
+<code>kiro</code>, <code>opencode</code>, <code>openclaw</code>,
+<code>pi</code>, <code>zed</code>, <code>omp</code>,
+<code>antigravity</code>, <code>antigravity-cli</code>,
+<code>copilot-cli</code>, <code>vscode-copilot</code>,
+<code>jetbrains-copilot</code>. <code>src/adapters/base.ts</code>
+supplies three defaults each one may override —
+<code>getConfigDir()</code> derived from
+<code>sessionDirSegments</code>, <code>getInstructionFiles()</code>
+defaulting to <code>["CLAUDE.md"]</code>, and
+<code>getMemoryDir()</code> defaulting to
+<code>&lt;configDir&gt;/memory</code>. That is a small contract, and it
+is the whole reason one memory implementation reaches seventeen
+hosts.</p>
+<p>The agent's agency over memory is close to nil, by design. It cannot
+write, cannot correct, cannot delete an item, and cannot address a
+memory by id. It can search (<code>ctx_search</code>) and it can destroy
+a project's whole store (<code>ctx_purge</code>). Injection is automatic
+and it is not a tool result — the knowledge block is prepended by the
+host at session start.</p>
+<p>Compaction is handled explicitly: <code>precompact.mjs</code> fires
+before the harness compacts, and the knowledge block records
+<code>source="compact"</code> versus <code>source="continue"</code> so
+the model can tell which boundary it just crossed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance is genuinely modelled, and unusually so: every event
+carries which hook produced it and a numeric confidence in the project
+it was attributed to. That is a rarer field than a trust score, and it
+is answering a different question — not <em>is this true</em> but <em>is
+this mine</em>.</p>
+<p>Prompt-injected false memories are structurally difficult here, and
+for a reason worth naming: the model never writes to the store. An
+attacker who controls a file the agent reads cannot cause a
+<code>decision</code> event to be written, because <code>decision</code>
+events come from parsing the harness's own payloads. What an attacker
+<em>can</em> do is influence what the agent reads and runs, which is
+what <code>checkProjectBoundary</code> and the deny policy are for.</p>
+<p>The gaps:</p>
+<ul>
+<li><strong>No correction of any kind.</strong> A <code>decision</code>
+event captured from a misinterpreted prompt is in every future session's
+knowledge block for that project, and the only remedy is
+<code>ctx_purge</code> of the entire store.</li>
+<li><strong>Attribution is a heuristic with a confidence number, and the
+number is not used as a filter</strong> anywhere on the read path that
+this reading found. A low-confidence attribution produces the same block
+as a high-confidence one.</li>
+<li><strong>Shared-database mode widens the surface
+deliberately.</strong> The <code>project</code> parameter exists there,
+and the schema comment is explicit that the guarantee in the default
+mode comes from the field's absence — so the guarantee is a deployment
+property, not a code property.</li>
+<li><strong>Elastic License 2.0</strong> means an adopter may read and
+modify but may not offer it as a hosted service, which matters for
+anyone evaluating it as a platform component rather than as a local
+tool.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>210 test files, and the coverage is broad — adapters, hooks, session
+extraction, security, executor, analytics, plus per-harness plugin
+tests.</p>
+<p>The one that earns a mark is
+<code>tests/session/cross-session-bleed.test.ts</code>. Its header
+documents the bug, the pull request, and the fixing commit, then states
+what the tests pin: <em>"getSessionEvents(db, sid) returns ONLY events
+for <code>sid</code>"</em> and <em>"getSessionEvents(db, 'unknown')
+returns [] — no fallback"</em>. The assertions are written in the
+negative — B's <code>file_read</code> and B's <code>error_tool</code>
+<strong>must not</strong> appear in A's set — and the header explains
+why the shape was chosen: <em>"If either contract regresses, all 6
+SessionStart adapters silently leak again. These tests fail loudly
+instead."</em> That reasoning is the argument for negative retrieval
+assertions, stated by someone who had just been bitten.</p>
+<p><code>tests/benchmark-results-v04.json</code> commits measured
+output: per-tool raw bytes, context bytes, savings percentage and
+duration, dated 23 February 2026 at version 0.4.0. It measures the
+<em>product</em> — how much smaller a distilled tool result is — not
+memory quality. No retrieval-quality evaluation exists, which is
+consistent with a system whose session retrieval is a <code>WHERE</code>
+clause rather than a ranking.</p>
+<p>What I would want before trusting it: a test that the
+<code>&lt;session_knowledge&gt;</code> block rendered for session A
+contains no string from session B, which is one level above the contract
+the current test pins — the leak was in the adapters, and the test is on
+the function the adapters call. And a test of the two-step
+<code>projectScope</code> <code>IN</code> clause on the content store,
+which is the same boundary on the other arm and is untested as far as
+this reading found.</p>
+<p>I ran nothing. Every claim here comes from reading the tree at
+<code class="commit-id" title="ff5f911d5732a036336c59684c27f4514f211edf">ff5f911d…</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Delete the parameter instead of validating it.</strong> If a
+scope must not be chosen by the model, leave it out of the tool schema
+rather than rejecting bad values at runtime. The comment's phrasing is
+the right test — a field the caller physically cannot supply is a
+stronger guarantee than one you check — and the conditional-schema trick
+makes it compatible with a deployment mode that does need the
+field.</li>
+<li><strong>Write the negative test at the function the leak passed
+through.</strong> The bug here was six adapters calling one convenience
+function; the test pins the function's contract, so a seventh adapter
+written next year inherits the guarantee. Testing each adapter would
+have been six tests that a new adapter does not get.</li>
+<li><strong>Derive every delete path from the input, never from a
+directory listing.</strong> <code>purgeSession</code>'s refusal to glob
+is what makes it safe across worktrees, and the same reasoning applies
+to any store keyed by a hash of a path.</li>
+<li><strong>Record which hook produced an event, and how confident you
+are about the scope you assigned it.</strong> Attribution confidence is
+a different axis from content confidence and it is the one a
+multi-project, multi-window setup actually needs.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not ship capture without a per-item delete.</strong> A
+store that can only be destroyed wholesale forces the user to choose
+between one wrong memory and all of them, and the wrong memory is the
+one that keeps getting injected.</li>
+<li><strong>Do not let the injected block grow without a global
+bound.</strong> Per-item truncation caps the worst single entry and says
+nothing about the total, which is the number that ends up in every
+prompt.</li>
+<li><strong>Do not assume your own tool calls are visible to your own
+hooks.</strong> This project found the gap empirically, in production,
+after building analytics on top of it. If you meter your own retrieval,
+verify the meter fires.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for someone who works across several coding agents and wants
+one memory that follows them, and it is worth adopting for that reason
+alone — the seventeen adapters are the expensive part and they already
+exist. It assumes a local, single-developer deployment: one machine, one
+SQLite file per project, no server, no account.</p>
+<p>Walk away if you need memory to be <em>corrected</em>. There is no
+seam to add it: the schema has no version chain, the read path has no
+filter to consult, and the write path has no author to attribute a fix
+to. Walk away too if you were planning to host it — the Elastic licence
+forecloses that specifically — and if what you actually want is a
+semantic memory over conversations, since everything here is lexical
+over what a hook observed.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the rendered <code>&lt;session_knowledge&gt;</code> block ever
+exceed a useful size in a long session? Per-item truncation is in the
+code and the total is not bounded anywhere this reading found.</li>
+<li>Is <code>attribution_confidence</code> consumed anywhere as a
+threshold, or only recorded? Nothing on the read path appeared to read
+it.</li>
+<li>How does shared-database mode scope the session arm? The
+<code>project</code> parameter covers the content store through
+<code>projectScope</code>; whether prior-session events are equally
+filtered there was not traced.</li>
+<li>What proportion of the seventeen adapters actually deliver a session
+id on resume? The fix depends on it, and an adapter that does not would
+fall into the <code>[]</code> branch — safe, but silently empty.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong> <code>src/session/db.ts</code> ·
+<code>src/db-base.ts</code> · <code>src/store.ts</code> ·
+<code>src/store-directory.ts</code></p>
+<p><strong>Write path</strong> <code>src/session/extract.ts</code> ·
+<code>src/session/event-emit.ts</code> ·
+<code>src/session/persist-tool-calls.ts</code> ·
+<code>src/session/project-attribution.ts</code> ·
+<code>hooks/posttooluse.mjs</code> ·
+<code>hooks/userpromptsubmit.mjs</code></p>
+<p><strong>Retrieval</strong> <code>src/search/unified.ts</code> ·
+<code>src/search/auto-memory.ts</code> ·
+<code>src/search/ctx-search-schema.ts</code> ·
+<code>src/search/flood-guard.ts</code></p>
+<p><strong>Context assembly</strong>
+<code>hooks/session-directive.mjs</code> ·
+<code>hooks/sessionstart.mjs</code> · <code>hooks/precompact.mjs</code>
+· <code>src/session/snapshot.ts</code></p>
+<p><strong>Deletion</strong> <code>src/session/purge.ts</code></p>
+<p><strong>Integration</strong> <code>src/server.ts</code> ·
+<code>src/adapters/base.ts</code> · <code>src/adapters/detect.ts</code>
+· <code>src/adapters/client-map.ts</code></p>
+<p><strong>Tests and measurement</strong>
+<code>tests/session/cross-session-bleed.test.ts</code> ·
+<code>tests/adapters/base-adapter-memory.test.ts</code> ·
+<code>tests/benchmark-results-v04.json</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/mksglu/context-mode/commit/ff5f911d5732a036336c59684c27f4514f211edf"><code class="commit-id" title="ff5f911d5732a036336c59684c27f4514f211edf">ff5f911d…</code></a>
+— first reading, from the <a
+href="https://github.com/QuesmaOrg/awesome-ai-tokenomics">awesome-ai-tokenomics
+triage</a>, where the entry describes only the tool-output sandbox.
+Screened before reading: 1 auto-run surface
+(<code>.claude/settings.json</code>, which declares permission allow and
+deny lists and no hooks), 3 unpinned manifests, no dependency surface
+inside the seven-day cooldown. Nothing was executed and nothing was
+installed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

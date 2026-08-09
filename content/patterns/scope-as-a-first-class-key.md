@@ -360,6 +360,30 @@ together, nothing within a level is separated, and the level describes the run
 that wrote a file rather than anything about the file. Read it as a containment
 boundary, not as tenancy.
 
+**[Context Mode](../../systems/context-mode/) arrives at CSM's conclusion by a
+different route and adds the test.** Its `ctx_search` input schema is *built*
+rather than declared: `buildCtxSearchSchema` in `src/search/ctx-search-schema.ts`
+spreads the cross-project `project` field into the Zod object only when the host
+runs in shared-database mode. In the default per-project layout the field does
+not exist in the tool schema at all, which the comment defends as *"a stronger
+guarantee than runtime"* validation. CSM binds the scope at tool registration;
+this binds it at schema construction, and both produce the same property — the
+model has no argument in which to name another scope.
+
+The test is the part worth copying wholesale. Six `SessionStart` adapters were
+calling one convenience function, `getLatestSessionEvents(db)`, which returns the
+events of whichever session started most recently regardless of project — so a
+second worktree or a second editor window leaked its files and errors into a
+resumed session's injected knowledge block. The fix passes the resuming session's
+own id; `tests/session/cross-session-bleed.test.ts` pins the *function's*
+contract rather than each adapter's, with assertions written in the negative —
+session B's `file_read` and `error_tool` must **not** appear in session A's set —
+and a second case asserting that an unknown session id returns `[]` rather than
+falling back. The header states why that shape: *"If either contract regresses,
+all 6 SessionStart adapters silently leak again. These tests fail loudly
+instead."* Testing the shared function rather than the six callers is what makes
+a seventh adapter, written later, inherit the guarantee.
+
 ## Tests to require
 
 - Cross-user, cross-agent, and cross-project leakage.

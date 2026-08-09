@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 239 reports.</strong></p>
+<p><strong>This page covers all 241 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;239 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;241 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6182,6 +6182,85 @@ could have left in it.</li>
 remembers. There is no retrieval, no fact, no confidence and no
 correction — the store is a directory the agent greps, and adding those
 would mean building a second memory system beside this one.</li>
+</ul>
+<h3 id="context-mode"><a
+href="../systems/context-mode/"><code>context-mode</code></a></h3>
+<ul>
+<li>Best idea: a <code>ctx_search</code> input schema that omits the
+cross-project <code>project</code> parameter entirely in the default
+per-project mode, rather than validating it at runtime. The comment in
+<code>src/search/ctx-search-schema.ts</code> argues the case: a field
+the model physically cannot pass is <em>"a stronger guarantee than
+runtime"</em>. CSM reaches the same conclusion by binding the scope at
+tool registration; this one reaches it by conditional schema
+construction.</li>
+<li>Biggest risk: there is no correction of any kind.
+<code>session_events</code> has no <code>UPDATE</code> anywhere in the
+tree, no version chain and no supersession field, so a
+<code>decision</code> event captured from a misread prompt is in the
+<code>&lt;session_knowledge&gt;</code> block of every future session in
+that project. The only forgetting is <code>ctx_purge</code>, which
+destroys the whole project store.</li>
+<li>Most reusable component:
+<code>tests/session/cross-session-bleed.test.ts</code>. It pins the
+contract that six <code>SessionStart</code> adapters depend on —
+<code>getSessionEvents(db, sid)</code> returns only <code>sid</code>'s
+events, and an unknown id returns <code>[]</code> rather than falling
+back to the most recent session — with the assertions written in the
+negative and a header explaining that the alternative is six adapters
+leaking silently.</li>
+<li>Maturity impression: 599 files, 52,000 lines, version 1.0.169,
+Elastic License 2.0. 210 test files covering seventeen harness adapters,
+plus a committed <code>benchmark-results-v04.json</code> measuring the
+product's byte savings per tool. The engineering habit worth noting is
+the issue numbers in the comments — #398 for the session bleed, #663 for
+the project-scoped memory directory, #737 for the shared-database
+parameter — each one a scope bug found in production and closed with a
+note about why.</li>
+<li>Study when: you want cross-session memory for a coding agent and
+cannot pick one harness, or you are about to write a scope filter and
+want the test that catches it regressing.</li>
+<li>Do not copy when: memory has to be correctable, or you intend to
+host it — the licence forbids offering it as a service, and the schema
+has no seam where a correction would attach.</li>
+</ul>
+<h3 id="ollama"><a
+href="../systems/ollama/"><code>ollama</code></a></h3>
+<ul>
+<li>Best idea: the catalog and the content are separated on purpose.
+<code>SkillCatalog.SystemContext()</code> puts one
+<code>- name: description</code> line per skill into the system prompt,
+above a comment saying it <em>"advertises the catalog without expanding
+full instructions in every request"</em>, and the body arrives as a tool
+result only when something loads it. <code>List()</code> sorts by name,
+so the block is byte-identical between turns and sits in the cached
+prefix rather than invalidating it.</li>
+<li>Biggest risk: nothing the agent learns survives the run. Approvals
+live on the <code>Session</code> struct, compaction replaces archived
+turns with a summary inside the message history and writes nothing to
+disk, and no tool can create or edit a skill. The loop from "learned" to
+"remembered" is closed by a person editing a file, and a new file is not
+seen until the next agent session.</li>
+<li>Most reusable component: approval on <em>recall</em>.
+<code>agent/tools/skill.go</code> returns an unconditional
+<code>true</code> from <code>RequiresApproval</code> because <em>"a
+skill's instructions can influence the rest of the run"</em>, while
+explicit user activation bypasses the gate. Almost everything else in
+this atlas gates the write and lets recall run unattended; for memory
+that will be followed rather than considered, this is the right way
+round.</li>
+<li>Maturity impression: MIT, four files and about 900 lines for the
+whole memory surface, inside a 1,233-file repository that is otherwise
+an inference engine. 16 test functions on the loader covering
+precedence, malformed front matter, the 1 MiB ceiling and the empty-file
+case. Nothing evaluates whether the model picks the right skill from a
+description, which is the only quality question the design raises.</li>
+<li>Study when: your durable memory is procedural — curated playbooks —
+and you want it to cost four files and no database, or you are choosing
+where to put an approval gate.</li>
+<li>Do not copy when: you need episodic memory. There is no store, no
+memory event stream and no write tool, so there is no seam to extend;
+the persistence belongs in a layer above this one.</li>
 </ul>
         </article>
       </div>

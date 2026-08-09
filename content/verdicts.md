@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 239 reports.**
+**This page covers all 241 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["239 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["241 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2068,4 +2068,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, GitHub, Inc., 2,766 Go files. Fourteen memory-named test files in `pkg/workflow/` holding 94 `func Test` entries, plus shell tests for the restore and integrity scripts, and a `docs/adr/` tree that records rejected alternatives and negative consequences rather than only decisions. What no test asserts is the read-down guarantee itself: nothing demonstrates a `none`-branch file failing to reach a `merged` run.
 - Study when: your sessions are CI jobs, or you have any store a later session reloads and have never asked what an earlier compromised session could have left in it.
 - Do not copy when: you need the agent to reason about what it remembers. There is no retrieval, no fact, no confidence and no correction — the store is a directory the agent greps, and adding those would mean building a second memory system beside this one.
+
+### [`context-mode`](../systems/context-mode/)
+
+- Best idea: a `ctx_search` input schema that omits the cross-project `project` parameter entirely in the default per-project mode, rather than validating it at runtime. The comment in `src/search/ctx-search-schema.ts` argues the case: a field the model physically cannot pass is *"a stronger guarantee than runtime"*. CSM reaches the same conclusion by binding the scope at tool registration; this one reaches it by conditional schema construction.
+- Biggest risk: there is no correction of any kind. `session_events` has no `UPDATE` anywhere in the tree, no version chain and no supersession field, so a `decision` event captured from a misread prompt is in the `<session_knowledge>` block of every future session in that project. The only forgetting is `ctx_purge`, which destroys the whole project store.
+- Most reusable component: `tests/session/cross-session-bleed.test.ts`. It pins the contract that six `SessionStart` adapters depend on — `getSessionEvents(db, sid)` returns only `sid`'s events, and an unknown id returns `[]` rather than falling back to the most recent session — with the assertions written in the negative and a header explaining that the alternative is six adapters leaking silently.
+- Maturity impression: 599 files, 52,000 lines, version 1.0.169, Elastic License 2.0. 210 test files covering seventeen harness adapters, plus a committed `benchmark-results-v04.json` measuring the product's byte savings per tool. The engineering habit worth noting is the issue numbers in the comments — #398 for the session bleed, #663 for the project-scoped memory directory, #737 for the shared-database parameter — each one a scope bug found in production and closed with a note about why.
+- Study when: you want cross-session memory for a coding agent and cannot pick one harness, or you are about to write a scope filter and want the test that catches it regressing.
+- Do not copy when: memory has to be correctable, or you intend to host it — the licence forbids offering it as a service, and the schema has no seam where a correction would attach.
+
+### [`ollama`](../systems/ollama/)
+
+- Best idea: the catalog and the content are separated on purpose. `SkillCatalog.SystemContext()` puts one `- name: description` line per skill into the system prompt, above a comment saying it *"advertises the catalog without expanding full instructions in every request"*, and the body arrives as a tool result only when something loads it. `List()` sorts by name, so the block is byte-identical between turns and sits in the cached prefix rather than invalidating it.
+- Biggest risk: nothing the agent learns survives the run. Approvals live on the `Session` struct, compaction replaces archived turns with a summary inside the message history and writes nothing to disk, and no tool can create or edit a skill. The loop from "learned" to "remembered" is closed by a person editing a file, and a new file is not seen until the next agent session.
+- Most reusable component: approval on *recall*. `agent/tools/skill.go` returns an unconditional `true` from `RequiresApproval` because *"a skill's instructions can influence the rest of the run"*, while explicit user activation bypasses the gate. Almost everything else in this atlas gates the write and lets recall run unattended; for memory that will be followed rather than considered, this is the right way round.
+- Maturity impression: MIT, four files and about 900 lines for the whole memory surface, inside a 1,233-file repository that is otherwise an inference engine. 16 test functions on the loader covering precedence, malformed front matter, the 1 MiB ceiling and the empty-file case. Nothing evaluates whether the model picks the right skill from a description, which is the only quality question the design raises.
+- Study when: your durable memory is procedural — curated playbooks — and you want it to cost four files and no database, or you are choosing where to put an approval gate.
+- Do not copy when: you need episodic memory. There is no store, no memory event stream and no write tool, so there is no seam to extend; the persistence belongs in a layer above this one.
 

@@ -162,7 +162,8 @@ that matches:</p>
 ─────────────────────────────────── cache boundary
 user turn (never cached)
   └─ query-specific recall results        — changes every turn</code></pre>
-<p>Two shapes implement this, and they differ in what they give up:</p>
+<p>Three shapes implement this, and they differ in what they give
+up:</p>
 <p><strong>Split by position.</strong> Stable memory stays in the
 prefix; query-specific recall moves into the user turn. Nothing is lost
 — the model sees the same tokens, in a different envelope. Helm's report
@@ -172,6 +173,11 @@ static channel already demonstrates it.</p>
 prompt once, at session start, and refuse to update it mid-session.
 Writes still land on disk immediately and durably; they simply do not
 reach the model until the next session begins.</p>
+<p><strong>Split the memory, not the position.</strong> Put a one-line
+index of the store in the prefix and load an item's body on demand. This
+is the cheapest of the three where the unit is large and individually
+addressable, and it is described under <em>Why it works</em> below
+because its cost curve differs from the other two.</p>
 <pre class="mermaid"><code>flowchart TD
     A[&quot;session start&quot;] --&gt; B[&quot;render stable memory&lt;br/&gt;into system prompt&quot;]
     B --&gt; C[&quot;prefix cached&quot;]
@@ -201,6 +207,33 @@ overflow.</p>
 <p>That is a write path, a correction path and a capacity policy all
 derived from a caching constraint. It is why this belongs in a memory
 pattern library rather than in a prompt-engineering note.</p>
+<p><strong><a href="../../systems/ollama/">Ollama</a> is the third
+shape, and it is the cheapest of the three.</strong> Rather than
+choosing where to put the memory, it splits the memory itself:
+<code>SkillCatalog.SystemContext()</code> renders one
+<code>- name: description</code> line per skill into the system prompt,
+and the body of a skill loads only when something calls the
+<code>skill</code> tool, arriving as a tool result in the message
+history. The comment gives the reasoning as a token argument rather than
+a caching one — <em>"advertises the catalog without expanding full
+instructions in every request. The skill call is the explicit loading
+boundary"</em> — and the caching property falls out for free, because
+the index is computed once at start from a name-sorted list and is
+therefore byte-identical for the session.</p>
+<p>Call it <strong>index in the prefix, body after it</strong>. It costs
+one line per item always and the full item only when used, which inverts
+the usual scaling: a store that grows in <em>item size</em> costs
+nothing extra, and only a store that grows in <em>item count</em> pushes
+on the prefix. It applies wherever memories are large, individually
+addressable and rarely all needed at once — documents, playbooks,
+runbooks — and not at all where the unit is a one-line fact, since there
+the index and the body are the same size.</p>
+<p>The catch is that it moves retrieval into the model. Nothing here
+scores a match; the model reads forty descriptions and picks. That is
+fine for forty and not for four thousand, and it makes the quality of
+the <em>description</em> the whole retrieval system — which is why
+Ollama's bundled <code>skill-creator</code> spends most of its length on
+how to write one.</p>
 <h2 id="tradeoffs">Tradeoffs</h2>
 <ul>
 <li><strong>Freshness is the price of freezing.</strong> Under the
@@ -237,6 +270,17 @@ friendlier to prefix caching than the alternative.</li>
 <li><strong><a href="../../systems/graphify/">Graphify</a></strong> —
 assembles context in a way the report contrasts explicitly with
 "invalidating a prefix cache on every request".</li>
+<li><strong><a href="../../systems/ollama/">Ollama</a></strong> — the
+index/body split, with a sorted catalog line in the prefix and the
+instruction body arriving as a tool result.</li>
+<li><strong><a href="../../systems/context-mode/">Context
+Mode</a></strong> — the boundary shape by accident of lifecycle: its
+<code>&lt;session_knowledge&gt;</code> block is emitted once at
+<code>SessionStart</code> and once at <code>PreCompact</code> and never
+re-rendered mid-session, so it lands in the cached prefix. Nothing in
+that tree says this was reasoned about, which is worth noting — it is
+the one arrangement here that could silently stop being true if a
+maintainer added a per-turn refresh.</li>
 <li><strong><a href="../../systems/helm/">Helm</a></strong>, <strong><a
 href="../../systems/csm/">CSM</a></strong>, <strong><a
 href="../../systems/risuai/">RisuAI</a></strong>, <strong><a

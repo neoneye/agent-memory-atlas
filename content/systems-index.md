@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **239 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **241 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -61,6 +61,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
 - [`cognis`](../systems/cognis/) **Cognis** — A memory policy with a fingerprint · `fpytloun/cognis` · Scope enforced, Negative evals
 - [`context-mem`](../systems/context-mem/) **Context Mem** — The unflattering number is committed; the badge is not about it · `JubaKitiashvili/context-mem`
+- [`context-mode`](../systems/context-mode/) **Context Mode** — Session knowledge across seventeen harnesses · `mksglu/context-mode` · Scope enforced, Negative evals
 - [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`core-redplanet`](../systems/core-redplanet/) **CORE** — Reified temporal knowledge graph · `RedPlanetHQ/core` · Bi-temporal, Scope enforced
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
@@ -213,6 +214,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`obsidian-mind`](../systems/obsidian-mind/) **obsidian-mind** — A silent loss is worse than the bloat · `breferrari/obsidian-mind`
 - [`octopoda-os`](../systems/octopoda-os/) **Octopoda** — RLS as the trust wall · `RyjoxTechnologies/Octopoda-OS` · Scope enforced, Mutation audit
+- [`ollama`](../systems/ollama/) **Ollama** — Procedural memory, and nothing else · `ollama/ollama`
 - [`omega-memory`](../systems/omega-memory/) **OMEGA** — Local-first cross-model memory · `omega-memory/omega-memory` · Bi-temporal, Scope enforced, Mutation audit
 - [`omi`](../systems/omi/) **Omi** — Status decides what a memory may do · `BasedHardware/omi` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`omnimemory`](../systems/omnimemory/) **OmniMemory** — A gate that tests whether the gate discriminates · `OmniNode-ai/omnimemory`
