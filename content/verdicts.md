@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 196 reports.**
+**This page covers all 197 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["196 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["197 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1681,3 +1681,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 60,000 lines of Python over 569 Markdown files, a regex anti-sycophancy classifier that cannot itself be flattered, auditors for staleness and coverage — and an explicit N=1 admission: "this worked for one person who built it around his own thinking — you are the replication experiment".
 - Study when: you are about to describe a mechanism in the present tense and are not sure any code implements it.
 - Do not copy when: you need the governance to travel — the one code-enforced safeguard is a Claude Code hook, and the project says so.
+
+### [`mem9`](../systems/mem9/)
+
+- Best idea: `e2e/crdt-e2e-tests.sh` asks the three right questions about what "deleted" means under concurrency — delete is invisible to reads, repeated delete is idempotent, and a causally-dominating write *revives* the tombstone. It is the opposite position from Noosphere's refusal and YantrikDB's restore-no-resurrect, argued deliberately.
+- Biggest risk: none of it is in the published server. `clock`, `write_id`, `tombstone`, `space_token` and `/api/spaces` appear in no Go, TypeScript or SQL file in the repository. A committed suite is normally the most trustworthy documentation a repo has; this one specifies code that is not here, so the multi-agent convergence story cannot be assessed from this tree.
+- Most reusable component: a `paused` state beside `active`, `archived` and `deleted` — withheld from recall without being archived, which is what a user actually wants when a memory is wrong *for now*.
+- Maturity impression: 154,000 lines with three storage backends behind one repository interface and three schemas maintained side by side, nine indexes on identity and lifecycle, signed webhooks and a transactional usage outbox — and 110 test files, one of which tests a different system.
+- Study when: your store has more than one writer and you have never written down what deletion means.
+- Do not copy when: you need one state to cover both "superseded" and "withdrawn" — they have opposite requirements, and this design has one value for both.

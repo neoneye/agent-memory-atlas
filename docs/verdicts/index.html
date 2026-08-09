@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 196 reports.</strong></p>
+<p><strong>This page covers all 197 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;196 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;197 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4781,6 +4781,36 @@ tense and are not sure any code implements it.</li>
 <li>Do not copy when: you need the governance to travel — the one
 code-enforced safeguard is a Claude Code hook, and the project says
 so.</li>
+</ul>
+<h3 id="mem9"><a href="../systems/mem9/"><code>mem9</code></a></h3>
+<ul>
+<li>Best idea: <code>e2e/crdt-e2e-tests.sh</code> asks the three right
+questions about what "deleted" means under concurrency — delete is
+invisible to reads, repeated delete is idempotent, and a
+causally-dominating write <em>revives</em> the tombstone. It is the
+opposite position from Noosphere's refusal and YantrikDB's
+restore-no-resurrect, argued deliberately.</li>
+<li>Biggest risk: none of it is in the published server.
+<code>clock</code>, <code>write_id</code>, <code>tombstone</code>,
+<code>space_token</code> and <code>/api/spaces</code> appear in no Go,
+TypeScript or SQL file in the repository. A committed suite is normally
+the most trustworthy documentation a repo has; this one specifies code
+that is not here, so the multi-agent convergence story cannot be
+assessed from this tree.</li>
+<li>Most reusable component: a <code>paused</code> state beside
+<code>active</code>, <code>archived</code> and <code>deleted</code> —
+withheld from recall without being archived, which is what a user
+actually wants when a memory is wrong <em>for now</em>.</li>
+<li>Maturity impression: 154,000 lines with three storage backends
+behind one repository interface and three schemas maintained side by
+side, nine indexes on identity and lifecycle, signed webhooks and a
+transactional usage outbox — and 110 test files, one of which tests a
+different system.</li>
+<li>Study when: your store has more than one writer and you have never
+written down what deletion means.</li>
+<li>Do not copy when: you need one state to cover both "superseded" and
+"withdrawn" — they have opposite requirements, and this design has one
+value for both.</li>
 </ul>
         </article>
       </div>

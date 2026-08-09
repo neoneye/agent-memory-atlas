@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A committed end-to-end suite
+specifies tombstone revival by dominating vector clock and write-id
+idempotency — against endpoints, a tombstone field and a clock that
+appear in no Go file in the repository.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mem9 — Agent Memory Atlas">
+    <meta property="og:description" content="A committed end-to-end
+suite specifies tombstone revival by dominating vector clock and
+write-id idempotency — against endpoints, a tombstone field and a clock
+that appear in no Go file in the repository.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mem9 — Agent Memory Atlas">
+    <meta name="twitter:description" content="A committed end-to-end
+suite specifies tombstone revival by dominating vector clock and
+write-id idempotency — against endpoints, a tombstone field and a clock
+that appear in no Go file in the repository.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mem9 — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A test suite for an API that is not
+here</p>
+          <h1>mem9</h1>
+          <p class="document-deck">A committed end-to-end suite
+specifies tombstone revival by dominating vector clock and write-id
+idempotency — against endpoints, a tombstone field and a clock that
+appear in no Go file in the repository.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mem9-ai/mem9">
+              <span>Source</span>
+              <strong>mem9-ai/mem9</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f" title="ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f">
+              <span>Analyzed revision</span>
+              <code>ee12da17…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mem9 is a persistent memory service for agents — "persistent memory
+across sessions and machines, shared memory for multi-agent workflows,
+and hybrid recall with a visual dashboard". Apache-2.0, roughly 154,000
+lines, a Go server over Postgres/pgvector with TiDB and a third backend,
+plus plugins for OpenClaw, Claude Code, OpenCode and Codex.</p>
+<p><strong>The finding is a mismatch between what the repository tests
+and what it contains.</strong></p>
+<p><code>e2e/crdt-e2e-tests.sh</code> is a committed end-to-end suite
+that provisions two agents into a shared workspace and exercises a CRDT
+contract in detail:</p>
+<ul>
+<li><strong>Test 5 — "Tombstone delete + invisible to reads"</strong>:
+delete returns 204, a subsequent <code>GET</code> returns 404, the key
+is absent from search, and a repeated delete is idempotent.</li>
+<li><strong>Test 6 — "Tombstone revival — write after delete"</strong>:
+agent B writes the same key with a <strong>dominating vector
+clock</strong> (<code>{"agent-a":3,"agent-b":1}</code> against the
+original's <code>{"agent-a":1}</code>), and the suite asserts HTTP 201,
+that the content is B's, that <code>tombstone</code> is now
+<code>false</code>, and that <code>GET</code> returns 200.</li>
+<li><strong>Test 7 — <code>write_id</code> idempotency</strong>: a
+retried write with the same <code>write_id</code> returns a cached
+result with the version <em>not</em> bumped.</li>
+</ul>
+<p>That is a precise and well-designed specification of a genuinely hard
+problem: what "deleted" means when two agents write concurrently. And it
+takes a position opposite to two other systems in this atlas — <a
+href="../noosphere/">Noosphere</a> refuses a revoked value on re-entry,
+<a href="../yantrikdb/">YantrikDB</a> keeps a tombstone in the log until
+every replica has seen it so a restore cannot resurrect, and mem9 treats
+revival by a causally-later write as <strong>correct behaviour</strong>
+and tests for it.</p>
+<p><strong>None of it is in the published server.</strong> Searching
+every <code>.go</code>, <code>.ts</code> and <code>.sql</code> file in
+the repository:</p>
+<ul>
+<li><code>"clock"</code> — no match.</li>
+<li><code>tombstone</code> — no match outside the e2e script.</li>
+<li><code>write_id</code> — no match.</li>
+<li><code>space_token</code>, <code>/api/spaces</code> — no match.</li>
+<li><code>vclock</code>, <code>version_vector</code>,
+<code>lamport</code>, <code>hlc</code> — no match.</li>
+</ul>
+<p>The <code>memories</code> table has <code>state</code>,
+<code>version INT</code>, <code>updated_by</code> and
+<code>superseded_by</code>. There is no clock column, no tombstone field
+and no space-provisioning endpoint. The server in
+<code>server/internal/</code> implements a different surface: memories,
+tenants, webhooks, metering, uploads.</p>
+<p>So the suite documents a contract the code here does not implement.
+Either the CRDT layer is a component the project has not published, or
+the suite predates or postdates the server in this tree. This report
+does not guess which; it records that a reader who takes the committed
+tests as a description of the committed code will be wrong, and that the
+CRDT semantics cannot be verified from this repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>What <em>is</em> here is a conventional multi-tenant memory service.
+A memory carries content, tags, metadata, a 1536-dimension embedding, a
+<code>memory_type</code> (<code>pinned</code>, <code>insight</code>,
+<code>session</code>), and four identity keys — <code>agent_id</code>,
+<code>session_id</code>, <code>app_id</code> and the tenant — each with
+its own index.</p>
+<p><code>MemoryState</code> is
+<code>active | paused | archived | deleted</code>. <code>paused</code>
+is the unusual one and it is a good idea: a memory temporarily withheld
+from recall without being archived or deleted, which is the state most
+stores express as a tag or not at all.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; active: written, version 1
+    active --&gt; paused: withheld from recall, not archived
+    paused --&gt; active
+    active --&gt; archived
+    active --&gt; deleted: state set, superseded_by may point at the replacement
+    active --&gt; active: rewritten, version increments, updated_by recorded
+    deleted --&gt; [*]: excluded by the state filter
+    note right of deleted
+        The committed CRDT suite asserts a
+        dominating clock revives this state.
+        No clock exists in the published server.
+    end note</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Go server with a repository interface and <strong>three backend
+implementations</strong> — <code>repository/postgres</code>,
+<code>repository/tidb</code>, <code>repository/db9</code> — each with
+its own schema file (<code>schema_pg.sql</code>,
+<code>schema.sql</code>, <code>schema_db9.sql</code>). Supporting one
+storage engine well is common; supporting three behind one interface,
+with parallel schemas maintained together, is a real engineering
+commitment and the main thing the published tree demonstrates.</p>
+<p>Around it: <code>handler</code>, <code>service</code>,
+<code>middleware</code>, <code>tenant</code>, <code>metering</code>,
+<code>metrics</code>, <code>webhook</code> (with a signer and a
+dispatcher), <code>encrypt</code>, <code>embed</code>, <code>llm</code>,
+<code>runtimeusage</code>, <code>reqid</code>.</p>
+<p>A dashboard, a CLI, four editor plugins and a marketing site complete
+the tree.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — handler → service → repository, incrementing
+<code>version</code> and stamping <code>updated_by</code>.</p>
+<p><strong>Read</strong> — repository queries filtered by tenant and by
+<code>state</code>, with the indexes on <code>memory_type</code>,
+<code>source</code>, <code>state</code>, <code>agent_id</code>,
+<code>session_id</code>, <code>app_id</code> and <code>updated_at</code>
+matching the filters.</p>
+<p><strong>Webhook</strong> — <code>internal/webhook/</code>: a
+<code>service</code>, a <code>store</code>, a <code>dispatcher</code>
+and a <code>signer</code>, so an outbound notification is signed rather
+than trusted.</p>
+<p><strong>Metering</strong> — <code>runtime_usage_outbox</code> as a
+table, i.e. the transactional-outbox pattern for usage events, which is
+the correct way to emit billing events without losing them on a
+crash.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nine indexes on one table tells you the query shapes, and they are
+all identity and lifecycle: type, source, state, agent, session, app,
+updated-at. That is a service designed to answer "what does
+<em>this</em> agent know in <em>this</em> session for <em>this</em> app"
+rather than "what is semantically nearest".</p>
+<p><code>superseded_by</code> exists as a nullable pointer and
+<code>version</code> as a counter, which together give a supersession
+chain without a separate history table. There is no validity interval,
+no confidence and no verification field.</p>
+<p><code>space_chains</code>, <code>space_chain_bindings</code> and
+<code>space_chain_nodes</code> are the tables closest to the
+shared-workspace concept the e2e suite provisions against — so the
+<em>storage</em> for spaces exists in the schema even where the API the
+suite calls does not exist in the handlers. That is worth stating
+precisely rather than inferring a conclusion from it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid recall over pgvector with the state and identity filters
+above, and a dashboard for inspection.</p>
+<p><strong>Scope is real and is the mark this report awards.</strong>
+<code>tenant_id</code> is a predicate in the repository queries across
+all three backends, and the four identity columns are indexed. For a
+service that provisions agents into shared workspaces, that layering —
+tenant, then app, then agent, then session — is the right shape.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous through the service layer, versioned, and
+attributed via <code>updated_by</code>.</p>
+<p>Correction is <code>superseded_by</code> plus a state change. Nothing
+is keyed on a rejected value, and — given the suite's position that a
+dominating clock should revive a deletion — nothing in this design would
+refuse a re-write even if the clock existed. That is a coherent stance
+for multi-writer convergence and the opposite stance from a privacy
+revocation; a system needing both would have to distinguish "deleted
+because superseded" from "deleted because withdrawn", and
+<code>MemoryState</code> has one value for both.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Plugins for OpenClaw, Claude Code, OpenCode and Codex, a CLI, a
+dashboard, and documented guides for Hermes Agent and Dify. Webhooks
+with a signer let external systems react to memory events.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded</strong>, per section 6.</p>
+<p><strong>Tombstone — no.</strong> The word does not appear in the
+server. The e2e suite's tombstone is a contract for code that is not
+here, and its semantics are <em>revival-permitting</em>, which is the
+opposite of the mark's definition even if it were implemented.</p>
+<p><strong>Trust state — no.</strong>
+<code>active | paused | archived | deleted</code> is lifecycle.</p>
+<p><strong>Audit log — no.</strong> <code>version</code> and
+<code>updated_by</code> on the row are the closest thing; there is no
+append-only mutation record. <code>runtime_usage_outbox</code> is a
+billing outbox.</p>
+<p><strong>Bitemporal, human review, negative eval — no.</strong></p>
+<p><strong>The e2e mismatch is the risk a reader most needs.</strong> A
+committed test suite is normally the most trustworthy documentation in a
+repository — it is executable and it is checked. Here it describes
+endpoints, a request field and a response field that no published code
+produces. Anyone evaluating mem9's multi-agent convergence story on the
+strength of <code>e2e/crdt-e2e-tests.sh</code> is reading a
+specification, not a test of this code.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> A <code>benchmark/</code> directory and a
+<code>test-results/</code> directory exist in the tree; no summary
+figure or scorecard was found, and the README makes no retrieval-quality
+claim.</p>
+<p>110 test files including backend integration tests. The
+<code>e2e/</code> suite is the one discussed above, and it is genuinely
+well-written — idempotency checks, negative assertions on search
+exclusion, explicit HTTP status expectations — which is why its
+detachment from the server matters.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Test what "deleted" means under concurrency,
+explicitly.</strong> The three cases in this suite — delete is invisible
+to reads, repeated delete is idempotent, a causally-dominating write
+revives — are the right three questions for any multi-writer store, and
+almost nothing in this atlas asks them.</li>
+<li><strong>Add a <code>paused</code> state.</strong> Withheld from
+recall, not archived, not deleted. It is the state a user actually wants
+when a memory is wrong <em>for now</em>.</li>
+<li><strong>Use a transactional outbox for usage events.</strong>
+<code>runtime_usage_outbox</code> means a crash between the write and
+the emit loses nothing.</li>
+<li><strong>Sign your webhooks.</strong> A dispatcher plus a signer, as
+separate modules, is the difference between a notification and a trusted
+one.</li>
+<li><strong>Index for the questions you actually ask.</strong> Nine
+indexes on identity and lifecycle, none on content, is an honest
+statement that this service answers scope questions first.</li>
+<li><strong>Keep the schemas for every backend side by side.</strong>
+Three files, maintained together, is what makes a three-backend
+repository interface real rather than aspirational.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not commit an e2e suite for an API you have not
+published.</strong> A test file is read as executable documentation;
+when the endpoints, the request field (<code>clock</code>,
+<code>write_id</code>) and the response field (<code>tombstone</code>)
+exist nowhere in the code, the suite documents intentions in the present
+tense — the exact failure <a href="../athena/">Athena</a> writes its
+labelling convention to prevent.</li>
+<li><strong>Do not use one state for "superseded" and
+"withdrawn".</strong> They have opposite requirements: one should be
+revivable by a later write, the other must never be.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team wanting a hosted, multi-tenant, multi-agent memory
+service with editor plugins and a dashboard, and specifically one that
+needs more than one storage backend.</p>
+<p>The multi-agent convergence story — the reason to choose it over a
+simpler store — cannot be assessed from this repository, and the suite
+that describes it is the reason to ask.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Where is the CRDT layer?</strong> The schema has
+<code>space_chains</code> and its bindings; the handlers have no
+<code>/api/spaces</code>, and no Go file mentions a clock.</li>
+<li><strong>Does the server ignore <code>clock</code> and
+<code>write_id</code>?</strong> If it accepts and drops them, Test 6
+would pass because <em>any</em> write revives, not because a dominating
+clock does — which would make a passing suite worse than a failing
+one.</li>
+<li><strong>What distinguishes <code>paused</code> from
+<code>archived</code> on the read path?</strong> Both are excluded by
+the state filter; the difference is presumably intent, and where it is
+enforced was not traced.</li>
+<li><strong>What is in <code>benchmark/</code> and
+<code>test-results/</code>?</strong> Directories with no summary.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The e2e contract</strong> —
+<code>e2e/crdt-e2e-tests.sh</code> (workspace provisioning
+<code>:12-25</code>, Test 5 tombstone delete <code>:198-226</code>, Test
+6 tombstone revival <code>:228-258</code>, Test 7 <code>write_id</code>
+idempotency <code>:260-275</code>), <code>e2e/README.md</code></p>
+<p><strong>Schema</strong> — <code>server/schema_pg.sql:85-109</code>
+(<code>memories</code> and its nine indexes),
+<code>server/schema.sql</code>, <code>server/schema_db9.sql</code>, the
+<code>space_chains</code> family</p>
+<p><strong>Domain</strong> —
+<code>server/internal/domain/types.go:19-27</code>
+(<code>MemoryState</code>), <code>:29</code> (<code>Memory</code>)</p>
+<p><strong>Repositories</strong> —
+<code>server/internal/repository/postgres/</code>, <code>tidb/</code>,
+<code>db9/</code></p>
+<p><strong>Service and transport</strong> —
+<code>server/internal/service/memory.go</code>,
+<code>server/internal/handler/</code>, <code>middleware/</code>,
+<code>tenant/</code>, <code>reqid/</code></p>
+<p><strong>Operations</strong> — <code>server/internal/webhook/</code>
+(<code>dispatcher.go</code>, <code>signer.go</code>,
+<code>store.go</code>), <code>metering/</code>,
+<code>runtimeusage/</code>, <code>metrics/</code>,
+<code>encrypt/</code></p>
+<p><strong>Integration</strong> — <code>claude-plugin/</code>,
+<code>openclaw-plugin/</code>, <code>opencode-plugin/</code>,
+<code>codex-plugin/</code>, <code>cli/</code>, <code>dashboard/</code>,
+<code>skills/</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f"><code class="commit-id" title="ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f">ee12da17…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test was run. The CRDT end-to-end suite was read, not
+executed, and the endpoints it drives were not found in the published
+server.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
