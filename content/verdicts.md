@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 197 reports.**
+**This page covers all 198 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["197 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["198 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1690,3 +1690,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 154,000 lines with three storage backends behind one repository interface and three schemas maintained side by side, nine indexes on identity and lifecycle, signed webhooks and a transactional usage outbox — and 110 test files, one of which tests a different system.
 - Study when: your store has more than one writer and you have never written down what deletion means.
 - Do not copy when: you need one state to cover both "superseded" and "withdrawn" — they have opposite requirements, and this design has one value for both.
+
+### [`aurora`](../systems/aurora/)
+
+- Best idea: verification is phase four of nine, ahead of Route, Collect and Synthesize — the query decomposition is checked before any agent is dispatched, with `SELF` and `ADVERSARIAL` as an option on the same function selecting different prompt templates. Gating the expensive path, applied to planning rather than storage.
+- Biggest risk: the README documents a retrieval-quality gate in detail — NONE/WEAK/GOOD on groundedness ≥ 0.7 and three chunks, with a sample warning — and its example calls `verify_decomposition` with `interactive_mode` and `retrieval_context`, neither of which is in the signature, and names the option parameter wrongly. The example as written raises.
+- Most reusable component: the four-column `activations` table — `chunk_id`, `base_level`, `last_access`, `access_count` — kept separate from the chunk row so the hot-path write stays small, with the pipeline's `Record` phase doing the reinforcement so it cannot be forgotten.
+- Maturity impression: 145,000 lines across twelve packages with strict tooling, 153 test files, SQLite in WAL mode with schema-version detection tested against a deliberately legacy table, and a committed performance baseline file.
+- Study when: your agent plans multi-step work and you dispatch before checking the plan.
+- Do not copy when: you expected a memory system in this atlas's usual sense — nothing here is believed, corrected or forgotten, because the codebase is the truth.

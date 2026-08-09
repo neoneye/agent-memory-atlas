@@ -136,7 +136,7 @@ outside.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. Thirty-eight
-repositories of one hundred and ninety-seven carry the mark, and they are not all
+repositories of one hundred and ninety-eight carry the mark, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a

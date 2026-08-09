@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 197 reports.</strong></p>
+<p><strong>This page covers all 198 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;197 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;198 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4811,6 +4811,36 @@ written down what deletion means.</li>
 <li>Do not copy when: you need one state to cover both "superseded" and
 "withdrawn" — they have opposite requirements, and this design has one
 value for both.</li>
+</ul>
+<h3 id="aurora"><a
+href="../systems/aurora/"><code>aurora</code></a></h3>
+<ul>
+<li>Best idea: verification is phase four of nine, ahead of Route,
+Collect and Synthesize — the query decomposition is checked before any
+agent is dispatched, with <code>SELF</code> and <code>ADVERSARIAL</code>
+as an option on the same function selecting different prompt templates.
+Gating the expensive path, applied to planning rather than storage.</li>
+<li>Biggest risk: the README documents a retrieval-quality gate in
+detail — NONE/WEAK/GOOD on groundedness ≥ 0.7 and three chunks, with a
+sample warning — and its example calls <code>verify_decomposition</code>
+with <code>interactive_mode</code> and <code>retrieval_context</code>,
+neither of which is in the signature, and names the option parameter
+wrongly. The example as written raises.</li>
+<li>Most reusable component: the four-column <code>activations</code>
+table — <code>chunk_id</code>, <code>base_level</code>,
+<code>last_access</code>, <code>access_count</code> — kept separate from
+the chunk row so the hot-path write stays small, with the pipeline's
+<code>Record</code> phase doing the reinforcement so it cannot be
+forgotten.</li>
+<li>Maturity impression: 145,000 lines across twelve packages with
+strict tooling, 153 test files, SQLite in WAL mode with schema-version
+detection tested against a deliberately legacy table, and a committed
+performance baseline file.</li>
+<li>Study when: your agent plans multi-step work and you dispatch before
+checking the plan.</li>
+<li>Do not copy when: you expected a memory system in this atlas's usual
+sense — nothing here is believed, corrected or forgotten, because the
+codebase is the truth.</li>
 </ul>
         </article>
       </div>
