@@ -479,3 +479,16 @@ the reason is in the report.
 
 Forty-five entries read, seven reports.
 
+### Batch 10 — five declines, no near-misses
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `workweave/router` | `807931b3` | Out of scope: an on-box embedding cluster scorer picking a model per request. ELv2. No memory vocabulary in source |
+| `firecrawl/firecrawl` | `448ef4bf` | Out of scope: a scraping API that converts pages to markdown before they reach a model |
+| `valyuAI/valyu-benchmarks` | `104ad746` | Out of scope: a 70-file benchmark harness with raw outputs, and **no licence file** |
+| `sgl-project/sglang` | `bfeb9a8a` | Out of scope: a serving framework. The one vocabulary hit is a quantization kernel |
+| `vllm-project/vllm` | `83ad767e` | Out of scope: the serving engine. Its one hit is a KV-transfer worker, which is the boundary `content/overview.md` draws |
+
+The first batch with nothing to say. Recorded rather than skipped because a triage
+note that only lists the interesting batches is not a ledger.
+
