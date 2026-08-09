@@ -119,6 +119,18 @@ Two limits are documented rather than left to be found, which is the right way t
 
 Two providers in this ecosystem — [Redis Agent Memory Server](../../systems/redis-agent-memory-server/) and [OpenViking](../../systems/openviking/) — have far richer internal scope and lifecycle models than the interfaces mounting them can express, which is the clearest evidence that the contract, not the backend, is the limiting factor.
 
+### The vendor-neutral contract nobody signed up for
+
+Every interface above is a host's, and each was designed by people who had to make one runtime work. There is now one that is not: OpenTelemetry's [GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai) define, at `46d43c8949afb53765a202e89f4534eeb75ca3fa`, a `gen_ai.operation.name` enum containing seven memory operations — `create_memory`, `search_memory`, `update_memory`, `upsert_memory`, `delete_memory`, `create_memory_store`, `delete_memory_store` — all at development stability. It stores nothing and is not a memory system, so it gets no report here; it is an observability vocabulary, which makes it the closest thing the field has to an agreed answer about what operations memory *has*.
+
+Read against this page's own tally, two things stand out.
+
+**It names deletion, twice, and at both granularities.** Of the ten host contracts read here, exactly one declares targeted deletion. The vocabulary written by nobody's runtime declares `delete_memory` for records and `delete_memory_store` for the whole store, and gives `gen_ai.memory.record.count` an explicit meaning for a delete — *"the number of memory records the operation attempted to delete"*. It also names `upsert_memory` separately from create and update, defined as create-or-update *"without the caller choosing which"*, which is the operation most of these systems actually implement and almost none of them name.
+
+**It declares no scope at all.** There is no tenant, user, project or agent attribute on a memory operation — only `gen_ai.memory.store.id`, with the note that each component *"SHOULD document what `gen_ai.memory.store.id` maps to"*. Isolation is left as an implementation detail of the store id, which is the same gap four host contracts on this page have, arriving from a fifth direction.
+
+The record schema is the sharper version of the same point. `model/gen-ai/gen-ai-memory-records.json` defines a `MemoryRecord` as `content` (the only required field), `id`, `score`, and an opaque `metadata` object. No validity interval, no trust state, no provenance, no supersession pointer — every mechanism the [tombstone](../rejected-value-tombstone/), [bi-temporal validity](../bi-temporal-fact-validity/) and [trust state machine](../trust-state-machine/) pages are about falls into `metadata`, where it is by construction not comparable across implementations. That is not a criticism of a development-stage spec, which is right to standardise the common shape first. It is a statement about what the common shape currently is: **a scored string with an id**.
+
 ## Tests to require
 
 - Delete a memory through the host and prove it is gone from the mounted provider, not just from the host's own store.

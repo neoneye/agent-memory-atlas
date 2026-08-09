@@ -150,3 +150,44 @@ says nobody publishes — has produced nothing yet. `gh-aw` sidesteps the patter
 rather than answering it: there is no per-turn injection to invalidate, because
 the store is a directory and the agent goes looking.
 
+### Batch 3 — observability, and a spec that turned out to matter
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `robinebers/openusage` | `9d2bf09f` | Out of scope: a Swift menu-bar meter. Hits are `PopoverTransparencyStore` and a panel-height controller |
+| `mm7894215/TokenTracker` | `f3da4c50` | Out of scope: a local token dashboard with a desktop pet. Two hits, one README, one `DynamicIslandController.swift` |
+| `eunomia-bpf/agentsight` | `07a83a32` | Out of scope: eBPF kernel-boundary observation of an agent. Hits are profiling docs |
+| `traceloop/openllmetry` | `c2f3f45e` | Out of scope: OpenTelemetry SDKs for LLM apps. `test_context_token_lifecycle.py` is about OTel context tokens |
+| `open-telemetry/semantic-conventions-genai` | `46d43c89` | Out of scope as a system — **and the pass's most useful non-report** |
+
+The OpenTelemetry GenAI conventions store nothing, so they fail the bar and get
+no report. They are still the most interesting thing in three batches, because
+they are the only **vendor-neutral** answer in the field to the question the
+[pluggable memory provider](../content/patterns/pluggable-memory-provider.md)
+page has been asking one host at a time: what operations does memory have?
+
+`model/gen-ai/registry.yaml` puts seven of them in the `gen_ai.operation.name`
+enum — `create_memory`, `search_memory`, `update_memory`, `upsert_memory`,
+`delete_memory`, `create_memory_store`, `delete_memory_store` — plus
+`gen_ai.memory.store.id`, `gen_ai.memory.record.id`,
+`gen_ai.memory.record.count`, `gen_ai.memory.query.text` and a
+`gen_ai.memory.records` payload with a JSON schema.
+
+Two readings, both now on the pattern page.
+
+The vocabulary **names deletion at both granularities**, records and store, where
+exactly one of the ten host contracts the atlas has read declares targeted
+deletion at all. And it **declares no scope whatsoever** — no tenant, user,
+project or agent attribute on a memory operation, only a store id whose meaning
+each component is told to document for itself.
+
+The record schema is the sharp end. A `MemoryRecord` is `content` (the only
+required field), `id`, `score`, and an opaque `metadata` object. Validity time,
+trust state, provenance and supersession — three whole pattern pages here — all
+land in `metadata`, where they are by construction not comparable between
+implementations. For a development-stage spec that is a reasonable place to
+start. It is also a precise statement of what the field currently agrees a memory
+*is*: a scored string with an id.
+
+Fifteen entries read, one report, one pattern page changed.
+

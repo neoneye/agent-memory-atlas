@@ -338,6 +338,56 @@ Server</a> and <a href="../../systems/openviking/">OpenViking</a> — have
 far richer internal scope and lifecycle models than the interfaces
 mounting them can express, which is the clearest evidence that the
 contract, not the backend, is the limiting factor.</p>
+<h3 id="the-vendor-neutral-contract-nobody-signed-up-for">The
+vendor-neutral contract nobody signed up for</h3>
+<p>Every interface above is a host's, and each was designed by people
+who had to make one runtime work. There is now one that is not:
+OpenTelemetry's <a
+href="https://github.com/open-telemetry/semantic-conventions-genai">GenAI
+semantic conventions</a> define, at
+<code class="commit-id" title="46d43c8949afb53765a202e89f4534eeb75ca3fa">46d43c89…</code>, a
+<code>gen_ai.operation.name</code> enum containing seven memory
+operations — <code>create_memory</code>, <code>search_memory</code>,
+<code>update_memory</code>, <code>upsert_memory</code>,
+<code>delete_memory</code>, <code>create_memory_store</code>,
+<code>delete_memory_store</code> — all at development stability. It
+stores nothing and is not a memory system, so it gets no report here; it
+is an observability vocabulary, which makes it the closest thing the
+field has to an agreed answer about what operations memory
+<em>has</em>.</p>
+<p>Read against this page's own tally, two things stand out.</p>
+<p><strong>It names deletion, twice, and at both granularities.</strong>
+Of the ten host contracts read here, exactly one declares targeted
+deletion. The vocabulary written by nobody's runtime declares
+<code>delete_memory</code> for records and
+<code>delete_memory_store</code> for the whole store, and gives
+<code>gen_ai.memory.record.count</code> an explicit meaning for a delete
+— <em>"the number of memory records the operation attempted to
+delete"</em>. It also names <code>upsert_memory</code> separately from
+create and update, defined as create-or-update <em>"without the caller
+choosing which"</em>, which is the operation most of these systems
+actually implement and almost none of them name.</p>
+<p><strong>It declares no scope at all.</strong> There is no tenant,
+user, project or agent attribute on a memory operation — only
+<code>gen_ai.memory.store.id</code>, with the note that each component
+<em>"SHOULD document what <code>gen_ai.memory.store.id</code> maps
+to"</em>. Isolation is left as an implementation detail of the store id,
+which is the same gap four host contracts on this page have, arriving
+from a fifth direction.</p>
+<p>The record schema is the sharper version of the same point.
+<code>model/gen-ai/gen-ai-memory-records.json</code> defines a
+<code>MemoryRecord</code> as <code>content</code> (the only required
+field), <code>id</code>, <code>score</code>, and an opaque
+<code>metadata</code> object. No validity interval, no trust state, no
+provenance, no supersession pointer — every mechanism the <a
+href="../rejected-value-tombstone/">tombstone</a>, <a
+href="../bi-temporal-fact-validity/">bi-temporal validity</a> and <a
+href="../trust-state-machine/">trust state machine</a> pages are about
+falls into <code>metadata</code>, where it is by construction not
+comparable across implementations. That is not a criticism of a
+development-stage spec, which is right to standardise the common shape
+first. It is a statement about what the common shape currently is:
+<strong>a scored string with an id</strong>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Delete a memory through the host and prove it is gone from the
