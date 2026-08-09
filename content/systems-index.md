@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **243 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **245 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -254,6 +254,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`redis-agent-memory-server`](../systems/redis-agent-memory-server/) **Redis Agent Memory Server** — Working/long-term memory service · `redis/agent-memory-server` · Scope enforced
 - [`reme`](../systems/reme/) **ReMe** — Markdown memory that publishes its bad scores · `agentscope-ai/ReMe`
 - [`risuai`](../systems/risuai/) **RisuAI** — Three memory systems, one repository · `kwaroran/RisuAI` · Human review
+- [`ruflo`](../systems/ruflo/) **ruflo** — A guard on the retrieval path, off by default · `ruvnet/ruflo`
 ## S
 
 - [`second-brain-cloudflare`](../systems/second-brain-cloudflare/) **Second Brain** — How fast a fact goes stale depends on what kind of fact it is · `rahilp/second-brain-cloudflare` · Trust state, Negative evals
@@ -290,6 +291,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`vir`](../systems/vir/) **vir** — Most of your session history is your tooling talking to itself · `djolex999/vir` · Human review
 - [`virtual-context`](../systems/virtual-context/) **virtual-context** — A tag vocabulary that reorganises itself · `virtual-context/virtual-context` · Scope enforced, Mutation audit
 - [`virtualwife`](../systems/virtualwife/) **VirtualWife** — normalize_scores does not normalize · `yakami129/VirtualWife`
+- [`vllm-semantic-router`](../systems/vllm-semantic-router/) **vLLM Semantic Router** — A full memory system inside a router · `vllm-project/semantic-router` · Scope enforced, Negative evals
 - [`voyager`](../systems/voyager/) **Voyager** — Procedural skill memory · `MineDojo/Voyager`
 ## W
 

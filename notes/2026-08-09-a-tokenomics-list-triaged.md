@@ -421,3 +421,61 @@ Graphify — which the atlas already reports — and to not re-reading files.
 
 Forty entries read, five reports.
 
+### Batch 9 — the routers, and two memory systems hiding in them
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `mihneaptu/opencode-fusion` | `4c314488` | Out of scope: a 56-file OpenCode config layer that removes tools from the main agent's schema. Nothing stored |
+| `katanemo/plano` | `bd711e03` | Out of scope: an Envoy-based router. One vocabulary hit, in `cli/planoai/trace_cmd.py` |
+| `lm-sys/RouteLLM` | `0b64fdaf` | Out of scope: a trained cost-threshold router. No commit since 9 August 2024 |
+| **`ruvnet/ruflo`** | `913f9eae` | **Report written** — [ruflo](../content/systems/ruflo.md) |
+| **`vllm-project/semantic-router`** | `6ae15901` | **Report written** — [vLLM Semantic Router](../content/systems/vllm-semantic-router.md) |
+
+Two of five. The category the list files these under — *Routing / model selection*
+— turned out to contain more memory code than the *Memory* section did.
+
+**vLLM Semantic Router** has 10,777 lines of Go under
+`src/semantic-router/pkg/memory/` that its list entry never hints at: `MemoryType`
+as an actual column (`semantic | procedural | episodic`), four storage backends
+behind one `Store` interface, and — rare enough to be worth the report on its own
+— `Forget(id)` **and** `ForgetByScope(user, project, types)` declared in that
+interface.
+
+Two of its test files are better than its code. `test_isolation.py` opens *"User
+memory isolation (security) tests"* and checks one user's secret against another
+at the storage layer *and* through the live retrieval path; every retrieval
+assertion in the suite runs in a **new session with no `previous_response_id`**,
+so a pass cannot be explained by conversation history. And
+`MemoryContradictionTest` stores two contradicting facts and asserts both survive,
+above a docstring saying the router does soft-insert today and that the test is a
+baseline for when contradiction detection arrives, citing three papers. A
+characterisation test for a mechanism you have not built is the best record of a
+known gap this pass has found.
+
+Its injection is the near-miss. `injectMemoryMessages` deliberately avoids the
+system prompt — *"following the openai-agents-python pattern where context is
+injected as conversation items"* — and then inserts at the index right after the
+last system message, in front of the whole conversation. The system prompt
+survives; every message after the block does not. Appending to the current user
+turn would cost nothing and keep the history cached.
+
+**ruflo** ships 24,166 lines of memory inside a 5,491-file swarm harness, and one
+file justified the report. `agentdb-retrieval-guard.ts` screens retrieved chunks
+for injection before assembly, wrapping the harness's existing tool-output
+guardrail rather than writing a second pattern library, and names the attack with
+a citation: SMSR (arXiv:2606.12703), 93–100% undefended success against 0% behind
+a certified guard. It **refuses to truncate** an oversized chunk because
+*"truncation would let an attacker pad a payload past the guardrail's own scan
+window"* — the second-order failure most size gates walk into.
+
+And it is **off** unless an environment variable turns it on, then annotate-only
+unless a second one makes it drop. Three states, safest least likely. The file
+says so plainly, which is better than a security document that does not.
+
+No marks for ruflo. Its three-scope directory layout is placement rather than a
+filter, and no committed test in the memory package asserts that one agent's
+namespace cannot surface in another's results — so the scope mark is withheld and
+the reason is in the report.
+
+Forty-five entries read, seven reports.
+

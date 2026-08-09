@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 243 reports.**
+**This page covers all 245 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["243 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["245 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2104,4 +2104,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: six files, MIT, one commit dated 1 June 2026, standard library only, no tests and no CI. Three implemented behaviours — code-fence skipping, no double-wrapping, longest-name-first — are pinned by nothing. The README's headline, "71.5x fewer tokens per session", is not produced or measured by anything in the repository; the token argument belongs to Graphify and to not re-reading files.
 - Study when: you keep an Obsidian vault and want your agent's history to land in it tagged and connected, and you are happy for that to be a command you run.
 - Do not copy when: you need memory to be selective. Everything is kept verbatim, the vault grows with every session, and nothing in the design has an opinion about what mattered.
+
+### [`vllm-semantic-router`](../systems/vllm-semantic-router/)
+
+- Best idea: a characterisation test for a mechanism that does not exist yet. `MemoryContradictionTest` stores two contradicting facts and asserts both survive, above a docstring stating that the router does soft-insert today and that this exists as a baseline for when contradiction detection is added, citing RoseRAG, Hindsight and RMM for why it matters. Every retrieval assertion in the same suite runs in a new session with no `previous_response_id`, so a pass cannot be explained by conversation history — the control most memory tests omit.
+- Biggest risk: by that test's own admission there is no contradiction handling. A stale fact and its replacement both live in Milvus and both can be retrieved into the same prompt — and this is a router that serves cheap models, which is the deployment where injecting a wrong fact is most costly, as its own citation says. `Importance` is a float that ranks; nothing can withhold.
+- Most reusable component: the `Store` interface. Six methods with `Forget(id)` and `ForgetByScope(user, project, types)` both declared, plus `List` requiring `UserID` — targeted deletion at two granularities in a contract, which almost nothing else in this atlas has.
+- Maturity impression: Apache-2.0, vLLM project, a 10,777-line memory package with a `_test.go` beside nearly every file, four storage backends behind one interface, and a five-file end-to-end suite whose isolation case is written as a security test against two users and a secret each. No memory-quality benchmark is committed; `metrics.go` exports operational counters.
+- Study when: you want memory as a platform capability behind a gateway rather than a feature in each application, or you are about to write a scope test and want the fresh-session control.
+- Do not copy when: you want the agent to participate. By design the model cannot save, address or correct anything — and note the injection point, which sits in front of the conversation and so invalidates the cached prefix from there on.
+
+### [`ruflo`](../systems/ruflo/)
+
+- Best idea: screening retrieved memory with the same guardrail the harness already applies to tool output. `agentdb-retrieval-guard.ts` treats a chunk coming back from the vector index as untrusted input about to enter a prompt, wraps `@claude-flow/security`'s `ToolOutputGuardrail` rather than writing a second pattern library, and — the detail worth stealing on its own — flags or drops an oversized chunk instead of truncating it, because *"truncation would let an attacker pad a payload past the guardrail's own scan window"*.
+- Biggest risk: that guard is off unless `CLAUDE_FLOW_RETRIEVAL_GUARD=true`, and annotate-only unless a second variable makes it drop. Three states where the safest is the least likely to be configured. Its verdict is also never written back, so a hostile chunk is re-scanned on every retrieval and the store never learns anything about it.
+- Most reusable component: the entity arm. `entity-tagger.ts` adds a regex proper-noun match as a third RRF signal beside dense and BM25, with the clearest justification for it in this atlas: BM25 weights by overall token frequency, so querying "Alice OAuth tokens" can rank a generic OAuth document above the one that names Alice, and an exact per-entity match surfaces it independently.
+- Maturity impression: MIT, a 24,166-line memory package inside a 5,491-file monorepo, 19 test files holding 452 `it()` cases, a committed write benchmark, and ADR numbers in nearly every file header. What no committed test covers is namespace isolation between agents, which is why this report withholds the scope mark despite a three-scope directory layout.
+- Study when: you already run a swarm orchestrator over Claude Code, or you want one file — the guard, or the entity tagger — that lifts cleanly out of it.
+- Do not copy when: you need correction. Entries leave by expiry or content-hash dedup; nothing can mark one wrong, and confidence is consulted once, at transfer time between agents.
 
