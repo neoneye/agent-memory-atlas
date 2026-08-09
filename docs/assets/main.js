@@ -164,7 +164,15 @@
   filters.forEach((filter) => {
     filter.addEventListener("click", () => {
       activeFilter = filter.dataset.filter || "all";
-      filters.forEach((item) => item.classList.toggle("is-active", item === filter));
+      // Radio-like — one architecture at a time — so the selection has to be
+      // announced as well as coloured. The capability chips below carried
+      // aria-pressed from the start and these did not, which left a screen
+      // reader unable to tell which architecture filter was selected.
+      filters.forEach((item) => {
+        const on = item === filter;
+        item.classList.toggle("is-active", on);
+        item.setAttribute("aria-pressed", String(on));
+      });
       applyFilters();
     });
   });

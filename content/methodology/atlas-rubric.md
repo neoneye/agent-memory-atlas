@@ -158,10 +158,22 @@ re-score, system by system, is in
 it also names the one mark that cites no case at all and should probably be
 dropped.
 
-The flags are unchanged at 37 deliberately. Dropping ten would delete the fact
-that ten more systems ship committed must-not tests, which is rare enough to be
-worth counting; renaming the mark would move a goalpost under a published
-number. The split is published instead, and
+**The three numbers in the paragraph above are not the same kind of number, and
+an outside review was right that presenting them together reads as
+inconsistency.** Fifty is live, generated from report frontmatter on every
+build. Thirty-seven and twenty-seven are dated: they are what the corpus held
+and what the re-score found *on 2026-08-08*. Every mark awarded since was judged
+against the strict definition at the top of this section, and **the read-path
+share has not been recomputed since that date** — so "27 for a strict reading"
+is a fact about 2026-08-08 and not a current figure. Recomputing it means
+re-reading fifty test suites, which is the work `capability_evidence:`'s
+`subsystem` field exists to spread across future readings rather than do in one
+pass.
+
+The flags were left unchanged at the re-score deliberately. Dropping ten would
+delete the fact that ten more systems ship committed must-not tests, which is
+rare enough to be worth counting; renaming the mark would move a goalpost under
+a published number. The split is published instead, and
 `capability_evidence:`'s `subsystem` field carries it per report as the
 [migration](#open-work-on-this-rubric) proceeds.
 
