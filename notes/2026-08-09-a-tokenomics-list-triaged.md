@@ -492,3 +492,40 @@ Forty-five entries read, seven reports.
 The first batch with nothing to say. Recorded rather than skipped because a triage
 note that only lists the interesting batches is not a ledger.
 
+### Batch 11 — the policy layer, and a gateway that guesses your tool names
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `withcoral/coral` | `272c725e` | Out of scope: one SQL interface over APIs instead of many MCP servers. No memory vocabulary in source |
+| `mlco2/codecarbon` | `c3013108` | Out of scope: energy and CO2e estimation for a workload |
+| `mlco2/ecologits` | `3d9c4e85` | Out of scope: the hosted-API counterpart to CodeCarbon |
+| `eunomia-bpf/ActPlane` | `47cd96c6` | Out of scope: an eBPF OS-level policy engine for agent harnesses. Its one hit is `bpf/process.bpf.c` |
+| `Justin0504/Aegis` | `82b7501c` | Out of scope as a system — **and now on the governed-write-gateway page** |
+
+ActPlane is worth one line beyond the decline: five auto-run surfaces, the most
+of any repository in this pass — `.claude/settings.json`, a devcontainer, an
+`.envrc`, `.gitmodules` and a `.mcp.json`. Nothing was executed. For a project
+whose subject is constraining what a harness may do, shipping five ways to run
+something on clone is at least worth noticing.
+
+**AEGIS is the write-side mirror of ruflo's read-side guard**, and putting the two
+together is the finding.
+`packages/gateway-mcp/src/detectors/built-in/memory-poison-detector.ts` states the
+threat exactly as this atlas would: *"an adversary tricks the agent into
+persisting attacker-controlled instructions into long-term storage that subsequent
+sessions retrieve and treat as authoritative."*
+
+Because it sits outside every memory system, it cannot know which tool is a
+memory write — so it **pattern-matches the tool name**, with five regexes covering
+`write_memory`, `persist_fact`, `upsert_vector`, `memory_set`, `kb_insert` and
+their neighbours, then inspects the payload for imperatives, role overrides and
+jailbreak phrasing. It calls itself heuristic in its own header.
+
+That is the whole trick and the whole weakness, and it inverts into advice a
+builder can act on: **a memory system whose write tool is named something clever
+is ungoverned by any external policy layer, by construction.** Several systems in
+this atlas would not match those patterns. Both halves are now on the
+[governed write gateway](../content/patterns/governed-write-gateway.md) page.
+
+Fifty-five entries read, seven reports.
+

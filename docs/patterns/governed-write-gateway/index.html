@@ -253,6 +253,48 @@ per process, and emits a <code>merge_supersede_blocked</code> audit
 event per occurrence. The comment gives the reason — "an unaudited
 heuristic whose number-mismatch score sits exactly at the default action
 threshold must never select deactivation".</p>
+<h3 id="the-gateway-that-is-not-yours">The gateway that is not
+yours</h3>
+<p>Every gateway on this page is inside the memory system it governs.
+Two projects in the token-cost corpus put one <em>outside</em>, in front
+of the agent, and between them they cover both directions of the same
+threat — which is worth naming because neither is a memory system and
+neither gets a report here.</p>
+<p><a href="https://github.com/Justin0504/Aegis">AEGIS</a>, MIT,
+examined on 2026-08-09 at <a
+href="https://github.com/Justin0504/Aegis/commit/82b7501cf3491a105362a10a059e33d0e949d4d3"><code class="commit-id" title="82b7501cf3491a105362a10a059e33d0e949d4d3">82b7501c…</code></a>,
+is an MCP gateway with a pre-execution detector chain, and one of its
+built-ins is <code>memory-poison-detector.ts</code>. Its threat model is
+stated exactly as this atlas would state it: <em>"an adversary tricks
+the agent into persisting attacker- controlled instructions into
+long-term storage that subsequent sessions retrieve and treat as
+authoritative."</em></p>
+<p>The interesting part is how it finds the write path it is supposed to
+gate. Sitting outside every memory system, it cannot know which tool is
+a memory write, so it pattern-matches the <em>tool name</em> —
+<code>^(write|save|store|put|append|persist|remember|memorize)_?(memory|state|context|note|fact|scratchpad)</code>,
+<code>^(upsert|insert)_?(vector|embedding|document|memory|fact|chunk)</code>,
+<code>^memory_(set|store|write|put|append|add)</code>, and two more —
+then inspects the payload for imperatives, role overrides and known
+jailbreak phrasing. It calls itself <em>"heuristic, not perfect — a
+determined adversary can paraphrase"</em> and pairs itself with a
+request-side injection classifier and cross-agent detectors.</p>
+<p>That naming convention is the whole trick and the whole weakness. A
+gateway outside the system can only recognise a write it can name, so
+<strong>a memory system whose write tool is called something else is
+ungoverned by construction</strong> — and several in this atlas are. The
+lesson runs the other way for a builder: if you want an external policy
+layer to be able to protect your memory, name your write tool the
+boring, guessable thing.</p>
+<p><a href="../../systems/ruflo/">ruflo</a> is the read-side half of the
+same idea and the one that does have a report:
+<code>agentdb-retrieval-guard.ts</code> screens chunks <em>coming
+out</em> of the store before they are assembled into context. Write-side
+screening catches the payload as it lands; read-side screening also
+catches whatever was already in the store when you turned the guard on.
+They are not substitutes, and a system with a governed write gateway of
+its own has the better version of the first half — because it knows
+which writes are writes.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>
