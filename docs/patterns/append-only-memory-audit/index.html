@@ -433,6 +433,21 @@ by <code>fallback_from_run_id</code>, committed atomically before the
 heuristic verdict is used; there is no <code>UPDATE</code> against
 either table anywhere in the tree, and the only <code>DELETE</code> is
 retention pruning that cascades the pair as a unit.</p>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> answers the
+value question and skips the actor one, which is the mirror image of the
+warning above. Its <code>store_fact()</code> writes a
+<code>SUPERSEDED</code> row to <code>episodes.jsonl</code> before
+overwriting a semantic fact, carrying <code>prior_value</code>,
+<code>prior_status</code> and <code>new_value</code>, so the log does
+show what an entry used to say. It records no actor — a single-operator
+kit does not need one — and, more consequentially, it records nothing on
+the trust axis: promoting a fact to <code>verified</code> writes no
+event, and a restatement whose value happens to match the stored one
+drops the <code>verified</code> status and its oracle with no row
+logged. The lesson generalizes past that repository: decide which
+transitions the log covers by asking which ones you would need to
+reconstruct, not by asking which ones happen to pass through the
+function you instrumented.</p>
 <p><a href="../../systems/memory-palace/">Memory Palace</a> is the
 counterexample and worth knowing about before trusting a schema.
 Migration 0004 creates <code>access_log</code> as "the L0 layer"

@@ -328,6 +328,19 @@ failure that falls back to a heuristic writes two rows linked by
 there is no `UPDATE` against either table anywhere in the tree, and the only
 `DELETE` is retention pruning that cascades the pair as a unit.
 
+[breadcrumbs](../../systems/breadcrumbs/) answers the value question and skips
+the actor one, which is the mirror image of the warning above. Its
+`store_fact()` writes a `SUPERSEDED` row to `episodes.jsonl` before overwriting
+a semantic fact, carrying `prior_value`, `prior_status` and `new_value`, so the
+log does show what an entry used to say. It records no actor — a single-operator
+kit does not need one — and, more consequentially, it records nothing on the
+trust axis: promoting a fact to `verified` writes no event, and a restatement
+whose value happens to match the stored one drops the `verified` status and its
+oracle with no row logged. The lesson generalizes past that repository: decide
+which transitions the log covers by asking which ones you would need to
+reconstruct, not by asking which ones happen to pass through the function you
+instrumented.
+
 [Memory Palace](../../systems/memory-palace/) is the counterexample and worth
 knowing about before trusting a schema. Migration 0004 creates `access_log` as
 "the L0 layer" persisting read, write, search-hit and compact events "used by the

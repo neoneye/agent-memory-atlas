@@ -600,6 +600,15 @@ retired writes a fresh line with a new date and walks past every `obsoleted_by`
 in the file — which is exactly the laundering path Verel's red team found, minus
 the adversary.
 
+Its engine tier gets closer than the ledger does, and the gap is instructive.
+`store_fact()` writes a `SUPERSEDED` row to the episodic log before overwriting
+a fact, carrying `prior_value`, `prior_status` and `new_value` — so a durable,
+append-only record of the retired value exists in the store. It is still not a
+tombstone, because nothing consults it: `store_fact()` reads `facts.json` and
+never the episode log, and no write path asks whether the value arriving has
+been retired before. The difference between a tombstone and a history is
+entirely which one the write path is obliged to read.
+
 So the honest reading is that the value-keyed form is unnecessary *while every
 write is a human decision*, and that the condition is a property of the write
 path rather than of the store. Any system here that adds model-driven extraction

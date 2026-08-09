@@ -45,7 +45,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`basic-memory`](../systems/basic-memory/) **Basic Memory** — Human-editable Markdown graph · `basicmachines-co/basic-memory` · Scope enforced
 - [`brain-md`](../systems/brain-md/) **brain.md** — Compiled truth over an append-only timeline · `mindmuxai/brain.md` · Scope enforced, Mutation audit, Negative evals
-- [`breadcrumbs`](../systems/breadcrumbs/) **breadcrumbs** — Correction that never reaches the retrieval lane · `The-825/breadcrumbs` · Trust state, Negative evals
+- [`breadcrumbs`](../systems/breadcrumbs/) **breadcrumbs** — Correction that never reaches the retrieval lane · `The-825/breadcrumbs` · Trust state, Mutation audit, Negative evals
 - [`buzz`](../systems/buzz/) **Buzz** — Memory as an encrypted protocol · `block/buzz` · Scope enforced
 - [`byterover`](../systems/byterover/) **ByteRover** — Curated coding-agent memory · `campfirein/cipher`
 ## C
