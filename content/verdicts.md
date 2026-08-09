@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 224 reports.**
+**This page covers all 225 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["224 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["225 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1933,6 +1933,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 14,800 lines with consolidation decomposed into named, individually tested passes under a lock, ontologies as swappable directories with a conformance module, a production deployment named, and a roadmap that lists its own entity-resolution failure — "sometimes an entity will become a catch-all and the thing will insist in overloading it".
 - Study when: you are about to build an index next to a store that git already versions.
 - Do not copy when: recall has to survive vocabulary mismatch — there is no semantic fallback when the right memory uses different words from the query.
+
+### [`memsearch`](../systems/memsearch/)
+
+- Best idea: a distilled skill is inert. Candidates "are never written into an agent's skills directory by this module. Turning a candidate into an agent-visible skill is a separate, human-driven step" — enforced at a module boundary rather than a flag, with the candidate store its own git repository so every automatic edit is a commit with diff and revert, and the whole feature off by default.
+- Biggest risk: the gate is on the safe path. Skill distillation is gated, disabled and revertible; the background maintenance pass rewriting `PROJECT.md` and `USER.md` is none of those, and those two files are what the agent reads as durable truth.
+- Most reusable component: `evaluation/README.md` — an embedder choice made on 955 chunks and 2,172 queries built from the project's own memory logs across twelve projects, chunked by its own chunker, with simple, complex and multi-hop questions in Chinese and English, twelve models with their sizes in the table, and the primary metric justified from the interface: "the user typically sees top 3-5 results, so Recall@5 is primary".
+- Maturity impression: four maintained agent plugins sharing one store, index-health diagnostics for a deliberately disposable index, SHA-256 gating so a live file watcher is affordable — and a vector-database vendor calling its own product "a shadow index: a derived, rebuildable cache".
+- Study when: your system distils procedures from experience and then runs them.
+- Do not copy when: you need the pipeline evaluated — the methodology is excellent and stops at the embedder.
+
 
 
 
