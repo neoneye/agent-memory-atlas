@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 216 reports.</strong></p>
+<p><strong>This page covers all 217 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;216 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;217 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5410,6 +5410,39 @@ count as satisfying" — and a spec still headed
 asked what depended on the old version.</li>
 <li>Do not copy when: you need the review half — the quarantine is
 written and never read.</li>
+</ul>
+<h3 id="opencode-mem"><a
+href="../systems/opencode-mem/"><code>opencode-mem</code></a></h3>
+<ul>
+<li>Best idea: <code>SECURITY_AUDIT.md</code> — a committed read-only
+audit of its own code with five graded findings, each carrying the
+exploit path, the fix and the regression test that pins it. The CRITICAL
+one prints the working payload; the HIGH one explains why CORS is not
+authentication (<code>isAllowedBrowserOrigin()</code> returned true when
+no <code>Origin</code> header was present, so every non-browser client
+passed); and finding 5 is published as <em>not fixed</em>, with the
+reason.</li>
+<li>Biggest risk: the audit is scoped to an earlier commit than the one
+pinned here, so a reader could take a committed audit file as a standing
+guarantee rather than a point-in-time artifact. The three named
+regression tests are the durable part.</li>
+<li>Most reusable component: <code>privacy.ts</code> —
+<code>&lt;private&gt;…&lt;/private&gt;</code> redaction implemented with
+a depth counter rather than a pair-matching regex "so that the two
+malformed shapes fail <em>closed</em>", meaning an unclosed tag redacts
+to the end of the input instead of storing the secret, and
+<code>&lt;private &gt;</code> is tolerated the way an XML parser
+would.</li>
+<li>Maturity impression: embedded Turso/libSQL with inline
+<code>F32_BLOB</code> vectors and a DiskANN index, two vectors per
+memory, 66 test files, a CI matrix across six OS/architecture
+combinations with a note on what it does <em>not</em> cover, and a
+<code>.legacy.bak</code> written per shard before migration.</li>
+<li>Study when: you have a local HTTP API and a CORS policy and have not
+asked what happens when there is no <code>Origin</code> header.</li>
+<li>Do not copy when: you need correction — <code>is_pinned</code> is
+the only field that changes a memory's standing, and it changes
+retention rather than truth.</li>
 </ul>
         </article>
       </div>

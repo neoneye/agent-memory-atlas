@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 216 reports.**
+**This page covers all 217 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["216 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["217 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1861,6 +1861,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Postgres with versioned procedures, a GIN index on entities, an evolution log carrying each diff and its originating episode, both-polarity unit tests including "a negated mention does not count as satisfying" — and a spec still headed `Status: design` for a gate that shipped.
 - Study when: your agent revises what it learned and you have never asked what depended on the old version.
 - Do not copy when: you need the review half — the quarantine is written and never read.
+
+### [`opencode-mem`](../systems/opencode-mem/)
+
+- Best idea: `SECURITY_AUDIT.md` — a committed read-only audit of its own code with five graded findings, each carrying the exploit path, the fix and the regression test that pins it. The CRITICAL one prints the working payload; the HIGH one explains why CORS is not authentication (`isAllowedBrowserOrigin()` returned true when no `Origin` header was present, so every non-browser client passed); and finding 5 is published as *not fixed*, with the reason.
+- Biggest risk: the audit is scoped to an earlier commit than the one pinned here, so a reader could take a committed audit file as a standing guarantee rather than a point-in-time artifact. The three named regression tests are the durable part.
+- Most reusable component: `privacy.ts` — `<private>…</private>` redaction implemented with a depth counter rather than a pair-matching regex "so that the two malformed shapes fail *closed*", meaning an unclosed tag redacts to the end of the input instead of storing the secret, and `<private >` is tolerated the way an XML parser would.
+- Maturity impression: embedded Turso/libSQL with inline `F32_BLOB` vectors and a DiskANN index, two vectors per memory, 66 test files, a CI matrix across six OS/architecture combinations with a note on what it does *not* cover, and a `.legacy.bak` written per shard before migration.
+- Study when: you have a local HTTP API and a CORS policy and have not asked what happens when there is no `Origin` header.
+- Do not copy when: you need correction — `is_pinned` is the only field that changes a memory's standing, and it changes retention rather than truth.
+
 
 
 
