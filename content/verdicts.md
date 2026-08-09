@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 222 reports.**
+**This page covers all 223 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["222 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["223 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1915,6 +1915,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a vault template with lifecycle hooks for three agent CLIs, Obsidian `.base` views so the human and the agent query one store, an exposure allowlist that ships empty with a written reason, and a path check that unifies separators before normalising because POSIX `normalize()` will not collapse a backslash-spelled `..`.
 - Study when: you inject context at session start and have never measured what it costs.
 - Do not copy when: you want a component — the vault *is* the system, adopted wholesale.
+
+### [`vir`](../systems/vir/)
+
+- Best idea: deciding which of your own transcripts are actually yours. Of 243 files on the author's machine "about 20 were sessions I actually drove" — the rest subagent runs, workflow phases and headless SDK agents — and vir detects all three with three independent mechanisms: on-disk layout, the first user line's `entrypoint`, and a per-line `isSidechain` backstop whose test says it is a backstop. Every transcript-mining memory system has this problem and this is the only careful treatment of it here.
+- Biggest risk: two LLM passes stand between a transcript and a note, nothing measures whether the note is faithful, and the vault is designed to outlive the transcript — so an unfaithful distillation becomes permanent and unfalsifiable once Claude Code's ~30-day pruning window closes.
+- Most reusable component: the rejected-signal notes. `promptSource` reads "sdk" even on desktop-launched human sessions (the C23 serbeval trap) and turn count would kill single-prompt autonomous runs — the two signals a reader would reach for first, ruled out with the reason. Beside them, a redaction rule whose comment names the innocent string it must not eat: `"risk-ant-…"` must survive.
+- Maturity impression: 46 test files with nearly one per pipeline module, tests named for the behaviours they protect (`run.rewriteDryRun`, `run.retryBound`, `run.transcriptFilter`), a cheap-model-triage/expensive-model-distil split with cost tracking, and a TF-IDF fallback so it works before any model server is configured.
+- Study when: you mine an agent's own logs and have not checked how much of that history the user actually wrote.
+- Do not copy when: you need `confidence` to do anything at query time — it selects the top five for `sync-claude` and nothing else.
+
 
 
 

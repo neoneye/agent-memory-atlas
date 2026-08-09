@@ -1,9 +1,9 @@
 # Seventy-one repositories from an outside corpus — the join, the probe, and what came back
 
-**Status:** in progress. Fifty-one reports written and pushed across thirteen
+**Status:** in progress. Fifty-six reports written and pushed across fourteen
 batches; every remaining candidate cloned, screened and probed at code level,
 with the evidence tabulated below and no verdict claimed for anything unread.
-Twenty of the tabulated candidates remain unread.
+Fifteen of the tabulated candidates remain unread.
 **Origin:** [issue #17](https://github.com/neoneye/agent-memory-atlas/issues/17),
 submitted 2026-08-09 by the author of
 [AlexisOlson/somnigraph](https://github.com/AlexisOlson/somnigraph), pointing at
@@ -91,7 +91,7 @@ rejected-value records. The one that was —
 
 ## What has been written
 
-Fifty-one reports across thirteen batches. The six that changed something in the
+Fifty-six reports across fourteen batches. The six that changed something in the
 corpus rather than adding to it:
 
 - **[Wenlan](../content/systems/wenlan.md)** — the atlas's tenth tombstone, and
@@ -283,7 +283,8 @@ Athena, mem9 and AURORA; then AIPass, total-agent-memory (pinned at its old
 PLTM, Memoir, MemoMind and GitMem; then Engram Provable (`Harshitk-cp/engram`,
 the third distinct repository of that name in the atlas), AgentWorkingMemory,
 Second Brain, Context Mem and MoltBrain; then Fidelis, TeleMem, Mengram,
-OpenCode Memory and OpenMemory. Twenty remain.*
+OpenCode Memory and OpenMemory; then Ori Mnemos, YourMemory, cortex-engine,
+obsidian-mind and vir. Fifteen remain.*
 
 Every one of these is cloned, screened with `screen_repo.py`, and measured.
 The six read and dispositioned above are excluded.
@@ -376,7 +377,7 @@ Four rows deserve a note now rather than after a reading:
 
 ## What came of it
 
-- **51 reports added**, taking the corpus from 167 to 218.
+- **56 reports added**, taking the corpus from 167 to 223.
 - **Marks added**: 18 `scope_enforced`, 18 `audit_log`, 9 `trust_state`,
   5 `bitemporal`, 5 `negative_eval`, 5 `human_review`, and **2 `tombstone`** —
   the first two added since the
