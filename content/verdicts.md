@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 182 reports.**
+**This page covers all 187 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["182 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["187 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1555,3 +1555,48 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 152,800 lines across a monorepo with forty-plus connectors, a pluggable graph provider behind a three-value enum, six vector namespaces and nine pages of accurate documentation — beside 25 test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number published in a different repository.
 - Study when: your memory holds both facts and directives and you are storing them the same way.
 - Do not copy when: you need lexical retrieval; V2 dropped BM25 and the pipeline that has it is version-gated.
+
+### [`yantrikdb`](../systems/yantrikdb/)
+
+- Best idea: `CORRECTIONS.md` — four published benchmark conclusions withdrawn because the condition labelled "structured memory" was a 120-line Python dict with word-overlap retrieval, with the maintainer's own words quoted ("the core functionality did not run at all") and the four-word reply "Correct observation. No defense." The correction was published before the favourable rerun was finished.
+- Biggest risk: the crypto-shred erasure path is an orchestrator with no caller, no encryption layer beneath it and no admin endpoint — stated in its own header under "What's NOT here (deferred)", so the GDPR story at this commit rests on logical tombstones alone.
+- Most reusable component: `commit/retention.rs` — restore-no-resurrect, where a tombstone stays in the log until every replica watermark has passed it, so a restore cannot bring a deleted memory back.
+- Maturity impression: 63,000 lines of Rust across six crates, AGPL-3.0, every mutation through one commit substrate idempotent on `op_id` with per-tenant log indices, and a rerun harness committed with raw logs at n=2.
+- Study when: your deletion story stops at the primary and you have replicas or backups.
+- Do not copy when: you want cognition — `certainty` and `valence` here are fields, not mechanisms.
+
+### [`vibe-cognition`](../systems/vibe-cognition/)
+
+- Best idea: journal-first — every mutation is appended to `journal.jsonl` before the in-memory graph is touched, so the graph and the embeddings are both projections and a crash between the two loses nothing.
+- Biggest risk: the ChromaDB sync "only ADDS" and a removed node "is NEVER un-embedded", so the vector store accumulates orphans that anything querying it directly would surface.
+- Most reusable component: the tombstone line itself — `{"id": ..., "removed_by": ...}` where `removed_by` is a git identity or a surface tag, with the dashboard documenting why it passes `"dashboard"` rather than a person.
+- Maturity impression: 56,000 lines of Python with 58 test files, twelve node types each declaring its own update semantics in the enum comments, and multi-process replay bugs explained in paragraph-length comments at the fix.
+- Study when: you want the log-and-projection shape implemented small enough to read in an afternoon.
+- Do not copy when: you need a measurement — there is no benchmark of any kind.
+
+### [`gbrain`](../systems/gbrain/)
+
+- Best idea: claims typed by commitment — `fact | take | bet | hunch` — where only a bet resolves, and the resolved outcomes become a per-holder Brier score with bias tags like `over-confident-geography` that feed contradiction handling.
+- Biggest risk: `since_date` and `until_date` are both written on every insert and the range query compares `since_date` at both ends, so a window returns claims that *began* in it rather than claims that were *true* during it.
+- Most reusable component: `destructive-guard.ts` — impact preview, typed confirmation, 72-hour recoverable tombstone, under the principle that "the blast radius should be visible BEFORE you pull the trigger, and recoverable AFTER".
+- Maturity impression: 564,000 lines of TypeScript with 1,005 test files, a fuzz suite, CI guards that state which way they should fail, and `grade_completion` recording when a calibration profile was computed from partial input — with the BrainBench numbers in a sibling repository.
+- Study when: several people write claims into one store and you weight them all the same.
+- Do not copy when: you need the temporal window to mean what it says.
+
+### [`superlocalmemory`](../systems/superlocalmemory/)
+
+- Best idea: the audit chain runs on its own sqlite connection, "not shared DB manager — for independence — audit must survive even if the main DB is corrupted". Every other hash-chained log in this atlas shares a fate with the store it audits.
+- Biggest risk: ABAC defaults to allow-all with a deny-list, so an unconfigured deployment of a system sold on governance has no access control at all.
+- Most reusable component: `compliance/retention.py` — named rules bound to a profile, tagged by framework, with three actions where `notify` deliberately changes nothing and only surfaces the count.
+- Maturity impression: 399,000 lines of Python across twenty-eight subpackages with nine framework integration packages, AGPL-3.0 — and an EU AI Act module whose docstring refuses to certify compliance, plus four temporal columns no read path filters on.
+- Study when: you have a compliance obligation and need the audit trail to survive the incident it is evidence about.
+- Do not copy when: you want a small component; the surface is the largest here relative to what one user needs.
+
+### [`nornicdb`](../systems/nornicdb/)
+
+- Best idea: `ConstraintTemporal` — validity declared as a schema constraint over `(key, valid_from, valid_to)` and enforced at write time, so a node cannot claim a temporal label without the fields. Everywhere else in this atlas validity is a convention two queries must remember to share.
+- Biggest risk: "search remains current-state focused: current search paths are intentionally separate from historical MVCC state" — the constraint, the temporal index and the MVCC reads all exist, and the retrieval path a memory client uses reaches none of them.
+- Most reusable component: `kalman_anti_sycophancy_test.go` and the filter behind it — fifty measurements of 0.6, one 0.99 asserted to stay under 0.8, then recovery, so an agent agreeing enthusiastically with itself cannot ratchet a confidence score.
+- Maturity impression: 780,000 lines of Go with forty-plus packages, MVCC snapshot isolation, Bolt/Cypher/gRPC/GraphQL/Qdrant/MCP surfaces, and an audit module citing GDPR, HIPAA, FISMA, SOC2 and SOX by clause rather than by name.
+- Study when: you are building the memory layer and want validity enforceable and history queryable underneath it.
+- Do not copy when: you expected a memory product — nothing here decides what to remember or resolves a contradiction.

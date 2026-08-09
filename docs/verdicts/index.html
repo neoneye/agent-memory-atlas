@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 182 reports.</strong></p>
+<p><strong>This page covers all 187 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;182 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;187 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4398,6 +4398,131 @@ published in a different repository.</li>
 storing them the same way.</li>
 <li>Do not copy when: you need lexical retrieval; V2 dropped BM25 and
 the pipeline that has it is version-gated.</li>
+</ul>
+<h3 id="yantrikdb"><a
+href="../systems/yantrikdb/"><code>yantrikdb</code></a></h3>
+<ul>
+<li>Best idea: <code>CORRECTIONS.md</code> — four published benchmark
+conclusions withdrawn because the condition labelled "structured memory"
+was a 120-line Python dict with word-overlap retrieval, with the
+maintainer's own words quoted ("the core functionality did not run at
+all") and the four-word reply "Correct observation. No defense." The
+correction was published before the favourable rerun was finished.</li>
+<li>Biggest risk: the crypto-shred erasure path is an orchestrator with
+no caller, no encryption layer beneath it and no admin endpoint — stated
+in its own header under "What's NOT here (deferred)", so the GDPR story
+at this commit rests on logical tombstones alone.</li>
+<li>Most reusable component: <code>commit/retention.rs</code> —
+restore-no-resurrect, where a tombstone stays in the log until every
+replica watermark has passed it, so a restore cannot bring a deleted
+memory back.</li>
+<li>Maturity impression: 63,000 lines of Rust across six crates,
+AGPL-3.0, every mutation through one commit substrate idempotent on
+<code>op_id</code> with per-tenant log indices, and a rerun harness
+committed with raw logs at n=2.</li>
+<li>Study when: your deletion story stops at the primary and you have
+replicas or backups.</li>
+<li>Do not copy when: you want cognition — <code>certainty</code> and
+<code>valence</code> here are fields, not mechanisms.</li>
+</ul>
+<h3 id="vibe-cognition"><a
+href="../systems/vibe-cognition/"><code>vibe-cognition</code></a></h3>
+<ul>
+<li>Best idea: journal-first — every mutation is appended to
+<code>journal.jsonl</code> before the in-memory graph is touched, so the
+graph and the embeddings are both projections and a crash between the
+two loses nothing.</li>
+<li>Biggest risk: the ChromaDB sync "only ADDS" and a removed node "is
+NEVER un-embedded", so the vector store accumulates orphans that
+anything querying it directly would surface.</li>
+<li>Most reusable component: the tombstone line itself —
+<code>{"id": ..., "removed_by": ...}</code> where
+<code>removed_by</code> is a git identity or a surface tag, with the
+dashboard documenting why it passes <code>"dashboard"</code> rather than
+a person.</li>
+<li>Maturity impression: 56,000 lines of Python with 58 test files,
+twelve node types each declaring its own update semantics in the enum
+comments, and multi-process replay bugs explained in paragraph-length
+comments at the fix.</li>
+<li>Study when: you want the log-and-projection shape implemented small
+enough to read in an afternoon.</li>
+<li>Do not copy when: you need a measurement — there is no benchmark of
+any kind.</li>
+</ul>
+<h3 id="gbrain"><a
+href="../systems/gbrain/"><code>gbrain</code></a></h3>
+<ul>
+<li>Best idea: claims typed by commitment —
+<code>fact | take | bet | hunch</code> — where only a bet resolves, and
+the resolved outcomes become a per-holder Brier score with bias tags
+like <code>over-confident-geography</code> that feed contradiction
+handling.</li>
+<li>Biggest risk: <code>since_date</code> and <code>until_date</code>
+are both written on every insert and the range query compares
+<code>since_date</code> at both ends, so a window returns claims that
+<em>began</em> in it rather than claims that were <em>true</em> during
+it.</li>
+<li>Most reusable component: <code>destructive-guard.ts</code> — impact
+preview, typed confirmation, 72-hour recoverable tombstone, under the
+principle that "the blast radius should be visible BEFORE you pull the
+trigger, and recoverable AFTER".</li>
+<li>Maturity impression: 564,000 lines of TypeScript with 1,005 test
+files, a fuzz suite, CI guards that state which way they should fail,
+and <code>grade_completion</code> recording when a calibration profile
+was computed from partial input — with the BrainBench numbers in a
+sibling repository.</li>
+<li>Study when: several people write claims into one store and you
+weight them all the same.</li>
+<li>Do not copy when: you need the temporal window to mean what it
+says.</li>
+</ul>
+<h3 id="superlocalmemory"><a
+href="../systems/superlocalmemory/"><code>superlocalmemory</code></a></h3>
+<ul>
+<li>Best idea: the audit chain runs on its own sqlite connection, "not
+shared DB manager — for independence — audit must survive even if the
+main DB is corrupted". Every other hash-chained log in this atlas shares
+a fate with the store it audits.</li>
+<li>Biggest risk: ABAC defaults to allow-all with a deny-list, so an
+unconfigured deployment of a system sold on governance has no access
+control at all.</li>
+<li>Most reusable component: <code>compliance/retention.py</code> —
+named rules bound to a profile, tagged by framework, with three actions
+where <code>notify</code> deliberately changes nothing and only surfaces
+the count.</li>
+<li>Maturity impression: 399,000 lines of Python across twenty-eight
+subpackages with nine framework integration packages, AGPL-3.0 — and an
+EU AI Act module whose docstring refuses to certify compliance, plus
+four temporal columns no read path filters on.</li>
+<li>Study when: you have a compliance obligation and need the audit
+trail to survive the incident it is evidence about.</li>
+<li>Do not copy when: you want a small component; the surface is the
+largest here relative to what one user needs.</li>
+</ul>
+<h3 id="nornicdb"><a
+href="../systems/nornicdb/"><code>nornicdb</code></a></h3>
+<ul>
+<li>Best idea: <code>ConstraintTemporal</code> — validity declared as a
+schema constraint over <code>(key, valid_from, valid_to)</code> and
+enforced at write time, so a node cannot claim a temporal label without
+the fields. Everywhere else in this atlas validity is a convention two
+queries must remember to share.</li>
+<li>Biggest risk: "search remains current-state focused: current search
+paths are intentionally separate from historical MVCC state" — the
+constraint, the temporal index and the MVCC reads all exist, and the
+retrieval path a memory client uses reaches none of them.</li>
+<li>Most reusable component: <code>kalman_anti_sycophancy_test.go</code>
+and the filter behind it — fifty measurements of 0.6, one 0.99 asserted
+to stay under 0.8, then recovery, so an agent agreeing enthusiastically
+with itself cannot ratchet a confidence score.</li>
+<li>Maturity impression: 780,000 lines of Go with forty-plus packages,
+MVCC snapshot isolation, Bolt/Cypher/gRPC/GraphQL/Qdrant/MCP surfaces,
+and an audit module citing GDPR, HIPAA, FISMA, SOC2 and SOX by clause
+rather than by name.</li>
+<li>Study when: you are building the memory layer and want validity
+enforceable and history queryable underneath it.</li>
+<li>Do not copy when: you expected a memory product — nothing here
+decides what to remember or resolves a contradiction.</li>
 </ul>
         </article>
       </div>
