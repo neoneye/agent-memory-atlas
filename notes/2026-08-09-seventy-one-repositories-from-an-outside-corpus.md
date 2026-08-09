@@ -1,9 +1,9 @@
 # Seventy-one repositories from an outside corpus — the join, the probe, and what came back
 
-**Status:** in progress. Thirty-six reports written and pushed across ten
+**Status:** in progress. Forty-six reports written and pushed across twelve
 batches; every remaining candidate cloned, screened and probed at code level,
 with the evidence tabulated below and no verdict claimed for anything unread.
-Thirty-five of the tabulated candidates remain unread.
+Twenty-five of the tabulated candidates remain unread.
 **Origin:** [issue #17](https://github.com/neoneye/agent-memory-atlas/issues/17),
 submitted 2026-08-09 by the author of
 [AlexisOlson/somnigraph](https://github.com/AlexisOlson/somnigraph), pointing at
@@ -91,7 +91,7 @@ rejected-value records. The one that was —
 
 ## What has been written
 
-Thirty-six reports across ten batches. The six that changed something in the
+Forty-six reports across twelve batches. The six that changed something in the
 corpus rather than adding to it:
 
 - **[Wenlan](../content/systems/wenlan.md)** — the atlas's tenth tombstone, and
@@ -277,10 +277,12 @@ plausible, checkable, and refuted by reading the next thirty lines.
 
 ## The forty-five still to read, with the evidence
 
-*Ten have since been read and are struck from this list: AIPass, total-agent-memory
-(pinned at its old `claude-total-memory` URL), OmniMemory, Wax and TrueMemory in
-the most recent batch, after Neuroca, Athena, mem9, AURORA and the batch before.
-Thirty-five remain.*
+*Twenty have since been read and are struck from this list. In order: Neuroca,
+Athena, mem9 and AURORA; then AIPass, total-agent-memory (pinned at its old
+`claude-total-memory` URL), OmniMemory, Wax and TrueMemory; then Daem0nMCP,
+PLTM, Memoir, MemoMind and GitMem; then Engram Provable (`Harshitk-cp/engram`,
+the third distinct repository of that name in the atlas), AgentWorkingMemory,
+Second Brain, Context Mem and MoltBrain. Twenty-five remain.*
 
 Every one of these is cloned, screened with `screen_repo.py`, and measured.
 The six read and dispositioned above are excluded.
@@ -373,7 +375,7 @@ Four rows deserve a note now rather than after a reading:
 
 ## What came of it
 
-- **36 reports added**, taking the corpus from 167 to 203.
+- **46 reports added**, taking the corpus from 167 to 213.
 - **Marks added**: 18 `scope_enforced`, 18 `audit_log`, 9 `trust_state`,
   5 `bitemporal`, 5 `negative_eval`, 5 `human_review`, and **2 `tombstone`** —
   the first two added since the
