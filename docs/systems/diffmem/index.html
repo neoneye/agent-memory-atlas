@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The retrieval agent explores
+memory with grep, git log and git blame behind a thirteen-command
+allowlist that validates every segment of a chain — and then hands the
+string to a shell.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DiffMem — Agent Memory Atlas">
+    <meta property="og:description" content="The retrieval agent
+explores memory with grep, git log and git blame behind a
+thirteen-command allowlist that validates every segment of a chain — and
+then hands the string to a shell.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DiffMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="The retrieval agent
+explores memory with grep, git log and git blame behind a
+thirteen-command allowlist that validates every segment of a chain — and
+then hands the string to a shell.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DiffMem — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A whitelisted shell for the memory repo</p>
+          <h1>DiffMem</h1>
+          <p class="document-deck">The retrieval agent explores memory
+with grep, git log and git blame behind a thirteen-command allowlist
+that validates every segment of a chain — and then hands the string to a
+shell.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/growth-kinetics/diffmem">
+              <span>Source</span>
+              <strong>growth-kinetics/diffmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/growth-kinetics/diffmem/commit/5f00e8d22dc05fb1fc505f5322cb717de61bed3f" title="5f00e8d22dc05fb1fc505f5322cb717de61bed3f">
+              <span>Analyzed revision</span>
+              <code>5f00e8d2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DiffMem is a memory backend with no index: markdown files in a git
+repository, and an LLM that explores them with shell commands. "No
+vector databases, no embeddings, no BM25 — just git and an LLM."</p>
+<p><strong>The architectural idea is a real one.</strong> Memory files
+hold only the <em>current</em> view — "current relationships, facts, or
+timelines" — so the surface a query scans stays small, and every prior
+state lives in the commit graph, reachable on demand:</p>
+<blockquote>
+<p>"Git diffs and logs provide a natural way to track how memories
+evolve. Agents can ask 'How has this fact changed over time?' without
+scanning entire histories, pulling only relevant commits."</p>
+</blockquote>
+<p>That is the log-and-projection pattern with git supplying the log for
+free, and it answers a question most systems here cannot: not <em>what
+do you believe</em> but <em>when did that change, and to what</em>.
+<code>git blame</code> on a memory file is provenance per line, at no
+storage cost.</p>
+<p><strong>The mechanism worth studying is
+<code>command_router.py</code></strong> — a sandbox for handing an LLM a
+shell over the memory repo. Thirteen commands are allowed
+(<code>cat</code>, <code>head</code>, <code>tail</code>,
+<code>grep</code>, <code>ls</code>, <code>wc</code>, <code>awk</code>,
+<code>sed</code>, <code>cut</code>, <code>sort</code>,
+<code>uniq</code>, <code>find</code>, <code>git</code>),
+<code>git</code> carries a <strong>second</strong> allowlist of
+read-only subcommands (<code>log</code>, <code>diff</code>,
+<code>blame</code>, <code>show</code>, <code>rev-list</code>,
+<code>shortlog</code>), the validator takes
+<code>Path(tokens[0]).name</code> so a path-prefixed binary cannot slip
+through, and the splitters for <code>|</code> and for
+<code>&amp;&amp;</code>/<code>||</code>/<code>;</code> are quote- and
+escape-aware so a pipe inside a grep pattern is not a pipe.
+<strong>Every segment of every chain is validated</strong>, not just the
+first.</p>
+<p>Giving <code>git</code> its own subcommand allowlist is the detail
+that shows the author thought about it: <code>git</code> unrestricted is
+a write primitive and a network client.</p>
+<p><strong>And then the validated string is executed with
+<code>shell=True</code></strong> — section 9.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Entity files hold the present. Git holds the past. A retrieval agent
+reads the present with <code>grep</code> and reaches into the past with
+<code>git log</code> and <code>git diff</code> when a question needs it.
+A writer agent edits; a consolidator reorganises.</p>
+<pre class="mermaid"><code>flowchart TD
+    Q[&quot;question&quot;] --&gt; RA[&quot;retrieval agent&quot;]
+    RA --&gt; CR{&quot;command_router.run(command)&quot;}
+    CR --&gt; SPL[&quot;split chain on ; &amp;&amp; ||, quote-aware&lt;br/&gt;then split each pipeline on |, quote-aware&quot;]
+    SPL --&gt; VAL{&quot;every segment: base command in the 13?&lt;br/&gt;git subcommand in the 6?&quot;}
+    VAL --&gt;|no| ERR[&quot;[error] unknown command, with the list&quot;]
+    VAL --&gt;|yes| SH[&quot;subprocess.run(pipeline_str, shell=True)&quot;]
+    SH --&gt; PRES[&quot;presentation layer: text check,&lt;br/&gt;elapsed ms, return code&quot;]
+    PRES --&gt; RA
+    CUR[&quot;current-state markdown — the &#39;now&#39; view&quot;] --&gt; SH
+    HIST[&quot;git commit graph — every prior state&quot;] --&gt; SH
+    W[&quot;conversation&quot;] --&gt; WA[&quot;writer agent&quot;]
+    WA --&gt; CUR
+    WA --&gt; CMT[&quot;commit — the differential is the history&quot;]
+    CON[&quot;consolidator: dedupe, link,&lt;br/&gt;reabsorb, redistribute&quot;] --&gt; CUR
+    ONT[&quot;ontology: personal | corporate&quot;] --&gt; WA
+    ONT --&gt; CON</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/diffmem/</code> holds <code>retrieval_agent</code> (agent,
+baseline, <code>command_router</code>, <code>resolver</code>, prompts),
+<code>writer_agent</code>, <code>consolidator_agent</code>,
+<code>executor</code>, <code>storage</code>, <code>ontology</code>,
+<code>ontologies</code>, <code>repo_manager</code>,
+<code>frontmatter</code>, <code>conformance</code>, <code>api</code>,
+<code>server</code>, <code>status</code>.</p>
+<p><strong>The executor is pluggable</strong> —
+<code>TaskExecutor</code> as an abstract base with an
+<code>InlineExecutor</code> and a <code>HatchetExecutor</code>, a
+<code>JobHandle</code> receipt, a <code>JobResult</code> with status and
+timestamps, and a <code>build_executor</code> factory reading an env
+var. The design note is the good part: "Endpoints construct a thunk
+(<code>Callable[[], dict]</code>) that closes over the actual
+writer/consolidator call and hand it to <code>submit_write</code> /
+<code>submit_consolidate</code> — keeping the executor decoupled from
+DiffMemory internals." Write and consolidate become jobs you can run
+inline in development and on a queue in production without the memory
+code knowing.</p>
+<p><strong>Ontologies are pluggable</strong> — <code>personal</code> and
+<code>corporate</code> ship as separate directories, so what counts as
+an entity and which fields it carries is configuration rather than code.
+There is a <code>conformance.py</code> beside them.</p>
+<p>14,800 lines of Python, 22 test files.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Sandbox</strong> —
+<code>src/diffmem/retrieval_agent/command_router.py</code>
+(<code>WHITELISTED_COMMANDS</code> <code>:22-26</code>,
+<code>_validate_command</code> <code>:87-106</code>,
+<code>_split_pipeline</code> <code>:108</code>,
+<code>_split_chain</code> <code>:141</code>,
+<code>_execute_pipeline</code> <code>:221-265</code>).</p>
+<p><strong>Retrieve</strong> —
+<code>src/diffmem/retrieval_agent/agent.py</code>,
+<code>resolver.py</code>, <code>baseline.py</code>,
+<code>prompts/</code>.</p>
+<p><strong>Write and consolidate</strong> —
+<code>src/diffmem/writer_agent/</code>,
+<code>src/diffmem/consolidator_agent/</code>,
+<code>src/diffmem/repo_manager.py</code>.</p>
+<p><strong>Schedule</strong> —
+<code>src/diffmem/executor/{base,factory,inline,hatchet,jobstore}.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown with frontmatter, one file per entity, under a pluggable
+ontology. The file is the current state; the commit graph is the
+history.</p>
+<p>There is no status field, no confidence, no supersession pointer and
+no tombstone — by design, because git carries the succession. A
+superseded fact is the previous revision of a line, and
+<code>git log -p</code> on the file is the belief history. That is
+elegant and it has one consequence worth stating: <strong>nothing on the
+read path knows a fact was recently corrected</strong>, because the
+retrieval agent greps the current file. History is available on demand
+and not consulted by default, so the agent sees the corrected value with
+no signal that it changed at all, unless it thinks to ask.</p>
+<p>The roadmap names the model's own failure mode, which is the kind of
+disclosure this atlas records:</p>
+<blockquote>
+<p>"Sometimes an entity will become a catch-all and the thing will
+insist in overloading it."</p>
+</blockquote>
+<p>Entity resolution collapsing everything into one popular node is a
+real and common failure, and it is on the public roadmap rather than in
+an issue nobody reads.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>An LLM writes shell commands. <code>grep</code> finds the current
+view; <code>git log</code>, <code>git diff</code>,
+<code>git blame</code> and <code>git show</code> reach into history;
+<code>awk</code>, <code>cut</code>, <code>sort</code>, <code>uniq</code>
+and <code>wc</code> shape the output. The router describes a "two-layer
+execution/presentation architecture inspired by the Manus/*nix agent
+pattern", and the presentation layer adds a binary-content check,
+elapsed milliseconds and the return code, so the model sees a bounded,
+labelled result rather than raw bytes.</p>
+<p>The advantages are real: no index to build or keep in sync, no
+embedding cost, no staleness between the store and its index, and a
+query language the model already knows. The cost is that recall depends
+on the model choosing good patterns — there is no semantic fallback when
+the right memory uses different words.</p>
+<p><code>baseline.py</code> beside <code>agent.py</code> suggests a
+non-agentic comparison path; no results comparing them were found.</p>
+<p><strong>Scope is the repository.</strong> One store per memory set;
+no scope key reaches a query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A writer agent edits the current-state files and commits; the commit
+<em>is</em> the differential. A consolidator agent runs dedupe, linking,
+reabsorption and redistribution — the test names are
+<code>test_consolidator_dedupe</code>,
+<code>test_consolidator_link</code>,
+<code>test_consolidator_reabsorb</code>,
+<code>test_consolidator_redistribute</code>,
+<code>test_consolidator_lock</code> — so the reorganisation is
+decomposed into named, individually tested passes, and it takes a
+lock.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A server, an HTTP API, Docker and a deploy directory, with the
+executor abstraction allowing the write and consolidate paths to run on
+Hatchet.</p>
+<p>The README names a production deployment — Annabelle, "a simulated
+intelligence that maintains persistent memory across thousands of
+conversations on WhatsApp and Messenger" — and links a companion
+repository showing DiffMem processing a novel chapter by chapter, which
+is a good way to let a reader see the output shape without running
+anything.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks.</strong> No trust state, no tombstone, no
+bitemporality as a queryable model, no scope key, no review surface, no
+committed exclusion case.</p>
+<p><strong>Audit log — withheld, and DiffMem is the purest case of the
+exclusion.</strong> The mark requires "a named append-only event record
+of memory mutations in the system's own store" and explicitly does not
+count git history. Here git history <em>is</em> the design, and it
+genuinely provides what an audit trail provides — <code>git blame</code>
+gives per-line authorship and time, <code>git log -p</code> gives every
+prior value. A reader should take the withheld mark as a definitional
+boundary rather than a criticism: this system has better memory-change
+provenance than several that carry the mark.</p>
+<p><strong>The sandbox has one gap, and it is the one this design shape
+always has.</strong></p>
+<p>Validation tokenises with <code>shlex.split</code> and checks the
+base command of every segment. Execution then does:</p>
+<pre class="python"><code>result = subprocess.run(cmd_str, shell=True, ...)</code></pre>
+<p>on the original pipeline string. So the validator's model of the
+command and the shell's model of it are different parsers, and anything
+the validator treats as an <em>argument</em> the shell may treat as
+<em>syntax</em>. Nothing in the router rejects command substitution —
+<code>$(…)</code> and backticks — or output redirection, and neither
+appears in the whitelist logic. A command whose base token is
+<code>grep</code> passes validation with an argument the shell will
+expand before <code>grep</code> ever runs.</p>
+<p><strong>Why this matters here specifically:</strong> the whole point
+of the retrieval agent is that an LLM composes these commands, and in
+the named production deployment the memory repository contains text from
+WhatsApp and Messenger conversations — content the operator does not
+author. A prompt-injection payload that reaches the model has a shell
+behind it.</p>
+<p>The fix is small and does not cost the design anything: reject
+<code>$(</code>, <code>`</code>, <code>&gt;</code>,
+<code>&gt;&gt;</code> and <code>&lt;</code> at validation time, or
+execute each validated segment with <code>shell=False</code> and wire
+the pipes in Python. The second is strictly better, because it removes
+the parser differential rather than patching it — the whitelist already
+produces the token lists it would need.</p>
+<p><code>tests/</code> has 22 files and <strong>none of them covers the
+command router</strong>. The rest of the system is tested per-pass; the
+security boundary is not.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no benchmark, no committed results.</strong> 22
+test files, most of them consolidator behaviours — dedupe, link,
+reabsorb, redistribute, lock — plus corporate and personal ontology
+end-to-end tests and a conformance module.</p>
+<p>Decomposing consolidation into named passes with a test each is good
+practice and it is where the testing effort went. What is not tested is
+retrieval quality — the central claim is that grep and git beat a vector
+store for this workload, and nothing measures it, including against the
+<code>baseline.py</code> sitting next to the agent.</p>
+<p><strong>I ran nothing</strong>, and in particular no command was
+executed against the router. The gap in section 9 is read from the
+source: the validator's <code>shlex</code> tokenisation against
+<code>subprocess.run(..., shell=True)</code> on the unmodified string,
+with no substitution or redirection check between them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the current state be small and put the history in the
+log.</strong> Query and search hit a compact "now" surface; "how did
+this change" pulls only the relevant commits. It is the
+log-and-projection pattern with git supplying the log.</li>
+<li><strong>Give an exploration agent a whitelist, not a shell.</strong>
+Thirteen commands with the base name taken via
+<code>Path(tokens[0]).name</code>, so <code>/bin/sh</code> cannot enter
+as a path.</li>
+<li><strong>Allowlist git's subcommands separately.</strong>
+<code>git</code> is a write primitive and a network client;
+<code>log</code>, <code>diff</code>, <code>blame</code>,
+<code>show</code>, <code>rev-list</code>, <code>shortlog</code> are
+not.</li>
+<li><strong>Validate every segment of a chain.</strong> Splitting on
+<code>|</code>, <code>&amp;&amp;</code>, <code>||</code> and
+<code>;</code> quote- and escape-aware, then checking each part, closes
+the gap where only the first command is inspected.</li>
+<li><strong>Add a presentation layer between the shell and the
+model.</strong> A binary-content check, the elapsed time and the return
+code turn raw output into something the model can reason about and
+cannot be flooded by.</li>
+<li><strong>Make the executor pluggable with a thunk.</strong> Endpoints
+close over the real call and hand a <code>Callable[[], dict]</code> to
+<code>submit_write</code>, so the queue backend and the memory internals
+stay decoupled and inline execution works in development.</li>
+<li><strong>Make the ontology configuration.</strong>
+<code>personal</code> and <code>corporate</code> as separate directories
+with a conformance check means the entity model is not a code
+change.</li>
+<li><strong>Decompose consolidation into named passes and test
+each.</strong> Dedupe, link, reabsorb, redistribute — and take a
+lock.</li>
+<li><strong>Put your known failure on the roadmap.</strong> "Sometimes
+an entity will become a catch-all and the thing will insist in
+overloading it" is the sentence a potential adopter needs.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not validate with one parser and execute with
+another.</strong> <code>shlex.split</code> for the check and
+<code>shell=True</code> for the run means arguments the validator
+approved can be syntax the shell expands. Either reject <code>$(</code>,
+backticks and redirection explicitly, or run each validated segment with
+<code>shell=False</code> and build the pipeline in Python.</li>
+<li><strong>Do not leave the security boundary untested.</strong> 22
+test files and none for the router is the wrong allocation when the
+router is what stands between an LLM and a shell.</li>
+<li><strong>Do not let corrections be invisible at read time.</strong>
+The current file shows the corrected value with no signal that it
+changed; history is available and not consulted by default.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A strong fit if your memory is genuinely a personal knowledge base
+that evolves — relationships, timelines, facts about people — and you
+want it human-readable, portable and diffable, with no index to
+maintain. The production deployment shows the shape works at
+conversational scale.</p>
+<p>Wrong fit if recall must survive vocabulary mismatch: there is no
+semantic fallback when the right memory uses different words from the
+query.</p>
+<p>Read <code>command_router.py</code> for the sandbox design and fix
+the execution call before you deploy it anywhere the memory content is
+not yours.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does anything upstream strip shell metacharacters?</strong>
+None was found in the retrieval agent.</li>
+<li><strong>What does <code>baseline.py</code> compare against, and how
+did it do?</strong> No results were found.</li>
+<li><strong>How is the catch-all entity problem being
+addressed?</strong> It is on the roadmap unassigned.</li>
+<li><strong>Does the writer agent ever rewrite history?</strong> The
+consolidator redistributes content between files; whether that rebases
+or only commits forward was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The sandbox</strong> —
+<code>src/diffmem/retrieval_agent/command_router.py</code> (the
+docstring and Manus/*nix framing <code>:1-7</code>,
+<code>WHITELISTED_COMMANDS</code> <code>:22-26</code>, the git-bash path
+resolution <code>:28-45</code>, <code>_is_text</code>
+<code>:74-85</code>, <code>_validate_command</code> with the basename
+check and the git-subcommand allowlist <code>:87-106</code>,
+<code>_split_pipeline</code> <code>:108-140</code>,
+<code>_split_chain</code> <code>:141-</code>,
+<code>_execute_pipeline</code> and the per-part validation
+<code>:221-245</code>, <code>shell=True</code> <code>:257</code>,
+<code>subprocess.run</code> <code>:265</code>,
+<code>_apply_presentation_layer</code> <code>:277</code>)</p>
+<p><strong>Retrieval</strong> —
+<code>src/diffmem/retrieval_agent/agent.py</code>,
+<code>resolver.py</code>, <code>baseline.py</code>,
+<code>prompts/</code></p>
+<p><strong>Write path</strong> — <code>src/diffmem/writer_agent/</code>,
+<code>src/diffmem/consolidator_agent/</code>,
+<code>src/diffmem/repo_manager.py</code>,
+<code>src/diffmem/frontmatter.py</code></p>
+<p><strong>Executor</strong> —
+<code>src/diffmem/executor/__init__.py</code> (the public surface
+<code>:1-11</code>), <code>base.py</code> (the thunk rationale
+<code>:1-9</code>), <code>factory.py</code>, <code>inline.py</code>,
+<code>hatchet.py</code>, <code>hatchet_worker.py</code>,
+<code>hatchet_workflows.py</code>, <code>jobstore.py</code></p>
+<p><strong>Ontologies</strong> — <code>ontologies/personal/</code>,
+<code>ontologies/corporate/</code>, <code>src/diffmem/ontology/</code>,
+<code>src/diffmem/conformance.py</code></p>
+<p><strong>Tests</strong> —
+<code>tests/test_consolidator_{dedupe,link,reabsorb,redistribute,lock,api,e2e}.py</code>,
+<code>tests/test_corporate_{e2e,ontology}.py</code></p>
+<p><strong>Documentation</strong> — <code>README.md</code> (the git
+rationale, the production deployment, the roadmap with the catch-all
+entity defect), <code>repo_guide.md</code>,
+<code>src/diffmem/CONTEXT.md</code>,
+<code>src/diffmem/executor/CONTEXT.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/growth-kinetics/diffmem/commit/5f00e8d22dc05fb1fc505f5322cb717de61bed3f"><code class="commit-id" title="5f00e8d22dc05fb1fc505f5322cb717de61bed3f">5f00e8d2…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no command was executed against the router. The section 9
+finding is read from the source.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

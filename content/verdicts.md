@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 223 reports.**
+**This page covers all 224 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["223 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["224 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1924,6 +1924,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 46 test files with nearly one per pipeline module, tests named for the behaviours they protect (`run.rewriteDryRun`, `run.retryBound`, `run.transcriptFilter`), a cheap-model-triage/expensive-model-distil split with cost tracking, and a TF-IDF fallback so it works before any model server is configured.
 - Study when: you mine an agent's own logs and have not checked how much of that history the user actually wrote.
 - Do not copy when: you need `confidence` to do anything at query time — it selects the top five for `sync-claude` and nothing else.
+
+### [`diffmem`](../systems/diffmem/)
+
+- Best idea: memory files hold only the current view so queries scan a compact surface, and every prior state lives in the commit graph — log-and-projection with git supplying the log, and `git blame` giving per-line provenance at no storage cost. Retrieval is an LLM issuing `grep`, `git log`, `git diff` and `git blame` behind a thirteen-command allowlist that validates every segment of a chain and gives `git` a second allowlist of read-only subcommands.
+- Biggest risk: validation tokenises with `shlex.split` and execution runs `subprocess.run(cmd_str, shell=True)` on the original string, with nothing rejecting `$(…)`, backticks or redirection — so an argument the validator approved can be syntax the shell expands. It matters here because an LLM composes the commands and, in the named production deployment, the repository holds text the operator did not author. None of the 22 test files covers the router.
+- Most reusable component: the pluggable executor — endpoints build a thunk closing over the real writer or consolidator call and hand it to `submit_write`, so the queue backend and the memory internals stay decoupled and inline execution still works in development.
+- Maturity impression: 14,800 lines with consolidation decomposed into named, individually tested passes under a lock, ontologies as swappable directories with a conformance module, a production deployment named, and a roadmap that lists its own entity-resolution failure — "sometimes an entity will become a catch-all and the thing will insist in overloading it".
+- Study when: you are about to build an index next to a store that git already versions.
+- Do not copy when: recall has to survive vocabulary mismatch — there is no semantic fallback when the right memory uses different words from the query.
+
 
 
 

@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 223 reports.</strong></p>
+<p><strong>This page covers all 224 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;223 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;224 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5638,6 +5638,41 @@ much of that history the user actually wrote.</li>
 <li>Do not copy when: you need <code>confidence</code> to do anything at
 query time — it selects the top five for <code>sync-claude</code> and
 nothing else.</li>
+</ul>
+<h3 id="diffmem"><a
+href="../systems/diffmem/"><code>diffmem</code></a></h3>
+<ul>
+<li>Best idea: memory files hold only the current view so queries scan a
+compact surface, and every prior state lives in the commit graph —
+log-and-projection with git supplying the log, and
+<code>git blame</code> giving per-line provenance at no storage cost.
+Retrieval is an LLM issuing <code>grep</code>, <code>git log</code>,
+<code>git diff</code> and <code>git blame</code> behind a
+thirteen-command allowlist that validates every segment of a chain and
+gives <code>git</code> a second allowlist of read-only subcommands.</li>
+<li>Biggest risk: validation tokenises with <code>shlex.split</code> and
+execution runs <code>subprocess.run(cmd_str, shell=True)</code> on the
+original string, with nothing rejecting <code>$(…)</code>, backticks or
+redirection — so an argument the validator approved can be syntax the
+shell expands. It matters here because an LLM composes the commands and,
+in the named production deployment, the repository holds text the
+operator did not author. None of the 22 test files covers the
+router.</li>
+<li>Most reusable component: the pluggable executor — endpoints build a
+thunk closing over the real writer or consolidator call and hand it to
+<code>submit_write</code>, so the queue backend and the memory internals
+stay decoupled and inline execution still works in development.</li>
+<li>Maturity impression: 14,800 lines with consolidation decomposed into
+named, individually tested passes under a lock, ontologies as swappable
+directories with a conformance module, a production deployment named,
+and a roadmap that lists its own entity-resolution failure — "sometimes
+an entity will become a catch-all and the thing will insist in
+overloading it".</li>
+<li>Study when: you are about to build an index next to a store that git
+already versions.</li>
+<li>Do not copy when: recall has to survive vocabulary mismatch — there
+is no semantic fallback when the right memory uses different words from
+the query.</li>
 </ul>
         </article>
       </div>

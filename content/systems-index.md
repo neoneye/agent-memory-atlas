@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **223 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **224 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -74,6 +74,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`deepcode`](../systems/deepcode/) **DeepCode** — Consolidation with no oracle · `HKUDS/DeepCode` · Scope enforced, Mutation audit, Negative evals
 - [`deer-flow`](../systems/deer-flow/) **DeerFlow** — The best-specified memory contract here · `bytedance/deer-flow` · Scope enforced, Human review
 - [`dexto`](../systems/dexto/) **Dexto** — CRUD, and no retrieval on purpose · `truffle-ai/dexto` · Human review
+- [`diffmem`](../systems/diffmem/) **DiffMem** — A whitelisted shell for the memory repo · `growth-kinetics/diffmem`
 ## E
 
 - [`ean-agentos`](../systems/ean-agentos/) **EAN AgentOS** — A fix that failed, ranked not removed · `eanai-ro/ean-agentos` · Scope enforced
