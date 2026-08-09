@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 210 reports.**
+**This page covers all 211 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["210 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["211 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1807,6 +1807,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 45,000 lines of TypeScript over one store interface with PGlite, SQLite and Postgres backends, 49 test files, local ONNX models, and five distinct forgetting mechanisms — salience filtering, staging, decay, eviction and retraction — where most systems here implement one.
 - Study when: your agent can correct a fact but everything it inferred from that fact stays untouched.
 - Do not copy when: you need the sequence of corrections — retraction writes `retracted_by` and `retracted_at` onto the row, so there is no append-only record of how memory reached its current state.
+
+### [`second-brain-cloudflare`](../systems/second-brain-cloudflare/)
+
+- Best idea: staleness as a property of the claim rather than the row's age. A durable/state/volatile classifier — birthdays and birthplaces against job titles and cities against meetings and deadlines — sets each memory's recency floor at 0.9, 0.6 or 0.15, on the stated reasoning that a decay bottoming out at a floor makes "recency a tie-breaker rather than a gate", so "a strong old match can no longer be buried under a fresh weak one". The classifier returns null when unsure.
+- Biggest risk: every system verdict lives in a caller-writable `tags[]` array, and the code documents two exploits of its own reserved namespace — a `Volatility:durable` tag that slipped past a case-sensitive filter and then won because the reader took the first match, and a junk `volatility:sometimes` that shadowed a real verdict. Both are fixed by hardening the readers; the namespace is still writable, in a system that ingests email.
+- Most reusable component: the re-embedding migration's reasoning that its obvious progress marker would lie. Vector ids are derived from entry id and chunk count, so re-embedding into a fresh index reproduces them byte-identically — an entry the migration never reached "reads as 'vectorized' in D1 while the live index holds nothing for it", and the repair prompt stays hidden. Hence a separate KV ledger.
+- Maturity impression: TypeScript on Workers, D1, Vectorize and KV with 125 test files, contradiction resolution that deprecates the loser *and* deletes its vectors from the index, and graph expansion tested to skip deprecated neighbours on the higher-weight edge.
+- Study when: one exponential decay is quietly vetoing facts that were never going to change.
+- Do not copy when: you need multi-user scoping — isolation here is one deployment per person, with no key on the read path.
+
 
 
 

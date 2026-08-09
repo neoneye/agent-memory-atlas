@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 210 reports.</strong></p>
+<p><strong>This page covers all 211 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;210 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;211 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5221,6 +5221,39 @@ from that fact stays untouched.</li>
 writes <code>retracted_by</code> and <code>retracted_at</code> onto the
 row, so there is no append-only record of how memory reached its current
 state.</li>
+</ul>
+<h3 id="second-brain-cloudflare"><a
+href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a></h3>
+<ul>
+<li>Best idea: staleness as a property of the claim rather than the
+row's age. A durable/state/volatile classifier — birthdays and
+birthplaces against job titles and cities against meetings and deadlines
+— sets each memory's recency floor at 0.9, 0.6 or 0.15, on the stated
+reasoning that a decay bottoming out at a floor makes "recency a
+tie-breaker rather than a gate", so "a strong old match can no longer be
+buried under a fresh weak one". The classifier returns null when
+unsure.</li>
+<li>Biggest risk: every system verdict lives in a caller-writable
+<code>tags[]</code> array, and the code documents two exploits of its
+own reserved namespace — a <code>Volatility:durable</code> tag that
+slipped past a case-sensitive filter and then won because the reader
+took the first match, and a junk <code>volatility:sometimes</code> that
+shadowed a real verdict. Both are fixed by hardening the readers; the
+namespace is still writable, in a system that ingests email.</li>
+<li>Most reusable component: the re-embedding migration's reasoning that
+its obvious progress marker would lie. Vector ids are derived from entry
+id and chunk count, so re-embedding into a fresh index reproduces them
+byte-identically — an entry the migration never reached "reads as
+'vectorized' in D1 while the live index holds nothing for it", and the
+repair prompt stays hidden. Hence a separate KV ledger.</li>
+<li>Maturity impression: TypeScript on Workers, D1, Vectorize and KV
+with 125 test files, contradiction resolution that deprecates the loser
+<em>and</em> deletes its vectors from the index, and graph expansion
+tested to skip deprecated neighbours on the higher-weight edge.</li>
+<li>Study when: one exponential decay is quietly vetoing facts that were
+never going to change.</li>
+<li>Do not copy when: you need multi-user scoping — isolation here is
+one deployment per person, with no key on the read path.</li>
 </ul>
         </article>
       </div>
