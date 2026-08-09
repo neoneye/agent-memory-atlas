@@ -19,7 +19,7 @@ python3 "$project_dir/scripts/generate_matrix.py"
 python3 "$project_dir/scripts/generate_index.py"
 
 rm -rf "$output_dir"
-mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/verdicts" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
+mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/verdicts" "$output_dir/build" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 
 cp "$project_dir/site/index.html" "$output_dir/index.html"
 # /discord.html is a redirect in front of the Discord invite, so the invite code
@@ -106,6 +106,7 @@ render_document "$project_dir/content/overview.md" "$output_dir/compare/index.ht
 render_document "$project_dir/content/systems-index.md" "$output_dir/a-z/index.html"
 render_document "$project_dir/content/patterns/index.md" "$output_dir/patterns/index.html"
 render_document "$project_dir/content/benchmarks.md" "$output_dir/benchmarks/index.html"
+render_document "$project_dir/content/build.md" "$output_dir/build/index.html"
 render_document "$project_dir/content/capabilities.md" "$output_dir/capabilities/index.html"
 render_document "$project_dir/content/verdicts.md" "$output_dir/verdicts/index.html"
 render_document "$project_dir/content/contributing.md" "$output_dir/contributing/index.html"

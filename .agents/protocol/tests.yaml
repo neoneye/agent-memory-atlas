@@ -194,7 +194,7 @@ tests:
 
   - id: deletion.absent_after_reindex_and_restart
     pattern: multiple
-    source: "content/benchmarks.md § 6 (ten-step deletion sequence, six-method adapter)"
+    source: "content/benchmarks.md § 6 (thirteen-step deletion sequence, six-method adapter)"
     proves: Deleted content stays absent across every path that could bring it back.
     spec:
       given: A memory written, settled, and present in a prompt prefix.
@@ -214,6 +214,35 @@ tests:
       when: The correction is applied and the index is rebuilt.
       then: Recall answers with the corrected value, the history is intact, and derived artifacts agree.
     not_proven: That the model uses the corrected value once retrieval returns both.
+
+  - id: correction.retraction_without_replacement
+    pattern: rejected-value-tombstone
+    source: "content/benchmarks.md § 7 (contradiction test, five case shapes)"
+    proves: A correction with no replacement value still takes effect.
+    spec:
+      given: A settled memory, and a user statement that retracts it without supplying a new value ("I misspoke, I do not have a sister").
+      when: The retraction is processed, then the original source material is re-fed and background jobs run.
+      then: The retracted value is absent from recall, and no newer fact was required to make that happen.
+    not_proven: >
+      That the retraction is durable across a prune. Pair with
+      tombstone.survives_ttl_and_prune. Split out of
+      correction.survives_reindex deliberately: the five-shape bundle can pass
+      on replacement alone, and this is the shape the benchmarks page expects to
+      fail almost everywhere, because recency has nothing to prefer.
+
+  - id: deletion.absent_from_shared_copies
+    pattern: multiple
+    source: "content/benchmarks.md § 6 (thirteen-step deletion sequence, six-method adapter)"
+    proves: Deleting an original reaches the copies made before the deletion.
+    spec:
+      given: A memory shared, exported or synced to a second scope, agent, tenant or hub while it was still live.
+      when: The original is deleted.
+      then: It is not retrievable from the second scope either, and the export or backup taken beforehand does not restore it.
+    not_proven: >
+      That a copy already delivered to a third party is recoverable. This
+      asserts about stores the system still controls. Separate from
+      deletion.absent_after_reindex_and_restart, which covers derived artifacts
+      inside one scope; a system routinely passes that and fails this.
 
   - id: retrieval.k_is_an_upper_bound
     pattern: gate-the-expensive-path

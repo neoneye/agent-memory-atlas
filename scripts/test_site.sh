@@ -8,6 +8,7 @@ required=(
   "$site_dir/index.html"
   "$site_dir/compare/index.html"
   "$site_dir/benchmarks/index.html"
+  "$site_dir/build/index.html"
   "$site_dir/capabilities/index.html"
   "$site_dir/patterns/index.html"
   "$site_dir/patterns/rejected-value-tombstone/index.html"

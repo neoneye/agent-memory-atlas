@@ -1361,7 +1361,7 @@ requires a small harness; none needs a new dataset.
 | Precision | Forbidden-hit rate: how often material that should not surface does | The half nobody reports |
 | Fidelity | Fraction of retrieved memories that survive into the actual prompt | Truncation silently eats what retrieval found |
 | Correction | The [contradiction test](#contradiction-test) matrix: cases against A/B/C/D/E | Turns "we support updates" into something that separates systems |
-| Deletion | Pass/fail on the ten-step sequence above | The compliance-relevant one |
+| Deletion | Pass/fail on the thirteen-step sequence above | The compliance-relevant one |
 | Cost (write) | Tokens per unit of material ingested | Scales with volume |
 | Cost (read) | Injected memory tokens per turn, and accuracy per thousand of them | The recurring cost, and the honest efficiency ratio |
 | Latency | Retrieval p50 and p99 | p50 alone hides the stalls |

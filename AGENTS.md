@@ -1,6 +1,6 @@
 # Working in this repository
 
-A code-grounded field guide to agent memory systems: 155 reports, each read at a
+A code-grounded field guide to agent memory systems: 238 reports, each read at a
 pinned commit, plus 21 design patterns extracted from them.
 
 There are two jobs here, and they use different parts of the repo.
@@ -14,7 +14,7 @@ this section as a workflow: read the target repository, pick a profile, write a
 build brief, stop for approval, implement in an order where each stage stands
 alone, then run the tests by id. The rest of this section is what it is built on.
 
-**Do not read the reports.** There are 155 of them and reading widely is how an
+**Do not read the reports.** There are hundreds and reading widely is how an
 agent ends up recommending the most interesting mechanism instead of the smallest
 sufficient one. Read five things, in this order.
 
@@ -39,7 +39,7 @@ sufficient one. Read five things, in this order.
    its own; vector search and model-based extraction come last, deliberately.
 
 5. **[`content/benchmarks.md`](content/benchmarks.md) §6 and §7** when you need
-   tests: a ten-step deletion sequence with a six-method adapter, and a
+   tests: a thirteen-step deletion sequence with a six-method adapter, and a
    contradiction test with five case shapes. Both are specified in enough detail
    to implement and neither has been run by this project.
 
@@ -69,7 +69,7 @@ you are borrowing.
 - **Never cite stars, downloads or adoption** as evidence about a mechanism.
   This project has a standing rule against it and a note explaining what it cost
   to learn.
-- **Counts are generated.** Anything of the form "9 of 155" comes from report
+- **Counts are generated.** Anything of the form "9 of 238" comes from report
   frontmatter. Do not hand-copy a count into new prose; link to the
   [capability index](content/capabilities.md) instead. If you copy one anyway,
   `scripts/check_claim_counts.py` will catch it when it goes stale.

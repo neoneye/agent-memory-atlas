@@ -34,7 +34,14 @@ import sys
 from pathlib import Path
 
 CATALOGUE = ".agents/protocol/tests.yaml"
-TEMPLATES = [".agents/protocol/build-brief.md", ".agents/skills/use-the-atlas/SKILL.md"]
+TEMPLATES = [
+    ".agents/protocol/build-brief.md",
+    ".agents/skills/use-the-atlas/SKILL.md",
+    # The published build path lists test ids in a table. It is checked with the
+    # agent-facing templates so a renamed id cannot go stale on the website
+    # while staying correct in the catalogue.
+    "content/build.md",
+]
 REQUIRED = ("pattern", "source", "proves", "spec", "not_proven")
 SPEC_KEYS = ("given", "when", "then")
 #: A bare hex run long enough to be a commit. Templates must use a placeholder:

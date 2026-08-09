@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The route from "my agent needs
+memory" to a specification you can implement — pick the profile, build
+in an order where each stage stands alone, and verify with named
+acceptance tests that each state what a pass does not prove.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Build a Memory
+System — Agent Memory Atlas">
+    <meta property="og:description" content="The route from "my agent
+needs memory" to a specification you can implement — pick the profile,
+build in an order where each stage stands alone, and verify with named
+acceptance tests that each state what a pass does not prove.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Build a Memory
+System — Agent Memory Atlas">
+    <meta name="twitter:description" content="The route from "my agent
+needs memory" to a specification you can implement — pick the profile,
+build in an order where each stage stands alone, and verify with named
+acceptance tests that each state what a pass does not prove.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Build a Memory System — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/main.css">
+  </head>
+  <body class="document-page" data-root="..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../#systems">Systems</a>
+        <a href="../a-z/">A–Z</a>
+        <a href="../build/">Build</a>
+        <a href="../patterns/">Patterns</a>
+        <a href="../capabilities/">Capabilities</a>
+        <a href="../verdicts/">Verdicts</a>
+        <a href="../compare/">Compare</a>
+        <a href="../benchmarks/">Benchmarks</a>
+        <a href="../methodology/atlas-rubric/">Rubric</a>
+        <a href="../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The paved path</p>
+          <h1>Build a Memory System</h1>
+          <p class="document-deck">The route from "my agent needs
+memory" to a specification you can implement — pick the profile, build
+in an order where each stage stands alone, and verify with named
+acceptance tests that each state what a pass does not prove.</p>
+                                      </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<p>The rest of this site is a comparison. This page is the route through
+it.</p>
+<p>It exists because the material a builder needs was spread across four
+documents and two files that were never published, so the only way to
+get from <em>my agent needs memory</em> to <em>here is what I should
+implement</em> was to read a comparative report end to end and
+synthesise it yourself. Everything below already existed; what is new is
+the order, and the fact that you can now reach it.</p>
+<p><strong>Read <a href="#what-this-page-does-not-give-you">what this
+page does not give you</a> before you rely on it.</strong> Nothing here
+has been run against a working system by this project, and the page says
+so in the places where the omission matters.</p>
+<pre class="mermaid"><code>flowchart TD
+    Q[&quot;Does anything need to survive the session?&quot;]
+    Q --&gt;|&quot;no&quot;| STOP[&quot;Build nothing.&lt;br/&gt;A prompt and a scratchpad are the answer&quot;]
+    Q --&gt;|&quot;yes&quot;| P[&quot;1 · Pick the profile&lt;br/&gt;from the failure that hurts&quot;]
+    P --&gt; B[&quot;2 · Write the brief&lt;br/&gt;and stop for approval&quot;]
+    B --&gt; S[&quot;3 · Build in stages&lt;br/&gt;each one useful alone&quot;]
+    S --&gt; T[&quot;4 · Verify by test id&lt;br/&gt;each says what it does not prove&quot;]
+    T --&gt;|&quot;a test fails&quot;| S
+    T --&gt; C[&quot;5 · Close it out&lt;br/&gt;what is closed, what is open, what was deferred&quot;]</code></pre>
+<h2 id="1-pick-the-profile-from-the-failure-not-the-mechanism">1. Pick
+the profile from the failure, not the mechanism</h2>
+<p><strong>Start from the failure your product cannot tolerate.</strong>
+Starting from the mechanism that sounds most rigorous is how a
+single-user note-taker acquires a tombstone it will never need, and the
+cost lands on whoever maintains it.</p>
+<p>Two routers do this job, both on the pattern index:</p>
+<ul>
+<li><strong><a href="../patterns/#how-to-use-the-library">How to use the
+library</a></strong> — a list of symptoms, each pointing at the pattern
+that closes it. <em>Wrong facts return after correction. Memory cannot
+be audited. Memories leak across projects. Retrieval repeats one
+document.</em> Find yours and follow the link.</li>
+<li><strong><a
+href="../patterns/#stacks-by-what-you-are-building">Stacks, by what you
+are building</a></strong> — five product shapes, each naming the failure
+that actually hurts for that shape and the two or three patterns that
+close it. Single-user tool, multi-tenant, companion or roleplay, an
+autonomous agent that acts, and memory that must be correctable and
+defensible.</li>
+</ul>
+<p>Patterns fail at their intersections rather than one at a time, which
+is why the unit is a stack. A rejected-value tombstone is decorative if
+three ungoverned write paths bypass the check. Hybrid retrieval is
+actively dangerous without scope as a key, because better recall means a
+wider blast radius when the boundary is missing.</p>
+<p><strong>The correctable stack is not the default.</strong> Scope,
+evidence, a governed gateway and a tombstone are the answer for memory
+that must be defensible under a correction. Most products are not that,
+and the pattern index says so in its own words.</p>
+<h3 id="the-question-before-all-of-them">The question before all of
+them</h3>
+<p>Does anything need to survive the session at all? If the answer is
+that the model needs the right things <em>in this conversation</em>,
+that is context assembly and not memory, and the smallest honest answer
+is a prompt and a scratchpad. The atlas keeps a <a
+href="../compare/#not-in-scope-conversation-window-management">scope
+boundary</a> for exactly this case, because the two get conflated
+constantly and the second one costs an order of magnitude more to
+build.</p>
+<h2 id="2-write-the-brief-then-stop">2. Write the brief, then stop</h2>
+<p>Before any code: one page saying what is being built, which failure
+each part closes, and <strong>what is being deferred and why</strong>.
+The deferral list is the part worth more later than the code you write
+instead — it is the difference between a system that lacks a tombstone
+and a system whose author decided it did not need one.</p>
+<p>The format is in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/.agents/protocol/build-brief.md"><code>.agents/protocol/build-brief.md</code></a>:
+the brief, a closure report, and a lock file recording which atlas pages
+the decisions came from. It is written for an agent and reads fine as a
+checklist.</p>
+<p>Stop here for a human decision. A memory layer is a schema plus a set
+of irreversible commitments about deletion and correction; those are
+cheap to change on one page and expensive to change afterwards.</p>
+<h2 id="3-build-in-an-order-where-each-stage-stands-alone">3. Build in
+an order where each stage stands alone</h2>
+<p>Taken from <a href="../compare/#8-what-i-would-build">§8 <em>What I
+Would Build</em></a>, which carries the table-level schema, the
+four-state status enum, the ten-step write path, the seven-step
+retrieval path and the context-assembly rules. The staging matters more
+than the schema: <strong>vector search and model-based extraction come
+last, deliberately</strong>, because a system that stores raw evidence
+and searches it lexically already works, and a system that starts with
+extraction has no floor to fall back to when extraction is wrong.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>What it adds</th>
+<th>What works at the end of it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Raw evidence stored before any model call, deterministic chunking,
+scope applied as a read filter, lexical search</td>
+<td>A memory that never loses material and never leaks across
+scopes</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Derived claims with append-only provenance rows, a discrete status,
+supersession</td>
+<td>Claims you can trace back to what they came from</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Vector search fused with lexical, token-budgeted context assembly,
+recall fenced as data</td>
+<td>Retrieval that finds paraphrases without displacing the evidence
+floor</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Correction that survives a rebuild, a mutation audit, background
+jobs behind clear synchronous semantics</td>
+<td>A correction you can prove held</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Rejected-value tombstones, human review, bi-temporal validity,
+negative tests in CI</td>
+<td>Memory that stays corrected through re-extraction</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>What is safe to defer, stated plainly</strong>, from the
+pattern index: bi-temporal validity, hybrid retrieval fusion, decay and
+reinforcement, and source-diverse context are all improvements to memory
+that already works. None of them prevents a silent failure. Stage 5 is
+where the deferrals stop being safe, and only for the products whose
+profile put them there.</p>
+<p>Operational rules that belong at the stage they apply to, from <a
+href="../compare/#10-practical-checklist-for-your-own-system">§10</a>:
+keep local state inspectable while developing, use transactional storage
+for primary state and reserve flat JSON for exports, add background
+workers only once synchronous semantics are settled, version schemas
+from the start, and provide a repair/reindex path before you need
+one.</p>
+<h2 id="4-verify-by-test-id">4. Verify by test id</h2>
+<p>Twenty acceptance tests are specified in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/.agents/protocol/tests.yaml"><code>.agents/protocol/tests.yaml</code></a>,
+each with a stable id, a given/when/then specification against your own
+API, the atlas page it was derived from, and — the field that matters
+most — <strong>what a pass does not prove</strong>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Id</th>
+<th>Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scope.cross_tenant_absent</code></td>
+<td>A memory written under one scope is never returned under
+another</td>
+</tr>
+<tr>
+<td><code>scope.caller_cannot_widen</code></td>
+<td>A caller cannot reach another scope by passing a different
+argument</td>
+</tr>
+<tr>
+<td><code>scope.background_respects_boundary</code></td>
+<td>Consolidation does not summarise across a boundary retrieval
+enforces</td>
+</tr>
+<tr>
+<td><code>evidence.claim_resolves_to_source</code></td>
+<td>Every derived claim resolves to the material it came from</td>
+</tr>
+<tr>
+<td><code>evidence.source_delete_reaches_derived</code></td>
+<td>Deleting a source reaches everything derived from it</td>
+</tr>
+<tr>
+<td><code>evidence.rebuild_from_retained</code></td>
+<td>The derived layer can be rebuilt from what was kept</td>
+</tr>
+<tr>
+<td><code>gateway.no_bypass_path</code></td>
+<td>No write path reaches the store around the gate</td>
+</tr>
+<tr>
+<td><code>gateway.model_cannot_claim_human_authority</code></td>
+<td>A model cannot write at the authority reserved for a person</td>
+</tr>
+<tr>
+<td><code>tombstone.laundering_sequence</code></td>
+<td>Reject, supersede, restate — the value does not come back</td>
+</tr>
+<tr>
+<td><code>tombstone.survives_ttl_and_prune</code></td>
+<td>The rejection outlives the pruning that deletes ordinary rows</td>
+</tr>
+<tr>
+<td><code>tombstone.key_normalization_attack</code></td>
+<td>A unicode look-alike does not slip past the check</td>
+</tr>
+<tr>
+<td><code>tombstone.reextraction_stays_inactive</code></td>
+<td>Re-extracting the same source does not re-assert a rejected
+value</td>
+</tr>
+<tr>
+<td><code>tombstone.no_second_memory_unit</code></td>
+<td>The rejection is not itself a memory that can be retrieved</td>
+</tr>
+<tr>
+<td><code>correction.survives_reindex</code></td>
+<td>A correction holds through a rebuild, across five case shapes</td>
+</tr>
+<tr>
+<td><code>correction.retraction_without_replacement</code></td>
+<td>A retraction with no replacement value still takes effect</td>
+</tr>
+<tr>
+<td><code>deletion.absent_after_reindex_and_restart</code></td>
+<td>Deleted content stays absent across every path that could restore
+it</td>
+</tr>
+<tr>
+<td><code>deletion.absent_from_shared_copies</code></td>
+<td>Deleting an original reaches copies made before the deletion</td>
+</tr>
+<tr>
+<td><code>retrieval.k_is_an_upper_bound</code></td>
+<td>A system reporting <code>@k</code> scores exactly the first
+<em>k</em> results</td>
+</tr>
+<tr>
+<td><code>prompt.recall_is_fenced_as_data</code></td>
+<td>Recalled text is fenced as data, not as instructions</td>
+</tr>
+<tr>
+<td><code>prompt.model_ignores_embedded_instructions</code></td>
+<td>An instruction stored in a memory does not execute on recall</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two are worth singling out because they are the ones a bundled suite
+passes without noticing.
+<strong><code>correction.retraction_without_replacement</code></strong>
+covers the case where a user says <em>"I misspoke"</em> and supplies
+nothing in its place: there is no newer fact for recency to prefer, so a
+system with no negative memory has nothing to work with, and the <a
+href="../benchmarks/#7-the-contradiction-test">contradiction test</a>
+expects this row to fail almost everywhere.
+<strong><code>deletion.absent_from_shared_copies</code></strong> covers
+deleting an original after it was exported, synced or shared to a second
+scope — a different failure from derived artifacts inside one scope, and
+one a system routinely passes the first while failing the second.</p>
+<p>For the full versions, <a
+href="../benchmarks/#6-does-anything-benchmark-forgetting">benchmarks
+§6</a> carries the thirteen-step deletion sequence with a six-method
+adapter contract, and <a
+href="../benchmarks/#7-the-contradiction-test">§7</a> the contradiction
+test with its five case shapes.</p>
+<h2 id="5-close-it-out">5. Close it out</h2>
+<p>A closure report naming what is closed, what is open, and what was
+deferred with the reason. Not a conformance statement: this project
+certifies nothing, and a list of which failure modes you closed is more
+useful to the next maintainer than a badge would be.</p>
+<p>If you publish numbers, <a
+href="../benchmarks/#8-a-scorecard-worth-publishing">benchmarks §8</a>
+gives the eleven axes worth reporting — including the four nobody
+reports: forbidden-hit rate, the fraction of retrieved memories that
+survive into the actual prompt, write-to-readable lag, and index bytes
+as a multiple of source bytes. Two rules go with them. Assert the
+cutoff, because a <code>@k</code> figure that scores more than
+<em>k</em> results is not measuring what it says. And commit the
+results, not just the harness — a reproducible harness with no committed
+output reads as measured and is not.</p>
+<h2 id="what-this-page-does-not-give-you">What this page does not give
+you</h2>
+<p>Stated here rather than discovered later, because the gaps are as
+load-bearing as the content.</p>
+<ul>
+<li><strong>Nothing is runnable.</strong> The twenty tests are
+language-independent specifications, not executable fixtures. There is
+no adapter you can install and no suite you can point at your system.
+Turning each <code>given/when/then</code> into a test in your own stack
+is an afternoon; the atlas has not done it for you.</li>
+<li><strong>The atlas has run none of them against anything.</strong>
+Every specification here was derived from reading code, and no system in
+the corpus has been put through the deletion sequence by this project. A
+test's presence in the catalogue is an argument that it is worth
+running, not evidence that anything passed it.</li>
+<li><strong>There is no reference implementation.</strong> §8 is a
+specification at the level of tables, states and path ordering. It does
+not carry API signatures, idempotency or concurrency rules, or
+index-rebuild semantics, and no worked end-to-end design exists for any
+of the five profiles.</li>
+<li><strong>There are no operating numbers.</strong> The scorecard names
+the axes worth measuring — write cost, read cost, retrieval p50 and p99,
+write-to-readable lag, bytes per memory. It cannot tell you what to
+expect, because almost nothing in the corpus publishes them and this
+project has measured none of them itself. Inventing the figures would be
+worse than the gap.</li>
+</ul>
+<h2 id="if-you-are-an-agent">If you are an agent</h2>
+<p>The workflow above is packaged as a skill: <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/.agents/skills/use-the-atlas/SKILL.md"><code>.agents/skills/use-the-atlas/</code></a>.
+It runs in one of four modes — decide, design, review, build — and only
+the last one writes code, after its own approval step. It also carries
+the instruction this page opens with: <strong>do not read the
+reports.</strong> There are hundreds, and reading widely is how an agent
+ends up recommending the most interesting mechanism instead of the
+smallest sufficient one. Read a system report only when a pattern page
+cites it for the exact mechanism you are borrowing.</p>
+<p><code>scripts/check_protocol.py</code> validates the test catalogue
+against the pages it cites and runs in the site's own test suite, so a
+test whose source argument changes goes stale visibly rather than
+quietly.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../patterns/">Design patterns</a>
+        <a href="../capabilities/">Capability index</a>
+        <a href="../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../compare/">Comparative report</a>
+        <a href="../benchmarks/">Benchmarking memory</a>
+        <a href="../methodology/per-repo-report-format/">Review method</a>
+        <a href="../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../assets/main.js"></script>
+  </body>
+</html>
