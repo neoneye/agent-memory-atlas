@@ -381,3 +381,43 @@ and a third instance would make it stronger.
 
 Thirty-five entries read, four reports.
 
+### Batch 8 — a recipe, a repository already covered, and a closed CLI
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| **`lucasrosati/claude-code-memory-setup`** | `c5f2e0b5` | **Report written** — [claude-code-memory-setup](../content/systems/claude-code-memory-setup.md) |
+| `getzep/zep` | `ba4fc3cc` | Out of scope: already dispositioned. The engine is [Graphiti](../content/systems/graphiti.md); this tree is examples, integrations, ingestion, benchmarks and a `legacy` directory |
+| `oanhduong/token-ninja` | `79897edf` | Out of scope: one `UserPromptSubmit` hook that runs deterministic commands locally instead of letting the model call them. Nothing is stored |
+| `google-antigravity/antigravity-cli` | `1d853acd` | **Ignored by instruction**: 15 files, a `CHANGELOG.md`, a demo GIF and examples, with no licence file. The CLI itself is closed source, which the list's own *Market Competitors* entry says outright |
+| `musistudio/claude-code-router` | `47f36494` | Out of scope: a routing gateway. Its own list entry warns that routing scripts run as fully trusted code beside your credentials |
+
+The `getzep/zep` disposition is a repeat, and worth naming as one: the same
+repository was dispositioned the same way in
+[the seventy-one-repository pass](2026-08-09-seventy-one-repositories-from-an-outside-corpus.md),
+which is what a second corpus overlapping the first looks like.
+
+**claude-code-memory-setup is a recipe and gets a report anyway**, because the
+importer is a real capture path and because of what it does at the end of it.
+`insert_wikilinks` gathers every note name in the Obsidian vault, drops names
+under four characters, sorts longest-first so a longer name beats a shorter one it
+contains, splits the body on code fences with a capturing regex so code survives
+untouched, and links the **first occurrence only** of each name behind a guard
+that refuses to re-wrap an existing `[[link]]`. A new note joins the graph and
+nobody curated it.
+
+Read against [Serena](../content/systems/serena.md) from the batch before, this is
+the same problem with the opposite risk posture. Serena detects a bare name that
+should be a link and *warns*, graded by confidence, behind a similarity threshold
+with a test on each side and an ignore list for words that are also English.
+This *rewrites*, silently, into the note body, with a length floor as the only
+guard — four characters removes `api` and keeps `test`, `error` and `database` —
+and deletes the original export if `--move` was passed. Two independent arrivals
+at wikilink-style memory, one cautious and one not, is the third data point the
+pattern proposal from batch 7 was waiting for.
+
+Its README leads with *"71.5x fewer tokens per session"*. Nothing in the
+repository produces, measures or records that; the token argument belongs to
+Graphify — which the atlas already reports — and to not re-reading files.
+
+Forty entries read, five reports.
+

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 242 reports.**
+**This page covers all 243 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["242 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["243 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2095,4 +2095,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Oraios AI, 1,218 lines for the memory subsystem inside a 1,048-file toolkit whose other half is language-server code navigation. 55 tests in `test_memories_manager.py`, five of them sandbox-escape cases with a comment explaining the exact `pathlib` behaviour they defend against — joining an absolute path discards the base — and most of the rest are similarity-threshold cases named after the false positive they prevent. What no test covers is that an `ignored_memory_patterns` memory stays out of `list_memories`.
 - Study when: your memory is documents rather than facts, and you have never checked whether the pointers between them still resolve.
 - Do not copy when: you need retrieval. There is none — names are listed at activation and the model reads by judgement or follows a link — so a store large enough that navigation fails has no fallback.
+
+### [`claude-code-memory-setup`](../systems/claude-code-memory-setup/)
+
+- Best idea: linking on the way in. `insert_wikilinks` gathers every vault note name, sorts longest-first so a longer name beats a shorter one it contains, splits the body on code fences with a capturing regex so code survives untouched, and links the first occurrence only of each name with a guard that refuses to re-wrap an existing `[[link]]`. A new note arrives already connected and nobody maintained the connections.
+- Biggest risk: that rewrite is silent, irreversible and guarded only by a four-character name floor — which removes `api` and keeps `test`, `error` and `database`. With `--move` the original export is deleted, and because links are derived from whatever the vault contained at import time, the graph is a function of import order and re-deriving it means overwriting any edits made since.
+- Most reusable component: `SHORT_KEYWORDS`, ten of the sixty-six keyword-map entries held back to whole-word matching while the rest match as substrings. Splitting a keyword table by how dangerous each entry is costs nothing and almost nobody does it.
+- Maturity impression: six files, MIT, one commit dated 1 June 2026, standard library only, no tests and no CI. Three implemented behaviours — code-fence skipping, no double-wrapping, longest-name-first — are pinned by nothing. The README's headline, "71.5x fewer tokens per session", is not produced or measured by anything in the repository; the token argument belongs to Graphify and to not re-reading files.
+- Study when: you keep an Obsidian vault and want your agent's history to land in it tagged and connected, and you are happy for that to be a command you run.
+- Do not copy when: you need memory to be selective. Everything is kept verbatim, the vault grows with every session, and nothing in the design has an opinion about what mattered.
 

@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A 638-line guide and a 387-line
+importer that turn exported Claude Code transcripts into a tagged
+Obsidian vault, inserting wikilinks to existing notes as it writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="claude-code-memory-setup — Agent Memory Atlas">
+    <meta property="og:description" content="A 638-line guide and a
+387-line importer that turn exported Claude Code transcripts into a
+tagged Obsidian vault, inserting wikilinks to existing notes as it
+writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="claude-code-memory-setup — Agent Memory Atlas">
+    <meta name="twitter:description" content="A 638-line guide and a
+387-line importer that turn exported Claude Code transcripts into a
+tagged Obsidian vault, inserting wikilinks to existing notes as it
+writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>claude-code-memory-setup — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A recipe that links notes on the way in</p>
+          <h1>claude-code-memory-setup</h1>
+          <p class="document-deck">A 638-line guide and a 387-line
+importer that turn exported Claude Code transcripts into a tagged
+Obsidian vault, inserting wikilinks to existing notes as it writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lucasrosati/claude-code-memory-setup">
+              <span>Source</span>
+              <strong>lucasrosati/claude-code-memory-setup</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">
+              <span>Analyzed revision</span>
+              <code>c5f2e0b5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (53%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is a <strong>recipe</strong>, not a library: a README of 638
+lines, a 387-line Python importer, and a 46-line shell wrapper. It
+exists to solve the two problems its first section names — <em>"Amnesia
+between sessions"</em> and codebase re-reading — by pairing an Obsidian
+Zettelkasten vault as durable memory with <a
+href="../../systems/graphify/">Graphify</a>, which the atlas already
+covers, as the code index.</p>
+<p>The part worth reading is <code>scripts/claude_to_obsidian.py</code>.
+It takes exported Claude Code chats, strips any existing frontmatter,
+infers an origin (<code>code</code> or <code>web</code>), derives tags
+from a 66-entry keyword map, stamps a created date from the file's
+mtime, and files the note under <code>chats/&lt;origin&gt;/</code>.
+Then, before writing, it <strong>inserts <code>[[wikilinks]]</code> to
+existing vault notes into the body</strong>.</p>
+<p>That last step is the mechanism. <code>collect_vault_notes</code>
+gathers every note name in the vault, filters names shorter than four
+characters, and sorts longest-first so a longer name wins over a shorter
+one it contains. <code>insert_wikilinks</code> splits the body on code
+fences and inline code, skips those segments, and links the
+<strong>first occurrence only</strong> of each name, with a pattern that
+refuses to wrap a name already inside <code>[[…]]</code>. A new note
+therefore arrives already connected to the graph, and nobody had to
+maintain the connections.</p>
+<p>Set beside <a href="../../systems/serena/">Serena</a>, which reads
+the same problem from the other end, the contrast is the useful part.
+Serena <em>warns</em> about a bare memory name that should have been a
+link, grades the warning by confidence, keeps a similarity threshold
+with a test on each side of it, and hard-codes an ignore list for names
+that are also English words. This <em>rewrites</em>, immediately, with a
+four-character length floor as the only guard. A vault containing a note
+called <code>test</code> or <code>python</code> will have the first
+prose occurrence of that word in every imported chat turned into a link
+to it, and the original export is deleted if <code>--move</code> was
+passed.</p>
+<p>Where it is weakest is the claim on the tin. The README's headline is
+<em>"71.5x fewer tokens per session"</em>, and nothing in this
+repository produces, measures or records that figure — the token
+argument belongs to Graphify and to not re-reading files, neither of
+which this code touches.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a whole conversation, kept verbatim,
+decorated</strong>. There is no extraction: nothing summarises the chat,
+nothing pulls a fact out of it, nothing decides that one exchange
+mattered and another did not. What the importer adds is a frontmatter
+block and a set of outbound links.</p>
+<p>The state machine has two states and one transition:</p>
+<ul>
+<li><strong>Exported.</strong> A Markdown file sitting in an export
+directory, produced by whatever Claude Code export the user ran.</li>
+<li><strong>Filed.</strong> The same content, plus frontmatter, plus
+wikilinks, written under <code>chats/code/</code> or
+<code>chats/web/</code>. With <code>--move</code>, the export is
+unlinked.</li>
+</ul>
+<p>There is no third state. Nothing supersedes, expires, decays or gets
+rejected. A note is corrected by editing it in Obsidian and forgotten by
+deleting the file, and neither leaves a record. Re-running the importer
+over the same export overwrites the destination and re-derives the links
+from whatever the vault contains at that moment, so the link set is a
+function of import order rather than of content — the same chat imported
+before and after a note exists gets different links.</p>
+<p>Control is entirely the user's. The model never writes here; it reads
+a vault that a person populated by running a script.</p>
+<p>The interesting epistemic position is that this design
+<strong>refuses to decide what matters</strong>. Everything is kept, and
+the finding is delegated to Obsidian's search, its graph view, and the
+links the importer guessed. That is a coherent bet — it cannot lose
+information to a bad extractor — and the cost is that the vault grows
+with every session and nothing ever prunes it.</p>
+<pre class="mermaid"><code>flowchart TD
+    E[&quot;exported chat .md&quot;] --&gt; S[&quot;strip existing frontmatter&quot;]
+    S --&gt; O[&quot;detect origin: code | web&quot;]
+    O --&gt; T[&quot;extract_tags: 66-entry keyword map&lt;br/&gt;whole-word match for 10 short keys&quot;]
+    T --&gt; V[&quot;collect_vault_notes:&lt;br/&gt;names &gt;= 4 chars, longest first&quot;]
+    V --&gt; L[&quot;insert_wikilinks:&lt;br/&gt;skip code fences, first occurrence only,&lt;br/&gt;never re-wrap an existing [[link]]&quot;]
+    L --&gt; F[&quot;frontmatter + rewritten body&quot;]
+    F --&gt; W[&quot;vault/chats/&amp;lt;origin&amp;gt;/name.md&quot;]
+    E -.-&gt;|&quot;--move: original unlinked&quot;| X[&quot;gone&quot;]
+    W --&gt; R[&quot;Obsidian search, graph view,&lt;br/&gt;or the agent reading the vault&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six files. <code>scripts/claude_to_obsidian.py</code> is the whole
+implementation; <code>scripts/sync_claude_obsidian.sh</code> is a
+46-line convenience wrapper; the rest is the guide in English and
+Portuguese, a licence, and a scripts README.</p>
+<p>There is no service, no database, no index and no dependency beyond
+the Python standard library. Persistence is the Obsidian vault, which is
+a directory of Markdown.</p>
+<p>The two components the guide leans on are <em>not</em> in this
+repository. Obsidian is a third-party application. Graphify is a
+separate project with <a href="../../systems/graphify/">its own report
+here</a>, and the README's Part 3 is installation and usage instructions
+for it. What this repository contributes is Part 2, the import
+pipeline.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Python 3 and a text editor. Nothing runs in the background, no key is
+required, and everything is offline. First run is one command with
+<code>--export-dir</code> and <code>--vault-dir</code>, and
+<code>--dry-run</code> prints what would happen without touching
+anything — which is the right default to offer for a script whose main
+action is rewriting files.</p>
+<p>The store is as inspectable and repairable as it gets: Markdown a
+person already opens daily in a note-taking application. That is the
+strongest argument for this whole shape, and it is why the atlas keeps
+finding it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> is external. The guide instructs the user to
+export chats; the importer starts from files that already exist.</p>
+<p><strong>Origin detection</strong> —
+<code>detect_origin(filepath, content)</code> decides <code>code</code>
+or <code>web</code> from the path and the content, or is overridden by
+<code>--origin</code>.</p>
+<p><strong>Tagging</strong> — <code>extract_tags(content)</code> scans
+for the 66 keys of <code>KEYWORD_TAG_MAP</code>, which maps several
+spellings onto one tag (<code>gpt</code>, <code>claude</code> and
+<code>llm</code> all produce <code>llm</code>; <code>postgres</code> and
+<code>mongodb</code> both produce <code>database</code>). Ten short keys
+— <code>sql</code>, <code>llm</code>, <code>gpt</code>,
+<code>rag</code>, <code>nlp</code>, <code>git</code>, <code>api</code>,
+<code>rest</code>, <code>aws</code>, <code>gcp</code> — are held in
+<code>SHORT_KEYWORDS</code> and matched only as whole words, which is a
+deliberate false-positive guard on exactly the entries that would
+otherwise fire inside other words.</p>
+<p><strong>Link insertion</strong> —
+<code>collect_vault_notes(vault_dir)</code> walks the vault with
+<code>rglob</code>, skips any path component beginning with a dot, drops
+names under four characters, and sorts by descending length.
+<code>insert_wikilinks(body, vault_notes)</code> splits on
+<code>```…```</code> and <code>`…`</code> with a capturing regex so the
+code segments survive in the output, skips any part starting with a
+backtick, and for each note runs a case-insensitive word-boundary search
+with a <code>(?&lt;!\[\[)</code> / <code>(?!\]\])</code> guard,
+replacing the first hit and recording the name in a <code>linked</code>
+set so it is not linked twice in the same note.</p>
+<p><strong>Write</strong> — <code>process_file</code> composes
+<code>build_frontmatter(title, tags, origin, created)</code> with the
+rewritten body, creates <code>vault/chats/&lt;origin&gt;/</code>,
+writes, and unlinks the source when <code>--move</code> was given.</p>
+<p>There are no tests. There is no test directory, no CI configuration,
+and no assertion anywhere in the tree.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a Markdown file. Its metadata is the frontmatter the
+importer builds:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>the export file's stem</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>keyword map hits over the whole content</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td><code>code</code> or <code>web</code>, inferred or forced</td>
+</tr>
+<tr>
+<td><code>created</code></td>
+<td>the export file's mtime, formatted <code>%Y-%m-%d</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Using mtime for <code>created</code> is a small and consequential
+choice: it is the date the export was written, not the date the
+conversation happened, and a bulk export therefore stamps every note
+with one day.</p>
+<p>Scoping is the origin folder and nothing else. There is no project
+key, no user, no session id — a vault is one person's, and the design
+assumes it.</p>
+<p>There is no validity interval, no version, no supersession pointer,
+no provenance beyond the origin flag, and no link back to the source
+transcript once <code>--move</code> has deleted it.</p>
+<p>The graph structure is real but implicit: it lives in the
+<code>[[…]]</code> links inside note bodies, which is where Obsidian
+looks for it. Nothing in this repository can enumerate, validate or
+repair those links after they are written.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Nothing in this repository retrieves anything.</strong> The
+vault is found by Obsidian, by the operating system, or by an agent
+reading files, and the guide's workflow section is about how a person
+drives that.</p>
+<p>What the importer contributes to retrieval is done at <em>write</em>
+time, and it is worth separating into two mechanisms with different
+reliability.</p>
+<p>The <strong>tags</strong> are a coarse, high-precision index: 66
+keywords, whole-word matching for the ten that need it, and a
+many-to-one mapping so related spellings collapse. For finding "the
+chats where I was doing something with embeddings", this works.</p>
+<p>The <strong>wikilinks</strong> are the interesting one and the
+fragile one. Linking the first occurrence only is a reasonable default —
+it makes the connection visible in Obsidian's graph without turning the
+note into a sea of links — and skipping code fences avoids the worst
+false positives, since a note named <code>docker</code> should not link
+from inside a Dockerfile block. What is missing is any notion of whether
+the match <em>meant</em> the note. A four-character floor removes
+<code>api</code> and <code>sql</code>; it does not remove
+<code>test</code>, <code>error</code>, <code>pipeline</code> or
+<code>database</code>, all of which are plausible note names and common
+English. Serena's answer to the same problem is a similarity threshold,
+a token-Jaccard floor and an explicit ignore list for words like
+<code>core</code>; this one has a length check.</p>
+<p>The failure is silent and permanent. The link is written into the
+body, the original is optionally deleted, and there is no report of what
+was linked.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>manual, batched and zero-LLM</strong>. A person
+exports, a person runs the script, and the script's only intelligence is
+a substring table. That is the cheapest capture path in this atlas's
+vocabulary and it has the property the <a
+href="../../patterns/zero-llm-capture/">zero-LLM capture</a> page
+describes: nothing is lost to a bad extractor, and nothing is condensed
+either.</p>
+<p>There is no deduplication. Two exports of the same conversation
+produce two notes unless they share a filename, in which case the second
+overwrites the first. There is no consolidation pass and no merge.</p>
+<p>Conflict handling is absent. <code>dest.write_text</code> overwrites
+unconditionally, so an edit a person made in Obsidian to an imported
+note is destroyed by a re-import of the same export.</p>
+<p>Malicious or noisy input is not filtered at all. A chat transcript is
+written to disk verbatim, and the only content-aware behaviour in the
+whole pipeline is the code-fence skip.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Zero on both paths, in the sense the rest of this atlas measures: no
+model call is made by anything in this repository, at write or at
+read.</p>
+<p>The lag before a memory is retrievable is however long it takes the
+user to remember to run the script — this is a manual sync, and the
+guide's workflow section is the only thing that makes it periodic.</p>
+<p>Nothing runs in the background and no pass rewrites the store, with
+one qualification: because links are derived from the vault's current
+contents at import time, the <em>effective</em> link graph is only as
+good as the order things were imported in, and the only way to re-derive
+it is to re-import, which overwrites edits.</p>
+<p>On the read side there is no injection to bound. Whatever the agent
+opens, it opens; the vault is a directory and the cost is whatever the
+model chooses to read — which is the same arrangement <a
+href="../../systems/ollama/">Ollama</a> and <a
+href="../../systems/serena/">Serena</a> arrive at, without the index
+those two put in the prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no programmatic integration. No MCP server, no hook, no
+plugin, no tool. The agent sees the vault because the vault is on disk
+in a place the guide told the user to put it, and Part 4 of the README
+is a workflow a person follows.</p>
+<p>That is worth stating plainly rather than treating as a defect,
+because it is what "recipe" means here and it is a genuine position: the
+composition is Obsidian for memory, Graphify for code, Claude Code for
+work, and a person for glue. Nothing has to agree on an interface.</p>
+<p>The consequence is that every guarantee in this design is a habit. If
+the user stops running the importer, memory stops accumulating, and
+nothing notices.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The provenance model is one field: <code>origin: code | web</code>.
+Nothing records which export produced a note once <code>--move</code>
+has removed the source, and nothing records what the importer
+changed.</p>
+<p><code>--dry-run</code> is the safety mechanism, and it is the right
+one to have. Against that, the default behaviour of a tool whose main
+action is rewriting file bodies is worth naming precisely: it edits the
+content it is filing, and the edit is not reported, not reversible, and
+not idempotent with respect to vault state.</p>
+<p>Prompt-injected false memories are not a live risk here in the usual
+sense — nothing extracts claims — but the vault is
+instructions-adjacent: an agent pointed at a Zettelkasten will read
+whatever is in it, and every word of every past conversation is in it
+verbatim.</p>
+<p>Multi-tenancy, auth, races and replication are all out of frame. This
+is one person's laptop.</p>
+<p>The gap that matters most is the same one the whole recipe shape has:
+<strong>there is no correction path other than editing the file, and no
+record that anything was corrected.</strong> For a store of verbatim
+transcripts that is defensible — a transcript is a fact about what was
+said, not a claim about the world — but the guide's framing is
+<em>persistent memory</em>, and a reader adopting it for decisions
+rather than for recall will find nothing that can mark a decision
+superseded.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are none. No test file, no CI workflow, no assertion in the
+tree.</p>
+<p>The README's <em>Real Results</em> section is where the claims live,
+and the headline figure — <strong>71.5x fewer tokens per
+session</strong> — is not produced by anything in this repository. The
+token argument is Graphify's (a code index means the agent does not
+re-read the tree) plus the general claim that persistent notes avoid
+re-explaining a project. Neither is measured here, no method is stated,
+and no run is committed.</p>
+<p>This is the ordinary shape of a practitioner recipe and it should be
+read as one. The value on offer is the arrangement, not the number.</p>
+<p>What I would want before trusting the importer: a case asserting that
+a note name appearing inside a fenced code block is not linked, one
+asserting that <code>[[already-linked]]</code> is not double-wrapped,
+and one asserting that a longer name wins over a shorter one it
+contains. All three behaviours are implemented and none is pinned.</p>
+<p>I ran nothing. Every claim here comes from reading the tree at
+<code class="commit-id" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">c5f2e0b5…</code>, the only commit
+in the repository's recent history and dated 1 June 2026.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Link on the way in.</strong> If your memory is a set of
+documents, deriving links at write time from the names already present
+costs one pass over the store and gives you a navigable graph nobody has
+to curate. Longest-name-first, first occurrence only, and never re-wrap
+an existing link are the three details that make it usable rather than
+noisy.</li>
+<li><strong>Skip code when scanning prose.</strong> Splitting on fences
+with a <em>capturing</em> regex so the code segments survive into the
+output is a three-line habit, and it removes the largest single source
+of false matches in any technical corpus.</li>
+<li><strong>Give short keywords a different matching rule.</strong>
+<code>SHORT_KEYWORDS</code> holds the ten riskiest entries in the
+keyword map, matched whole-word while the rest match as substrings.
+Splitting a keyword table by how dangerous each entry is costs nothing
+and is rarer than it should be.</li>
+<li><strong>Ship <code>--dry-run</code> for anything that rewrites
+content.</strong> Especially when the same tool also offers to delete
+the original.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not rewrite a document body without recording what you
+changed.</strong> A link insertion is an edit. If the output is the only
+artifact, the user cannot tell a good link from a bad one without
+re-reading everything, and cannot undo either.</li>
+<li><strong>Do not use a length floor as your only false-positive
+guard.</strong> Four characters removes <code>api</code> and keeps
+<code>test</code>. The names most likely to collide with prose are
+exactly the generic ones a person is likely to use as note titles.</li>
+<li><strong>Do not derive durable structure from mutable ambient
+state.</strong> Links here depend on which notes existed at import time,
+so the graph is a function of ordering, and the only way to re-derive it
+destroys manual edits. Either make the derivation re-runnable and
+non-destructive, or store the links separately from the body.</li>
+<li><strong>Do not put a number in the headline that your repository
+cannot produce.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if you already live in Obsidian and want your Claude Code
+history to land there tagged and connected, and are content for that to
+be a thing you run rather than a thing that happens. It is 387 lines you
+can read in one sitting and change to fit your own stack, which is the
+honest strength of the recipe genre.</p>
+<p>Walk away if you want memory to be <em>selective</em>. Everything is
+kept, verbatim, and the vault grows with every session — the design has
+no opinion about what matters and no mechanism that could acquire one.
+Walk away too if more than one person is involved, or if you need the
+agent to write memory rather than read it: neither is in scope here, and
+neither has a seam to add.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the Claude Code export step actually produce at the
+versions the guide targets? <code>detect_origin</code> reads the path
+and content to classify, which implies a shape the repository does not
+document.</li>
+<li>Does the Obsidian vault the guide describes carry any structure
+beyond <code>chats/&lt;origin&gt;/</code>? The README's Zettelkasten
+section was read as prose; whether the recommended folder scheme
+interacts with the importer's destination was not established.</li>
+<li>How large does the wikilink pass get on a mature vault?
+<code>collect_vault_notes</code> is an <code>rglob</code> and
+<code>insert_wikilinks</code> is a nested loop over every note name per
+body segment, which is fine for hundreds and untested for
+thousands.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Write path and link insertion</strong>
+<code>scripts/claude_to_obsidian.py</code></p>
+<p><strong>Operator surface</strong>
+<code>scripts/sync_claude_obsidian.sh</code> ·
+<code>scripts/README.md</code></p>
+<p><strong>Design record and claims</strong> <code>README.md</code> ·
+<code>README.pt-BR.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b"><code class="commit-id" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">c5f2e0b5…</code></a>
+— first reading, from the <a
+href="https://github.com/QuesmaOrg/awesome-ai-tokenomics">awesome-ai-tokenomics
+triage</a>. Screened before reading: no auto-run surfaces, no dependency
+manifests at all — the importer is standard library only — and therefore
+no cooldown or pinning findings. Nothing was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 242 reports.</strong></p>
+<p><strong>This page covers all 243 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;242 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;243 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6304,6 +6304,40 @@ never checked whether the pointers between them still resolve.</li>
 <li>Do not copy when: you need retrieval. There is none — names are
 listed at activation and the model reads by judgement or follows a link
 — so a store large enough that navigation fails has no fallback.</li>
+</ul>
+<h3 id="claude-code-memory-setup"><a
+href="../systems/claude-code-memory-setup/"><code>claude-code-memory-setup</code></a></h3>
+<ul>
+<li>Best idea: linking on the way in. <code>insert_wikilinks</code>
+gathers every vault note name, sorts longest-first so a longer name
+beats a shorter one it contains, splits the body on code fences with a
+capturing regex so code survives untouched, and links the first
+occurrence only of each name with a guard that refuses to re-wrap an
+existing <code>[[link]]</code>. A new note arrives already connected and
+nobody maintained the connections.</li>
+<li>Biggest risk: that rewrite is silent, irreversible and guarded only
+by a four-character name floor — which removes <code>api</code> and
+keeps <code>test</code>, <code>error</code> and <code>database</code>.
+With <code>--move</code> the original export is deleted, and because
+links are derived from whatever the vault contained at import time, the
+graph is a function of import order and re-deriving it means overwriting
+any edits made since.</li>
+<li>Most reusable component: <code>SHORT_KEYWORDS</code>, ten of the
+sixty-six keyword-map entries held back to whole-word matching while the
+rest match as substrings. Splitting a keyword table by how dangerous
+each entry is costs nothing and almost nobody does it.</li>
+<li>Maturity impression: six files, MIT, one commit dated 1 June 2026,
+standard library only, no tests and no CI. Three implemented behaviours
+— code-fence skipping, no double-wrapping, longest-name-first — are
+pinned by nothing. The README's headline, "71.5x fewer tokens per
+session", is not produced or measured by anything in the repository; the
+token argument belongs to Graphify and to not re-reading files.</li>
+<li>Study when: you keep an Obsidian vault and want your agent's history
+to land in it tagged and connected, and you are happy for that to be a
+command you run.</li>
+<li>Do not copy when: you need memory to be selective. Everything is
+kept verbatim, the vault grows with every session, and nothing in the
+design has an opinion about what mattered.</li>
 </ul>
         </article>
       </div>
