@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 204 reports.**
+**This page covers all 205 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["204 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["205 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1753,6 +1753,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 70,000 lines, 107 test files with four on the covenant alone, an embedding migration shipped as a runnable module and labelled breaking, and an uninstall document beside the install one.
 - Study when: your agent is instructed to consult memory before acting and you have no way to know whether it did.
 - Do not copy when: you need scope enforced inside one store — isolation here is one SQLite file per project directory, not a read-path predicate.
+
+### [`pltm-claude`](../systems/pltm-claude/)
+
+- Best idea: explicit opposite-predicate conflict detection, on the observation that contradictions are near neighbours in embedding space by construction — "I like jazz" and "I hate jazz" share subject and topic — so a similarity threshold treats a contradiction like a corroboration. Stage two even skips the similarity filter for exclusive predicates, so no conflict is filtered away before it is seen.
+- Biggest risk: the headline "99% accuracy" is a unit-test pass rate — `run_200_test_benchmark.py` runs 200 hand-written assertions and prints `Accuracy: passed/total` — and the "100% vs 66.9% for Mem0" comparison runs Mem0 against those same author-written cases. Scoring 100% on your own specification is a tautology.
+- Most reusable component: the four-judge jury's three-valued verdict — approve, reject, quarantine, with the safety judge always-binding. The vocabulary is right; the storage is not, and fixing it is a column.
+- Maturity impression: 67,000 lines, 136 advertised MCP tools against 26 test files, two memory schemas live at once mid-migration, a `provenance` table specifying `quoted_span`, `content_hash`, `commit_sha` and `line_range` with no writer, and `venv311/` committed.
+- Study when: your dedup or correction path decides by cosine similarity and you have not asked what a contradiction looks like to it.
+- Do not copy when: you need the quarantine verdict to mean anything at read time — it is a halved float and a `[QUARANTINED: …]` marker appended into the free-text field the model reads back.
+
 
 
 

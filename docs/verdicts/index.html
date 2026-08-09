@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 204 reports.</strong></p>
+<p><strong>This page covers all 205 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;204 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;205 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5032,6 +5032,36 @@ and you have no way to know whether it did.</li>
 <li>Do not copy when: you need scope enforced inside one store —
 isolation here is one SQLite file per project directory, not a read-path
 predicate.</li>
+</ul>
+<h3 id="pltm-claude"><a
+href="../systems/pltm-claude/"><code>pltm-claude</code></a></h3>
+<ul>
+<li>Best idea: explicit opposite-predicate conflict detection, on the
+observation that contradictions are near neighbours in embedding space
+by construction — "I like jazz" and "I hate jazz" share subject and
+topic — so a similarity threshold treats a contradiction like a
+corroboration. Stage two even skips the similarity filter for exclusive
+predicates, so no conflict is filtered away before it is seen.</li>
+<li>Biggest risk: the headline "99% accuracy" is a unit-test pass rate —
+<code>run_200_test_benchmark.py</code> runs 200 hand-written assertions
+and prints <code>Accuracy: passed/total</code> — and the "100% vs 66.9%
+for Mem0" comparison runs Mem0 against those same author-written cases.
+Scoring 100% on your own specification is a tautology.</li>
+<li>Most reusable component: the four-judge jury's three-valued verdict
+— approve, reject, quarantine, with the safety judge always-binding. The
+vocabulary is right; the storage is not, and fixing it is a column.</li>
+<li>Maturity impression: 67,000 lines, 136 advertised MCP tools against
+26 test files, two memory schemas live at once mid-migration, a
+<code>provenance</code> table specifying <code>quoted_span</code>,
+<code>content_hash</code>, <code>commit_sha</code> and
+<code>line_range</code> with no writer, and <code>venv311/</code>
+committed.</li>
+<li>Study when: your dedup or correction path decides by cosine
+similarity and you have not asked what a contradiction looks like to
+it.</li>
+<li>Do not copy when: you need the quarantine verdict to mean anything
+at read time — it is a halved float and a <code>[QUARANTINED: …]</code>
+marker appended into the free-text field the model reads back.</li>
 </ul>
         </article>
       </div>

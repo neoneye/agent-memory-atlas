@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **204 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **205 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -203,6 +203,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`palazzo`](../systems/palazzo/) **Palazzo** — An audit log that can refuse a delete · `calibrae/palazzo` · Mutation audit
 - [`perseus-vault`](../systems/perseus-vault/) **Perseus Vault** — Claims audited against artifacts · `Perseus-Computing-LLC/perseus-vault` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
+- [`pltm-claude`](../systems/pltm-claude/) **PLTM** — A third verdict with nowhere to live · `Alby2007/PLTM-Claude` · Scope enforced
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
 - [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
 - [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
