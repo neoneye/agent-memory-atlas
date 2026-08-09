@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 233 reports.</strong></p>
+<p><strong>This page covers all 234 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;233 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;234 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5965,6 +5965,40 @@ is.</li>
 <li>Do not copy when: you need anything to change after the door — the
 gate decides entry and nothing decides whether a stored fact is still
 true.</li>
+</ul>
+<h3 id="stash"><a href="../systems/stash/"><code>stash</code></a></h3>
+<ul>
+<li>Best idea: a hypothesis gets its own table. <code>proposed</code> /
+<code>testing</code> / <code>confirmed</code> / <code>rejected</code>,
+with a <code>verification_plan</code> and a <code>method</code> saying
+how it could be settled, and on resolution either a
+<code>confirmed_fact_id</code> or a <code>rejection_reason</code> — so a
+claim the system inferred but has not established is not stored as a
+fact, and recall cannot reach it because the separation is a table
+boundary rather than a predicate someone must remember to apply.</li>
+<li>Biggest risk: one reasoner adjudicates contradictions, extracts
+causal links and resolves hypotheses — three judgements each writing
+into the store the next one reads — with
+<code>internal/brain/brain_test.go</code> as the only test in the
+package and no evaluation of any of them.</li>
+<li>Most reusable component: contradiction detected on
+<code>(entity, property)</code> rather than by embedding similarity.
+"Alice works at Acme" and "Alice left Acme" are near neighbours, and so
+are "Alice works at Acme" and "Bob works at Acme"; only the triple's
+subject and predicate separate <em>says the opposite</em> from <em>is
+about the same thing</em>. And when either key is missing it returns no
+candidates rather than falling back to similarity.</li>
+<li>Maturity impression: 7,900 lines of Go with six first-class
+epistemic entity types — facts, hypotheses, contradictions, causal
+links, goals, failures — one file per concept, <code>failures</code>
+splitting content from reason from lesson, consolidation runs reporting
+<code>llmCalls</code> beside their outcomes, and
+<code>docker compose up</code> as the entire install.</li>
+<li>Study when: your system stores an inference and an observation in
+the same place with a confidence float between them.</li>
+<li>Do not copy when: you need a rejected claim to stay rejected — the
+rejection is durable and nothing consults it on the next inference
+pass.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 233 reports.**
+**This page covers all 234 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["233 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["234 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2014,6 +2014,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 9,200 lines with wrappers per provider delivering the three-line adoption claim, three retrieval tiers with published latency budgets, and an observability module to check them — against 12 test files and no evaluation of the gate itself.
 - Study when: your write path asks a model how important something is.
 - Do not copy when: you need anything to change after the door — the gate decides entry and nothing decides whether a stored fact is still true.
+
+### [`stash`](../systems/stash/)
+
+- Best idea: a hypothesis gets its own table. `proposed` / `testing` / `confirmed` / `rejected`, with a `verification_plan` and a `method` saying how it could be settled, and on resolution either a `confirmed_fact_id` or a `rejection_reason` — so a claim the system inferred but has not established is not stored as a fact, and recall cannot reach it because the separation is a table boundary rather than a predicate someone must remember to apply.
+- Biggest risk: one reasoner adjudicates contradictions, extracts causal links and resolves hypotheses — three judgements each writing into the store the next one reads — with `internal/brain/brain_test.go` as the only test in the package and no evaluation of any of them.
+- Most reusable component: contradiction detected on `(entity, property)` rather than by embedding similarity. "Alice works at Acme" and "Alice left Acme" are near neighbours, and so are "Alice works at Acme" and "Bob works at Acme"; only the triple's subject and predicate separate *says the opposite* from *is about the same thing*. And when either key is missing it returns no candidates rather than falling back to similarity.
+- Maturity impression: 7,900 lines of Go with six first-class epistemic entity types — facts, hypotheses, contradictions, causal links, goals, failures — one file per concept, `failures` splitting content from reason from lesson, consolidation runs reporting `llmCalls` beside their outcomes, and `docker compose up` as the entire install.
+- Study when: your system stores an inference and an observation in the same place with a confidence float between them.
+- Do not copy when: you need a rejected claim to stay rejected — the rejection is durable and nothing consults it on the next inference pass.
+
 
 
 
