@@ -32,7 +32,7 @@ The proposal treats five things as missing that are written down:
 | --- | --- |
 | Five product profiles | `content/patterns/index.md` → *Stacks, by what you are building*: single-user tool, multi-tenant, companion/roleplay, autonomous actor, correctable-and-defensible — each with the failure that hurts for that shape, plus a *What you can defer* paragraph |
 | Implement in dependency order | `content/overview.md` §8 *What I Would Build*, Ship First / Add Later — already ordered so each stage stands alone and vector search and extraction come last |
-| Acceptance tests per pattern | Every pattern page has a `Tests to require` section; `content/benchmarks.md` §6 specifies the ten-step deletion sequence with a six-method adapter, §7 the contradiction test with five case shapes and five scoring dimensions |
+| Acceptance tests per pattern | Every pattern page has a `Tests to require` section; `content/benchmarks.md` §6 specifies the thirteen-step deletion sequence with a six-method adapter, §7 the contradiction test with five case shapes and five scoring dimensions |
 | Adoption cost, tradeoffs, exemplars per pattern | Every pattern page has `Cost to adopt`, `Tradeoffs`, `Implementation checklist`, `Seen in the atlas`, `Related patterns` |
 | Maturity per pattern | `content/patterns/index.md` → *How established is any of this?*, which splits the library into reporting, advocacy, and established-in-one-category, and gives the mechanism spread as generated counts |
 

@@ -8,6 +8,50 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-09-the-conformance-run-the-atlas-does-not-run.md](2026-08-09-the-conformance-run-the-atlas-does-not-run.md) —
+  step 2 of the eval-suite note is closed rather than deferred: running the
+  deletion sequence means executing 238 checkouts, which contradicts the
+  screening tool this project built to avoid executing checkouts. The rejection
+  it reopens instead — "a `pip install` that nobody runs" — predicted a
+  population's behaviour, and Verel, Perseus and Daimon each built an executable
+  self-evaluation unprompted. So the burden inverts, and the design problem
+  becomes what makes a self-run readable statically at a pin: the project's own
+  public CI with an addressable log, a pinned commit, **the adapter committed
+  upstream** because the dominant failure will be an adapter that passes by not
+  testing, and a negative control per test in the same job — Daimon's placebo arm
+  as a submission rule. The atlas reads the adapter, not the result. Plus the
+  asymmetry that keeps it off a scoreboard: a submission is only ever evidence
+  *for* a mechanism, because not running is not failing.
+- [2026-08-09-the-corpus-has-a-half-life.md](2026-08-09-the-corpus-has-a-half-life.md) —
+  113 of 238 reports were read in the project's first six days and have not been
+  touched since; the age distribution is bimodal, so the average report a reader
+  lands on is much older than the project. Measured from `analyzed_at` with no
+  network call, which is the point — upstream polling is the expensive path and is
+  not needed to rank the queue. Two cheap proposals: a dated tag so a citation
+  can name what it read, and the age delta surfaced at the point of reading — a
+  number, not a freshness badge, because a badge needs a vocabulary that would
+  assert fourteen days means the same thing for a project with four commits a
+  month and one with four a day. Neither makes a report more true; they stop
+  staleness being invisible, and the failure mode is a reader trusting an old
+  report, not distrusting one.
+- [2026-08-09-the-receipts-the-atlas-cannot-produce.md](2026-08-09-the-receipts-the-atlas-cannot-produce.md) —
+  the case for a downstream-changes page is not influence, it is that on 4 August
+  a review claimed five maintainers merged against the rubric and the atlas could
+  not check a factual claim about itself. The data is already in the `## History`
+  sections but unevenly: Perseus, memsem and Verel are explicitly attributable
+  and Daimon is not, which is the row that matters because an enthusiastic page
+  would assert causation the report never claimed. Generated from a frontmatter
+  field rather than hand-kept, attribution labelled explicit/inferred/unknown,
+  atlas retractions carried as rows too — and a firewall enforced in `scripts/`,
+  because responsiveness is adoption evidence wearing a lab coat.
+- [2026-08-09-widening-and-its-falling-marginal-value.md](2026-08-09-widening-and-its-falling-marginal-value.md) —
+  the incumbent option held to the same scrutiny as the three proposals written
+  beside it. Seventy reports in one day is the project's best throughput and also
+  seventy new pins in a queue nobody re-reads; recent batches keep converging on
+  conclusions the corpus already held, which is a real result and the signature of
+  a covered space. The bar worth applying to a candidate: worth the pin if a
+  *pattern* might move, not if a report can be written — which two candidates
+  currently clear, the symbolic lineage and MemState on Kuzu.
 - [2026-08-09-the-papers-the-reports-did-not-read.md](2026-08-09-the-papers-the-reports-did-not-read.md) —
   audit prompted by the SESA report saying "no ablation is present" when the
   README cited a paper whose Table 3 ablates the mechanism at 2.7 points. Eleven

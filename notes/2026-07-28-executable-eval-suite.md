@@ -9,7 +9,9 @@
 The [benchmarks page](../content/benchmarks.md) specifies two tests in enough
 detail to implement:
 
-- **The ten-step deletion sequence** (§6) with a six-method adapter —
+- **The deletion sequence** (§6) — ten steps when this note was written, thirteen
+  since `6db05c98` on 30 July extended it to propagated copies — with a
+  six-method adapter —
   `write`, `settle`, `prompt_prefix`, `forget`, `run_background_jobs`,
   `leak_probes`, `audit_entries` — and a pytest function that is checked to parse
   as Python.
