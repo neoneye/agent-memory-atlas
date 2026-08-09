@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 225 reports.**
+**This page covers all 226 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["225 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["226 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1942,6 +1942,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: four maintained agent plugins sharing one store, index-health diagnostics for a deliberately disposable index, SHA-256 gating so a live file watcher is affordable — and a vector-database vendor calling its own product "a shadow index: a derived, rebuildable cache".
 - Study when: your system distils procedures from experience and then runs them.
 - Do not copy when: you need the pipeline evaluated — the methodology is excellent and stops at the embedder.
+
+### [`mnemos`](../systems/mnemos/)
+
+- Best idea: `internal/eval` builds a held-out corpus **with each query's text stripped from its own host chunk** before indexing, so a generated-question evaluation cannot be won by finding the question inside the answer — using the same goldmark configuration as ingestion "so the AST view of a document matches what ingestion sees", ingesting into an ephemeral database, and comparing against a versioned baseline where a missing file is deliberately not an error.
+- Biggest risk: citation is not status. The README's opening complaint is that an agent "forgets why you rejected an architecture", and a rejected ADR cites exactly as cleanly as an accepted one — nothing in the index says which way the decision went, though ADR conventions already carry a `status` header to read.
+- Most reusable component: a secret scanner whose `Finding` holds the matched substring on an **unexported** field, "so it cannot leak through serialization or an external caller: the remember tool reports only Rule names and never echoes the value back to the agent". A scanner that hands the model the key it just found has moved the secret into the context it was protecting.
+- Maturity impression: 19,800 lines of Go with 84 test files, one cgo-free binary with no Python, Node, vector database or model server, a `doctor` command, and a benchmark comparing the scoped and unscoped query so the collection predicate's index usage is visible.
+- Study when: you are about to generate evaluation questions from the documents you are also indexing.
+- Do not copy when: you need the number — the harness and the baseline mechanism are in-tree and no baseline JSON is.
+
 
 
 

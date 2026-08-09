@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 225 reports.</strong></p>
+<p><strong>This page covers all 226 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;225 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;226 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5704,6 +5704,38 @@ derived, rebuildable cache".</li>
 runs them.</li>
 <li>Do not copy when: you need the pipeline evaluated — the methodology
 is excellent and stops at the embedder.</li>
+</ul>
+<h3 id="mnemos"><a
+href="../systems/mnemos/"><code>mnemos</code></a></h3>
+<ul>
+<li>Best idea: <code>internal/eval</code> builds a held-out corpus
+<strong>with each query's text stripped from its own host chunk</strong>
+before indexing, so a generated-question evaluation cannot be won by
+finding the question inside the answer — using the same goldmark
+configuration as ingestion "so the AST view of a document matches what
+ingestion sees", ingesting into an ephemeral database, and comparing
+against a versioned baseline where a missing file is deliberately not an
+error.</li>
+<li>Biggest risk: citation is not status. The README's opening complaint
+is that an agent "forgets why you rejected an architecture", and a
+rejected ADR cites exactly as cleanly as an accepted one — nothing in
+the index says which way the decision went, though ADR conventions
+already carry a <code>status</code> header to read.</li>
+<li>Most reusable component: a secret scanner whose <code>Finding</code>
+holds the matched substring on an <strong>unexported</strong> field, "so
+it cannot leak through serialization or an external caller: the remember
+tool reports only Rule names and never echoes the value back to the
+agent". A scanner that hands the model the key it just found has moved
+the secret into the context it was protecting.</li>
+<li>Maturity impression: 19,800 lines of Go with 84 test files, one
+cgo-free binary with no Python, Node, vector database or model server, a
+<code>doctor</code> command, and a benchmark comparing the scoped and
+unscoped query so the collection predicate's index usage is
+visible.</li>
+<li>Study when: you are about to generate evaluation questions from the
+documents you are also indexing.</li>
+<li>Do not copy when: you need the number — the harness and the baseline
+mechanism are in-tree and no baseline JSON is.</li>
 </ul>
         </article>
       </div>
