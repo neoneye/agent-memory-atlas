@@ -59,7 +59,14 @@ often this was retrieved. `L_interaction` is interaction length. `R_recency` is
 time decay. Adding them with weights of 1, 1 and 1 means a long conversation
 scores like a frequently-revisited one, so **verbosity is indistinguishable from
 importance**. The comment says the constants "can be tuned or made configurable";
-no ablation was found.
+nothing in the repository ablates them, and the paper this repository
+accompanies — [arXiv:2506.06326](https://arxiv.org/abs/2506.06326), *Memory OS
+of AI Agent* — settles it from the other side. It prints the same formula and
+states that "the values of α, β, and γ in Eq. 4 are equality set to 1", and its
+one ablation removes **modules** — mid-term memory, the long-term persona
+module, the dialogue page chain — never the three weights. The coefficients are
+not an implementation shortcut that the research tuned elsewhere; they are 1, 1
+and 1 in both places.
 
 **There are two access counters.** Heat consumes `N_visit`, while capacity
 eviction runs a separate LFU path over `self.access_frequency` and
@@ -254,7 +261,8 @@ Strengths:
 
 Gaps:
 
-- **Heat sums three unlike signals** with weights of 1, 1 and 1, and no ablation.
+- **Heat sums three unlike signals** with weights of 1, 1 and 1, ablated in neither
+  the repository nor the paper.
 - **`L_interaction` rewards verbosity**, and long-term memory is built from what
   scores highest.
 - **Two access counters** that can disagree about the same segment.
@@ -338,5 +346,7 @@ to learn the shape from, not to build on.
   `memoryos-playground/`.
 
 ## History
+
+**2026-08-09** — the accompanying paper ([arXiv:2506.06326](https://arxiv.org/abs/2506.06326)) was read and cited, which the first reading did not do. It changes no claim: the paper prints the same heat formula, states the three coefficients are set to 1, and ablates modules rather than weights — so the report's central criticism holds in both artifacts rather than only in the code.
 
 **2026-07-28** — [`587ed7755c7aed179965792830ff1b5ad9a6fa92`](https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92) — first reading.

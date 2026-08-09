@@ -8,6 +8,23 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-09-the-papers-the-reports-did-not-read.md](2026-08-09-the-papers-the-reports-did-not-read.md) —
+  audit prompted by the SESA report saying "no ablation is present" when the
+  README cited a paper whose Table 3 ablates the mechanism at 2.7 points. Eleven
+  paper-backed systems checked against their own READMEs; none of the eleven
+  reports cites the paper. Only one carried an unscoped absence claim —
+  MemoryOS — and reading its paper strengthened the claim rather than breaking
+  it. Both agent skills now require a citation grep before section 10, and the
+  distinction the audit turns on: "no ablation" is a claim about the work, "no
+  result is committed to this repository" is a claim about the artifact.
+- [2026-08-09-the-database-people-arrived-at-the-same-four.md](2026-08-09-the-database-people-arrived-at-the-same-four.md) —
+  a data-management vision paper (arXiv:2605.26252) derives this atlas's argument
+  from the other side: four failure modes that match the four reported here, and
+  six correctness conditions of which C2 is the rejected-value tombstone stated
+  as a property and C4 is provenance-preserving forgetting. It proves append-only
+  storage cannot satisfy C2. The tombstone page's "no shared vocabulary" clause
+  was wrong and has been narrowed. Its prototype, MemState on Kuzu, is a
+  screening candidate.
 - [2026-08-09-a-mirror-that-agrees-to-forget.md](2026-08-09-a-mirror-that-agrees-to-forget.md) —
   `Untrivial-ai/agent-orchestrator` triaged and excluded on the
   harness-is-not-a-store boundary: sixty-five migrations, none of them holding a

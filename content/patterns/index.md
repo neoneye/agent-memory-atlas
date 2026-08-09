@@ -207,6 +207,34 @@ It is a mechanism three small repositories have and the literature has not
 named — which is either the atlas being early or the atlas being wrong about
 what matters, and one survey cannot tell you which.
 
+**Eight months later the literature named it, and the atlas should say so.**
+*Is Agent Memory a Database? Rethinking Data Foundations for Long-Term AI Agent
+Memory* ([arXiv:2605.26252](https://arxiv.org/abs/2605.26252), 25 May 2026)
+argues that agent memory is a data-management workload whose correctness is "a
+property of the state trajectory, not of individual records", and formalises it
+as **Governed Evolving Memory** — four state-level operators (ingestion,
+revision, forgetting, retrieval) under six correctness conditions. Two of the six
+are this library's advocacy pages written as invariants. **C2** requires that
+"no superseded value becomes current", which is the rejected-value tombstone
+stated as a property rather than as a table. **C4** requires that forgetting and
+revision *preserve provenance chains*, which is
+[evidence before belief](./evidence-before-belief/) and the
+[append-only memory audit](./append-only-memory-audit/) at once. It also states
+an impossibility the atlas has only ever argued empirically: append-only storage
+cannot satisfy C2, so supersession chains are structurally insufficient no
+matter how carefully they are kept.
+
+What that changes here is narrow and worth being precise about. The tombstone
+page said there is "no shared vocabulary" for the mechanism; there is now one,
+in a vision paper with a prototype (MemState, on an embedded property graph)
+rather than in a shipped library — which is a different thing from consensus and
+from adoption. The four failure modes that paper opens with — unregulated
+growth, missing semantic revision, capacity-driven rather than importance-driven
+forgetting, and read-only retrieval — are the same four this atlas keeps
+reporting, arrived at from the database side by people who did not read these
+pages. Two independent derivations is better evidence than one, and it is still
+not a practice.
+
 So this library is doing two different jobs at once, and it is worth knowing
 which one you are reading. Every page now carries its answer as a pill under its
 title, so the distinction survives a reader who arrives by search and never sees

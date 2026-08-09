@@ -17,8 +17,12 @@ stance: advocacy
 > — [the table below](#the-nine-sorted-by-what-actually-stops-the-value) says
 > which, and what the other four do instead.
 > There is no consensus
-> behind this page, no library that provides the mechanism, and no shared
-> vocabulary for it. Everything below is an argument, and the provenance is
+> behind this page and no library that provides the mechanism. There is now a
+> **vocabulary**: [arXiv:2605.26252](https://arxiv.org/abs/2605.26252) states it
+> as a correctness condition — *no superseded value becomes current* — and proves
+> that append-only storage cannot satisfy it, which is this page's argument in
+> one line and from the database side. One vision paper with a prototype is not
+> adoption. Everything below is still an argument, and the provenance is
 > traced under *Seen in the atlas* so you can weigh it as one.
 
 ## Intent

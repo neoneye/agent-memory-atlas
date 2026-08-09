@@ -136,6 +136,17 @@ If the upstream repository 404s, check for a rename before concluding it is
 gone: GitHub redirects renamed repositories, and the new name is in the redirect.
 See "A project that renamed itself" below.
 
+**Check for a paper, whether or not the code moved.** Grep the README and docs
+for `arxiv`, `bibtex`, `@article`, `@misc`, `Citation`, `CITATION.cff` and `doi`.
+A paper can appear after a report was written, and an existing report may predate
+one — a citation block at the bottom of a README is easy to scroll past. If the
+report cites no paper and one exists, that is a reanalysis reason on its own,
+even when the pinned commit is still current: read at least the abstract and any
+ablation table, and check every absence claim in the report's section 10 against
+it. "No ablation" is a claim about the work; "no result is committed to this
+repository" is a claim about the artifact, and only the second is one a reading
+of the tree can support.
+
 ## Decide the shape, then write
 
 Three outcomes. Name which one you are in before editing, because they call for

@@ -1177,7 +1177,9 @@ retrieval, the Ebbinghaus curve for forgetting — and stores the score
 components of every retrieval on the memory that was retrieved. **MemoryOS** is
 the tiered short/mid/long architecture in its most legible form, with the
 promotion rule written down as `alpha * N_visit + beta * L_interaction + gamma *
-R_recency` — and the coefficients left at 1, 1 and 1 with no ablation, so
+R_recency` — and the coefficients left at 1, 1 and 1 with no ablation in the
+code *or* in its paper ([arXiv:2506.06326](https://arxiv.org/abs/2506.06326),
+which states they "are equality set to 1" and ablates modules instead), so
 verbosity scores like importance. **Aeris is the family's outlier and the only
 system here where the model has no write path by construction.** It is a
 deterministic ECS simulation whose agents hold memories that carry no text at all
