@@ -2142,6 +2142,55 @@ mean. The distinction the atlas draws is that a KV cache is an
 optimisation whose loss costs latency, and a memory is a claim whose
 loss costs correctness. Deleting a cache entry is free; deleting a
 memory is the hardest problem on this page.</p>
+<h3 id="not-in-scope-the-semantic-response-cache">Not in scope: the
+semantic response cache</h3>
+<p>The third collision is a <strong>semantic cache</strong>: a store of
+past question/answer pairs, keyed by embedding, that returns a saved
+response when a new query is close enough and skips the paid call
+entirely. Unlike the KV cache this one is genuinely durable, genuinely
+retrieved by similarity, and genuinely has eviction — so it passes a
+naive reading of the inclusion test, and it is worth saying why it fails
+a careful one.</p>
+<p><a href="https://github.com/zilliztech/GPTCache">GPTCache</a> is the
+reference implementation, examined on 2026-08-09 at <a
+href="https://github.com/zilliztech/GPTCache/commit/c59fb3a6152a4458b2a070ca183b61c4b614095f"><code class="commit-id" title="c59fb3a6152a4458b2a070ca183b61c4b614095f">c59fb3a6…</code></a>
+— MIT, about 10,800 lines of Python, with no commit since 11 July 2025.
+It has the parts: an embedding step, a scalar store beside a vector
+store, a similarity evaluator, and <code>manager/eviction/</code> with
+LRU and LFU over <code>cachetools</code>.</p>
+<p>One function settles it. <code>gptcache/processor/check_hit.py</code>
+is the default hit check, and its body is
+<code>return cur_session_id not in cache_session_ids</code>. The default
+behaviour is that a cached answer is <strong>withheld from the session
+that produced it</strong> and served to every other session. That is the
+precise inverse of memory, and it is not a bug — asking the same
+question twice in one conversation usually means the first answer was
+unsatisfactory, so replaying it is wrong. A memory system's whole
+purpose is to give a session back what it learned; this one is built to
+refuse exactly that.</p>
+<p><a href="https://github.com/GuglielmoCerri/khazad">khazad</a> makes
+the second half of the point, at <a
+href="https://github.com/GuglielmoCerri/khazad/commit/da10e6fcf37909d0be21b72f6c0629f9d79e6651"><code class="commit-id" title="da10e6fcf37909d0be21b72f6c0629f9d79e6651">da10e6fc…</code></a>
+— MIT, 1,634 lines, a transport-layer cache on Redis vector sets
+requiring no application change. It has a <code>CacheScope</code> enum,
+so a reader scanning for the <a
+href="../patterns/scope-as-a-first-class-key/">scope key</a> finds one.
+Its two values are <code>MODEL</code> and <code>HOST</code>, and its
+docstring says what they partition: <em>"a <code>gpt-4o</code> answer is
+never served to a <code>gpt-4o-mini</code> call."</em> There is no user,
+tenant or session dimension anywhere. A cache's scope exists to keep an
+answer from being served in a context where it would be <em>wrong</em>;
+a memory's scope exists to keep it from being served to someone who
+should not <em>see</em> it. Intercepting HTTP with no application change
+is the selling point, and it also means the cache cannot know who is
+asking.</p>
+<p>So the rule from the KV-cache section holds with one amendment. A
+cache is still an optimisation whose <em>loss</em> costs latency, which
+is why nothing here needs a tombstone. But a semantic cache differs from
+a KV cache in that its <em>hit</em> can be wrong — two questions can be
+neighbours in embedding space and have different answers — which is why
+the serious ones grow a verification step, and why that step is a
+cost-control problem rather than a memory one.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
 <p>Most agent frameworks ship something called "memory" that is a

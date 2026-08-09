@@ -191,3 +191,42 @@ start. It is also a precise statement of what the field currently agrees a memor
 
 Fifteen entries read, one report, one pattern page changed.
 
+### Batch 4 — tracing, and the boundary the atlas had not drawn
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `Arize-ai/phoenix` | `b4d9b19e` | Out of scope: LLM tracing, 7,068 files. One vocabulary hit, `"Typed in-memory store for system_settings"` |
+| `liaohch3/claude-tap` | `bf1a37b7` | Out of scope: a local trace viewer intercepting agent API traffic. No hits |
+| `comet-ml/opik` | `a911602e` | Out of scope: an observability platform, 11,978 files. No hits |
+| `zilliztech/GPTCache` | `c59fb3a6` | Out of scope — **and the reason the overview now has a third scope boundary** |
+| `GuglielmoCerri/khazad` | `da10e6fc` | Out of scope, same boundary, second half of the argument |
+
+A semantic cache passes a naive reading of the inclusion bar. It stores question
+and answer durably, retrieves by embedding similarity across sessions, and
+evicts. Three declines by category would have been the lazy call, so both were
+read.
+
+GPTCache settles itself in one function. `gptcache/processor/check_hit.py` is the
+default hit check and its whole body is
+`return cur_session_id not in cache_session_ids` — a cached answer is **withheld
+from the session that produced it** and served to every other session. That is
+the exact inverse of memory, and it is correct for a cache: asking the same
+question twice in one conversation usually means the first answer was no good.
+
+khazad supplies the other half. It has a `CacheScope` enum, so a reader grepping
+for a scope key finds one — and its two values are `MODEL` and `HOST`, keeping a
+`gpt-4o` answer from being served to a `gpt-4o-mini` call. No user, tenant or
+session dimension exists. A cache's scope stops an answer being served where it
+would be *wrong*; a memory's scope stops it being served to someone who should
+not *see* it. khazad intercepts HTTP with no application change, which is the
+selling point and also the reason it cannot know who is asking.
+
+Both are now written up in `content/overview.md` as **Not in scope: the semantic
+response cache**, beside the KV cache and the chat buffer. The rule from the
+KV-cache section carries over with an amendment: a cache is still an optimisation
+whose *loss* costs latency, but a semantic cache's *hit* can be wrong, which is
+why the serious ones grow a verification step — a cost-control problem, not a
+memory one.
+
+Twenty entries read, one report, one pattern page and one scope boundary.
+
