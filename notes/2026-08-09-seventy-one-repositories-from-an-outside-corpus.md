@@ -1,8 +1,8 @@
 # Seventy-one repositories from an outside corpus — the join, the probe, and what came back
 
-**Status:** in progress. Twenty-one reports written and pushed across four
+**Status:** in progress. Twenty-five reports written and pushed across seven
 batches; every remaining candidate cloned, screened and probed at code level,
-with the verdicts below.
+with the evidence tabulated below and no verdict claimed for anything unread.
 **Origin:** [issue #17](https://github.com/neoneye/agent-memory-atlas/issues/17),
 submitted 2026-08-09 by the author of
 [AlexisOlson/somnigraph](https://github.com/AlexisOlson/somnigraph), pointing at
@@ -90,7 +90,7 @@ rejected-value records. The one that was —
 
 ## What has been written
 
-Twenty-one reports across four batches. The five that changed something in the
+Twenty-five reports across seven batches. The six that changed something in the
 corpus rather than adding to it:
 
 - **[Wenlan](../content/systems/wenlan.md)** — the atlas's tenth tombstone, and
@@ -115,6 +115,12 @@ corpus rather than adding to it:
   self-audit of its own graph construction, written to this atlas's evidence
   rules, finding a dead resolver, a header contradicting its own code, and a
   quality gate the upsert path voids entirely.
+- **[Noosphere](../content/systems/noosphere.md)** — the eleventh tombstone, of
+  the *consulted* kind, and the only one in the corpus that reasons about the
+  key used to compute its own key: the digest is an HMAC, so the check runs
+  against every retained key version and a rotation cannot readmit a revocation.
+  It added a fifth property to
+  [the strong-form taxonomy](2026-08-07-the-strong-form-tombstone-subset.md).
 
 ## The pattern the batch surfaced
 
@@ -199,15 +205,108 @@ for a reading, with the signal that argues for it:
     provenance surviving compression, `alash3al/stash` for its causal-link and
     hypothesis taxonomy, `nhevers/moltbrain` for hook-driven passive capture.
 
+## The fifty-one still to read, with the evidence
+
+Every one of these is cloned, screened with `screen_repo.py`, and measured.
+**None has been read**, and nothing below is a verdict — the columns are the
+probe output described above, and that probe caught out three times as often as
+it hit. They are ordered by size because size correlates with nothing in
+particular and at least sorts deterministically.
+
+The `tomb`/`sup`/`val`/`aud`/`rev`/`scope` columns are counts of *files
+containing a vocabulary match*, not counts of mechanisms.
+
+| Repository | Lines | tomb | sup | val | aud | rev | scope | MCP | tests |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :-: | ---: |
+| `memorybear` | 410,279 | 0 | 24 | 359 | 4 | 6 | 349 | MCP | 14 |
+| `aipass` | 377,209 | 0 | 21 | 255 | 5 | 17 | 37 | - | 446 |
+| `mem9` | 153,728 | 8 | 30 | 98 | 1 | 6 | 81 | - | 110 |
+| `jumbo.cli` | 150,278 | 0 | 80 | 199 | 6 | 76 | 46 | - | 587 |
+| `aurora` | 144,756 | 0 | 30 | 328 | 4 | 34 | 22 | MCP | 153 |
+| `neuroca` | 133,748 | 0 | 6 | 200 | 0 | 1 | 25 | - | 21 |
+| `omnimemory` | 119,082 | 0 | 10 | 239 | 5 | 3 | 21 | - | 99 |
+| `claude-total-memory` | 109,121 | 0 | 57 | 84 | 4 | 4 | 7 | MCP | 145 |
+| `wax` | 100,459 | 1 | 61 | 74 | 1 | 11 | 7 | MCP | 0 |
+| `truememory` | 73,324 | 0 | 29 | 72 | 1 | 17 | 14 | MCP | 182 |
+| `daem0n-mcp` | 71,142 | 0 | 40 | 72 | 0 | 3 | 4 | MCP | 106 |
+| `pltm-claude` | 67,404 | 0 | 29 | 91 | 0 | 25 | 20 | MCP | 36 |
+| `memoir` | 65,426 | 1 | 12 | 46 | 1 | 4 | 142 | MCP | 51 |
+| `memomind` | 63,390 | 0 | 6 | 42 | 1 | 0 | 12 | MCP | 0 |
+| `athena-public` | 60,196 | 0 | 27 | 172 | 14 | 29 | 3 | MCP | 17 |
+| `gitmem` | 59,882 | 0 | 18 | 125 | 2 | 4 | 34 | MCP | 84 |
+| `second-brain-cloudflare` | 58,269 | 0 | 15 | 36 | 2 | 1 | 41 | MCP | 125 |
+| `context-mem` | 55,951 | 0 | 19 | 50 | 6 | 25 | 0 | MCP | 99 |
+| `moltbrain` | 54,392 | 0 | 5 | 55 | 0 | 1 | 4 | MCP | 40 |
+| `engram` | 48,839 | 7 | 9 | 25 | 5 | 0 | 63 | MCP | 32 |
+| `agent-working-memory` | 45,028 | 0 | 61 | 70 | 5 | 3 | 8 | MCP | 49 |
+| `mengram` | 40,820 | 0 | 13 | 14 | 2 | 5 | 5 | MCP | 15 |
+| `fidelis` | 37,902 | 0 | 8 | 31 | 3 | 8 | 8 | - | 31 |
+| `telemem` | 33,049 | 0 | 1 | 40 | 0 | 1 | 62 | MCP | 20 |
+| `openmemory` | 32,965 | 0 | 11 | 35 | 0 | 1 | 33 | MCP | 11 |
+| `opencode-mem` | 32,329 | 0 | 7 | 27 | 0 | 0 | 0 | - | 65 |
+| `cortex-engine` | 32,280 | 0 | 12 | 38 | 1 | 1 | 128 | MCP | 35 |
+| `obsidian-mind` | 29,232 | 0 | 17 | 40 | 2 | 5 | 3 | MCP | 55 |
+| `ori-mnemos` | 25,339 | 0 | 7 | 37 | 1 | 3 | 0 | MCP | 35 |
+| `vir` | 22,884 | 0 | 3 | 11 | 0 | 8 | 0 | MCP | 46 |
+| `yourmemory` | 22,060 | 0 | 4 | 9 | 5 | 11 | 9 | MCP | 5 |
+| `memsearch` | 20,330 | 0 | 5 | 15 | 1 | 5 | 4 | - | 32 |
+| `claudest` | 20,209 | 0 | 5 | 58 | 5 | 8 | 26 | - | 18 |
+| `mnemos` | 19,775 | 1 | 7 | 28 | 8 | 0 | 6 | MCP | 84 |
+| `nocturne_memory` | 19,433 | 0 | 4 | 21 | 0 | 6 | 41 | MCP | 13 |
+| `diffmem` | 14,784 | 0 | 5 | 23 | 0 | 1 | 9 | - | 22 |
+| `memcp` | 14,313 | 0 | 11 | 28 | 1 | 0 | 2 | MCP | 26 |
+| `arcrift` | 13,445 | 0 | 3 | 19 | 0 | 0 | 3 | MCP | 12 |
+| `memv` | 11,951 | 0 | 22 | 23 | 1 | 1 | 2 | MCP | 15 |
+| `agentmemory` | 11,928 | 0 | 15 | 22 | 7 | 5 | 18 | - | 0 |
+| `memory-ts` | 11,622 | 0 | 12 | 3 | 0 | 1 | 17 | - | 1 |
+| `memlayer` | 9,229 | 0 | 0 | 6 | 0 | 1 | 0 | - | 7 |
+| `stash` | 7,933 | 0 | 2 | 18 | 3 | 0 | 49 | - | 1 |
+| `knowledge-worker` | 7,466 | 0 | 1 | 18 | 0 | 8 | 2 | MCP | 7 |
+| `marsnme` | 3,899 | 1 | 5 | 11 | 0 | 0 | 13 | MCP | 2 |
+| `claude-cognitive` | 3,678 | 0 | 0 | 26 | 3 | 1 | 0 | MCP | 0 |
+| `context-infrastructure` | 3,496 | 0 | 0 | 8 | 1 | 0 | 3 | - | 1 |
+| `continuity-v2` | 2,589 | 0 | 0 | 0 | 1 | 0 | 0 | MCP | 0 |
+| `sovereign-ai-kit` | 2,128 | 0 | 0 | 0 | 1 | 0 | 1 | - | 0 |
+| `memorix-sdk` | 1,299 | 0 | 1 | 2 | 0 | 0 | 0 | - | 1 |
+| `claude-sleep` | 0 | 0 | 1 | 0 | 0 | 0 | 0 | - | 0 |
+
+Reading these in size order would be the wrong call, and reading them by
+tombstone count would have put three index-tombstone false positives at the
+front of this pass. The order the shortlist above proposes is by *which axis of
+this atlas is thinnest* — correction and governance — and then by whether the
+probe suggests the repository has anything on that axis at all.
+
+Four rows deserve a note now rather than after a reading:
+
+- **`memorybear`** is the largest and has the highest scope count in the
+  remainder. The source corpus credits it with "a genuine ACT-R forgetting
+  engine" and marks its self-reported LoCoMo numbers as lower than the
+  submitter's own. Both claims are checkable and neither is checked here.
+- **`jumbo.cli`** carries the highest review-vocabulary count of anything left
+  (76 files) beside 587 test files, which is the profile of a system with a
+  real workflow rather than a flag.
+- **`aipass`** has 446 test files and the second-largest source tree, and the
+  source corpus describes its memory as "a minimal file-JSON-hot + ChromaDB-cold
+  vector store" — a large system whose memory is small, which is exactly the
+  shape metadata triage gets wrong in the direction the issue warns about.
+- **`neuroca`** was declined in the source corpus as "alpha; ~110K lines of
+  AI-generated scaffolding, integration tests all skipped". The probe agrees on
+  the scale and says nothing about the scaffolding claim, which needs a reading
+  to confirm or overturn — and confirming somebody else's decline is worth as
+  much as overturning it.
+
 ## What came of it
 
-- **21 reports added**, taking the corpus from 167 to 188.
-- **Marks added**: 14 `scope_enforced`, 14 `audit_log`, 7 `trust_state`,
-  5 `bitemporal`, 4 `negative_eval`, 3 `human_review`, and **1 `tombstone`** —
-  the first added since the [strong-form audit](2026-08-07-the-strong-form-tombstone-subset.md),
-  and a *collided*-kind instance made deliberate.
-- **One rename resolved** that a URL join could not see, and
-  [recorded in the report](../content/systems/byterover.md) so the next join
+- **25 reports added**, taking the corpus from 167 to 192.
+- **Marks added**: 18 `scope_enforced`, 18 `audit_log`, 9 `trust_state`,
+  5 `bitemporal`, 5 `negative_eval`, 5 `human_review`, and **2 `tombstone`** —
+  the first two added since the
+  [strong-form audit](2026-08-07-the-strong-form-tombstone-subset.md), one
+  *collided*-kind made deliberate and one *consulted*-kind that survives key
+  rotation.
+- **Three renames resolved** that a URL join could not see — `byterover-cli`,
+  `tencentdb-agent-memory` and `mempalace` — each
+  [recorded in its report](../content/systems/byterover.md) so the next join
   does not re-report it.
 - **One DIVE-tier system confirmed gone** from GitHub.
 - **The corpus's methodological claim corroborated**, and the probe that
