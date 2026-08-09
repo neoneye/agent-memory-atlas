@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **220 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **221 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -60,6 +60,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`core-redplanet`](../systems/core-redplanet/) **CORE** — Reified temporal knowledge graph · `RedPlanetHQ/core` · Bi-temporal, Scope enforced
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
+- [`cortex-engine`](../systems/cortex-engine/) **cortex-engine** — \"You were wrong\" and \"the world changed\" are different verdicts · `fozikio/cortex-engine` · Mutation audit
 - [`cortexgraph`](../systems/cortexgraph/) **CortexGraph** — Forgetting as the default · `prefrontal-systems/cortexgraph` · Scope enforced
 - [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`
 - [`cowagent`](../systems/cowagent/) **CowAgent** — Daily-distilled memory · `zhayujie/CowAgent` · Scope enforced

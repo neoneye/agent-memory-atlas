@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 220 reports.**
+**This page covers all 221 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["220 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["221 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1897,6 +1897,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: three backends behind one connection layer, non-LLM fallbacks beside the LLM paths, a benchmark document leading with `recall_all@5` when `recall_any@5` is eleven points better, 95% CIs, and a `SOC2_READINESS_REPORT.md` labelled "NOT a SOC 2 attestation… Prepared by: Automated codebase assessment" on line 2.
 - Study when: your ranking multiplies relevance by a decay term and old correct answers keep losing to new irrelevant ones.
 - Do not copy when: you need to know what a correction replaced — five test files also carry three benchmark suites.
+
+### [`cortex-engine`](../systems/cortex-engine/)
+
+- Best idea: `contradict` adjudicates the (evidence, belief) pair into five outcomes before recording anything, and only `genuine` penalises confidence — `supersedes` gets a lower-priority TENSION signal and no penalty, because "the world changed; revise via believe() with valid_from instead of distrusting the belief". Everywhere else in this atlas a superseded fact and a refuted one are treated alike, which teaches the system to distrust things that were correct at the time.
+- Biggest risk: a dozen neuroscience-named mechanisms — NREM/REM consolidation, Thousand Brains voting, Fiedler-value graph health, epistemic foraging, PE saturation — with no evaluation of any of them anywhere in the tree.
+- Most reusable component: `believe()`'s transaction discipline. The belief log and the memory update commit together "so we never end up with a belief entry that points at a memory that was never updated, or a memory whose history is missing the revision row", and the embedding is computed *before* the transaction because network calls "must never happen inside `withTransaction` (they hold the writer mutex open)".
+- Maturity impression: 32,000 lines, three storage backends behind one interface with a checkpointed ID-preserving migrator that fails loud on schema mismatch, 60 MCP tools each carrying `whenToUse` *and* `doNotUse`, and a REST surface that blocks the destructive tools while leaving them available over MCP.
+- Study when: your confidence scores fall for beliefs that were true when they were written.
+- Do not copy when: you need `valid_from` to be queryable — it is stored on every backend, read back by the mappers, and used in no predicate.
+
 
 
 

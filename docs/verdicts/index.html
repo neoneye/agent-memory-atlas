@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 220 reports.</strong></p>
+<p><strong>This page covers all 221 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;220 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;221 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5537,6 +5537,39 @@ assessment" on line 2.</li>
 old correct answers keep losing to new irrelevant ones.</li>
 <li>Do not copy when: you need to know what a correction replaced — five
 test files also carry three benchmark suites.</li>
+</ul>
+<h3 id="cortex-engine"><a
+href="../systems/cortex-engine/"><code>cortex-engine</code></a></h3>
+<ul>
+<li>Best idea: <code>contradict</code> adjudicates the (evidence,
+belief) pair into five outcomes before recording anything, and only
+<code>genuine</code> penalises confidence — <code>supersedes</code> gets
+a lower-priority TENSION signal and no penalty, because "the world
+changed; revise via believe() with valid_from instead of distrusting the
+belief". Everywhere else in this atlas a superseded fact and a refuted
+one are treated alike, which teaches the system to distrust things that
+were correct at the time.</li>
+<li>Biggest risk: a dozen neuroscience-named mechanisms — NREM/REM
+consolidation, Thousand Brains voting, Fiedler-value graph health,
+epistemic foraging, PE saturation — with no evaluation of any of them
+anywhere in the tree.</li>
+<li>Most reusable component: <code>believe()</code>'s transaction
+discipline. The belief log and the memory update commit together "so we
+never end up with a belief entry that points at a memory that was never
+updated, or a memory whose history is missing the revision row", and the
+embedding is computed <em>before</em> the transaction because network
+calls "must never happen inside <code>withTransaction</code> (they hold
+the writer mutex open)".</li>
+<li>Maturity impression: 32,000 lines, three storage backends behind one
+interface with a checkpointed ID-preserving migrator that fails loud on
+schema mismatch, 60 MCP tools each carrying <code>whenToUse</code>
+<em>and</em> <code>doNotUse</code>, and a REST surface that blocks the
+destructive tools while leaving them available over MCP.</li>
+<li>Study when: your confidence scores fall for beliefs that were true
+when they were written.</li>
+<li>Do not copy when: you need <code>valid_from</code> to be queryable —
+it is stored on every backend, read back by the mappers, and used in no
+predicate.</li>
 </ul>
         </article>
       </div>
