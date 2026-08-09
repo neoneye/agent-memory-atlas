@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 217 reports.**
+**This page covers all 218 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["217 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["218 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1870,6 +1870,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: embedded Turso/libSQL with inline `F32_BLOB` vectors and a DiskANN index, two vectors per memory, 66 test files, a CI matrix across six OS/architecture combinations with a note on what it does *not* cover, and a `.legacy.bak` written per shard before migration.
 - Study when: you have a local HTTP API and a CORS policy and have not asked what happens when there is no `Origin` header.
 - Do not copy when: you need correction — `is_pinned` is the only field that changes a memory's standing, and it changes retention rather than truth.
+
+### [`openmemory`](../systems/openmemory/)
+
+- Best idea: `test_project_isolation.ts` asserts three things per direction — the project finds its own memory, does *not* find the other project's, and *does* find the shared `system_global` tier. Each assertion alone passes for a broken implementation (return everything, return nothing, drop the global scope); together they pin the behaviour.
+- Biggest risk: the distinguishing claim is unmeasured. `SECTORAL_INTERDEPENDENCE_MATRIX_FOR_COGNITIVE_RESONANCE` is a hand-typed symmetric 5×5 grid, sitting under twelve Greek-lettered constants, with no citation, derivation, fitting procedure or ablation anywhere — while `Why.md` scores the project ✅ against vector databases' ❌ on "biological alignment" and "explainable recall".
+- Most reusable component: bounding a graph signal's contribution — `waypoint` at 0.15 of the pre-sigmoid hybrid score with a `waypoint_boost` and a `max_waypoint_weight`, so an association graph cannot swamp similarity as it densifies.
+- Maturity impression: a wide integration surface — two SDKs, MCP, VS Code, four frameworks, five source connectors — full governance documents, and a README whose first line announces a rewrite in progress on another branch.
+- Study when: you are building multi-project memory with a shared global tier and need the test that pins it.
+- Do not copy when: you want the sectored model — run retrieval with the matrix, flattened, and randomised first; nothing in the repository shows it earns its place.
+
 
 
 

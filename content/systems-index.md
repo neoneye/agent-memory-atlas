@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **217 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **218 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -204,6 +204,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`opencode`](../systems/opencode/) **OpenCode** — Hooks, no contract · `anomalyco/opencode`
 - [`opencode-mem`](../systems/opencode-mem/) **OpenCode Memory** — A path traversal it found in itself, with the payload printed · `tickernelz/opencode-mem` · Scope enforced
 - [`openhuman`](../systems/openhuman/) **OpenHuman** — Taint-gated memory · `tinyhumansai/openhuman` · Scope enforced
+- [`openmemory`](../systems/openmemory/) **OpenMemory** — Twenty-five numbers nobody derived · `CaviraOSS/OpenMemory` · Scope enforced, Negative evals
 - [`opensre`](../systems/opensre/) **OpenSRE** — Grounding as the write gate · `Tracer-Cloud/opensre` · Scope enforced, Human review, Negative evals
 - [`openviking`](../systems/openviking/) **OpenViking** — Filesystem context database · `volcengine/OpenViking` · Scope enforced
 - [`openworker`](../systems/openworker/) **OpenWorker** — Policy over machinery · `andrewyng/openworker` · Scope enforced
