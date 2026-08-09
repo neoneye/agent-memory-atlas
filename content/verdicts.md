@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 195 reports.**
+**This page covers all 196 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["195 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["196 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1672,3 +1672,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 134,000 lines with three tiers over pluggable backends, a lymphatic consolidator, an annealing optimizer and Hebbian tubule weights — beside 21 test files, three unit skips reasoned "implementation varies across backends", and an Agno comparison hosted in a separate repository.
 - Study when: you want the status vocabulary and the consolidation provenance fields, both of which are independent of the refactor.
 - Do not copy when: now — the architecture is legible and its coverage against a durable backend is zero by the project's own markers.
+
+### [`athena`](../systems/athena/)
+
+- Best idea: a README section titled "What's Proven vs. What's Proposed" that grades six layers from shipped to "partially unfalsifiable — by nature", including the row where the project names the literature predicting its own failure — user-memory profiles raise agreement sycophancy 45% on Gemini 2.5 Pro — and then writes "Athena is *built on* that mechanism". No other system in this atlas cites the paper against itself.
+- Biggest risk: the anti-self-mythologizing convention it defines — every mechanism labelled `code-enforced`, `agent-discretion` or `aspirational` — is applied inline in about eight files out of 569, with the `epistemic_status:` frontmatter key used nowhere. The rule says "tag on touch"; at this commit the tagged set is roughly the documents about tagging.
+- Most reusable component: `audit_staleness.py`, which flags a reference written *before* the file it points at was last modified — freshness applied to citations rather than to content, using git timestamps.
+- Maturity impression: 60,000 lines of Python over 569 Markdown files, a regex anti-sycophancy classifier that cannot itself be flattered, auditors for staleness and coverage — and an explicit N=1 admission: "this worked for one person who built it around his own thinking — you are the replication experiment".
+- Study when: you are about to describe a mechanism in the present tense and are not sure any code implements it.
+- Do not copy when: you need the governance to travel — the one code-enforced safeguard is a Claude Code hook, and the project says so.
