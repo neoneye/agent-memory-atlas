@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 206 reports.**
+**This page covers all 207 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["206 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["207 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1771,6 +1771,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 55,000 lines implementing LangGraph's `BaseStore`, Merkle inclusion proofs delegated to prollytree rather than hand-rolled, `memoir blame` returning commit, author, date and message per key, a lazy v1→v2 schema lift with a byte-identical compatibility separator, and 35 test files.
 - Study when: your store answers "a write landed on an occupied key" the same way for a scratchpad value and a stated fact.
 - Do not copy when: you need a rejected-value record — `REPLACE` drops prior entries from the blob and they survive only in git history, recoverable but never consulted on the next write.
+
+### [`memomind`](../systems/memomind/)
+
+- Best idea: `engine/PATCHES.md` — four defects found by running [Hindsight](../systems/hindsight/) in production, each with file, change and reason. Two are memory-quality findings the upstream project does not measure: the consolidator creates observations that are 1:1 restatements of a single fact, and its 0.8 similarity gate is defeated by gpt-4o paraphrasing its own output, fixed by dropping to 0.5 *and* adding a length-ratio check.
+- Biggest risk: `install.sh` runs `sed -i 's/password/trust/g'` over the application's `pg_hba.conf` and prints "Database auth fixed (trust mode)". The instance is the app's own, but trust means any local process can read years of imported private conversations without a password.
+- Most reusable component: `prune_stale_observations` — delete observations with `proof_count <= 1` older than 30 days, and write what was deleted into the backup. Forgetting keyed on evidence rather than on a decay curve, and the operational counterpart to the patch that stops those observations being created.
+- Maturity impression: roughly 63,000 lines of which 1,411 are this project's; no tests, no benchmark, a patcher defaulting to one machine's Windows path, and a documented warning that `pip install --upgrade` wipes the patches.
+- Study when: you are running Hindsight — read the patch file before you run it again.
+- Do not copy when: you are looking for a memory design; the mechanism here is upstream, and this project's contribution is the field report and the pruner.
+
 
 
 

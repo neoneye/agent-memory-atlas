@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 206 reports.</strong></p>
+<p><strong>This page covers all 207 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;206 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;207 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5095,6 +5095,36 @@ the same way for a scratchpad value and a stated fact.</li>
 <code>REPLACE</code> drops prior entries from the blob and they survive
 only in git history, recoverable but never consulted on the next
 write.</li>
+</ul>
+<h3 id="memomind"><a
+href="../systems/memomind/"><code>memomind</code></a></h3>
+<ul>
+<li>Best idea: <code>engine/PATCHES.md</code> — four defects found by
+running <a href="../systems/hindsight/">Hindsight</a> in production,
+each with file, change and reason. Two are memory-quality findings the
+upstream project does not measure: the consolidator creates observations
+that are 1:1 restatements of a single fact, and its 0.8 similarity gate
+is defeated by gpt-4o paraphrasing its own output, fixed by dropping to
+0.5 <em>and</em> adding a length-ratio check.</li>
+<li>Biggest risk: <code>install.sh</code> runs
+<code>sed -i 's/password/trust/g'</code> over the application's
+<code>pg_hba.conf</code> and prints "Database auth fixed (trust mode)".
+The instance is the app's own, but trust means any local process can
+read years of imported private conversations without a password.</li>
+<li>Most reusable component: <code>prune_stale_observations</code> —
+delete observations with <code>proof_count &lt;= 1</code> older than 30
+days, and write what was deleted into the backup. Forgetting keyed on
+evidence rather than on a decay curve, and the operational counterpart
+to the patch that stops those observations being created.</li>
+<li>Maturity impression: roughly 63,000 lines of which 1,411 are this
+project's; no tests, no benchmark, a patcher defaulting to one machine's
+Windows path, and a documented warning that
+<code>pip install --upgrade</code> wipes the patches.</li>
+<li>Study when: you are running Hindsight — read the patch file before
+you run it again.</li>
+<li>Do not copy when: you are looking for a memory design; the mechanism
+here is upstream, and this project's contribution is the field report
+and the pruner.</li>
 </ul>
         </article>
       </div>
