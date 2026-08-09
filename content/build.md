@@ -98,11 +98,22 @@ to fall back to when extraction is wrong.
 
 | Stage | What it adds | What works at the end of it |
 | --- | --- | --- |
-| 1 | Raw evidence stored before any model call, deterministic chunking, scope applied as a read filter, lexical search | A memory that never loses material and never leaks across scopes |
+| 1 | Raw evidence stored before any model call, deterministic chunking, scope as a schema key applied on the read path, lexical search | A memory that never loses material, and a scope boundary that holds on the read path |
 | 2 | Derived claims with append-only provenance rows, a discrete status, supersession | Claims you can trace back to what they came from |
 | 3 | Vector search fused with lexical, token-budgeted context assembly, recall fenced as data | Retrieval that finds paraphrases without displacing the evidence floor |
 | 4 | Correction that survives a rebuild, a mutation audit, background jobs behind clear synchronous semantics | A correction you can prove held |
 | 5 | Rejected-value tombstones, human review, bi-temporal validity, negative tests in CI | Memory that stays corrected through re-extraction |
+
+**Stage 1 is not a tenant boundary yet, and shipping it as one is the mistake
+this table can most easily cause.** A read filter keeps one scope's memories out
+of another scope's results; it says nothing about a caller that passes someone
+else's scope as an argument, or a consolidation pass that summarises across the
+line the read path enforces. Those are `scope.caller_cannot_widen` and
+`scope.background_respects_boundary` in the table below, they are separate tests
+because they fail separately, and the pattern index is blunt about the reason
+scope comes first: it "has to reach the schema, the indexes, the cache keys, and
+every background job", which is why retrofitting it into a store that already has
+data is the hardest migration on its list.
 
 **What is safe to defer, stated plainly**, from the pattern index: bi-temporal
 validity, hybrid retrieval fusion, decay and reinforcement, and source-diverse

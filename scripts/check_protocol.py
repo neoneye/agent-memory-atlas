@@ -13,6 +13,10 @@ What this validates:
 
 - the catalogue parses, and every entry has the required fields;
 - ids are unique, and every id referenced in a template resolves;
+- the pages in `COMPLETE` list *every* catalogue id, and state the right total —
+  checking only that referenced ids exist is one-directional, and would let a
+  twenty-first test be added while the published table kept twenty rows under a
+  sentence saying twenty;
 - each `source:` names a file that exists and a section that appears in it;
 - each `pattern:` is a real pattern slug, or the literal `multiple`;
 - no literal commit hash is left in the templates, because a copied hash is a
@@ -42,6 +46,22 @@ TEMPLATES = [
     # while staying correct in the catalogue.
     "content/build.md",
 ]
+#: Pages whose test list is exhaustive rather than illustrative. The templates
+#: quote whichever ids a brief happens to need; the published table claims to be
+#: the catalogue, so it is held to the catalogue both ways.
+COMPLETE = ("content/build.md",)
+#: The sentence introducing that table carries the total in prose. A row added
+#: without touching it leaves a count that reads current and is not.
+TOTAL_PHRASE = re.compile(r"\b([A-Za-z-]+|\d{1,3})\s+acceptance tests are specified", re.IGNORECASE)
+#: Spelled totals this project is plausibly within range of. Digits are read
+#: directly; anything outside both is reported rather than guessed at.
+WORDS = {
+    "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+    "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+    "twenty": 20, "twenty-one": 21, "twenty-two": 22, "twenty-three": 23,
+    "twenty-four": 24, "twenty-five": 25, "twenty-six": 26, "twenty-seven": 27,
+    "twenty-eight": 28, "twenty-nine": 29, "thirty": 30,
+}
 REQUIRED = ("pattern", "source", "proves", "spec", "not_proven")
 SPEC_KEYS = ("given", "when", "then")
 #: A bare hex run long enough to be a commit. Templates must use a placeholder:
@@ -123,7 +143,31 @@ def validate(entries: list[dict], root: Path, referenced: dict[str, list[str]]) 
             if tid not in seen:
                 problems.append(f"{where}: references test id '{tid}', which is not in the catalogue")
 
+    for where in COMPLETE:
+        if where not in referenced:
+            continue
+        for tid in sorted(seen - set(referenced[where])):
+            problems.append(f"{where}: catalogue test '{tid}' is missing from a page that lists them all")
+        problems.extend(check_total(where, len(seen), root))
+
     return problems
+
+
+def check_total(where: str, total: int, root: Path) -> list[str]:
+    """The prose total beside an exhaustive table must be the catalogue size."""
+    path = root / where
+    if not path.exists():
+        return []
+    match = TOTAL_PHRASE.search(path.read_text(encoding="utf-8"))
+    if not match:
+        return [f"{where}: no 'N acceptance tests are specified' sentence to check the total against"]
+    token = match.group(1).lower()
+    stated = int(token) if token.isdigit() else WORDS.get(token)
+    if stated is None:
+        return [f"{where}: total written as '{match.group(1)}', which this check cannot read"]
+    if stated != total:
+        return [f"{where}: says {match.group(1)} acceptance tests, catalogue has {total}"]
+    return []
 
 
 def check_source(tid: str, source: str, root: Path) -> list[str]:
@@ -209,7 +253,11 @@ def self_test(root: Path) -> int:
     it before a bug did.
     """
     entries = parse_tests(BAD_FIXTURE)
-    problems = " | ".join(validate(entries, root, {"fixture": ["not.a_real_id"]}))
+    # An empty list for an exhaustive page stands in for the drift the reverse
+    # check exists to catch: a catalogue entry that never reached the table, and
+    # a prose total left at the figure it had before.
+    referenced = {"fixture": ["not.a_real_id"], "content/build.md": []}
+    problems = " | ".join(validate(entries, root, referenced))
     expected = {
         "duplicate id": "duplicate id",
         "missing spec key": "spec is missing then",
@@ -217,6 +265,8 @@ def self_test(root: Path) -> int:
         "missing source file": "does not exist",
         "missing section": "no such heading",
         "unresolved reference": "not in the catalogue",
+        "catalogue id absent from an exhaustive page": "missing from a page that lists them all",
+        "stale prose total": "acceptance tests, catalogue has 1",
     }
     failures = [label for label, needle in expected.items() if needle not in problems]
     if len(entries) != 2:
