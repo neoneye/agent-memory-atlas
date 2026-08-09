@@ -141,7 +141,7 @@ what it used.
 
 The consequence is worth being plain about: **nothing corrects anything.** A note
 you wrote in March that stopped being true in April is retrieved with the same
-standing as one written yesterday, and there is no mechanism — not a decay
+standing as every other passage in the store, and there is no mechanism — not a decay
 curve, not a status flag, not a supersession link — by which the store learns it
 is stale. The system's answer is that you edit your notes.
 
