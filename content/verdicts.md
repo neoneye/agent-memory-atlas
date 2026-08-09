@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 227 reports.**
+**This page covers all 228 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["227 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["228 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1960,6 +1960,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 19,200 lines with MCP over SSE and streamable HTTP, a REST API, a web frontend and a documented workaround for FastMCP's SSE transport dropping the namespace on `POST /messages/` — against 12 test files, thinnest exactly at the fuzzy patcher whose failure is a silently wrong edit.
 - Study when: your agent edits stored memory by quoting the text it wants to replace.
 - Do not copy when: you need the framing to mean something — "alignment is for tools, memories are for sovereign AI" is positioning, and the URI graph underneath it is the part that works.
+
+### [`claudest`](../systems/claudest/)
+
+- Best idea: "**a run that only adds is a failure mode**" — consolidation judged by what it removed, with the auditor producing SUPERSEDED / REDUNDANT / LOW-VALUE / MERGE findings the protocol requires to become concrete proposals. Beside it: retirements settle *before* clustering, because "clustering never runs before retirement; it must not mask removable entries".
+- Biggest risk: the whole protocol is prose an LLM is asked to follow, enforced by nothing. The ordering rule, the removal requirement and the verification step can all be skipped with nothing failing loudly — against two test files for 8,800 lines of hooks that edit the user's `CLAUDE.md` and `MEMORY.md`.
+- Most reusable component: three independent guards on agent-initiated deletion — `AskUserQuestion` offering *Approve selectively* rather than approve-all, `trash` instead of `rm` so an approved mistake is recoverable, and a `Glob` afterwards because "claiming a deletion that did not happen is the exact failure this guards against". Any one alone is insufficient.
+- Maturity impression: SQLite with FTS5 and zero external dependencies, precomputed summaries injected at session start with separate selection algorithms for a fresh start and a `/clear`, and one integer doing three jobs — `summary_version < 2` selects for work, `2` marks current, `-1` marks permanently failed so a poisoned document is never retried.
+- Study when: your consolidation pass has never deleted anything.
+- Do not copy when: you need the protocol enforced — it is a specification for a model, not code.
+
 
 
 

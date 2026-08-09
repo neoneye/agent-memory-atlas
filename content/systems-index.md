@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **227 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **228 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -51,6 +51,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`camel`](../systems/camel/) **CAMEL** — Message store with vector recall · `camel-ai/camel`
 - [`claude-mem`](../systems/claude-mem/) **Claude-Mem** — Hook-native coding-agent memory · `thedotmack/claude-mem` · Scope enforced
 - [`claude-total-memory`](../systems/claude-total-memory/) **total-agent-memory** — Search for what would refute the answer · `vbcherepanov/claude-total-memory` · Bi-temporal, Scope enforced, Negative evals
+- [`claudest`](../systems/claudest/) **Claudest (claude-memory)** — A run that only adds is a failure mode · `gupsammy/claudest` · Human review
 - [`clawmem`](../systems/clawmem/) **ClawMem** — On-device vault for coding agents · `yoloshii/clawmem` · Bi-temporal, Scope enforced, Mutation audit
 - [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
 - [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced

@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A consolidation protocol that must
+produce removals, settles retirements before clustering so nothing masks
+a removable entry, and verifies each deletion actually happened.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Claudest
+(claude-memory) — Agent Memory Atlas">
+    <meta property="og:description" content="A consolidation protocol
+that must produce removals, settles retirements before clustering so
+nothing masks a removable entry, and verifies each deletion actually
+happened.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claudest
+(claude-memory) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A consolidation protocol
+that must produce removals, settles retirements before clustering so
+nothing masks a removable entry, and verifies each deletion actually
+happened.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Claudest (claude-memory) — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A run that only adds is a failure mode</p>
+          <h1>Claudest (claude-memory)</h1>
+          <p class="document-deck">A consolidation protocol that must
+produce removals, settles retirements before clustering so nothing masks
+a removable entry, and verifies each deletion actually happened.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gupsammy/claudest">
+              <span>Source</span>
+              <strong>gupsammy/claudest</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9" title="1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9">
+              <span>Analyzed revision</span>
+              <code>1c634ac0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Claudest is a marketplace of eight Claude Code plugins;
+<strong><code>claude-memory</code></strong> is the one this report
+covers. It stores every session in SQLite with FTS5 and BM25 ranking,
+injects precomputed summaries of recent sessions at session start, and
+offers an <code>extract-learnings</code> skill that promotes durable
+insights into <code>CLAUDE.md</code>, <code>MEMORY.md</code> and topic
+files.</p>
+<p><strong>The artifact worth the report is
+<code>extract-learnings/SKILL.md</code></strong> — a consolidation
+protocol specified with more care than most systems here give their
+code, and one line in it is the best sentence in this batch:</p>
+<blockquote>
+<p>"Convert the auditor's SUPERSEDED / REDUNDANT / LOW-VALUE / MERGE
+findings into concrete REMOVE/MERGE proposals — <strong>a run that only
+adds is a failure mode</strong>."</p>
+</blockquote>
+<p>A consolidation pass that never retires anything is a growth pass
+with a consolidation label on it, and this atlas has read many. Naming
+that as a <em>failure</em> — a condition the run should be judged
+against — is the correction.</p>
+<p><strong>Three more rules in the same protocol earn their
+place:</strong></p>
+<p><strong>Ordering.</strong> "ONLY after retirements and merges are
+settled" does the overflow check run, and only on the reduced set.
+"Clustering never runs before retirement; it must not mask removable
+entries." Splitting an over-full section into a cluster file before
+deleting its dead entries hides exactly what should have been deleted,
+and produces a tidy-looking memory that is still wrong.</p>
+<p><strong>Reversibility.</strong> "Delete each retired topic file with
+<code>Bash: trash &lt;path&gt;</code> (<strong>trash, never rm —
+reversible</strong>)."</p>
+<p><strong>Verification.</strong> "After REMOVE/MERGE, run
+<code>Glob memory/**/*.md</code> from resolved path and confirm each
+retired file is gone. <strong>Never mark a REMOVE/MERGE row 'done'
+unless the file is verified absent — claiming a deletion that did not
+happen is the exact failure this guards against.</strong>"</p>
+<p>That is an agent instructed not to trust its own report of its own
+action, with the failure mode it is guarding written next to the check.
+It is the same discipline this atlas applies to the systems it
+reads.</p>
+<p><strong>And none of it lands without approval</strong> —
+<code>AskUserQuestion: Approve all / Approve selectively / Reject</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two layers. Sessions accumulate automatically in SQLite and are
+searchable. Durable learnings are promoted out of them into markdown, by
+an explicit, gated, audited process.</p>
+<pre class="mermaid"><code>flowchart TD
+    S[&quot;session&quot;] --&gt; IMP[&quot;import_conversations — branches in SQLite + FTS5&quot;]
+    IMP --&gt; SUM[&quot;compute_context_summary&quot;]
+    SUM --&gt; SV{&quot;summary_version&quot;}
+    SV --&gt;|&quot;NULL or &amp;lt; 2&quot;| BF[&quot;backfill batch of 50, commit between batches&quot;]
+    SV --&gt;|&quot;= 2&quot;| CUR[&quot;current&quot;]
+    SV --&gt;|&quot;= -1&quot;| POI[&quot;permanently failed — never retried&quot;]
+    ST[&quot;SessionStart&quot;] --&gt; SEL{&quot;startup or clear?&quot;}
+    SEL --&gt;|startup| A1[&quot;most recent substantive (&amp;gt;2 exchanges)&lt;br/&gt;+ recent short sessions in remaining slots&quot;]
+    SEL --&gt;|clear| A2[&quot;read the handoff file written by SessionEnd —&lt;br/&gt;hard-link to the exact cleared-from session&quot;]
+    A2 --&gt;|&quot;missing, stale, or not in DB&quot;| A1
+    A1 --&gt; INJ[&quot;inject as hookSpecificOutput&quot;]
+    A2 --&gt; INJ
+    EL[&quot;extract-learnings&quot;] --&gt; AUD[&quot;memory-auditor: SUPERSEDED / REDUNDANT /&lt;br/&gt;LOW-VALUE / MERGE findings&quot;]
+    AUD --&gt; PROP[&quot;concrete REMOVE / MERGE proposals —&lt;br/&gt;a run that only adds is a failure mode&quot;]
+    PROP --&gt; ASK{&quot;AskUserQuestion:&lt;br/&gt;Approve all / selectively / Reject&quot;}
+    ASK --&gt;|approved| R1[&quot;1. REMOVE: trash the file, drop its pointer&quot;]
+    R1 --&gt; R2[&quot;2. MERGE: write merged, trash absorbed, drop pointers&quot;]
+    R2 --&gt; R3[&quot;3. Cluster: only now, on the post-removal set&quot;]
+    R3 --&gt; VER[&quot;Glob memory/**/*.md — confirm each retired file is absent&quot;]
+    VER --&gt; DONE[&quot;only then mark the row done&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>plugins/claude-memory/</code> is about 8,800 lines:
+<code>hooks/</code> (import, sync, setup, backfill, context injection,
+consolidation check, onboarding, handoff clearing), <code>skills/</code>
+(<code>recall-conversations</code>, <code>extract-learnings</code>,
+<code>get-token-insights</code>), <code>agents/</code>
+(<code>memory-auditor.md</code>, <code>signal-discoverer.md</code>), and
+<code>commands/</code>.</p>
+<p>The storage claim is worth noting for what it rules out: "SQLite
+database with full-text search (FTS5, BM25 ranking, <strong>zero
+external dependencies</strong>)". No embedding model, no vector store,
+no service — the same constraint <a href="../mnemos/">mnemos</a>
+accepts, and the same consequence: lexical retrieval only.</p>
+<p><code>get-token-insights</code> is a separate concern bolted to the
+same data — turns, tool calls, session metrics, hook executions and an
+import log, with an HTML dashboard for cache hit rates and spending.
+Instrumenting the agent's cost from the same transcript store that
+provides its memory is a reasonable economy.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Consolidate</strong> —
+<code>plugins/claude-memory/skills/extract-learnings/SKILL.md</code>
+(the allowed-tools list including <code>AskUserQuestion</code> and
+<code>trash</code> <code>:6-18</code>, the consolidation-pressure rule
+<code>:109</code>, the approval gate <code>:111</code>, the apply order
+<code>:115-118</code>, the deletion verification <code>:121</code>, the
+completion condition <code>:133</code>),
+<code>agents/memory-auditor.md</code>,
+<code>agents/signal-discoverer.md</code>.</p>
+<p><strong>Summarise</strong> — <code>hooks/backfill_summaries.py</code>
+(the batch and poison-pill contract <code>:1-21</code>, the selection
+predicate <code>:40</code>, the success and failure updates
+<code>:52-59</code>), <code>hooks/import_conversations.py</code>
+<code>:391</code>.</p>
+<p><strong>Inject</strong> — <code>hooks/memory-context.py</code> (the
+two selection algorithms <code>:1-16</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>branches</code> in SQLite with a <code>context_summary</code>,
+a <code>context_summary_json</code> and a <code>summary_version</code>,
+mirrored into FTS5.</p>
+<p><strong><code>summary_version</code> does three jobs with one
+integer</strong>, and the pattern is worth stealing: <code>NULL</code>
+or <code>&lt; 2</code> means <em>needs summarising</em>, <code>2</code>
+means <em>current for this summariser</em>, and <code>-1</code> means
+<em>permanently failed</em>. The backfill selects on the first, writes
+the second on success and the third on error — "to avoid infinite
+retry". A background pass that keeps failing on the same document every
+cycle is one of the commonest quiet defects in this corpus, and one
+column fixes it while also giving you a re-summarise trigger when the
+summariser version changes.</p>
+<p>The curated layer is markdown with a pointer discipline:
+<code>MEMORY.md</code> sections hold entries, sections over 25 entries
+migrate to <code>memory/clusters/&lt;section&gt;.md</code> replaced by a
+single pointer, and clusters must stay "a pure trigger-index" with rule
+bodies extracted into topic files.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 with BM25 for search, and precomputed summaries for injection —
+precomputation is the right call for a session-start hook, where the
+budget is milliseconds and the summary would otherwise be an LLM call in
+the critical path.</p>
+<p><strong>The two selection algorithms are the detail to copy.</strong>
+On <em>startup</em>: the most recent substantive session (more than two
+exchanges) plus recent short ones in the remaining slots. On
+<em>clear</em>: read a handoff file written by the SessionEnd hook "to
+hard-link to the exact cleared-from session", and if that session is not
+substantive, append the most recent one that is.</p>
+<p>Distinguishing "you opened Claude Code" from "you ran
+<code>/clear</code> mid-task" is a real distinction — after a clear you
+want the thing you were just doing, not the most recent thing you
+finished — and the fallthrough is explicit: "if handoff file is missing,
+stale, or session not in DB", use the startup logic.</p>
+<p>Scope is the database. No scope key reaches a query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Sessions import automatically. The curated layer is written only
+through <code>extract-learnings</code>, and the ordering constraint in
+section 1 is the part that makes it a consolidation rather than an
+accumulation.</p>
+<p>The auditor's finding vocabulary — SUPERSEDED, REDUNDANT, LOW-VALUE,
+MERGE — is a taxonomy of <em>reasons to remove</em>, which is what makes
+"a run that only adds is a failure mode" enforceable: the auditor
+produces findings, the protocol requires them to become proposals.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A plugin marketplace:
+<code>/plugin marketplace add gupsammy/claudest</code>, then install any
+of eight plugins, with auto-update toggleable.
+<code>claude-memory</code> brings its own hooks, skills, agents and
+commands.</p>
+<p>The README links a Reddit write-up as "the full story behind the
+architecture", which is a pointer off-repository — the design reasoning
+that matters most is in <code>SKILL.md</code> and is in the tree.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>One mark: human review.</strong>
+<code>AskUserQuestion: Approve all / Approve selectively / Reject</code>
+gates every consolidation edit, and "Approve selectively" is the option
+that makes it a real review rather than a confirmation dialog — a person
+can take three removals and decline the fourth.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log, scope,
+negative eval — no.</strong> <code>summary_version = -1</code> is a
+processing state, not an epistemic one.</p>
+<p><strong>The safety design around deletion is the strongest
+part</strong> and is worth separating into its three independent guards:
+<em>approval</em> before anything applies, <em>trash rather than
+<code>rm</code></em> so an approved mistake is recoverable, and
+<em>verification by <code>Glob</code></em> so a claimed deletion that
+did not happen cannot be marked done. Any one of the three alone would
+be insufficient; together they are the most careful treatment of
+agent-initiated memory deletion in this atlas.</p>
+<p><strong>The risk is the test count.</strong> Two test files against
+8,800 lines of hooks that run on every session start and edit the user's
+<code>CLAUDE.md</code> and <code>MEMORY.md</code>. The protocol is
+specified in prose for an LLM to follow, and prose is not enforced — the
+ordering rule, the removal requirement and the verification step are all
+instructions the model may skip under pressure, with nothing failing
+loudly if it does.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no benchmark, no committed results.</strong> Two
+test files at the repository root against eight plugins.</p>
+<p>The verification step inside <code>SKILL.md</code> is, in effect, a
+runtime test the agent performs on itself — <code>Glob</code> after
+<code>trash</code>, and the completion condition is stated as a
+conjunction: "Phase 4 is complete when all approved edits are applied,
+every REMOVE/MERGE is verified absent via Glob, the marker is written,
+and the summary table is presented."</p>
+<p>Specifying completion as a checkable conjunction rather than "when
+done" is good practice for an agent protocol. It is still a prompt.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Judge a consolidation run by what it removed.</strong> "A
+run that only adds is a failure mode" turns consolidation from a label
+into a condition, and gives the auditor's findings somewhere to
+land.</li>
+<li><strong>Give the auditor a vocabulary of reasons to remove.</strong>
+SUPERSEDED, REDUNDANT, LOW-VALUE, MERGE — four named findings, each
+convertible into a concrete proposal.</li>
+<li><strong>Settle removals before reorganising.</strong> "Clustering
+never runs before retirement; it must not mask removable entries."
+Splitting an over-full section before deleting its dead entries produces
+a tidy memory that is still wrong.</li>
+<li><strong>Offer "approve selectively".</strong> Approve-all-or-nothing
+is a confirmation dialog; per-item approval is a review.</li>
+<li><strong>Trash, never <code>rm</code>.</strong> An approved mistake
+stays recoverable.</li>
+<li><strong>Verify the deletion actually happened, and say what you are
+guarding against.</strong> "Never mark a REMOVE/MERGE row 'done' unless
+the file is verified absent — claiming a deletion that did not happen is
+the exact failure this guards against."</li>
+<li><strong>State completion as a conjunction.</strong> Edits applied
+<em>and</em> deletions verified <em>and</em> marker written <em>and</em>
+summary presented.</li>
+<li><strong>Use one integer for needs-work, current and
+poisoned.</strong> <code>summary_version &lt; 2</code> selects,
+<code>= 2</code> marks current, <code>= -1</code> marks permanently
+failed — a re-summarisation trigger and a retry guard in one
+column.</li>
+<li><strong>Distinguish a fresh start from a
+<code>/clear</code>.</strong> After a clear the user wants the session
+they just left, not the most recent thing they finished; hard-link it
+via a handoff file and fall through cleanly when it is missing or
+stale.</li>
+<li><strong>Precompute what a session-start hook injects.</strong> The
+budget there is milliseconds.</li>
+<li><strong>Filter trivial sessions out of injection.</strong> More than
+two exchanges as the substantive threshold.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not leave a protocol this careful enforced only by
+prose.</strong> The ordering rule, the removal requirement and the
+verification step are instructions to a model, and nothing fails loudly
+when they are skipped. The <code>Glob</code> check is scriptable; so is
+"did this run produce any removals".</li>
+<li><strong>Do not run 8,800 lines of session hooks on two test
+files</strong> when those hooks edit the user's memory files.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Worth adopting if you use Claude Code and want session history
+searchable plus a disciplined promotion path into your instruction
+files. The consolidation protocol is the reason, and it transfers: it is
+a specification, not code, and it would improve most of the memory
+systems in this atlas that have a consolidation pass.</p>
+<p>Read <code>extract-learnings/SKILL.md</code> regardless of what you
+build. It is the clearest statement here of what a consolidation pass
+owes the user.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does anything check that a run produced removals?</strong>
+The rule is stated in the prompt; no code enforces it.</li>
+<li><strong>What do <code>memory-auditor</code> and
+<code>signal-discoverer</code> disagree about?</strong> Two agents with
+different jobs feed the same protocol; their interaction was not
+traced.</li>
+<li><strong>Is <code>summary_version = -1</code> ever cleared?</strong>
+A permanently failed summary would otherwise never recover after a
+summariser fix.</li>
+<li><strong>How does the handoff file get invalidated?</strong> "Stale"
+is handled; the staleness criterion was not read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Consolidation protocol</strong> —
+<code>plugins/claude-memory/skills/extract-learnings/SKILL.md</code>
+(allowed tools including <code>AskUserQuestion</code> and
+<code>trash</code> <code>:6-18</code>, the consolidation-pressure rule
+and the clustering-after-retirement ordering <code>:109</code>, the
+approval gate <code>:111</code>, the apply order <code>:115-118</code>,
+the <code>Glob</code> verification and its stated failure mode
+<code>:121</code>, the completion conjunction <code>:133</code>),
+<code>plugins/claude-memory/agents/memory-auditor.md</code>,
+<code>plugins/claude-memory/agents/signal-discoverer.md</code></p>
+<p><strong>Summaries</strong> —
+<code>plugins/claude-memory/hooks/backfill_summaries.py</code> (the
+contract <code>:1-21</code>, <code>BATCH_SIZE</code> <code>:21</code>,
+the selection <code>:40</code>, the success and poison-pill updates
+<code>:52-59</code>), <code>hooks/import_conversations.py</code>
+(<code>:391</code>)</p>
+<p><strong>Injection</strong> —
+<code>plugins/claude-memory/hooks/memory-context.py</code> (the two
+selection algorithms and the fallthrough <code>:1-16</code>),
+<code>hooks/clear-handoff.py</code>, <code>hooks/memory-setup.py</code>,
+<code>hooks/consolidation-check.py</code>,
+<code>hooks/hooks.json</code></p>
+<p><strong>Skills</strong> —
+<code>plugins/claude-memory/skills/recall-conversations/</code>,
+<code>get-token-insights/scripts/ingest_token_data.py</code>
+(<code>turns</code> <code>:114</code>, <code>turn_tool_calls</code>
+<code>:137</code>, <code>session_metrics</code> <code>:155</code>,
+<code>hook_executions</code> <code>:190</code>,
+<code>token_import_log</code> <code>:200</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9"><code class="commit-id" title="1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9">1c634ac0…</code></a>
+— first reading, covering the <code>claude-memory</code> plugin of the
+eight in the marketplace. Screened before reading; the tree was read,
+never installed, and no hook was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
