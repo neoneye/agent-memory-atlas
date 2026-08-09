@@ -66,17 +66,20 @@ when the work happens.
   *pattern* might move, not if a report can be written — which two candidates
   currently clear, the symbolic lineage and MemState on Kuzu.
 - [2026-08-09-the-constant-was-fixed-for-thirty-arms.md](2026-08-09-the-constant-was-fixed-for-thirty-arms.md) —
-  three papers behind four links, and 60 is the only RRF constant anywhere in this
-  corpus. Cormack et al. fixed it in a pilot that fused *thirty* rankings over a
-  curve flat from 30 to 100, and said the choice "was not critical"; 80 scored
-  higher in the same table. The arm count changes what the constant does — with
-  two arms at k=60, agreement at rank 61 beats a lone first-place hit, and one
-  arm's whole top-60 rank signal is worth 1.967× against a 2× bonus for merely
-  appearing in a second arm, which is the supabase floor and the Empryo rank-5
-  entry seen from both sides. The only published two-arm sweep puts the default
-  last of three. Latent Terms supplies the citation the pattern's premise never
-  had — BM25 0.9490 against Contriever 0.0265 on LIMIT — and refuses the
-  conclusion that a dense arm can replace a lexical one.
+  60 is the only RRF constant anywhere in this corpus, and it was fixed in a
+  pilot over thirty configurations of one search engine, on a curve flat from 30
+  to 100, with the paper itself saying the choice "was not critical" — 80 scored
+  higher in the same table. Bruch et al. (TOIS 2023) is the source that settles
+  it: one constant *per arm*, swept 1–100 over nine datasets, where a convex
+  combination of normalized scores beats RRF (60,60) on all nine, a symmetric
+  (5,5) transfers, and in-domain per-arm tuning collapses out of domain — so
+  "sweep it" is not sufficient advice. At k=60 one arm's whole top-60 rank signal
+  spans 1.967×, but the value of cross-arm agreement is 1 + (k+a)/(k+b), not a
+  flat 2×, and candidate depth and arm correlation sit outside the arithmetic
+  entirely. Latent Terms supplies the premise's missing citation — BM25 0.9490
+  against Contriever 0.0265 on LIMIT — narrowly: its recovery to 0.5100 takes a
+  new autoencoder over token activations and a second inverted index, not a
+  rescoring of the embedding.
 - [2026-08-09-the-papers-the-reports-did-not-read.md](2026-08-09-the-papers-the-reports-did-not-read.md) —
   audit prompted by the SESA report saying "no ablation is present" when the
   README cited a paper whose Table 3 ablates the mechanism at 2.7 points. Eleven

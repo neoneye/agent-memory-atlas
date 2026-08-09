@@ -15,7 +15,7 @@ Retrieve both conceptually related memory and exact facts, while enforcing scope
 
 Vector search is good at paraphrase and topical similarity but weak on exact names, identifiers, dates, paths, and negation. Lexical search catches exact strings but misses paraphrase. Either signal alone produces avoidable blind spots.
 
-The size of that blind spot is measurable. On LIMIT, a benchmark built to expose single-vector retrieval, BM25 reaches Recall@20 of 0.9490 where Contriever reaches 0.0265 ([Clavié et al., *Latent Terms*, arXiv:2605.29384](https://arxiv.org/abs/2605.29384), 28 May 2026). The same paper shows the lexical capability is *present* in the dense model and hidden by its scoring function — a sparse autoencoder trained on frozen activations recovers that 0.0265 to 0.5100 — which is a reason to keep a lexical index, not to expect the embedding to grow one.
+The size of that blind spot is measurable. On LIMIT, a benchmark built to expose single-vector retrieval, BM25 reaches Recall@20 of 0.9490 where Contriever reaches 0.0265 ([Clavié et al., *Latent Terms*, arXiv:2605.29384](https://arxiv.org/abs/2605.29384), 28 May 2026). That paper also shows some of the gap is recoverable from the dense model — but recovering it is a second index, not a better read of the first. It trains a new sparse autoencoder on the retriever's frozen final-layer **token** activations and scores the resulting features with BM25 over an inverted index; the pooled embedding is never rescored. The recovery is partial (Contriever 0.0265 → 0.5100, still 0.44 short of BM25) and it does not hold everywhere — on a multi-vector model it loses ground on both LIMIT and BEIR. Read it as evidence that lexical structure exists in token-level activations and needs its own scoring machinery to be usable, which is an argument for keeping a lexical arm rather than for expecting an embedding to grow one.
 
 ## The pattern
 
@@ -36,7 +36,19 @@ flowchart TD
 
 Reciprocal-rank fusion is a useful baseline because it combines rankings without pretending incomparable scores share a calibrated scale — the property its authors claim for it, "without regard to the arbitrary scores returned by particular ranking methods" ([Cormack, Clarke and Büttcher, SIGIR '09](https://dl.acm.org/doi/10.1145/1571941.1572114)). Weighted score fusion can work when every component has measured, bounded behavior.
 
-**The constant is not a law, and it was fixed for many more arms than you have.** `k = 60` comes from a pilot that fused *thirty* rankings and swept `k` over a curve flat from 30 to 100; the paper's own words are that 60 "was near-optimal, but that the choice was not critical", and 80 scored fractionally higher in the table it comes from. The arm count changes what `k` does. A document that `m` arms rank at `r` outranks a document one arm ranks first whenever `r < m(k+1) − k` — so with two arms at `k = 60`, agreement at rank **61** beats a lone first-place hit, and the entire rank signal inside one arm's top 60 spans a factor of 1.967× against a 2× bonus for merely appearing in a second arm. Two-arm RRF at 60 behaves closer to a presence vote than a rank aggregation, which is how a lone weak lexical match outranks a good semantic one, and how an exact-identifier hit that only the lexical arm found gets buried. The one published sweep on two arms puts the default last: convex combination at α = 0.5 scores Recall@5 0.726, RRF at `k = 10` scores 0.716, RRF at `k = 60` scores 0.695 ([Akarsu et al., arXiv:2604.01733](https://arxiv.org/abs/2604.01733), 2 April 2026, §IV-C — one domain, financial text-and-table QA). Keep 60 as a default if you have nothing to tune against; do not defend it as measured.
+**The constant is a default, not a measurement.** `k = 60` was fixed in a pilot that fused *thirty* configurations of a single search engine, over a curve flat from 30 to 100; the paper's own words are that 60 "was near-optimal, but that the choice was not critical", and 80 scored fractionally higher in the table it comes from.
+
+What `k` controls is how much of an arm's rank ordering survives fusion. Within one arm, `k = 60` compresses the whole top 60 into a factor of 1.967× — so a first-place hit is worth barely more than a sixtieth-place one, and cross-arm agreement dominates rank position. How much agreement is worth is *not* a fixed factor: a document at rank `a` in one arm gains `1 + (k+a)/(k+b)` by also appearing at rank `b` in the other, which reaches 2× only when the two ranks coincide and falls to 1.06× for `a = 1, b = 1000`. Two more things the arithmetic alone will not tell you: how deep each arm's candidate list runs, since a document missing from an arm's top-*k* has no defined rank and is usually approximated over the union of the lists; and how correlated the arms are, since agreement between two views of the same corpus is much weaker evidence than agreement among many independently built systems.
+
+Fusing rank-only also discards the score distribution, and the literature has measured what that costs. [Bruch, Gai and Ingber, *An Analysis of Fusion Functions for Hybrid Retrieval*, TOIS 2023 (arXiv:2210.11934)](https://arxiv.org/abs/2210.11934) sweeps a separate constant per arm over 1–100 across nine datasets — RRF has as many parameters as it has arms — and finds NDCG "swings wildly" with them. Three results worth carrying:
+
+- A **convex combination** of normalized scores, with one tuned weight, beat RRF `(60,60)` on NDCG on **all nine** datasets, in-domain and zero-shot, and needs only a small tuning sample. Normalization choice barely mattered.
+- **Symmetrically lowering the constant transferred.** RRF `(5,5)` matched or beat `(60,60)` on all nine.
+- **Asymmetric tuning did not transfer.** `(10,4)`, tuned in-domain, improved MS MARCO 0.425 → 0.451 and then cost HotpotQA 0.675 → 0.621 and FEVER 0.721 → 0.649. In-domain the tuning discounts the lexical arm; out-of-domain that reverses.
+
+[Akarsu et al. (arXiv:2604.01733)](https://arxiv.org/abs/2604.01733), 2 April 2026, agrees in one domain on two arms: convex combination at α = 0.5 reaches Recall@5 0.726, RRF `k = 10` 0.716, RRF `k = 60` 0.695.
+
+So: keep 60 if you have nothing to tune against, and do not defend it as measured. If you can normalize scores and tune one weight on a small in-domain sample, that is the better-evidenced fusion. And if you tune per-arm constants, tune them on your own traffic and expect them not to survive a domain change.
 
 ## Why it works
 
@@ -142,7 +154,7 @@ channel ran.
 - Exact identifiers, paraphrases, dates, negation, and typo cases.
 - Scope leakage and lifecycle filtering before ranking.
 - Ablations for each retrieval channel.
-- A sweep of the fusion constant at *your* arm count, not the paper's — the cheapest experiment on this page and the one nobody in this corpus has run.
+- A sweep of the fusion constant on *your* corpus and arm count, not the paper's — and a check that whatever you pick still holds on data you did not tune against, because per-arm tuning is the setting that has been measured failing to transfer.
 - Hard assertions that `@k` evaluates exactly the first `k` results.
 - Token-volume and latency reporting.
 - Stable tie-breaking and bounded heuristic contributions.
