@@ -3783,6 +3783,44 @@ It fails on enforcement. Prose rules bind only as far as the model follows them,
 nothing audits compliance, and the action-verified axiom leaves no record of the
 tool call that justified a write.
 
+**The largest artifact of this kind in the field is not in any repository this
+atlas reports on, and it is now measurable.**
+[Piebald-AI/claude-code-system-prompts](https://github.com/Piebald-AI/claude-code-system-prompts),
+read on 2026-08-09 at
+[`61e5bb8a47fcb657c1258c29516e262fd1468820`](https://github.com/Piebald-AI/claude-code-system-prompts/commit/61e5bb8a47fcb657c1258c29516e262fd1468820),
+extracts one shipping harness's compiled prompt payload per release and prices
+each string in tokens. It stores nothing and gets no report; what it provides is
+the first place a memory *policy* can be read as a versioned artifact rather than
+inferred.
+
+The memory-related entries alone describe a lifecycle this atlas would otherwise
+have to reconstruct: an agent for deciding **which memory files to attach** (354
+tokens), a multi-phase **consolidation pass** that orients on existing memories,
+gathers recent signal from logs and transcripts, merges updates into topic files
+and prunes the index (1,573), a **reconciliation** step that deletes stale
+memories or flags drift against the instructions file (436), **team-memory
+handling** with deduplication, conservative pruning and a rule against
+accidentally promoting a personal memory (279), an index-pointer rule requiring a
+one-line pointer and *never* memory content in the index (120), a durable-lesson
+instruction telling the auto-memory system to save only what the user taught and
+validate each turn (1,016), and a feedback-memory body structure of rule, why and
+how to apply (79).
+
+Three things follow that are hard to get any other way. The policy has a
+**price**: the consolidation pass is 1,573 tokens of instruction every time it
+runs, which is the number every system in this atlas that ships a `dream.md` or a
+distillation rule set has and does not report. It has a **history**: the
+repository carries a changelog across 252 versions, so how a memory policy
+changed release to release is publicly traceable, which no project here can say
+of its own. And it confirms the shape rather than the exception — a mature
+first-party memory system's correction path is *also* prose handed to a model,
+with the same enforcement gap GenericAgent has, at a much larger scale.
+
+The caveats are the ordinary ones for an extracted corpus: it is a third party's
+reading of a compiled artifact, its own README notes that interpolated variables
+make a live session's counts differ, and the token figures are its measurements
+rather than the vendor's.
+
 ### Gate the expensive path
 
 Pattern guide: [Gate the expensive path](../patterns/gate-the-expensive-path/).

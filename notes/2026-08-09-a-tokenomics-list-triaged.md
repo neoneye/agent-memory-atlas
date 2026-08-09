@@ -589,3 +589,43 @@ or a hand-written pair of sessions.
 
 Sixty-five entries read, seven reports.
 
+### Batch 14 — the prompt corpora, and a memory policy with a price on it
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `SWE-bench/SWE-bench` | `6cd91d8c` | Out of scope: the accuracy-only issue-resolution benchmark |
+| `x1xhlol/system-prompts-and-models-of-ai-tools` | `eb111b42` | Out of scope: extracted system prompts across 35+ vendors, raw text with no token counts |
+| `asgeirtj/system_prompts_leaks` | `93c99911` | Out of scope: the sibling corpus, CC0, 482 files |
+| **`Piebald-AI/claude-code-system-prompts`** | `61e5bb8a` | Out of scope as a system — **and now cited in the overview's memory-policy section** |
+| `kenn-io/agentsview` | `78abc7db` | Out of scope: a cross-vendor usage tracker over local session logs |
+
+This atlas keeps recording the same finding one project at a time: the memory
+*policy* — when to save, what to merge, what to prune — lives in prose handed to a
+model, with nothing auditing compliance. GenericAgent's axioms are the corpus's
+best example and the overview says so.
+
+The Piebald extraction is that artifact at a scale nothing in the corpus reaches,
+**with a token count on every line**. Its memory-related entries alone lay out a
+whole lifecycle: which memory files to attach (354 tokens), a multi-phase
+consolidation pass that merges into topic files and prunes the index (1,573), a
+reconciliation step that deletes stale memories or flags instruction-file drift
+(436), team-memory handling with dedup and conservative pruning (279), an
+index-pointer rule that forbids putting memory content in the index (120), a
+durable-lesson instruction validated each turn (1,016), and a feedback-memory body
+structure of rule, why, how to apply (79).
+
+Three things follow. The policy has a **price** — 1,573 tokens of instruction
+every time a consolidation runs — which is the number every system here shipping a
+`dream.md` has and none reports. It has a **history**, via a changelog across 252
+versions, so a memory policy's evolution is publicly traceable in a way no project
+in this corpus can claim of its own. And it confirms the shape rather than the
+exception: a mature first-party memory system's correction path is *also* prose,
+with the same enforcement gap, much larger.
+
+Described rather than quoted at length, deliberately. It is a third party's
+extraction of somebody else's compiled artifact, its own README warns that
+interpolated variables move the counts, and the figures are its measurements
+rather than the vendor's — all three now stated on the page beside the claim.
+
+Seventy entries read, seven reports.
+
