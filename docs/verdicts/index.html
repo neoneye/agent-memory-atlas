@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 209 reports.</strong></p>
+<p><strong>This page covers all 210 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;209 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;210 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5191,6 +5191,36 @@ and have been treating them as incompatible.</li>
 <li>Do not copy when: you need the rejected-value record it is one query
 short of — <code>content_hash</code> is computed, chained and immutable,
 and no write path ever selects on it.</li>
+</ul>
+<h3 id="agent-working-memory"><a
+href="../systems/agent-working-memory/"><code>agent-working-memory</code></a></h3>
+<ul>
+<li>Best idea: a retraction propagates a contamination penalty weighted
+by how tightly the retracted engram's 2-hop neighbourhood coheres —
+~1.5× for a dense cluster with shared tags because "the whole cluster
+shares the wrong story", ~0.5× for an isolated engram, and a reduced
+bridge weight that barely touches the far side. Derived explicitly from
+the Continued Influence Effect (Carrillo et al., ICCM 2025) and bounded
+to 20 nodes and one batched fetch.</li>
+<li>Biggest risk: the 1.5× and 0.5× multipliers are asserted rather than
+measured, and they amplify the blast radius of a mistaken retraction
+exactly where the graph is densest.</li>
+<li>Most reusable component: <code>discardRegret</code> — counting
+engrams the salience filter tagged low-salience that were nonetheless
+accessed. Every write-time filter has a false-negative rate and almost
+none of them are measurable, because the rejected material is gone;
+tagging the near-misses makes the cost observable.</li>
+<li>Maturity impression: 45,000 lines of TypeScript over one store
+interface with PGlite, SQLite and Postgres backends, 49 test files,
+local ONNX models, and five distinct forgetting mechanisms — salience
+filtering, staging, decay, eviction and retraction — where most systems
+here implement one.</li>
+<li>Study when: your agent can correct a fact but everything it inferred
+from that fact stays untouched.</li>
+<li>Do not copy when: you need the sequence of corrections — retraction
+writes <code>retracted_by</code> and <code>retracted_at</code> onto the
+row, so there is no append-only record of how memory reached its current
+state.</li>
 </ul>
         </article>
       </div>
