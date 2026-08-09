@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 226 reports.</strong></p>
+<p><strong>This page covers all 227 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;226 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;227 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5736,6 +5736,41 @@ visible.</li>
 documents you are also indexing.</li>
 <li>Do not copy when: you need the number — the harness and the baseline
 mechanism are in-tree and no baseline JSON is.</li>
+</ul>
+<h3 id="nocturne-memory"><a
+href="../systems/nocturne-memory/"><code>nocturne-memory</code></a></h3>
+<ul>
+<li>Best idea: <code>text_patch.py</code> — when an agent edits memory
+by quoting the passage, the model re-emits curly quotes as straight
+ones, em dashes as hyphens and collapses double spaces, and the exact
+match fails. The fix normalises both sides to <em>find</em> the target
+"while keeping a position map so the replacement targets the correct
+range in the original content", and only after an exact match has
+already failed. Every system whose edit interface is quoted text has
+this bug.</li>
+<li>Biggest risk: <code>update_memory</code> patches in place with no
+record of the change, in a system whose README demonstrates months of
+accumulated strategy memory — nothing distinguishes a conclusion the
+user has since abandoned from a current one. A <code>demo.db</code> is
+also committed beside a README full of personal notes.</li>
+<li>Most reusable component: memory as a URI namespace —
+<code>core://domain/topic</code> for stored nodes, with
+<code>system://boot</code>, <code>system://index/&lt;domain&gt;</code>,
+<code>system://recent</code> and <code>system://glossary</code>
+generated from the graph on read so they cannot drift. An agent that can
+navigate deliberately as well as search is strictly better off, and the
+README's session traces show it opening with
+<code>read_memory("system://boot")</code>.</li>
+<li>Maturity impression: 19,200 lines with MCP over SSE and streamable
+HTTP, a REST API, a web frontend and a documented workaround for
+FastMCP's SSE transport dropping the namespace on
+<code>POST /messages/</code> — against 12 test files, thinnest exactly
+at the fuzzy patcher whose failure is a silently wrong edit.</li>
+<li>Study when: your agent edits stored memory by quoting the text it
+wants to replace.</li>
+<li>Do not copy when: you need the framing to mean something —
+"alignment is for tools, memories are for sovereign AI" is positioning,
+and the URI graph underneath it is the part that works.</li>
 </ul>
         </article>
       </div>

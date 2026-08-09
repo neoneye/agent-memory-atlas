@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 226 reports.**
+**This page covers all 227 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["226 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["227 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1951,6 +1951,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 19,800 lines of Go with 84 test files, one cgo-free binary with no Python, Node, vector database or model server, a `doctor` command, and a benchmark comparing the scoped and unscoped query so the collection predicate's index usage is visible.
 - Study when: you are about to generate evaluation questions from the documents you are also indexing.
 - Do not copy when: you need the number — the harness and the baseline mechanism are in-tree and no baseline JSON is.
+
+### [`nocturne-memory`](../systems/nocturne-memory/)
+
+- Best idea: `text_patch.py` — when an agent edits memory by quoting the passage, the model re-emits curly quotes as straight ones, em dashes as hyphens and collapses double spaces, and the exact match fails. The fix normalises both sides to *find* the target "while keeping a position map so the replacement targets the correct range in the original content", and only after an exact match has already failed. Every system whose edit interface is quoted text has this bug.
+- Biggest risk: `update_memory` patches in place with no record of the change, in a system whose README demonstrates months of accumulated strategy memory — nothing distinguishes a conclusion the user has since abandoned from a current one. A `demo.db` is also committed beside a README full of personal notes.
+- Most reusable component: memory as a URI namespace — `core://domain/topic` for stored nodes, with `system://boot`, `system://index/<domain>`, `system://recent` and `system://glossary` generated from the graph on read so they cannot drift. An agent that can navigate deliberately as well as search is strictly better off, and the README's session traces show it opening with `read_memory("system://boot")`.
+- Maturity impression: 19,200 lines with MCP over SSE and streamable HTTP, a REST API, a web frontend and a documented workaround for FastMCP's SSE transport dropping the namespace on `POST /messages/` — against 12 test files, thinnest exactly at the fuzzy patcher whose failure is a silently wrong edit.
+- Study when: your agent edits stored memory by quoting the text it wants to replace.
+- Do not copy when: you need the framing to mean something — "alignment is for tools, memories are for sovereign AI" is positioning, and the URI graph underneath it is the part that works.
+
 
 
 

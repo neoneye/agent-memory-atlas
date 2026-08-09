@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **226 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **227 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -192,6 +192,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`nemoclaw`](../systems/nemoclaw/) **NemoClaw** — Memory as an operand · `NVIDIA/NemoClaw`
 - [`neo4j-agent-memory`](../systems/neo4j-agent-memory/) **Neo4j Agent Memory** — Memory of its own reasoning · `neo4j-labs/agent-memory` · Bi-temporal, Scope enforced
 - [`neuroca`](../systems/neuroca/) **NeuroCA** — A memory system mid-refactor · `Modern-Prometheus-AI/Neuroca`
+- [`nocturne-memory`](../systems/nocturne-memory/) **Nocturne Memory** — The model retypes your text and the match fails · `dataojitori/nocturne_memory` · Scope enforced
 - [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
 - [`noosphere`](../systems/noosphere/) **Noosphere** — A tombstone that survives key rotation · `sweetsophia/noosphere` · Tombstone, Scope enforced, Mutation audit, Human review
 - [`nornicdb`](../systems/nornicdb/) **NornicDB** — Temporal validity as a constraint · `orneryd/NornicDB` · Scope enforced, Mutation audit
