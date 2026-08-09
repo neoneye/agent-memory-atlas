@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 214 reports.**
+**This page covers all 215 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["214 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["215 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1843,6 +1843,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 31 test files including `test_public_install_truth.py`, `test_telemetry_kill_actually_kills.py` and `test_zero_llm_regression.py` — tests of claims, not only of code — and seven files guarding one write-loss incident recorded in `degrade.py`'s docstring.
 - Study when: you are about to publish a benchmark number and have not decided which metric it is.
 - Do not copy when: you need the store to age — the design position is that you edit your notes.
+
+### [`telemem`](../systems/telemem/)
+
+- Best idea: a published evaluation charter with a harness flag behind every rule — a grep baseline and a full-context baseline required in every table, `--validate-judge` feeding gold answers that must pass and shuffled wrong-but-topical answers that must fail, `--seeds N` with Wilson intervals, and an advance commitment not to claim a win across overlapping intervals. Rule 9 discloses the conflict of interest in the document making the claim.
+- Biggest risk: the methodology is shipped and the numbers under it are not. The charter "governs new evaluation runs" and says the README's existing table predates it, so the results a reader can see are ones the project has already disowned, with the re-runs tracked in a public issue.
+- Most reusable component: the sentence telling readers how to find out they do not need the product — "build a full-context baseline and a grep baseline **on your own data** first… you may not need TeleMem — or any memory system." Applying rule 1 to a reader's own data is the selection procedure this atlas would give.
+- Maturity impression: a mem0 drop-in with a tech report, CI, an MCP server on the current spec, and `tests/test_contract.py` where each test is named after the API promise it enforces — including two that assert negatives, that `infer=False` calls no LLM and that telemetry is opt-in.
+- Study when: you are about to publish a comparison table and have not decided what would make it defensible.
+- Do not copy when: you need correction — everything epistemic is inherited from mem0, and the unscoped-write fallback into a shared `events` scope is readable by every character.
+
 
 
 
