@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **188 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **191 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -54,6 +54,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`core-memory`](../systems/core-memory/) **Core Memory** — Grounding-gated trust · `JohnnyFiv3r/Core-Memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`core-redplanet`](../systems/core-redplanet/) **CORE** — Reified temporal knowledge graph · `RedPlanetHQ/core` · Bi-temporal, Scope enforced
 - [`cortex`](../systems/cortex/) **Cortex** — Approval on the read, not the write · `CortexPrism/cortex` · Scope enforced, Human review
+- [`cortexgraph`](../systems/cortexgraph/) **CortexGraph** — Forgetting as the default · `prefrontal-systems/cortexgraph` · Scope enforced
 - [`cosmonapse`](../systems/cosmonapse/) **Cosmonapse** — A memory contract with a failure vocabulary · `Cosmonapse/cosmonapse-core`
 - [`cowagent`](../systems/cowagent/) **CowAgent** — Daily-distilled memory · `zhayujie/CowAgent` · Scope enforced
 - [`crewai`](../systems/crewai/) **CrewAI** — Hierarchical scope paths · `crewAIInc/crewAI` · Scope enforced, Negative evals
@@ -92,6 +93,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`helix-agi`](../systems/helix-agi/) **Helix AGI** — Belief physics on a journal · `munch2u-a11y/Helix-AGI` · Negative evals
 - [`helm`](../systems/helm/) **Helm** — Confidence-ratcheted SQLite memory · `GOODMAN-PRO/helm` · Negative evals
 - [`hermes-agent`](../systems/hermes-agent/) **Hermes Agent** — Prompt-cache-bounded memory · `NousResearch/hermes-agent` · Human review
+- [`hexis`](../systems/hexis/) **Hexis** — Reconsolidation after a belief changes · `quixiai/hexis` · Trust state, Mutation audit, Human review
 - [`hindsight`](../systems/hindsight/) **Hindsight** — Retain, recall, and reflect · `vectorize-io/hindsight` · Scope enforced, Mutation audit
 - [`hippo-memory`](../systems/hippo-memory/) **Hippo** — Physics-model decay memory · `kitfunso/hippo-memory` · Trust state, Bi-temporal, Scope enforced, Mutation audit
 - [`hipporag`](../systems/hipporag/) **HippoRAG** — Associative graph memory · `OSU-NLP-Group/HippoRAG`
@@ -167,6 +169,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`nemoclaw`](../systems/nemoclaw/) **NemoClaw** — Memory as an operand · `NVIDIA/NemoClaw`
 - [`neo4j-agent-memory`](../systems/neo4j-agent-memory/) **Neo4j Agent Memory** — Memory of its own reasoning · `neo4j-labs/agent-memory` · Bi-temporal, Scope enforced
 - [`nooa-memory`](../systems/nooa-memory/) **NOOA Memory** — Cognitive-model recall · `NVIDIA-NeMo/labs-OO-Agents` · Scope enforced, Negative evals
+- [`noosphere`](../systems/noosphere/) **Noosphere** — A tombstone that survives key rotation · `sweetsophia/noosphere` · Tombstone, Scope enforced, Mutation audit, Human review
 - [`nornicdb`](../systems/nornicdb/) **NornicDB** — Temporal validity as a constraint · `orneryd/NornicDB` · Scope enforced, Mutation audit
 - [`nova-ai`](../systems/nova-ai/) **Nova AI** — Symbolic memory, no model · `Whooptie/NOVA_AI` · Tombstone, Trust state, Mutation audit, Human review
 - [`npcpy`](../systems/npcpy/) **npcpy** — Memory that waits for a yes · `npc-worldwide/npcpy` · Trust state, Human review

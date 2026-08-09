@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 188 reports.</strong></p>
+<p><strong>This page covers all 191 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;188 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;191 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4553,6 +4553,86 @@ and <code>project_unknowns</code> as first-class rows.</li>
 you have never asked what it is hiding.</li>
 <li>Do not copy when: you need retrieval — recall here is decay-weighted
 bootstrap, and no retrieval quality is claimed or measured.</li>
+</ul>
+<h3 id="hexis"><a href="../systems/hexis/"><code>hexis</code></a></h3>
+<ul>
+<li>Best idea: a <code>CONTESTED_BECAUSE</code> edge, and a
+reconsolidation sweep that reads it. When a worldview belief transforms,
+the service re-evaluates memories "rejected because of old belief, may
+now accept" — the only correction mechanism in this atlas that goes
+backwards and asks what a superseded belief had been suppressing.</li>
+<li>Biggest risk: that sweep's verdict is an LLM call over batches of
+eight, defensively parsed and never validated against evidence, and the
+review surface that exists for claims does not cover it.</li>
+<li>Most reusable component: <code>user_model_claims</code> —
+<code>status</code> (<code>active|superseded|rejected</code>) and
+<code>review_status</code>
+(<code>pending_review|approved|rejected|superseded</code>) as separate
+CHECK-constrained columns, so the system's position and a person's
+verdict never overwrite each other, with
+<code>(review_status, updated_at DESC)</code> indexed so the queue is a
+query.</li>
+<li>Maturity impression: 182,000 lines with the memory model implemented
+as eighty-plus numbered Postgres function files, one table per graph
+edge type, a review-event log carrying <code>prior_status</code> and a
+<code>restore</code> decision — and a repository file called
+<code>why_i_suck_and_how_to_fix_it.md</code>.</li>
+<li>Study when: your corrections only move forward and you have never
+asked what a retired belief was blocking.</li>
+<li>Do not copy when: you need the sweep's judgement to be checkable;
+nothing measures it.</li>
+</ul>
+<h3 id="noosphere"><a
+href="../systems/noosphere/"><code>noosphere</code></a></h3>
+<ul>
+<li>Best idea: the eleventh tombstone in this atlas and the most
+rigorous. A revoked capture is refused on the write path — inside a
+serializable transaction, after the lineage rows are locked — by
+matching an HMAC digest against every <em>retained key version</em>, so
+rotating the HMAC key cannot resurrect a revocation. No other
+rejected-value record here reasons about the key used to compute its own
+key.</li>
+<li>Biggest risk: the tombstone carries a ninety-day TTL by design,
+bounding the keyring. The refusal is durable for a window, not forever,
+and a reader wanting "never again" needs an unbounded tier beside
+it.</li>
+<li>Most reusable component: the three independent upserts on revocation
+— a tombstone that blocks re-entry, a privacy-review row for a person,
+and a durable cleanup job under an idempotency key — none depending on
+the others succeeding.</li>
+<li>Maturity impression: 68,000 lines of TypeScript on Postgres through
+Prisma, with <code>capture-race-integration.test.ts</code> written
+because the check and the insert must be correct under concurrency, an
+<code>embedding_consent</code> table, and <code>RestrictedScope</code>
+as a deletable row with its own revocation reason.</li>
+<li>Study when: a deletion in your system has to actually stick.</li>
+<li>Do not copy when: you need permanence; ninety days is the
+guarantee.</li>
+</ul>
+<h3 id="cortexgraph"><a
+href="../systems/cortexgraph/"><code>cortexgraph</code></a></h3>
+<ul>
+<li>Best idea: forgetting as the default — strength starts at 1.0,
+decays from <code>last_used</code> on an Ebbinghaus curve, and only use
+reinforces it, so an unused memory costs nothing to keep because it will
+not be kept.</li>
+<li>Biggest risk: <code>LICENSE</code> is AGPL-3.0 and
+<code>CITATION.cff</code> says MIT. Those cannot both be right, and the
+citation file is what automated tooling reads.</li>
+<li>Most reusable component: <code>cross_domain_count</code> — one
+integer counting how many distinct domains a memory has been useful in,
+which separates a narrow fact from a general principle better than an
+importance score does.</li>
+<li>Maturity impression: 53,000 lines with 70 test files including a
+named storage-parity suite, an SBOM workflow and a security-scanning
+workflow — and a committed design spec arguing against its own
+append-only log because "the data structure is fighting the biological
+model", still marked Proposed.</li>
+<li>Study when: you want the log-versus-directory argument made
+concretely, by a project that hit the sync failure that motivates
+it.</li>
+<li>Do not copy when: a wrong memory must be retractable rather than
+left to fade; decay cannot tell false from unused.</li>
 </ul>
         </article>
       </div>

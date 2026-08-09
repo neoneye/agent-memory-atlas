@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 188 reports.**
+**This page covers all 191 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["188 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["191 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1609,3 +1609,30 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 303,000 lines of Python with 431 test files, a Sentinel gate that blocks edits until understanding is demonstrated, a `mistakes_made` table whose columns are `why_wrong`/`cost_estimate`/`root_cause_vector`/`prevention`, and `project_unknowns` as first-class rows.
 - Study when: your correction path has one word for "not current" and you have never asked what it is hiding.
 - Do not copy when: you need retrieval — recall here is decay-weighted bootstrap, and no retrieval quality is claimed or measured.
+
+### [`hexis`](../systems/hexis/)
+
+- Best idea: a `CONTESTED_BECAUSE` edge, and a reconsolidation sweep that reads it. When a worldview belief transforms, the service re-evaluates memories "rejected because of old belief, may now accept" — the only correction mechanism in this atlas that goes backwards and asks what a superseded belief had been suppressing.
+- Biggest risk: that sweep's verdict is an LLM call over batches of eight, defensively parsed and never validated against evidence, and the review surface that exists for claims does not cover it.
+- Most reusable component: `user_model_claims` — `status` (`active|superseded|rejected`) and `review_status` (`pending_review|approved|rejected|superseded`) as separate CHECK-constrained columns, so the system's position and a person's verdict never overwrite each other, with `(review_status, updated_at DESC)` indexed so the queue is a query.
+- Maturity impression: 182,000 lines with the memory model implemented as eighty-plus numbered Postgres function files, one table per graph edge type, a review-event log carrying `prior_status` and a `restore` decision — and a repository file called `why_i_suck_and_how_to_fix_it.md`.
+- Study when: your corrections only move forward and you have never asked what a retired belief was blocking.
+- Do not copy when: you need the sweep's judgement to be checkable; nothing measures it.
+
+### [`noosphere`](../systems/noosphere/)
+
+- Best idea: the eleventh tombstone in this atlas and the most rigorous. A revoked capture is refused on the write path — inside a serializable transaction, after the lineage rows are locked — by matching an HMAC digest against every *retained key version*, so rotating the HMAC key cannot resurrect a revocation. No other rejected-value record here reasons about the key used to compute its own key.
+- Biggest risk: the tombstone carries a ninety-day TTL by design, bounding the keyring. The refusal is durable for a window, not forever, and a reader wanting "never again" needs an unbounded tier beside it.
+- Most reusable component: the three independent upserts on revocation — a tombstone that blocks re-entry, a privacy-review row for a person, and a durable cleanup job under an idempotency key — none depending on the others succeeding.
+- Maturity impression: 68,000 lines of TypeScript on Postgres through Prisma, with `capture-race-integration.test.ts` written because the check and the insert must be correct under concurrency, an `embedding_consent` table, and `RestrictedScope` as a deletable row with its own revocation reason.
+- Study when: a deletion in your system has to actually stick.
+- Do not copy when: you need permanence; ninety days is the guarantee.
+
+### [`cortexgraph`](../systems/cortexgraph/)
+
+- Best idea: forgetting as the default — strength starts at 1.0, decays from `last_used` on an Ebbinghaus curve, and only use reinforces it, so an unused memory costs nothing to keep because it will not be kept.
+- Biggest risk: `LICENSE` is AGPL-3.0 and `CITATION.cff` says MIT. Those cannot both be right, and the citation file is what automated tooling reads.
+- Most reusable component: `cross_domain_count` — one integer counting how many distinct domains a memory has been useful in, which separates a narrow fact from a general principle better than an importance score does.
+- Maturity impression: 53,000 lines with 70 test files including a named storage-parity suite, an SBOM workflow and a security-scanning workflow — and a committed design spec arguing against its own append-only log because "the data structure is fighting the biological model", still marked Proposed.
+- Study when: you want the log-versus-directory argument made concretely, by a project that hit the sync failure that motivates it.
+- Do not copy when: a wrong memory must be retractable rather than left to fade; decay cannot tell false from unused.

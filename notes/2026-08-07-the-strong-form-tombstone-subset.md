@@ -21,8 +21,9 @@ implement the form the page argues for?
 
 ## The answer
 
-**Five.** And the four that do not fail in three distinguishable ways, which
-turns out to be more useful than the number.
+**Five of the nine, when this was written; six of eleven now.** And the four
+that do not fail in three distinguishable ways, which turns out to be more
+useful than the number.
 
 | System | Value-keyed | Normalized | Read before the write? | Write refused? | Kind |
 | --- | --- | --- | --- | --- | --- |
@@ -31,6 +32,7 @@ turns out to be more useful than the number.
 | [universal-memory-engine](../content/systems/universal-memory-engine.md) | yes — canonical label | yes — `canonicalKey` | yes, four points in the write gate | yes — `suppressed_blocked` | **Consulted** |
 | [rainbox](../content/systems/rainbox.md) | yes — `value_key` | yes — `belief_keys`/`_SHAPE_RULES`, no LLM | yes — dedupe → **tombstone** → conflict → create, under lock | yes, refusals counted in `hit_count` | **Consulted** |
 | [verel](../content/systems/verel.md) | yes — ledger on `make_key(subject, predicate, scope)` | asserted, function not named in the report | yes — the gate sees the ledger; `approve()` refuses a rejected record | yes — a re-write stays rejected | **Consulted** |
+| [noosphere](../content/systems/noosphere.md) | yes — HMAC `subjectHash` over the capture | yes — `digestWithAllKeys` across the retained keyring | yes — inside the serializable transaction, after `lockLineages` | yes — a 409, *"Capture was previously revoked"* | **Consulted** |
 | [daimon](../content/systems/daimon.md) | yes — content-derived id | yes — `canonical_text`: NFKC, invisibles, casefold, **confusables** | partly — the supersede-candidate emitter consults it; the capture path does not | no — the value re-enters the checkpoint and is suppressed on every read | **Hybrid** |
 | [provem](../content/systems/provem.md) | yes | yes — token set with a subset test | no | no — read-side suppression, stated as the known limit | **Suppressed** |
 | [mnemosyne](../content/systems/mnemosyne.md) | yes — SHA-256 of the triple | yes — NFC, length-prefixed | no — nothing reads the rejection | no — the write lands **on** the tombstoned row and bumps its counts; `superseded_by` stays set | **Collided** |
@@ -42,8 +44,8 @@ Counting stops being interesting once you notice the four rows below the line
 are not one failure mode but three, separated by a single question: **does
 anything read the rejection before the write completes?**
 
-- **Consulted (5).** Something looks the value up and the write does not happen.
-  This is the pattern as argued.
+- **Consulted (5, now 6).** Something looks the value up and the write does not
+  happen. This is the pattern as argued.
 - **Collided (2).** Nothing looks anything up. The rejection survives because the
   primary key *is* the value, so a re-extraction lands on the rejected row
   instead of minting a live one. Durable, free, and **held in place by the
@@ -114,3 +116,42 @@ new live row exists *and* that the store contains no second copy. The consulted
 five pass both halves; the collided two pass the first and fail the second; the
 suppressed one fails the first. Nobody has to be told which group they are in —
 the test says it.
+
+
+---
+
+## 2026-08-09 — a sixth consulted instance, and the property none of the others has
+
+[Noosphere](../content/systems/noosphere.md) was added from
+[the outside corpus](2026-08-09-seventy-one-repositories-from-an-outside-corpus.md)
+and lands in the **Consulted** row on all four properties. It is added to the
+table above rather than kept separate, because it fails none of them.
+
+What it adds to the taxonomy is a fifth question the other five never had to
+answer: **what happens to a value-keyed tombstone when the key rotates?**
+
+Noosphere's `subjectHash` is an HMAC, not a plain digest. Rotate the secret and
+every stored `subjectHash` becomes uncomputable from new input — so a naive
+implementation silently readmits every value it had ever refused, with no error
+and no signal. The fix is in the comment beside the check:
+
+> A tombstone from any retained key version blocks recreation. Historical keys
+> remain in the bounded keyring until their tombstones and source TTLs have
+> expired.
+
+`digestWithAllKeys` computes the candidate's digest under every retained key
+version and matches the tombstone against the whole set; `MemoryTombstone`
+stores `hmacKeyVersion` so the retention policy is auditable.
+
+**The five earlier instances do not have this problem and could acquire it.**
+memsem, Perseus Vault, Universal Memory Engine, RainBox and Verel all key on a
+plain normalised value or a digest with no secret. Any of them adding a keyed
+hash — for privacy, for multi-tenancy, for anything — would need this exact
+mechanism, and the failure would be invisible: the tombstone table would still
+be full, the checks would still run, and nothing would ever match.
+
+The cost is the reason it is bounded. Retaining historical keys is what makes
+the check possible, so the keyring size is bounded by the tombstone TTL — ninety
+days here. **This is the first tombstone in the atlas with a deliberate
+expiry**, and the pattern page's strong form should probably grow a fifth
+question of its own: *for how long?*

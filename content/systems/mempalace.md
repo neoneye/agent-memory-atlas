@@ -433,4 +433,6 @@ For your own memory system, MemPalace is the strongest reminder that extraction 
 
 ## History
 
+**2026-08-09** — the repository now lives at `milla-jovovich/mempalace` and `MemPalace/mempalace` redirects to it; the pin below resolves unchanged. Recorded because an outside corpus listed the new path as an uncovered system, and a join on `source_url` cannot see an owner change.
+
 **2026-07-26** — [`afd0428823b47f9a9d1d68c450d54bb0045a4988`](https://github.com/MemPalace/mempalace/commit/afd0428823b47f9a9d1d68c450d54bb0045a4988) — first reading.

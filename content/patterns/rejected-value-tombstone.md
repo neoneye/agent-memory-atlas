@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and eighty-eight
+> **This is not an established best practice.** Nine systems of one hundred and ninety-one
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -192,9 +192,9 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of one hundred and eighty-eight
+That makes the negative result stronger rather than weaker. Two of one hundred and ninety-one
 would suggest a hard idea that a few teams reach independently. One of
-one hundred and eighty-eight, plus one adoption by a reader who went looking, suggests an idea
+one hundred and ninety-one, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -546,6 +546,29 @@ commit gate tested across nine cases — so even here, the negative half is the
 half nobody covered. The mechanism is not hard. It is reached when a concrete
 re-assertion loop makes the need undeniable, and memory systems have exactly
 that loop and mostly have not noticed.
+
+[Noosphere](../../systems/noosphere/) is the strongest implementation of the
+form this page argues for, and it answers a question the others never had to.
+Its key is an **HMAC** of the capture, not a plain digest — so rotating the
+secret would make every stored key uncomputable from new input and silently
+readmit every value the system had ever refused. The check therefore computes
+the candidate's digest under **every retained key version** and matches the
+tombstone against the whole set, with the reasoning in the comment: *"A
+tombstone from any retained key version blocks recreation. Historical keys
+remain in the bounded keyring until their tombstones and source TTLs have
+expired."* The check runs inside a serializable transaction after the lineage
+rows are locked, and the write is refused with a 409.
+
+**If your value key is derived under a secret, this is a fifth property the
+strong form needs**, and it is invisible when it fails: the tombstone table
+stays full, the check keeps running, and nothing ever matches again.
+
+It also introduces the first deliberate **expiry** in this atlas's tombstones.
+Retaining the historical keys is what makes the check work, so the keyring is
+bounded by the tombstone's ninety-day TTL. That is a defensible trade for a
+privacy revocation whose source data expires anyway, and it means the guarantee
+is *not again for ninety days* rather than *never again* — a distinction worth
+making explicitly wherever this shape is copied.
 
 ## Tests to require
 
