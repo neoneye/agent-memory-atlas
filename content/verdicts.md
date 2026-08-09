@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 218 reports.**
+**This page covers all 219 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["218 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["219 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1879,6 +1879,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a wide integration surface — two SDKs, MCP, VS Code, four frameworks, five source connectors — full governance documents, and a README whose first line announces a rewrite in progress on another branch.
 - Study when: you are building multi-project memory with a shared global tier and need the test that pins it.
 - Do not copy when: you want the sectored model — run retrieval with the matrix, flattened, and randomised first; nothing in the repository shows it earns its place.
+
+### [`ori-mnemos`](../systems/ori-mnemos/)
+
+- Best idea: `stage-learner.ts` makes each retrieval stage an arm of a LinUCB bandit that learns per query type whether the stage earns its latency and auto-skips it when it does not — with `MIN_SAMPLES = 15` before acting, an abstain threshold so it declines to decide, a cost penalty so a stage must be worth its latency rather than merely harmless, a load-balance term borrowed from mixture-of-experts, and a hard time budget.
+- Biggest risk: the repository contains two tables of the same benchmarks whose numbers disagree — the README gives HotpotQA F1 0.68 where `bench/README.md` gives 0.523 and 0.410, and the README's LoCoMo 37.69/29.31 appear nowhere in the bench file's per-category figures — and `.gitignore` excludes `bench/results/`, so no committed run adjudicates.
+- Most reusable component: `warmth-audit.jsonl`, which logs `baseRank` and `baseScore` beside `finalRank` and `finalScore` with the `movement` computed. Logging the counterfactual makes a re-ranking signal's contribution measurable; logging only the final ranking makes it an article of faith.
+- Maturity impression: markdown on disk with a SQLite index and wiki-links as graph edges, ACT-R base-level activation written out beside exponential vitality decay, 35 test files, two design specs at the root, and `fading` and `warmth-audit` as first-class CLI commands.
+- Study when: your hybrid retriever runs every arm on every query and you tune fusion weights by hand.
+- Do not copy when: you need the comparison the README makes — Mem0 is measured on source-document recall through an extraction pipeline that discards source text, which is not the workload it is built for.
+
 
 
 

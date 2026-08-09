@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 218 reports.</strong></p>
+<p><strong>This page covers all 219 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;218 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;219 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5473,6 +5473,39 @@ global tier and need the test that pins it.</li>
 <li>Do not copy when: you want the sectored model — run retrieval with
 the matrix, flattened, and randomised first; nothing in the repository
 shows it earns its place.</li>
+</ul>
+<h3 id="ori-mnemos"><a
+href="../systems/ori-mnemos/"><code>ori-mnemos</code></a></h3>
+<ul>
+<li>Best idea: <code>stage-learner.ts</code> makes each retrieval stage
+an arm of a LinUCB bandit that learns per query type whether the stage
+earns its latency and auto-skips it when it does not — with
+<code>MIN_SAMPLES = 15</code> before acting, an abstain threshold so it
+declines to decide, a cost penalty so a stage must be worth its latency
+rather than merely harmless, a load-balance term borrowed from
+mixture-of-experts, and a hard time budget.</li>
+<li>Biggest risk: the repository contains two tables of the same
+benchmarks whose numbers disagree — the README gives HotpotQA F1 0.68
+where <code>bench/README.md</code> gives 0.523 and 0.410, and the
+README's LoCoMo 37.69/29.31 appear nowhere in the bench file's
+per-category figures — and <code>.gitignore</code> excludes
+<code>bench/results/</code>, so no committed run adjudicates.</li>
+<li>Most reusable component: <code>warmth-audit.jsonl</code>, which logs
+<code>baseRank</code> and <code>baseScore</code> beside
+<code>finalRank</code> and <code>finalScore</code> with the
+<code>movement</code> computed. Logging the counterfactual makes a
+re-ranking signal's contribution measurable; logging only the final
+ranking makes it an article of faith.</li>
+<li>Maturity impression: markdown on disk with a SQLite index and
+wiki-links as graph edges, ACT-R base-level activation written out
+beside exponential vitality decay, 35 test files, two design specs at
+the root, and <code>fading</code> and <code>warmth-audit</code> as
+first-class CLI commands.</li>
+<li>Study when: your hybrid retriever runs every arm on every query and
+you tune fusion weights by hand.</li>
+<li>Do not copy when: you need the comparison the README makes — Mem0 is
+measured on source-document recall through an extraction pipeline that
+discards source text, which is not the workload it is built for.</li>
 </ul>
         </article>
       </div>
