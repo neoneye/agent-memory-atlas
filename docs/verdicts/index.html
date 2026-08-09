@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 234 reports.</strong></p>
+<p><strong>This page covers all 235 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;234 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;235 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5999,6 +5999,38 @@ the same place with a confidence float between them.</li>
 <li>Do not copy when: you need a rejected claim to stay rejected — the
 rejection is durable and nothing consults it on the next inference
 pass.</li>
+</ul>
+<h3 id="knowledge-worker"><a
+href="../systems/knowledge-worker/"><code>knowledge-worker</code></a></h3>
+<ul>
+<li>Best idea: a fabricated-quote detector. A
+<code>high</code>-confidence claim must carry an excerpt and the excerpt
+must substring-match the source; if it does not, the claim is
+<strong>demoted to <code>low</code></strong> with the reason recorded —
+<code>no_excerpt</code> or <code>excerpt_not_in_source</code>. An LLM
+asked to extract claims with evidence will invent the evidence, and this
+catches it deterministically with no second model call. Demotion rather
+than rejection is the right third option: the claim may be true, it is
+just not evidenced.</li>
+<li>Biggest risk: substring matching catches <em>invention</em>, not
+<em>misquotation in context</em>. "I would never use MongoDB for this"
+contains "use MongoDB for this", and a claim excerpting the fragment
+passes — storing the source offset rather than the text would let the
+surrounding span be checked.</li>
+<li>Most reusable component: the validation manifest — accepted,
+rejected and demoted nodes and edges, each with an enumerated reason
+string — which turns an extraction pass from a silent transformation
+into an auditable one, and gives tests an exact assertion target.</li>
+<li>Maturity impression: 7,500 lines with a closed node and edge type
+set, edge endpoints resolved against both the existing graph and the
+current candidate batch so an edge to a just-rejected node is dropped,
+OWL import and export, and analytics that keep provenance edges out of
+the semantic centrality measures — against 8 test files, none on the
+validator.</li>
+<li>Study when: an LLM is deciding what becomes durable knowledge in
+your store and you take its evidence on trust.</li>
+<li>Do not copy when: you need automatic recall — the model is handed a
+filtered brief, and the retrieval decision stays with the human.</li>
 </ul>
         </article>
       </div>

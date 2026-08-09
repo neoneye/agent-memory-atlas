@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 234 reports.**
+**This page covers all 235 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["234 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["235 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2023,6 +2023,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 7,900 lines of Go with six first-class epistemic entity types — facts, hypotheses, contradictions, causal links, goals, failures — one file per concept, `failures` splitting content from reason from lesson, consolidation runs reporting `llmCalls` beside their outcomes, and `docker compose up` as the entire install.
 - Study when: your system stores an inference and an observation in the same place with a confidence float between them.
 - Do not copy when: you need a rejected claim to stay rejected — the rejection is durable and nothing consults it on the next inference pass.
+
+### [`knowledge-worker`](../systems/knowledge-worker/)
+
+- Best idea: a fabricated-quote detector. A `high`-confidence claim must carry an excerpt and the excerpt must substring-match the source; if it does not, the claim is **demoted to `low`** with the reason recorded — `no_excerpt` or `excerpt_not_in_source`. An LLM asked to extract claims with evidence will invent the evidence, and this catches it deterministically with no second model call. Demotion rather than rejection is the right third option: the claim may be true, it is just not evidenced.
+- Biggest risk: substring matching catches *invention*, not *misquotation in context*. "I would never use MongoDB for this" contains "use MongoDB for this", and a claim excerpting the fragment passes — storing the source offset rather than the text would let the surrounding span be checked.
+- Most reusable component: the validation manifest — accepted, rejected and demoted nodes and edges, each with an enumerated reason string — which turns an extraction pass from a silent transformation into an auditable one, and gives tests an exact assertion target.
+- Maturity impression: 7,500 lines with a closed node and edge type set, edge endpoints resolved against both the existing graph and the current candidate batch so an edge to a just-rejected node is dropped, OWL import and export, and analytics that keep provenance edges out of the semantic centrality measures — against 8 test files, none on the validator.
+- Study when: an LLM is deciding what becomes durable knowledge in your store and you take its evidence on trust.
+- Do not copy when: you need automatic recall — the model is handed a filtered brief, and the retrieval decision stays with the human.
+
 
 
 
