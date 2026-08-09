@@ -193,7 +193,9 @@ href="../systems/honcho/">Honcho</a>, <a
 href="../systems/hindsight/">Hindsight</a>, <a
 href="../systems/swafra/">Swafra</a>, <a
 href="../systems/agentmemory/">agentmemory</a>, <a
-href="../systems/daimon/">Daimon</a></td>
+href="../systems/daimon/">Daimon</a>, <a
+href="../systems/engram-alpha/">Engram Alpha</a> (retrieval half only —
+see below)</td>
 </tr>
 <tr>
 <td><strong>BEAM</strong></td>
@@ -545,6 +547,28 @@ each comparison runs through a different integration adapter, and that
 report's open questions ask the obvious thing: <em>how much of the delta
 is the memory layer, and how much is prompt-shape changes in the
 adapter?</em> Nothing in the published artifacts separates the two.</p>
+<p><strong>One system in this corpus cuts the pipeline in half rather
+than reporting through it.</strong> <a
+href="../systems/engram-alpha/">Engram Alpha</a> runs LongMemEval-S at
+full population with no model anywhere: the haystack is ingested as-is,
+one verbatim note per chat turn, and a question counts as answered when
+a note from a labelled evidence session lands in the delivered set. No
+extraction model, no answering model, no judge — four of the six stages
+above are removed, and what is left is the retrieval stack, graded
+deterministically. The trade is stated on its own page: these numbers
+cannot be compared with published LongMemEval scores, because nothing
+here measures what a model does with the delivery. Two second- order
+costs come with it and are worth naming for anyone copying the design.
+Grading at <em>session</em> level is generous to dumps — any turn from
+the right session counts, so a blind 3,000-token selection that happens
+to keep one filler line scores as a hit, which is visible in that run's
+<code>curated-file</code> arm beating the graph on R@1. And the
+delivered-token column, which is where the comparison actually lands,
+bills one arm for snippets and another for whole turns. The lesson
+generalises past this repository: <strong>an offline retrieval grade
+buys determinism and full population at the price of the thing the
+benchmark was built to measure</strong>, and both halves of that trade
+have to be published for the number to mean anything.</p>
 <h3
 id="vendor-run-comparisons-compare-them-with-them-plus-us">Vendor-run
 comparisons compare "them" with "them plus us"</h3>
@@ -1875,6 +1899,17 @@ head-to-heads, and its caveats section instructs a reader to flag that
 Zep's publication does not state its prompt variant. It publishes the
 per-question-type breakdown including the category it does badly on
 (<code>single-session-preference</code>, 0.300 on 30 questions).</p>
+<p>That category is worth watching across systems. <a
+href="../systems/engram-alpha/">Engram Alpha</a>, grading the retrieval
+half of the same benchmark under a wholly different protocol, reports
+those same 30 questions as its own worst row — R@5 0.867 and MRR 0.757,
+against 0.98 and above on <code>knowledge-update</code> and
+<code>single-session-assistant</code>. Two independent measurements
+landing on the same category points at the questions rather than at
+either system: preference questions are <em>oblique</em>, meaning the
+evidence never shares the question's vocabulary, which is the failure
+mode embedding retrieval is worst at and the one a per-category
+breakdown exists to expose.</p>
 <p><strong><a href="../systems/provem/">Provem</a> goes one step past
 all of them: it makes the reproduction a gate rather than an
 invitation.</strong> Every other repository here, at best, ships a

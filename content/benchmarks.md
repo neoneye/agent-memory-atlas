@@ -66,7 +66,7 @@ existence and use are verifiable from code.
 | Benchmark | What it tests | Shipped as a harness by |
 | --- | --- | --- |
 | **LoCoMo** | Question answering over very long multi-session conversations, with single-hop, multi-hop, temporal, open-domain and adversarial question categories | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Basic Memory](../systems/basic-memory/) |
-| **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/), [Daimon](../systems/daimon/) |
+| **LongMemEval** | Long-conversation QA split by ability, including **knowledge updates** and **abstention** | [OpenViking](../systems/openviking/), [Honcho](../systems/honcho/), [Hindsight](../systems/hindsight/), [Swafra](../systems/swafra/), [agentmemory](../systems/agentmemory/), [Daimon](../systems/daimon/), [Engram Alpha](../systems/engram-alpha/) (retrieval half only — see below) |
 | **BEAM** | Long-conversation QA at extreme length; Cognee's committed report covers 100K and 10M-token conversations. Its category list includes **`contradiction_resolution`** and **`abstention`** — see the correction below | [Cognee](../systems/cognee/), [Honcho](../systems/honcho/), [ReMe](../systems/reme/) |
 | **Oolong** | Present in Honcho's bench tree; not characterized here | [Honcho](../systems/honcho/) |
 | **τ²-bench (tau2)** | Agentic tool use against a simulated user with policy compliance — a *downstream task*, not a memory test | [OpenViking](../systems/openviking/) |
@@ -296,6 +296,26 @@ But each comparison runs through a different integration adapter, and that
 report's open questions ask the obvious thing: *how much of the delta is the
 memory layer, and how much is prompt-shape changes in the adapter?* Nothing in
 the published artifacts separates the two.
+
+**One system in this corpus cuts the pipeline in half rather than reporting
+through it.** [Engram Alpha](../systems/engram-alpha/) runs LongMemEval-S at
+full population with no model anywhere: the haystack is ingested as-is, one
+verbatim note per chat turn, and a question counts as answered when a note from
+a labelled evidence session lands in the delivered set. No extraction model, no
+answering model, no judge — four of the six stages above are removed, and what
+is left is the retrieval stack, graded deterministically. The trade is stated on
+its own page: these numbers cannot be compared with published LongMemEval scores,
+because nothing here measures what a model does with the delivery. Two second-
+order costs come with it and are worth naming for anyone copying the design.
+Grading at *session* level is generous to dumps — any turn from the right session
+counts, so a blind 3,000-token selection that happens to keep one filler line
+scores as a hit, which is visible in that run's `curated-file` arm beating the
+graph on R@1. And the delivered-token column, which is where the comparison
+actually lands, bills one arm for snippets and another for whole turns. The
+lesson generalises past this repository: **an offline retrieval grade buys
+determinism and full population at the price of the thing the benchmark was
+built to measure**, and both halves of that trade have to be published for the
+number to mean anything.
 
 ### Vendor-run comparisons compare "them" with "them plus us"
 
@@ -1416,6 +1436,16 @@ reproducing them as head-to-heads, and its caveats section instructs a reader to
 flag that Zep's publication does not state its prompt variant. It publishes the
 per-question-type breakdown including the category it does badly on
 (`single-session-preference`, 0.300 on 30 questions).
+
+That category is worth watching across systems. [Engram
+Alpha](../systems/engram-alpha/), grading the retrieval half of the same
+benchmark under a wholly different protocol, reports those same 30 questions as
+its own worst row — R@5 0.867 and MRR 0.757, against 0.98 and above on
+`knowledge-update` and `single-session-assistant`. Two independent measurements
+landing on the same category points at the questions rather than at either
+system: preference questions are *oblique*, meaning the evidence never shares
+the question's vocabulary, which is the failure mode embedding retrieval is
+worst at and the one a per-category breakdown exists to expose.
 
 **[Provem](../systems/provem/) goes one step past all of them: it makes the
 reproduction a gate rather than an invitation.** Every other repository here, at

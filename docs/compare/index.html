@@ -4577,27 +4577,35 @@ when the same text is saved again, and a test asserts it</td>
 </tr>
 <tr>
 <td><code>engram-alpha</code></td>
-<td>A typed node — Principle, Decision, Caution, Problem, Resolution,
-Insight, Intent or Anchor — joined by typed edges including
-<code>replaces</code> and <code>conflicts-with</code></td>
+<td>A typed node joined by typed edges — but the type set is per-graph
+config, not a Rust enum: engine logic keys on the roles a type or verb
+carries (<code>supersession</code>, <code>contradiction</code>,
+<code>worklist</code>), so a renamed or replaced ontology keeps every
+behaviour</td>
 <td>SQLite (with a TepinDB backend beside it), nodes and edges plus a
 suspects table and an append-only audit journal</td>
 <td>Vectors with a reranker that votes rather than decides, a keyword
-weight of 0.15, and a score floor whose whole tradeoff curve is
-committed</td>
+weight of 0.15, and calibrated delivery — a score floor and a knee cut
+whose whole tradeoff curve is committed, with the abstention line fitted
+per graph from unanswerable probes built out of the graph's own
+vocabulary</td>
 <td>A write returns the look-alike pairs it just queued, so the
 assistant judges them in the same turn — detection is local, judgment is
 the assistant's</td>
 <td><code>replaces</code> and <code>conflicts-with</code> edges,
-<code>valid_until</code> for archival, a suspects table resolved as
-conflict, replaces or dismiss, and a human pin that disables decay</td>
+<code>valid_until</code> for archival, an atomic
+<code>merge_nodes</code> that rehomes edges and archives victims behind
+a supersession, a suspects table resolved as conflict, replaces or
+dismiss, and a human pin that disables decay</td>
 <td>None — one graph per project directory, with no scope key inside
 it</td>
 <td>An MCP server, a JetBrains plugin and a VS Code extension published
 to three marketplaces, plus a standalone pane with a live browser
 demo</td>
-<td>Trust is computed at read time, so nothing depends on a background
-pass; drift scans surface for review and deliberately never demote</td>
+<td>Trust is computed at read time, so no pass has to have run for a
+read to be correct; a session-boundary <code>validate_graph</code>
+archives, retires, re-fits the two auto-tune dials and rescans, and
+drift scans surface for review while deliberately never demoting</td>
 <td>Three distinct durable anchors — <code>confirmed_at</code>,
 <code>approved_at</code>, <code>demoted_at</code> — plus a
 <code>trust_override</code> pin, and a suspects status of suspected,
@@ -4605,9 +4613,9 @@ confirmed or dismissed</td>
 <td>Retrieval stamps <code>last_seen</code> for observability only,
 because exposure would otherwise let a broad recurring query certify its
 own outputs</td>
-<td>Alpha, with no scope key and a contradiction detector whose
-97-of-100 recall is measured on a synthetic 500-node graph the project
-generated</td>
+<td>No scope key of any kind; the retrieval half of LongMemEval is
+graded at session level, and the one number the external run does not
+price is how often an answerable question gets warned</td>
 </tr>
 <tr>
 <td><code>engram-provable</code></td>
@@ -14348,7 +14356,7 @@ at <a
 href="https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1"><code class="commit-id" title="cd196704bb3dd148c314a81a32d96752204be5c1">cd196704…</code></a></li>
 <li><a href="https://github.com/techtheist/engram">techtheist/engram</a>
 at <a
-href="https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37"><code class="commit-id" title="5721848af9fe4adc28ff08dce5bda6cfc3f24a37">5721848a…</code></a></li>
+href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d"><code class="commit-id" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">cbc6f0b8…</code></a></li>
 <li><a
 href="https://github.com/munch2u-a11y/Helix-AGI">munch2u-a11y/Helix-AGI</a>
 at <a
@@ -16054,6 +16062,31 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-09</strong> — Two shipped subsystems went unreported
+in <a href="../systems/engram-alpha/">Engram Alpha</a> — a per-graph
+configurable ontology and a two-dial threshold auto-tuner — and both
+were fully present in the tree at the commit the report pinned. Neither
+absence was a search that failed; there was no search, because the
+reading answered "what are the node types" from the README's list and
+never asked whether the list was a constant. <strong>The seven-mechanism
+rubric asks what a system does, and a report can answer all seven
+without ever asking what a system lets its user change.</strong>
+Configurability is a mechanism — where it lives, what it may not
+violate, and which surface may write it are design decisions as
+load-bearing as a trust curve, and this atlas's own categories give an
+agent no prompt to go looking for them. The file index is where it
+showed: <code>config.rs</code> was listed under <em>Safety</em> beside
+<code>error.rs</code>, which is what a file gets called when nobody
+opened it. A concrete check for the next reading, cheap enough to run
+every time: for each of the report's stated vocabularies — node types,
+edge verbs, statuses, thresholds — grep for the literal names and see
+whether the engine compares against them or against something it loaded.
+A second, smaller lesson: <strong>a product's name is not a maturity
+claim.</strong> <em>Alpha</em> here is part of the name the project
+ships under, and the report read it as a stability disclaimer and
+repeated it in the verdict, the matrix and the fit paragraph. What a
+repository says about its own maturity is a sentence somewhere in it,
+and it can be quoted; the title bar cannot.</p>
 <p><strong>2026-08-09</strong> — A dash is a negative claim and needs
 the tree-wide grep this project already demands of a negative sentence.
 A reading of <a href="../systems/breadcrumbs/">breadcrumbs</a> withheld

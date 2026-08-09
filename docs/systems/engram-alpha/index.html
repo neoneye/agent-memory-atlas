@@ -7,7 +7,8 @@
     <meta name="description" content="A Rust graph memory for coding
 assistants whose trust decays only when judged contradicting evidence
 lands, never from age alone and never from being retrieved — with the
-ablation row it ships labelled in its own committed benchmark data.">
+ablation row it ships labelled in its own committed benchmark data, and
+a fitted-as-data ontology carrying it onto a corpus it did not write.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
@@ -17,7 +18,8 @@ Alpha — Agent Memory Atlas">
 coding assistants whose trust decays only when judged contradicting
 evidence lands, never from age alone and never from being retrieved —
 with the ablation row it ships labelled in its own committed benchmark
-data.">
+data, and a fitted-as-data ontology carrying it onto a corpus it did not
+write.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Engram
@@ -26,7 +28,8 @@ Alpha — Agent Memory Atlas">
 coding assistants whose trust decays only when judged contradicting
 evidence lands, never from age alone and never from being retrieved —
 with the ablation row it ships labelled in its own committed benchmark
-data.">
+data, and a fitted-as-data ontology carrying it onto a corpus it did not
+write.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Engram Alpha — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -88,21 +91,23 @@ validate</p>
           <p class="document-deck">A Rust graph memory for coding
 assistants whose trust decays only when judged contradicting evidence
 lands, never from age alone and never from being retrieved — with the
-ablation row it ships labelled in its own committed benchmark data.</p>
+ablation row it ships labelled in its own committed benchmark data, and
+a fitted-as-data ontology carrying it onto a corpus it did not
+write.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/techtheist/engram">
               <span>Source</span>
               <strong>techtheist/engram</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37" title="5721848af9fe4adc28ff08dce5bda6cfc3f24a37">
+            <a class="meta-pill revision-pill" href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">
               <span>Analyzed revision</span>
-              <code>5721848a…</code>
+              <code>cbc6f0b8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-08-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -121,20 +126,50 @@ ablation row it ships labelled in its own committed benchmark data.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Engram Alpha is graph memory for AI coding assistants: 25,521 lines
+<p>Engram Alpha is graph memory for AI coding assistants: 26,244 lines
 of Rust across <code>engram-core</code>, <code>engram-mcp</code> and
-<code>engram-http</code>, MIT, 66 commits since 3 July 2026, shipping as
+<code>engram-http</code>, MIT, 76 commits since 3 July 2026, shipping as
 a JetBrains plugin and a VS Code extension on three marketplaces with a
 browser demo of the real pane. <strong>Not to be confused with <a
 href="../engram/">Engram</a> — a different project of the same name,
 already in this atlas.</strong></p>
-<p>A memory is a typed node — <code>Principle</code>,
+<p><em>Alpha</em> is part of the product's name, not a maturity label:
+the marketplace identifier is <code>techtheist.engram-alpha</code>, the
+installed binary is <code>engram-alpha</code>, and nothing in the README
+applies the word to the software's state. The stability claim the
+repository does make is its own status line — <em>"early development,
+heavily dogfooded, benchmark-driven — retrieval changes cite a measured
+run or they don't ship"</em> — and the second half of that sentence is
+the one this report can check.</p>
+<p>A memory is a typed node joined by typed edges — but the vocabulary
+is <strong>per-graph configuration, not a closed enum</strong>.
+<code>GraphConfig</code> (<code>config.rs</code>) stores the ontology,
+the policy numbers and the brief shape as one document inside the graph
+itself, travelling with <code>migrate</code> and riding along in
+exports. The shipped preset is eight types — <code>Principle</code>,
 <code>Decision</code>, <code>Caution</code>, <code>Problem</code>,
 <code>Resolution</code>, <code>Insight</code>, <code>Intent</code>,
-<code>Anchor</code> — joined by typed edges: <code>about</code>,
+<code>Anchor</code> — over seven verbs: <code>about</code>,
 <code>because</code>, <code>answers</code>, <code>builds-on</code>,
-<code>replaces</code>, <code>conflicts-with</code>,
-<code>needs</code>.</p>
+<code>replaces</code>, <code>conflicts-with</code>, <code>needs</code>.
+Two other presets ship beside it (<code>research</code>,
+<code>minimal</code>) and a graph may define its own.</p>
+<p>The rule that makes that safe is stated at the top of the module and
+enforced throughout: <strong>roles, never names.</strong> Engine logic
+keys on the role flags a type or verb carries — <code>worklist</code>,
+<code>supersession</code>, <code>contradiction</code> — never on the
+strings, so a renamed or wholly replaced ontology keeps every behaviour.
+<code>hub.rs:104</code> is the shape of it: the contradiction gate tests
+<code>edge.edge_type.as_str() == contradiction_verb</code>, where the
+verb comes from the graph's config, not from a literal. Two hard
+invariants hold across any configuration — edges stay sentence-shaped,
+and exactly one supersession verb plus one contradiction verb must
+exist, <em>"they are what make the graph active"</em> — with
+<code>graph_config_validation_guards_hard_invariants</code> and
+<code>shipped_presets_are_valid_and_complete</code> asserting both.
+There is deliberately <strong>no MCP write surface</strong> for the
+ontology: reshaping it is a pane gesture, <em>"like pin and
+delete"</em>.</p>
 <p><strong>Its trust model states two principles the rest of this corpus
 mostly violates</strong>, and
 <code>crates/engram-core/src/policy.rs</code> names both:</p>
@@ -194,13 +229,41 @@ decomposition almost nobody reports, and <code>floor-500.json</code>
 sweeps twenty-one score floors with unanswerable
 <strong>controls</strong> at each point, so the precision gained is
 priced against the answerable questions declined.</p>
-<p>The limits are real and stated by the name: this is alpha, there is
-no scope key of any kind, and every number above is measured on graphs
-the project generated itself.</p>
+<p><strong>And it runs on a corpus it did not write.</strong>
+<code>eval/LONGMEMEVAL.md</code> reports the full 500 questions of <a
+href="https://github.com/xiaowu0162/LongMemEval">LongMemEval</a>-S —
+real multi-session chat, ~115k tokens of haystack per question, evidence
+sessions labelled, 30 questions deliberately unanswerable — ingested
+<em>as-is</em>, one verbatim note per chat turn, with no extraction and
+no model anywhere in the ingestion or grading path. Five arms over
+identical haystacks; the receipt is
+<code>eval/results/longmemeval-s-full.json</code>:</p>
+<pre class="text"><code>arm            R@1    R@5    MRR    tok/query
+engram         0.909  0.953  0.929      207.5
+rag            0.909  0.974  0.937    2,654.4
+grep           0.706  0.864  0.775    4,761.0
+curated-file   0.919  0.919  0.919    2,999.0
+whole-file     1.000  1.000  1.000  122,515.5</code></pre>
+<p>No row is an outright win, and that is the point of publishing all
+five. Engram matches pure vectors at R@1, gives up 0.02 at R@5, loses
+R@1 to a blind 3,000-token file dump — and delivers an eighth of rag's
+tokens doing it, with both of its recall figures computed over the set
+calibrated delivery left rather than over a fixed ten. The 30
+unanswerable questions draw <strong>2 empty deliveries, 28 warned, 0
+unwarned</strong>, with the weak line auto-fitted per store on 27 of 30
+graphs.</p>
+<p>The limits are real and the project states most of them itself: there
+is no scope key of any kind, the external run grades retrieval at
+<em>session</em> level (any turn from the right session counts, which
+flatters dumps), and the harness never asks what the same warning line
+costs on the 470 answerable questions — the offline suite, which does
+ask, answers 47% at 100 notes and 48% at 1,500.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<p>A node is a claim of a stated kind, and the kind carries the
-epistemics: a <code>Decision</code> is not a <code>Caution</code> is not
-an <code>Insight</code>. Durability is separate — <code>stable</code>,
+<p>A node is a claim of a kind the graph's ontology declares, and the
+kind carries the epistemics: under the shipped preset a
+<code>Decision</code> is not a <code>Caution</code> is not an
+<code>Insight</code>, and the roles each kind carries are what the
+engine reads. Durability is separate — <code>stable</code>,
 <code>episodic</code>, <code>volatile</code> — and decides whether time
 is allowed to erode it at all.</p>
 <p>Trust is <strong>computed at read time</strong> from durable anchors,
@@ -225,6 +288,20 @@ column comment reads <em>"models don't validate"</em>. A suspect is
 <code>suspected</code>, then <code>confirmed</code> or
 <code>dismissed</code>, and the verdict vocabulary is
 <code>conflict</code>, <code>replaces</code>, <code>dismiss</code>.</p>
+<p>The constants in that machine are per-graph, and two of them are
+fitted rather than chosen. <code>Engine::auto_tune</code> runs at every
+session boundary: dial one refits the conflict-suspect floor from the
+graph's own judged suspects by maximising balanced accuracy over
+midpoint candidates, and dial two refits the "likely not in memory"
+line. Each move is damped to half the distance to the fit
+(<code>AUTO_TUNE_DAMPING = 0.5</code>), clamped into a stated range,
+suppressed below <code>AUTO_TUNE_MIN_DELTA</code>, gated behind minimum
+volumes — 200 notes and 20 judgments with at least 3 on each side for
+dial one — and journalled as an <code>auto_tuned</code> row.
+<code>policy.auto_tune = false</code> opts a graph out entirely. The
+field lesson behind it is written down in the project's own chronicle:
+<em>"register-dependent score scales — absolute thresholds don't
+transfer between graphs, relative mechanisms do."</em></p>
 <pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Unseen: created_at only, trust starts low
     Unseen --&gt; Confirmed: a deliberate update or Confirm still true
@@ -243,7 +320,7 @@ graph and changes no trust, so a note cannot certify itself by being
 popular.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><strong>Runtime.</strong> A Rust core (<code>engram-core</code>) with
-an MCP server (<code>engram-mcp</code>, 2,979 lines) and an HTTP surface
+an MCP server (<code>engram-mcp</code>, 3,046 lines) and an HTTP surface
 (<code>engram-http</code>), a Vue frontend for the pane, and editor
 integrations for JetBrains and VS Code published to the JetBrains
 Marketplace, the VS Marketplace and Open VSX. There is a standalone
@@ -254,29 +331,62 @@ with a second backend (<code>store_tepin.rs</code>) behind the same
 <code>edges</code>, <code>suspects</code>, <code>audit</code>, plus a
 <code>meta</code> table holding the embedding model identity and vector
 width so a store cannot be silently read with the wrong embedder.</p>
-<p><strong>Modules worth naming.</strong> <code>nli.rs</code> runs a
+<p><strong>Modules worth naming.</strong> <code>config.rs</code> holds
+<code>GraphConfig</code> — the ontology, the policy numbers and the
+brief composition as one stored document, with the three shipped presets
+and the validator for the hard invariants; <code>nli.rs</code> runs a
 local natural-language-inference model for contradiction hints;
-<code>policy.rs</code> holds the trust constants and their rationale;
-<code>redact.rs</code> exists at all; <code>cortex.rs</code>,
-<code>digest.rs</code>, <code>rag.rs</code>, <code>hub.rs</code> carry
-retrieval and briefing; <code>migrate.rs</code> handles schema
-movement.</p>
-<p><strong>Background work.</strong> Deliberately little. Trust is a
-read-time computation. Drift scans surface for review without demoting.
-The suspects queue is filled synchronously by the write that created the
-look-alike.</p>
+<code>policy.rs</code> holds the trust constants, the auto-tune bounds
+and their rationale; <code>onnx.rs</code> centralises inference-session
+policy (arena, thread and batch-width knobs, read from
+<code>ENGRAM_ONNX_*</code>); <code>redact.rs</code> exists at all;
+<code>cortex.rs</code>, <code>digest.rs</code>, <code>rag.rs</code>,
+<code>hub.rs</code> carry retrieval and briefing;
+<code>migrate.rs</code> handles schema movement.</p>
+<p><strong>Background work.</strong> Deliberately little, and none of it
+load-bearing for a read. Trust is a read-time computation. The suspects
+queue is filled synchronously by the write that created the look-alike.
+What does run is <code>Engine::validate_graph</code>, one
+session-boundary pass — archive what decayed, retire what a supersession
+superseded, refit the two auto-tune dials, rescan for conflicts, count
+drifted <code>code_refs</code> — journalled as a
+<code>graph_validated</code> row with its own summary note, and backed
+by a six-hourly sweep. Drift scans surface for review without
+demoting.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>One binary and one SQLite file per project, plus optional local
 models — an embedder (<code>bge-small-en-v1.5</code>), a reranker
 (<code>jina-reranker-v1-turbo-en</code>) and an NLI model
-(<code>mobilebert-uncased-mnli</code>) — all small enough to run on a
-developer machine, which is the point. No service to stand up and no API
-key required to store anything.</p>
-<p>The pane is the operating surface, and it is unusually complete for
-an alpha: a live graph, a review queue, conflict judgement, retirement,
-pinning, and a theme menu. The browser demo means a reader can exercise
-the correction flow without installing anything, which is the best
-documentation decision in the repository.</p>
+(<code>deberta-v3-small-tasksource-nli</code>, a 172 MB quantised ONNX
+export the project made itself) — all small enough to run on a developer
+machine, which is the point. No service to stand up and no API key
+required to store anything.</p>
+<p>The NLI slot has been swapped twice on measurement, and the module
+says what each swap bought: MNLI-only models <em>"presuppose
+co-reference"</em> and call unrelated same-register notes confident
+contradictions — <em>"Engram uses Rust"</em> against <em>"TepinDB is on
+crates.io"</em> scored 0.99 — where the multi-task model judges them
+neutral, halving false alarms at the shipped gate. Predecessors stay
+selectable, and the swap contract is a directory holding
+<code>model.onnx</code>, <code>tokenizer.json</code> and a
+<code>config.json</code> whose <code>id2label</code> covers the three
+classes.</p>
+<p>The pane is the operating surface and it is unusually complete: a
+live graph, a review queue, conflict judgement, retirement, pinning, an
+ontology editor, a feed timeline and a theme menu. The browser demo
+means a reader can exercise the correction flow without installing
+anything, which is the best documentation decision in the
+repository.</p>
+<p>The daemon's memory footprint is measured with a committed
+before/after pair. <code>eval/results/mem-daemon-before.json</code> and
+<code>-after.json</code> walk the same six stages — startup with three
+models, one search, ten searches, an NLI claim check, a conflict scan,
+thirty seconds idle — under stock onnxruntime defaults and under the
+shipped ones: 669,696 → 896,000 KB against 667,648 → 696,320 KB. The
+difference is an inference batch width capped at 2 instead of
+fastembed's 256; <code>scripts/mem-probe.sh</code> is the harness, and
+three other suspects (the ORT arena, per-session thread pools, malloc
+free-list retention) are recorded as measured and refuted.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
@@ -286,27 +396,46 @@ Paths</h2>
 <code>suspects</code> (<code>:50</code>), the append-only
 <code>audit</code> journal (<code>:65</code>), <code>meta</code>.</li>
 <li><strong>Types and vocabularies:</strong>
-<code>crates/engram-core/src/types.rs</code> — node kinds, edge verbs,
-durability, statuses, <code>WriteOutcome::Created</code> returning
-<code>suspects</code>.</li>
+<code>crates/engram-core/src/types.rs</code> — open string-backed name
+types, durability, statuses, <code>WriteOutcome::Created</code>
+returning <code>suspects</code>, <code>MergeOutcome</code>.</li>
+<li><strong>Ontology and per-graph config:</strong>
+<code>crates/engram-core/src/config.rs</code> —
+<code>GraphConfig</code>, <code>OntologyConfig</code>,
+<code>TypeRoles</code> / <code>VerbRoles</code>, the
+<code>engram</code>, <code>research</code> and <code>minimal</code>
+presets, <code>describe_ontology</code>.</li>
 <li><strong>Trust:</strong>
 <code>crates/engram-core/src/policy.rs</code> — the two principles, the
-anchors, <code>STALE_TRUST</code>, <code>trust_override</code>.</li>
+anchors, <code>STALE_TRUST</code>, <code>trust_override</code>, the
+<code>AUTO_TUNE_*</code> bounds.</li>
+<li><strong>Auto-tune:</strong> <code>engine.rs</code> —
+<code>auto_tune</code> (<code>:335</code>),
+<code>fit_conflict_floor</code> (<code>:368</code>),
+<code>fit_weak_line</code> (<code>:441</code>), called from
+<code>validate_graph</code> (<code>:273</code>).</li>
 <li><strong>Contradiction:</strong>
 <code>crates/engram-core/src/nli.rs</code>; <code>hub.rs:104</code>
-gates on a live <code>conflicts-with</code> edge with
+gates on a live edge carrying the graph's contradiction role with
 <code>valid_until</code> unset.</li>
+<li><strong>Consolidation:</strong> <code>engine.rs</code> —
+<code>merge_nodes</code> (<code>:1654</code>).</li>
 <li><strong>Stores:</strong> <code>store.rs</code>,
 <code>store_sqlite.rs</code>, <code>store_tepin.rs</code>,
 <code>migrate.rs</code>.</li>
-<li><strong>Retrieval:</strong> <code>rag.rs</code>,
-<code>cortex.rs</code>, <code>digest.rs</code>.</li>
+<li><strong>Retrieval and delivery:</strong> <code>rag.rs</code>,
+<code>cortex.rs</code>, <code>digest.rs</code>;
+<code>Engine::search</code> (<code>engine.rs:1302</code>) applies the
+delivery floor and the knee cut, <code>search_confidence</code>
+(<code>:1365</code>) returns <code>none | weak | strong</code>.</li>
 <li><strong>Redaction:</strong> <code>redact.rs</code>.</li>
 <li><strong>Surfaces:</strong> <code>crates/engram-mcp/</code>,
 <code>crates/engram-http/</code>, <code>frontend/</code>,
 <code>engram-vscode/</code>, the JetBrains plugin.</li>
 <li><strong>Evaluation:</strong> <code>eval/src/</code> and
-<code>eval/results/</code> — 71 committed files.</li>
+<code>eval/results/</code> — 84 committed result files, plus
+<code>eval/src/longmem.rs</code> (the LongMemEval adapter) and
+<code>eval/src/chains.rs</code> (the supersession-chain bench).</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>nodes</code> carries <code>id</code>, <code>type</code>,
@@ -340,6 +469,39 @@ href="../magic-context/">Magic Context</a> is credited for here.</p>
 column; isolation is one graph per project directory. Coherent for an
 editor plugin, and it means the schema cannot host two projects without
 a migration.</p>
+<h3 id="what-a-user-may-reshape-and-the-guard-on-each">What a user may
+reshape, and the guard on each</h3>
+<p>The pane's ontology editor writes <code>GraphConfig</code> — types,
+verbs, the trust and threshold constants, and the brief composition —
+and three of its rules are worth naming because each closes a way the
+reshape could strand data.</p>
+<ul>
+<li><strong>A rename is the migration gesture, not a relabel.</strong>
+<code>rename_type</code> and <code>rename_verb</code>
+(<code>engine.rs:1194</code>) move the stored rows along with the name,
+and the editor's card shows how many nodes will follow.</li>
+<li><strong>A save cannot drop a vocabulary that still holds
+data.</strong> Removing a type that has nodes fails with <em>"type …
+still has N node(s) — rename it (bulk retype) or retype them first"</em>
+(<code>engine.rs:1141</code>), and the same for verbs on edges. There is
+no path where an edit orphans knowledge.</li>
+<li><strong>The hard invariants survive every configuration.</strong>
+Exactly one supersession verb and one contradiction verb must exist, or
+validation refuses the document — the graph cannot be configured into
+inertness.</li>
+</ul>
+<p>Two smaller per-graph features sit in the same document.
+<strong>Version tracking</strong> (off by default) stamps every new node
+of a <code>versioned</code> type with the graph's current working
+version, set by the <code>set_version</code> MCP tool, so a note records
+which release it was captured under; <code>Principle</code> and
+<code>Anchor</code> carry the <code>versioned: false</code> role in the
+shipped preset, because <em>"a value or a code subject transcends any
+single release"</em>, and the stamp is provenance only — nothing in
+trust or ranking reads it. And a reserved <code>handoff</code> tag
+(<code>config.rs:340</code>) gives an open worklist note guaranteed top
+placement in the next session brief, which is reactive
+session-to-session memory without a new node type.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Vectors from <code>bge-small-en-v1.5</code>, a keyword weight of
 0.15, and a reranker (<code>jina-reranker-v1-turbo-en</code>) that
@@ -362,6 +524,40 @@ priced.</p>
 <p>Trust multiplies the score, so a stale node is buried rather than
 filtered — it stays findable, which is what makes the review queue
 meaningful.</p>
+<p><strong>Delivery is a second stage with two cuts, both
+reranker-gated.</strong> <code>search</code>
+(<code>engine.rs:1302</code>) fetches wide, reranks, drops everything
+under <code>policy.delivery_floor</code>, truncates to the limit, then
+applies a <em>knee</em> cut: sort the delivered score curve, find the
+largest relative drop over <code>policy.knee_cliff</code>, and discard
+the tail below it. The reasoning for gating both on the reranker is
+stated at the call site — the fused hybrid score is a different scale,
+so a floor read against it would be read on the wrong ruler. The
+consequence for every number in this report: engram's recall is measured
+over a set the system has already trimmed, while the RAG arm it is
+compared against keeps its full ten.</p>
+<p><strong>The abstention line is fitted from probes the graph writes
+about itself.</strong> <code>fit_weak_line</code>
+(<code>engine.rs:441</code>) synthesises questions that have no answer —
+half question-shaped templates over vocabulary borrowed from the graph's
+own node titles, half <em>ICT transplants</em>: real sentences from the
+store with their subjects coined out — then measures how high the
+reranker's top score climbs against each, and takes the
+<strong>larger</strong> of the two families' q90 as the fit — the line
+must clear whichever register this graph's noise speaks loudest in. The
+fit is then damped halfway and clamped, with the lower clamp
+<em>relative to the delivery floor</em> rather than absolute, so a line
+that could never fire is impossible and one noisy probe register cannot
+teleport it. Borrowed vocabulary is the load-bearing part and the
+comment says why: generic probes under-read how high <em>this</em>
+graph's scores can go, and the first live fit found in-register
+questions reaching 0.32 against a 0.25 line fitted from generic wording.
+What clears the line is answered; what falls below is delivered warned,
+never cut. <strong>No other report in this corpus describes a system
+calibrating its own "I don't know" threshold from synthesised
+unanswerable queries</strong> — <a href="../metaclaw/">MetaClaw</a> is
+the nearest, and it replays <em>real</em> past turns against candidate
+policies rather than manufacturing negatives.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>A write is synchronous and returns more than an id.
 <code>WriteOutcome::Created</code> carries the node, any
@@ -379,6 +575,27 @@ validate."</em> A probability is a hint, not a ruling.</p>
 stamps <code>demoted_at</code>, closing <code>valid_until</code> to
 archive, approving, pinning, or dismissing a suspect. Every one of them
 appends to the audit journal.</p>
+<p><strong><code>merge_nodes</code> is the consolidation move</strong>,
+and its edge cases are where the design shows. Several notes stating one
+truth collapse into one survivor: tags and <code>code_refs</code> union,
+live edges rehome onto the survivor, victims are archived behind a
+supersession edge rather than deleted, and <code>MergeOutcome</code>
+reports per victim how many edges moved and how many were deliberately
+left — already present on the survivor, internal to the merged set, or
+an <em>incoming</em> supersession, which is part of the victim's own
+story and does not travel. An archived survivor is refused outright. And
+the assistant cannot merge away a pinned node: with
+<code>source == Source::Claude</code> a pinned victim raises
+<code>Error::Pinned</code> carrying the instruction to <em>"tell the
+user and let them merge this pair in the pane"</em> — the same
+human-only boundary the pin draws everywhere else. Four committed tests
+cover the union, the pin refusal, the outgoing-but-not-incoming
+supersession rule, and a live conflict rehoming onto the survivor.</p>
+<p>The audit journal also carries events that are not node or edge
+mutations: <code>audit_activity</code> writes rows against the entity
+type <code>session</code>, which is where <code>graph_validated</code>
+and <code>auto_tuned</code> land — so a threshold the system moved on
+itself is on the same tape as a human's approval.</p>
 <p><strong>The audit journal is the richest in this corpus.</strong> One
 row per node or edge mutation, insert-only, carrying
 <code>before_json</code> and <code>after_json</code> in full, the
@@ -426,12 +643,18 @@ live.</p>
 audit journal names as actions.</p>
 <p><strong><code>human_review</code> — earned.</strong> A review queue
 for stale nodes, conflict judgement, retirement and pinning, with
-pinning explicitly reserved to humans.</p>
+pinning explicitly reserved to humans. Two further gestures are
+human-only by construction rather than by convention: reshaping the
+ontology has no MCP write surface at all, and <code>merge_nodes</code>
+refuses a pinned victim when the caller is the assistant.</p>
 <p><strong><code>negative_eval</code> — earned.</strong> The floor sweep
 carries unanswerable <strong>controls</strong> at every operating point
 and reports <code>controls_declined</code>, so the evaluation asserts
 that material which should not be returned is not returned — and prices
-the answerable questions lost at each threshold.</p>
+the answerable questions lost at each threshold. The LongMemEval run
+extends the same discipline onto a corpus the project did not write: 30
+labelled never-answerable questions, scored on whether an answer went
+out unwarned.</p>
 <p><strong><code>tombstone</code> — not found.</strong> A
 <code>dismissed</code> suspect durably records that a pair was judged
 not-a-conflict, and <code>replaces</code> records supersession, but both
@@ -448,20 +671,33 @@ traced.</li>
 <li><strong><code>meta</code> pins the embedding model identity and
 vector width</strong>, so a store read with the wrong embedder is
 detectable rather than silently wrong.</li>
-<li><strong>Alpha, and the README says so first.</strong> APIs may
-change between releases.</li>
-<li><strong>Every number is self-generated.</strong> The graphs,
-questions and controls are the project's own synthetic corpora; nothing
-here is measured on an external benchmark, and the report should not be
-read as saying otherwise.</li>
+<li><strong>The external dataset is SHA-256 pinned and re-verified on
+every open</strong>, not only on download, and the reason is written at
+the function: <em>"a truncated download must never quietly grade as a
+small corpus."</em> Both digests live in <code>longmem.rs</code> with a
+committed test asserting they are well-formed. The data itself is never
+checked in — the repository carries the loader, the digests and the
+provenance note.</li>
+<li><strong>The system moves its own thresholds.</strong> Two auto-tune
+dials rewrite <code>GraphConfig</code> at session boundaries. Every move
+is damped, clamped, gated on volume and journalled, and a graph can opt
+out — but a reader comparing two installations should expect their
+delivery and conflict thresholds to differ, because each was fitted to
+its own graph.</li>
+<li><strong>Most numbers are self-generated.</strong> The offline
+suite's graphs, questions and controls are the project's own synthetic
+corpora. LongMemEval is the exception and it is one corpus, graded on
+the retrieval half only.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>eval/</code> is a first-class crate with 71 committed result
+<p><code>eval/</code> is a first-class crate with 84 committed result
 files — <code>bench-100.json</code>,
 <code>contradictions-500.json</code>,
-<code>floor-100/500/1500.json</code> and their <code>.log</code>
-companions — and this is the part of the project most worth copying.</p>
+<code>floor-100/500/1500.json</code>, <code>longmemeval-s-*.json</code>,
+<code>chains-200x20.json</code>, <code>budget-*.json</code>,
+<code>posttune-*.json</code> and their <code>.log</code> companions —
+and this is the part of the project most worth copying.</p>
 <p><strong>The ablation labels its own shipped row.</strong>
 <code>bench-100.json</code> holds thirteen configurations with a runtime
 stamp (<code>"embeddings_are_fake": false</code>, seed, embedder,
@@ -484,13 +720,174 @@ reports it.</p>
 at every threshold, with <code>controls_declined</code> rising as the
 floor rises — so precision is never claimed without the recall it
 cost.</p>
-<p>Nothing was run for this review: three dependency surfaces were
-inside the seven-day cooldown and one auto-run surface was present.</p>
-<p>What the evaluation does not establish: any of this on data the
-project did not generate. The graphs, the questions, the phrasing mix
-and the controls are all synthetic and self-authored, which makes the
-<em>relative</em> comparisons (VOTES vs DECIDES, floor by floor)
-credible and the absolute numbers a statement about their generator.</p>
+<h3 id="the-external-corpus">The external corpus</h3>
+<p><code>eval/LONGMEMEVAL.md</code> and <code>eval/src/longmem.rs</code>
+run <a
+href="https://github.com/xiaowu0162/LongMemEval">LongMemEval</a>-S (Wu
+et al., ICLR 2025, MIT): 500 questions, each over its own multi-session
+chat haystack of ~115k tokens, evidence sessions labelled, 30 questions
+deliberately unanswerable. The receipt is
+<code>longmemeval-s-full.json</code> — the whole population run,
+<code>questions_run</code> equal to <code>questions_total</code>, mean
+493 turn-notes per store, and the table reproduced in §1 above.</p>
+<p><strong>What the design gets right, and it is most of
+it.</strong></p>
+<ul>
+<li><strong>The population is not sampled.</strong> Every question, with
+<code>questions_run</code> and <code>capped</code> in the receipt so a
+partial run cannot be mistaken for a full one.</li>
+<li><strong>No model in the ingestion or grading path.</strong> One note
+per chat turn, verbatim, filler included; a question counts as answered
+when a note from a labelled evidence session lands in the delivered set.
+Deterministic and judge-free, which is the same standard the offline
+suite meets.</li>
+<li><strong>The unflattering register is chosen deliberately and
+labelled.</strong> Engram ships no extractor — the deployed shape is
+typed notes an agent wrote — so as-is ingestion measures the
+<em>floor</em> for the product, not its intended operating point, and
+the page says exactly that.</li>
+<li><strong>One embedder, five arms, identical haystacks</strong>, so
+what separates the rows is the retrieval stack.</li>
+<li><strong>The runtime swap is verified rather than asserted.</strong>
+The full run used bge-small served by Ollama on GPU instead of
+onnxruntime on CPU, to bring ~16 h down to ~2 h. Both smoke receipts are
+committed — <code>longmemeval-s-smoke20.json</code> and
+<code>-gpu.json</code> — and every arm's R@1, R@5, MRR and token mean
+agrees to four decimal places. The claim of grade-identity is checkable
+from the repository, and it holds.</li>
+<li><strong>The rows that do not flatter are published.</strong>
+<code>whole-file</code> scores a perfect 1.00 and its column of interest
+is the 122,515 tokens per question it costs; the blind 3k
+<code>curated-file</code> beats engram on R@1 (0.919 vs 0.909); pure
+vectors beat it on R@5.</li>
+</ul>
+<p><strong>Three things a reader has to hold while reading the
+table.</strong></p>
+<ol type="1">
+<li><strong>The token column compares two different delivery
+formats.</strong> The engram arm is billed for a title plus a matched
+snippet per hit; the RAG arm is billed for a title plus the
+<em>whole</em> turn, for a fixed ten hits. Part of the 13× is calibrated
+delivery returning fewer notes — which is a real product behaviour, and
+it makes engram's recall harder-won, since its R@5 is computed over a
+set already trimmed — and part is snippet-versus-whole-note framing. A
+vector stack that also delivered snippets would close some of that
+gap.</li>
+<li><strong>Session-level grading is generous to dumps</strong>, which
+the page states plainly: any turn from the right session counts, so a
+blind selection that happens to keep one filler line from the evidence
+session scores as a hit. The token column is the only thing separating
+<em>present</em> from <em>readable</em> here; the focus/noise metrics
+that do that job in the offline suite are not run.</li>
+<li><strong>This is the retrieval half.</strong> The published benchmark
+grades a generated answer; these numbers grade a delivery, so they are
+not comparable with published LongMemEval scores and the page says so in
+its second paragraph. The reserved online half is named as the plan of
+record.</li>
+</ol>
+<p><strong>The chat ontology is the interesting part of the
+adapter.</strong> Rather than forcing the software ontology onto chat —
+where every turn lands as <code>Insight</code> and the type layer
+contributes nothing — the run defines a two-type ontology <em>entirely
+as per-graph data</em>: <code>statement</code> (a user turn,
+<code>rank_prior</code> 0.05, so a first-party source outranks a
+restatement at equal relevance) over <code>reply</code> (an assistant
+turn, no prior, muted). Role is the one distinction an as-is ingester
+can make without a classifier.
+<code>the_chat_ontology_validates_and_the_engine_accepts_its_types</code>
+asserts the engine's write boundary accepts the fitted types and refuses
+the stock one they replaced. Zero engine changes — which is the
+per-graph <code>GraphConfig</code> machinery demonstrating itself on a
+register it was never written for, and the strongest available evidence
+that the "roles, never names" rule is real rather than aspirational.</p>
+<p><strong>The gap in the external run is the warn rate on answerable
+questions.</strong> The abstention result is strong — 30
+<code>_abs</code> questions, 2 empty deliveries, 28 warned, 0 unwarned,
+weak line auto-fitted on 27 of 30 stores. But
+<code>weak_evidence_top</code> is read only in the abstention branch of
+<code>run_question</code>; the answerable path computes rank and cost
+and never asks for a verdict. So the run prices the false-positive side
+of the calibrated line and not its cost, and a line that warns on
+everything would also score 0.00 here. The offline suite does measure
+that cost and does not hide it: <code>posttune-100-enriched.json</code>
+pairs <code>controls_unwarned</code> 0.0 with
+<code>answerable_warned</code> <strong>0.473</strong>, and
+<code>posttune-1500-enriched.json</code> pairs 0.011 with 0.480 over 375
+controls. So the warning line is well-behaved at both graph sizes the
+project sweeps, and the price of it is that nearly half of answerable
+questions come back carrying a "likely not in memory" flag. Running
+those same two counters over LongMemEval's 470 answerable questions is a
+small change to <code>run_question</code>, and it would turn the
+abstention paragraph from a one-sided result into a priced one — on the
+corpus where it would matter most, because it is the one nobody here
+wrote.</p>
+<h3 id="supersession-measured-against-an-ablation">Supersession,
+measured against an ablation</h3>
+<p><code>chains-200x20.json</code> builds ADR-shaped history — 20 chains
+of 3 generations, each <code>replaces</code>-ing the last, 40
+supersessions over a 660-node graph — and runs the identical store with
+and without them:</p>
+<pre class="text"><code>                 R@1    R@5   pollution  head_first  tokens
+superseded      0.75   0.85       0.00        1.00     219.6
+flat            0.50   0.83       0.88        0.59     292.8
+rag             0.30   0.97       0.97        0.41   2,144.2
+grep            0.00   0.67       0.70        0.02   2,656.8
+curated-file    0.00   0.00       0.00        0.00   3,000.0
+whole-file      1.00   1.00       1.00        0.00 165,115.0</code></pre>
+<p><code>pollution</code> is the share of questions where a retired
+generation was delivered, <code>head_first</code> the share where the
+current one won the ranking. Pure vectors have the best R@5 on the board
+and deliver a retired answer 97% of the time — which is the clearest
+statement in this repository of what the graph is <em>for</em>. The
+receipt also records <code>retired_searchable: 0.0</code>,
+<code>retired_fetchable: 1.0</code>,
+<code>history_reachable: 1.0</code>: retired generations leave the
+search path and stay one link away.</p>
+<h3 id="levers-that-were-tried-and-refuted">Levers that were tried and
+refuted</h3>
+<p><code>budget-500.json</code> is six configurations × four retrieval
+limits over a 1,500-node graph and 858 questions, and it refutes the
+obvious lever. Raising the limit from 10 to 30 moves the RAG arm's
+weighted recall not at all — 0.9231 at every limit — while
+<code>tokens_mean</code> goes 2,673 → 4,069 → 5,428 → 8,070 and
+<code>noise</code> climbs 0.907 → 0.968. The shipped stack behaves the
+same way, 0.9330 → 0.9343 across a 2.7× token increase. <strong>Spending
+more delivered tokens buys nothing measurable, in either
+stack.</strong></p>
+<p>The same file prices the two delivery trims directly.
+<code>engram open+no-trims</code> reaches 0.9257 weighted recall with
+<code>noise</code> 0.919 and 536 tokens; the shipped configuration
+reaches 0.9330 with <code>noise</code> 0.546 and 293 tokens. Removing
+the floor and knee roughly doubles both the tokens and the noise without
+buying recall — which is the ablation that turns "calibrated delivery"
+from a claim into a measurement. And a row that does not flatter sits
+beside it: <code>engram kw0</code>, the keyword channel switched off
+entirely, edges the shipped keyword weight of 0.15 on weighted recall at
+limits 20 and 30 (0.9355 vs 0.9346).</p>
+<p>The README keeps a standing list of mechanisms that did not survive
+measurement — graph spreading activation, a deciding cross-encoder,
+deeper reranking, and <strong>hard abstention</strong>, which was
+measured, priced and rejected because refusing to return candidates
+costs real answers. That last decision is why the budget rows all read
+<code>false_positive_rate: 1.0</code>: that field counts unanswerable
+questions that returned <em>anything at all</em>, and this system
+deliberately always returns something and warns instead. The metric that
+judges the warning is the pair <code>controls_unwarned</code> /
+<code>answerable_warned</code>, and it holds its shape with scale —
+0.000 / 0.473 on a 100-node graph, 0.011 / 0.480 on a 1,500-node one
+with 375 controls. Roughly one control in a hundred slips through
+unwarned, and nearly half of answerable questions carry a warning they
+did not need.</p>
+<p>Nothing was run for this review: four dependency surfaces were inside
+the seven-day cooldown and one auto-run surface was present. Every
+number above was read from committed receipts, and the two smoke
+receipts were compared field by field.</p>
+<p>What the evaluation does not establish: what a model <em>does</em>
+with any of these deliveries. Both halves of the corpus — synthetic and
+external — are graded on retrieval, so the numbers price what reaches
+the context window and say nothing about what an answerer makes of it.
+The project names that gap itself and reserves a section for closing
+it.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -518,6 +915,29 @@ answers "was this the human or the assistant", which is the first
 question when a memory turns out wrong.</li>
 <li><strong>Label the shipped row in the benchmark file.</strong> Not
 the README — the data.</li>
+<li><strong>Key your engine on roles, not on type names.</strong>
+<code>worklist</code>, <code>supersession</code>,
+<code>contradiction</code> as flags a configured type or verb carries is
+what lets a user rename or replace the whole vocabulary without breaking
+a single behaviour — and it is what let the same engine run a two-type
+chat ontology on an external corpus with no code change. Declare the
+invariants that must survive any configuration (here: exactly one
+supersession verb, exactly one contradiction verb) and test them against
+every shipped preset.</li>
+<li><strong>Fit the "I don't know" line from probes your own store
+generates.</strong> Coin a subject that cannot exist, phrase the
+question in vocabulary borrowed from your own titles, and see how high
+the ranker climbs with no answer present. That ceiling is your
+abstention threshold, it needs no labels, and it moves with the graph —
+a constant fitted on someone else's corpus will not transfer.</li>
+<li><strong>Damp, clamp and journal every self-tuning move.</strong>
+Half the distance to the fit, a stated range, a minimum delta below
+which nothing moves, a volume gate, an audit row, and a per-graph off
+switch. Self-tuning without those five is a system that silently drifts
+away from the behaviour you tested.</li>
+<li><strong>Publish the before/after when you fix a resource
+bug.</strong> Six named stages, two committed JSON files, and the
+refuted hypotheses beside the confirmed one.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -530,27 +950,51 @@ expressible at all.</li>
 <li><strong>Treating an NLI score as a verdict.</strong> The column
 comment is <em>"models don't validate"</em>; the score is a hint and the
 judgment is elsewhere.</li>
-<li><strong>Reading self-generated benchmark numbers as external
-validation.</strong> Engram is scrupulous about publishing its config; a
-reader still has to notice that the corpus is its own.</li>
+<li><strong>Reading a retrieval-graded benchmark as a benchmark
+score.</strong> The offline suite's corpus is the project's own, and the
+LongMemEval run grades deliveries rather than answers. Both are labelled
+as such in the repository; a reader quoting the numbers elsewhere is the
+one who drops the label.</li>
+<li><strong>Pricing an abstention mechanism on the abstention questions
+alone.</strong> A line that warns on everything scores a perfect
+false-positive rate. The warn rate on <em>answerable</em> questions is
+the other half, and where this project does measure it, it is 47% at 100
+notes and 48% at 1,500.</li>
+<li><strong>Comparing delivered-token counts across different delivery
+formats.</strong> A snippet-per-hit stack against a whole-document stack
+is measuring two things at once. Say which part of the gap is fewer
+results and which is shorter ones.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits a developer who wants project memory inside the editor,
 with a graph they can see and correct, and small local models rather
 than an API key. The editor integrations and the browser demo make it
-unusually easy to evaluate before adopting.</p>
-<p>It is alpha, single-project, and has no scope key — so it is not a
-fit for a team store or anything multi-tenant, and the API is expected
-to move.</p>
+unusually easy to evaluate before adopting. The configurable ontology
+widens that fit: the shipped preset is software-decision shaped, but
+<code>research</code> and <code>minimal</code> ship beside it and a
+graph can define its own type and verb set, which is the mechanism the
+external run exercises.</p>
+<p>It is single-project and has no scope key, so it is not a fit for a
+team store or anything multi-tenant, and the README's own status line is
+<em>"early development"</em>.</p>
 <p>Take the policy module even if you take nothing else. It is a few
 hundred lines of constants and rationale, and it is the clearest
 statement in this corpus of which signals are allowed to change what an
 agent believes.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>How does any of it perform on a corpus the project did not
-generate?</strong> Every committed number is over synthetic graphs and
-questions of its own making.</li>
+<li><strong>What does the calibrated warning cost on LongMemEval's
+answerable half?</strong> The harness computes the verdict only for the
+30 <code>_abs</code> questions. Two counters over the other 470 would
+price it.</li>
+<li><strong>What does a model do with these deliveries?</strong> Every
+arm is graded on retrieval, so the comparison between a 208-token
+focused delivery and a 2,654-token whole-turn one is a comparison of
+inputs, not of answers. The online half is planned and reserved.</li>
+<li><strong>How much of the LongMemEval result is the fitted chat
+ontology?</strong> <code>--lme-ontology default</code> runs the stock
+types beside it and the page lists that pair as reserved, so the type
+layer's contribution on this corpus is named but not yet a number.</li>
 <li><strong>What drives <code>redact.rs</code>?</strong> The module
 exists; the policy that calls it was not traced.</li>
 <li><strong>How often does the local NLI hint disagree with the
@@ -569,10 +1013,19 @@ surface for review, and nothing forces the review.</li>
 <li><code>crates/engram-core/src/schema.rs</code>,
 <code>types.rs</code>, <code>id.rs</code></li>
 </ul>
-<p><strong>Trust and judgment</strong></p>
+<p><strong>Ontology and per-graph configuration</strong></p>
+<ul>
+<li><code>config.rs</code> — <code>GraphConfig</code>,
+<code>OntologyConfig</code>, <code>TypeRoles</code>,
+<code>VerbRoles</code>, <code>presets()</code>,
+<code>describe_ontology</code></li>
+</ul>
+<p><strong>Trust, judgment and calibration</strong></p>
 <ul>
 <li><code>crates/engram-core/src/policy.rs</code>, <code>nli.rs</code>,
-<code>hub.rs</code></li>
+<code>hub.rs</code>; <code>engine.rs</code> — <code>auto_tune</code>,
+<code>fit_conflict_floor</code>, <code>fit_weak_line</code>,
+<code>validate_graph</code></li>
 </ul>
 <p><strong>Stores</strong></p>
 <ul>
@@ -585,10 +1038,14 @@ surface for review, and nothing forces the review.</li>
 <li><code>rag.rs</code>, <code>cortex.rs</code>, <code>digest.rs</code>,
 <code>engine.rs</code>, <code>harness.rs</code></li>
 </ul>
+<p><strong>Inference runtime</strong></p>
+<ul>
+<li><code>onnx.rs</code> — session policy, batch width, thread and arena
+knobs</li>
+</ul>
 <p><strong>Safety</strong></p>
 <ul>
-<li><code>redact.rs</code>, <code>config.rs</code>,
-<code>error.rs</code></li>
+<li><code>redact.rs</code>, <code>error.rs</code></li>
 </ul>
 <p><strong>Surfaces</strong></p>
 <ul>
@@ -597,12 +1054,59 @@ surface for review, and nothing forces the review.</li>
 </ul>
 <p><strong>Evaluation</strong></p>
 <ul>
-<li><code>eval/src/</code>, <code>eval/results/</code> —
-<code>bench-100.json</code>, <code>contradictions-500.json</code>,
-<code>floor-100.json</code>, <code>floor-500.json</code>,
-<code>floor-1500.json</code> and logs</li>
+<li><code>eval/src/</code> — <code>longmem.rs</code> (LongMemEval
+adapter), <code>chains.rs</code> (supersession chains),
+<code>generate.rs</code>, <code>arms.rs</code>, <code>run.rs</code>,
+<code>ollama.rs</code></li>
+<li><code>eval/LONGMEMEVAL.md</code>, <code>eval/README.md</code></li>
+<li><code>eval/results/</code> — <code>bench-100.json</code>,
+<code>contradictions-500.json</code>,
+<code>floor-100/500/1500.json</code>,
+<code>longmemeval-s-full.json</code>,
+<code>longmemeval-s-smoke20.json</code> and <code>-gpu.json</code>,
+<code>chains-200x20.json</code>, <code>budget-50/100/500.json</code>,
+<code>posttune-100/1500-enriched.json</code>,
+<code>ladder-100/1500-enriched.json</code>,
+<code>mem-daemon-before/after.json</code> and logs</li>
+<li><code>scripts/mem-probe.sh</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/techtheist/engram/commit/cbc6f0b867d8858ba6795b516bf9baf7f852426d"><code class="commit-id" title="cbc6f0b867d8858ba6795b516bf9baf7f852426d">cbc6f0b8…</code></a>
+— ten commits past the previous pin, covering releases 0.8.2 and a
+drafted 0.8.3. Two published claims were wrong in the same direction and
+are corrected here. <strong>The ontology was described as a fixed set of
+eight node kinds; it is per-graph configuration</strong> —
+<code>config.rs</code>, unchanged since the previous pin, stores types
+and verbs as a document inside the graph, engine logic keys on roles
+rather than names, three presets ship, and the hard invariants are
+asserted by test. The same document carries version stamping and the
+reserved <code>handoff</code> tag, a rename bulk-retypes the rows it
+renames, and <code>docs/customization.md</code> described all of it at
+the previous pin. <strong>Auto-tune was not described at all</strong>,
+though both dials predate the previous pin: dial one fits the conflict
+floor from judged suspects, dial two fits the abstention line from
+synthesised unanswerable probes, and both run at session boundaries
+under damping, clamps, volume gates and an audit row. The report also
+read <em>Alpha</em> as a maturity label; it is part of the product's
+name — the marketplace id is <code>techtheist.engram-alpha</code> and
+the binary is <code>engram-alpha</code> — and the stability statement
+the repository actually makes is its README status line. What moved
+upstream: LongMemEval-S at full population, the first external corpus,
+under a chat ontology defined purely as per-graph data;
+<code>merge_nodes</code> with four committed tests; a supersession-chain
+bench with a no-supersession ablation; budget sweeps that refute the
+spend-more-tokens lever; and an inference batch-width cap with a
+before/after daemon-memory receipt. The open question "how does any of
+it perform on a corpus the project did not generate" is answered and
+removed; the criticism replacing it is narrower — the external run
+prices the false-positive side of the calibrated warning line and not
+its cost on the 470 answerable questions. Screened before reading: 1
+auto-run surface (<code>.claude/settings.json</code> hooks), 0
+build-time exec paths, 2 unpinned dependency surfaces and 4 inside the
+seven-day cooldown. Nothing was installed, built or run; the committed
+receipts were read, and the CPU and GPU smoke runs compared field by
+field.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37"><code class="commit-id" title="5721848af9fe4adc28ff08dce5bda6cfc3f24a37">5721848a…</code></a>
 — first reading. The slug is <code>engram-alpha</code> because

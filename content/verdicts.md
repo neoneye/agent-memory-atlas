@@ -1316,10 +1316,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`engram-alpha`](../systems/engram-alpha/)
 - Best idea: two stated principles its trust module enforces — *"time doesn't validate"* and *"exposure doesn't validate"* — so stable knowledge decays only when a judged `conflicts-with` edge stamps `demoted_at`, retrieval moves nothing, and withdrawing the evidence withdraws the demotion.
-- Biggest risk: every published number is measured on graphs, questions and controls the project generated itself, so the relative comparisons are credible and the absolute figures are a statement about its own generator.
+- Biggest risk: every arm on every corpus, its own and LongMemEval alike, is graded on what retrieval delivered rather than on an answer — and the external run prices the calibrated warning line's false positives without pricing what that line costs on the answerable questions, which the offline suite puts at 47% of them warned at 100 notes and 48% at 1,500.
 - Most reusable component: the audit journal — insert-only, full before and after JSON, an eleven-value action vocabulary, and the originating surface (`pane | mcp | daemon | cli | library`) on every row, which is the first thing you want when a memory turns out wrong.
-- Maturity impression: alpha and says so, 25,521 lines of Rust across three crates, shipping on three editor marketplaces with a browser demo of the real pane, and 71 committed evaluation artifacts including an ablation that labels its shipped row `<- ships today` and shows pure RAG beating it on recall.
-- Study when: you are deciding which signals may move an agent's trust. The policy module is a few hundred lines of constants and rationale and is the clearest answer in this corpus.
+- Maturity impression: 26,244 lines of Rust across three crates, shipping on three editor marketplaces with a browser demo of the real pane, and 84 committed evaluation artifacts — an ablation that labels its shipped row `<- ships today` and shows pure RAG beating it on recall, a supersession bench run against its own no-supersession ablation, and a full-population external run on a SHA-pinned corpus.
+- Study when: you are deciding which signals may move an agent's trust, or how to fit a threshold you have no labels for. The policy module is the clearest statement in this corpus of what may change what an agent believes, and `fit_weak_line` fits an abstention threshold from unanswerable probes built out of the graph's own vocabulary.
 - Do not copy when: you need multi-project or multi-tenant memory — there is no scope key on either table — or a stable API.
 
 ### [`helix-agi`](../systems/helix-agi/)
