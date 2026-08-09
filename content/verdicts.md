@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 228 reports.**
+**This page covers all 229 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["228 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["229 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1969,6 +1969,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: SQLite with FTS5 and zero external dependencies, precomputed summaries injected at session start with separate selection algorithms for a fresh start and a `/clear`, and one integer doing three jobs — `summary_version < 2` selects for work, `2` marks current, `-1` marks permanently failed so a poisoned document is never retried.
 - Study when: your consolidation pass has never deleted anything.
 - Do not copy when: you need the protocol enforced — it is a specification for a model, not code.
+
+### [`agentmemory-v4`](../systems/agentmemory-v4/)
+
+- Best idea: comparability notes that restate three rivals into like-for-like form — OMEGA's task-weighted 95.4% as raw 466/500 = 93.2%, Supermemory's ~99% as its single-pass 85.86%, and Hindsight flagged for using one model as both generator and judge — alongside a committed result file, a committed run log, `PYTHONHASHSEED=42` with judge `seed=42`, and a `LEGITIMACY.md` self-audit. Recounting the 500 per-case records gives 481, so the headline is reproducible from the file rather than asserted.
+- Biggest risk: three committed artifacts — the runner default at `:713`, the run log's second line, and the result summary's `dataset` field — all name `longmemeval_oracle.json`, while the README says the score is on LongMemEval_S with "no oracle access" and excludes others' oracle scores as not reflecting real retrieval. The self-audit lists the file and argues no oracle *metadata* is consulted, which is true of the harness and does not address what `haystack_sessions` contains in that variant.
+- Most reusable component: `assert not USE_DIRECT_CONTEXT, "INVALID: … must be False for legitimate evaluation"` — guarding the shortcut you were tempted by so the invalidating configuration crashes the run instead of producing a number.
+- Maturity impression: a 2,800-line harness with `--resume`, `--offset` and `--dataset`, per-question-type token budgets tuned against named failures, and a self-audit written as a table of checks with file and line for each.
+- Study when: you are about to publish a record and want to know what evidence to commit alongside it.
+- Do not copy when: you need the number — one re-run with `--dataset longmemeval_s.json`, logged the same way, would settle it.
+
 
 
 

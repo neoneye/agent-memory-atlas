@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **228 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **229 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -25,6 +25,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agent-working-memory`](../systems/agent-working-memory/) **AgentWorkingMemory** — Retracting a fact should shake its whole story · `CompleteIdeas/agent-working-memory` · Trust state, Scope enforced, Negative evals
 - [`agentic-context-engine`](../systems/agentic-context-engine/) **Agentic Context Engine** — A decision not to merge, kept · `kayba-ai/agentic-context-engine` · Trust state
 - [`agentmemory`](../systems/agentmemory/) **agentmemory** — Hook-native coding-agent memory · `rohitg00/agentmemory` · Scope enforced, Mutation audit
+- [`agentmemory-v4`](../systems/agentmemory-v4/) **agentmemory V4** — The run log names a different dataset from the claim · `jordanmccann/agentmemory`
 - [`agentrecall-x`](../systems/agentrecall-x/) **AgentRecall-X** — A correction that loses its veto · `Goldentrii/AgentRecall-X` · Trust state, Scope enforced
 - [`agentswarms`](../systems/agentswarms/) **AgentSwarms** — Keyword memory in a trigger · `AgentSwarms-fyi/agentswarms` · Scope enforced, Human review
 - [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals
