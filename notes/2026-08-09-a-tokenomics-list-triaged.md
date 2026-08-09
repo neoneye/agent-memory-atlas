@@ -281,3 +281,53 @@ boundary drawn. The cost-list hypothesis has now failed in the direction it was
 expected to hold — the memory systems are here, they are just filed under
 inference and token savings.
 
+### Batch 6 — compression, and the page the hint was pointing at
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `headroomlabs-ai/headroom` | `675d13f0` | Out of scope: a dereference table, not a memory — but named on the pattern page |
+| `microsoft/LLMLingua` | `e0e9d99b` | Out of scope: prompt compression with a small model. No memory vocabulary at all; no commit since 28 October 2025 |
+| `fkiene/llmtrim` | `d7fd2c4e` | Out of scope as a system — **and the best outside evidence this pass has found** |
+| `rtk-ai/rtk` | `9936b2b9` | Out of scope: `src/core/tracking.rs` is a 90-day SQLite ledger of token savings for a human to read |
+| `toon-format/toon` | `f06ddca1` | Out of scope: a serialization format. No persistence of any kind |
+
+The suggestion that came with this list said minimising token usage is adjacent to
+[cache-preserving injection](../content/patterns/cache-preserving-injection.md).
+`llmtrim/crates/llmtrim-core/src/memo.rs` is where that adjacency turns out to be
+literal.
+
+llmtrim is a compression proxy and gets no report: its memo store is in-process
+only, size-capped, and its own SECURITY.md commits to never writing prompt text to
+disk. Nothing survives the session. But the module is 100 lines of documentation
+before the first `use`, and it states the pattern page's failure mode from the
+inside — its stages read the whole conversation, so *"the compressed form of an
+old message can change when a new turn arrives … the provider cache is busted →
+the product's headline savings leak silently on exactly the highest-traffic
+(agent) shape."* A compression product discovering that compression breaks the
+cache is the sharpest version of that argument available.
+
+It also supplies a number the page could not: 85–95% of an agentic request's
+prompt tokens are unchanged turn-to-turn, cited to a 2026 measurement. And its fix
+is the split-by-position shape applied to conversation history — a cumulative
+128-bit hash chain over *original* message bytes, longest all-present run is the
+frozen prefix, its slots overwritten with last turn's emitted bytes, first-write
+wins so a freeze never re-mutates.
+
+Two habits from it are now on the page. The memo is *"an optimization, never a
+correctness dependency"* and falls back to full recomputation on any doubt. And it
+disables reuse entirely whenever the n-gram stage is on, because that stage's
+placeholders are assigned from whole-conversation frequencies and splicing an old
+turn's `§1` into a new turn's legend would corrupt it — a cache that knows which
+of its own components it may not apply to.
+
+headroom is on the same page for the other half. Its CCR layer — Compress, Cache,
+Retrieve — stashes a dropped payload in SQLite keyed by the hash that goes into
+the prompt and honours a retrieval tool call that trades the hash back for the
+original: *"lossy on the wire, lossless end-to-end."* That is a dereference table
+rather than a memory, so no report; the shape is the same one Ollama reaches with
+a name instead of a hash, and it is what a memory system does when a recalled item
+is too large to inject.
+
+Thirty entries read. Three reports, five pattern pages changed, one scope
+boundary.
+

@@ -191,6 +191,66 @@ a *different* mechanism — reusing model state rather than positioning text —
 falls under the KV-cache scope boundary in the
 [comparative report](../../compare/).
 
+## The same constraint, one layer down
+
+Everything above is about where a *memory system* puts its recall block. The same
+prefix property is being defended one layer below, at the proxy, by projects with
+no memory at all — and one of them has written the argument out more carefully
+than anything in this atlas.
+
+[llmtrim](https://github.com/fkiene/llmtrim) is an MPL-2.0 compression proxy that
+sits between a coding agent and its provider, examined on 2026-08-09 at
+[`d7fd2c4e3ec4a9e354f98227546e3f75b5c0f1c6`](https://github.com/fkiene/llmtrim/commit/d7fd2c4e3ec4a9e354f98227546e3f75b5c0f1c6).
+It gets no report here, because its store is in-process only, size-capped and
+explicitly never written to disk — nothing survives the session, which is the
+inclusion bar. `crates/llmtrim-core/src/memo.rs` is worth reading anyway, for
+three reasons.
+
+**It names the failure precisely, and the failure is caused by compression
+itself.** Its stages are deterministic per request but read the whole
+conversation, so *"the compressed form of an old message can change when a new
+turn arrives. Two consecutive turns then serialize a divergent prefix → the
+provider cache is busted → the product's headline savings leak silently on
+exactly the highest-traffic (agent) shape."* That is the same silence the top of
+this page describes — quality unaffected, tests pass, only the bill moves — found
+in a system whose entire purpose is reducing the bill.
+
+**It supplies the number this page otherwise cannot.** The module's opening cites
+a 2026 measurement putting 85–95% of an agentic request's prompt tokens at
+unchanged turn-to-turn. That is a claim about agent traffic rather than a cache
+hit rate, and it is the reason the boundary's position matters so much for
+exactly the shape memory systems serve.
+
+**Its fix is the split-by-position shape applied to history rather than to
+memory.** A cumulative 128-bit hash chain over the *original* bytes fingerprints
+each message prefix; the longest run whose boundaries are all present in the store
+is the frozen prefix, and its slots in the compressed output are overwritten with
+the bytes emitted last turn. Appending a turn leaves every earlier boundary hash
+unchanged; editing one byte of an old message invalidates that boundary and every
+one after it — which is the prefix-cache semantics restated as a data structure.
+Writes are first-write-wins, so a frozen message is never re-mutated.
+
+Two details are worth stealing regardless of layer. The memo is *"an optimization,
+never a correctness dependency"* — any doubt (a restructured message array, a cold
+prefix, an unexpected count delta) falls back to full recomputation. And it
+carves out the one stage where splicing is unsound: the n-gram stage assigns
+placeholders from frequencies across the whole conversation, so reuse is disabled
+whenever that stage is on, rather than reaching into the stage to freeze its
+dictionary. A caching optimisation that knows which of its own components it
+cannot safely apply to is rarer than it should be.
+
+The same repository shows the other half of the trade. [headroom](https://github.com/headroomlabs-ai/headroom),
+examined at
+[`675d13f08d42455c8fa17bda878c1a11b905cee4`](https://github.com/headroomlabs-ai/headroom/commit/675d13f08d42455c8fa17bda878c1a11b905cee4),
+implements what it calls CCR — Compress-Cache-Retrieve — where a dropped payload
+is stashed in SQLite keyed by the hash that goes into the prompt, and a retrieval
+tool call trades the hash back for the original: *"lossy on the wire, lossless
+end-to-end."* It is a dereference table rather than a memory, and it is not
+reported here for that reason, but the shape is the one a memory system reaches
+for when a recalled item is too big to inject — put the handle in the prefix and
+let the model ask for the body, which is what
+[Ollama](../../systems/ollama/) does above with a name instead of a hash.
+
 ## Tests before relying on it
 
 - Capture the exact bytes of two consecutive requests and diff them. The first
