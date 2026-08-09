@@ -9,6 +9,13 @@ recommendation is right about the destination and wrong about who runs it. The
 operator constraint that decided the shape is stated below, because it is
 permanent and a plan that waits for it to lift is not a plan.
 
+**Sequencing:** phases 2, 3 and 4 of
+[the phased program](2026-08-09-a-phased-program-and-where-to-abandon-it.md).
+Phase 2 — validating the suite against the kernel and its broken arm — is the
+go/no-go for everything here, and it is the one place local execution is safe,
+because the code under test is this project's own. Phase 3 is gated on reading an
+adapter producing something the log did not say.
+
 ## What this revises
 
 The eval-suite note has three sequencing steps. Step 1 — build the harness

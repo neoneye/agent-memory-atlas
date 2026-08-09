@@ -8,6 +8,19 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-09-a-phased-program-and-where-to-abandon-it.md](2026-08-09-a-phased-program-and-where-to-abandon-it.md) —
+  sequences the four notes below, and three results came out of it that none of
+  them could see alone. The cheapest item is a prerequisite for the other three,
+  because every later artifact cites the state of the atlas and without a tag they
+  all cite a moving target. Local execution is safe in exactly one phase —
+  against this project's own kernel and its paired broken arm — which is also the
+  phase that decides whether the conformance line is real, and it is allowed to
+  fail: a test that cannot be made to fail on the broken arm is removed rather
+  than shipped with a caveat. And phase 3's gate is not a submission but a
+  finding: if reading the adapter added nothing to reading the log, the burden
+  inversion bought nothing and phase 4 must not happen. Written before any gate
+  became inconvenient, because a program where each stage is justified by the next
+  one is how phase 4 gets approved before phase 2 returned.
 - [2026-08-09-the-conformance-run-the-atlas-does-not-run.md](2026-08-09-the-conformance-run-the-atlas-does-not-run.md) —
   step 2 of the eval-suite note is closed rather than deferred: running the
   deletion sequence means executing 238 checkouts, which contradicts the

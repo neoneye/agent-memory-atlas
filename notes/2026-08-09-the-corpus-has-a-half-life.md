@@ -6,6 +6,12 @@ versioned snapshots so researchers can cite a fixed corpus". That half is worth
 building. The half it did not name is the one that decides whether the atlas is
 still true in October, and it is measurable today without touching the network.
 
+**Sequencing:** phase 0 of
+[the phased program](2026-08-09-a-phased-program-and-where-to-abandon-it.md), and
+first not because it is cheap. Every later phase produces an artifact that cites
+the state of the atlas — a submission, a downstream row, a re-analysis delta — and
+without a tag all three cite a moving target, retroactively unfixable.
+
 Companion to [automating re-analysis](2026-08-04-automating-re-analysis.md),
 which covers *which* report to re-read next. This note covers what the reader
 is owed while it waits.

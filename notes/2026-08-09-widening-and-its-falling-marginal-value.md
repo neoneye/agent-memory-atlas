@@ -6,6 +6,12 @@ incumbent option the same scrutiny. Widening is what happens if nothing is
 decided, and an option that wins by default should have to win on the merits at
 least once.
 
+**Sequencing:** not a phase in
+[the phased program](2026-08-09-a-phased-program-and-where-to-abandon-it.md) —
+along with re-reading, it is the background load every phase competes with out of
+one budget. The bar this note proposes is the one that note applies to phase 3 as
+well: worth it if a *pattern* might move.
+
 ## Where the corpus is
 
 238 reports, 21 patterns. Seventy of those reports landed on a single day across

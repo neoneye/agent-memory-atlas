@@ -5,6 +5,13 @@
 The stronger argument for building one is five days older and is about a failure
 rather than an achievement.
 
+**Sequencing:** phase 1 of
+[the phased program](2026-08-09-a-phased-program-and-where-to-abandon-it.md),
+with the firewall shipping in the same commit as the page rather than after it.
+Its gate is Daimon's row reading visibly as `inferred`; if it cannot be made to
+look different from Perseus's at a glance, the page asserts causation and should
+not ship.
+
 ## The argument that is not about impact
 
 On 4 August a favourable review closed with this:
