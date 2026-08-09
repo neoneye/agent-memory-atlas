@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A benchmark writeup that refuses a
+favourable comparison, publishes the ablation where its own change hurt,
+and names an 8× cost miss in its flagship mode as a known limitation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Fidelis
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A benchmark writeup that
+refuses a favourable comparison, publishes the ablation where its own
+change hurt, and names an 8× cost miss in its flagship mode as a known
+limitation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fidelis
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A benchmark writeup that
+refuses a favourable comparison, publishes the ablation where its own
+change hurt, and names an 8× cost miss in its flagship mode as a known
+limitation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Fidelis Memory — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The gap is not the issue. The metric
+is.</p>
+          <h1>Fidelis Memory</h1>
+          <p class="document-deck">A benchmark writeup that refuses a
+favourable comparison, publishes the ablation where its own change hurt,
+and names an 8× cost miss in its flagship mode as a known
+limitation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hermes-labs-ai/fidelis">
+              <span>Source</span>
+              <strong>hermes-labs-ai/fidelis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7" title="804e521f86e3c0056d3c89b4c7babd1eb086a6a7">
+              <span>Analyzed revision</span>
+              <code>804e521f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (50%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Fidelis Memory is an MIT Python memory layer for Claude Code — local
+Chroma and BM25 under <code>~/.cogito</code>, a nomic embedder on
+Ollama, an MCP install, and a deliberate constraint: <strong>no LLM in
+the default retrieval path</strong>, and the original passage returned
+verbatim rather than paraphrased.</p>
+<p><strong>The reason this report exists is
+<code>WRITEUP-LONGMEMEVAL-20260423.md</code>, which is the most honest
+benchmark document in this atlas.</strong></p>
+<p>Its central section is titled <em>"Why this is NOT a leaderboard
+submission"</em> and opens:</p>
+<blockquote>
+<p>"<strong>The gap is not the issue. The metric is.</strong></p>
+<p>Mastra's published 94.87% is <strong>QA accuracy (Task B)</strong> —
+measured with gpt-4o-mini as both reader and judge… cogito-ergo's 96.4%
+is <strong>retrieval R@1 (Task A)</strong>… These are different tasks.
+Retrieval R@1 is an upper bound on QA accuracy… Our measured QA accuracy
+with qwen-max is 54.2%…</p>
+<p>To make a legitimate leaderboard comparison we'd need to run
+<code>evaluate_qa.py</code> on our runP-v35 retrieval output using
+gpt-4o-mini. Estimated cost: ~$1.24. Blocked on OpenAI API key.</p>
+<p><strong>The path chosen is writeup</strong>, not leaderboard. Honest
+about what we measured."</p>
+</blockquote>
+<p>A project holding a 96.4% number, declining to compare it to a
+competitor's 94.87%, explaining precisely why the comparison would be
+invalid, disclosing its own worse figure on the comparable metric, and
+pricing the experiment that would settle it. No other report in this
+atlas records a paragraph like it.</p>
+<p><strong>It then publishes three findings that are all negative
+results about itself</strong> — section 10.</p>
+<p><strong>The mechanism is deliberately small</strong>: hybrid
+lexical-plus-dense retrieval with RRF fusion, returning stored text
+unchanged. The interesting engineering is in what happens when it breaks
+— section 7.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Notes and sessions go into a local store. A query is answered by BM25
+and dense retrieval fused with reciprocal rank fusion, and the winning
+<strong>original passages</strong> are handed to whatever LLM the agent
+already uses. Fidelis never rewrites them.</p>
+<pre class="mermaid"><code>flowchart TD
+    N[&quot;~/notes markdown, Claude sessions&quot;] --&gt; W[&quot;fidelis watch — auto-ingest&quot;]
+    W --&gt; WR{&quot;write succeeds?&quot;}
+    WR --&gt;|&quot;Ollama or mem0 unreachable&quot;| DQ[&quot;JSONL dead-letter queue&lt;br/&gt;~/.cogito/queue, MAX_ATTEMPTS = 5&quot;]
+    DQ --&gt; RP[&quot;sync job replays later&quot;]
+    WR --&gt;|yes| ST[&quot;local store: Chroma + BM25&quot;]
+    Q[&quot;query&quot;] --&gt; B[&quot;BM25&quot;]
+    Q --&gt; D[&quot;nomic dense, search_query: prefix&quot;]
+    B --&gt; RRF[&quot;reciprocal rank fusion&quot;]
+    D --&gt; RRF
+    RRF --&gt; P[&quot;original passages, verbatim&quot;]
+    P --&gt; SC[&quot;Fidelis Scaffold:&lt;br/&gt;140–180-token system prompt,&lt;br/&gt;parameterised by qtype and&lt;br/&gt;retrieval-confidence score&quot;]
+    SC --&gt; HEDGE[&quot;calibrated hedge invitation:&lt;br/&gt;&#39;If retrieval doesn&#39;t contain the answer,&lt;br/&gt;respond exactly: I cannot answer this&lt;br/&gt;from the retrieved memory.&#39;&quot;]
+    SC --&gt; LLM[&quot;the agent&#39;s own LLM&quot;]
+    OPT[&quot;optional flagship tier&quot;] -.-&gt;|&quot;escalates ~80% of queries&lt;br/&gt;against an intended ~10%&quot;| RRF</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/fidelis/</code> is about twenty modules:
+<code>recall</code>, <code>recall_b</code>, <code>recall_hybrid</code>,
+<code>recall_sessions</code> (the two retrieval paths and their
+variants), <code>ingest_claude_sessions</code>, <code>watch_cmd</code>,
+<code>seed</code>, <code>snapshot</code>, <code>augment</code>,
+<code>calibrate</code>, <code>degrade</code>, <code>telemetry</code>,
+<code>server</code>, <code>mcp_server</code>,
+<code>scaffold_server</code>, <code>cli</code>, <code>init_cmd</code>,
+and a <code>scaffold</code> package with a <code>preflight</code>
+validator.</p>
+<p>Two retrieval paths, explicitly separated by workload — an important
+design decision that section 10 shows was learned the hard way:</p>
+<ul>
+<li><strong>Path A (<code>/recall</code>)</strong> — atomic-fact recall
+over 50–200 character facts, "the production path".</li>
+<li><strong>Path B (<code>/recall_hybrid</code>)</strong> — session
+retrieval over 2000+ character sessions, BM25 + dense + RRF with
+turn-level chunking, "tuned for LongMemEval".</li>
+</ul>
+<p>31 test files (the README badge counts 368 CI tests), a
+<code>CITATION.cff</code>, a <code>STATUS.md</code>, a
+<code>COMPLIANCE-DRAFT.md</code>, a Homebrew <code>Formula</code>, and
+Docker.</p>
+<p>The repository is mid-rename: the product is
+<strong>fidelis</strong>, the writeup and the store path
+(<code>~/.cogito/</code>) are <strong>cogito-ergo</strong>, and the PyPI
+package is <code>fidelis-memory</code> because <code>fidelis</code>
+belongs to an unrelated project — which the README states outright, with
+a link to the other project. Disambiguating your own package name
+against a stranger's is a small courtesy almost nobody performs.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Retrieve</strong> —
+<code>src/fidelis/recall_hybrid.py</code>, <code>recall.py</code>,
+<code>recall_sessions.py</code>.</p>
+<p><strong>Survive a write failure</strong> —
+<code>src/fidelis/degrade.py</code> (<code>MAX_ATTEMPTS = 5</code>,
+<code>_queue_dir()</code>).</p>
+<p><strong>Constrain the reader</strong> —
+<code>src/fidelis/scaffold/_core.py</code>, <code>preflight.py</code>,
+<code>docs/scaffold.md</code>.</p>
+<p><strong>Report</strong> —
+<code>WRITEUP-LONGMEMEVAL-20260423.md</code>,
+<code>experiments/zeroLLM-FLAGSHIP-evidence/SUMMARY.json</code>,
+<code>bench/RESULTS-SUMMARY.md</code>,
+<code>bench/BENCHMARK_INTEGRITY_AUDIT.md</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A stored passage and its embedding. There is no confidence field, no
+status, no supersession pointer, no tombstone and no provenance beyond
+the source file.</p>
+<p>That is a design position rather than an omission, and the README
+states it: memory here is a <strong>retrieval index over text you
+wrote</strong>, not a belief store. "Original stored passages returned,
+not paraphrases." If two notes contradict each other, both are returned
+and the reader is told, via the scaffold, to quote what it used.</p>
+<p>The consequence is worth being plain about: <strong>nothing corrects
+anything.</strong> A note you wrote in March that stopped being true in
+April is retrieved with the same standing as one written yesterday, and
+there is no mechanism — not a decay curve, not a status flag, not a
+supersession link — by which the store learns it is stale. The system's
+answer is that you edit your notes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 plus nomic dense with the <code>search_query:</code> /
+<code>search_document:</code> prefixes, fused by RRF, at a reported 216
+ms mean and $0 per query. The zero-LLM claim has its own verification
+recipe in the README — unset every API key, optionally drop the network,
+and run the explicit-tier command — which is the right way to make a
+negative claim checkable.</p>
+<p><strong>The Fidelis Scaffold is the part that shapes the
+answer</strong>, and its first listed element is the one to steal:</p>
+<blockquote>
+<p>"<strong>Calibrated hedge invitation:</strong> <em>'If retrieval
+doesn't contain the answer, respond exactly: I cannot answer this from
+the retrieved memory.'</em> Overrides the prior pattern of forcing the
+LLM to guess."</p>
+</blockquote>
+<p>A 140–180 token system prompt, versioned
+(<code>[FIDELIS-SCAFFOLD-v0.1.0]</code>), idempotent
+(<code>wrap(wrap(x)) == wrap(x)</code>), detectable and strippable, with
+an 8-check <code>preflight</code> static validator returning a
+<code>PreflightReport</code> of <code>.passed</code> /
+<code>.failures</code> / <code>.warnings</code> /
+<code>.metrics</code>.</p>
+<p>Treating a prompt as a versioned artifact with markers, an idempotent
+wrapper, a detector, a stripper and a static validator is prompt
+engineering done as software engineering, and it is rare.</p>
+<p><strong>No scope key reaches the read path.</strong> The README
+places "multi-namespace isolation" among the things a team should email
+about, so the omission is deliberate and disclosed.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Markdown is watched and auto-ingested. And <code>degrade.py</code>
+exists because of a specific disaster, written into the module
+docstring:</p>
+<blockquote>
+<p>"When the upstream LLM (Ollama / mem0) is unreachable, we MUST NOT
+lose the write. Instead, queue it locally as JSONL and let a sync job
+replay later.</p>
+<p>This module exists because of the 2026-04-19 incident: Ollama's
+socket layer broke under Python 3.14, every <code>cogito add</code>
+returned HTTP 500, and <strong>a full session of memory was silently
+lost.</strong>"</p>
+</blockquote>
+<p>The test suite treats that incident as a permanent obligation:
+<code>test_graceful_degrade.py</code>,
+<code>test_graceful_degrade_corruption.py</code>,
+<code>test_dead_letter.py</code>,
+<code>test_write_fallback_contract.py</code>,
+<code>test_broken_pipe_recovery.py</code>,
+<code>test_watch_backpressure.py</code>,
+<code>test_graceful_shutdown.py</code>. Seven files around one failure
+mode.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four commands to a working install — <code>pip install</code>,
+<code>fidelis init</code> (a launchd or systemd service),
+<code>fidelis watch ~/notes</code>, <code>fidelis mcp install</code>.
+Plus Docker, a Homebrew formula, and an <code>llms.txt</code>.</p>
+<p><code>fidelis init</code> also disables mem0 and Chroma telemetry,
+and the README is careful about how much that buys: "That can reduce
+third-party data exposure, but deployments still own their security and
+compliance assessment." A privacy claim with its own limits
+attached.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks</strong>, and the reason is structural rather than a
+shortfall: this is a faithful retrieval index, not a belief store. No
+trust state, no tombstone, no bitemporality, no scope key, no audit log,
+no review surface, and no committed case asserting that particular
+material must not be retrieved.</p>
+<p><strong>What it has instead is calibration.</strong> The scaffold
+takes a retrieval-confidence score and a question type and adjusts the
+instruction, with a literal hedge string for the not-in-memory case.
+That is the right lever for a system whose position is "return what you
+wrote and let the reader decide".</p>
+<p><strong>The known-limitations section is where the risks are, and the
+project wrote it.</strong> Verbatim:</p>
+<ul>
+<li>"<strong>Pre-release.</strong> Python function names and CLI
+commands may change."</li>
+<li>"<strong>Temporal-reasoning and preference questions are the weakest
+qtypes</strong> in the QA scaffold (TR ~58%, Pref ~37% on the full
+eval)."</li>
+<li>"<strong>The optional LLM tier ('flagship' mode) currently escalates
+~80% of queries instead of the intended ~10%</strong> — an 8× cost miss
+we're transparent about."</li>
+<li>"<strong>qwen3.5:9b in thinking mode does not reliably follow the
+literal hedge instruction</strong>… Use Claude, an OpenAI-format API, or
+non-thinking-mode local models for reliable hedging."</li>
+</ul>
+<p>Naming a model that defeats your safety instruction, in your own
+README, is the single most user-respecting line in this batch.</p>
+<p><strong>The risk this report adds</strong> is the one section 5
+names: a memory system with no correction path, marketed for context
+that accumulates over months. Day 7 in the README's own timeline is
+"your agent starts carrying project context across sessions" — and by
+day 90 some of that context is wrong, with nothing in the system able to
+say so.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>This section is the report.</strong> The evidence is
+committed: <code>experiments/zeroLLM-FLAGSHIP-evidence/</code> holds
+four raw result files and a <code>SUMMARY.json</code>;
+<code>bench/runs/runP-v35/aggregate.json</code> holds the retrieval
+aggregate; <code>bench/BENCHMARK_INTEGRITY_AUDIT.md</code> and
+<code>bench/RESULTS-SUMMARY.md</code> sit beside them.</p>
+<p><strong>The headline numbers</strong>, from
+<code>SUMMARY.json</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>metric</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retrieval R@1 (zero-LLM)</td>
+<td>83.2%</td>
+</tr>
+<tr>
+<td>Retrieval R@5</td>
+<td>98.3%</td>
+</tr>
+<tr>
+<td>End-to-end QA accuracy</td>
+<td>73.04% (317/434), <strong>Wilson 95% CI [68.7%, 77.0%]</strong></td>
+</tr>
+<tr>
+<td>Retrieval cost</td>
+<td>$0, ~90 ms zero-LLM stage</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>A Wilson confidence interval on a benchmark accuracy appears
+nowhere else in this atlas.</strong> It is the difference between "we
+scored 73%" and "we ran 434 questions and the true rate is probably
+between 69% and 77%."</p>
+<p><strong>The ablation table publishes a change that made things
+worse.</strong> Dense-only 56.0% → nomic prefixes 60.9% → BM25 hybrid
+73.2% → <strong>turn-level chunks 66.8%</strong> → all three combined
+83.2%. Turn-level chunking alone <em>lost</em> 6.4 points against the
+BM25 hybrid and the row is in the table anyway, with an
+<code>LLM?</code> column so a reader can see which gains cost money.</p>
+<p><strong>And the three "novel findings" are all negative results about
+itself:</strong></p>
+<ol type="1">
+<li><strong>The demotion problem</strong> — "LLM reranker filters can
+demote gold sessions that retrieval already ranked #1… 15+ questions had
+gold at S1 position 1 but were demoted to position 2+ by the LLM filter.
+Standard RAG + LLM-reranker architectures have this failure mode; it is
+underreported." And on the attempted fix: "the guard activation code did
+not fire in runC — <strong>a bug, not a negative result</strong>."
+Distinguishing an experiment that failed to run from an experiment that
+produced a null is a distinction most papers blur.</li>
+<li><strong>Workload divergence kills transfer</strong> — the
+configuration scoring 96.4% on LongMemEval scores "<strong>54% on
+cogito's own 31-case atomic-fact eval</strong>, vs 75% for Path A."
+Publishing that your flagship benchmark configuration is worse than your
+production path on your production workload is close to unheard of.</li>
+<li><strong>The escalation rate problem</strong> — intended ~10%, actual
+377/470 = 80%, diagnosed to a calibration sample that "had a different
+confidence score distribution than preference questions, so the
+<code>top1&lt;0.8 or gap&lt;0.07</code> threshold overfit", with the
+remedy named: stratified sampling across all six question types.</li>
+</ol>
+<p><strong>The test names deserve their own mention.</strong>
+<code>test_public_install_truth.py</code> — a test that the published
+install instructions are true.
+<code>test_telemetry_kill_actually_kills.py</code> — a test that the
+telemetry-disable actually disables, rather than trusting the flag.
+<code>test_zero_llm_regression.py</code> — a guard on the headline
+claim. <code>test_p0_score_bypass.py</code>,
+<code>test_verify_guard.py</code>. These are tests of <em>claims</em>,
+not only of code.</p>
+<p><strong>Two things this report adds, in the project's own
+spirit.</strong></p>
+<p>The QA evidence covers <code>n = 434</code> questions against a
+README heading that says 470; <code>SUMMARY.json</code>'s
+<code>_note</code> discloses it — "434 graded; remaining 36 from KU/TR
+partial" — but the README table does not carry the caveat.</p>
+<p>And the reader and grader for that 73.0% are "Claude Opus 4.7 via
+Anthropic subscription", while the published Mem0, Zep and Supermemory
+figures the README places beside it use gpt-4o-mini as reader and judge.
+That is precisely the comparability objection the writeup itself raises
+against comparing its R@1 to Mastra's QA accuracy — applied to the
+README's own context paragraph. The project has already articulated the
+standard; the paragraph does not quite meet it.</p>
+<p><strong>I ran nothing.</strong> Every figure above is read from the
+repository's committed evidence files.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Say which metric you measured, especially when the other
+reading flatters you.</strong> "The gap is not the issue. The metric
+is." Then explain the difference, give your own number on the comparable
+metric, and price the experiment that would settle it.</li>
+<li><strong>Publish the ablation row where your change hurt.</strong>
+Turn-level chunking at 66.8% against a 73.2% baseline, in the table,
+with the combined result underneath. A monotonic ablation table is a
+table with rows missing.</li>
+<li><strong>Report a confidence interval.</strong> Wilson on a
+proportion is three lines of code and it turns a score into a
+measurement.</li>
+<li><strong>Distinguish "the experiment didn't run" from "the experiment
+found nothing."</strong> "A bug, not a negative result" is the sentence
+that keeps an ablation table honest.</li>
+<li><strong>Check whether your benchmark configuration is your
+production configuration.</strong> Path B wins LongMemEval and loses to
+Path A on the workload the product actually serves — an argument, as the
+writeup says, "for per-workload indexes rather than one unified
+retrieval architecture".</li>
+<li><strong>Give the reader an explicit hedge string.</strong> "Respond
+exactly: 'I cannot answer this from the retrieved memory'" beats hoping
+the model declines.</li>
+<li><strong>Treat the system prompt as a versioned artifact.</strong>
+Open and close markers, an idempotent wrapper, a detector, a stripper,
+and a static preflight validator returning failures, warnings and
+metrics.</li>
+<li><strong>Never lose a write when the embedder is down.</strong> A
+local JSONL dead-letter queue with a replay job, bounded retries, and
+seven tests — written after a session of memory was silently lost.</li>
+<li><strong>Test your README.</strong>
+<code>test_public_install_truth.py</code>.</li>
+<li><strong>Test that your privacy switch works, not that it is
+set.</strong> <code>test_telemetry_kill_actually_kills.py</code>.</li>
+<li><strong>Name the model that defeats your safety
+instruction.</strong></li>
+<li><strong>Disambiguate your package name from a stranger's</strong>,
+with a link.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not carry a caveat in the evidence file and not in the
+table.</strong> The graded subset is disclosed in
+<code>SUMMARY.json</code>'s <code>_note</code>; the README's benchmark
+heading names the full question count without it.</li>
+<li><strong>Do not place your number beside published numbers measured
+with a different reader and judge.</strong> The writeup makes this exact
+argument; the comparison paragraph does not apply it to itself.</li>
+<li><strong>Do not ship a memory that accumulates for months with no
+correction path.</strong> Verbatim retrieval is a virtue and staleness
+is still a fact; something has to be able to say a passage stopped being
+true.</li>
+<li><strong>Do not grade with the same model family that
+answered</strong> without saying what that buys and costs.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice if you want your own notes retrievable by your
+agent, locally, with the exact text you wrote and no second model
+between you and it — and you are willing to keep the notes correct
+yourself.</p>
+<p>The wrong choice if the store is meant to accumulate an agent's own
+conclusions over time, because nothing in it can be superseded,
+retracted or aged out.</p>
+<p><code>WRITEUP-LONGMEMEVAL-20260423.md</code> is worth reading
+regardless of what you build. It is the standard this atlas would like
+every benchmark claim held to, written by a project that had a 96.4%
+number and declined to spend it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What are the 36 ungraded questions?</strong>
+<code>SUMMARY.json</code> attributes them to "KU/TR partial"; whether
+grading them would move 73.0% up or down is unknown.</li>
+<li><strong>Has <code>evaluate_qa.py</code> been run with
+gpt-4o-mini?</strong> The writeup prices it at $1.24 and reports it
+blocked on an API key.</li>
+<li><strong>Is the 80% escalation fixed?</strong> It appears in the
+writeup and in the README's known limitations at this commit.</li>
+<li><strong>Does the verify-guard fire now?</strong> It was a bug in
+runC; whether it has been re-run was not established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The writeup</strong> —
+<code>WRITEUP-LONGMEMEVAL-20260423.md</code> (the two paths
+<code>:11-17</code>, the ablation history <code>:21-34</code>, the
+reproduce commands <code>:36-50</code>, "Why this is NOT a leaderboard
+submission" <code>:54-68</code>, per-category R@1 <code>:70-84</code>,
+the three findings <code>:86-104</code>, the compute and cost notes
+<code>:145-150</code>)</p>
+<p><strong>Evidence</strong> —
+<code>experiments/zeroLLM-FLAGSHIP-evidence/SUMMARY.json</code> (the
+four runs with Wilson intervals, the <code>_note</code> on the graded
+subset and the reader/grader <code>:148</code>),
+<code>F2-FULL-scaffold.json</code> (434 per-question records with
+<code>qa_correct</code>, <code>retrieval_hit_at_1</code>,
+<code>retrieval_hit_at_5</code>, <code>k_used</code>,
+<code>reader_model</code>, <code>incremental_cost_usd</code>),
+<code>F1-smoke-scaffold.json</code>,
+<code>F1B-smoke-baseline-partial.json</code>,
+<code>F1B-smoke-baseline-TR-only.json</code>,
+<code>bench/BENCHMARK_INTEGRITY_AUDIT.md</code>,
+<code>bench/RESULTS-SUMMARY.md</code></p>
+<p><strong>Durability</strong> — <code>src/fidelis/degrade.py</code>
+(the incident <code>:1-9</code>, <code>MAX_ATTEMPTS</code>
+<code>:22</code>, <code>_queue_dir</code> <code>:25-30</code>),
+<code>tests/test_graceful_degrade.py</code>,
+<code>test_graceful_degrade_corruption.py</code>,
+<code>test_dead_letter.py</code>,
+<code>test_write_fallback_contract.py</code>,
+<code>test_broken_pipe_recovery.py</code>,
+<code>test_watch_backpressure.py</code>,
+<code>test_graceful_shutdown.py</code></p>
+<p><strong>Scaffold</strong> —
+<code>src/fidelis/scaffold/_core.py</code>, <code>preflight.py</code>,
+<code>docs/scaffold.md</code> (the module surface, the calibrated hedge
+invitation <code>:35</code>)</p>
+<p><strong>Retrieval</strong> — <code>src/fidelis/recall.py</code>,
+<code>recall_hybrid.py</code>, <code>recall_b.py</code>,
+<code>recall_sessions.py</code>,
+<code>src/fidelis/calibrate.py</code></p>
+<p><strong>Claim tests</strong> —
+<code>tests/test_public_install_truth.py</code>,
+<code>test_telemetry_kill_actually_kills.py</code>,
+<code>test_zero_llm_regression.py</code>,
+<code>test_p0_score_bypass.py</code>,
+<code>test_verify_guard.py</code></p>
+<p><strong>Claims</strong> — <code>README.md</code> (the headline
+<code>:8</code>, the benchmark table <code>:122-136</code>, the zero-LLM
+verification recipe <code>:138-150</code>, known limitations
+<code>:225-240</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7"><code class="commit-id" title="804e521f86e3c0056d3c89b4c7babd1eb086a6a7">804e521f…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no benchmark was run. The figures in section 10 are read
+from the repository's own committed evidence files.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

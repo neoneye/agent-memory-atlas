@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 213 reports.**
+**This page covers all 214 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["213 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["214 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1834,6 +1834,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 40 test files, careful explicit-column SQLite migrations, four indexes on the observations table, and a substantial product surface — web viewer, themes, favourites, filters, export, analytics — around a memory model that is a typed append-only log.
 - Study when: you want automatic capture you will browse yourself, with a good viewer and export.
 - Do not copy when: memory is injected into an agent without a person in the loop — the only deletion path in the tree is a duplicate-cleanup script run by hand.
+
+### [`fidelis`](../systems/fidelis/)
+
+- Best idea: `WRITEUP-LONGMEMEVAL-20260423.md`, the most honest benchmark document in the atlas. Holding a 96.4% retrieval R@1, it declines to compare it to a competitor's 94.87% QA accuracy — "the gap is not the issue, the metric is" — explains that R@1 is an upper bound on QA accuracy, discloses its own 54.2% on the comparable metric, prices the experiment that would settle it at $1.24, and says it is blocked on an API key.
+- Biggest risk: nothing corrects a stored passage. Verbatim retrieval with no status, no supersession and no decay means a note that stopped being true has the same standing as one written yesterday, in a system whose own timeline promises accumulating project context by day 7.
+- Most reusable component: the ablation table that publishes the change which made things worse — turn-level chunking at 66.8% against a 73.2% BM25 baseline, in the table, with an `LLM?` column so a reader can see which gains cost money — beside a Wilson 95% CI on the end-to-end accuracy, which appears nowhere else in this corpus.
+- Maturity impression: 31 test files including `test_public_install_truth.py`, `test_telemetry_kill_actually_kills.py` and `test_zero_llm_regression.py` — tests of claims, not only of code — and seven files guarding one write-loss incident recorded in `degrade.py`'s docstring.
+- Study when: you are about to publish a benchmark number and have not decided which metric it is.
+- Do not copy when: you need the store to age — the design position is that you edit your notes.
+
 
 
 
