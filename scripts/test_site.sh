@@ -203,6 +203,19 @@ if ! python3 "$project_dir/scripts/check_capability_evidence.py" "$project_dir";
   exit 1
 fi
 
+# The storage census is only worth publishing if a seeded guess cannot quietly
+# become indistinguishable from a reviewed judgement. --check enforces the
+# vocabulary, that every report declares the keys, that the seeded count never
+# rises, and that the rendered table matches the frontmatter it claims to sum.
+if ! python3 "$project_dir/scripts/extract_stack.py" --self-test; then
+  echo "extract_stack.py cannot demonstrate that its seeding rules still hold." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/extract_stack.py" "$project_dir" --check; then
+  echo "The stack census is stale, malformed, or lost reviewed coverage." >&2
+  exit 1
+fi
+
 # The protocol catalogue claims each test "carries the page it came from, so a
 # test whose source argument changes goes stale visibly rather than quietly".
 # Nothing made that true until this check existed, and an outside review said so.

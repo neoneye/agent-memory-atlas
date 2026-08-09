@@ -10,6 +10,9 @@ revision: d07ea183ff637c0208e87357d51aa097dd3fced0
 revision_url: https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0
 analyzed_at: 2026-08-07
 capabilities: "scope_enforced, human_review"
+stack_storage: "sqlite, postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A behavioural profile keyed on `(user_id, agent_id)` — a risk level from 1 to 10, active alerts, a context summary, a profile version and the analysis that produced it — beside audit rows that hold the decisions it was derived from"
   storage: "SQLite or Postgres, with a dual-dialect schema and migrations; `behavioral_profiles`, `behavioral_analyses`, `analysis_tasks`, `session_summaries`, `audit_log` and an event index with projection state"

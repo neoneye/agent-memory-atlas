@@ -10,6 +10,9 @@ revision: 65f68450450c8ba6190197b23993d74a3ab8b020
 revision_url: https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020
 analyzed_at: 2026-08-07
 capabilities: "scope_enforced"
+stack_storage: "sqlite, files, delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A belief row in one of eight category files — content, confidence, verifications, stability index, relations, and `previous_content` once something has superseded it — with raw conversation chunks a category of their own"
   storage: "Per-category JSON files under each agent's own workspace directory, plus a pluggable vector store; SQLite holds cases, tasks, templates and jobs, not memory"

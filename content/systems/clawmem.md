@@ -10,6 +10,9 @@ revision: 264cea726748ce975f6ae566409996e8146b7438
 revision_url: https://github.com/yoloshii/clawmem/commit/264cea726748ce975f6ae566409996e8146b7438
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced, audit_log"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown document in a collection, chunked for search, plus derived observations and subject-predicate-object triples"
   storage: "One local SQLite file per vault: FTS5 for lexical, sqlite-vec for dense, ordinary tables for the graph"

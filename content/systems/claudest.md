@@ -10,6 +10,9 @@ revision: 1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9
 revision_url: https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9
 analyzed_at: 2026-08-09
 capabilities: "human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A session branch in SQLite, plus curated entries in CLAUDE.md, MEMORY.md and topic files"
   storage: "SQLite with FTS5 and BM25, no external dependencies; markdown for the curated layer"

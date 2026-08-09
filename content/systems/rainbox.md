@@ -10,6 +10,9 @@ revision: 9f565bf26175bc5e09288f70ec666a4616a2323c
 revision_url: https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c
 analyzed_at: 2026-07-26
 capabilities: "tombstone, trust_state, scope_enforced, human_review"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Claim, evidence, embedding, retrieval event"
   storage: "Postgres/SQLAlchemy plus pgvector"

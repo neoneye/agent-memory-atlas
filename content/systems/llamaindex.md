@@ -10,6 +10,9 @@ revision: 199e9b5b130bbde72639358a08935b913e7132c0
 revision_url: https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Block-owned content; no memory record"
   storage: "Application-chosen; vector store via the framework's abstractions"

@@ -10,6 +10,9 @@ revision: d3863966c9de39140e7a28cffdc71ae96614774b
 revision_url: https://github.com/andrewyng/openworker/commit/d3863966c9de39140e7a28cffdc71ae96614774b
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Row with scope, optional key, content, workspace, session, created_at"
   storage: "SQLite (`coworker.db`) alongside sessions and workspaces"

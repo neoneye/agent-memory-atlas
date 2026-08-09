@@ -10,6 +10,9 @@ revision: 9cc7401b97f258beca56b3caab92a16362fc00f5
 revision_url: https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5
 analyzed_at: 2026-08-04
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `TemporalFact` — subject, relation, object — with valid/invalid times, confidence, evidence ids, supersession links, source type and trust, and a privacy policy"
   storage: "Pluggable backends behind a governance layer; its own local store, or Mem0 and Graphiti adapters"

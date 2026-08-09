@@ -10,6 +10,9 @@ revision: e8866f43c54677d3f2877820cd74cf915af6fbb7
 revision_url: https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7
 analyzed_at: 2026-07-31
 capabilities: "trust_state, audit_log"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Depends on the tier — a JSON record under a family, an episodic row, a vector, or a `BeliefMutationRecord` keyed `namespace:key`"
   storage: "SQLite, a vector store, per-family JSON files, and a receipt store with a SHA-256 hash chain beside it"

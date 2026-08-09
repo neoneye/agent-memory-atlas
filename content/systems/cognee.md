@@ -10,6 +10,9 @@ revision: 325acf356a81545b9892f19ab1ea7b61c51a776b
 revision_url: https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b
 analyzed_at: 2026-07-27
 capabilities: "scope_enforced"
+stack_storage: "sqlite, postgres, delegated"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Source data, chunk, typed `DataPoint`, graph edge, summary, session entry"
   storage: "SQLite/PostgreSQL plus pluggable graph/vector stores"

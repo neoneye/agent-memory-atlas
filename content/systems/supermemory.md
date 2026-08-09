@@ -10,6 +10,9 @@ revision: 603d0512fd40e4575e2a075938c1851a898ceeb6
 revision_url: https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6
 analyzed_at: 2026-07-26
 capabilities: "scope_enforced"
+stack_storage: ""
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Document, chunk, memory entry, space"
   storage: "Hosted backend; visible schemas/client only"

@@ -10,6 +10,9 @@ revision: c4c000b17487683deecb06cf810dc82c17ef0894
 revision_url: https://github.com/Whooptie/NOVA_AI/commit/c4c000b17487683deecb06cf810dc82c17ef0894
 analyzed_at: 2026-08-06
 capabilities: "tombstone, trust_state, audit_log, human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Two units — an interaction event, and a concept with senses, relations and a per-record audit log"
   storage: "SQLite for events (plus a JSONL mirror and an archive table); one `concepts.json` rewritten whole for knowledge"

@@ -10,6 +10,9 @@ revision: fdf24f317ad81db7be2315c23e711a95386175c9
 revision_url: https://github.com/quixiai/hexis/commit/fdf24f317ad81db7be2315c23e711a95386175c9
 analyzed_at: 2026-08-09
 capabilities: "trust_state, human_review, audit_log"
+stack_storage: "postgres"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory node in a Postgres graph, plus a user-model claim keyed on a canonical claim_key"
   storage: "Postgres with a hand-built graph schema — one table per edge type — and eighty-plus SQL function files"

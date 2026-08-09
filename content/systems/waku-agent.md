@@ -10,6 +10,9 @@ revision: 51228f07a4c8bad13987cdfb9668edd3ea9ba060
 revision_url: https://github.com/ShenSeanChen/waku-agent/commit/51228f07a4c8bad13987cdfb9668edd3ea9ba060
 analyzed_at: 2026-08-06
 capabilities: "human_review"
+stack_storage: "sqlite, postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Fact (semantic), episode (episodic), and SKILL.md (procedural)"
   storage: "SQLite by default; Supabase for facts, Notion for episodes"

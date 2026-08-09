@@ -10,6 +10,9 @@ revision: b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 revision_url: https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 analyzed_at: 2026-08-09
 capabilities: "trust_state"
+stack_storage: "sqlite"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A cell — a typed claim from a ten-kind vocabulary with a ten-position score legend and signed edges"
   storage: "SQLite per project, registered in a projects table, with a read-only federated union across them"

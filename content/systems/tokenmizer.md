@@ -10,6 +10,9 @@ revision: ed7860e626ccc5c67fdf28c5cd12532ba337aeee
 revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/ed7860e626ccc5c67fdf28c5cd12532ba337aeee
 analyzed_at: 2026-07-30
 capabilities: "trust_state, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A graph node — one of fourteen types (task, decision, file, error, endpoint, schema, goal, test…) carrying a label, a summary and one of eight statuses"
   storage: "SQLite: nodes and edges plus a separate `decision_transitions` table that survives graph pruning"

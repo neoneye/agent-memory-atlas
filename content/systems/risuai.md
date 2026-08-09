@@ -10,6 +10,9 @@ revision: 316e430bedbe68c80060ce74c5a1fff88f3bdf97
 revision_url: https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97
 analyzed_at: 2026-07-29
 capabilities: "human_review"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A summary of a contiguous run of chat messages, carrying the set of message ids it was derived from, an importance pin, a category and tags"
   storage: "Per-chat-room JSON in the local database, with an embedding cache keyed by content and model"

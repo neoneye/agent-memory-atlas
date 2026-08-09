@@ -10,6 +10,9 @@ revision: 6800f0530068168522d6cf3d854b2d0bc5fa4bb6
 revision_url: https://github.com/jumbocontext/jumbo.cli/commit/6800f0530068168522d6cf3d854b2d0bc5fa4bb6
 analyzed_at: 2026-08-09
 capabilities: "audit_log, human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A domain event appended to an aggregate's stream — twelve aggregate types, from goals to invariants"
   storage: "A filesystem event store, one JSON file per event, with SQLite view tables as rebuildable projections"

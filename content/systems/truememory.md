@@ -10,6 +10,9 @@ revision: e7f1fd79e4188637f9b168337c5a219af890a613
 revision_url: https://github.com/buildingjoshbetter/TrueMemory/commit/e7f1fd79e4188637f9b168337c5a219af890a613
 analyzed_at: 2026-08-09
 capabilities: "trust_state, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A message row, plus derived rows in fact_timeline, summaries and entity profiles"
   storage: "One SQLite file — messages, FTS5, fact_timeline, summaries, entity profiles and style vectors"

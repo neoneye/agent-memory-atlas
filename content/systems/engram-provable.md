@@ -10,6 +10,9 @@ revision: 4a3d20487a370d0cca6eaaf97861a6d5d0bcbe37
 revision_url: https://github.com/Harshitk-cp/engram/commit/4a3d20487a370d0cca6eaaf97861a6d5d0bcbe37
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, trust_state, scope_enforced, audit_log, human_review"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed memory row with a binding, a provenance, a confidence and an event date"
   storage: "PostgreSQL with pgvector, an HNSW index, and a per-tenant hash-chained mutation log"

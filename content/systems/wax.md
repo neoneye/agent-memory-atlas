@@ -10,6 +10,9 @@ revision: 93cbf51f76f7db4f837c744f84d26554f7fc9f66
 revision_url: https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66
 analyzed_at: 2026-08-09
 capabilities: "audit_log, human_review, negative_eval"
+stack_storage: ""
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A frame in a single .wax file, with typed metadata under wax.* keys"
   storage: "One self-contained file — double-buffered header pages, a TOC, a footer and a WAL ring"

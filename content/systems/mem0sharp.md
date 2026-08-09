@@ -10,6 +10,9 @@ revision: 4f995e08349ebb0e0453786d5aad999737ddd239
 revision_url: https://github.com/jihadkhawaja/mem0sharp/commit/4f995e08349ebb0e0453786d5aad999737ddd239
 analyzed_at: 2026-08-03
 capabilities: "scope_enforced, audit_log"
+stack_storage: "postgres, qdrant, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A row with text, `user_id`, `agent_id`, `run_id`, a `scope`, metadata, an embedding, timestamps, an expiry and a content hash"
   storage: "Postgres with pgvector or Qdrant as the real backends, plus an in-memory store; a separate relationship store for the graph"

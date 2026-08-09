@@ -10,6 +10,9 @@ revision: 81c7177d4374cd7aecca8f6a8da43e229cadefee
 revision_url: https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee
 analyzed_at: 2026-08-09
 capabilities: "human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An insight node in a four-edge graph, with a feedback score and an importance"
   storage: "SQLite for the graph, the filesystem for contexts and chunks under ~/.memcp"

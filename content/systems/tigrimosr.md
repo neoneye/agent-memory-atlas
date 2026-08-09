@@ -10,6 +10,9 @@ revision: 0813f2eb9f28a07e9adb6231f3de4f09803b66b4
 revision_url: https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4
 analyzed_at: 2026-07-31
 capabilities: "trust_state, scope_enforced, human_review"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A skill — a SKILL.md with a registry row carrying review status, rationale and the sessions it came from — plus one memory.md per project"
   storage: "JSON files on disk (skills.json, projects.json, chat history) and SKILL.md directories, resolved through a project-first overlay in CLI mode"

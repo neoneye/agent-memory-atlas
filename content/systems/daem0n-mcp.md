@@ -10,6 +10,9 @@ revision: 00809c67c03938014ac3ea470ef3600f7ccebabc
 revision_url: https://github.com/dasblueyeddevil/daem0n-mcp/commit/00809c67c03938014ac3ea470ef3600f7ccebabc
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, audit_log"
+stack_storage: "sqlite, qdrant"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row with content, rationale, tags and an outcome, versioned on every change"
   storage: "SQLite per project under .daem0nmcp, with FTS5, BM25, Qdrant vectors and a graph layer"

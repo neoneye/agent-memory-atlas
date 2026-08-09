@@ -10,6 +10,9 @@ revision: 669e7bdbcbcd421deb172a05f8fe52b741c0e915
 revision_url: https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Verbatim or synthetic chunk plus directed chunk edges, and a (subject, relation, value) fact carrying a validity end"
   storage: "Adaptive: three JSON files by default, auto-migrating to SQLite with WAL only past 5,000 chunks"

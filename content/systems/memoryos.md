@@ -10,6 +10,9 @@ revision: 587ed7755c7aed179965792830ff1b5ad9a6fa92
 revision_url: https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92
 analyzed_at: 2026-07-28
 capabilities: ""
+stack_storage: "chroma, files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "QA pair in short term; topic session segment in mid term; profile string and knowledge entry in long term"
   storage: "JSON files by default; a separate ChromaDB variant"

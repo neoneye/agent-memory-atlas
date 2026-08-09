@@ -10,6 +10,9 @@ revision: 1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
 revision_url: https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite, chroma"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An observation typed decision, bugfix, feature, refactor, discovery or change"
   storage: "SQLite for observations, summaries, sessions and prompts; ChromaDB for vectors"

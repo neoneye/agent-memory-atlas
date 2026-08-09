@@ -10,6 +10,9 @@ revision: 29a19f4dd86ae2aeabab97df2b9bea3ae718460e
 revision_url: https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e
 analyzed_at: 2026-08-04
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryEntry` with a tier, a type, a key, an importance and a `source` recording which write path created it"
   storage: "SQLite with a numbered migration list — memories, episodes, graph nodes and edges, vectors, plus evolution tables"

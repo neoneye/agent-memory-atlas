@@ -10,6 +10,9 @@ revision: d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
 revision_url: https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A node with content, a memory_type, a validity interval, an entity link and a JSON metadata blob"
   storage: "One local SQLite database with an embedding index, plus an entity index, a graph edge table and bandit arms"

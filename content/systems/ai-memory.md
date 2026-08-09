@@ -10,6 +10,9 @@ revision: 5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
 revision_url: https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced"
+stack_storage: "sqlite, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Markdown page in git, plus observation, handoff, and workstream records"
   storage: "Markdown in git as the human source of truth; SQLite as derived index and state"

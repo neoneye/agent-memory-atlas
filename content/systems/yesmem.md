@@ -10,6 +10,9 @@ revision: b1ad72ef9fd508180afaef1ca46c87a17a3c675c
 revision_url: https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A learning — a categorized statement extracted from a session, on a 55-column row"
   storage: "SQLite with FTS5, a Go-native IVF vector index, and a separate cap store database"

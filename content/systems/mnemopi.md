@@ -10,6 +10,9 @@ revision: 4df68d60438423b384b2b47fb3d6835641624757
 revision_url: https://github.com/can1357/oh-my-pi/commit/4df68d60438423b384b2b47fb3d6835641624757
 analyzed_at: 2026-07-30
 capabilities: "negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed memory — one of fourteen types, each carrying a `veracity` provenance class and a type-specific decay curve"
   storage: "Bun SQLite, one database per named bank under `~/.hermes/mnemopi/data/banks/`, with optional local ONNX embeddings"

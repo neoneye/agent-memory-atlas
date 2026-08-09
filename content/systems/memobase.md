@@ -10,6 +10,9 @@ revision: 358c16bbc6d687937d79bc2f984a11c3be8da901
 revision_url: https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A free-text memo of at most five sentences, keyed by topic and subtopic, plus tagged events and their embedded gists"
   storage: "Postgres with pgvector; composite (id, project_id) primary keys throughout"

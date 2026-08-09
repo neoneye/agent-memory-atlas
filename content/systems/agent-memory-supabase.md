@@ -10,6 +10,9 @@ revision: b711e6d76009d0713c5d5c211c2ab5c83d01ca53
 revision_url: https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53
 analyzed_at: 2026-07-30
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "One `memories` row — content, a nine-value `memory_type`, project, tags, importance 1–10, extracted entities as JSONB, a validity window, an expiry and a supersedes pointer"
   storage: "A single Postgres table on Supabase with pgvector HNSW, a generated `tsvector`, pg_trgm and six further indexes"

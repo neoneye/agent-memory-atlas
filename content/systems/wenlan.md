@@ -10,6 +10,9 @@ revision: 87ee2831a8b9445026c33139adfd8d87bf60ad45
 revision_url: https://github.com/7xuanlu/origin/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45
 analyzed_at: 2026-08-09
 capabilities: "tombstone, scope_enforced, human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A chunk with a typed schema — identity, preference, decision or fact — carrying required and optional structured fields"
   storage: "libSQL/SQLite with F32_BLOB embeddings, a knowledge graph, page maps, and Markdown pages as the user-facing artifact"

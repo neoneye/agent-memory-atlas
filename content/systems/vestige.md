@@ -10,6 +10,9 @@ revision: a8b0a75661faaa396fa4519c82fcc369f0ddef8e
 revision_url: https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, audit_log, human_review"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A knowledge node with FSRS-6 scheduling state, a dual-strength model, sentiment weighting and an optional validity interval"
   storage: "One SQLite file behind a 25MB Rust binary, with embeddings in a blob table and fifteen-plus migrations"

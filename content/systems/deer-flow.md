@@ -10,6 +10,9 @@ revision: 5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
 revision_url: https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
 analyzed_at: 2026-08-02
 capabilities: "scope_enforced, human_review"
+stack_storage: "files, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A structured fact in the DeerMem shape — `version`, `lastUpdated`, `user`, `history`, `facts[]` — which every backend must map into"
   storage: "Backend's choice. The default writes JSON; Mem0 and OpenViking adapters point at those systems instead"

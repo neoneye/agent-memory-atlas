@@ -10,6 +10,9 @@ revision: c91ca5765598bbbfe18277eb933e94430273b3eb
 revision_url: https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "graph, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A statement — an atomic fact extracted from an episode and classified into one of twelve aspects"
   storage: "A pluggable graph provider for triple aspects, an aspects store for voice aspects, and six vector namespaces"

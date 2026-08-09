@@ -10,6 +10,9 @@ revision: 0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
 revision_url: https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
 analyzed_at: 2026-08-02
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Depends on the table — the distinctive one is an `errors_solutions` row: an error, its stack trace, a fix, and whether the fix worked"
   storage: "One SQLite database with roughly fourteen base tables and fifteen migrations, plus an embeddings table"

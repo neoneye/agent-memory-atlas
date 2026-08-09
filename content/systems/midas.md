@@ -10,6 +10,9 @@ revision: ee9953c15a977343eb783de0b9f217aaf46e5b4e
 revision_url: https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
+stack_storage: "sqlite, memory"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A verbatim turn or statement with a kind, an importance 1-5, a provenance and an actor — never an LLM rewrite"
   storage: "One SQLite file, optionally encrypted, with an in-memory mirror refreshed off PRAGMA data_version"

@@ -10,6 +10,9 @@ revision: 750a39da51ed947aab851e9fd5c06a2587402e2b
 revision_url: https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "sqlite"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A chunk of code or documentation with an ACT-R activation record and typed relationships"
   storage: "SQLite in WAL mode with chunks, activations, relationships, a file index and a document hierarchy"

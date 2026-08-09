@@ -10,6 +10,9 @@ revision: 24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
 revision_url: https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An engram — a `kind:30174` Nostr event whose NIP-44 ciphertext decodes to `{slug, value}`, or `{slug: core, profile}` for the identity surface"
   storage: "A Nostr relay the operator runs; engrams are parameterized-replaceable events keyed by (pubkey, kind, d_tag), so the relay holds only the head"

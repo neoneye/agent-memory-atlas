@@ -10,6 +10,9 @@ revision: bc64ff745a9b2c0e6245e0137654f041fba0c155
 revision_url: https://github.com/agentic-box/memora/commit/bc64ff745a9b2c0e6245e0137654f041fba0c155
 analyzed_at: 2026-07-27
 capabilities: "audit_log, human_review"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Memory row with content, tags, metadata, importance, and access count"
   storage: "SQLite with FTS5, embeddings, crossrefs, events, actions; D1 cloud backend"

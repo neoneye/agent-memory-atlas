@@ -10,6 +10,9 @@ revision: 027ecf0a379bcc1d09956d46d12d44a3ad9cee14
 revision_url: https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "chroma, redis, memory, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryContent` — content, a MIME type and optional metadata. There is no identifier field"
   storage: "Interface only. Ships an in-process list plus ChromaDB, Redis, Mem0 and a text-canvas adapter"

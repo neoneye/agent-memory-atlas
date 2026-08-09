@@ -10,6 +10,9 @@ revision: 90986c5c55631e0a372694e77fa69880ba39b31b
 revision_url: https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b
 analyzed_at: 2026-07-30
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown file — the global `MEMORY.md`, a per-project `SCRATCHPAD.md`, project notes, and a daily log per date"
   storage: "Plain files on disk under a store root, with project-scoped subdirectories and `YYYY-MM-DD.md` daily logs"

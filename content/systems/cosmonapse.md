@@ -10,6 +10,9 @@ revision: 16997d577596750e139f3eb83fd5c4b1c3c740bf
 revision_url: https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf
 analyzed_at: 2026-07-30
 capabilities: ""
+stack_storage: "sqlite, postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An entry, shape left to the backend; `Hit` and `RecallResult` on the way out, `ImprintReceipt` on the way in"
   storage: "An `Engram` ABC with three shipped backends — a dict, stdlib `sqlite3`, and asyncpg Postgres"

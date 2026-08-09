@@ -10,6 +10,9 @@ revision: a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd
 revision_url: https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd
 analyzed_at: 2026-07-31
 capabilities: "trust_state, scope_enforced"
+stack_storage: "postgres, files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `CorrectionRecord` — a one-sentence rule with a severity, a nine-value failure class, a kind, and outcome counters — beside journal entries and palace notes"
   storage: "One JSON file per record under `~/.agent-recall/projects/<project>/corrections/`, with an optional Supabase mirror carrying pgvector and FTS"

@@ -10,6 +10,9 @@ revision: 5721848af9fe4adc28ff08dce5bda6cfc3f24a37
 revision_url: https://github.com/techtheist/engram/commit/5721848af9fe4adc28ff08dce5bda6cfc3f24a37
 analyzed_at: 2026-08-06
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed node — Principle, Decision, Caution, Problem, Resolution, Insight, Intent or Anchor — joined by typed edges including `replaces` and `conflicts-with`"
   storage: "SQLite (with a TepinDB backend beside it), nodes and edges plus a suspects table and an append-only audit journal"

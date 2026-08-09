@@ -10,6 +10,9 @@ revision: 7ffc95823b6e40ca4e10acf9fb285d923485cacc
 revision_url: https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Text and Markdown across four layers"
   storage: "`global_mem_insight.txt`, `global_mem.txt`, `memory/`, `L4_raw_sessions/`"

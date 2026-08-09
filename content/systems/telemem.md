@@ -10,6 +10,9 @@ revision: 8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
 revision_url: https://github.com/TeleAI-UAGI/telemem/commit/8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "faiss"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A mem0-shaped memory scoped to a character, agent or run, plus video-caption memories"
   storage: "Local by default — Qwen for inference and FAISS for vectors; mem0-compatible backends"

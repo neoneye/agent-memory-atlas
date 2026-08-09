@@ -10,6 +10,9 @@ revision: 49451ee8edf3747f81df6548411f0439c4378c6c
 revision_url: https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c
 analyzed_at: 2026-08-09
 capabilities: "human_review"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed markdown note — pattern, gotcha, decision or tool — in an Obsidian vault"
   storage: "Plain markdown on disk plus a state database; embeddings in Ollama or a TF-IDF fallback"

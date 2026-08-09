@@ -10,6 +10,9 @@ revision: d1902419321352f0108c499bd8ed4ebd129fe138
 revision_url: https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced, human_review"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Typed memory with title, content, confidence, tags, and session linkage"
   storage: "Moorcheh vector service, hosted or on-prem; conflict reports as dated JSON on disk"

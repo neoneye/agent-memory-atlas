@@ -10,6 +10,9 @@ revision: b441edc4d17de778d30ae955f46408edae39bffe
 revision_url: https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A hash-chained entry — payload (actor, chainKey, seq, operation, tier, contentHash) plus plaintext that a forget erases"
   storage: "Two paths: a local JSONL store with an independent JSONL receipts log, and a Convex `aukora_memory` table behind a delegation-manifest pipeline"

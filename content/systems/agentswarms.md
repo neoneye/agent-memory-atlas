@@ -10,6 +10,9 @@ revision: cfde9169ede6128f3cf149e0b3748859e1a2f4e4
 revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced, human_review"
+stack_storage: "postgres"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A row with a four-value `kind` — fact, preference, episodic, instruction — its content, and a trigger-derived keyword array"
   storage: "Supabase Postgres, three tables, row-level security per user; no vector column anywhere on the memory path"

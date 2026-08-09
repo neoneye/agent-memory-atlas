@@ -10,6 +10,9 @@ revision: a31ba52203062f7a586a901f6870176bf3961707
 revision_url: https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707
 analyzed_at: 2026-07-30
 capabilities: "trust_state, human_review"
+stack_storage: "files"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryItem` — content plus context, tied to a message, conversation, npc, team and directory, carrying an initial and a final text and a status"
   storage: "A JSON-backed knowledge store per directory, a knowledge graph with concepts and links, and a separate index"

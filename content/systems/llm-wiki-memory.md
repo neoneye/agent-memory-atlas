@@ -10,6 +10,9 @@ revision: b7cc76a493573baac133969b324a874990556146
 revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/b7cc76a493573baac133969b324a874990556146
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, human_review"
+stack_storage: "files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Typed Markdown atom, plan/investigation, daily capture, or full document"
   storage: "Filesystem wiki, per-category embedding caches, private git history"

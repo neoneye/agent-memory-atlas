@@ -10,6 +10,9 @@ revision: 54cbbdd86e426c13e48f2fdb20145fb199d54425
 revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/54cbbdd86e426c13e48f2fdb20145fb199d54425
 analyzed_at: 2026-08-07
 capabilities: "negative_eval"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A belief row in one of seven category files — content, mass, confidence, verifications, stability index, relations, memory_refs, an 8-D position and the somatic state at encoding — beside memories that exist only as journal lines"
   storage: "Per-category JSON files for beliefs, one append-only JSONL journal for memories and belief snapshots, a separately saved 384-D index; no database"

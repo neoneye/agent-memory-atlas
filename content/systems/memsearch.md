@@ -10,6 +10,9 @@ revision: b734a142ea017657959dfe918ecfe9e1a16c6654
 revision_url: https://github.com/zilliztech/memsearch/commit/b734a142ea017657959dfe918ecfe9e1a16c6654
 analyzed_at: 2026-08-09
 capabilities: "human_review"
+stack_storage: "milvus, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A markdown chunk in a daily journal, plus durable PROJECT.md and USER.md notes"
   storage: "Markdown as the source of truth; Milvus as a rebuildable shadow index"

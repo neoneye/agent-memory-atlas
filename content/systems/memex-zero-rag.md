@@ -10,6 +10,9 @@ revision: c4337081a7dfcdffb84a36ee2778b6d519827aad
 revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/c4337081a7dfcdffb84a36ee2778b6d519827aad
 analyzed_at: 2026-07-31
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown wiki page — source, entity, concept or synthesis — with YAML frontmatter and inline `[confidence:]`, `[sources:]`, `[verified:]` tags"
   storage: "Files in a git repository. `raw/` is immutable input, `wiki/` is the LLM's output, `L1/` is per-install context"

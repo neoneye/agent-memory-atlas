@@ -10,6 +10,9 @@ revision: 21d00969c25ca170ef40bc07e6811beb5e78c99e
 revision_url: https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Typed memory row across eleven types, plus experience packets, AgentBook events, and work-ledger file changes"
   storage: "PostgreSQL with pgvector HNSW across 46 tables; a deliberately narrower SQLite core"

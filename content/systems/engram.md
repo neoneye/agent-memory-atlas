@@ -10,6 +10,9 @@ revision: 509e6762fdd9417ff7a39d30f426a9566220eaf0
 revision_url: https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, human_review"
+stack_storage: "sqlite"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "Observation and prompt records"
   storage: "Local SQLite WAL, FTS5"

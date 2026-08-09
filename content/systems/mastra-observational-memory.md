@@ -10,6 +10,9 @@ revision: 470f286e98c9ad95f4c42087e411c0af363a4a2c
 revision_url: https://github.com/mastra-ai/mastra/commit/470f286e98c9ad95f4c42087e411c0af363a4a2c
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
+stack_storage: "delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Raw message, dated observation group, reflected observation context"
   storage: "Mastra `MemoryStorage` adapters"

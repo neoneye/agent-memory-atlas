@@ -10,6 +10,9 @@ revision: 760cdde49328a6cca8c430256b072cc1c4f48247
 revision_url: https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247
 analyzed_at: 2026-08-04
 capabilities: "trust_state, scope_enforced"
+stack_storage: "sqlite, chroma"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A `memory_entry` with a state, a category, a scope pair, provenance columns and eight outcome counters"
   storage: "Swappable backends behind one contract — SQLite, Chroma, TF-IDF, graph, multihop and hybrid; a separate research store for episodes, strategies and reflections"

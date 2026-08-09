@@ -10,6 +10,9 @@ revision: c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5
 revision_url: https://github.com/gitmem-dev/gitmem/commit/c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, human_review"
+stack_storage: "postgres"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A learning typed scar, win, pattern or anti_pattern, with counter-arguments and a protocol"
   storage: "Postgres with pgvector on Supabase, or a local .gitmem directory on the free tier"

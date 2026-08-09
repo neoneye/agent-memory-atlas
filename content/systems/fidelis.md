@@ -10,6 +10,9 @@ revision: 804e521f86e3c0056d3c89b4c7babd1eb086a6a7
 revision_url: https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "chroma, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An original passage — an atomic fact on one path, a multi-turn session on the other"
   storage: "Local Chroma plus BM25 under ~/.cogito, with a JSONL dead-letter queue for failed writes"

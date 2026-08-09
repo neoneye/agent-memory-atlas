@@ -10,6 +10,9 @@ revision: 816accaa9befe8281668ba8819eaf74d11ce2385
 revision_url: https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
+stack_storage: "sqlite, postgres, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Canonical Markdown note; indexed entity, observation, relation"
   storage: "Filesystem source + SQLite/PostgreSQL projection"

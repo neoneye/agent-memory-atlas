@@ -10,6 +10,9 @@ revision: 7cee90c57ad934a76ed852132b4a8ef055f64f5b
 revision_url: https://github.com/haagndaazer/vibe-cognition/commit/7cee90c57ad934a76ed852132b4a8ef055f64f5b
 analyzed_at: 2026-08-09
 capabilities: "audit_log"
+stack_storage: "chroma, files"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed cognition node from a twelve-value vocabulary — decision, fail, discovery, incident, workflow, person and more"
   storage: "An append-only journal.jsonl as the source of truth, with a NetworkX graph and ChromaDB as projections"

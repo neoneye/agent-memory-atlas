@@ -10,6 +10,9 @@ revision: e36da55815951d50d103d7242d92cf9a71ceee96
 revision_url: https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96
 analyzed_at: 2026-07-28
 capabilities: "audit_log"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "One line of at most 280 characters, fixed width, position-addressed"
   storage: "`LOG.txt` append-only, never edited; `TREE/` of compressed blocks, a rebuildable cache"

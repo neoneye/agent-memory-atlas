@@ -10,6 +10,9 @@ revision: b918c94563608e379e4fd2fd28e863371fc86d37
 revision_url: https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37
 analyzed_at: 2026-08-07
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "None of its own. The unit is whatever the mounted provider returns — a recall payload of instructions, core memories, search results and stats — with the host holding the policy that produced it"
   storage: "No memory store. Postgres holds users, agents, conversations and workflows; memory is delegated to a provider, with Mnemory and a null backend shipped"

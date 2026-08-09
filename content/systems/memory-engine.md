@@ -10,6 +10,9 @@ revision: 54e4d7d201b5c7ba3aed618ea343d9f4d3f40927
 revision_url: https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927
 analyzed_at: 2026-07-28
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Row in one `memory` table: content, name, meta, tree path, temporal range, embedding"
   storage: "PostgreSQL 18 — ltree, pgvector/halfvec, BM25, JSONB, tstzrange; schema per space"

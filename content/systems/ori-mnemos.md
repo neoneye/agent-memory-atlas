@@ -10,6 +10,9 @@ revision: 56c04fa547cf11e2dad8fc503aa049d9ed024f8f
 revision_url: https://github.com/aayoawoyemi/ori-mnemos/commit/56c04fa547cf11e2dad8fc503aa049d9ed024f8f
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A markdown note in a vault, with wiki-links as graph edges"
   storage: "Markdown on disk with a SQLite index; git as the version control layer"

@@ -10,6 +10,9 @@ revision: d22cad56b28a26bb514ecede4ee0dbd509a46c3f
 revision_url: https://github.com/kage-core/kage/commit/d22cad56b28a26bb514ecede4ee0dbd509a46c3f
 analyzed_at: 2026-08-09
 capabilities: "trust_state, human_review, negative_eval"
+stack_storage: "files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A packet — a typed engineering claim with cited paths, per-symbol content hashes and a chain of re-verification records"
   storage: "Markdown and JSON files in git under .agent_memory, conformant to Google's Open Knowledge Format"

@@ -10,6 +10,9 @@ revision: 0d27e5ef282fca141c08c1d76fa3a8647a3eeea4
 revision_url: https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "chroma, files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A JSON entry in a per-branch memory file, capped by type, plus symbolic fragments in ChromaDB"
   storage: "JSON files per branch as the hot tier, ChromaDB as the archive, with a subprocess isolation layer"

@@ -10,6 +10,9 @@ revision: db98ef59999beb5c33d9aba190cb2c82bf9401cb
 revision_url: https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb
 analyzed_at: 2026-07-31
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: ""
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A node with a category, aliases and a state, carrying slices for detail, events for change, and edges to other nodes"
   storage: "Cloudflare D1 across eleven migrations, with Durable Objects and an optional vector index"

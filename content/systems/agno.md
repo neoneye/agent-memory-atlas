@@ -10,6 +10,9 @@ revision: 7c68873c1357321a5152397c8ab4fb8b3f587bba
 revision_url: https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, human_review, negative_eval"
+stack_storage: "sqlite, postgres, redis, mongo, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Six of them — a profile field, a free-text memory, a session summary, a titled learning, an entity carrying facts and events, and a decision with an outcome"
   storage: "One `BaseDb` behind twenty backends (Postgres, SQLite, Mongo, Redis, DynamoDB, Firestore, ClickHouse, SurrealDB, JSON, GCS); learnings in one table keyed by learning type"

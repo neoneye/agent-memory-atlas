@@ -10,6 +10,9 @@ revision: 1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
 revision_url: https://github.com/rahulmranga/knowledge-worker/commit/1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
 analyzed_at: 2026-08-09
 capabilities: "trust_state"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed node with a confidence and an excerpt, plus typed edges between nodes"
   storage: "A local graph with OWL import and export; provenance edges kept separate"

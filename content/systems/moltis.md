@@ -10,6 +10,9 @@ revision: 1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 revision_url: https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "sqlite, delegated"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Chunk of a Markdown file"
   storage: "SQLite with vectors; pluggable local, OpenAI, batch, and fallback embeddings"

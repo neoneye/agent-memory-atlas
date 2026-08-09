@@ -10,6 +10,9 @@ revision: 86018d651acb6500ea4d3c79acf5acbbaf547a76
 revision_url: https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76
 analyzed_at: 2026-08-04
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An `EpisodicMemory` — timestamp, `event_type`, and a free-form `content` dict, with no identifier"
   storage: "One JSON file holding the whole `SessionState`, written atomically via temp file, `fsync` and `os.replace`"

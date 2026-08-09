@@ -10,6 +10,9 @@ revision: bd22c0896b9726eb951a100a5015e04ae8769c01
 revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/bd22c0896b9726eb951a100a5015e04ae8769c01
 analyzed_at: 2026-08-06
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A working-memory row that ages into an episodic row, plus extracted subject-predicate-object facts consolidated into a separate table keyed by the hash of the triple"
   storage: "One SQLite file at `~/.hermes/mnemosyne/data/mnemosyne.db`, with sqlite-vec and FTS5 virtual tables, optional int8 or bit vector quantization, and per-bank database files for isolation"

@@ -10,6 +10,9 @@ revision: 45e6e80ae2e63b65fad0d89f5e13171229c8f295
 revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295
 analyzed_at: 2026-07-26
 capabilities: ""
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "L0 conversation, L1 memory record, L2 scene, L3 persona, offload reference/map"
   storage: "JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB"

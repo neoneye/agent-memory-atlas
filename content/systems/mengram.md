@@ -10,6 +10,9 @@ revision: 99bfd824c374d85f021290f6f78de357243ebf9a
 revision_url: https://github.com/alibaizhanov/mengram/commit/99bfd824c374d85f021290f6f78de357243ebf9a
 analyzed_at: 2026-08-09
 capabilities: "trust_state, scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact, an episode, or a versioned procedure with steps, triggers and preconditions"
   storage: "Postgres with a GIN index on procedure entities; versioned procedure rows"

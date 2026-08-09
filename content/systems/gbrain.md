@@ -10,6 +10,9 @@ revision: f15480b9d04b342d8d261fb4e8a6784bd9478be3
 revision_url: https://github.com/garrytan/gbrain/commit/f15480b9d04b342d8d261fb4e8a6784bd9478be3
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "postgres, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A page, plus takes extracted from it — claims typed fact, take, bet or hunch, each with a holder and a weight"
   storage: "Postgres or PGLite with pgvector, a self-wiring entity graph, and page files on disk"

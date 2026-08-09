@@ -10,6 +10,9 @@ revision: b84464b983d7b25e811d52986f8b61dbcbad961d
 revision_url: https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A markdown note with frontmatter and wikilinks, in a topic folder"
   storage: "An Obsidian vault on disk, with .base database views and a QMD semantic index"

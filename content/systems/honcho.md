@@ -10,6 +10,9 @@ revision: d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8
 revision_url: https://github.com/plastic-labs/honcho/commit/d191c107e5250cc2ca4c6058d9ebfe26b7cfc6f8
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
+stack_storage: "postgres, delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Message, document/observation, representation"
   storage: "Postgres/SQLAlchemy, pgvector or vector adapter"

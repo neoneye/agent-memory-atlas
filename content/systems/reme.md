@@ -10,6 +10,9 @@ revision: 550317c3bfb755d985a0401194827eaa9676a5bc
 revision_url: https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "faiss, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown note with YAML frontmatter and wikilinks, chunked for indexing"
   storage: "Files on disk as canonical, with FAISS and a keyword index as rebuildable projections"

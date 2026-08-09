@@ -10,6 +10,9 @@ revision: cd196704bb3dd148c314a81a32d96752204be5c1
 revision_url: https://github.com/fpytloun/mnemory/commit/cd196704bb3dd148c314a81a32d96752204be5c1
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, human_review"
+stack_storage: "qdrant"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact with a category, importance and memory type in a vector store, optionally pointing at a larger artifact held separately"
   storage: "Qdrant for vectors, S3 or MinIO for artifacts, stateless HTTP in front of both"

@@ -10,6 +10,9 @@ revision: 78140714426d66b01246eb9cdefae00d7d93f74f
 revision_url: https://github.com/KimGLee/Cambium/commit/78140714426d66b01246eb9cdefae00d7d93f74f
 analyzed_at: 2026-08-07
 capabilities: "trust_state, human_review"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown page in an adopter's vault, carrying frontmatter with four independent status axes; Cambium ships no pages"
   storage: "None of its own — the corpus is the adopter's vault; Cambium adds a state layer of ledgers, receipts and a watermark, all as templates"

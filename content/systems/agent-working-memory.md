@@ -10,6 +10,9 @@ revision: f129a697982c81efd6d488152408a586d7f5f4b0
 revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/f129a697982c81efd6d488152408a586d7f5f4b0
 analyzed_at: 2026-08-09
 capabilities: "trust_state, scope_enforced, negative_eval"
+stack_storage: "sqlite, postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An engram with a concept, content, salience, confidence, tags and a stage"
   storage: "PGlite, SQLite or Postgres behind one store interface, with FTS5 BM25 and local ONNX embeddings"

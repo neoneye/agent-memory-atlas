@@ -10,6 +10,9 @@ revision: 4256419595f63fe307147dc19e379477cecdc44f
 revision_url: https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, lancedb, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Markdown on disk as the source, deriving episodes, atomic facts, agent cases and agent skills as typed rows"
   storage: "Markdown files as canonical, with SQLite and LanceDB indexes rebuilt from them"

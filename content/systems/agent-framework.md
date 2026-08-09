@@ -10,6 +10,9 @@ revision: 28389df805b97f846ca21d857e291602a7adc0a4
 revision_url: https://github.com/microsoft/agent-framework/commit/28389df805b97f846ca21d857e291602a7adc0a4
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced"
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 capability_evidence:
   scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
 matrix:

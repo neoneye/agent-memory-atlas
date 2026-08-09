@@ -10,6 +10,9 @@ revision: fd314bac28247df1149edfbf0d1f7881690ef448
 revision_url: https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A semantic knowledge statement with valid_at, invalid_at and expired_at"
   storage: "SQLite or Postgres behind one storage layer, with vector and BM25 indexes"

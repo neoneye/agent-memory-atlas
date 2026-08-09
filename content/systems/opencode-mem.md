@@ -10,6 +10,9 @@ revision: 8cba720736ff8d3f6315ced14362259efc301899
 revision_url: https://github.com/tickernelz/opencode-mem/commit/8cba720736ff8d3f6315ced14362259efc301899
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row with content, two vectors, a container tag, a type and project metadata"
   storage: "Embedded Turso/libSQL with F32_BLOB vectors and a DiskANN index, sharded per scope"

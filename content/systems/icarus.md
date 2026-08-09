@@ -10,6 +10,9 @@ revision: 6e348708dcddb7cf1ad47726cb287cd4c9183c40
 revision_url: https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40
 analyzed_at: 2026-08-09
 capabilities: "trust_state, audit_log, negative_eval"
+stack_storage: "files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An entry — a typed claim in a Markdown file with evidence pointers, a verified status and a lifecycle"
   storage: "Markdown files with YAML frontmatter under a root directory, written atomically, version-controlled by git"

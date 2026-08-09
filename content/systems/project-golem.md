@@ -10,6 +10,9 @@ revision: 210658a11bee669df875cc6edc0511fac239d1ba
 revision_url: https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba
 analyzed_at: 2026-07-31
 capabilities: ""
+stack_storage: "lancedb, files, delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A text passage with metadata and a stable id derived from its content, plus a separate experience record of rejected proposal types"
   storage: "LanceDB with a pluggable embedder — Gemini, Ollama or a local provider — and a flat JSON file for the experience store"

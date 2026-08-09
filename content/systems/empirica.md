@@ -10,6 +10,9 @@ revision: d64b6416e8850e867bff3ee5ed0402dc842128d2
 revision_url: https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2
 analyzed_at: 2026-08-09
 capabilities: "trust_state, scope_enforced, audit_log"
+stack_storage: "sqlite, qdrant"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed epistemic artifact — finding, unknown, mistake, decision, assumption or dead-end — scoped to a project and goal"
   storage: "SQLite across a dozen schema modules, with an optional Qdrant backend for semantic event retrieval"

@@ -10,6 +10,9 @@ revision: 26844673ac9f134e2ad3851a12dd26762d94c3a9
 revision_url: https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced"
+stack_storage: "sqlite, postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A row in a table the agent invented. There is no framework-defined memory record — the schema is whatever the model wrote `CREATE TABLE` for"
   storage: "One zstd-compressed SQLite file per agent in Django's `default_storage`, restored per run through a validating subprocess; Postgres holds the platform's own 183 models"

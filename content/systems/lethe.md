@@ -10,6 +10,9 @@ revision: b6053b7bdacc78a91b9ea4bb25f32edad278c495
 revision_url: https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495
 analyzed_at: 2026-07-30
 capabilities: "audit_log, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A row with text and a `depth ∈ ℝ` — 1.0 just inscribed, (0,1) sinking, 0 submerged but present, above 1 pinned"
   storage: "SQLite with three synced tables — the row store, a `vec0` vector index, and a non-contentless FTS5 index so DELETE reaches it"

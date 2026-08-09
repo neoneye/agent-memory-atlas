@@ -10,6 +10,9 @@ revision: bf81e61087a6e6af24e5ffd225d66c74135a4faa
 revision_url: https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa
 analyzed_at: 2026-07-30
 capabilities: "human_review"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "One dated bullet — `- [YYYY-MM-DD] one fact` — in a flat list under a single heading, order preserved as written"
   storage: "`<project>/.juggler/MEMORY.md`, a plain Markdown file, git-ignored so it never leaves the checkout"

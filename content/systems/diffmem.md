@@ -10,6 +10,9 @@ revision: 5f00e8d22dc05fb1fc505f5322cb717de61bed3f
 revision_url: https://github.com/growth-kinetics/diffmem/commit/5f00e8d22dc05fb1fc505f5322cb717de61bed3f
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A markdown entity file holding the current view, with history in the commit graph"
   storage: "A git repository of markdown; no vector store, no embeddings, no BM25"

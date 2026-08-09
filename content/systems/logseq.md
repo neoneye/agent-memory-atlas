@@ -10,6 +10,9 @@ revision: 9a11243d50b23afeb10bda5a2ca6cc77357eea38
 revision_url: https://github.com/logseq/logseq/commit/9a11243d50b23afeb10bda5a2ca6cc77357eea38
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An outliner block or page in a DataScript graph, typed by user-defined tags (classes) and properties with declared types and cardinality"
   storage: "DataScript over SQLite, local-first; FTS5 trigram index and a 384-dimension vector index alongside; optional multi-device sync"

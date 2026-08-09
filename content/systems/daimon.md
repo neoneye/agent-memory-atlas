@@ -10,6 +10,9 @@ revision: 4222243e40352691b957d6e3242b5aed25e8c851
 revision_url: https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851
 analyzed_at: 2026-08-07
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
   storage: "Per-project JSON checkpoints plus a disposable SQLite FTS5 index"

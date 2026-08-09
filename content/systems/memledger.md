@@ -10,6 +10,9 @@ revision: 27f67e436ec0910e50c4b1c41cdf96f7afb6b341
 revision_url: https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341
 analyzed_at: 2026-07-31
 capabilities: "trust_state, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `(subject, relation, value)` tuple with a layer, a status, an impact score and a sessions-seen count, projected from an event log"
   storage: "SQLite — an append-only `events` table plus `records`, `vectors` and an FTS index rebuilt from it"

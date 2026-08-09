@@ -10,6 +10,9 @@ revision: ce5a832885d66ba3608e02d2db85e5e90a455559
 revision_url: https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced, audit_log"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Markdown entry staged, then digested into a themed region of a root document"
   storage: "Files in the project tree; a dream ledger and journal alongside"

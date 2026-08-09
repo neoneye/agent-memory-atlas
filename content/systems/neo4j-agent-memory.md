@@ -10,6 +10,9 @@ revision: b017db4449d592a982944986c2e3c18652bb36ad
 revision_url: https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad
 analyzed_at: 2026-07-28
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "graph"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Conversation turn, extracted entity, preference, and reasoning trace with tool calls"
   storage: "Neo4j — one graph shared across agents rather than per-agent silos"

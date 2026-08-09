@@ -10,6 +10,9 @@ revision: 9dd7228b8a502099522a900d647c57c99f127359
 revision_url: https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359
 analyzed_at: 2026-07-31
 capabilities: "audit_log"
+stack_storage: "qdrant, files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A verbatim text with four free-text taxonomy tags — category, wing, room, hall — and five temporal-validity columns"
   storage: "One Qdrant collection of 768-dimension points, plus an append-only JSONL write-ahead log on local disk"

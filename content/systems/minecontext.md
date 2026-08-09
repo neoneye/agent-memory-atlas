@@ -10,6 +10,9 @@ revision: 171c7a9ea8091e326ddcf0f10718aa1b58c83c65
 revision_url: https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "sqlite, chroma, qdrant"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed context with an event time, a confidence and an importance score, keeping its raw properties beneath it — plus todo rows with an open/done lifecycle"
   storage: "SQLite for structured rows, with ChromaDB or Qdrant for vectors"

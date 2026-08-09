@@ -10,6 +10,9 @@ revision: 570eab59e7c7ce052f4550af7507e7dd77c73e11
 revision_url: https://github.com/openclaw/openclaw/commit/570eab59e7c7ce052f4550af7507e7dd77c73e11
 analyzed_at: 2026-07-27
 capabilities: "scope_enforced"
+stack_storage: "lancedb, delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Categorized entry (preference/fact/decision/entity/other) with embedding"
   storage: "LanceDB via `memory-lancedb` extension; swappable embedding adapters"

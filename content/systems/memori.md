@@ -10,6 +10,9 @@ revision: 538b61f245295aa1a43df8033879f8293627f74d
 revision_url: https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "mongo"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An entity fact — content, embedding, num_times, and a normalized content hash — joined to every conversation that mentioned it"
   storage: "Six SQL dialects plus MongoDB, from one Rust core with Python and TypeScript bindings"

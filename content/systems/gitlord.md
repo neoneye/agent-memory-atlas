@@ -10,6 +10,9 @@ revision: 42b0bab151777c1ee38ced7ab2805b0699e7a8a1
 revision_url: https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1
 analyzed_at: 2026-07-30
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A turn — user, assistant or tool call — committed as JSON on a branch, addressed by commit sha and path"
   storage: "A git repository. Sessions are branches; the commit graph is the durable record"

@@ -10,6 +10,9 @@ revision: a9c7cca3613b6571bfb37ad1fb6c070b7c976197
 revision_url: https://github.com/kitfunso/hippo-memory/commit/a9c7cca3613b6571bfb37ad1fb6c070b7c976197
 analyzed_at: 2026-08-04
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row carrying strength, half-life, layer, emotional valence, schema fit, outcome score and a confidence level"
   storage: "SQLite with FTS5 and a 25-plus-step migration ladder; separate tables for conflicts, goals, policies, decisions, processes and audit"

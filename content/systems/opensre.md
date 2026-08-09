@@ -10,6 +10,9 @@ revision: c81d6c36d69bd6b39c1e18b0205f28422c3d2544
 revision_url: https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, human_review, negative_eval"
+stack_storage: ""
+stack_retrieval: "lexical"
+stack_source: "seeded"
 capability_evidence:
   scope_enforced: "long-term memory store, read and write | config/constants/paths.py | session_home() resolves <org root>/users/<actor id> from a ContextVar, and memory_dir() is the only path every read goes through | tests/core/agent_harness/session/test_memory_extraction.py::test_scheduled_extraction_thread_inherits_storage_scope"
   human_review: "the /memory slash commands over the same markdown files the agent reads | surfaces/interactive_shell/command_registry/memory_cmds.py | list, show and forget after the fact, plus the store path printed so the files can be edited directly | tests/interactive_shell/test_memory_cmds.py"

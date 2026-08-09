@@ -10,6 +10,9 @@ revision: 4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8
 revision_url: https://github.com/BasedHardware/omi/commit/4ab6fa0ca7255b2445fc185ee29d456eb7aa01d8
 analyzed_at: 2026-08-06
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "pinecone"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact — canonical `predicate` plus slot-keyed `arguments`, a subject entity id, qualifiers carrying validity time and `epistemic_status`, and a list of `Evidence` rows each naming its extractor and version"
   storage: "Firestore, memories as a subcollection under the user document and encrypted per user at rest; Pinecone for vectors; an append-only per-user commit ledger with the document store as its projection"

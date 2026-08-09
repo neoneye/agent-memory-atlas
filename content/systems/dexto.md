@@ -10,6 +10,9 @@ revision: 4108a9c730425f43602bce6c8720e2fe44b4b9d5
 revision_url: https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2fe44b4b9d5
 analyzed_at: 2026-07-31
 capabilities: "human_review"
+stack_storage: "memory"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A `Memory` — id, content capped at 10,000 characters, timestamps, up to ten tags, and metadata carrying source and pinned"
   storage: "A five-method `MemoryStore` interface with a database-backed and an in-memory implementation"

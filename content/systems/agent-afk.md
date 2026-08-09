@@ -10,6 +10,9 @@ revision: e3d15fe2389602c2761954baadd495d8ebe7a6a2
 revision_url: https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2
 analyzed_at: 2026-07-30
 capabilities: "negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact — content, one of four CHECK-constrained categories, a source surface, a confidence float, an access count, a supersedes pointer and a nullable `evidence` citation"
   storage: "SQLite with an FTS5 external-content index and porter tokenizer, plus a `HOT.md` working file under a token cap"

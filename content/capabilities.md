@@ -207,3 +207,51 @@ cases. The ones worth knowing:
   suppression table refuses the write and is keyed on the normalised value, and
   nothing but a human rejecting a candidate ever writes a row into it, so its own
   automatic supersession path reaches the store ungated.
+
+## What these systems are built on
+
+The seven marks above are about mechanisms. This is the other question people
+arrive with — *what do these systems actually store memory in* — and the atlas
+had no answer to it until every report started declaring the engine and the
+retrieval arms in its own frontmatter, which is where these counts come from.
+
+**Read this as a census, not a recommendation.** It says what the corpus
+contains and nothing about what works. This project has a standing rule against
+citing adoption as evidence about a mechanism, and a distribution is the easiest
+possible way to break it: the largest number below is a plurality of under half,
+and no row here has been shown to retrieve better than any other row. The
+[build page](../build/) declines to pick an engine for you on purpose, and this
+table is not a way around that.
+
+Two rows are worth reading before the big ones. **Delegated to the adopter**
+counts reports whose storage is an adapter their user binds — a framework's
+`BaseStore`, an ORM, "application-chosen" — so a measurable part of the corpus
+is database-agnostic by design too. And **no arm named** counts reviews whose
+retrieval summary named neither a lexical nor a vector nor a graph channel,
+which is a gap in the review, not a system without retrieval.
+
+<!-- BEGIN GENERATED STACK -->
+
+| Stored in | Systems | | Retrieval arm | Systems |
+| --- | ---: | --- | --- | ---: |
+| SQLite | 108 | | Vector | 143 |
+| Files on disk | 88 | | Lexical | 109 |
+| Postgres | 47 | | Graph | 45 |
+| Delegated to the adopter | 25 | | No arm named in the review | 63 |
+| In-process only | 19 | |  |  |
+| Chroma | 17 | |  |  |
+| Qdrant | 14 | |  |  |
+| Graph database | 12 | |  |  |
+| Redis | 9 | |  |  |
+| LanceDB | 7 | |  |  |
+| Embedded key-value | 5 | |  |  |
+| Milvus | 4 | |  |  |
+| FAISS | 3 | |  |  |
+| MongoDB | 2 | |  |  |
+| Elasticsearch | 1 | |  |  |
+| Pinecone | 1 | |  |  |
+| DuckDB | 1 | |  |  |
+
+Counted across 238 reports, each of which may name more than one store. 0 of the 238 stack rows have been confirmed against the tree; the remaining 238 were derived from the review's own summary lines and carry `stack_source: "seeded"` until someone checks them.
+
+<!-- END GENERATED STACK -->

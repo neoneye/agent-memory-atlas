@@ -10,6 +10,9 @@ revision: f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
 revision_url: https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "lancedb, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A three-level memory — abstract, overview, content — with a category, a tier, a layer and a fact key"
   storage: "LanceDB as the single vector store, with metadata carried as a JSON string on each row"

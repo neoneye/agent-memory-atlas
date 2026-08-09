@@ -10,6 +10,9 @@ revision: 5424ea14dd9a848dcbcfb49586f348324999af88
 revision_url: https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88
 analyzed_at: 2026-08-09
 capabilities: "negative_eval, scope_enforced"
+stack_storage: "sqlite, graph, delegated"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact extracted from a captured conversation, plus graph triples and chunks"
   storage: "Local SQLite with FTS5 and vectors; a Neo4j adapter alongside"

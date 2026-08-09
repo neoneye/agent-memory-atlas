@@ -10,6 +10,9 @@ revision: 22ca10c21771d0192d550517cb06c3aab6e602aa
 revision_url: https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A chunk of text addressed by a `text_key` returned at insert, with optional metadata and a timestamp"
   storage: "In-process chunk queue over a simple vector database, serialised whole through `state_as_text` / `set_state`"

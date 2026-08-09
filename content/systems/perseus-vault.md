@@ -10,6 +10,9 @@ revision: 60d7ac4fc41bff182a6a53826f0b230bc6b9b785
 revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/60d7ac4fc41bff182a6a53826f0b230bc6b9b785
 analyzed_at: 2026-08-08
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 capability_evidence:
   tombstone: "entity store — remember-path write gate | src/db.rs | normalize_rejected_value + rejected_value_digest against rejected_value_tombstones | src/db.rs::rejected_value_tombstone_blocks_same_value_under_any_key_in_scope"
   trust_state: "entity store | src/models.rs | epistemic_state, schema v27 vocabulary candidate/verified/corroborated/rejected/defensively_recalled | src/db.rs::recall_filters_by_epistemic_state_on_all_paths"

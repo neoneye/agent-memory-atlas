@@ -10,6 +10,9 @@ revision: 1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
 revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
 analyzed_at: 2026-08-06
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "sqlite, graph, qdrant, files"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Bead (typed record) plus Claim (subject/slot/value) with claim updates"
   storage: "Session JSONL as live authority, rebuildable index projection; Qdrant, Kuzu, Neo4j, SQLite backends"

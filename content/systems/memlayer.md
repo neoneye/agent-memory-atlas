@@ -10,6 +10,9 @@ revision: 5e95f44061a867a5ac0caf53434240713d58b86a
 revision_url: https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "chroma"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An extracted fact or entity, in a vector store and a NetworkX graph"
   storage: "ChromaDB for vectors and NetworkX for the graph, or graph-only in lightweight mode"

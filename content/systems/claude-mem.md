@@ -10,6 +10,9 @@ revision: 132b46343e60ecf4057c427736c57b08f7615dfe
 revision_url: https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe
 analyzed_at: 2026-07-27
 capabilities: "scope_enforced"
+stack_storage: "sqlite, chroma"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Hook event, pending message, observation, session summary, prompt"
   storage: "Canonical SQLite, optional Chroma projection and cloud sync"

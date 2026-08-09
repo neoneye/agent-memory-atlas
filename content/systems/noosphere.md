@@ -10,6 +10,9 @@ revision: 8bb93ee67d46e661f47ab16a23d03c84a0bb08de
 revision_url: https://github.com/sweetsophia/noosphere/commit/8bb93ee67d46e661f47ab16a23d03c84a0bb08de
 analyzed_at: 2026-08-09
 capabilities: "tombstone, scope_enforced, human_review, audit_log"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A capture, promoted to a candidate, promoted to a wiki article with topics, revisions and scopes"
   storage: "Postgres through Prisma, with an optional hybrid embedding tier behind consent state"

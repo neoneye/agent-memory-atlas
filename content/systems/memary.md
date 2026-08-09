@@ -10,6 +10,9 @@ revision: b2331a2c0844d66f69acd607b9e4dbaba56552c1
 revision_url: https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "graph, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An entity mention with a timestamp, and an entity with a cumulative mention count; graph triplets underneath"
   storage: "Neo4j or FalkorDB for the graph, plus two flat JSON files for the streams"

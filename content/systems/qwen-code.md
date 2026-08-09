@@ -10,6 +10,9 @@ revision: 6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe
 revision_url: https://github.com/QwenLM/qwen-code/commit/6a432ad2ebce57b0b48cd3d6a8f4f7fab50c33fe
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced, human_review"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Auto-memory entry typed `user | feedback | project | reference`, with source refs"
   storage: "Markdown context files on disk; the team tier is committed to the repository"

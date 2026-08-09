@@ -10,6 +10,9 @@ revision: 3d032badc07335012ae6917e29ea16b8203252f5
 revision_url: https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5
 analyzed_at: 2026-07-29
 capabilities: "audit_log"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Four kinds of Markdown file — a psychological state index, a user profile, per-subject topic files, and a dated append-only diary"
   storage: "Plain files under `.soul/<character>/chats/<chat>/memory/`, with a rolling five-deep backup directory"

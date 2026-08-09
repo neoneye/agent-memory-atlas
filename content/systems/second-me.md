@@ -10,6 +10,9 @@ revision: d0e40251d9de61b3340b8d0d7d83150669f1885a
 revision_url: https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a
 analyzed_at: 2026-07-29
 capabilities: "human_review"
+stack_storage: "sqlite, chroma"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Three layers — a document with its raw content, a versioned biography and shades derived from it, and the model weights trained on both"
   storage: "SQLite for documents, chunks and the versioned L1 tables; ChromaDB for embeddings; GGUF files for the model"

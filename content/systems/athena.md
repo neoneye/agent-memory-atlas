@@ -10,6 +10,9 @@ revision: 2e4898e3bd28a79a58dc1b17437ace050bea2479
 revision_url: https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479
 analyzed_at: 2026-08-09
 capabilities: "audit_log"
+stack_storage: "postgres, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown file on disk — session logs, insights, case studies, protocols — indexed into SQLite"
   storage: "Plain Markdown as the source of truth, with a files/tags/links index and an optional Supabase tier"

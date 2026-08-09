@@ -10,6 +10,9 @@ revision: 0c446572ddaad588164af939f2e093441b06921f
 revision_url: https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, human_review"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An episodic row (session, summary, topics, entities, importance, sensitivity) or a semantic row (content, summary, category, tags, importance, sensitivity)"
   storage: "libSQL/SQLite with FTS, embeddings stored as blobs, and an optional mirrored vector backend"

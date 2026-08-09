@@ -10,6 +10,9 @@ revision: e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9
 revision_url: https://github.com/RBKunnela/ALMA-memory/commit/e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9
 analyzed_at: 2026-08-06
 capabilities: "trust_state, scope_enforced, audit_log"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "One of five typed rows — a heuristic, an outcome, a domain fact, an anti-pattern or a preference — each with its own columns and a 384-dimension embedding"
   storage: "Postgres with pgvector in the hosted schema and a local SQLite mirror; five tables plus indexes on `(project_id, agent)`"

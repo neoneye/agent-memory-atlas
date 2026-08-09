@@ -10,6 +10,9 @@ revision: 74de5d77a19774cfba53d6950d47633a2d632430
 revision_url: https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Skill Card — category, pattern, common confusion, key distinction, trigger keywords and up to three query templates — carrying its own retrieved, helpful and hurt counters"
   storage: "One detached Ray actor holding a Python list and a float32 matrix, persisted as `skills.jsonl` plus a per-update `skills_step_N.jsonl` snapshot and a `meta.json`"

@@ -10,6 +10,9 @@ revision: e005dede938832fd63d5097bbf5145228f693ce3
 revision_url: https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3
 analyzed_at: 2026-08-07
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `node` row with a kind — `memory`, doc chunk or code `symbol` — carrying uid, content, a normalized content hash, project id, JSON meta, `deleted_at` and `superseded_by`, joined by a typed `edge` table"
   storage: "One SQLite database with FTS5 over node text, an `embedding` table keyed by model and content hash, and migrations; no server process required"

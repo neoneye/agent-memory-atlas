@@ -10,6 +10,9 @@ revision: a681abf9623299bba8ad931e5d9af02fb6ef0997
 revision_url: https://github.com/MemMachine/MemMachine/commit/a681abf9623299bba8ad931e5d9af02fb6ef0997
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "sqlite, postgres, graph, qdrant, milvus, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Raw `Episode` (a conversation message) plus derived `SemanticFeature` — category, tag, feature name, value — carrying citations back to episode IDs"
   storage: "Episodes in SQLAlchemy (SQLite or Postgres); semantic features in Neo4j or Postgres/pgvector; vectors in sqlite-vec, Qdrant, Milvus or in-process hnswlib"

@@ -10,6 +10,9 @@ revision: f8378f98bb0d25128f473ab4e7c5cac829c22773
 revision_url: https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory with text, certainty, importance, valence, domain, source and an emotional state"
   storage: "A Rust server over SQLite with an HNSW vector index, a per-tenant commit log and pack files"

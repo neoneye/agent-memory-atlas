@@ -10,6 +10,9 @@ revision: f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b
 revision_url: https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A recorded entry with transcribed segments, plus derived profile facts, threads, pins and concepts above it"
   storage: "Postgres — entries, segments with a GIN full-text index, concepts, threads, profile facts, pins, daily summaries"

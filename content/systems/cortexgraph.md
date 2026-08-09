@@ -10,6 +10,9 @@ revision: 81a2daa3436f0923650eda9d84579cab54710408
 revision_url: https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory with a decaying strength, a use count, entities and a review schedule, plus typed relations"
   storage: "An append-only JSONL log or SQLite, with promoted memories written as Markdown into a vault"

@@ -1,41 +1,51 @@
 #!/usr/bin/env python3
-"""Extract the storage engine and retrieval arms each report describes.
+"""Count what each reviewed system stores memory in, and which retrieval arms it runs.
 
-The atlas can already answer "which systems have a tombstone" from declared
-frontmatter flags. It cannot answer "what do these systems store their memory
-in", which is the question most people arrive with and the one the build page
-deliberately refuses to answer for them. This script counts it.
+The atlas can already say which systems carry a tombstone, because every report
+declares its capability flags in frontmatter. It could not say what any of them
+stores memory in — that lived in a free-text `matrix.storage` line meant for a
+human reading one report, and the first version of this script mined it with
+substring rules.
 
-Two sources, kept apart on purpose:
+That was wrong in three ways at once and the fixes are recorded in the self-test:
+`graph` unanchored matched LangGraph, arms read from the storage line counted
+`pgvector` as a vector arm, and clause negation was invisible so "no lexical
+arm" counted as a lexical arm. Those bugs are the argument for this file's
+current shape: **the read path is frontmatter, not prose.**
 
-* **Declared.** A report may carry a `stack:` block in its frontmatter with
-  `storage:` and `retrieval:` lists drawn from the vocabularies below. That is a
-  reviewer's judgement at a pinned commit, the same standing as a capability
-  flag.
-* **Inferred.** Where the block is absent, the engine and arms are guessed by
-  substring rules over the free-text `matrix.storage` and `matrix.retrieval`
-  lines. This is a *summary of a summary* and it is wrong in both directions: a
-  report saying "application-chosen" may ship SQLite in its default path, and a
-  storage line that mentions a vector store in passing is counted as one.
+Each report declares two flat keys in the same quoted-comma shape the
+`capabilities:` flag already uses:
 
-The split is printed on every run rather than folded together, because a
-declared count and an inferred count look identical in a chart and only one of
-them is evidence. `--check` fails when the inferred share rises above a recorded
-floor, so back-filling can only move in one direction.
+    stack_storage: "sqlite, files"
+    stack_retrieval: "lexical, vector"
+    stack_source: "seeded"
+
+`stack_source` separates a value a reviewer confirmed against the tree
+(`reviewed`) from one derived from that report's own prose by `--seed`
+(`seeded`). Both render identically in a table, and only one is evidence, which
+is the same reason `check_claim_counts.py` exists. The seeded count can only
+fall: `--check` fails if it rises.
+
+Inference survives in exactly one place — `--seed`, which proposes values for a
+report that has none. It is never consulted at read time, so a report missing
+the keys is an error rather than a silent guess.
 
 What this deliberately does not do: rank engines, call a shape typical, or let a
 count stand as an argument about a mechanism. The project has a standing rule
-against adoption-as-evidence and a distribution is the most inviting possible
+against adoption-as-evidence, and a distribution is the most inviting possible
 way to break it.
 
 Usage:
-    extract_stack.py [root] [--list] [--proposal] [--json] [--check] [--self-test]
+    extract_stack.py [root] [--list] [--json] [--seed] [--write] [--render]
+                            [--check] [--self-test]
 
-    --list      one row per report: name, source, storage, retrieval
-    --proposal  emit the `stack:` block each undeclared report would get, for
-                review before pasting — never written automatically
-    --json      the distribution as JSON, for a generator to render
-    --check     fail if inferred coverage worsens against INFERRED_CEILING
+    --list     one row per report: name, source, storage, retrieval
+    --json     the distribution, for anything that wants to render it
+    --seed     print the keys each undeclared report would gain, for review
+    --write    write those keys into reports that lack them (seeded)
+    --render   regenerate the section in content/capabilities.md
+    --check    fail if a report lacks the keys, if the seeded count rose, or if
+               the rendered section is out of date
 """
 
 from __future__ import annotations
@@ -48,10 +58,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-#: Ordered because the first match wins for the primary label, and because a
-#: report naming both SQLite and Chroma is a SQLite system with a vector
-#: sidecar far more often than the reverse. Every value here is a *substring
-#: rule over prose*, not a schema.
+BEGIN = "<!-- BEGIN GENERATED STACK -->"
+END = "<!-- END GENERATED STACK -->"
+
+#: Controlled vocabulary. A value outside these lists is an error, because the
+#: point of the field is that two reports naming the same engine spell it the
+#: same way.
+STORAGE_VOCAB = [
+    "sqlite", "postgres", "files", "graph", "chroma", "qdrant", "lancedb",
+    "milvus", "weaviate", "pinecone", "faiss", "elastic", "redis", "mongo",
+    "duckdb", "kv", "memory", "delegated",
+]
+ARM_VOCAB = ["lexical", "vector", "graph"]
+
+STORAGE_LABELS = {
+    "sqlite": "SQLite", "postgres": "Postgres", "files": "Files on disk",
+    "graph": "Graph database", "chroma": "Chroma", "qdrant": "Qdrant",
+    "lancedb": "LanceDB", "milvus": "Milvus", "weaviate": "Weaviate",
+    "pinecone": "Pinecone", "faiss": "FAISS", "elastic": "Elasticsearch",
+    "redis": "Redis", "mongo": "MongoDB", "duckdb": "DuckDB",
+    "kv": "Embedded key-value", "memory": "In-process only",
+    "delegated": "Delegated to the adopter",
+}
+ARM_LABELS = {"lexical": "Lexical", "vector": "Vector", "graph": "Graph"}
+
+#: Seeding rules only. Ordered, first match wins nothing — every match counts,
+#: because a report may legitimately name two stores.
 STORAGE_RULES: list[tuple[str, str]] = [
     ("sqlite", r"sqlite|libsql|better-sqlite|node:sqlite|turso"),
     ("postgres", r"postgres|pgvector|supabase|pglite|\bneon\b|timescale"),
@@ -76,46 +108,51 @@ STORAGE_RULES: list[tuple[str, str]] = [
     ("delegated", r"application-chosen|adapters?\b|basestore|orm database|"
                   r"through the framework|abstractions|pluggable|configurable"),
 ]
-
-#: Retrieval arms. "hybrid" implies both without naming either, which is why it
-#: is a rule of its own rather than a synonym in each list.
 ARM_RULES: list[tuple[str, str]] = [
     ("lexical", r"bm25|fts5|\bfts\b|full[- ]text|tsvector|trigram|keyword|"
                 r"lexical|inverted index|ripgrep|\bgrep\b|like query|substring|"
                 r"exact match|exact-match|tag match|glob"),
     ("vector", r"vector|embedding|cosine|semantic|\bknn\b|k-nn|\bann\b|hnsw|"
                r"\bdense\b|similarity"),
-    # \bgraph\b, not `graph` — "LangGraph" is a framework name, not an arm, and
-    # the unanchored rule counted it as graph retrieval.
+    # \bgraph\b, not `graph` — "LangGraph" is a framework name, not an arm.
     ("graph", r"\bgraph\b|traversal|spreading activation|pagerank|\bbfs\b|"
               r"\bcypher\b|\bedges?\b"),
 ]
 HYBRID_RULE = r"hybrid"
 
 #: Clause openers that mean the arm named next is *absent*. Without this,
-#: "no lexical arm" counts as a lexical arm and "no embeddings, no search
-#: engine" counts as a vector one — three reports in the corpus said exactly
-#: that. Negation is scoped to the clause, so a later clause still counts.
+#: "no lexical arm" seeds a lexical arm.
 NEGATOR = re.compile(r"^\s*(?:no|without|neither|nor|nothing)\b", re.I)
 CLAUSE_SPLIT = re.compile(r"[;,.]|—|\s-\s")
+
+#: Reports whose stack was seeded from prose rather than confirmed against the
+#: tree. Lower it as reports are reviewed; --check fails if it rises.
+SEEDED_CEILING = 238
 
 
 def affirmative(text: str) -> str:
     """Drop clauses that deny the thing they name."""
     return " ".join(c for c in CLAUSE_SPLIT.split(text) if not NEGATOR.match(c))
 
-STORAGE_VOCAB = [name for name, _ in STORAGE_RULES]
-ARM_VOCAB = [name for name, _ in ARM_RULES]
 
-#: Reports whose stack is inferred rather than declared, as of the last time
-#: this floor was moved. --check fails if the number rises. It starts at the
-#: whole corpus because nothing is declared yet; lowering it is the point.
-INFERRED_CEILING = 238
+def front_of(text: str) -> str:
+    if not text.startswith("---\n"):
+        return ""
+    end = text.find("\n---\n", 3)
+    return text[4:end] if end != -1 else ""
 
 
-def parse_frontmatter(text: str) -> str:
-    match = re.match(r"\A---\n(.*?)\n---\n", text, re.S)
-    return match.group(1) if match else ""
+def flat_list(front: str, key: str) -> list[str] | None:
+    """Read `key: "a, b"`. None means the key is absent, which is not empty."""
+    match = re.search(rf'^{key}: "(.*)"$', front, re.M)
+    if not match:
+        return None
+    return [v.strip() for v in match.group(1).split(",") if v.strip()]
+
+
+def scalar(front: str, key: str) -> str | None:
+    match = re.search(rf'^{key}: "(.*)"$', front, re.M)
+    return match.group(1).strip() if match else None
 
 
 def matrix_field(front: str, field: str) -> str:
@@ -123,26 +160,8 @@ def matrix_field(front: str, field: str) -> str:
     return match.group(1) if match else ""
 
 
-def declared_stack(front: str) -> dict[str, list[str]] | None:
-    """Read an explicit `stack:` block. Absent is the normal case for now."""
-    block = re.search(r"^stack:\n((?:  \w+: \[.*\]\n)+)", front, re.M)
-    if not block:
-        return None
-    out: dict[str, list[str]] = {}
-    for key, raw in re.findall(r"^  (\w+): \[(.*)\]$", block.group(1), re.M):
-        values = [v.strip().strip('"\'') for v in raw.split(",") if v.strip()]
-        out[key] = values
-    return out
-
-
-def infer(storage_text: str, retrieval_text: str) -> dict[str, list[str]]:
-    """Arms come from the retrieval line only.
-
-    Reading arms out of the combined text counted `pgvector` in a storage line
-    as a vector arm, which inflates exactly the number a reader would quote.
-    An engine that implies an arm still has to say so where retrieval is
-    described.
-    """
+def seed(storage_text: str, retrieval_text: str) -> tuple[list[str], list[str]]:
+    """Propose values from a report's own prose. Never used at read time."""
     storage = [n for n, pat in STORAGE_RULES if re.search(pat, storage_text.lower())]
     haystack = affirmative(retrieval_text.lower())
     arms = [n for n, pat in ARM_RULES if re.search(pat, haystack)]
@@ -150,106 +169,121 @@ def infer(storage_text: str, retrieval_text: str) -> dict[str, list[str]]:
         for required in ("lexical", "vector"):
             if required not in arms:
                 arms.append(required)
-    return {"storage": storage, "retrieval": sorted(arms, key=ARM_VOCAB.index)}
+    return storage, sorted(arms, key=ARM_VOCAB.index)
 
 
-def read_reports(root: Path) -> list[dict]:
-    rows = []
+def read_reports(root: Path) -> tuple[list[dict], list[str]]:
+    rows, problems = [], []
     for path in sorted((root / "content" / "systems").glob("*.md")):
-        front = parse_frontmatter(path.read_text(encoding="utf-8"))
-        storage_text = matrix_field(front, "storage")
-        retrieval_text = matrix_field(front, "retrieval")
-        declared = declared_stack(front)
-        stack = declared or infer(storage_text, retrieval_text)
+        text = path.read_text(encoding="utf-8")
+        front = front_of(text)
+        storage = flat_list(front, "stack_storage")
+        arms = flat_list(front, "stack_retrieval")
+        source = scalar(front, "stack_source")
+        if storage is None or arms is None:
+            problems.append(f"{path.stem}: no stack_storage/stack_retrieval in frontmatter")
+            continue
+        if source not in ("seeded", "reviewed"):
+            problems.append(f"{path.stem}: stack_source is {source!r}, expected seeded or reviewed")
+        for value in storage:
+            if value not in STORAGE_VOCAB:
+                problems.append(f"{path.stem}: unknown storage value {value!r}")
+        for value in arms:
+            if value not in ARM_VOCAB:
+                problems.append(f"{path.stem}: unknown retrieval value {value!r}")
         rows.append({
-            "name": path.stem,
-            "source": "declared" if declared else "inferred",
-            "storage": stack.get("storage", []),
-            "retrieval": stack.get("retrieval", []),
-            "storage_text": storage_text,
-            "retrieval_text": retrieval_text,
+            "name": path.stem, "path": path, "source": source,
+            "storage": storage, "retrieval": arms,
+            "storage_text": matrix_field(front, "storage"),
+            "retrieval_text": matrix_field(front, "retrieval"),
         })
-    return rows
+    return rows, problems
 
 
 def distribution(rows: list[dict]) -> dict:
-    storage = Counter()
-    storage_declared = Counter()
-    arms = Counter()
-    combos = Counter()
+    storage, arms, combos = Counter(), Counter(), Counter()
     for row in rows:
         for value in row["storage"]:
             storage[value] += 1
-            if row["source"] == "declared":
-                storage_declared[value] += 1
         for value in row["retrieval"]:
             arms[value] += 1
-        combos[" + ".join(row["retrieval"]) or "(none named)"] += 1
+        combos[" + ".join(row["retrieval"]) or "none named"] += 1
     return {
         "total": len(rows),
-        "declared": sum(1 for r in rows if r["source"] == "declared"),
-        "inferred": sum(1 for r in rows if r["source"] == "inferred"),
-        "no_storage_matched": sum(1 for r in rows if not r["storage"]),
-        "no_arm_matched": sum(1 for r in rows if not r["retrieval"]),
+        "reviewed": sum(1 for r in rows if r["source"] == "reviewed"),
+        "seeded": sum(1 for r in rows if r["source"] == "seeded"),
+        "no_storage": sum(1 for r in rows if not r["storage"]),
+        "no_arm": sum(1 for r in rows if not r["retrieval"]),
         "storage": dict(storage.most_common()),
-        "storage_declared": dict(storage_declared),
         "arms": dict(arms.most_common()),
         "arm_combinations": dict(combos.most_common()),
     }
 
 
-def cooccurrence(rows: list[dict], engine: str, arm: str) -> tuple[int, int]:
-    """How many reports pair an engine with an arm, and how many name that arm alone."""
-    both = [r for r in rows if engine in r["storage"] and arm in r["retrieval"]]
-    solo = [r for r in both if r["retrieval"] == [arm]]
-    return len(both), len(solo)
-
-
-def render(rows: list[dict], dist: dict) -> None:
-    print(f"{dist['total']} reports — {dist['declared']} declared, "
-          f"{dist['inferred']} inferred from prose")
-    print()
-    print("storage engine named (a report may name more than one)")
-    for name, count in dist["storage"].items():
-        declared = dist["storage_declared"].get(name, 0)
-        suffix = f"  ({declared} declared)" if declared else ""
-        print(f"  {name:<11} {count:>4}{suffix}")
-    print(f"  {'(unmatched)':<11} {dist['no_storage_matched']:>4}")
-    print()
-    print("retrieval arms named")
-    for name, count in dist["arms"].items():
-        print(f"  {name:<11} {count:>4}")
-    print(f"  {'(unmatched)':<11} {dist['no_arm_matched']:>4}")
-    print()
-    print("arm combinations")
-    for name, count in dist["arm_combinations"].items():
-        print(f"  {name:<24} {count:>4}")
-    print()
-    both, solo = cooccurrence(rows, "sqlite", "lexical")
-    print(f"sqlite with a lexical arm: {both}, of which lexical-only: {solo}")
-    both, solo = cooccurrence(rows, "postgres", "vector")
-    print(f"postgres with a vector arm: {both}, of which vector-only: {solo}")
-
-
-def render_list(rows: list[dict]) -> None:
-    for row in rows:
-        print(f"{row['name']:<32} {row['source']:<9} "
-              f"{','.join(row['storage']) or '-':<28} "
-              f"{','.join(row['retrieval']) or '-'}")
-
-
-def render_proposal(rows: list[dict]) -> None:
-    """Emit what each undeclared report would gain. Never written for you."""
-    for row in rows:
-        if row["source"] == "declared":
+def write_seeds(root: Path) -> int:
+    """Add seeded keys to reports that have none. Existing values are never touched."""
+    written = 0
+    for path in sorted((root / "content" / "systems").glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        front = front_of(text)
+        if not front or flat_list(front, "stack_storage") is not None:
             continue
-        print(f"# {row['name']}")
-        print(f"#   storage:   {row['storage_text']}")
-        print(f"#   retrieval: {row['retrieval_text']}")
-        print("stack:")
-        print(f"  storage: [{', '.join(row['storage'])}]")
-        print(f"  retrieval: [{', '.join(row['retrieval'])}]")
-        print()
+        storage, arms = seed(matrix_field(front, "storage"),
+                             matrix_field(front, "retrieval"))
+        block = (f'stack_storage: "{", ".join(storage)}"\n'
+                 f'stack_retrieval: "{", ".join(arms)}"\n'
+                 f'stack_source: "seeded"\n')
+        anchor = re.search(r"^capabilities: \".*\"\n", front + "\n", re.M)
+        if anchor:
+            new_front = front.replace(anchor.group(0), anchor.group(0) + block, 1)
+        else:  # no capability line: sit above the matrix block instead
+            new_front = re.sub(r"^matrix:\n", block + "matrix:\n", front, count=1, flags=re.M)
+        path.write_text(text.replace(front, new_front, 1), encoding="utf-8")
+        written += 1
+    return written
+
+
+def render_section(dist: dict) -> str:
+    lines = [
+        BEGIN,
+        "",
+        "| Stored in | Systems | | Retrieval arm | Systems |",
+        "| --- | ---: | --- | --- | ---: |",
+    ]
+    # .get, not [] — an out-of-vocabulary value is reported by --check as a
+    # problem, and rendering it as its raw key beats crashing the build before
+    # the problem list is printed.
+    storage_rows = [(STORAGE_LABELS.get(k, k), v) for k, v in dist["storage"].items()]
+    arm_rows = [(ARM_LABELS.get(k, k), v) for k, v in dist["arms"].items()]
+    arm_rows.append(("No arm named in the review", dist["no_arm"]))
+    for index in range(max(len(storage_rows), len(arm_rows))):
+        left = storage_rows[index] if index < len(storage_rows) else ("", "")
+        right = arm_rows[index] if index < len(arm_rows) else ("", "")
+        lines.append(f"| {left[0]} | {left[1]} | | {right[0]} | {right[1]} |")
+    lines += [
+        "",
+        f"Counted across {dist['total']} reports, each of which may name more "
+        f"than one store. {dist['reviewed']} of the {dist['total']} stack rows "
+        f"have been confirmed against the tree; the remaining {dist['seeded']} "
+        "were derived from the review's own summary lines and carry "
+        '`stack_source: "seeded"` until someone checks them.',
+        "",
+        END,
+    ]
+    return "\n".join(lines)
+
+
+def write_render(root: Path, section: str) -> bool:
+    page = root / "content" / "capabilities.md"
+    text = page.read_text(encoding="utf-8")
+    if BEGIN in text and END in text:
+        new = re.sub(re.escape(BEGIN) + r".*?" + re.escape(END), section, text, flags=re.S)
+    else:
+        new = text.rstrip("\n") + "\n\n" + section + "\n"
+    if new == text:
+        return False
+    page.write_text(new, encoding="utf-8")
+    return True
 
 
 def self_test() -> int:
@@ -257,41 +291,45 @@ def self_test() -> int:
         ("One local SQLite file via `node:sqlite`", "BM25 fused with MiniLM cosine by RRF",
          ["sqlite"], ["lexical", "vector"], "sqlite plus both arms"),
         ("A single Postgres table on Supabase with pgvector HNSW", "Three lanes fused by RRF",
-         ["postgres"], [], "postgres recognised, arms unnamed in this line"),
+         ["postgres"], [], "pgvector in a storage line is not a retrieval arm"),
         ("Plain markdown in `brain/`", "ripgrep over the tree",
          ["files"], ["lexical"], "files plus lexical only"),
         ("LangGraph `BaseStore`", "framework default",
-         ["delegated"], [], "framework abstraction is its own category"),
+         ["delegated"], [], "LangGraph is a name, not a graph arm"),
         ("SQLite with FTS5", "hybrid search",
          ["sqlite"], ["lexical", "vector"], "hybrid implies both arms"),
         ("Neo4j, FalkorDB, Kuzu", "BFS across edges",
          ["graph"], ["graph"], "graph store and graph traversal"),
-        ("A vault", "Vector search with mandatory agent-scoped predicate; no lexical arm",
+        ("A vault", "Vector search with a scoped predicate; no lexical arm",
          ["files"], ["vector"], "a denied arm is not an arm"),
         ("A vault", "Section extraction by marker; no embeddings, no search engine",
          ["files"], [], "several denials in a row"),
         ("SQLite", "BM25 over FTS5 — no embeddings anywhere",
-         ["sqlite"], ["lexical"], "denial after an em dash still scopes to its clause"),
+         ["sqlite"], ["lexical"], "denial after an em dash scopes to its clause"),
     ]
     failures = []
     for storage_text, retrieval_text, want_storage, want_arms, label in cases:
-        got = infer(storage_text, retrieval_text)
-        if got["storage"] != want_storage:
-            failures.append(f"{label}: storage {got['storage']} != {want_storage}")
-        if got["retrieval"] != want_arms:
-            failures.append(f"{label}: arms {got['retrieval']} != {want_arms}")
+        got_storage, got_arms = seed(storage_text, retrieval_text)
+        if got_storage != want_storage:
+            failures.append(f"{label}: storage {got_storage} != {want_storage}")
+        if got_arms != want_arms:
+            failures.append(f"{label}: arms {got_arms} != {want_arms}")
 
-    declared = declared_stack("stack:\n  storage: [sqlite]\n  retrieval: [lexical, vector]\n")
-    if declared != {"storage": ["sqlite"], "retrieval": ["lexical", "vector"]}:
-        failures.append(f"declared block parsed as {declared}")
-    if declared_stack("title: x\n") is not None:
-        failures.append("absent stack block should read as None")
+    front = 'title: "x"\nstack_storage: "sqlite, files"\nstack_retrieval: "lexical"\n'
+    if flat_list(front, "stack_storage") != ["sqlite", "files"]:
+        failures.append("declared storage list misparsed")
+    if flat_list(front, "stack_retrieval") != ["lexical"]:
+        failures.append("declared arm list misparsed")
+    if flat_list(front, "stack_source") is not None:
+        failures.append("absent key must read as None, not empty")
+    if flat_list('stack_storage: ""\n', "stack_storage") != []:
+        failures.append('empty declared list must read as [], not None')
 
     for failure in failures:
         print(failure, file=sys.stderr)
     if failures:
         return 1
-    print(f"self-test: {len(cases) + 2} controls passed")
+    print(f"self-test: {len(cases) + 4} controls passed")
     return 0
 
 
@@ -301,9 +339,29 @@ def main() -> int:
         return self_test()
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     root = Path(args[0]) if args else ROOT
-    rows = read_reports(root)
+
+    if "--seed" in flags or "--write" in flags:
+        if "--write" in flags:
+            print(f"seeded {write_seeds(root)} reports")
+            return 0
+        for path in sorted((root / "content" / "systems").glob("*.md")):
+            front = front_of(path.read_text(encoding="utf-8"))
+            if flat_list(front, "stack_storage") is not None:
+                continue
+            storage, arms = seed(matrix_field(front, "storage"),
+                                 matrix_field(front, "retrieval"))
+            print(f'# {path.stem}\n#   {matrix_field(front, "storage")[:100]}')
+            print(f'stack_storage: "{", ".join(storage)}"')
+            print(f'stack_retrieval: "{", ".join(arms)}"')
+            print('stack_source: "seeded"\n')
+        return 0
+
+    rows, problems = read_reports(root)
+    if problems and "--check" not in flags:
+        for problem in problems[:10]:
+            print(problem, file=sys.stderr)
+        print(f"({len(problems)} problems; run --write to seed)", file=sys.stderr)
     if not rows:
-        print(f"no reports found under {root}/content/systems", file=sys.stderr)
         return 1
     dist = distribution(rows)
 
@@ -311,18 +369,47 @@ def main() -> int:
         print(json.dumps(dist, indent=2))
         return 0
     if "--list" in flags:
-        render_list(rows)
+        for row in rows:
+            print(f"{row['name']:<32} {row['source']:<9} "
+                  f"{','.join(row['storage']) or '-':<28} "
+                  f"{','.join(row['retrieval']) or '-'}")
         return 0
-    if "--proposal" in flags:
-        render_proposal(rows)
+    if "--render" in flags:
+        changed = write_render(root, render_section(dist))
+        print("stack section regenerated." if changed
+              else "stack section already up to date.")
         return 0
 
-    render(rows, dist)
-    if "--check" in flags and dist["inferred"] > INFERRED_CEILING:
-        print(f"\ninferred coverage worsened: {dist['inferred']} > "
-              f"{INFERRED_CEILING}; declare the stack or move the floor",
-              file=sys.stderr)
-        return 1
+    if "--check" in flags:
+        failures = list(problems)
+        if dist["seeded"] > SEEDED_CEILING:
+            failures.append(f"seeded rows rose to {dist['seeded']} > {SEEDED_CEILING}")
+        # Only compare the rendered section once the frontmatter is known good.
+        # A malformed value would otherwise be reported as a stale table.
+        if not failures:
+            page = (root / "content" / "capabilities.md").read_text(encoding="utf-8")
+            if render_section(dist) not in page:
+                failures.append("capabilities.md stack section is out of date; run --render")
+        for failure in failures:
+            print(failure, file=sys.stderr)
+        if failures:
+            return 1
+        print(f"{dist['total']} stack rows checked "
+              f"({dist['reviewed']} reviewed, {dist['seeded']} seeded).")
+        return 0
+
+    print(f"{dist['total']} reports — {dist['reviewed']} reviewed, {dist['seeded']} seeded")
+    print("\nstored in (a report may name more than one)")
+    for name, count in dist["storage"].items():
+        print(f"  {STORAGE_LABELS[name]:<26} {count:>4}")
+    print(f"  {'(none named)':<26} {dist['no_storage']:>4}")
+    print("\nretrieval arms")
+    for name, count in dist["arms"].items():
+        print(f"  {ARM_LABELS[name]:<26} {count:>4}")
+    print(f"  {'(none named)':<26} {dist['no_arm']:>4}")
+    print("\narm combinations")
+    for name, count in dist["arm_combinations"].items():
+        print(f"  {name:<26} {count:>4}")
     return 0
 
 

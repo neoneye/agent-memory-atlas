@@ -10,6 +10,9 @@ revision: 55e45a880755d0c8c66ca7fb5fe7962ac8974f89
 revision_url: https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "chroma, files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Executable JavaScript skill plus generated description"
   storage: "`skills.json` and flat files, Chroma index over descriptions"

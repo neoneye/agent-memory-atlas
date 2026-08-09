@@ -10,6 +10,9 @@ revision: 27df4b569cc26b25e75356322db72f6461939a66
 revision_url: https://github.com/arhuman/mnemos/commit/27df4b569cc26b25e75356322db72f6461939a66
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A chunk of a markdown document, addressed as file#section with a line range"
   storage: "SQLite from a single cgo-free Go binary; no vector database and no external service"

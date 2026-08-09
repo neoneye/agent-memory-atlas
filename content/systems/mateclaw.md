@@ -10,6 +10,9 @@ revision: 3643aed7564390f57906954286a443d5913b97a7
 revision_url: https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7
 analyzed_at: 2026-07-27
 capabilities: "scope_enforced"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Fact, recall record, workspace file, and dream report"
   storage: "Relational repositories with fact projections"

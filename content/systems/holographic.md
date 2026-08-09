@@ -10,6 +10,9 @@ revision: 0fa5e41c86f022bba147797849f0b44865721476
 revision_url: https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Flat fact row plus HRR phase vector and linked entities"
   storage: "Local SQLite (WAL) with FTS5 and per-category bundled banks"

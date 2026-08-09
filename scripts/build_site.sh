@@ -18,6 +18,10 @@ python3 "$project_dir/scripts/generate_matrix.py"
 # without appearing in it. See scripts/generate_index.py for why the page exists.
 python3 "$project_dir/scripts/generate_index.py"
 
+# The storage/retrieval census on the capability index, from the stack_* keys
+# each report declares. Regenerating is idempotent; --check enforces it in tests.
+python3 "$project_dir/scripts/extract_stack.py" --render >/dev/null
+
 rm -rf "$output_dir"
 mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/verdicts" "$output_dir/build" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 

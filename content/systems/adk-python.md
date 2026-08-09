@@ -10,6 +10,9 @@ revision: 6bab08fc803d26853417c4d6e71704b1a72e035e
 revision_url: https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "sqlite, memory"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryEntry` — a `types.Content` plus optional id, author, timestamp and custom metadata; the unit written is usually a whole session's events"
   storage: "Interface only. Ships an in-process dict, a Vertex AI Memory Bank client and a Vertex AI RAG client; sessions additionally have SQLite and database backends"

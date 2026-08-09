@@ -10,6 +10,9 @@ revision: e213bc5fc4000e9ad599c977a560113cc018c554
 revision_url: https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryEntry` — id, key, content, namespace, category, timestamp, session, score and a `MemoryTaint` provenance label; plus chunks, tree summaries and extracted `event_log` rows"
   storage: "SQLite plus on-disk markdown across seven primitives — raw, chunks, entities, trees, vectors, kv, contacts — with FTS5 and a git repository used as a derived diff ledger"

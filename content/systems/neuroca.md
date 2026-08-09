@@ -10,6 +10,9 @@ revision: b4d4198e0d102be9074aa3c74b660c6d4091cdf4
 revision_url: https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "sqlite, memory, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A MemoryItem with structured or raw content, a status, importance, strength and tier metadata"
   storage: "Pluggable backends behind a factory — in-memory, SQLite, vector — under three tiers"

@@ -10,6 +10,9 @@ revision: 69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 revision_url: https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 analyzed_at: 2026-08-05
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "sqlite, files"
+stack_retrieval: ""
+stack_source: "seeded"
 capability_evidence:
   scope_enforced: "conversation store (SQLite) | core/sessions/store.py | WHERE project_id = ? on the thread read path | unknown"
   audit_log: "conversation store (SQLite) | core/persistence/database.py | event_log, append-only with per-thread sequence heads | unknown"

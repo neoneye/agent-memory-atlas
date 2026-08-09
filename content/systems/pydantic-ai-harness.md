@@ -10,6 +10,9 @@ revision: 39ee7e08101c54b1ddf9c1e3a7f603f09ae34555
 revision_url: https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, postgres, memory"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown file. `MEMORY.md` is the notebook; other files hold focused notes, each versioned with a generation counter and a fingerprint"
   storage: "A `MemoryStore` Protocol with three implementations — in-memory, a directory of files with a SQLite sidecar, and Postgres — plus an optional `SearchableMemoryStore` extension"

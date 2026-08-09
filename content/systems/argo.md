@@ -10,6 +10,9 @@ revision: 9cd3e70fa28f4336b6df1181a771af9289f0f0f7
 revision_url: https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7
 analyzed_at: 2026-08-04
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "graph, files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An ArchiMate 3.2 element, relationship or view — 96, 140 and 47 of them in the committed graph"
   storage: "`design/KG/SystemArchitecture.json` is canonical; Neo4j is a projection rebuilt wholesale, plus a live vector index"

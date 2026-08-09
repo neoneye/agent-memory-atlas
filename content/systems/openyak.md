@@ -10,6 +10,9 @@ revision: bd88bff824c29fc48024eb19b7435cb2c065e432
 revision_url: https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced, human_review"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "One row per workspace directory holding a free-form plain-text document capped at 200 lines"
   storage: "A single SQLAlchemy table with a unique index on the normalised workspace path"

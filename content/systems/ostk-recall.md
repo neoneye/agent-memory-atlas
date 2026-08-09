@@ -10,6 +10,9 @@ revision: 5f25e8444219e6bec5eb080112a1150abe78657f
 revision_url: https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f
 analyzed_at: 2026-08-08
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review"
+stack_storage: "sqlite, lancedb"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 capability_evidence:
   trust_state: "claim store | crates/store/src/claims.rs | ClaimState active/disputed/superseded/suppressed/retracted/unsupported with is_current | crates/store/src/claims.rs::split_is_atomic_replayable_and_keep_false_suppresses_parent"
   bitemporal: "claim store | crates/store/src/claims.rs | valid_from and valid_to beside created_at and updated_at on memory_claims | unknown"

@@ -10,6 +10,9 @@ revision: 7cd214ff9107ae722555ed8c2688a6922d719e9e
 revision_url: https://github.com/dataojitori/nocturne_memory/commit/7cd214ff9107ae722555ed8c2688a6922d719e9e
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "graph"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A node in a memory graph addressed by a URI — core://domain/topic"
   storage: "A graph service over a relational store, namespaced per user or persona"

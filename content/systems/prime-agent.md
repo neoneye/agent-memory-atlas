@@ -10,6 +10,9 @@ revision: c98941a2a5cf40faecf9b4648ac3c304abf48fd3
 revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/c98941a2a5cf40faecf9b4648ac3c304abf48fd3
 analyzed_at: 2026-08-05
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 capability_evidence:
   scope_enforced: "session listing for resume and branch, not the refinement store | packages/coding-agent/src/core/session-manager.ts | sessionHeaderMatchesCwd | unknown"
   audit_log: "continual-refinement harness | packages/coding-agent/src/core/refinement/refinement.ts | appendGlobalRefinement writing harness/refinements.jsonl | unknown"

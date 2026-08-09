@@ -10,6 +10,9 @@ revision: cac4c0b387d55e0549636e031811fd3a7eec4d5f
 revision_url: https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f
 analyzed_at: 2026-08-09
 capabilities: "audit_log"
+stack_storage: "kv"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An experience with extracted entities, joined into a Hebbian graph of typed and co-occurrence edges"
   storage: "RocksDB — one instance per user, plus a shared column-family database for audit and cross-user state"

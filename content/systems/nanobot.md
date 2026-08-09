@@ -10,6 +10,9 @@ revision: b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 revision_url: https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Markdown durable files plus JSONL summary lines"
   storage: "`SOUL.md`, `USER.md`, `memory/MEMORY.md`, `history.jsonl`, git"

@@ -10,6 +10,9 @@ revision: 992dc090b347f31976316cfac885b097a26bb298
 revision_url: https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298
 analyzed_at: 2026-08-03
 capabilities: "audit_log, human_review"
+stack_storage: "chroma"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fragment or session summary carrying strength, stability, memory_type and consolidation_level"
   storage: "One ChromaDB collection plus a plain-text activity log; embeddings from a local all-MiniLM-L6-v2"

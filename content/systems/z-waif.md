@@ -10,6 +10,9 @@ revision: aaf905c12efcbd2a709a3b2285f55e554d47484f
 revision_url: https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A message pair — one user turn and one character turn — reduced to a list of word ids with the common words pruned out"
   storage: "Three JSON files under `RAG_Database/`: a word table with counts and values, per-pair word ids and scores, and the raw text"

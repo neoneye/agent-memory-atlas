@@ -10,6 +10,9 @@ revision: 56c9bed39957f615da0b66b5e1459281d8fd1fef
 revision_url: https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef
 analyzed_at: 2026-08-09
 capabilities: "trust_state, human_review"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row addressed by one or more (domain, path) pairs, chunked for retrieval, with derived gists, summaries and procedures above it"
   storage: "SQLite through SQLAlchemy, FTS5 for lexical, a vector table or sqlite-vec for dense, JSON snapshot files on disk"

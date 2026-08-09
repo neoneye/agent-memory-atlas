@@ -10,6 +10,9 @@ revision: 51f3342d5366b0e215439581f92e0323227146af
 revision_url: https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, postgres, redis"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Six typed rows — episodic event, semantic concept, procedural step, resource, knowledge-vault secret, core block — plus a raw_memory evidence table"
   storage: "Postgres with pgvector, or SQLite with FTS5; Redis Stack as a search-capable cache"

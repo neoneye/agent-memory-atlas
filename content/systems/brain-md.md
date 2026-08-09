@@ -10,6 +10,9 @@ revision: 5cecfdd4154687751f80e2d40f3a70a4fdca4543
 revision_url: https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543
 analyzed_at: 2026-08-07
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A markdown page with CLI-generated frontmatter, a `compiled_truth` section holding what is currently believed, and a `timeline` of append-only entries typed `decision | evidence | reversal | note`"
   storage: "Plain markdown in `brain/` inside the repository — six fixed root pages plus `pages/` — with an `index.md` regenerated rather than hand-kept, and a `brainRoot` redirect for a sidecar brain"

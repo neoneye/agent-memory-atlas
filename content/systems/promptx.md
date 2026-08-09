@@ -10,6 +10,9 @@ revision: 93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 revision_url: https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 analyzed_at: 2026-08-04
 capabilities: "scope_enforced"
+stack_storage: "sqlite, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An engram — content, a schema, a type, a timestamp and a strength — reachable through the cue words indexed against it"
   storage: "One `better-sqlite3` database per role under the role's own directory, plus a `network.json` and an anchor `state.json`"

@@ -10,6 +10,9 @@ revision: d60652a7058773fa9428fa720eda38942f12f014
 revision_url: https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Raw/compressed observation, versioned memory, summary, lesson, graph/semantic/procedural records"
   storage: "iii StateModule backed by local SQLite plus persisted search projections"

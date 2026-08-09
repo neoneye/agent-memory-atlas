@@ -10,6 +10,9 @@ revision: 08e3065b3f77dffa8ec313c25e6b38cbab77b67f
 revision_url: https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced, audit_log, human_review"
+stack_storage: "postgres, files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A lesson addressed by `(scope, key)` — a text value up to 64 KB with tags, `source_agent` and `trigger`"
   storage: "Supabase Postgres with row-level security and a generated FTS column; or a local two-tier Markdown store in the CLI"

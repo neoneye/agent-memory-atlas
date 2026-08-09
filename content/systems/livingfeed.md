@@ -10,6 +10,9 @@ revision: 9bdd464d570a493ba9125636f4cf01b6cff78bae
 revision_url: https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced"
+stack_storage: "qdrant, redis"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A consolidated episode — a summary under 500 characters, an importance float, the four factors that produced it, mandatory `source_event_ids`, and tags"
   storage: "Three layers — Redis lists for working memory, the event store as the permanent episodic original, Qdrant for the semantic index"

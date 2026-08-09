@@ -10,6 +10,9 @@ revision: 8fcadf6d8783869878a64d42aec3ed88f7f91a70
 revision_url: https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70
 analyzed_at: 2026-08-09
 capabilities: "trust_state"
+stack_storage: "files"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A two-tier memory — a headline always shown, full content expanded on demand"
   storage: "A filesystem-backed store with vectors and cosine similarity, no external service"

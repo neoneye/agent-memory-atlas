@@ -10,6 +10,9 @@ revision: 1052ac1a5dd0fde4da8693d4712064f7876c269c
 revision_url: https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Flat memory with source/pinned metadata; structured knowledge `ContextData`"
   storage: "Local Markdown under `.byterover/`, optional cloud sync"

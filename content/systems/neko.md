@@ -10,6 +10,9 @@ revision: 6a3d4beb7425261d01eb08034139d87bec03b8b5
 revision_url: https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb08034139d87bec03b8b5
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced, audit_log, negative_eval"
+stack_storage: "files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact or observation carrying independent reinforcement and disputation counters with separate decay clocks, plus a scope and a source"
   storage: "Per-character JSON views — facts, reflections, persona, directives — behind an append-only event log, with embeddings and archive shards"

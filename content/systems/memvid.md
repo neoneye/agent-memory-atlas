@@ -10,6 +10,9 @@ revision: e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 revision_url: https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 analyzed_at: 2026-07-28
 capabilities: "bitemporal, audit_log"
+stack_storage: ""
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Immutable frame; structured memory card keyed `entity:slot` with a cardinality"
   storage: "One `.mv2` file — payload, internal WAL, TOC, footer, lexical/vector/time indexes, no sidecars"

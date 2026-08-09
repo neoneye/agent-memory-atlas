@@ -10,6 +10,9 @@ revision: df44e76c6c6a919977806feed9549bc6a892932d
 revision_url: https://github.com/amitpatole/verel/commit/df44e76c6c6a919977806feed9549bc6a892932d
 analyzed_at: 2026-07-28
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "sqlite, delegated"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryRecord` fact/rule/schema/failure/skill"
   storage: "SQLite local plus backend adapters"

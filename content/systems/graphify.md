@@ -10,6 +10,9 @@ revision: 4fe11092ccbe9f543608f140c790f68d5d83cae4
 revision_url: https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4
 analyzed_at: 2026-07-31
 capabilities: "trust_state, negative_eval"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A Q&A doc — question, answer, cited source nodes, and an outcome of `useful | dead_end | corrected`"
   storage: "Markdown with YAML frontmatter under `graphify-out/memory/`, plus a derived `.graphify_learning.json` sidecar beside `graph.json`"

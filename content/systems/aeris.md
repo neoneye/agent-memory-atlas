@@ -10,6 +10,9 @@ revision: 68a2bd6d11a12beab705ce400e5c3a052d7f71db
 revision_url: https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db
 analyzed_at: 2026-08-07
 capabilities: "trust_state, scope_enforced, negative_eval"
+stack_storage: "sqlite, files, memory"
+stack_retrieval: ""
+stack_source: "seeded"
 capability_evidence:
   trust_state: "belief store | src/Aeris.Engine/BeliefData.cs | BeliefStatus | unknown"
   scope_enforced: "per-entity memory and belief stores | src/Aeris.Engine/MemoryRetrievalSystem.cs | per-entity dictionary key required on every read | unknown"

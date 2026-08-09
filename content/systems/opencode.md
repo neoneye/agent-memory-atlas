@@ -10,6 +10,9 @@ revision: 3cc70160deb0eda7f67fbf5b0c0780000f5c342d
 revision_url: https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d
 analyzed_at: 2026-07-28
 capabilities: ""
+stack_storage: "sqlite"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "None — sessions, messages, parts and todos; instruction files are read, not stored"
   storage: "SQLite via Drizzle: session, message, part, todo, project, workspace tables"

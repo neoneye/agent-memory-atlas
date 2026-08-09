@@ -10,6 +10,9 @@ revision: 5dacb73c3319fad338870916bfb30025af5cf39c
 revision_url: https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "postgres, graph, qdrant, redis, files, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A row in a memories table carrying lifecycle_state and lifecycle_revision, plus Pydantic domain models"
   storage: "Adapters for Qdrant, Memgraph, Valkey, Postgres and the filesystem, injected through a DI container"

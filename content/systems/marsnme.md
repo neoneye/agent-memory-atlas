@@ -10,6 +10,9 @@ revision: 3ed1b0bc7bbccfd40efd13df366d0f538d155316
 revision_url: https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "postgres"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row or a vault chunk, carrying an origin from a constrained allowlist"
   storage: "Postgres on Supabase with a schema per profile, plus a Cloudflare deployment"

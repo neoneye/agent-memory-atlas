@@ -10,6 +10,9 @@ revision: f555013dfccfc2c3d17ea78c15e038f7c8abd6a6
 revision_url: https://github.com/CodeAbra/iai-personal-memory-engine/commit/f555013dfccfc2c3d17ea78c15e038f7c8abd6a6
 analyzed_at: 2026-08-07
 capabilities: "human_review, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An episode captured verbatim, with superseded versions archived rather than replaced and retrievable afterwards, joined into a graph the sleep cycle clusters"
   storage: "Local SQLite with AES-256-GCM at rest, a Rust `lillibrain` crate beside the Python core, and no telemetry"

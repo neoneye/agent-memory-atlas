@@ -10,6 +10,9 @@ revision: f453eaa9683ea0a66b45c76275cb6576bcf14f73
 revision_url: https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73
 analyzed_at: 2026-07-30
 capabilities: "negative_eval"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `(kind, key)` fact carrying confidence, evidence_count, access_count and an expiry, plus a free-text episode"
   storage: "One local SQLite file via `node:sqlite`, vectors as JSON text in side tables; a separate Markdown vault the agent edits by prompt"

@@ -10,6 +10,9 @@ revision: 857bb5b4022fec641b0a511b82b0968a761a0d62
 revision_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "postgres, graph"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Statement or Entity node in Neo4j, with an ACT-R activation value derived from its access history"
   storage: "Neo4j for the graph and Postgres for configuration, cycle history and operational state"

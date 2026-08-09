@@ -10,6 +10,9 @@ revision: 6f462b8a5a5d8c33c1d624824668aff8ab67ebca
 revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca
 analyzed_at: 2026-07-31
 capabilities: "trust_state, human_review"
+stack_storage: "kv, files"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed LTM entry — discovery, problem-solution, code pattern, workflow or failure — with confidence, tier and corroboration sources"
   storage: "`.clio/ltm.json` per project, plus a YaRN conversation archive and a session key-value store; pure Perl, no CPAN, no database"

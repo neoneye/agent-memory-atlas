@@ -10,6 +10,9 @@ revision: 9e03b75a453118f4faf4ed3539279435e03bd603
 revision_url: https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603
 analyzed_at: 2026-07-31
 capabilities: "scope_enforced"
+stack_storage: "sqlite, chroma, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `Message` with a role, content, a `type` of `stm`, `ltm` or `profile`, and a per-conversation `memory_index`"
   storage: "Two parallel stacks: an in-process list, and SQLite plus a Chroma collection under `~/.membase/<account>/`; both mirror to a remote hub"

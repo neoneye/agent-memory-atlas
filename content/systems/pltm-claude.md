@@ -10,6 +10,9 @@ revision: 5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 revision_url: https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Two competing units — a subject/predicate/object atom, and a typed_memories row"
   storage: "SQLite; an atoms + provenance schema and a separate typed_memories schema with FTS"

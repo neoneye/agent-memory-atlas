@@ -10,6 +10,9 @@ revision: 945c78bc1554f8281aac40320b3599bd68d528d7
 revision_url: https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "redis, memory, delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Message in graded tiers; `Solution` with score and timestamp in the evolving population"
   storage: "In-memory or Redis for the population; pluggable storage for graded tiers"

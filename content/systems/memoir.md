@@ -10,6 +10,9 @@ revision: 868703a96fae8c9e058db3b04790229addeb7e93
 revision_url: https://github.com/zhangfengcdt/memoir/commit/868703a96fae8c9e058db3b04790229addeb7e93
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log, human_review"
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A timestamped facet entry at a semantic path like profile.professional.skills.python"
   storage: "A ProllyTree over a git object store, with a file backend as the alternative"

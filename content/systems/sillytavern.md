@@ -10,6 +10,9 @@ revision: 8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
 revision_url: https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A World Info entry: human-authored content plus primary and secondary keys, a logic mode, insertion position, order, depth and timed-effect settings"
   storage: "JSON lorebook files per world under the user's `worlds/` directory, plus a rolling summary in chat metadata"

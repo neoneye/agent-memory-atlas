@@ -10,6 +10,9 @@ revision: 02b59e5dc1c995cd47574af5eafb23395959ea03
 revision_url: https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03
 analyzed_at: 2026-07-28
 capabilities: ""
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "None of its own — a declared state directory belonging to a wrapped agent"
   storage: "Durable volume per agent; snapshots taken by `nemoclaw backup-all`"

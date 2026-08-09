@@ -10,6 +10,9 @@ revision: 9fdfc2ac09317881d0cdad6efd8b4859fc886323
 revision_url: https://github.com/CaviraOSS/OpenMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory assigned to one of five sectors — episodic, semantic, procedural, emotional, reflective"
   storage: "SQLite or Postgres with a vector store and a waypoint edge table"

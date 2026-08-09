@@ -10,6 +10,9 @@ revision: d45a7a08dfec155f38c0bed41d1159f7c6234fc1
 revision_url: https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Hindsight's units — source chunks, world and experience facts, observations, reflections"
   storage: "PostgreSQL with pgvector, in a per-user embedded instance the installer provisions"

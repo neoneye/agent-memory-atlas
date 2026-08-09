@@ -10,6 +10,9 @@ revision: bfb347bca53c1eaa0449d7acfebdefb29075fc23
 revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, delegated"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "`Memory` typed info, skill, episode, intent, todo, reflection or scratch, with typed edges"
   storage: "SQLite with owner/status columns and pluggable vector backends"

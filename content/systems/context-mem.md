@@ -10,6 +10,9 @@ revision: 2a55af0a4bf3467df89f1315a74bb2e15ad903f7
 revision_url: https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An observation from a tool call, plus knowledge rows and a derived markdown vault page"
   storage: "SQLite as the authoritative store, with a continuously synced markdown vault"

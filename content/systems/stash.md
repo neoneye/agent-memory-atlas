@@ -10,6 +10,9 @@ revision: d34ed430c4348ef741ef95146b488aea8616f4fb
 revision_url: https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb
 analyzed_at: 2026-08-09
 capabilities: "trust_state, scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A fact with an entity, a property and a value — plus hypotheses, goals and failures"
   storage: "Postgres with pgvector, migrations and a background consolidation worker"

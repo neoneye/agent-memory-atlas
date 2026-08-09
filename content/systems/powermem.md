@@ -10,6 +10,9 @@ revision: 9d1b48449345b1ec7af1144aa1b81bb776478851
 revision_url: https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An LLM-extracted memory row with retention metadata, plus distilled Experience and Skill records above it"
   storage: "SQLite, pgvector or OceanBase for memory; the skill and source stores are OceanBase only"

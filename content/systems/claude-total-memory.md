@@ -10,6 +10,9 @@ revision: 616d9a6f8b507c16b4cdfef4e823af59d949cc09
 revision_url: https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, scope_enforced, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A row in an append-only fact_assertions log, plus knowledge rows enriched by queue workers"
   storage: "SQLite with an append-only assertion log, a temporal knowledge graph and vector/BM25 indexes"

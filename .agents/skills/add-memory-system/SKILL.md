@@ -159,6 +159,28 @@ Review and update every applicable area:
   (`memory_unit`, `storage`, `retrieval`, `write`, `update_delete`, `scoping`,
   `integration`, `background`, `trust`, `strengths`, `risks`); fill every one,
   then run `npm run build`. `npm test` fails if the table is out of sync.
+- Storage census — three flat keys beside `capabilities:`, and the build fails
+  if they are missing:
+
+  ```yaml
+  stack_storage: "sqlite, files"
+  stack_retrieval: "lexical, vector"
+  stack_source: "reviewed"
+  ```
+
+  Vocabularies are fixed and listed in `scripts/extract_stack.py`; an unknown
+  value fails `npm test`. Name every store the system *itself* runs — a vector
+  sidecar counts, an adapter the adopter binds is `delegated`, and a system with
+  no store of its own gets `""`. Arms are `lexical`, `vector`, `graph`, and only
+  those the read path actually runs: a `pgvector` column is storage, not a
+  vector arm, unless retrieval queries it.
+
+  **Set `stack_source: "reviewed"` — you read the tree.** `"seeded"` marks the
+  238 rows back-filled from each report's own summary lines by
+  `extract_stack.py --seed` before this key existed; those are a guess with a
+  label on it, and the seeded count is only allowed to fall. If you re-analyse a
+  report carrying `"seeded"`, check the two lists against the code and promote
+  it while you are there.
 - Capability index — **do not edit that list either**. It is generated from the
   `capabilities:` key in the same frontmatter, and the build fails if the key is
   missing. Declare only what was found in code, against the definitions below.

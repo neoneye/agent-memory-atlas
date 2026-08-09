@@ -10,6 +10,9 @@ revision: da2766c5ebf45ff10440b419465c8ec0df674022
 revision_url: https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022
 analyzed_at: 2026-08-02
 capabilities: ""
+stack_storage: "graph"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Typed graph nodes — Entity, Facet, FacetPoint, Episode — plus a versioned Procedure built from key points and context points"
   storage: "A graph database with Cypher retrieval, alongside lexical and Jaccard retrievers and an episodic bundle store"

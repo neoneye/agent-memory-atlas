@@ -10,6 +10,9 @@ revision: 425bf2481b51437e43455e09d241c5f46e3d95f3
 revision_url: https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3
 analyzed_at: 2026-08-06
 capabilities: "bitemporal, scope_enforced"
+stack_storage: "graph"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Episode, entity, temporal relationship edge, community/saga"
   storage: "Neo4j, FalkorDB, Kuzu, Neptune"

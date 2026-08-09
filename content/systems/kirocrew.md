@@ -10,6 +10,9 @@ revision: 429cbad8cdb7bfbf4c10f6343374565832b176d2
 revision_url: https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2
 analyzed_at: 2026-08-06
 capabilities: "audit_log, human_review, negative_eval"
+stack_storage: "sqlite, faiss"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Two kinds — a semantic key-value entry under an allow-listed prefix, and an episodic conversation fragment with an embedding, tags and an importance score — beside three markdown files a person can read"
   storage: "`~/.kiro/crew/memory.db` in SQLite WAL with an optional FAISS index beside it, plus `preferences.md`, `projects.md` and dated `history/` files under the workspace directory"

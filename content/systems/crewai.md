@@ -10,6 +10,9 @@ revision: ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
 revision_url: https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, negative_eval"
+stack_storage: "sqlite, qdrant, lancedb"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryRecord` — content, a hierarchical `scope` path, categories, metadata, an `importance` float, `created_at`, `last_accessed`, a `source`, and a `private` flag"
   storage: "LanceDB by default, Qdrant Edge as an alternative, behind a `backend.py` contract; a separate SQLite store for kickoff task outputs"

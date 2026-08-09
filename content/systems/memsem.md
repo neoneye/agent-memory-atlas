@@ -10,6 +10,9 @@ revision: 16c28a940beac69fc060eb6bf5828061ad881d1a
 revision_url: https://github.com/WindSeries69/memsem/commit/16c28a940beac69fc060eb6bf5828061ad881d1a
 analyzed_at: 2026-08-05
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A subject/predicate/object triple with importance, confidence, frequency, tags, theme, an archived flag, a trust level, a short evidence string and a validity interval"
   storage: "One SQLite file via `node:sqlite`, six versioned migrations, plus history, edges, episodes, audit, candidate and suppression tables"

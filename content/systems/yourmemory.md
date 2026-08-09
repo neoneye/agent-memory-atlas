@@ -10,6 +10,9 @@ revision: 0bda3e0331e67b357832735f6beec3d3f7fb022e
 revision_url: https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite, postgres, duckdb"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row with an importance, a recall count and a type-dependent decay rate"
   storage: "Postgres, SQLite or DuckDB behind one connection layer, with a graph and embeddings"

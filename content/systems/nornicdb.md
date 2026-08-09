@@ -10,6 +10,9 @@ revision: a5f623399830d76e3e22e56264548c613ba897aa
 revision_url: https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa
 analyzed_at: 2026-08-09
 capabilities: "audit_log, scope_enforced"
+stack_storage: "kv"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A graph node or edge with properties and an optional vector, under a Neo4j-compatible model"
   storage: "Badger with MVCC snapshot isolation, an HNSW vector index and prefixed key spaces per index type"

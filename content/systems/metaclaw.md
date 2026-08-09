@@ -10,6 +10,9 @@ revision: 922caf3a1cd093fb316e95183a8acc8aa47b3b21
 revision_url: https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21
 analyzed_at: 2026-07-27
 capabilities: "scope_enforced"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryUnit` with type, status, importance, confidence, access count, reinforcement score"
   storage: "Store with embeddings, per-scope policies"

@@ -10,6 +10,9 @@ revision: 3aa3b8389896f81dd813fdf9176ef3ca122d809e
 revision_url: https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf9176ef3ca122d809e
 analyzed_at: 2026-08-09
 capabilities: ""
+stack_storage: ""
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An extracted memory with importance and lineage, indexed in an ANN structure"
   storage: "A local store with a dense embedder and a cross-encoder reranker, no external service"

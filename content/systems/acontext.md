@@ -10,6 +10,9 @@ revision: 259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 revision_url: https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced, human_review"
+stack_storage: "postgres"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "An agent skill — a directory of Markdown files with a SKILL.md the user defines the schema for"
   storage: "Postgres for skills, tasks, sessions and messages; a disk abstraction for the files themselves"

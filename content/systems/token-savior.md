@@ -10,6 +10,9 @@ revision: e41825f624d3513be7fdfb9146e35d265dbb1b06
 revision_url: https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite, files"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "An observation with a thirteen-value type vocabulary, from guardrail and ruled_out down to idea"
   storage: "SQLite with FTS5 and sqlite-vec, plus a JSON file holding the bandit's learned weights"

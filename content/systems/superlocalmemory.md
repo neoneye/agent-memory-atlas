@@ -10,6 +10,9 @@ revision: f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
 revision_url: https://github.com/qualixar/superlocalmemory/commit/f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
 analyzed_at: 2026-08-09
 capabilities: "audit_log, scope_enforced"
+stack_storage: "sqlite, files"
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An atomic fact typed episodic, semantic, opinion or temporal, with four date fields and an emotional pair"
   storage: "SQLite with a separate audit database, JSON-encoded embeddings, and a profile-scoped schema"

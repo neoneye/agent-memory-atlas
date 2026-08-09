@@ -10,6 +10,9 @@ revision: ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
 revision_url: https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A memory row with content, tags, an embedding, a type, a four-value state and a supersession pointer"
   storage: "Postgres with pgvector, TiDB and a third backend behind one repository interface"

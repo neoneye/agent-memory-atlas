@@ -10,6 +10,9 @@ revision: 6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d
 revision_url: https://github.com/virtual-context/virtual-context/commit/6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite, redis"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A segment — a compacted span of turns with a summary, full text, a primary tag and a tag set"
   storage: "SQLite with segments, a tag graph, per-tag summaries, engine state and a cost ledger; Redis for session state"

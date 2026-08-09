@@ -10,6 +10,9 @@ revision: 96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
 revision_url: https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
 analyzed_at: 2026-08-02
 capabilities: "trust_state"
+stack_storage: "files, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `Skill` — a section, keywords, an `issue`, an optional `insight`, its source occurrences, an `active` flag and four outcome counters"
   storage: "An in-process `Skillbook` serialised to JSON, embeddings excluded from the file and recomputed"

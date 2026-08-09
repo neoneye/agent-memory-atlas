@@ -10,6 +10,9 @@ revision: 637140a3a749f56a981cdb58d943f4fc1515c53b
 revision_url: https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b
 analyzed_at: 2026-07-31
 capabilities: "trust_state"
+stack_storage: ""
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "A typed TERSE object — Preference, Fact, Person, Decision, Pattern or OpenQuestion — with a required `as-of` and, for two kinds, a required `status`"
   storage: "One human-readable `.terse` file, queried and mutated through `terse-py`"

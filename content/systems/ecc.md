@@ -10,6 +10,9 @@ revision: 591ab5cbd3f2f65860ea91c226e410b1502c8e2e
 revision_url: https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e
 analyzed_at: 2026-07-29
 capabilities: "scope_enforced"
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown file with validated frontmatter — id, title, kind, scope, trust, status, sourceHarness, targetHarnesses, tags, links, timestamps, body"
   storage: "One `${id}.md` per memory under a per-scope vault root, with a trusted-boundary assertion on every read"

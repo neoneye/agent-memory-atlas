@@ -10,6 +10,9 @@ revision: f9fb3e934a459f814ac00fefb1819e675d2b5bce
 revision_url: https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced, audit_log"
+stack_storage: "postgres"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "Source chunk, world/experience fact, observation, reflection"
   storage: "PostgreSQL/pgvector or Oracle"

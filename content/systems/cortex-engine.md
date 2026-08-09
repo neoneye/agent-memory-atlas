@@ -10,6 +10,9 @@ revision: 6045c41933b1d496d43ac10bad67560c87cf1445
 revision_url: https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445
 analyzed_at: 2026-08-09
 capabilities: "audit_log"
+stack_storage: "sqlite, files"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "A node — observation, belief, question or hypothesis — in a namespaced graph"
   storage: "SQLite, Firestore or JSON behind one CortexStore interface, with atomic transactions"

@@ -10,6 +10,9 @@ revision: 5f8a724b8bd00b1b9e66765a8119096682b7a866
 revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/5f8a724b8bd00b1b9e66765a8119096682b7a866
 analyzed_at: 2026-08-04
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+stack_storage: "postgres, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A record with content and `normalized_content`, embedding, importance, confidence, sensitivity, status, source, weight, reinforcement count and revision"
   storage: "Postgres with pgvector and row-level security, or an in-memory store for keyless local runs"

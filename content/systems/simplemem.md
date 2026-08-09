@@ -10,6 +10,9 @@ revision: db80b6a7c591e0ea730a058e9f5fc4eb06572299
 revision_url: https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299
 analyzed_at: 2026-07-30
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite, lancedb"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryEntry` — a lossless restatement with pronouns resolved and times absolute, plus keywords, timestamp, location, persons, entities and topic"
   storage: "LanceDB behind a small vector-store wrapper for the text pillar; a separate SQLite schema with seven tables for EvolveMem"

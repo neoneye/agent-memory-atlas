@@ -10,6 +10,9 @@ revision: 7c7ebf36b5e1697001f92eed77c43e3d541decd7
 revision_url: https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
+stack_storage: "delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Store item, usually JSON memory"
   storage: "LangGraph `BaseStore`"

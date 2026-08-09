@@ -10,6 +10,9 @@ revision: ec48f997f3c2a700ae5a4cf0280792838fea81f8
 revision_url: https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8
 analyzed_at: 2026-07-30
 capabilities: ""
+stack_storage: "qdrant, redis, kv, files, memory"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryRecord` — a chat message plus its backend role, a UUID, a timestamp, an `extra_info` dict and an `agent_id`. Nothing is derived from the transcript"
   storage: "Key-value backends for chat history (in-memory, JSON file, Redis, Mem0 cloud) and a vector backend for recall (Qdrant by default)"

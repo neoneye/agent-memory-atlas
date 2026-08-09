@@ -10,6 +10,9 @@ revision: 6a7766d4ab957c52ca642ce672f293420ce8ef46
 revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/6a7766d4ab957c52ca642ce672f293420ce8ef46
 analyzed_at: 2026-08-09
 capabilities: "trust_state, negative_eval"
+stack_storage: ""
+stack_retrieval: "vector, graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An entry with content, a JSON tag array, a source and its derived vector ids"
   storage: "Cloudflare D1 for entries and edges, Vectorize for embeddings, KV for migration ledgers"

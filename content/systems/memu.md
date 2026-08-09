@@ -10,6 +10,9 @@ revision: c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
 revision_url: https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
 analyzed_at: 2026-08-04
 capabilities: ""
+stack_storage: "sqlite, postgres, memory, delegated"
+stack_retrieval: "vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "`RecallFile` on a memory or skill track, sliced into `RecallFileSegment` search units"
   storage: "Pluggable repositories over SQLite, Postgres, or in-memory"

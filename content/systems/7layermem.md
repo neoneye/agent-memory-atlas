@@ -10,6 +10,9 @@ revision: d3500bfd74b380585e8220f6c6f235c825bc803e
 revision_url: https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e
 analyzed_at: 2026-08-04
 capabilities: ""
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A row in one of seven typed tables — conversational turn, knowledge chunk, workflow, tool definition, entity, summary or tool-execution log"
   storage: "Seven SQLite tables created by `store_manager`, plus a hybrid BM25 and vector index over a separate RAG corpus"

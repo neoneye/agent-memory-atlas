@@ -10,6 +10,9 @@ revision: 583ddf190df809d7380afd6d07ee4095086773c2
 revision_url: https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, audit_log"
+stack_storage: "sqlite, postgres"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "A named node holding JSONB data and a 384-dimension vector, versioned by a validity interval"
   storage: "Postgres with pgvector and HNSW indexes, a SQLite fallback, or a proprietary native engine not in this tree"

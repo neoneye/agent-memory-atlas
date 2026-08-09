@@ -10,6 +10,9 @@ revision: 5d49be8f96b38051e2c0ed2435453d6d246d07e7
 revision_url: https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7
 analyzed_at: 2026-08-09
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
+stack_storage: "files"
+stack_retrieval: ""
+stack_source: "seeded"
 capability_evidence:
   tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
   trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"

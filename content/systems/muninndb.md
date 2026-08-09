@@ -10,6 +10,9 @@ revision: fc16e786970c7ef31a6e5244cfdca7980a341551
 revision_url: https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca7980a341551
 analyzed_at: 2026-08-07
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
+stack_storage: "kv"
+stack_retrieval: "graph"
+stack_source: "seeded"
 matrix:
   memory_unit: "An engram — a ULID-keyed record with a discrete `TrustLevel`, importance and two strengths, valid-from and valid-until, and typed edges to other engrams under a workspace prefix"
   storage: "Pebble key-value store with prefixed keyspaces, an archive tier for evicted edges, tiered caches, and replication and backup as first-class packages"

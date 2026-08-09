@@ -10,6 +10,9 @@ revision: ff19ffeafeb54bd2a7dc5d4a552f10191732a235
 revision_url: https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235
 analyzed_at: 2026-08-06
 capabilities: "scope_enforced"
+stack_storage: "delegated"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "Core memory block, archival passage, message"
   storage: "ORM database; passages with embeddings; optional git memory"

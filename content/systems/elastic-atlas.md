@@ -10,6 +10,9 @@ revision: 0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
 revision_url: https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
 analyzed_at: 2026-07-28
 capabilities: "scope_enforced"
+stack_storage: "elastic"
+stack_retrieval: "lexical, vector"
+stack_source: "seeded"
 matrix:
   memory_unit: "Document in one of three indices: episodic event, semantic fact, procedural playbook"
   storage: "Elasticsearch — `atlas_memory_episodic`, `atlas_memory_semantic`, `atlas_memory_procedural`"

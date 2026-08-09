@@ -10,6 +10,9 @@ revision: fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 revision_url: https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "files, memory"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "`ConceptNode` typed event, thought, or chat with poignancy"
   storage: "Per-persona JSON plus in-memory embedding dict"

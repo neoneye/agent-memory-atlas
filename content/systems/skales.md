@@ -10,6 +10,9 @@ revision: 128103e732465a00a2d2ab4bf7d322e32c17ad4d
 revision_url: https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d
 analyzed_at: 2026-07-29
 capabilities: ""
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "seeded"
 matrix:
   memory_unit: "An `ExtractedMemory` — id, category, content, source conversation id, extraction time, relevance keywords — plus tiered memory files and a soul profile of known facts"
   storage: "JSON files under `.skales-data/`: one per extracted memory, plus short-term, long-term and episodic files and the soul object"

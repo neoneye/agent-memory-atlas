@@ -10,6 +10,9 @@ revision: a597371bda2af70372d1323d550483b5f4a0ae36
 revision_url: https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36
 analyzed_at: 2026-07-27
 capabilities: ""
+stack_storage: "files, memory"
+stack_retrieval: ""
+stack_source: "seeded"
 matrix:
   memory_unit: "None — session-tree entry, not a memory record"
   storage: "JSONL session tree (`id`/`parentId`), swappable in-memory backend"
