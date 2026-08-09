@@ -130,9 +130,17 @@ backs the refusal.
 Bruch, Gai and Ingber studied precisely this configuration — one lexical arm, one
 semantic arm — three years before Akarsu. Their first move is the one that
 matters: they rewrite RRF with **one constant per arm**, η<sub>Lex</sub> and
-η<sub>Sem</sub>, and observe that RRF "is parametric and ... has as many
-parameters as there are retrieval functions to fuse", which is more parameters
-than the convex combination it is usually preferred to for being parameter-free.
+η<sub>Sem</sub>. In their words, they "adopt a parametric view of RRF where we
+have as many parameters as there are retrieval functions to fuse, a quantity
+that is always one more than that in a convex combination." The count checks
+out: *m* arms give RRF *m* constants, while convex weights on *m* scores have
+*m*−1 free values — for the two-arm case, two against α alone. So the method
+usually preferred for being parameter-free carries one parameter more than the
+one it is preferred over. Two caveats on that framing: the per-arm view is
+Bruch et al.'s deliberate re-parameterization, not Cormack's formula, which has
+a single shared *k* whatever the arm count; and the convex combination's count
+excludes normalization, which they argue is inconsequential because linear
+transforms give rank-equivalent solutions.
 They sweep both over {1, …, 100} on nine datasets — MS MARCO, NQ and Quora
 in-domain; NFCorpus, HotpotQA, FEVER, SciFact, DBPedia and FiQA zero-shot — and
 report that NDCG "swings wildly as a function of RRF parameters".
