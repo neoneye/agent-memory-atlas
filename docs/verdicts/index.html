@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 172 reports.</strong></p>
+<p><strong>This page covers all 177 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;172 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;177 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4137,6 +4137,133 @@ harness, and no LICENSE file despite an MIT badge.</li>
 documents, and you want updates to replace rather than pile up.</li>
 <li>Do not copy when: you need to know whether the ranking works;
 nothing here is measured.</li>
+</ul>
+<h3 id="wenlan"><a
+href="../systems/wenlan/"><code>wenlan</code></a></h3>
+<ul>
+<li>Best idea: a dismissed mind-map node keeps its row, so its derived
+fingerprint stays occupied under
+<code>UNIQUE(page_id, fingerprint)</code> and
+<code>ON CONFLICT DO NOTHING</code> makes every re-proposal a no-op —
+with the suggestion path a separate, insert-only accessor that "can
+never modify, resurrect, or overwrite a pinned/active/dismissed
+row".</li>
+<li>Biggest risk: that guarantee covers graph placement, not facts.
+Nothing stops the underlying claim being re-stored, and the page
+changelog that looks like a mutation history is a 20-entry FIFO.</li>
+<li>Most reusable component: <code>drift_guard.rs</code> — test-only
+teeth that parse the source with <code>syn</code> and fail CI on a
+documented-but-unwired flag or a duplicated definition, which is the
+exact class of defect several reports in this atlas exist to
+report.</li>
+<li>Maturity impression: 485,000 lines of Rust across five crates,
+Apache-2.0, a thirty-module evaluation subsystem with ranking goldens,
+and a committed benchmark table introduced by "This is a retrieval-only
+snapshot, not a claim about end-to-end answer quality."</li>
+<li>Study when: you need a rejected suggestion to stay rejected and want
+to see it done with a database constraint instead of a policy.</li>
+<li>Do not copy when: you want a component — this is a product with a
+desktop app, and the transferable part is 900 lines of
+<code>page_map.rs</code>.</li>
+</ul>
+<h3 id="kage"><a href="../systems/kage/"><code>kage</code></a></h3>
+<ul>
+<li>Best idea: staleness computed against per-symbol content hashes,
+resolved by name rather than by line, so moving a function does not
+invalidate a memory about it and an edit elsewhere in the same file does
+not either.</li>
+<li>Biggest risk: <code>scope</code> and <code>visibility</code> are
+stored with validated vocabularies and no read path compares against
+either — the isolation that exists comes from three separate
+directories, so a refactor merging the loaders would remove it without
+touching the field.</li>
+<li>Most reusable component: <code>benchmarkTrust</code> Gate 2 — write
+memories grounded in real files, confirm each is recallable, delete the
+files, assert each is gone, counting only the ones that were recallable
+first.</li>
+<li>Maturity impression: 108,000 lines of TypeScript on Google's Open
+Knowledge Format, GPL-3.0, 299 test declarations in one file, sixteen
+benchmark harnesses with no committed results — and an org audit log
+that is three functions with zero call sites.</li>
+<li>Study when: your memories are claims about code and you want a
+freshness verdict with no model in the path.</li>
+<li>Do not copy when: your memory is about people; there is nothing to
+hash.</li>
+</ul>
+<h3 id="icarus"><a
+href="../systems/icarus/"><code>icarus</code></a></h3>
+<ul>
+<li>Best idea: <code>verified</code> and <code>lifecycle</code> as
+separate fields with the reasoning in a comment — "verified is about
+provenance/trust, lifecycle is about freshness … so callers can combine
+them without overloading either" — backed by a legal-transition table in
+which <code>rolled_back</code> is terminal.</li>
+<li>Biggest risk: <code>verify(entry_id, verifier="manual")</code> takes
+an unvalidated string and is exposed as an MCP tool, so the agent that
+wrote an entry can verify it and record "manual" doing so.</li>
+<li>Most reusable component: <code>test_taint_safe_retrieval.py</code> —
+four statuses seeded, the default search asserted to return exactly the
+safe set, and <code>audit_search</code> asserted to return
+everything.</li>
+<li>Maturity impression: 3,000 lines of Python with 23 test files named
+after invariants rather than modules, Pydantic
+<code>extra="forbid"</code> on every model, and a README that says "PyPI
+release pending".</li>
+<li>Study when: you want a correctness-first memory small enough to read
+end to end and formal enough to reason about.</li>
+<li>Do not copy when: you need retrieval quality or tenancy; there is no
+benchmark and <code>project_id</code> is an optional filter.</li>
+</ul>
+<h3 id="omega-memory"><a
+href="../systems/omega-memory/"><code>omega-memory</code></a></h3>
+<ul>
+<li>Best idea: a genuine point-in-time filter — one batched negative
+query removing every candidate whose <code>valid_from</code> is after or
+<code>valid_until</code> at or before the requested instant — paired
+with a supersede that writes the validity bound and the status in the
+same statement.</li>
+<li>Biggest risk: <code>flagged_for_review</code> is set when the
+feedback score reaches −3 and nothing in the tree ever clears it, so a
+memory that later collects helpful ratings stays permanently invisible,
+because the retrieval filter tests the sticky flag rather than the
+score.</li>
+<li>Most reusable component: <code>forgetting_log</code> — an
+append-only deletion record with a reason vocabulary, indexed on reason
+and time, exposed to the agent as a queryable tool.</li>
+<li>Maturity impression: 17,300 lines of Python, Apache-2.0, 70 test
+files, a dead-letter queue for failed maintenance — and two
+self-reported LongMemEval figures inside one commit, 95.4% in
+<code>CITATION.cff</code> and 76.8% in the benchmark report, with no
+result artifact for either.</li>
+<li>Study when: you want the forgetting side of memory worked out —
+reasons, decay, dedup, delete propagation to a cloud copy.</li>
+<li>Do not copy when: you will act on the published numbers; the two in
+this repository disagree by 18.6 points.</li>
+</ul>
+<h3 id="octopoda-os"><a
+href="../systems/octopoda-os/"><code>octopoda-os</code></a></h3>
+<ul>
+<li>Best idea: tenant isolation as a Postgres row-level-security policy
+with both <code>USING</code> and <code>WITH CHECK</code> on five tables
+under a dedicated application role, so a query that forgets the
+predicate returns nothing rather than everything.</li>
+<li>Biggest risk: every update closes a version and inserts a new row,
+and no read path anywhere queries a point in time — a full history is
+written and nothing can ask for it, while the ephemeral write path
+deletes every version of a key.</li>
+<li>Most reusable component: <code>audit_v2/storage.py</code> — a
+per-tenant, per-agent SHA-256 chain over
+<code>(prev_hash + canonical event)</code>, living inside the memory
+table for the stated reason that the app role has no
+<code>CREATE TABLE</code> right.</li>
+<li>Maturity impression: 42,000 lines of Python with 32 test files
+including end-to-end tenant isolation, two CI workflows — and a split
+licence where the default native engine is proprietary, downloaded from
+another repository, and absent from the tree.</li>
+<li>Study when: you run many agents for many tenants and want the
+isolation enforced below the application.</li>
+<li>Do not copy when: you need to read or change how retrieval works at
+the default backend, or you need correction semantics of any kind.</li>
 </ul>
         </article>
       </div>

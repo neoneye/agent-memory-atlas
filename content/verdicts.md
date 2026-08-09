@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 172 reports.**
+**This page covers all 177 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["172 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["177 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1465,3 +1465,48 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: ~39,700 lines of TypeScript with 171 test files often named after the bug they pin, an unusually strict scope filter that denies null-scope rows — and no committed benchmark, no evaluation harness, and no LICENSE file despite an MIT badge.
 - Study when: your memory is facts about subjects rather than documents, and you want updates to replace rather than pile up.
 - Do not copy when: you need to know whether the ranking works; nothing here is measured.
+
+### [`wenlan`](../systems/wenlan/)
+
+- Best idea: a dismissed mind-map node keeps its row, so its derived fingerprint stays occupied under `UNIQUE(page_id, fingerprint)` and `ON CONFLICT DO NOTHING` makes every re-proposal a no-op — with the suggestion path a separate, insert-only accessor that "can never modify, resurrect, or overwrite a pinned/active/dismissed row".
+- Biggest risk: that guarantee covers graph placement, not facts. Nothing stops the underlying claim being re-stored, and the page changelog that looks like a mutation history is a 20-entry FIFO.
+- Most reusable component: `drift_guard.rs` — test-only teeth that parse the source with `syn` and fail CI on a documented-but-unwired flag or a duplicated definition, which is the exact class of defect several reports in this atlas exist to report.
+- Maturity impression: 485,000 lines of Rust across five crates, Apache-2.0, a thirty-module evaluation subsystem with ranking goldens, and a committed benchmark table introduced by "This is a retrieval-only snapshot, not a claim about end-to-end answer quality."
+- Study when: you need a rejected suggestion to stay rejected and want to see it done with a database constraint instead of a policy.
+- Do not copy when: you want a component — this is a product with a desktop app, and the transferable part is 900 lines of `page_map.rs`.
+
+### [`kage`](../systems/kage/)
+
+- Best idea: staleness computed against per-symbol content hashes, resolved by name rather than by line, so moving a function does not invalidate a memory about it and an edit elsewhere in the same file does not either.
+- Biggest risk: `scope` and `visibility` are stored with validated vocabularies and no read path compares against either — the isolation that exists comes from three separate directories, so a refactor merging the loaders would remove it without touching the field.
+- Most reusable component: `benchmarkTrust` Gate 2 — write memories grounded in real files, confirm each is recallable, delete the files, assert each is gone, counting only the ones that were recallable first.
+- Maturity impression: 108,000 lines of TypeScript on Google's Open Knowledge Format, GPL-3.0, 299 test declarations in one file, sixteen benchmark harnesses with no committed results — and an org audit log that is three functions with zero call sites.
+- Study when: your memories are claims about code and you want a freshness verdict with no model in the path.
+- Do not copy when: your memory is about people; there is nothing to hash.
+
+### [`icarus`](../systems/icarus/)
+
+- Best idea: `verified` and `lifecycle` as separate fields with the reasoning in a comment — "verified is about provenance/trust, lifecycle is about freshness … so callers can combine them without overloading either" — backed by a legal-transition table in which `rolled_back` is terminal.
+- Biggest risk: `verify(entry_id, verifier="manual")` takes an unvalidated string and is exposed as an MCP tool, so the agent that wrote an entry can verify it and record "manual" doing so.
+- Most reusable component: `test_taint_safe_retrieval.py` — four statuses seeded, the default search asserted to return exactly the safe set, and `audit_search` asserted to return everything.
+- Maturity impression: 3,000 lines of Python with 23 test files named after invariants rather than modules, Pydantic `extra="forbid"` on every model, and a README that says "PyPI release pending".
+- Study when: you want a correctness-first memory small enough to read end to end and formal enough to reason about.
+- Do not copy when: you need retrieval quality or tenancy; there is no benchmark and `project_id` is an optional filter.
+
+### [`omega-memory`](../systems/omega-memory/)
+
+- Best idea: a genuine point-in-time filter — one batched negative query removing every candidate whose `valid_from` is after or `valid_until` at or before the requested instant — paired with a supersede that writes the validity bound and the status in the same statement.
+- Biggest risk: `flagged_for_review` is set when the feedback score reaches −3 and nothing in the tree ever clears it, so a memory that later collects helpful ratings stays permanently invisible, because the retrieval filter tests the sticky flag rather than the score.
+- Most reusable component: `forgetting_log` — an append-only deletion record with a reason vocabulary, indexed on reason and time, exposed to the agent as a queryable tool.
+- Maturity impression: 17,300 lines of Python, Apache-2.0, 70 test files, a dead-letter queue for failed maintenance — and two self-reported LongMemEval figures inside one commit, 95.4% in `CITATION.cff` and 76.8% in the benchmark report, with no result artifact for either.
+- Study when: you want the forgetting side of memory worked out — reasons, decay, dedup, delete propagation to a cloud copy.
+- Do not copy when: you will act on the published numbers; the two in this repository disagree by 18.6 points.
+
+### [`octopoda-os`](../systems/octopoda-os/)
+
+- Best idea: tenant isolation as a Postgres row-level-security policy with both `USING` and `WITH CHECK` on five tables under a dedicated application role, so a query that forgets the predicate returns nothing rather than everything.
+- Biggest risk: every update closes a version and inserts a new row, and no read path anywhere queries a point in time — a full history is written and nothing can ask for it, while the ephemeral write path deletes every version of a key.
+- Most reusable component: `audit_v2/storage.py` — a per-tenant, per-agent SHA-256 chain over `(prev_hash + canonical event)`, living inside the memory table for the stated reason that the app role has no `CREATE TABLE` right.
+- Maturity impression: 42,000 lines of Python with 32 test files including end-to-end tenant isolation, two CI workflows — and a split licence where the default native engine is proprietary, downloaded from another repository, and absent from the tree.
+- Study when: you run many agents for many tenants and want the isolation enforced below the application.
+- Do not copy when: you need to read or change how retrieval works at the default backend, or you need correction semantics of any kind.

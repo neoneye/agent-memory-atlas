@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Tenant isolation enforced by
+Postgres row-level security instead of by remembering the WHERE clause,
+and a per-tenant hash-chained audit that lives inside the memory table
+because the app role cannot create one.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Octopoda — Agent Memory Atlas">
+    <meta property="og:description" content="Tenant isolation enforced
+by Postgres row-level security instead of by remembering the WHERE
+clause, and a per-tenant hash-chained audit that lives inside the memory
+table because the app role cannot create one.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Octopoda — Agent Memory Atlas">
+    <meta name="twitter:description" content="Tenant isolation enforced
+by Postgres row-level security instead of by remembering the WHERE
+clause, and a per-tenant hash-chained audit that lives inside the memory
+table because the app role cannot create one.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Octopoda — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">RLS as the trust wall</p>
+          <h1>Octopoda</h1>
+          <p class="document-deck">Tenant isolation enforced by Postgres
+row-level security instead of by remembering the WHERE clause, and a
+per-tenant hash-chained audit that lives inside the memory table because
+the app role cannot create one.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/RyjoxTechnologies/Octopoda-OS">
+              <span>Source</span>
+              <strong>RyjoxTechnologies/Octopoda-OS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2" title="583ddf190df809d7380afd6d07ee4095086773c2">
+              <span>Analyzed revision</span>
+              <code>583ddf19…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Octopoda is a memory and observability layer for AI agents: a Python
+SDK, an MCP server, a live dashboard, and a Postgres schema with
+pgvector. About 42,000 lines of Python across <code>synrix</code>,
+<code>synrix_runtime</code> and <code>octopoda_zf</code>.</p>
+<p><strong>The licence is split and a reader should know exactly where
+the line falls.</strong> <code>LICENSE</code> opens "MIT License (SDK
+Code Only)" and states that the "Native engine and binaries (including
+but not limited to <code>libsynrix*.dll</code>,
+<code>synrix-server</code>, and related executables) are proprietary",
+free under a 25,000-node evaluation tier and requiring a commercial
+licence above it. <code>synrix/engine.py</code> downloads that binary
+from a separate releases page; <strong>it is not in this
+tree</strong>.</p>
+<p>That would normally be the closed-mechanism exclusion. It is not,
+because the same repository ships <code>init.sql</code> and an 860-line
+<code>postgres_client.py</code> that implement the whole memory model in
+the open: the tables, the indexes, the write path, the version closing
+and every query. The native engine is one backend among three
+(<code>auto</code>, <code>sqlite</code>, <code>lattice</code>, plus
+<code>mock</code>), and the data model is fully readable. What cannot be
+inspected is how the proprietary engine performs the same
+operations.</p>
+<p><strong>The mechanism worth the report is where tenant isolation
+lives.</strong> Section 6 of <code>init.sql</code> is headed "ROW-LEVEL
+SECURITY — THE TRUST WALL". Five tables — <code>nodes</code>,
+<code>fact_embeddings</code>, <code>entities</code>,
+<code>relationships</code>, <code>tenant_settings</code> — get
+<code>ENABLE ROW LEVEL SECURITY</code> and a policy
+<code>FOR ALL TO octopoda_app</code> with both
+<code>USING (tenant_id = current_setting('app.tenant_id', TRUE))</code>
+<strong>and</strong> a matching <code>WITH CHECK</code>. The application
+sets <code>SET LOCAL app.tenant_id</code> per transaction.</p>
+<p>Most systems in this atlas enforce scope by remembering to add a
+predicate. Here a query that forgets the tenant returns nothing, and an
+insert that carries the wrong one is rejected — by the database, under a
+role that cannot bypass it. The
+<code>USING</code>/<code>WITH CHECK</code> pair matters:
+<code>USING</code> alone would let a tenant write a row they could then
+never read.</p>
+<p><strong>The audit log is hash-chained, and the reason it lives where
+it does is stated plainly.</strong>
+<code>synrix_runtime/audit_v2/storage.py</code> computes SHA-256 over
+<code>(prev_hash + canonical event)</code> per tenant and agent, so
+events form a tamper-evident chain. The rows are stored <strong>inside
+the <code>nodes</code> table</strong> rather than a dedicated one, and
+the header gives the reason: "the app-level DB role doesn't have CREATE
+TABLE rights on the managed Postgres instance. This keeps the v1
+deployment free of any admin-level schema changes." Audit events are
+written with <code>valid_until = 0</code> because they "are immutable",
+and the module asserts that the connection's effective tenant matches
+the tenant argument on every call.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>named node</strong> scoped to a tenant: a name,
+a JSONB payload, a JSONB metadata blob, a 384-dimension vector, and a
+validity interval of <code>valid_from</code>/<code>valid_until</code> as
+double-precision epoch seconds, where <code>valid_until = 0</code> means
+current.</p>
+<p>Updating a memory does not overwrite it. The write closes the
+previous version by stamping <code>valid_until</code>, then inserts a
+new row — and the unique index
+<code>(tenant_id, name, valid_from)</code> makes the version chain the
+primary key. Reads all carry <code>AND valid_until = 0</code>.</p>
+<p>Above the node sit two derived layers: <code>fact_embeddings</code>,
+holding LLM-extracted self-contained facts with their own vectors, and a
+knowledge graph of <code>entities</code> and <code>relationships</code>
+with a confidence float. Beside them sits an observability tier — the
+audit chain and a rule-based loop detector.</p>
+<pre class="mermaid"><code>flowchart TD
+    W[&quot;remember(name, data)&quot;] --&gt; FX{&quot;fact extraction configured?&quot;}
+    FX --&gt;|&quot;platform / ollama / openai / anthropic&quot;| F[&quot;decompose into self-contained facts&quot;]
+    FX --&gt;|none| E[&quot;embed the raw text&quot;]
+    F --&gt; E
+    E --&gt; C[&quot;UPDATE nodes SET valid_until = now&lt;br/&gt;WHERE tenant_id AND name AND valid_until = 0&quot;]
+    C --&gt; I[&quot;INSERT new row with valid_until = 0&quot;]
+    I --&gt; RLS{&quot;WITH CHECK: tenant_id matches app.tenant_id?&quot;}
+    RLS --&gt;|no| REJ[&quot;Postgres rejects the write&quot;]
+    RLS --&gt;|yes| OK[&quot;stored&quot;]
+    OK --&gt; R[&quot;every read: USING policy plus AND valid_until = 0&quot;]
+    R --&gt; H[&quot;the closed versions are retained&lt;br/&gt;and no query ever asks for them&quot;]</code></pre>
+<p>The last box is the finding. The write path is careful to preserve
+history; no read path in the tree asks for it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three deployment shapes from one SDK: a local SQLite backend, a
+Postgres deployment with pgvector, and the proprietary native engine.
+<code>synrix/engine.py</code> detects the platform and, when a download
+base URL is configured, fetches the binary.</p>
+<p><code>synrix_runtime</code> (27,500 lines) holds the runtime —
+<code>core/</code> with a daemon, garbage collection, heartbeats,
+recovery, a registry and a namespace module; <code>audit_v2/</code> with
+the hash chain, an async writer, framework/LLM/MCP/SDK hooks and a UI;
+<code>loop_intel_v2/</code> with the loop classifiers; a dashboard; and
+monitoring.</p>
+<p><code>loop_intel_v2</code> states its own contract in its package
+docstring, and it is a good contract: every classifier is "Rule-based
+(no LLMs in the detection path)", deterministic, versioned with a
+<code>rule_version</code> reported on every detection, unit-testable as
+a pure function of input events, and self-documenting with rule text
+explaining when it fires. Reporting the rule version alongside the
+verdict is what lets an operator tell a behaviour change from a rule
+change.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> —
+<code>synrix/postgres_client.py:300-320</code>: close the current
+version with
+<code>UPDATE nodes SET valid_until = %s WHERE tenant_id = %s AND name = %s AND valid_until = 0</code>,
+then insert the new row.</p>
+<p><strong>Fact extraction</strong> —
+<code>synrix/fact_extractor.py</code> decomposes text into
+self-contained facts before embedding, across five provider options
+(<code>platform</code>, <code>ollama</code>, <code>openai</code>,
+<code>anthropic</code>, <code>none</code>) with a documented fallback
+chain, claiming this moves semantic search quality "50% → 88%+".</p>
+<p><strong>Read</strong> — <code>query_prefix</code>, search and
+listing, each with <code>AND valid_until = 0</code>, under the RLS
+policy.</p>
+<p><strong>Audit</strong> —
+<code>audit_v2/async_writer.py:138-188</code>: warm
+<code>prev_hash</code> per <code>(tenant, agent)</code>, compute
+<code>this_hash</code>, write, chain forward, cache.</p>
+<p><strong>Isolation</strong> — <code>init.sql:194-225</code>, plus the
+per-call tenant assertion in <code>audit_v2/storage.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> is nine columns and it is the whole store:</p>
+<pre><code>nodes(id, tenant_id, name, data JSONB, metadata JSONB,
+      embedding vector(384), valid_from, valid_until, created_at)</code></pre>
+<p>with four indexes doing four different jobs: a unique index on
+<code>(tenant_id, name, valid_from)</code> enforcing one row per
+version, a partial index on
+<code>(tenant_id, name) WHERE valid_until = 0</code> for current
+lookups, a <code>text_pattern_ops</code> partial index for prefix
+search, an HNSW index on the vector, and a GIN index on the JSONB.
+Choosing partial indexes on the current-version predicate is the right
+call given every read carries it.</p>
+<p><code>fact_embeddings</code> links extracted facts back to their node
+by name, with a category and a collection. <code>entities</code> carries
+<code>first_seen</code>, <code>last_seen</code> and
+<code>mention_count</code> under a
+<code>UNIQUE(tenant_id, name, entity_type, collection)</code>;
+<code>relationships</code> carries a <code>confidence</code> float and
+cascades on entity deletion.</p>
+<p>There is no status field, no verification field and no trust state on
+a memory. The only epistemic number in the schema is
+<code>confidence</code> on a graph relationship.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three routes: prefix lookup over the <code>text_pattern_ops</code>
+index, JSONB containment over the GIN index, and cosine similarity over
+the HNSW vector index — on <code>fact_embeddings</code> as well as
+<code>nodes</code>, so a query can match an extracted fact rather than
+the whole memory.</p>
+<p>Every route filters <code>valid_until = 0</code>, and the RLS policy
+is applied by Postgres underneath. There is no reranker and no fusion in
+the inspectable path; the document count claim in the README is about
+breadth of integration rather than ranking sophistication, and this is a
+plain retrieval stack.</p>
+<p><strong>No read path takes a point in time.</strong>
+<code>valid_from</code> and <code>valid_until</code> are written on
+every update, indexed, and returned in some result rows — and searching
+the client for a comparison other than <code>valid_until = 0</code>
+finds none. So the store accumulates a full version history that nothing
+can query. This is the reason <code>bitemporal</code> is withheld: the
+storage is bi-temporal and the access is not, which is a different and
+more recoverable state than not tracking validity at all.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, and the version-closing update plus insert
+happen in one transaction, so a read can never see two current versions
+or none.</p>
+<p>The ephemeral path is deliberately different and worth knowing about:
+<code>add_node_ephemeral</code> runs
+<code>DELETE FROM nodes WHERE tenant_id = %s AND name = %s</code> —
+<strong>all</strong> versions, not just the current one — before
+inserting, with the comment "This keeps the table flat: exactly one row
+per ephemeral key". So a key written ephemerally has no history at all,
+and a key that was durable and is later written ephemerally loses the
+history it had.</p>
+<p>Nothing records a rejected value. A memory deleted or superseded can
+be written again immediately, and the audit chain records that it
+happened without preventing it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python SDK with three API levels (<code>Memory</code> for
+three-line usage, <code>SynrixAgentBackend</code> for the low-level
+client, <code>AgentRuntime</code> for the high-level runtime), an MCP
+server, LangChain integration, framework hooks, an OpenClaw skill and a
+dashboard that "runs locally and in the cloud".</p>
+<p>The observability tier is the product's own emphasis — loop
+detection, anomaly streams, per-agent scores — and it is instrumented
+through the same audit hooks that feed the chain, which is why the audit
+design is more developed than the memory design.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded, and it is the strongest instance in
+this atlas.</strong> Isolation is a database policy rather than an
+application convention. Five tables, <code>FOR ALL</code>, both
+<code>USING</code> and <code>WITH CHECK</code>, a dedicated application
+role, and a per-transaction <code>SET LOCAL</code>. A forgotten
+predicate returns nothing rather than everything, and
+<code>tests/test_e2e_tenant_isolation.py</code> exists to exercise it.
+The audit module adds a second belt, asserting the connection's
+effective tenant matches its argument.</p>
+<p><strong>Audit log — awarded.</strong> Per-tenant, per-agent SHA-256
+chain over <code>(prev_hash + canonical event)</code>, written
+asynchronously, with rows marked immutable. The candour about
+<em>why</em> it lives in <code>nodes</code> — no
+<code>CREATE TABLE</code> right on the managed instance — is worth as
+much as the mechanism: it is an honest record of a constraint, and it
+means the audit rows are subject to the same RLS as the memory they
+describe.</p>
+<p><strong>Bitemporal — withheld</strong>, for the reason in section
+6.</p>
+<p><strong>Trust state — no.</strong> No status, verification or review
+field on a node.</p>
+<p><strong>Human review — no.</strong> The dashboard displays fleet
+health, anomalies and loops; nothing there adjudicates memory
+content.</p>
+<p><strong>Tombstone — no.</strong> Supersession closes a version; the
+ephemeral path hard-deletes every version. Neither leaves a record keyed
+on the value.</p>
+<p><strong>Negative eval — no.</strong> 32 test files including tenant
+isolation, GC, the knowledge graph, the fact extractor and two audit
+suites; none asserts that particular material must not be retrieved. The
+isolation test is the closest — if it asserts that tenant B's query
+returns none of tenant A's rows it would be a boundary case in the
+atlas's sense, and I did not read it closely enough to claim that.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> No arXiv reference, DOI or citation
+file.</p>
+<p>32 files under <code>tests/</code>, including
+<code>test_e2e_tenant_isolation.py</code>,
+<code>test_full_audit.py</code>,
+<code>test_audit_bugfixes_3_1_12.py</code>,
+<code>test_knowledge_graph.py</code>, <code>test_gc.py</code>,
+<code>test_daemon.py</code>, <code>test_licensing.py</code>, a CI smoke
+test, a local-mode smoke test and a load-test runner. Two CI workflows
+are advertised in the README badges.</p>
+<p><strong>I did not run them.</strong> The screen flagged
+<code>tests/conftest.py</code> as executing on collection and an
+unpinned <code>pyproject.toml</code>; the tree was read, not installed.
+Running them would in any case exercise only the open backends, since
+the native engine is downloaded rather than committed.</p>
+<p>No retrieval benchmark is committed. The one quality claim in the
+tree is <code>fact_extractor.py</code>'s "Dramatically improves semantic
+search quality (50% → 88%+)", which appears in a docstring with no
+harness, dataset or result file behind it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put tenant isolation in the database, not in the
+query.</strong> RLS with a dedicated application role and
+<code>SET LOCAL</code> per transaction converts "every query must
+remember the predicate" into "the predicate cannot be forgotten". It is
+roughly thirty lines of DDL.</li>
+<li><strong>Pair <code>USING</code> with
+<code>WITH CHECK</code>.</strong> <code>USING</code> filters reads;
+without <code>WITH CHECK</code>, a caller can insert a row into another
+tenant that they will never be able to read — the worst possible
+failure, because nothing surfaces it.</li>
+<li><strong>Assert the connection's tenant inside the module
+too.</strong> A second check in application code costs nothing and
+catches a connection that was handed over without its setting.</li>
+<li><strong>Chain the audit per tenant and agent.</strong> SHA-256 over
+<code>(prev_hash + canonical event)</code> with the last hash cached in
+memory and warmed from the database on first use is cheap enough to run
+on every event.</li>
+<li><strong>Write down why the schema is shaped the way it is.</strong>
+"The app-level DB role doesn't have CREATE TABLE rights" is the sentence
+that stops the next maintainer refactoring the audit into its own table
+and breaking the deploy.</li>
+<li><strong>Use partial indexes on the current-version
+predicate.</strong> If every read carries
+<code>WHERE valid_until = 0</code>, the indexes should too.</li>
+<li><strong>Report the rule version with every rule-based
+verdict.</strong> <code>loop_intel_v2</code> does, and it is what lets
+an operator distinguish "the agent changed" from "the rules
+changed".</li>
+<li><strong>Extract self-contained facts before embedding.</strong>
+Embedding a decomposed fact rather than a paragraph is a well-supported
+move, and the five-provider fallback chain here degrades to raw text
+rather than failing.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not write a version history no query can read.</strong>
+Every update pays the cost of a second row and nothing can ask "what did
+this say last month". Either add the <code>valid_at</code> predicate —
+it is one comparison — or stop writing the interval.</li>
+<li><strong>Do not let one write path delete another's history.</strong>
+<code>add_node_ephemeral</code> removes <em>all</em> versions of a key,
+so a durable memory later written ephemerally loses its past
+silently.</li>
+<li><strong>Do not ship a quality claim with no harness.</strong> "50% →
+88%+" in a docstring is unverifiable from the repository.</li>
+<li><strong>Do not assume an open SDK means an open mechanism.</strong>
+The default backend here is a proprietary binary from another
+repository; the Postgres path is what makes this analysable, and a
+reader evaluating the product may not be running it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team running many agents in production that needs hard
+multi-tenant isolation and an audit trail, and that is comfortable with
+a commercial licence above the free node limit. The memory model itself
+is plain — named nodes, versions, vectors, an entity graph — and the
+value is in the operational layer around it.</p>
+<p>It is the wrong choice for anyone who wants to understand or modify
+how retrieval works at the default backend, and for anyone who needs
+correction semantics: there is no trust state, no review surface, and no
+rejected-value record.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What does the native engine do differently?</strong> The
+Postgres path is the readable one and may not be the one most
+deployments run. Whether the engine implements the same version
+semantics is not answerable from this tree.</li>
+<li><strong>Was the <code>valid_at</code> read removed or never
+written?</strong> The interval, the indexes and the unique constraint
+are all built for it.</li>
+<li><strong>Does the audit chain get verified anywhere?</strong> The
+write side computes and chains; a verifier walking the chain and
+reporting a break was not found.</li>
+<li><strong>What happens to the chain cache across processes?</strong>
+<code>_last_hash_cache</code> is per-process and warmed from the
+database on first use; two writers for the same
+<code>(tenant, agent)</code> racing on the tail was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and isolation</strong> — <code>init.sql</code>
+(<code>nodes</code> at <code>:69</code>, <code>fact_embeddings</code>
+<code>:106</code>, <code>entities</code> <code>:129</code>,
+<code>relationships</code> <code>:145</code>, the RLS section
+<code>:171-225</code>)</p>
+<p><strong>Memory client</strong> —
+<code>synrix/postgres_client.py</code> (version close and insert at
+<code>:300-320</code>, <code>add_node_ephemeral</code>
+<code>:360-390</code>, <code>query_prefix</code> <code>:392</code>),
+<code>synrix/memory.py</code>, <code>synrix/agent_memory.py</code>,
+<code>synrix/direct_client.py</code>, <code>synrix/client.py</code></p>
+<p><strong>The engine boundary</strong> — <code>LICENSE</code> (the
+proprietary-components section), <code>synrix/engine.py</code>,
+<code>synrix/licensing.py</code></p>
+<p><strong>Audit</strong> —
+<code>synrix_runtime/audit_v2/storage.py</code> (the chain and its
+rationale), <code>async_writer.py:138-188</code>,
+<code>models.py</code>, <code>trace.py</code>,
+<code>decisions.py</code>, <code>framework_hooks.py</code>,
+<code>llm_hooks.py</code>, <code>mcp_hooks.py</code>,
+<code>sdk_hooks.py</code></p>
+<p><strong>Loop detection</strong> —
+<code>synrix_runtime/loop_intel_v2/</code> (the contract in
+<code>__init__.py</code>)</p>
+<p><strong>Runtime</strong> — <code>synrix_runtime/core/</code>
+(<code>daemon.py</code>, <code>gc.py</code>, <code>heartbeat.py</code>,
+<code>namespace.py</code>, <code>recovery.py</code>,
+<code>registry.py</code>),
+<code>synrix_runtime/api/runtime.py</code></p>
+<p><strong>Extraction</strong> — <code>synrix/fact_extractor.py</code>,
+<code>synrix/extractor.py</code>, <code>synrix/embeddings.py</code></p>
+<p><strong>Integration</strong> — <code>octopoda/__init__.py</code>,
+<code>synrix/cloud.py</code>, <code>synrix/langchain/</code>,
+<code>synrix/integrations/</code>,
+<code>synrix_runtime/dashboard/</code>, <code>openclaw-skill/</code></p>
+<p><strong>Tests</strong> — <code>tests/</code> (32 files;
+<code>test_e2e_tenant_isolation.py</code>,
+<code>test_full_audit.py</code>,
+<code>test_audit_bugfixes_3_1_12.py</code>,
+<code>test_knowledge_graph.py</code>)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2"><code class="commit-id" title="583ddf190df809d7380afd6d07ee4095086773c2">583ddf19…</code></a>
+— first reading. Screened before reading: no auto-run surface,
+build-time execution in <code>tests/conftest.py</code>, one unpinned
+dependency surface. The tree was read, never installed, and no test was
+run. The proprietary native engine is not present in the tree and was
+not obtained.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

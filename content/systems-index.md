@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **172 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **177 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -97,12 +97,14 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## I
 
 - [`iai-pme`](../systems/iai-pme/) **iai-pme** — A tie, declared as a tie · `CodeAbra/iai-personal-memory-engine` · Human review, Negative evals
+- [`icarus`](../systems/icarus/) **Icarus** — Trust and freshness on separate axes · `esaradev/icarus-memory-infra` · Trust state, Mutation audit, Negative evals
 - [`intaris`](../systems/intaris/) **Intaris** — Memory about the agent, not the world · `fpytloun/intaris` · Scope enforced, Human review
 ## J
 
 - [`juggler`](../systems/juggler/) **Juggler** — A gitignored notebook with a delete button · `juggler-ai/juggler` · Human review
 ## K
 
+- [`kage`](../systems/kage/) **Kage** — Memory verified against the code · `kage-core/kage` · Trust state, Human review, Negative evals
 - [`kirocrew`](../systems/kirocrew/) **Kiro Crew** — Seven ways a write is refused · `kirodotdev/KiroCrew` · Mutation audit, Human review, Negative evals
 ## L
 
@@ -166,6 +168,8 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`npcpy`](../systems/npcpy/) **npcpy** — Memory that waits for a yes · `npc-worldwide/npcpy` · Trust state, Human review
 ## O
 
+- [`octopoda-os`](../systems/octopoda-os/) **Octopoda** — RLS as the trust wall · `RyjoxTechnologies/Octopoda-OS` · Scope enforced, Mutation audit
+- [`omega-memory`](../systems/omega-memory/) **OMEGA** — Local-first cross-model memory · `omega-memory/omega-memory` · Bi-temporal, Scope enforced, Mutation audit
 - [`omi`](../systems/omi/) **Omi** — Status decides what a memory may do · `BasedHardware/omi` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`open-cowork`](../systems/open-cowork/) **open-cowork** — Evaluated memory · `OpenCoworkAI/open-cowork` · Negative evals
 - [`openclaw`](../systems/openclaw/) **OpenClaw** — Host-runtime plugin memory · `openclaw/openclaw` · Scope enforced
@@ -225,6 +229,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## W
 
 - [`waku-agent`](../systems/waku-agent/) **Waku Agent** — Gated memory · `ShenSeanChen/waku-agent` · Human review
+- [`wenlan`](../systems/wenlan/) **Wenlan** — A living wiki over memory · `7xuanlu/origin` · Tombstone, Scope enforced, Human review
 ## Y
 
 - [`yesmem`](../systems/yesmem/) **YesMem** — Continuity for coding agents · `carsteneu/yesmem` · Scope enforced
