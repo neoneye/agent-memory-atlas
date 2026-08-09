@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 207 reports.**
+**This page covers all 208 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["207 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["208 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1780,6 +1780,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: roughly 63,000 lines of which 1,411 are this project's; no tests, no benchmark, a patcher defaulting to one machine's Windows path, and a documented warning that `pip install --upgrade` wipes the patches.
 - Study when: you are running Hindsight — read the patch file before you run it again.
 - Do not copy when: you are looking for a memory design; the mechanism here is upstream, and this project's contribution is the field report and the pruner.
+
+### [`gitmem`](../systems/gitmem/)
+
+- Best idea: a scar is refused at write time unless it carries at least two counter-arguments — and they are folded into the embedding text and returned on every search, so the objection travels with the claim to the point of use. Nothing else in this atlas requires a memory to argue against itself.
+- Biggest risk: `dismiss_suggestion` documents that "suggestions dismissed 3+ times are permanently suppressed", but dismissal sets `status = "dismissed"` and the matcher skips non-pending records, so the same topic creates a fresh suggestion at count 0. `dismissed_count` can never exceed 1 and the `< 3` guard is unreachable; the unit test asserts only the reachable branch.
+- Most reusable component: the refute-or-obey protocol — every surfaced scar answered with `APPLYING` (past-tense evidence and an artifact reference), `N_A` (scenario comparison) or `REFUTED` (risk acknowledgment), enforced by a `PreToolUse` hook that emits `{"decision":"block"}` on consequential Bash calls only.
+- Maturity impression: 59,000 lines of TypeScript, 82 test files across five vitest configs, and a `gitmem_scar_usage` table recording `reference_type` including `'none'`, `surfaced_at` against `acknowledged_at`, `execution_successful` and a `variant_id` — plus `repeat_mistake` linking a recurrence back to the scar that failed to prevent it.
+- Study when: your agent is shown memories and nothing records what it did about them.
+- Do not copy when: you want the dismissal suppression as written — key it on the embedding, not on a generated id.
+
 
 
 
