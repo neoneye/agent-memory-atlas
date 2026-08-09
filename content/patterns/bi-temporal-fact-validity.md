@@ -134,6 +134,30 @@ land a fact whose validity **precedes its own row**. If a backfill cannot expres
 "this was true from March, and I am only learning it now", the second time
 dimension is decorative no matter what the column is called.
 
+[Midas](../../systems/midas/) implements the smallest version that still answers
+the question. A retired belief keeps `superseded_at` in its metadata, `created_at`
+is caller-supplied so importers set it from the source turn, and `recall(as_of=)`
+walks the supersession chain to the version whose window contains the timestamp.
+`tests/test_bitemporal.py` pins it with three sequential launch dates and asserts
+that each `as_of` returns the belief that was current then. Two lines of state and
+a chain walk, with no graph database.
+
+[ClawMem](../../systems/clawmem/) carries the axis on its triple store rather than
+its documents: `entity_triples` holds `valid_from`, `valid_to` and `created_at`, a
+new assertion closes the old interval with `UPDATE ... SET valid_to` rather than
+overwriting, and the read path filters on the pair — surfaced as an MCP tool whose
+description is "what was true about X on date Y?". The uneven coverage is the
+sentence worth carrying: validity is tracked for the triples extracted from
+documents and not for the documents themselves.
+
+[memory-lancedb-pro](../../systems/memory-lancedb-pro/) separates two things most
+systems merge — `invalidated_at`, set when another fact supersedes this one, and
+`valid_until`, an expiry the fact carried from the start — with
+`isMemoryExpired` documented as "separate from `isMemoryActiveAt` (which checks
+`invalidated_at` from superseding)". It also refuses to store an incoherent
+interval: an `invalidated_at` earlier than `valid_from` is dropped rather than
+written.
+
 ## Tests to require
 
 - Backfilled old events ingested today.

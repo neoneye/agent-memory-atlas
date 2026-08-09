@@ -174,6 +174,35 @@ not the functions**: every function in CLIO's tier system is correct in
 isolation, and one test asserting that two corroborations promote an entry would
 have failed on the first run.
 
+[Memory Palace](../../systems/memory-palace/) is the atlas's clearest *procedural*
+instance and the one where the state reaches the read path hardest.
+`review_state` is `draft | human_reviewed | rejected`, validated on construction,
+and `recommend_for_trigger` returns only `human_reviewed` rows — the docstring
+calls this "the read-side enforcement of the draft-by-default invariant".
+`approve_draft` refuses a rejected row ("create a new draft instead of approving
+a rejection") and `increment_success` refuses anything not approved, "so the
+success counter truly reflects approved usage". The gap is the one this pattern
+always has to be checked for: nothing compares a new draft's `source_hashes`
+against rejected rows, so the state is durable for a row and not for a claim.
+
+Two systems in this atlas show the failure mode from opposite directions.
+[memory-lancedb-pro](../../systems/memory-lancedb-pro/) has the enum
+(`pending | confirmed | archived`) and a read-path gate on it, and then wrote the
+candidate state out of existence: every writer emits `confirmed`, four of them
+with the comment "write confirmed to unblock auto-recall". The gate survives over
+an empty population. [YesMem](../../systems/yesmem/) has the opposite half — a
+real trust *model* computed from use count, source and importance that downgrades
+a supersede to `pending_confirmation` — and no state machine to receive it:
+nothing reads or clears that value, so the correction is simply dropped. A trust
+state needs both the field and a transition somebody can make.
+
+[Midas](../../systems/midas/) is worth reading here as a deliberate non-instance.
+Its `provenance` field is a discrete four-value enum consulted on the decision
+path, and it is not a trust state: it records where a memory came from, not what
+anyone believes about it. Separating *authority* from *credence* turns out to be
+the more useful axis for gating actions, and conflating the two because the field
+is an enum is the easy mistake.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

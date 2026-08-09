@@ -127,6 +127,34 @@ what makes the committed negative cases possible.
 [Verel](../../systems/verel/) gates promotion rather than writing;
 [engram](../../systems/engram/) surfaces conflict candidates for judgment.
 
+[Midas](../../systems/midas/) applies the same idea one step later — a gateway on
+*use* rather than on write. `decide_memory_use` crosses a four-value provenance
+vocabulary with a four-value intended-use vocabulary: planning may rest on
+anything, an answer may not rest on an internal plan, and an external or
+destructive action requires `user_confirmation` and nothing else. Two refinements
+are worth lifting whole. A `forbidden_action` rule is stamped user-confirmed and
+would therefore be valid authorizing evidence, so it is explicitly excluded from
+the supporting set — "a prohibition is a gate, not an authorization" — and a live
+prohibition in the same evidence set *vetoes* any confirmation beside it, closing
+the approve-around attack. Currency is re-checked at the gate rather than trusted
+from recall, because, in the code's words, the guard "verifies currency itself
+rather than trusting recall to have filtered the stale record".
+
+[Memory Palace](../../systems/memory-palace/) shows the write-side version with a
+degradation rule most gateways lack. `write_guard` runs a semantic and a lexical
+search before a write and returns `ADD`, `UPDATE` or `NOOP` — and when the
+embedding provider has degraded to a hash fallback, it returns `NOOP` with the
+reason instead of a decision. A duplicate gate that falls through to "not a
+duplicate" whenever its evidence is bad is the failure this avoids.
+
+[ClawMem](../../systems/clawmem/) gates the *destructive* branch on the quality of
+the classifier that would select it: `resolveEffectiveContradictionPolicy`
+downgrades a configured `supersede` policy to a non-deactivating `link` whenever
+no audited judge is configured, warns once per process, and emits a
+`merge_supersede_blocked` audit event per occurrence. The comment gives the
+reason — "an unaudited heuristic whose number-mismatch score sits exactly at the
+default action threshold must never select deactivation".
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.

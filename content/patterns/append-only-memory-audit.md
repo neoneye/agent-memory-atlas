@@ -310,6 +310,33 @@ about *values*. If you want both, put the old value in the log or keep the
 version — deciding you have history because you have an audit log is the failure
 this entry exists to name.
 
+[Midas](../../systems/midas/) is the strong form: `audit_log` rows carry
+`prev_hash` and their own `hash`, `verify_audit_log` walks the chain, and the rows
+store a `content_sha` rather than content — so the log proves a mutation happened
+without retaining what was mutated, which is what makes it compatible with
+erasure rather than in tension with it. Beside it, `forgetting_receipt` produces
+an erasure certificate keyed on `sha256(id\x00content)`, "enough to later prove a
+specific item was erased, not enough to reconstruct it". The receipt is returned
+to the caller and never persisted or consulted, which is why it proves forgetting
+and cannot prevent the value returning.
+
+[ClawMem](../../systems/clawmem/) shows the motivation stated plainly: `judge_runs`
+and `judge_events` exist because "interactive hosts do not persist hook stderr, so
+these rows are the only durable evidence erosion calibration can read". A provider
+failure that falls back to a heuristic writes two rows linked by
+`fallback_from_run_id`, committed atomically before the heuristic verdict is used;
+there is no `UPDATE` against either table anywhere in the tree, and the only
+`DELETE` is retention pruning that cascades the pair as a unit.
+
+[Memory Palace](../../systems/memory-palace/) is the counterexample and worth
+knowing about before trusting a schema. Migration 0004 creates `access_log` as
+"the L0 layer" persisting read, write, search-hit and compact events "used by the
+forgetting engine, reflection workflow, and observability dashboards", with two
+indexes, a paired rollback, an ORM class and a dashboard counter. Nothing inserts
+into it. Every artifact of an audit trail is present except the write, and the
+forgetting engine named as its consumer works from denormalised counters on the
+memory row instead.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

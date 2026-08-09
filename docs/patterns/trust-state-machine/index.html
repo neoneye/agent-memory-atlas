@@ -282,6 +282,41 @@ change</strong> — <code>// 'unknown'</code> is the whole defect. And
 CLIO's tier system is correct in isolation, and one test asserting that
 two corroborations promote an entry would have failed on the first
 run.</p>
+<p><a href="../../systems/memory-palace/">Memory Palace</a> is the
+atlas's clearest <em>procedural</em> instance and the one where the
+state reaches the read path hardest. <code>review_state</code> is
+<code>draft | human_reviewed | rejected</code>, validated on
+construction, and <code>recommend_for_trigger</code> returns only
+<code>human_reviewed</code> rows — the docstring calls this "the
+read-side enforcement of the draft-by-default invariant".
+<code>approve_draft</code> refuses a rejected row ("create a new draft
+instead of approving a rejection") and <code>increment_success</code>
+refuses anything not approved, "so the success counter truly reflects
+approved usage". The gap is the one this pattern always has to be
+checked for: nothing compares a new draft's <code>source_hashes</code>
+against rejected rows, so the state is durable for a row and not for a
+claim.</p>
+<p>Two systems in this atlas show the failure mode from opposite
+directions. <a
+href="../../systems/memory-lancedb-pro/">memory-lancedb-pro</a> has the
+enum (<code>pending | confirmed | archived</code>) and a read-path gate
+on it, and then wrote the candidate state out of existence: every writer
+emits <code>confirmed</code>, four of them with the comment "write
+confirmed to unblock auto-recall". The gate survives over an empty
+population. <a href="../../systems/yesmem/">YesMem</a> has the opposite
+half — a real trust <em>model</em> computed from use count, source and
+importance that downgrades a supersede to
+<code>pending_confirmation</code> — and no state machine to receive it:
+nothing reads or clears that value, so the correction is simply dropped.
+A trust state needs both the field and a transition somebody can
+make.</p>
+<p><a href="../../systems/midas/">Midas</a> is worth reading here as a
+deliberate non-instance. Its <code>provenance</code> field is a discrete
+four-value enum consulted on the decision path, and it is not a trust
+state: it records where a memory came from, not what anyone believes
+about it. Separating <em>authority</em> from <em>credence</em> turns out
+to be the more useful axis for gating actions, and conflating the two
+because the field is an enum is the easy mistake.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

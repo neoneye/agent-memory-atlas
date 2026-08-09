@@ -219,6 +219,39 @@ makes the committed negative cases possible.</p>
 <p><a href="../../systems/verel/">Verel</a> gates promotion rather than
 writing; <a href="../../systems/engram/">engram</a> surfaces conflict
 candidates for judgment.</p>
+<p><a href="../../systems/midas/">Midas</a> applies the same idea one
+step later — a gateway on <em>use</em> rather than on write.
+<code>decide_memory_use</code> crosses a four-value provenance
+vocabulary with a four-value intended-use vocabulary: planning may rest
+on anything, an answer may not rest on an internal plan, and an external
+or destructive action requires <code>user_confirmation</code> and
+nothing else. Two refinements are worth lifting whole. A
+<code>forbidden_action</code> rule is stamped user-confirmed and would
+therefore be valid authorizing evidence, so it is explicitly excluded
+from the supporting set — "a prohibition is a gate, not an
+authorization" — and a live prohibition in the same evidence set
+<em>vetoes</em> any confirmation beside it, closing the approve-around
+attack. Currency is re-checked at the gate rather than trusted from
+recall, because, in the code's words, the guard "verifies currency
+itself rather than trusting recall to have filtered the stale
+record".</p>
+<p><a href="../../systems/memory-palace/">Memory Palace</a> shows the
+write-side version with a degradation rule most gateways lack.
+<code>write_guard</code> runs a semantic and a lexical search before a
+write and returns <code>ADD</code>, <code>UPDATE</code> or
+<code>NOOP</code> — and when the embedding provider has degraded to a
+hash fallback, it returns <code>NOOP</code> with the reason instead of a
+decision. A duplicate gate that falls through to "not a duplicate"
+whenever its evidence is bad is the failure this avoids.</p>
+<p><a href="../../systems/clawmem/">ClawMem</a> gates the
+<em>destructive</em> branch on the quality of the classifier that would
+select it: <code>resolveEffectiveContradictionPolicy</code> downgrades a
+configured <code>supersede</code> policy to a non-deactivating
+<code>link</code> whenever no audited judge is configured, warns once
+per process, and emits a <code>merge_supersede_blocked</code> audit
+event per occurrence. The comment gives the reason — "an unaudited
+heuristic whose number-mismatch score sits exactly at the default action
+threshold must never select deactivation".</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 167 reports.**
+**This page covers all 172 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["167 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["172 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1420,3 +1420,48 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 public alpha, but the memory corner is disciplined — a directory `FileLock` with atomic replace, 0700/0600 with the octal explained, a signature-keyed parse cache, and twenty extraction tests whose useful cases are negative.
 - Study when: you run automatic extraction over transcripts that contain your own tool output, your own demo data, or credentials — all three are addressed here and most systems address none.
 - Do not copy when: you need to explain why the agent believes something; there is no provenance field, no trust state and no mutation record once the gate has passed.
+
+### [`clawmem`](../systems/clawmem/)
+
+- Best idea: an offline eval with hand-labelled gold that measured the composite ranking stack against the raw channel score, found raw cosine at MRR 0.912 against the composite's 0.307, and shipped the negative result as the default — metadata now breaks exact ties and nothing else.
+- Biggest risk: `invalidated_at` is a hard predicate on both retrieval legs with no query-time signal, so a wrong contradiction verdict removes a document from search with nothing to lead a user to look; the project documents this and ships the mechanism disarmed.
+- Most reusable component: `resolveEffectiveContradictionPolicy` — twenty lines that downgrade a destructive supersede to a non-destructive link when no audited judge is configured, loudly and with an audit event.
+- Maturity impression: 34,000 lines of TypeScript across 55 files, 84 unit test files, a 22-column migration ladder on the central table, four integration surfaces, and committed eval artifacts for three judge configurations.
+- Study when: you have built a composite relevance score and never checked it against the raw channel score.
+- Do not copy when: you need a memory two people can share — the isolation boundary is "use a different vault file".
+
+### [`memory-palace`](../systems/memory-palace/)
+
+- Best idea: procedural memory that is `draft` until a person approves it, with the default enforced three ways — a validated `review_state` enum, `recommend_for_trigger` returning only `human_reviewed` rows, and `NOT NULL` provenance columns so a bypassing caller cannot write a provenance-less row.
+- Biggest risk: the rejection is keyed on the row. `extract_pattern` computes `source_hashes` for every draft and never compares them to rejected rows, so a reviewer's "no" survives exactly until the next extraction over the same sources.
+- Most reusable component: `write_guard` — a pre-write duplicate check returning ADD/UPDATE/NOOP that returns `NOOP` with a degradation reason when the embedding provider is untrustworthy, rather than falling through to "not a duplicate".
+- Maturity impression: ~98,000 lines of Python, 84 test files, eight migrations each with a paired rollback and a dry-run gate, a React dashboard with a real review surface — and an `access_log` table that is created, indexed, modelled, counted in the UI and written by nothing.
+- Study when: derived memory must not reach an agent until a person has seen it.
+- Do not copy when: you need multi-tenancy; `domain` is an optional filter and the maintenance API key is an operator boundary, not a user one.
+
+### [`midas`](../systems/midas/)
+
+- Best idea: a deterministic gate on what memory may *authorize* — a provenance vocabulary crossed with an intended-use vocabulary, where an external or destructive action requires `user_confirmation`, a superseded belief cannot justify anything, and a live prohibition vetoes any confirmation in the same evidence set.
+- Biggest risk: the gate believes the provenance stamp, and in an MCP deployment the caller writing `user_confirmation` is the agent — the project states this is out of scope for the guard.
+- Most reusable component: `eval/memory_safety.py` — ten adversarial cases plus four benign controls, scored as attack-success rate *and* benign-pass rate together so that blocking everything cannot look safe.
+- Maturity impression: ~18,700 lines of Python with 58 test files, a TypeScript port, a hash-chained audit log with a verifier, and a benchmark document that publishes five experiments which did not help.
+- Study when: an agent can take an irreversible action and your memory currently has no say in whether it may.
+- Do not copy when: you need whole-conversation summarisation — it is listed as out of scope by design, and measured.
+
+### [`yesmem`](../systems/yesmem/)
+
+- Best idea: supersession resistance graded by a trust score computed from use count, stated source and importance, so a user-stated learning the agent has relied on forty times is not silently overwritten by one LLM extraction.
+- Biggest risk: the confirmation that gate depends on does not exist. `supersede_status = 'pending_confirmation'` is written at two sites and read by nothing — no query, no CLI command, no tool, no clear — so the highest-trust learnings are the only ones whose corrections are discarded.
+- Most reusable component: `quarantine_session` — one statement that removes an entire noisy session's learnings from vector search, BM25, associations and embedding refresh, reversibly.
+- Maturity impression: ~188,000 lines of Go with 355 test files and a LoCoMo run against a community-corrected dataset that also publishes the non-agentic score — beside a 55-column memory table carrying two more mechanisms wired in one direction only.
+- Study when: you want correction to cost more for memories that have earned trust, and you will finish the loop.
+- Do not copy when: you need memory that is current within the session; extraction is asynchronous and the briefing shows the state as of the last pass.
+
+### [`memory-lancedb-pro`](../systems/memory-lancedb-pro/)
+
+- Best idea: `fact_key` — correction keyed on what a memory is *about*, derived from category plus text when the extractor does not supply one, with a scoped collision scan that supersedes the previous value instead of accumulating statements.
+- Biggest risk: the `pending` state was written out of existence. Four extractor sites set `state: "confirmed"` with the comment "write confirmed to unblock auto-recall", so an LLM admission score is the only filter, and a rejected candidate leaves no record to be judged against next time.
+- Most reusable component: `computeTier1Patch` — three unconfirmed injections suppress a memory from auto-recall for thirty minutes, and a day without an injection resets the counter, in three integers and no model call.
+- Maturity impression: ~39,700 lines of TypeScript with 171 test files often named after the bug they pin, an unusually strict scope filter that denies null-scope rows — and no committed benchmark, no evaluation harness, and no LICENSE file despite an MIT badge.
+- Study when: your memory is facts about subjects rather than documents, and you want updates to replace rather than pile up.
+- Do not copy when: you need to know whether the ranking works; nothing here is measured.

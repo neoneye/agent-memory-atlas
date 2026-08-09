@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **167 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **172 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -46,6 +46,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`cambium`](../systems/cambium/) **Cambium** — A standard, not a store · `KimGLee/Cambium` · Trust state, Human review
 - [`camel`](../systems/camel/) **CAMEL** — Message store with vector recall · `camel-ai/camel`
 - [`claude-mem`](../systems/claude-mem/) **Claude-Mem** — Hook-native coding-agent memory · `thedotmack/claude-mem` · Scope enforced
+- [`clawmem`](../systems/clawmem/) **ClawMem** — On-device vault for coding agents · `yoloshii/clawmem` · Bi-temporal, Scope enforced, Mutation audit
 - [`clio`](../systems/clio/) **CLIO** — Corroboration tiers in pure Perl · `SyntheticAutonomicMind/CLIO` · Trust state, Human review
 - [`cognee`](../systems/cognee/) **Cognee** — Knowledge-graph memory control plane · `topoteretes/cognee` · Scope enforced
 - [`cognicore`](../systems/cognicore/) **CogniCore** — Candidate-to-verified memory with a utility ledger · `cognicore-dev/cognicore-my-openenv` · Trust state, Scope enforced
@@ -133,6 +134,8 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review
 - [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced
 - [`memory-engine`](../systems/memory-engine/) **Memory Engine** — Agents as principals · `timescale/memory-engine` · Bi-temporal, Scope enforced
+- [`memory-lancedb-pro`](../systems/memory-lancedb-pro/) **memory-lancedb-pro** — OpenClaw memory plugin · `CortexReach/memory-lancedb-pro` · Bi-temporal, Scope enforced
+- [`memory-palace`](../systems/memory-palace/) **Memory Palace** — Draft-by-default procedural memory · `agi-is-going-to-arrive/memory-palace` · Trust state, Human review
 - [`memory-project`](../systems/memory-project/) **memory-project** — Associative decay memory for a coding agent · `acdesigntech/memory-project` · Mutation audit, Human review
 - [`memoryops-ai`](../systems/memoryops-ai/) **MemoryOps AI** — Governed memory as a runtime · `patibandlavenkatamanideep/memoryops-ai` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`
@@ -143,6 +146,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memvid`](../systems/memvid/) **Memvid** — Rewindable memory · `memvid/memvid` · Bi-temporal, Mutation audit
 - [`mercury-agent`](../systems/mercury-agent/) **Mercury Agent** — Graded personal memory · `cosmicstack-labs/mercury-agent` · Human review
 - [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
+- [`midas`](../systems/midas/) **Midas** — A guard on memory-justified action · `vornicx/Midas` · Bi-temporal, Scope enforced, Mutation audit, Negative evals
 - [`mimir`](../systems/mimir/) **Mimir** — One graph, three node kinds · `MakerViking/mimir` · Scope enforced, Negative evals
 - [`minecontext`](../systems/minecontext/) **MineContext** — Prospective memory, inferred · `volcengine/MineContext`
 - [`mirix`](../systems/mirix/) **MIRIX** — Multi-agent typed memory · `Mirix-AI/MIRIX` · Scope enforced, Negative evals
@@ -221,6 +225,9 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## W
 
 - [`waku-agent`](../systems/waku-agent/) **Waku Agent** — Gated memory · `ShenSeanChen/waku-agent` · Human review
+## Y
+
+- [`yesmem`](../systems/yesmem/) **YesMem** — Continuity for coding agents · `carsteneu/yesmem` · Scope enforced
 ## Z
 
 - [`z-waif`](../systems/z-waif/) **Z-Waif** — It caps its own voice in its own query · `SugarcaneDefender/z-waif`

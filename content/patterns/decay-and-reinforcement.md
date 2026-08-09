@@ -248,6 +248,28 @@ the contested verdict stable. A decay function whose output feeds a *classificat
 needs to be deterministic across machines in a way one that only feeds a ranking
 does not.
 
+[memory-lancedb-pro](../../systems/memory-lancedb-pro/) adds the signal this
+pattern usually lacks: a *negative* one that is not just the absence of a
+positive. `computeTier1Patch` counts injections that were never confirmed as
+used; three of them suppress the memory from auto-recall for thirty minutes, and
+twenty-four hours without an injection resets the counter on the stated reasoning
+that "this memory is being needed again". The threshold is deliberately not
+configurable and the comment explains the distinction — three strikes is "a
+behavioral design choice that should hold across deployments" while the windows
+around it are operational tuning. Only the automatic injection path feeds the
+counters, so a memory the user fetches deliberately never accrues strikes.
+
+[ClawMem](../../systems/clawmem/) is the cautionary instance, and the measurement
+is committed. Its composite score blended recency decay, content-type half-lives,
+co-activation reinforcement, confidence, quality and revision count — and an
+offline eval against hand-labelled gold found raw cosine ranking 16 of 19 judged
+targets first (MRR 0.912) where the composite managed 1 of 19 (0.307), with the
+composite's own `minScore` filtering 14 of 19 out. The project's response was to
+demote every metadata signal to an exact-tie-break on the direct routes. The
+generalisable argument is in the file header: a decay-and-reinforcement blend is
+only safe where its terms are smaller than the margin separating a right answer
+from a wrong one.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="No LLM at ingest, verbatim recall,
+and a deterministic gate that decides what a memory is allowed to
+authorize — scored against an adversarial suite with a benign-pass
+floor.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Midas — Agent Memory Atlas">
+    <meta property="og:description" content="No LLM at ingest, verbatim
+recall, and a deterministic gate that decides what a memory is allowed
+to authorize — scored against an adversarial suite with a benign-pass
+floor.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Midas — Agent Memory Atlas">
+    <meta name="twitter:description" content="No LLM at ingest, verbatim
+recall, and a deterministic gate that decides what a memory is allowed
+to authorize — scored against an adversarial suite with a benign-pass
+floor.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Midas — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A guard on memory-justified action</p>
+          <h1>Midas</h1>
+          <p class="document-deck">No LLM at ingest, verbatim recall,
+and a deterministic gate that decides what a memory is allowed to
+authorize — scored against an adversarial suite with a benign-pass
+floor.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vornicx/Midas">
+              <span>Source</span>
+              <strong>vornicx/Midas</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e" title="ee9953c15a977343eb783de0b9f217aaf46e5b4e">
+              <span>Analyzed revision</span>
+              <code>ee9953c1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (53%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Midas is a local memory layer for coding agents: one SQLite file, a
+Python library, an MCP server, a TypeScript port, MIT licensed, about
+18,700 lines. Its central bet is stated as a negative — <strong>no LLM
+at ingest and none at query</strong>. Nothing is extracted, summarised
+or rewritten; recall returns the verbatim turn that was captured, so, in
+the README's framing, there is no extraction step that can hallucinate a
+fact you never said.</p>
+<p>That bet buys the properties the project measures: zero marginal
+cost, zero data egress, deterministic and reproducible results. It also
+costs something the project says out loud — whole-conversation
+aggregation and summarisation are listed in the comparison table as "❌
+by design", because top-<em>k</em> retrieval cannot cover them.</p>
+<p><strong>The reason this earns a report is
+<code>midas/guard.py</code>.</strong> Every memory carries a
+<code>provenance</code> from a four-value vocabulary —
+<code>planning</code>, <code>action</code>, <code>observation</code>,
+<code>user_confirmation</code> — and every <em>use</em> of memory is
+declared from a four-value vocabulary — <code>planning</code>,
+<code>answer</code>, <code>external_action</code>,
+<code>destructive_action</code>. A static matrix decides which
+provenances may justify which use. Planning may use anything. An answer
+may not rest on an internal plan. An external or destructive action
+requires <code>user_confirmation</code> and nothing else.</p>
+<p>Three refinements make it more than a lookup table:</p>
+<ul>
+<li><strong>Currency is re-checked at the gate.</strong> A superseded
+belief cannot justify an answer or an action even if it was
+user-confirmed when current. The comment says why: "The guard verifies
+currency itself rather than trusting recall to have filtered the stale
+record."</li>
+<li><strong>A prohibition cannot authorize.</strong> A
+<code>forbidden_action</code> rule is stamped as a user-confirmed
+constraint, which would otherwise make it valid authorizing evidence. It
+is explicitly excluded from the supporting set — "a prohibition is a
+gate, not an authorization".</li>
+<li><strong>A live prohibition vetoes a confirmation in the same
+evidence set</strong>, so an attacker cannot plant an approval beside a
+standing "never do X" and have the approval win.</li>
+</ul>
+<p>And the guard is scored the way a guard should be.
+<code>eval/memory_safety.py</code> reports attack-success rate
+<em>and</em> benign-pass rate together, with the reason stated in the
+module docstring: "blocking everything gives ASR 0 <em>and</em>
+benign_pass 0". The committed suite covers a superseded confirmation, an
+unconfirmed observation, a cross-agent action, a planted prohibition, a
+confirmation for a <em>different</em> action, a provenance-laundering
+supersession, and a confirmation in another namespace.</p>
+<p>The gap the project also states: the gate trusts the provenance
+<em>stamp</em>. Forging <code>user_confirmation</code> at capture time
+is out of scope for the guard. What it does defend is laundering after
+the fact — <code>_maybe_supersede</code> refuses to let a
+non-confirmation revise a confirmed belief, so an attacker cannot retire
+a prohibition with an observation.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Midas separates two questions that most memory systems merge into one
+score.</p>
+<p><em>Is this memory relevant?</em> is answered by retrieval — dense
+plus BM25, fusion, optional reranking, all local.</p>
+<p><em>Is this memory allowed to justify what I am about to do?</em> is
+answered by the guard, and the answer does not depend on relevance at
+all. It depends on where the memory came from, whether it is still
+current, who produced it, and what the agent is about to do with it.</p>
+<p>A memory therefore has two independent lifecycles. Its
+<strong>content</strong> lifecycle is capture → embed → recall →
+possibly supersede → possibly forget. Its <strong>authority</strong>
+lifecycle is a stamp applied at capture and never upgraded: an
+observation does not become a confirmation by being useful, or old, or
+recalled often. The only way to gain authority is for the user to
+confirm something, which creates a new record.</p>
+<pre class="mermaid"><code>flowchart TD
+    R[&quot;recalled evidence set&quot;] --&gt; U{&quot;intended_use?&quot;}
+    U --&gt;|planning| P[&quot;allowed: any provenance&quot;]
+    U --&gt;|answer| A{&quot;provenance in action, observation, user_confirmation?&quot;}
+    U --&gt;|&quot;external or destructive&quot;| C{&quot;provenance == user_confirmation?&quot;}
+    A --&gt;|no| B1[&quot;blocked: internal plan cannot answer&quot;]
+    A --&gt;|yes| S1{&quot;superseded_by is null?&quot;}
+    C --&gt;|no| B2[&quot;blocked: needs user confirmation&quot;]
+    C --&gt;|yes| S2{&quot;superseded_by is null?&quot;}
+    S1 --&gt;|no| B3[&quot;blocked: stale belief&quot;]
+    S2 --&gt;|no| B4[&quot;blocked: stale confirmation&quot;]
+    S2 --&gt;|yes| F{&quot;any live forbidden_action rule recalled?&quot;}
+    F --&gt;|yes| B5[&quot;VETO: prohibition overrides the confirmation&quot;]
+    F --&gt;|no| X{&quot;actor == acting agent?&quot;}
+    X --&gt;|no| B6[&quot;blocked: another agent&#39;s evidence&quot;]
+    X --&gt;|yes| OK[&quot;allowed, with evidence refs returned&quot;]
+    S1 --&gt;|yes| OK</code></pre>
+<p>Every terminal node returns a <code>MemoryUseDecision</code> carrying
+the reason, the required provenances, the evidence considered and the
+ids that were blocked — so a refusal is explainable to the agent and to
+an auditor, not just a <code>False</code>.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no service. <code>midas init</code> creates a SQLite file
+and wires up whichever MCP clients it finds. The library, the MCP
+server, the CLI and the TypeScript port all open the same file.</p>
+<p>Concurrency across processes is handled without a lock server. The
+store keeps an in-memory mirror and probes
+<code>PRAGMA data_version</code>, which changes only when a
+<em>different</em> connection writes — so each agent process picks up
+the others' captures on its next read instead of holding a snapshot from
+startup. That is a cheap, correct answer to "several agents share one
+memory file live", and it is the kind of detail that is usually solved
+with a daemon.</p>
+<p>Schema migration refuses to open a store written by a newer Midas
+rather than guessing, with the error naming the fix
+(<code>midas update</code>). The store can be opened with
+<code>PRAGMA key</code>, so an encrypted file is a supported
+configuration.</p>
+<p>Nothing runs in the background. There is no worker, no queue, no
+model to keep resident unless the operator opts into a local embedder.
+The operational cost is a file and a path.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture</strong> — <code>Memory.remember</code>
+(<code>midas/memory.py</code>) stamps <code>provenance</code>,
+<code>actor</code>, <code>source</code> and <code>metadata</code>,
+embeds, writes through <code>SQLiteStore.put</code>
+(<code>midas/sqlite_store.py</code>), and appends a hash-chained row to
+<code>audit_log</code>.</p>
+<p><strong>Revision</strong> — <code>_maybe_supersede</code>
+(<code>midas/memory.py:960</code> onward) decides whether the new record
+retires an existing belief, optionally gated by a local NLI
+contradiction check.</p>
+<p><strong>Recall</strong> — <code>Memory.recall</code> builds a
+predicate from <code>kind</code>, <code>min_importance</code>,
+<code>metadata_filter</code> and <code>as_of</code>, runs the hybrid
+candidate path, then filters superseded records unless a historical
+query asked for them.</p>
+<p><strong>Governance</strong> — <code>decide_memory_use</code>
+(<code>midas/guard.py:114</code>) takes the recalled records and the
+intended use and returns the decision.</p>
+<p><strong>Audit</strong> — <code>audit_use</code>
+(<code>midas/audit.py</code>) packages the guard decision, each evidence
+record's provenance, its belief history and a completeness score into
+one artifact.</p>
+<p><strong>Control plane</strong> — <code>midas/state.py</code>
+(<code>memory_state</code>, the live non-superseded picture) and the
+diff view (beliefs added, beliefs revised old→new).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table for content and one for the log:</p>
+<pre><code>memories(id, content, kind, importance, source, provenance, actor,
+         metadata_json, created_at, updated_at, superseded_by, embedding)
+audit_log(seq, at, op, record_id, content_sha, prev_hash, hash)</code></pre>
+<p><code>kind</code> is a seven-value vocabulary — <code>note</code>,
+<code>chat</code>, <code>mission</code>, <code>fact</code>,
+<code>preference</code>, <code>constraint</code>,
+<code>commitment</code> — and the last one carries a comment worth
+quoting: "an open loop: work someone said WILL be done (close it via
+continuity.close_loop)". Modelling an unfinished intention as a memory
+kind, and giving it an explicit closing operation, is a shape this atlas
+sees rarely.</p>
+<p>There is no project table. <code>midas/projects.py</code> derives a
+project view by reading the explicit <code>project</code> tag, else
+<code>namespace</code>, else the capture <code>origin.cwd</code> — a
+deliberate refusal to add schema for a grouping that three existing
+signals already imply.</p>
+<p><code>superseded_at</code> lives in <code>metadata</code>, not in a
+column, and is set to the revising record's <code>created_at</code>.
+Since <code>created_at</code> is caller-supplied — importers set it from
+the source turn's timestamp — the pair
+<code>(created_at, superseded_at)</code> is a validity window over event
+time while <code>updated_at</code> and the audit row's <code>at</code>
+carry record time. That earns <code>bitemporal</code>, and the
+qualification belongs beside it: the validity axis is one column plus a
+metadata key, and it collapses onto record time whenever a caller does
+not supply an event time.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Dense retrieval over stored embeddings, BM25
+(<code>midas/bm25.py</code>), optional fusion, MMR, an ANN index, a
+ColBERT path and a Matryoshka option — all local, all optional, all
+measured.</p>
+<p><code>recall</code> accepts <code>as_of</code> and resolves each
+candidate through <code>_resolve_at</code>, walking the supersession
+chain to the version whose validity window contains the timestamp, and
+excluding records created after it.
+<code>tests/test_bitemporal.py</code> pins the behaviour with three
+sequential launch dates and asserts that <code>as_of=1_500</code>
+returns September, <code>as_of=2_500</code> returns October, and the
+current query returns November.</p>
+<p>There is one performance decision worth copying. When no scope filter
+is active, the predicate is set to <code>None</code> rather than to a
+trivially-true lambda, so the hybrid path takes its no-filter fast route
+— the comment records the measurement that motivated it: "11.6 s/query
+on the 246k-turn LongMemEval hybrid run". A filter that always returns
+<code>True</code> is not free.</p>
+<p>The reported retrieval numbers are recall@<em>k</em> against gold
+supporting turns on full public sets — LongMemEval-<code>s</code> 0.92,
+LoCoMo 0.73, BEAM 0.56 falling to 0.32 at 10M tokens — with a
+recency-window baseline beside each. Because recall returns the verbatim
+source turn, recall@<em>k</em> is computable here in a way it is not for
+systems that return rewritten facts, which the comparison table says
+explicitly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes do not block on any model.</strong> Ingest is
+embed-and-store; the README puts it at 16–116 ms, embed-bound. A memory
+is retrievable as soon as it is written.</p>
+<p>Belief revision is where the write path makes judgements, and it is
+unusually careful about which ones it refuses to make.
+<code>_maybe_supersede</code> will not let a
+non-<code>user_confirmation</code> record retire a
+<code>user_confirmation</code> belief — the comment names the attack it
+prevents, that laundering would "bypass the Guard's currency rule via
+supersession". With a local NLI model configured it goes further and
+requires an actual contradiction rather than similarity, described as
+"the principled no-LLM fix" for revision on diverse data where "similar
++ cue is often a distinct fact".</p>
+<p><code>forget_matching</code> removes records and returns them, and
+<code>audit.forgetting_receipt</code> turns that list into an erasure
+certificate: for each removed record, its id, kind and
+<code>sha256(id\x00content)</code> — "enough to later prove a specific
+item was erased, not enough to reconstruct it".</p>
+<p><strong>That receipt is the nearest miss to a tombstone in this
+batch, and it is not one.</strong> It is returned to the caller and
+never persisted by the store; nothing on the write path consults it or
+the <code>content_sha</code> column in <code>audit_log</code> before
+accepting a new record. So Midas can prove a value was erased and cannot
+prevent the same value being captured again five minutes later. Every
+ingredient is present — a content hash, a durable log, a write path that
+could check — and the check is absent.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with tools for capture, recall,
+<code>memory_state</code>, <code>memory_diff</code>,
+<code>resume</code>, <code>open_loops</code>,
+<code>remember_commitment</code>, forbidden-action rules and the guard
+check. A Python library, a TypeScript MCP port on npm, agent hooks, a
+LangGraph store adapter, and a CLI with an inspector.</p>
+<p>Every MCP write stamps a structured source
+(<code>mcp:{client}:{session}</code>) and an origin resolved once at
+startup — git commit, branch and cwd — so a belief traces back to the
+code state it was captured in.</p>
+<p><code>MIDAS_MCP_NAMESPACE=auto</code> derives the scope from the git
+repository name (else the cwd basename), which gives per-project
+partitioning of one shared store without the user configuring
+anything.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Audit log — awarded, and it is the strong form.</strong>
+<code>audit_log</code> is append-only and hash-chained: each row carries
+<code>prev_hash</code> and its own <code>hash</code>, <code>seq</code>
+and <code>prev</code> are read and written under the same connection for
+multi-process safety, and <code>verify_audit_log</code> walks the chain.
+Rows carry a <code>content_sha</code>, never content, so the log can
+prove a mutation happened without retaining what was mutated — which is
+what makes it compatible with the erasure story rather than in tension
+with it. <code>midas audit</code> and the inspector both expose
+verification.</p>
+<p><strong>Scope — awarded, with a caveat that matters.</strong>
+<code>metadata_filter</code> is an equality predicate applied inside the
+recall predicate, and every read tool on the MCP server passes
+<code>_ns_filter(namespace)</code> unconditionally. The strongest
+evidence that it is treated as a boundary rather than a tag is at
+<code>midas/memory.py:1083</code>: neighbour expansion re-applies the
+filter because otherwise "a same-thread record from another namespace
+would leak past the filter" — someone thought about the second-order
+path. The caveat is that the default namespace is the empty string,
+which means unscoped; the boundary exists and is enforced when
+configured, and the shipped default does not configure it.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>eval/memory_safety.py</code> commits ten attack cases whose
+premise is that particular material must not reach or justify a use,
+with four benign controls. One is a boundary case in the atlas's sense —
+a real <code>user_confirmation</code> in namespace <code>alpha</code>,
+recalled under a <code>beta</code> filter, which must not authorize.
+Others are content cases about a specific record: a superseded approval,
+a confirmation for a different action, a prohibition planted beside a
+confirmation. <code>eval/forbidden_eval.py</code> scores the
+forbidden-action path separately.</p>
+<p><strong>Trust state — withheld, and the reason is
+interesting.</strong> <code>provenance</code> is a discrete four-value
+field consulted on the decision path, which looks like a trust state and
+is not one. It records <em>where a memory came from</em>, not whether
+anyone believes it: there is no <code>rejected</code>, and no state a
+memory can move into after review. What Midas has instead is arguably
+better suited to its purpose — an authority vocabulary that answers "may
+this justify an action" — and it is worth separating the two ideas
+rather than conflating them because the field happens to be an enum.</p>
+<p><strong>Human review — withheld.</strong>
+<code>user_confirmation</code> records that a person confirmed something
+at capture time. There is no surface where a person inspects, approves
+or adjudicates stored memory after the fact.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> No arXiv reference, DOI,
+<code>CITATION.cff</code> or BibTeX block in the tree.
+<code>BENCHMARKS.md</code> is the evidence artifact instead.</p>
+<p>58 test files, including dedicated suites for the guard
+(<code>test_guard.py</code>, <code>test_guard_hardening.py</code>), the
+safety eval (<code>test_memory_safety.py</code>), the audit chain
+(<code>test_audit_chain.py</code>), bitemporal recall, metadata
+filtering, forget-matching, encrypted stores and the MCP server.
+<strong>I did not run them</strong> — the screen flagged an MCP server
+manifest declaring a start command and <code>tests/conftest.py</code>
+executing on collection, so the tree was read and never installed.</p>
+<p>The benchmark discipline is the second reason to read this project.
+Every headline number names a reproduce command, and
+<code>BENCHMARKS.md</code> publishes the experiments that failed: hybrid
+retrieval, reranking, thread diversification, dual-granularity indexing
+and naive distillation are each documented as not helping or actively
+hurting, with the numbers. One entry records that a change lifted
+summarization 0.18 → 0.23 while hurting precise single-turn belief
+recall; another that pinning assistant-voiced advice "hurt across the
+board". A memory project that keeps a public record of its own negative
+results is rare enough in this corpus to be worth naming as the
+practice, separately from any particular number.</p>
+<p>The numbers themselves are self-reported and the cross-system
+comparisons are structural claims about a design class rather than
+head-to-head reruns, which the document states.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate relevance from authority.</strong> Two vocabularies
+— where a memory came from, and what it is about to be used for — and a
+static matrix between them. It is perhaps eighty lines and it closes the
+failure where an agent acts on something it merely read.</li>
+<li><strong>Re-check currency at the gate, not only in recall.</strong>
+Defence in depth costs one <code>if</code> and survives a retrieval
+refactor that stops filtering superseded rows.</li>
+<li><strong>Distinguish a prohibition from an authorization.</strong> A
+"never do X" rule is user-confirmed, so a naive gate treats it as
+evidence <em>for</em> acting. Excluding it from the supporting set, and
+letting it veto, is the difference between a rule and a decoration.</li>
+<li><strong>Score a guard with two numbers.</strong> Attack-success rate
+alone rewards blocking everything. Publishing benign-pass beside it
+makes the score honest, and the module says so in its docstring.</li>
+<li><strong>Refuse to let a weaker record retire a stronger
+one.</strong> Supersession integrity — only a confirmation may revise a
+confirmation — closes the laundering path that would otherwise defeat
+the currency rule.</li>
+<li><strong>Publish the experiments that failed.</strong> Five
+documented non-improvements in <code>BENCHMARKS.md</code> are worth more
+to a reader building something similar than any of the wins.</li>
+<li><strong>Set the predicate to <code>None</code> when there is no
+filter.</strong> An always-true lambda cost 11.6 seconds a query at
+scale, and the codebase records the measurement.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not stop at proving erasure.</strong> The forgetting
+receipt is a content hash of exactly the thing a tombstone would key on,
+and it is handed to the caller instead of being kept and consulted.
+Prove <em>and</em> prevent, or the certificate describes a door that is
+still open.</li>
+<li><strong>Do not trust the stamp without asking who can set
+it.</strong> The guard's whole authority model rests on
+<code>provenance</code> being honest at capture. The project says this
+is out of scope; anyone deploying it should decide who is allowed to
+write <code>user_confirmation</code>.</li>
+<li><strong>Do not expect a top-<em>k</em> memory to summarise a
+conversation.</strong> Midas states the limit and measures it. A system
+that hides the same limit will fail the same query silently.</li>
+<li><strong>Do not ship an unscoped default and call it
+multi-tenant.</strong> The namespace mechanism is real; empty is the
+default, and <code>auto</code> is one environment variable away.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an individual or a small team running coding agents
+locally who want memory that costs nothing per message, never leaves the
+machine, and can be audited afterwards. The no-LLM bet is the whole
+design: if you need whole-conversation summaries or extracted structured
+facts, this is the wrong tool and the README says so first.</p>
+<p>It is also the clearest reference implementation in this atlas for
+the specific idea that <em>memory should not be allowed to authorize an
+action by itself</em>. Even a team that adopts nothing else should read
+<code>midas/guard.py</code> and <code>eval/memory_safety.py</code>
+together — they are 490 lines, and the second is what makes the first
+checkable.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Who may write <code>user_confirmation</code>?</strong> Any
+caller of <code>remember</code> can pass it. In an MCP deployment the
+caller is the agent, which makes the guard's strongest rule enforceable
+only by convention on the write side.</li>
+<li><strong>What happens when the audit chain fails
+verification?</strong> <code>verify_audit_log</code> reports; whether
+anything refuses to serve memory from a store with a broken chain was
+not traced.</li>
+<li><strong>Does anything consume the erasure receipt?</strong> The
+inspector generates one on a forget; nothing persists it, so the
+artifact's audience is a person who saved the output.</li>
+<li><strong>How does supersession behave without NLI?</strong> The
+precision gate is opt-in (<code>MIDAS_MCP_NLI=0</code> by default), so
+the shipped default revises on similarity plus a cue — which the code
+itself calls unreliable on diverse data.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>The guard</strong> — <code>midas/guard.py</code>
+(<code>_ALLOWED_BY_USE</code> at <code>:22</code>,
+<code>decide_memory_use</code> <code>:114</code>, the prohibition veto
+<code>:186</code>), <code>midas/policy.py</code>,
+<code>midas/access.py</code></p>
+<p><strong>Safety evaluation</strong> —
+<code>eval/memory_safety.py</code>, <code>eval/forbidden_eval.py</code>,
+<code>eval/benches.py</code>, <code>tests/test_memory_safety.py</code>,
+<code>tests/test_guard_hardening.py</code></p>
+<p><strong>Audit</strong> — <code>midas/audit.py</code>
+(<code>forgetting_receipt</code> <code>:28</code>,
+<code>belief_history</code>, <code>audit_completeness</code>,
+<code>audit_use</code>), <code>midas/sqlite_store.py:116</code> and
+<code>:234</code> (<code>verify_audit_log</code>),
+<code>tests/test_audit_chain.py</code></p>
+<p><strong>Belief revision and bitemporality</strong> —
+<code>midas/memory.py:960-1020</code> (<code>_maybe_supersede</code>,
+<code>_resolve_head</code>, <code>_resolve_at</code>),
+<code>midas/nli.py</code>, <code>tests/test_bitemporal.py</code>,
+<code>tests/test_memory_supersede.py</code></p>
+<p><strong>Retrieval</strong> — <code>midas/memory.py</code>
+(<code>recall</code>), <code>midas/bm25.py</code>,
+<code>midas/ann.py</code>, <code>midas/colbert.py</code>,
+<code>midas/sparse.py</code>, <code>midas/embeddings.py</code>,
+<code>midas/turbovec_index.py</code></p>
+<p><strong>Scoping</strong> — <code>midas/memory.py:610-640</code> (the
+predicate) and <code>:1083</code> (neighbour expansion),
+<code>midas/mcp_server.py:81-148</code>, <code>midas/projects.py</code>,
+<code>tests/test_metadata_filter.py</code></p>
+<p><strong>Storage</strong> — <code>midas/sqlite_store.py</code>,
+<code>midas/store.py</code>, <code>midas/turbovec_store.py</code></p>
+<p><strong>Integration</strong> — <code>midas/mcp_server.py</code>,
+<code>midas/hooks.py</code>, <code>midas/cli.py</code>,
+<code>midas/inspector.py</code>, <code>packages/midas-ts/</code>,
+<code>packages/midas-memory-mcp/</code></p>
+<p><strong>Control plane</strong> — <code>midas/state.py</code>,
+<code>midas/continuity.py</code>, <code>midas/coding.py</code>,
+<code>midas/entity.py</code></p>
+<p><strong>Benchmarks</strong> — <code>BENCHMARKS.md</code>,
+<code>eval/</code> (<code>datasets.py</code>, <code>runner.py</code>,
+<code>metrics.py</code>, <code>multiday.py</code>,
+<code>retention.py</code>, <code>distill_ab.py</code>,
+<code>summarization_ab.py</code>),
+<code>docs/agent-memory-benches.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e"><code class="commit-id" title="ee9953c15a977343eb783de0b9f217aaf46e5b4e">ee9953c1…</code></a>
+— first reading. Screened before reading: one auto-run surface
+(<code>server.json</code>, an MCP manifest declaring a start command),
+build-time execution in <code>tests/conftest.py</code>, three unpinned
+dependency surfaces. The tree was read, never installed, and no test or
+benchmark was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

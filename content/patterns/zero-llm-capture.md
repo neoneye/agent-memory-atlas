@@ -191,6 +191,14 @@ is richer than your emitters, shrink the vocabulary or write the emitters —
 leaving the gap open produces a store that looks well-designed and answers
 nothing.
 
+[Midas](../../systems/midas/) is the strongest form here, because it removes the
+model from *both* ends: nothing is extracted at ingest and nothing is rewritten
+at query. Recall returns the verbatim source turn, which is what makes its
+`recall@k` computable against gold supporting turns at all — a metric a system
+returning LLM-rewritten facts cannot report. It also publishes the cost of the
+bet rather than hiding it: whole-conversation aggregation and summarisation are
+listed as out of scope by design, "because top-k retrieval can't cover it".
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.
