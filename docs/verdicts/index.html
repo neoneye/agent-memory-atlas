@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 193 reports.</strong></p>
+<p><strong>This page covers all 195 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;193 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;195 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4693,6 +4693,62 @@ compressed with a pointer back.</li>
 <li>Do not copy when: you need correction — a wrong memory that is
 frequently retrieved is reinforced by the same mechanism that keeps a
 right one.</li>
+</ul>
+<h3 id="jumbo"><a href="../systems/jumbo/"><code>jumbo</code></a></h3>
+<ul>
+<li>Best idea: full event sourcing done plainly — one JSON file per
+event in a per-aggregate stream directory, zero-padded sequence and
+event type in the filename, written to a temp path and renamed so an
+interrupted or concurrent write cannot corrupt it. Every table in the
+database is named <code>*_views</code>, so a reader can see at a glance
+that nothing in it is authoritative.</li>
+<li>Biggest risk: <code>BaseEvent</code> declares
+<code>loggedBy?: "human" | "machine"</code> and a search of the whole
+tree returns exactly one line — the declaration. In a system whose
+entire value is a trustworthy history, the field that would separate a
+person's decision from an agent's is never set.</li>
+<li>Most reusable component: the goal state machine's small guards —
+<code>reviewIssues</code> cleared on resubmission so a stale rejection
+cannot outlive the thing it was about, and
+<code>lastWaitingStatus</code> so unblocking returns to the real prior
+state rather than a default.</li>
+<li>Maturity impression: 150,000 lines of TypeScript with 587 test
+files, twelve domain aggregates each with an event index, layered
+domain/application/infrastructure separation, and
+<code>StoredEvent</code> explicitly confined to the infrastructure
+layer.</li>
+<li>Study when: you want the log-and-projection shape with nothing
+mutable left to compromise it.</li>
+<li>Do not copy when: you need to know who wrote a memory — the log
+answers what and when, and never who.</li>
+</ul>
+<h3 id="neuroca"><a
+href="../systems/neuroca/"><code>neuroca</code></a></h3>
+<ul>
+<li>Best idea: a five-value status vocabulary that distinguishes
+<code>consolidated</code> ("moved to a higher tier") from
+<code>archived</code> ("no longer active but preserved") and makes
+<code>forgotten</code> — "marked for deletion but not yet removed" — an
+explicit intermediate rather than an implied one.</li>
+<li>Biggest risk: at this commit no integration test exercises the
+memory system against a durable backend. Two suites carry
+<code>pytest.skip(..., allow_module_level=True)</code> with the reason
+"These tests use the old memory architecture and need to be refactored",
+and the third skips Redis by default and SQLite for "thread safety and
+initialization".</li>
+<li>Most reusable component: <code>consolidated_from</code> and
+<code>consolidated_at</code> on the memory metadata, so a promoted
+memory is traceable rather than an unexplained appearance in a higher
+tier.</li>
+<li>Maturity impression: 134,000 lines with three tiers over pluggable
+backends, a lymphatic consolidator, an annealing optimizer and Hebbian
+tubule weights — beside 21 test files, three unit skips reasoned
+"implementation varies across backends", and an Agno comparison hosted
+in a separate repository.</li>
+<li>Study when: you want the status vocabulary and the consolidation
+provenance fields, both of which are independent of the refactor.</li>
+<li>Do not copy when: now — the architecture is legible and its coverage
+against a durable backend is zero by the project's own markers.</li>
 </ul>
         </article>
       </div>

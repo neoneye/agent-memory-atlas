@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 193 reports.**
+**This page covers all 195 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["193 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["195 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1654,3 +1654,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 410,000 lines across an API, a console and sandbox infrastructure on Neo4j plus Postgres, a real ACT-R activation model with Anderson (2007) cited and the formula written out, `end_user_id` on every node and relationship — beside 14 test files and a `DETACH DELETE` that interpolates the user id into Cypher instead of binding it.
 - Study when: your decay model deletes, and you would rather it compressed with a pointer back.
 - Do not copy when: you need correction — a wrong memory that is frequently retrieved is reinforced by the same mechanism that keeps a right one.
+
+### [`jumbo`](../systems/jumbo/)
+
+- Best idea: full event sourcing done plainly — one JSON file per event in a per-aggregate stream directory, zero-padded sequence and event type in the filename, written to a temp path and renamed so an interrupted or concurrent write cannot corrupt it. Every table in the database is named `*_views`, so a reader can see at a glance that nothing in it is authoritative.
+- Biggest risk: `BaseEvent` declares `loggedBy?: "human" | "machine"` and a search of the whole tree returns exactly one line — the declaration. In a system whose entire value is a trustworthy history, the field that would separate a person's decision from an agent's is never set.
+- Most reusable component: the goal state machine's small guards — `reviewIssues` cleared on resubmission so a stale rejection cannot outlive the thing it was about, and `lastWaitingStatus` so unblocking returns to the real prior state rather than a default.
+- Maturity impression: 150,000 lines of TypeScript with 587 test files, twelve domain aggregates each with an event index, layered domain/application/infrastructure separation, and `StoredEvent` explicitly confined to the infrastructure layer.
+- Study when: you want the log-and-projection shape with nothing mutable left to compromise it.
+- Do not copy when: you need to know who wrote a memory — the log answers what and when, and never who.
+
+### [`neuroca`](../systems/neuroca/)
+
+- Best idea: a five-value status vocabulary that distinguishes `consolidated` ("moved to a higher tier") from `archived` ("no longer active but preserved") and makes `forgotten` — "marked for deletion but not yet removed" — an explicit intermediate rather than an implied one.
+- Biggest risk: at this commit no integration test exercises the memory system against a durable backend. Two suites carry `pytest.skip(..., allow_module_level=True)` with the reason "These tests use the old memory architecture and need to be refactored", and the third skips Redis by default and SQLite for "thread safety and initialization".
+- Most reusable component: `consolidated_from` and `consolidated_at` on the memory metadata, so a promoted memory is traceable rather than an unexplained appearance in a higher tier.
+- Maturity impression: 134,000 lines with three tiers over pluggable backends, a lymphatic consolidator, an annealing optimizer and Hebbian tubule weights — beside 21 test files, three unit skips reasoned "implementation varies across backends", and an Agno comparison hosted in a separate repository.
+- Study when: you want the status vocabulary and the consolidation provenance fields, both of which are independent of the refactor.
+- Do not copy when: now — the architecture is legible and its coverage against a durable backend is zero by the project's own markers.
