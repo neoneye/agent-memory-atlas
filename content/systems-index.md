@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **235 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **236 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -168,6 +168,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memory-lancedb-pro`](../systems/memory-lancedb-pro/) **memory-lancedb-pro** — OpenClaw memory plugin · `CortexReach/memory-lancedb-pro` · Bi-temporal, Scope enforced
 - [`memory-palace`](../systems/memory-palace/) **Memory Palace** — Draft-by-default procedural memory · `agi-is-going-to-arrive/memory-palace` · Trust state, Human review
 - [`memory-project`](../systems/memory-project/) **memory-project** — Associative decay memory for a coding agent · `acdesigntech/memory-project` · Mutation audit, Human review
+- [`memory-ts`](../systems/memory-ts/) **memory-ts** — A schema that deleted its own dead fields, with receipts · `rlabs-inc/memory-ts` · Trust state
 - [`memorybear`](../systems/memorybear/) **MemoryBear** — Forgetting that fuses rather than deletes · `SuanmoSuanyangTechnology/MemoryBear` · Scope enforced, Mutation audit
 - [`memoryops-ai`](../systems/memoryops-ai/) **MemoryOps AI** — Governed memory as a runtime · `patibandlavenkatamanideep/memoryops-ai` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`memoryos`](../systems/memoryos/) **MemoryOS** — Heat-promoted tiers · `BAI-LAB/MemoryOS`

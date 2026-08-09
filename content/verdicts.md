@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 235 reports.**
+**This page covers all 236 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["235 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["236 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2032,6 +2032,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 7,500 lines with a closed node and edge type set, edge endpoints resolved against both the existing graph and the current candidate batch so an edge to a just-rejected node is dropped, OWL import and export, and analytics that keep provenance edges out of the semantic centrality measures — against 8 test files, none on the validator.
 - Study when: an LLM is deciding what becomes durable knowledge in your store and you take its evidence on trust.
 - Do not copy when: you need automatic recall — the model is handed a filtered brief, and the retrieval decision stays with the human.
+
+### [`memory-ts`](../systems/memory-ts/)
+
+- Best idea: a schema that deleted seven of its own fields and recorded the evidence for each — `emotional_resonance` ("580 variants, never used"), `component` ("always empty"), `parent_id`/`child_ids` ("no logic implemented"), `knowledge_domain` ("overlaps with project_id + domain"). This atlas spends much of its time finding declared-and-unread fields; this is a project that went looking for its own and left the receipts.
+- Biggest risk: the curator is the product and is a subprocess call to an external CLI, exercised by one hand-run script at the repository root that prints the result of curating a single session. What fraction of curated memories are ever surfaced is the measurement, and `sessions_since_surfaced` already holds the answer.
+- Most reusable component: the two-tier memory — a headline always shown and full content expanded on demand, with auto-expand rules (`action_required`, `awaiting_decision`, 5+ signals) saying when brevity is the wrong default. Two fields rather than truncation at render time means retrieval shows twenty summaries for the cost of two full memories.
+- Maturity impression: 11,600 lines of TypeScript with a five-state status filtered on the retrieval path *and* in the replacement and linked-memory lookups, decay counted in sessions rather than days, and a migrations directory — because the schema actually changes.
+- Study when: you suspect half your schema is fields nothing reads.
+- Do not copy when: you need supersession to hold — `superseded_by` records the replacement and nothing stops the old content being re-extracted from a later transcript.
+
 
 
 
