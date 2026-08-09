@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 241 reports.**
+**This page covers all 242 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["241 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["242 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2086,4 +2086,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, four files and about 900 lines for the whole memory surface, inside a 1,233-file repository that is otherwise an inference engine. 16 test functions on the loader covering precedence, malformed front matter, the 1 MiB ceiling and the empty-file case. Nothing evaluates whether the model picks the right skill from a description, which is the only quality question the design raises.
 - Study when: your durable memory is procedural — curated playbooks — and you want it to cost four files and no database, or you are choosing where to put an approval gate.
 - Do not copy when: you need episodic memory. There is no store, no memory event stream and no write tool, so there is no seam to extend; the persistence belongs in a layer above this one.
+
+### [`serena`](../systems/serena/)
+
+- Best idea: a referential-integrity report over the memory store. `serena memories check` names every `mem:` link pointing at nothing, with up to three ranked replacement candidates, and the inverse — a bare memory name in prose that should have been a link, graded high or low confidence by whether the name could plausibly be ordinary English. The similarity thresholds are tuned rather than guessed: version suffixes stripped before comparison, a 0.34 basename-Jaccard floor so `frontend/x-subtleties` does not match `backend/y-subtleties`, and `core` on a hard-coded ignore list because it is also an English word.
+- Biggest risk: the graph is checked in one direction only. There is no reachability pass, so a memory nothing links to — unreachable under the maintenance memory's own traversal model, in which the agent starts at `mem:core` and follows references — is invisible to the checker and costs a line in every activation listing. Nothing anywhere records that a memory was ever wrong; correction is an edit or a delete with no trace.
+- Most reusable component: `rename_memory_and_propagate_references`. It moves the file, then rewrites every reference across the store with a pattern anchored on both sides so a short name cannot match inside a longer one, and skips memories whose content does not mention it so untouched files keep their mtime. Any document store whose documents cite each other needs this and most do not have it.
+- Maturity impression: MIT, Oraios AI, 1,218 lines for the memory subsystem inside a 1,048-file toolkit whose other half is language-server code navigation. 55 tests in `test_memories_manager.py`, five of them sandbox-escape cases with a comment explaining the exact `pathlib` behaviour they defend against — joining an absolute path discards the base — and most of the rest are similarity-threshold cases named after the false positive they prevent. What no test covers is that an `ignored_memory_patterns` memory stays out of `list_memories`.
+- Study when: your memory is documents rather than facts, and you have never checked whether the pointers between them still resolve.
+- Do not copy when: you need retrieval. There is none — names are listed at activation and the model reads by judgement or follows a link — so a store large enough that navigation fails has no fallback.
 

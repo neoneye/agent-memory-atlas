@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An LSP-backed coding-agent toolkit
+whose memory is Markdown files that reference each other by name, with a
+checker that reports dangling links and a rename that rewrites every
+reference to the file it moved.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Serena — Agent Memory Atlas">
+    <meta property="og:description" content="An LSP-backed coding-agent
+toolkit whose memory is Markdown files that reference each other by
+name, with a checker that reports dangling links and a rename that
+rewrites every reference to the file it moved.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Serena — Agent Memory Atlas">
+    <meta name="twitter:description" content="An LSP-backed coding-agent
+toolkit whose memory is Markdown files that reference each other by
+name, with a checker that reports dangling links and a rename that
+rewrites every reference to the file it moved.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Serena — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory as a link graph, with an integrity
+checker</p>
+          <h1>Serena</h1>
+          <p class="document-deck">An LSP-backed coding-agent toolkit
+whose memory is Markdown files that reference each other by name, with a
+checker that reports dangling links and a rename that rewrites every
+reference to the file it moved.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/oraios/serena">
+              <span>Source</span>
+              <strong>oraios/serena</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/oraios/serena/commit/946ad9817875cbf46b308423296c33eb65e3e728" title="946ad9817875cbf46b308423296c33eb65e3e728">
+              <span>Analyzed revision</span>
+              <code>946ad981…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Serena is an MIT-licensed MCP toolkit that gives a coding agent
+IDE-grade code navigation — symbol search, references, symbol-level
+edits — over a language server. That is the product, and it is not why
+this report exists.</p>
+<p>Beside the LSP tools sits <code>src/serena/memories/</code>, 1,218
+lines across two files, implementing something the rest of this atlas
+mostly does not: <strong>memory as a graph of documents that cite each
+other, with a checker for the citations.</strong></p>
+<p>A memory is a Markdown file with a name that may carry topic segments
+(<code>frontend/debugging</code>). Inside a memory, a reference to
+another memory is written <code>`mem:frontend/debugging`</code>. From
+that one convention three mechanisms follow.</p>
+<p><code>rename_memory_and_propagate_references</code> moves a memory
+and then rewrites every <code>mem:</code> reference to it across every
+other memory, with a regex anchored on both sides so
+<code>mem:auth</code> cannot match inside <code>mem:auth_tokens</code>,
+and skipping files whose content does not mention it so untouched
+memories keep their mtime.</p>
+<p><code>validate_referential_integrity</code> reports two failure
+classes. <strong>Stale references</strong> are <code>mem:</code> links
+whose target no longer exists, each carrying up to three suggested
+replacements ranked by a similarity score. <strong>Unmarked
+references</strong> are the inverse — a bare memory name sitting in
+prose that probably should have been a link — split into high and low
+confidence by whether the name is "name-shaped" enough to be unlikely as
+ordinary English. <code>serena memories check</code> runs it;
+<code>auto_prefix_bare_references</code> fixes the second class, with a
+<code>dry_run</code>.</p>
+<p>And the shipped <code>memory_maintenance.md</code> template makes the
+graph a stated discipline rather than an emergent one:
+<code>mem:core</code> is the root, memories link outward from it, and —
+the line worth quoting — <em>"Memories themselves should not contain
+information about when to read them; this is the responsibility of the
+referring memory."</em> Relevance is an edge property, not a node
+property.</p>
+<p>The similarity scoring is where the care shows. Version suffixes are
+stripped before comparison (<code>auth_v2</code> → <code>auth</code>), a
+token-Jaccard floor of 0.34 stops <code>frontend/x-subtleties</code>
+matching <code>backend/y-subtleties</code> on their shared trailing
+word, a fuzzy floor of 0.6 stops the prose word "repository" matching
+<code>serena_repository_structure</code>, and <code>core</code> is
+hard-coded onto an ignore list because it is also an English word. Each
+of those thresholds has a test naming the false positive it exists to
+prevent.</p>
+<p>Where it is weakest is that the graph is only checked in one
+direction. Serena finds links pointing at nothing; it has no
+reachability pass, so a memory that nothing links to — and which the
+agent will therefore never discover under the declared traversal model —
+is invisible to the checker. Nothing here records that a memory was ever
+wrong, and there is no retrieval of any kind: the model reads names and
+decides.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a note a person or an agent decided was worth
+writing down</strong>, and the system has an opinion about which notes
+qualify. The shipped maintenance memory sets the threshold explicitly:
+add only <em>"stable, non-obvious project conventions that avoid complex
+rediscovery in the future"</em>, and do not add <em>"quick-read facts;
+generic language/framework knowledge; one-off task notes; volatile
+line-level details; behavior likely to change soon."</em> That is a
+memory-worthiness policy written as instructions to whoever is holding
+the write tool, which in practice is the model.</p>
+<p>The state machine is short because every transition is
+deliberate:</p>
+<ul>
+<li><strong>Written</strong> by <code>write_memory</code>, into the
+project root or — with an explicit <code>global/</code> prefix and only
+when instructed — the shared one.</li>
+<li><strong>Listed.</strong> At project activation the agent is handed
+the names of every project memory, and global names separately. Content
+is not included.</li>
+<li><strong>Read</strong> by name, by the model's own judgement, or
+followed from a <code>mem:</code> link in a memory it already read.</li>
+<li><strong>Edited</strong> in place, <strong>renamed</strong> with
+references propagated, or <strong>deleted</strong>.</li>
+<li><strong>Frozen or hidden.</strong> A name matching
+<code>read_only_memory_patterns</code> refuses tool writes; a name
+matching <code>ignored_memory_patterns</code> is excluded from listing,
+reading and writing through the memory tools entirely.</li>
+</ul>
+<p>There is no candidate state, no confidence, no supersession and no
+tombstone. A memory that turns out to be wrong is edited or deleted, and
+nothing in the store records that it ever said something else — the git
+history of <code>.serena/</code> does, if the project commits it, which
+is a different mechanism.</p>
+<p>The distinctive epistemic move is that <strong>relevance lives on the
+edge</strong>. Under the maintenance template's discovery model, a
+memory does not say when to read it; the memory that links to it does,
+and the referring text is required to <em>"provide more precise guidance
+than the memory name alone."</em> That inverts the usual arrangement,
+where each memory carries its own retrieval metadata and a ranker
+compares them. Here the previous document decides what the next one is
+for.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[&quot;project activation&quot;] --&gt; B[&quot;agent is handed&lt;br/&gt;memory names only&quot;]
+    B --&gt; C[&quot;read mem:core&lt;br/&gt;the declared root&quot;]
+    C --&gt; D[&quot;follow a mem: link&lt;br/&gt;the referring text says why&quot;]
+    D --&gt; D
+    D --&gt; E[&quot;read_memory(name)&quot;]
+    W[&quot;write_memory&quot;] --&gt; S[(&quot;Markdown files&lt;br/&gt;.serena/memories/ + global&quot;)]
+    S --&gt; C
+    R[&quot;rename_memory&quot;] --&gt; M[&quot;move the file&quot;]
+    M --&gt; P[&quot;rewrite every mem:OLD&lt;br/&gt;across all memories&quot;]
+    K[&quot;serena memories check&quot;] --&gt; Q{&quot;does each mem: link&lt;br/&gt;resolve?&quot;}
+    Q -- &quot;no&quot; --&gt; ST[&quot;stale reference&lt;br/&gt;+ up to 3 ranked candidates&quot;]
+    Q -- &quot;yes&quot; --&gt; U{&quot;bare name in prose&lt;br/&gt;matching a real memory?&quot;}
+    U -- &quot;yes&quot; --&gt; UN[&quot;unmarked reference warning&lt;br/&gt;high or low confidence&quot;]
+    S -.-&gt;|&quot;nothing checks the&lt;br/&gt;reverse direction&quot;| ORPH[&quot;a memory nothing links to&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python MCP server, installed and run with <code>uv</code>, whose
+memory subsystem is two modules with no external dependency beyond the
+standard library and a text helper:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Concern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/serena/memories/memory_manager.py</code></td>
+<td>438</td>
+<td>paths, sandbox, CRUD, rename-with-propagation, read-only and ignore
+filters</td>
+</tr>
+<tr>
+<td><code>src/serena/memories/memory_reference_analysis.py</code></td>
+<td>780</td>
+<td>reference detection, similarity scoring, integrity reporting,
+autofix</td>
+</tr>
+<tr>
+<td><code>src/serena/tools/memory_tools.py</code></td>
+<td>—</td>
+<td>the six agent-facing tools</td>
+</tr>
+<tr>
+<td><code>src/serena/cli.py</code></td>
+<td>—</td>
+<td>the <code>serena memories</code> command group</td>
+</tr>
+</tbody>
+</table></div>
+<p>Persistence is the filesystem:
+<code>&lt;project&gt;/.serena/memories/**.md</code>, plus one global
+root from <code>SerenaPaths().global_memories_path</code>. There is no
+index, no database, no embedding and no cache. Listing is an
+<code>os.walk</code>.</p>
+<p>The rest of Serena — the language-server pool, the symbol tools, the
+dashboard — is a much larger system and is not memory. It is worth
+naming only because it explains the shape of this half: a project that
+already gives the agent precise code retrieval does not need its memory
+to be searchable, because the code is where the facts are and the memory
+is where the <em>conventions</em> are.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uv</code> and a language server for the project's language.
+Nothing else runs: no daemon for memory, no API key to store anything,
+and the whole memory path is offline. First run seeds a
+<code>memory_maintenance</code> memory from a packaged template unless a
+global copy exists, and never overwrites an existing one — <em>"users
+may have customized them. To refresh from the shipped template, delete
+the existing memory first."</em></p>
+<p>The store is Markdown in a directory the project can commit, which
+makes review by pull request the natural correction path even though the
+code offers nothing of the kind. Symlinked memory directories are
+explicitly supported for the monorepo case, which is why the listing
+walk follows links and the containment check deliberately does not
+resolve them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>WriteMemoryTool.apply</code> bounds
+content at <code>default_max_tool_answer_chars</code> and raises rather
+than truncating — <em>"Please make the content shorter"</em> — then
+calls <code>MemoryManager.save_memory</code>, which sanitizes the name,
+refuses an ignored one, checks read-only, and writes.</p>
+<p><strong>Name resolution and sandbox.</strong>
+<code>get_memory_file_path</code> sanitizes (strips a stray
+<code>mem:</code> prefix, a <code>.md</code> suffix, and normalises OS
+separators — the docstring says these are <em>"common mistakes made by
+LLMs"</em>), rejects <code>..</code> segments, absolute names and empty
+segments, then routes <code>global/...</code> to the global root and
+everything else to the project root. <code>_resolve_memory_path</code>
+then re-checks containment with <code>os.path.normpath</code>
+<strong>before</strong> creating any directory, so a rejected name
+cannot leave stray directories behind. The comment states the choice:
+the check is <em>"deliberately lexical … directory symlinks placed
+inside the memories folder are a supported way to share
+memories."</em></p>
+<p><strong>Read and list.</strong> <code>load_memory</code> by exact
+name. <code>_iter_memory_files</code> walks with
+<code>followlinks=True</code>, with a comment recording that
+<code>Path.rglob</code> only follows symlinked directories from Python
+3.13 and <em>"silently skips them"</em> before that.
+<code>list_memories</code> partitions into <code>memories</code> and
+<code>read_only_memories</code>.</p>
+<p><strong>Rename with propagation.</strong> <code>move_memory</code>
+refuses to overwrite an existing target, then
+<code>rename_memory_and_propagate_references</code> loads every memory,
+calls <code>rename_references_to_memory</code>, and re-saves only those
+whose replacement count is non-zero. The pattern is
+<code>rf"(?&lt;!{name_char}){re.escape(ref_old)}(?!{name_char})"</code>
+with <code>name_char = r"[A-Za-z0-9_\-/]"</code>, so surrounding
+backticks, quotes and parentheses are unconstrained while a longer name
+cannot be partially matched.</p>
+<p><strong>Integrity.</strong>
+<code>MemoryReferenceAnalyzer.validate_referential_integrity</code>
+returns a <code>ReferentialIntegrityReport</code> with
+<code>stale_references</code>,
+<code>high_confidence_unmarked_memories</code> and
+<code>low_confidence_unmarked_memories</code>, plus
+<code>is_clean()</code> and a <code>format()</code> for the CLI that
+tags a stale reference whose source is read-only.</p>
+<p><strong>Autofix.</strong>
+<code>auto_prefix_bare_references(include_flat_names, include_read_only, include_global, dry_run)</code>
+rewrites bare occurrences of existing memory names to carry the
+<code>mem:</code> prefix, skipping read-only sources by default and
+reporting what it skipped.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. A memory is a path and a body; its name is its
+identity and its topic path is its only structure.</p>
+<p>Scoping is two-valued and resolved at read time. A name beginning
+<code>global/</code> addresses the shared root; anything else addresses
+this project's. Bare <code>global</code> is rejected with a message
+telling the caller to use <code>global/&lt;name&gt;</code>. Both roots
+are guarded by the same containment check. There is no user, tenant or
+agent dimension — Serena is a local tool for one developer, and the
+atlas's usual multi-tenancy questions do not apply.</p>
+<p>Two name-pattern filters sit above that, both configured rather than
+stored:</p>
+<ul>
+<li><code>read_only_memory_patterns</code> — a full-match regex list; a
+tool write raises <code>PermissionError</code>. Reads are unaffected,
+and the listing reports these separately, so the model can see that a
+memory exists and is frozen.</li>
+<li><code>ignored_memory_patterns</code> — excluded from listing,
+reading <em>and</em> writing through the memory tools. The docstring
+names the bypass in the same breath: <em>"Use read_file on the raw path
+to access ignored memory files."</em></li>
+</ul>
+<p>That second one is worth being precise about. It is a
+<em>tool-surface</em> filter, not an access boundary, and the code says
+so. A model with the file tools enabled can read an ignored memory; what
+the filter buys is that it will not stumble into one and will not
+clutter the activation listing.</p>
+<p>There are no temporal fields, no versions, no provenance and no TTL.
+The only metadata a memory carries is the one encoded in its name.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is no retrieval mechanism at all</strong>, and unlike
+most systems where that sentence is a criticism, here it is the
+design.</p>
+<p>The agent receives the list of memory names at project activation —
+names only, no content, no descriptions. From there it either reads a
+name it judges relevant (<code>ReadMemoryTool</code>'s own docstring
+says <em>"inferring relevance e.g. from the name"</em>) or, under the
+maintenance template's model, starts at <code>mem:core</code> and
+follows links, where each referring sentence explains what is behind the
+link.</p>
+<p>The consequences are worth stating both ways.</p>
+<p>In its favour: nothing is ranked, so nothing is mis-ranked; the cost
+per session is a list of names rather than a block of content; and the
+guidance that decides what to read next is written by a person who
+understood the relationship, not computed from a similarity score. It
+also composes with Serena's other half — the agent that needs a
+<em>fact</em> about the code asks the language server, and the memory is
+reserved for conventions no amount of code reading would reveal.</p>
+<p>Against it: discovery depends entirely on names and link text, so a
+badly named memory is unreachable in practice; there is no fallback
+search when the traversal misses; and — the gap the integrity checker
+does not close — a memory that nothing links to will never be reached
+under the declared model, and nothing reports it. The checker validates
+that every link points at something. It does not validate that
+everything is pointed at.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>explicit tool calls, synchronous, and cost no
+model call of their own</strong>. There is no extraction, no
+summarisation, no hook-driven capture and no background consolidation —
+every memory exists because something invoked <code>write_memory</code>
+with a name and a body.</p>
+<p>Consolidation is a human-or-model chore with tooling:
+<code>edit_memory</code> takes a <code>needle</code>/<code>repl</code>
+pair in <code>literal</code> or <code>regex</code> mode with an explicit
+<code>allow_multiple_occurrences</code> flag, so a careless multi-hit
+replacement has to be asked for. <code>move_memory</code> supports
+moving between project and global scope, which is how a convention that
+turned out to be general gets promoted.</p>
+<p>Conflict handling is absent: two agents writing the same memory is
+last-write-wins with no detection. For a single-developer local tool
+that is a defensible omission, and it is worth noting that the atlas's
+usual concurrency question does not have an answer here.</p>
+<p>Noisy or malicious input is filtered only structurally. The name
+sandbox is thorough — and it is the right thing to be thorough about,
+since a memory name is attacker-reachable if any content the agent reads
+can influence what it writes. The <em>content</em> of a memory is not
+examined at all, which matters because a memory is instructions the
+agent will follow later.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Zero on the write path — a file write. Zero background:
+<code>validate_referential_integrity</code> and
+<code>auto_prefix_bare_references</code> are commands, not workers, and
+nothing re-reads the store on a timer.</p>
+<p>On the read path the always-on cost is <strong>the list of
+names</strong>, injected once at project activation. That is bounded by
+how many memories exist and is stable for the session, so it sits in the
+cached prefix rather than invalidating it — the same
+index-in-the-prefix, body-on-demand arrangement <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> describes, reached here because there is nothing else to
+inject. Bodies arrive as tool results, once each, and stay in the
+transcript.</p>
+<p>The cost that is not bounded is the traversal: a graph whose root
+pulls in six memories, each pulling in four more, is a lot of tool
+results, and nothing caps depth or total bytes. The maintenance
+template's answer is editorial — <em>"dense agent notes, not prose docs
+… avoid obvious context, rationale, and examples"</em> — which is a
+policy, not a limit.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Six MCP tools: <code>write_memory</code>, <code>read_memory</code>,
+<code>list_memories</code>, <code>delete_memory</code>,
+<code>rename_memory</code>, <code>edit_memory</code>. Four are marked
+<code>ToolMarkerCanEdit</code>, so a read-only Serena configuration
+drops them and keeps reading.</p>
+<p>The agency allocation is unusually complete on the model's side. It
+may create, read, edit, rename and delete, and the shipped maintenance
+memory is addressed to it — the tool descriptions even carry the
+reference convention (<em>"References to other memories should be inside
+backticks and prefixed with mem:"</em>), so the graph discipline is
+taught through the tool schema. What the model may <em>not</em> do is
+override a read-only pattern or touch an ignored one through these
+tools.</p>
+<p>Injection at activation is a list, not content, and it is
+conditional: the code checks
+<code>self._active_tools.contains_tool_class(ReadMemoryTool)</code>
+before including it, so a configuration without memory tools does not
+advertise memories it cannot read.</p>
+<p>Porting the idea elsewhere is cheap. The whole mechanism is a naming
+convention, a regex, and a directory — the two modules depend on nothing
+Serena-specific except a path helper and a text replacer.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strongest part of this design is its <strong>path
+handling</strong>, and it is worth reading even if none of the rest
+applies to you. The sandbox has two independent layers: up-front segment
+validation rejecting <code>..</code>, absolute names and empty segments,
+and a lexical containment re-check inside
+<code>_resolve_memory_path</code> described in the code as <em>"a
+defense-in-depth backstop … even if a crafted name slipped through, the
+built path must never escape the memories sandbox (which would let an
+agent read/write/delete arbitrary files)."</em> The absolute-name case
+carries its own comment explaining the specific <code>pathlib</code>
+behaviour it defends against — joining an absolute path discards the
+base — with <code>/etc/cron.d/backdoor</code> as the worked example.
+Five committed tests cover it.</p>
+<p>That care is proportionate: a memory name is model-supplied, and any
+content the agent reads can try to influence it.</p>
+<p>What is not defended:</p>
+<ul>
+<li><strong>Content.</strong> A memory is instructions the agent will
+read later and nothing inspects what is in one. A repository that ships
+a <code>.serena/memories/</code> directory hands the next agent whatever
+it wants to say, and the activation listing makes those names visible
+immediately.</li>
+<li><strong>Correction has no memory.</strong> Editing or deleting
+leaves no record. There is no supersession, no tombstone, and nothing
+stops the model writing back a convention a person removed last week —
+the failure the <a
+href="../../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> exists for, entirely open here.</li>
+<li><strong>The ignore filter is not a boundary</strong>, by its own
+documentation, and a reader who configures
+<code>ignored_memory_patterns</code> expecting secrecy will be
+wrong.</li>
+<li><strong>No concurrency control</strong>, no backup, no sync beyond
+whatever the project's version control does with
+<code>.serena/</code>.</li>
+</ul>
+<p>The near-miss on human review is the CLI.
+<code>serena memories check</code> and the <code>dry_run</code> on the
+autofix are a person inspecting the memory <em>graph</em> — but never
+the memory <em>content</em>, and never as a gate on a write. A person
+can be told a link is dangling; nobody is asked whether a claim is
+true.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test/serena/test_memories_manager.py</code> holds 55 test
+functions, and the distribution says what the maintainers were worried
+about.</p>
+<p>Five are sandbox-escape cases: an absolute project name, an absolute
+system path, an absolute global name, a <code>..</code> segment, and a
+positive control asserting that accepted names resolve inside the
+memories directory. One test reads and lists memories behind a directory
+symlink, pinning the sharing case the containment check was deliberately
+kept lexical for.</p>
+<p>The rest are the similarity matrix, and they are the unusual part.
+There are tests for high-similarity pairs, below-threshold pairs,
+above-threshold pairs, symmetry, candidate ranking order, the empty
+result below threshold, a custom threshold, and the capped candidate
+list. Then the false-positive cases, each named after the mistake:
+<code>test_cross_topic_suffix_coincidence_is_rejected</code>,
+<code>test_fuzzy_near_miss_rejects_substring_only_matches</code>,
+<code>test_fuzzy_accepts_bare_token_when_jaccard_just_above_floor</code>
+paired with <code>..._just_below_floor</code>, and three around the
+hard-coded ignore word. A heuristic with a test on each side of its
+threshold is a heuristic somebody tuned against real false positives
+rather than guessed.</p>
+<p>What is missing is a test on the filters that matter for what a
+session sees. No committed case asserts that a memory matching
+<code>ignored_memory_patterns</code> is absent from
+<code>list_memories</code>, which is the assertion this atlas counts as
+a negative evaluation and the one that would catch the ignore filter
+regressing. The read-only tests exercise the <em>reporting</em> of
+read-only status in the integrity report rather than the
+<code>PermissionError</code> on write.</p>
+<p>There is no evaluation of whether the graph model works — whether an
+agent following <code>mem:core</code> reaches what it needs — and no
+benchmark. There is no paper; the README carries no citation block and
+no arXiv reference.</p>
+<p>I ran nothing. Every claim here comes from reading the tree at
+<code class="commit-id" title="946ad9817875cbf46b308423296c33eb65e3e728">946ad981…</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give references a syntax and then check them.</strong> One
+prefix (<code>mem:</code>), one character class defining a name's
+boundary, and a report of every link that points at nothing. It costs a
+regex and buys the failure mode that a document-based memory otherwise
+accumulates silently — a store full of pointers to things somebody
+deleted.</li>
+<li><strong>Propagate on rename.</strong> If memories cite each other, a
+rename that does not rewrite the citations is a rename that breaks the
+store. Anchor the pattern on both sides so a short name cannot match
+inside a longer one, and skip files whose content does not contain the
+reference so you do not churn every mtime.</li>
+<li><strong>Report the inverse too, and grade it by confidence.</strong>
+A bare memory name in prose is probably a link somebody forgot to mark.
+Splitting the warnings into high and low confidence by whether the name
+could plausibly be ordinary English is what makes the report readable
+rather than noise — and hard-coding an ignore list for words like
+<code>core</code> is the honest version of that.</li>
+<li><strong>Put relevance on the edge, not the node.</strong>
+<em>"Memories themselves should not contain information about when to
+read them; this is the responsibility of the referring memory."</em>
+That single rule removes the per-memory retrieval metadata most designs
+accumulate, and it means the guidance is written by whoever understood
+the relationship.</li>
+<li><strong>Sanitize the names your model supplies, twice.</strong>
+Validate segments up front, then re-check containment on the built path
+<em>before</em> creating directories. And write down why the check is
+lexical if you are supporting symlinks, because the next person will
+"fix" it to <code>resolve()</code>.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not check only one direction of the graph.</strong>
+Dangling links are the easy half. A memory nothing points to is
+unreachable under a traversal model and costs a slot in every listing,
+and it takes the same walk to find.</li>
+<li><strong>Do not call a listing filter an access control.</strong>
+Serena documents the bypass, which is the right thing to do; a system
+that shipped the same filter without that sentence would leave every
+reader with a wrong model of it.</li>
+<li><strong>Do not ship a graph discipline only as a template.</strong>
+The maintenance memory is seeded once and never re-applied, so a project
+that deletes or ignores it keeps all the tooling and loses all the
+convention, and nothing notices.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for a single developer, on a project whose <em>code</em> is
+already machine-readable and whose <em>conventions</em> are not. That is
+a real and common shape, and the design fits it exactly: no database, no
+ranking, no background work, and a store that lives in the repository
+where pull-request review already happens.</p>
+<p>Walk away if memory has to be shared across people with different
+permissions, or if it must be correctable in the sense the rest of this
+atlas means — nothing here can say a memory was wrong, only that it is
+gone. And walk away if you were hoping the memory would find you; the
+whole model assumes an agent willing to navigate, and a store big enough
+that navigation fails has no fallback.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does anything in the wider tree perform a reachability pass over the
+memory graph? The analyzer covers outbound links; this reading found no
+inbound scan, but the dashboard and the workflow tools were only
+skimmed.</li>
+<li>Does the onboarding prompt actually instruct traversal from
+<code>mem:core</code>, or only reference the maintenance memory by name?
+<code>create_onboarding_prompt</code> receives the maintenance memory's
+name; the prompt template itself was not read.</li>
+<li>How large do these stores get in practice, and at what point does
+the name-listing at activation become the dominant cost? Nothing in the
+tree bounds the count.</li>
+<li>Is <code>PermissionError</code> on a read-only write surfaced to the
+model in a form it can act on, or does it abort the tool call? The raise
+is in the manager; the tool layer's error handling was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage, sandbox and CRUD</strong>
+<code>src/serena/memories/memory_manager.py</code></p>
+<p><strong>Reference analysis and autofix</strong>
+<code>src/serena/memories/memory_reference_analysis.py</code></p>
+<p><strong>Agent surface</strong>
+<code>src/serena/tools/memory_tools.py</code> ·
+<code>src/serena/tools/workflow_tools.py</code> ·
+<code>src/serena/agent.py</code> (activation listing)</p>
+<p><strong>Operator surface</strong> <code>src/serena/cli.py</code> (the
+<code>serena memories</code> command group)</p>
+<p><strong>Shipped policy</strong>
+<code>src/serena/resources/memory_maintenance.md</code></p>
+<p><strong>Tests</strong>
+<code>test/serena/test_memories_manager.py</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/oraios/serena/commit/946ad9817875cbf46b308423296c33eb65e3e728"><code class="commit-id" title="946ad9817875cbf46b308423296c33eb65e3e728">946ad981…</code></a>
+— first reading, from the <a
+href="https://github.com/QuesmaOrg/awesome-ai-tokenomics">awesome-ai-tokenomics
+triage</a>, where the entry describes only the semantic code retrieval.
+Screened before reading: 4 auto-run surfaces
+(<code>.devcontainer/devcontainer.json</code>,
+<code>.github/copilot-instructions.md</code>,
+<code>.vscode/settings.json</code>, <code>server.json</code>), 4
+dependency surfaces inside the seven-day cooldown including
+<code>uv.lock</code>, and 4 unpinned manifests, all four of which are
+fixture repositories under <code>test/resources/repos/</code>. Nothing
+was executed and nothing was installed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

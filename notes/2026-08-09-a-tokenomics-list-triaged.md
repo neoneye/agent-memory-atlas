@@ -331,3 +331,53 @@ is too large to inject.
 Thirty entries read. Three reports, five pattern pages changed, one scope
 boundary.
 
+### Batch 7 — the packers, the gateways, and a memory graph
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `yamadashy/repomix` | `172b800f` | Out of scope: packs a repository into one file for a model to read. No persistence between runs |
+| `NVIDIA/RULER` | `c3f5e3b4` | Out of scope: a 31-file long-context benchmark |
+| **`oraios/serena`** | `946ad981` | **Report written** — [Serena](../content/systems/serena.md) |
+| `maximhq/bifrost` | `4c208bbf` | Out of scope: an AI gateway, 4,156 files. No memory vocabulary in source |
+| `BerriAI/litellm` | `f6b9518d` | Out of scope: a gateway with per-request cost accounting, 9,404 files. One hit, a dashboard page-metadata file |
+
+Serena is on the list for its LSP-backed code retrieval. `src/serena/memories/` is
+1,218 lines that nothing in the entry mentions, and it implements a shape the
+atlas mostly does not have: **memory as a graph of documents that cite each
+other, with a checker for the citations.**
+
+A memory body cites another as `` `mem:name` ``. Three mechanisms follow.
+`rename_memory_and_propagate_references` moves the file and rewrites every
+reference to it across the store, anchored on both sides so `mem:auth` cannot
+match inside `mem:auth_tokens`, skipping files that do not mention it so their
+mtimes stay put. `validate_referential_integrity` reports **stale references** —
+links pointing at nothing, each with up to three ranked replacement candidates —
+and the inverse, **unmarked references**: a bare memory name in prose that should
+have been a link, graded high or low confidence by whether the name is unlikely to
+be ordinary English. `serena memories check` runs it.
+
+The similarity scoring is the part that reads as tuned rather than guessed:
+version suffixes stripped before comparison, a 0.34 basename-Jaccard floor so
+`frontend/x-subtleties` does not match `backend/y-subtleties` on a shared trailing
+word, a 0.6 fuzzy floor so the prose word "repository" does not match
+`serena_repository_structure`, and `core` on a hard-coded ignore list because it is
+also an English word. Each threshold has a test named after the false positive it
+prevents.
+
+And the shipped `memory_maintenance.md` inverts how relevance is usually
+modelled: *"Memories themselves should not contain information about when to read
+them; this is the responsibility of the referring memory."* Relevance is an edge
+property. `mem:core` is the declared root and the agent discovers the rest by
+following links from it.
+
+The gap is the other direction. Nothing performs a reachability pass, so a memory
+that nothing links to is unreachable under the declared traversal model and no
+report mentions it — which is exactly the check
+[breadcrumbs](../content/systems/breadcrumbs.md) does run, and the only half *it*
+has. Two systems, opposite ends of the same graph problem, neither aware of the
+other. That is a pattern page waiting to be written and it is recorded here as a
+proposal rather than written now, because it wants both halves stated together
+and a third instance would make it stronger.
+
+Thirty-five entries read, four reports.
+

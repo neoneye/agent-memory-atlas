@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **241 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **242 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -257,6 +257,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 - [`second-brain-cloudflare`](../systems/second-brain-cloudflare/) **Second Brain** — How fast a fact goes stale depends on what kind of fact it is · `rahilp/second-brain-cloudflare` · Trust state, Negative evals
 - [`second-me`](../systems/second-me/) **Second Me** — The atlas's only memory that is weights · `mindverse/Second-Me` · Human review
+- [`serena`](../systems/serena/) **Serena** — Memory as a link graph, with an integrity checker · `oraios/serena` · Scope enforced
 - [`sesa`](../systems/sesa/) **SESA** — Failure-distilled skill memory · `Zenghuang-Fu/SESA-Self-Evolving-Search-Agents`
 - [`shodh-memory`](../systems/shodh-memory/) **Shodh-Memory** — A cognitive substrate with no LLM · `varun29ankuS/shodh-memory` · Mutation audit
 - [`sillytavern`](../systems/sillytavern/) **SillyTavern** — Memory people write by hand · `SillyTavern/SillyTavern`

@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 241 reports.</strong></p>
+<p><strong>This page covers all 242 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;241 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;242 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6261,6 +6261,49 @@ where to put an approval gate.</li>
 <li>Do not copy when: you need episodic memory. There is no store, no
 memory event stream and no write tool, so there is no seam to extend;
 the persistence belongs in a layer above this one.</li>
+</ul>
+<h3 id="serena"><a
+href="../systems/serena/"><code>serena</code></a></h3>
+<ul>
+<li>Best idea: a referential-integrity report over the memory store.
+<code>serena memories check</code> names every <code>mem:</code> link
+pointing at nothing, with up to three ranked replacement candidates, and
+the inverse — a bare memory name in prose that should have been a link,
+graded high or low confidence by whether the name could plausibly be
+ordinary English. The similarity thresholds are tuned rather than
+guessed: version suffixes stripped before comparison, a 0.34
+basename-Jaccard floor so <code>frontend/x-subtleties</code> does not
+match <code>backend/y-subtleties</code>, and <code>core</code> on a
+hard-coded ignore list because it is also an English word.</li>
+<li>Biggest risk: the graph is checked in one direction only. There is
+no reachability pass, so a memory nothing links to — unreachable under
+the maintenance memory's own traversal model, in which the agent starts
+at <code>mem:core</code> and follows references — is invisible to the
+checker and costs a line in every activation listing. Nothing anywhere
+records that a memory was ever wrong; correction is an edit or a delete
+with no trace.</li>
+<li>Most reusable component:
+<code>rename_memory_and_propagate_references</code>. It moves the file,
+then rewrites every reference across the store with a pattern anchored
+on both sides so a short name cannot match inside a longer one, and
+skips memories whose content does not mention it so untouched files keep
+their mtime. Any document store whose documents cite each other needs
+this and most do not have it.</li>
+<li>Maturity impression: MIT, Oraios AI, 1,218 lines for the memory
+subsystem inside a 1,048-file toolkit whose other half is
+language-server code navigation. 55 tests in
+<code>test_memories_manager.py</code>, five of them sandbox-escape cases
+with a comment explaining the exact <code>pathlib</code> behaviour they
+defend against — joining an absolute path discards the base — and most
+of the rest are similarity-threshold cases named after the false
+positive they prevent. What no test covers is that an
+<code>ignored_memory_patterns</code> memory stays out of
+<code>list_memories</code>.</li>
+<li>Study when: your memory is documents rather than facts, and you have
+never checked whether the pointers between them still resolve.</li>
+<li>Do not copy when: you need retrieval. There is none — names are
+listed at activation and the model reads by judgement or follows a link
+— so a store large enough that navigation fails has no fallback.</li>
 </ul>
         </article>
       </div>
