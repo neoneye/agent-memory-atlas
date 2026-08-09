@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **203 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **204 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -66,6 +66,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`ctx`](../systems/ctx/) **ctx** — Guarded consolidation · `ActiveMemory/ctx` · Scope enforced, Mutation audit
 ## D
 
+- [`daem0n-mcp`](../systems/daem0n-mcp/) **Daem0nMCP** — You may not write until you prove you asked · `dasblueyeddevil/daem0n-mcp` · Bi-temporal, Mutation audit
 - [`daimon`](../systems/daimon/) **Daimon** — Session-boundary checkpoint memory · `Daily-Nerd/daimon` · Tombstone, Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`deepcode`](../systems/deepcode/) **DeepCode** — Consolidation with no oracle · `HKUDS/DeepCode` · Scope enforced, Mutation audit, Negative evals
 - [`deer-flow`](../systems/deer-flow/) **DeerFlow** — The best-specified memory contract here · `bytedance/deer-flow` · Scope enforced, Human review

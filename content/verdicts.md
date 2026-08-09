@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 203 reports.**
+**This page covers all 204 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["203 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["204 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1744,6 +1744,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 73,000 lines over one SQLite file, 165 test files, three model tiers reported separately, a paper and a `CITATION.cff` — and `valid_from`, `valid_to` and `entity_scope` written on every insert and selected by nothing.
 - Study when: you are about to publish a retrieval number and have not decided what to disclose about how you got it.
 - Do not copy when: you need the bitemporal or scoping behaviour the `fact_timeline` schema appears to offer, or you need "100% local" to mean no telemetry — it is opt-out, and defaults on.
+
+### [`daem0n-mcp`](../systems/daem0n-mcp/)
+
+- Best idea: mutating tools are blocked by MCP middleware until the agent holds a `PreflightToken` — an HMAC over the intended action, session, project and an expiry, issued only by `context_check`. Consultation becomes a precondition with a receipt that goes stale and is bound to the action it was sought for, instead of a prompt instruction the model may ignore.
+- Biggest risk: `_TOKEN_SECRET` falls back to `"daem0nmcp-covenant-default-secret"`, committed in the source, so the signature the docstring says exists "to detect tampering" detects accident only. Beside it, `enforcement_bypass_log` has a table and a model and no writer — the record of who overrode the gate is the one whose absence cannot be reconstructed.
+- Most reusable component: the bitemporal trio — `get_versions_at_time()` filtering valid time and transaction time together, `recall(as_of_time=)` filtering valid time only because backfilled `happened_at` data must still be findable, and `get_memory_at_time()` on transaction time — each documented with which dimension it uses and why.
+- Maturity impression: 70,000 lines, 107 test files with four on the covenant alone, an embedding migration shipped as a runnable module and labelled breaking, and an uninstall document beside the install one.
+- Study when: your agent is instructed to consult memory before acting and you have no way to know whether it did.
+- Do not copy when: you need scope enforced inside one store — isolation here is one SQLite file per project directory, not a read-path predicate.
+
 
 
 

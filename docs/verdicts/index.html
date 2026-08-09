@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 203 reports.</strong></p>
+<p><strong>This page covers all 204 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;203 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;204 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5001,6 +5001,37 @@ decided what to disclose about how you got it.</li>
 <li>Do not copy when: you need the bitemporal or scoping behaviour the
 <code>fact_timeline</code> schema appears to offer, or you need "100%
 local" to mean no telemetry — it is opt-out, and defaults on.</li>
+</ul>
+<h3 id="daem0n-mcp"><a
+href="../systems/daem0n-mcp/"><code>daem0n-mcp</code></a></h3>
+<ul>
+<li>Best idea: mutating tools are blocked by MCP middleware until the
+agent holds a <code>PreflightToken</code> — an HMAC over the intended
+action, session, project and an expiry, issued only by
+<code>context_check</code>. Consultation becomes a precondition with a
+receipt that goes stale and is bound to the action it was sought for,
+instead of a prompt instruction the model may ignore.</li>
+<li>Biggest risk: <code>_TOKEN_SECRET</code> falls back to
+<code>"daem0nmcp-covenant-default-secret"</code>, committed in the
+source, so the signature the docstring says exists "to detect tampering"
+detects accident only. Beside it, <code>enforcement_bypass_log</code>
+has a table and a model and no writer — the record of who overrode the
+gate is the one whose absence cannot be reconstructed.</li>
+<li>Most reusable component: the bitemporal trio —
+<code>get_versions_at_time()</code> filtering valid time and transaction
+time together, <code>recall(as_of_time=)</code> filtering valid time
+only because backfilled <code>happened_at</code> data must still be
+findable, and <code>get_memory_at_time()</code> on transaction time —
+each documented with which dimension it uses and why.</li>
+<li>Maturity impression: 70,000 lines, 107 test files with four on the
+covenant alone, an embedding migration shipped as a runnable module and
+labelled breaking, and an uninstall document beside the install
+one.</li>
+<li>Study when: your agent is instructed to consult memory before acting
+and you have no way to know whether it did.</li>
+<li>Do not copy when: you need scope enforced inside one store —
+isolation here is one SQLite file per project directory, not a read-path
+predicate.</li>
 </ul>
         </article>
       </div>

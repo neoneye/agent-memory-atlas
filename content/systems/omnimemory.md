@@ -57,8 +57,8 @@ what the suite does **not** prove: the kernel's default environment token is
 therefore "a green suite here… does NOT prove the deployed name is authorized;
 the deployment must set the env token to `onex-dev`."
 
-A test whose subject is the boundary of its own evidence. This atlas has read
-two hundred and three systems and this is the first one.
+A test whose subject is the boundary of its own evidence. No other report in
+this atlas records one.
 
 **The second mechanism is a real compare-and-set on lifecycle.**
 `handler_memory_expire.py` transitions a memory with a WHERE clause carrying
@@ -319,7 +319,7 @@ ONEX there is nothing here to install.
 
 Read the gate file anyway. It is the best-argued test file in this atlas, and
 its central claim — that an unexercised gate and an absent gate are the same
-gate — applies to every invariant any of these two hundred and three systems assert.
+gate — applies to every invariant any system in this atlas asserts.
 
 ## 12. Open Questions
 
