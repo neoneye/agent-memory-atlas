@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 208 reports.</strong></p>
+<p><strong>This page covers all 209 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;208 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;209 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5158,6 +5158,39 @@ failed to prevent it.</li>
 did about them.</li>
 <li>Do not copy when: you want the dismissal suppression as written —
 key it on the embedding, not on a generated id.</li>
+</ul>
+<h3 id="engram-provable"><a
+href="../systems/engram-provable/"><code>engram-provable</code></a></h3>
+<ul>
+<li>Best idea: crypto-shredding resolves right-to-erasure against an
+append-only audit chain — content becomes AES-GCM ciphertext under a key
+discarded immediately, the embedding is cleared, and the redaction is
+recorded in the immutable chain, so the row and the history prove data
+existed and was erased while the content is unrecoverable. The first
+instance of the pattern in this atlas.</li>
+<li>Biggest risk: the README's 91.4% LongMemEval headline has no
+harness, no result file and no reference outside the README; the
+methodology lives on a website, outside the pinned commit. In an
+otherwise unusually verifiable system it is the one claim that rests on
+a link.</li>
+<li>Most reusable component: the audit chain as database enforcement —
+<code>seq</code>/<code>prev_hash</code>/<code>row_hash</code> set by a
+<code>BEFORE INSERT</code> trigger under
+<code>pg_advisory_xact_lock</code> per tenant, a
+<code>BEFORE UPDATE OR DELETE</code> trigger that raises so the
+application role cannot rewrite history, one <code>audit_canon</code>
+function shared by writer and verifier so the hashes cannot drift, and
+<code>verify_audit_chain</code> returning the breaking sequence
+number.</li>
+<li>Maturity impression: 44,000 lines of Go over 25+ ordered migrations,
+with tenant isolation, append-only, and the binding/ID state machine all
+enforced as constraints and triggers rather than service-layer
+discipline — and 32 test files.</li>
+<li>Study when: you have an audit requirement and an erasure requirement
+and have been treating them as incompatible.</li>
+<li>Do not copy when: you need the rejected-value record it is one query
+short of — <code>content_hash</code> is computed, chained and immutable,
+and no write path ever selects on it.</li>
 </ul>
         </article>
       </div>

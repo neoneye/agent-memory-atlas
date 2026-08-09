@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 208 reports.**
+**This page covers all 209 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["208 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["209 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1789,6 +1789,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 59,000 lines of TypeScript, 82 test files across five vitest configs, and a `gitmem_scar_usage` table recording `reference_type` including `'none'`, `surfaced_at` against `acknowledged_at`, `execution_successful` and a `variant_id` — plus `repeat_mistake` linking a recurrence back to the scar that failed to prevent it.
 - Study when: your agent is shown memories and nothing records what it did about them.
 - Do not copy when: you want the dismissal suppression as written — key it on the embedding, not on a generated id.
+
+### [`engram-provable`](../systems/engram-provable/)
+
+- Best idea: crypto-shredding resolves right-to-erasure against an append-only audit chain — content becomes AES-GCM ciphertext under a key discarded immediately, the embedding is cleared, and the redaction is recorded in the immutable chain, so the row and the history prove data existed and was erased while the content is unrecoverable. The first instance of the pattern in this atlas.
+- Biggest risk: the README's 91.4% LongMemEval headline has no harness, no result file and no reference outside the README; the methodology lives on a website, outside the pinned commit. In an otherwise unusually verifiable system it is the one claim that rests on a link.
+- Most reusable component: the audit chain as database enforcement — `seq`/`prev_hash`/`row_hash` set by a `BEFORE INSERT` trigger under `pg_advisory_xact_lock` per tenant, a `BEFORE UPDATE OR DELETE` trigger that raises so the application role cannot rewrite history, one `audit_canon` function shared by writer and verifier so the hashes cannot drift, and `verify_audit_chain` returning the breaking sequence number.
+- Maturity impression: 44,000 lines of Go over 25+ ordered migrations, with tenant isolation, append-only, and the binding/ID state machine all enforced as constraints and triggers rather than service-layer discipline — and 32 test files.
+- Study when: you have an audit requirement and an erasure requirement and have been treating them as incompatible.
+- Do not copy when: you need the rejected-value record it is one query short of — `content_hash` is computed, chained and immutable, and no write path ever selects on it.
+
 
 
 
