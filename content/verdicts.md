@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 201 reports.**
+**This page covers all 202 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["201 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["202 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1726,4 +1726,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 119,000 lines, mypy strict, Pydantic throughout, a frozen five-state transition map with DELETED terminal — and a fully specified audit model with no constructor anywhere in `src`, a trust enum derived from a float by threshold, and `OMNIMEMORY_USE_STUB_HANDLERS` defaulting to `"true"`.
 - Study when: you assert an invariant in CI and have never proved the assertion fails when violated.
 - Do not copy when: you want a memory system to adopt — this is a platform domain package, and the lifecycle it specifies is not running.
+
+### [`wax`](../systems/wax/)
+
+- Best idea: a crash harness that forks a child, sets `WAX_CRASH_INJECT_CHECKPOINT` to a named point in the commit sequence, SIGKILLs it, reopens the `.wax` file and asserts the exact committed frame count *and* both frames' bytes — with `childDidNotCrash` as a failure and an exit code on the child's fall-through, so the test fails closed at both ends.
+- Biggest risk: `memory_promote` defaults `approve` to `false` and returns a proposal; `promote`, the alias on the same command surface with the same parameters, sets it to `true` when absent. One name asks, the other acts.
+- Most reusable component: promotion as a proposal — suggested type and durability, confidence, recall count, unique query count, the reasons, and duplicate matches with similarity scores, returned without writing, with `.promotionReviewed` and `.promotionWritten` as distinct session events carrying `approved` and `written` separately.
+- Maturity impression: 97,000 lines of Swift across thirteen targets with its own single-file format — double-buffered headers, TOC, footer, WAL ring — 173 test files, CoreML embedding models, and a durable-write guard that refuses private keys, AWS keys, GitHub PATs and Slack tokens by name.
+- Study when: you wrote your own storage format and your durability evidence is that it reopens.
+- Do not copy when: you need scope to isolate — repo and project add 0.9 and 0.7 to the score and remove nothing, and expiry is enforced as a −10 sentinel against a −9.5 guard.
+
 

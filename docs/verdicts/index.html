@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 201 reports.</strong></p>
+<p><strong>This page covers all 202 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;201 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;202 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4938,6 +4938,36 @@ assertion fails when violated.</li>
 <li>Do not copy when: you want a memory system to adopt — this is a
 platform domain package, and the lifecycle it specifies is not
 running.</li>
+</ul>
+<h3 id="wax"><a href="../systems/wax/"><code>wax</code></a></h3>
+<ul>
+<li>Best idea: a crash harness that forks a child, sets
+<code>WAX_CRASH_INJECT_CHECKPOINT</code> to a named point in the commit
+sequence, SIGKILLs it, reopens the <code>.wax</code> file and asserts
+the exact committed frame count <em>and</em> both frames' bytes — with
+<code>childDidNotCrash</code> as a failure and an exit code on the
+child's fall-through, so the test fails closed at both ends.</li>
+<li>Biggest risk: <code>memory_promote</code> defaults
+<code>approve</code> to <code>false</code> and returns a proposal;
+<code>promote</code>, the alias on the same command surface with the
+same parameters, sets it to <code>true</code> when absent. One name
+asks, the other acts.</li>
+<li>Most reusable component: promotion as a proposal — suggested type
+and durability, confidence, recall count, unique query count, the
+reasons, and duplicate matches with similarity scores, returned without
+writing, with <code>.promotionReviewed</code> and
+<code>.promotionWritten</code> as distinct session events carrying
+<code>approved</code> and <code>written</code> separately.</li>
+<li>Maturity impression: 97,000 lines of Swift across thirteen targets
+with its own single-file format — double-buffered headers, TOC, footer,
+WAL ring — 173 test files, CoreML embedding models, and a durable-write
+guard that refuses private keys, AWS keys, GitHub PATs and Slack tokens
+by name.</li>
+<li>Study when: you wrote your own storage format and your durability
+evidence is that it reopens.</li>
+<li>Do not copy when: you need scope to isolate — repo and project add
+0.9 and 0.7 to the score and remove nothing, and expiry is enforced as a
+−10 sentinel against a −9.5 guard.</li>
 </ul>
         </article>
       </div>
