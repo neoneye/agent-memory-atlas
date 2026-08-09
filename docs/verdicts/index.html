@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 230 reports.</strong></p>
+<p><strong>This page covers all 231 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;230 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;231 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5870,6 +5870,39 @@ how important something is.</li>
 <li>Do not copy when: you need to know why belief ended —
 <code>expired_at</code> records when, not whether the fact was
 superseded or refuted.</li>
+</ul>
+<h3 id="memcp"><a href="../systems/memcp/"><code>memcp</code></a></h3>
+<ul>
+<li>Best idea: feedback weighted asymmetrically and propagated to the
+graph. <code>memcp_reinforce</code> moves a helpful insight
+<code>+0.1</code> and boosts its edges <code>0.02</code>; a
+<em>misleading</em> one moves <code>-0.2</code> and weakens its edges
+<code>0.05</code>. One report of being misled outweighs two of being
+helped, and the penalty reaches the neighbourhood rather than stopping
+at the node — because a misleading insight usually sits in a misleading
+neighbourhood.</li>
+<li>Biggest risk: <code>benchmark_output/benchmark_report.md</code> is a
+dated head-to-head whose "Native" column is not measured.
+<code>tests/benchmark/test_context_rot.py</code> sets
+<code>native_value=5.0  # Typical ~5% retention</code> and
+<code>native_value=2.0  # ~0.05^3 ≈ near zero</code> — one assumed
+constant derived from another — and the JSON computes a savings
+percentage and a ratio from them.</li>
+<li>Most reusable component: intent-typed traversal — "why did we choose
+X?" follows causal edges, "when was Y decided?" follows temporal ones.
+Choosing the relation to walk from the question's form is cheap and
+legible, and only possible because the edges are typed at write
+time.</li>
+<li>Maturity impression: 14,300 lines with a three-layer delegation, a
+four-relation SQLite graph with Hebbian strengthening and
+configurable-half-life decay, secret blocking on the write path, and
+<strong>two</strong> required dependencies with NER, embeddings and
+sub-agent extraction all optional.</li>
+<li>Study when: your feedback loop treats "this helped" and "this misled
+me" as mirror images.</li>
+<li>Do not copy when: you need the benchmark — "knowledge retained after
+a context wipe" is a property every external store has by construction,
+and a plain text file scores 100%.</li>
 </ul>
         </article>
       </div>

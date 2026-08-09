@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 230 reports.**
+**This page covers all 231 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["230 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["231 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1987,6 +1987,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 12,000 lines with SQLite and Postgres behind one storage layer, pluggable LLM and embedding adapters as constructor arguments, and a LongMemEval harness with checkpointing — and an empty `benchmarks/results/`.
 - Study when: your write path decides what to keep by asking a model how important something is.
 - Do not copy when: you need to know why belief ended — `expired_at` records when, not whether the fact was superseded or refuted.
+
+### [`memcp`](../systems/memcp/)
+
+- Best idea: feedback weighted asymmetrically and propagated to the graph. `memcp_reinforce` moves a helpful insight `+0.1` and boosts its edges `0.02`; a *misleading* one moves `-0.2` and weakens its edges `0.05`. One report of being misled outweighs two of being helped, and the penalty reaches the neighbourhood rather than stopping at the node — because a misleading insight usually sits in a misleading neighbourhood.
+- Biggest risk: `benchmark_output/benchmark_report.md` is a dated head-to-head whose "Native" column is not measured. `tests/benchmark/test_context_rot.py` sets `native_value=5.0  # Typical ~5% retention` and `native_value=2.0  # ~0.05^3 ≈ near zero` — one assumed constant derived from another — and the JSON computes a savings percentage and a ratio from them.
+- Most reusable component: intent-typed traversal — "why did we choose X?" follows causal edges, "when was Y decided?" follows temporal ones. Choosing the relation to walk from the question's form is cheap and legible, and only possible because the edges are typed at write time.
+- Maturity impression: 14,300 lines with a three-layer delegation, a four-relation SQLite graph with Hebbian strengthening and configurable-half-life decay, secret blocking on the write path, and **two** required dependencies with NER, embeddings and sub-agent extraction all optional.
+- Study when: your feedback loop treats "this helped" and "this misled me" as mirror images.
+- Do not copy when: you need the benchmark — "knowledge retained after a context wipe" is a property every external store has by construction, and a plain text file scores 100%.
+
 
 
 
