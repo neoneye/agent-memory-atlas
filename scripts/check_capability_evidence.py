@@ -58,7 +58,7 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: number is the whole mechanism: it can only go up, and it is edited by hand in
 #: the same commit that earns it, so raising it is a deliberate act with a diff
 #: rather than a side effect of a build.
-COVERAGE_FLOOR = 36
+COVERAGE_FLOOR = 38
 
 #: A test field says what pins the mechanism. These two are the honest answers
 #: when nothing does, and they are common — writing one is the point, because

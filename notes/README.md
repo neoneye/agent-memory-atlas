@@ -10,13 +10,19 @@ when the work happens.
 
 - [2026-08-09-a-tokenomics-list-triaged.md](2026-08-09-a-tokenomics-list-triaged.md) —
   73 open-source projects from a token-cost list, read against the memory bar in
-  batches of five. A cost corpus is a poor place to find memory systems and a
-  plausible place to find the measurement
+  fifteen batches. The starting hypothesis was that a cost corpus would be a poor
+  place to find memory systems and a plausible place to find the cache measurement
   [cache-preserving injection](../content/patterns/cache-preserving-injection.md)
-  says nobody publishes; both halves are being tested rather than assumed. The
-  running ledger, and the one method shortcut — a shallow clone disables the
-  screen's lockfile-age bound, which is only safe because nothing is installed
-  for the whole pass.
+  says nobody publishes. It was wrong in the more useful direction: **eight**
+  memory systems, none of them filed under *Memory* — Serena is for code
+  navigation, Ollama for local inference, gh-aw for CI, vLLM Semantic Router for
+  routing, and every one has memory underneath. The measurement turned up too, in
+  llmtrim, from a project that found the problem by watching its own compression
+  savings leak. Plus a new scope boundary (the semantic response cache, argued
+  from GPTCache's hit check refusing to serve a session its own answer), six
+  pattern pages changed, and the method finding that matters: an awesome-list entry
+  describes what a project is *for*, and a memory system is usually not what its
+  host is for — so nothing but a grep of the source would have found any of these.
 - [2026-08-09-a-phased-program-and-where-to-abandon-it.md](2026-08-09-a-phased-program-and-where-to-abandon-it.md) —
   sequences the four notes below, and three results came out of it that none of
   them could see alone. The cheapest item is a prerequisite for the other three,

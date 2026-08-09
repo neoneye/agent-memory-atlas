@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **245 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **246 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -277,6 +277,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/) **TencentDB Agent Memory** — Layered symbolic memory · `TencentCloud/tencentdb-agent-memory`
 - [`terse-memory`](../systems/terse-memory/) **TERSE Memory** — A linter where the verbs should be · `terse-lang/terse` · Trust state
 - [`tigrimosr`](../systems/tigrimosr/) **TigrimOSR** — Proposed skills, staged on disk · `Sompote/TigrimOSR` · Trust state, Scope enforced, Human review
+- [`token-optimizer`](../systems/token-optimizer/) **token-optimizer** — Cross-session continuity, fenced as data · `alexgreensh/token-optimizer` · Scope enforced, Negative evals
 - [`token-savior`](../systems/token-savior/) **Token Savior** — A learned injection ranker · `Mibayy/token-savior` · Scope enforced, Mutation audit
 - [`tokenmizer`](../systems/tokenmizer/) **TokenMizer** — A status for not knowing · `Shweta-Mishra-ai/tokenmizer` · Trust state, Mutation audit
 - [`truememory`](../systems/truememory/) **TrueMemory** — A leaderboard that puts someone else first · `buildingjoshbetter/TrueMemory` · Trust state, Negative evals
