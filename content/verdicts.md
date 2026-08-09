@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 202 reports.**
+**This page covers all 203 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["202 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["203 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1735,5 +1735,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 97,000 lines of Swift across thirteen targets with its own single-file format — double-buffered headers, TOC, footer, WAL ring — 173 test files, CoreML embedding models, and a durable-write guard that refuses private keys, AWS keys, GitHub PATs and Slack tokens by name.
 - Study when: you wrote your own storage format and your durability evidence is that it reopens.
 - Do not copy when: you need scope to isolate — repo and project add 0.9 and 0.7 to the score and remove nothing, and expiry is enforced as a −10 sentinel against a −9.5 guard.
+
+### [`truememory`](../systems/truememory/)
+
+- Best idea: benchmark reporting as it should be done — a nine-system LoCoMo leaderboard with a rival ranked first, the caveat that would have cost the rival that place printed under the table anyway, the rubric's leniency and its incomparability to published baselines stated, three-run means with the individual runs shown, competitors run in-house with their result files committed, and BEAM's worst category published at 19.5% in the same table as its best at 97.1%.
+- Biggest risk: contradictions are found by regex over message text and `build_contradictions` runs `DELETE FROM fact_timeline` before reinserting, so a correction phrased outside the pattern set never enters the timeline, `superseded_by` points at IDs that change every pass, and a retracted fact is re-derived from the same message on the next run.
+- Most reusable component: `tests/test_issue_637_directive_leaks.py` — directives were excluded from core search and leaked through five named supplement paths, and the fix is an exclusion test per leg, each paired with its `include_directives=True` counterpart. An exclusion invariant tested on every path that bypasses the filter.
+- Maturity impression: 73,000 lines over one SQLite file, 165 test files, three model tiers reported separately, a paper and a `CITATION.cff` — and `valid_from`, `valid_to` and `entity_scope` written on every insert and selected by nothing.
+- Study when: you are about to publish a retrieval number and have not decided what to disclose about how you got it.
+- Do not copy when: you need the bitemporal or scoping behaviour the `fact_timeline` schema appears to offer, or you need "100% local" to mean no telemetry — it is opt-out, and defaults on.
+
 
 
