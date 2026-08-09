@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 221 reports.**
+**This page covers all 222 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["221 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["222 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1906,6 +1906,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 32,000 lines, three storage backends behind one interface with a checkpointed ID-preserving migrator that fails loud on schema mismatch, 60 MCP tools each carrying `whenToUse` *and* `doNotUse`, and a REST surface that blocks the destructive tools while leaving them available over MCP.
 - Study when: your confidence scores fall for beliefs that were true when they were written.
 - Do not copy when: you need `valid_from` to be queryable — it is stored on every backend, read back by the mappers, and used in no predicate.
+
+### [`obsidian-mind`](../systems/obsidian-mind/)
+
+- Best idea: a byte budget on session-start injection that degrades the cheapest-to-lose sections to pointers and then **names every one it dropped in the size meter, "because a silent loss is worse than the bloat"**. The ranking rule is value density rather than size — filenames go first because one Glob rebuilds them; identity, personal context and correctness guards carry no fallback and are never traded for plumbing.
+- Biggest risk: no staleness story. A vault accumulating "Key Decisions" and "Gotchas" for a year holds reversed decisions and fixed gotchas, and nothing distinguishes them from the live ones — the design controls how *much* gets injected with real rigour and not whether it is still true.
+- Most reusable component: the argument against the obvious alternative — "line-based caps cannot do this job: shortening entries under a line cap just slides the window deeper and refills it" — together with the rule that optimising the eager layer means removing *duplication*, not *information*, which is why resume and compact re-inject only the volatile sections.
+- Maturity impression: a vault template with lifecycle hooks for three agent CLIs, Obsidian `.base` views so the human and the agent query one store, an exposure allowlist that ships empty with a written reason, and a path check that unifies separators before normalising because POSIX `normalize()` will not collapse a backslash-spelled `..`.
+- Study when: you inject context at session start and have never measured what it costs.
+- Do not copy when: you want a component — the vault *is* the system, adopted wholesale.
+
 
 
 
