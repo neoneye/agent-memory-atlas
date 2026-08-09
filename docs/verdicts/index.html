@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 229 reports.</strong></p>
+<p><strong>This page covers all 230 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;229 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;230 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5838,6 +5838,38 @@ evidence to commit alongside it.</li>
 <li>Do not copy when: you need the number — one re-run with
 <code>--dataset longmemeval_s.json</code>, logged the same way, would
 settle it.</li>
+</ul>
+<h3 id="memv"><a href="../systems/memv/"><code>memv</code></a></h3>
+<ul>
+<li>Best idea: store only what you failed to predict. The extractor asks
+the model what an episode should contain given existing knowledge,
+compares that against the actual transcript, and keeps the gap — so
+importance comes from prediction error rather than an importance prompt
+with no reference point. Credited to Nemori in the module docstring,
+with a discipline note beside it: the narrative summary is for
+retrieval, the original messages are the only extraction source, so a
+summarisation error cannot become a stored fact.</li>
+<li>Biggest risk: the criterion is unmeasured. Prediction error decides
+everything stored, so too good a predictor silently discards real
+information and too poor a one stores what the design exists to avoid —
+and the rate moves with whichever model the caller passes in. Nothing
+counts the discards.</li>
+<li>Most reusable component: the bitemporal store —
+<code>valid_at</code>/<code>invalid_at</code> for when a fact was true
+and <code>expired_at</code> for when belief in it ended, queried
+together as of an event time with <code>include_expired</code> as the
+switch, plus a model validator rejecting
+<code>invalid_at &lt;= valid_at</code>. Two dimensions as separate
+columns rather than one timestamp doing double duty.</li>
+<li>Maturity impression: 12,000 lines with SQLite and Postgres behind
+one storage layer, pluggable LLM and embedding adapters as constructor
+arguments, and a LongMemEval harness with checkpointing — and an empty
+<code>benchmarks/results/</code>.</li>
+<li>Study when: your write path decides what to keep by asking a model
+how important something is.</li>
+<li>Do not copy when: you need to know why belief ended —
+<code>expired_at</code> records when, not whether the fact was
+superseded or refuted.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 229 reports.**
+**This page covers all 230 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["229 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["230 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1978,6 +1978,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a 2,800-line harness with `--resume`, `--offset` and `--dataset`, per-question-type token budgets tuned against named failures, and a self-audit written as a table of checks with file and line for each.
 - Study when: you are about to publish a record and want to know what evidence to commit alongside it.
 - Do not copy when: you need the number — one re-run with `--dataset longmemeval_s.json`, logged the same way, would settle it.
+
+### [`memv`](../systems/memv/)
+
+- Best idea: store only what you failed to predict. The extractor asks the model what an episode should contain given existing knowledge, compares that against the actual transcript, and keeps the gap — so importance comes from prediction error rather than an importance prompt with no reference point. Credited to Nemori in the module docstring, with a discipline note beside it: the narrative summary is for retrieval, the original messages are the only extraction source, so a summarisation error cannot become a stored fact.
+- Biggest risk: the criterion is unmeasured. Prediction error decides everything stored, so too good a predictor silently discards real information and too poor a one stores what the design exists to avoid — and the rate moves with whichever model the caller passes in. Nothing counts the discards.
+- Most reusable component: the bitemporal store — `valid_at`/`invalid_at` for when a fact was true and `expired_at` for when belief in it ended, queried together as of an event time with `include_expired` as the switch, plus a model validator rejecting `invalid_at <= valid_at`. Two dimensions as separate columns rather than one timestamp doing double duty.
+- Maturity impression: 12,000 lines with SQLite and Postgres behind one storage layer, pluggable LLM and embedding adapters as constructor arguments, and a LongMemEval harness with checkpointing — and an empty `benchmarks/results/`.
+- Study when: your write path decides what to keep by asking a model how important something is.
+- Do not copy when: you need to know why belief ended — `expired_at` records when, not whether the fact was superseded or refuted.
+
 
 
 

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Importance emerges from prediction
+error — the model is asked what an episode should contain, and only the
+gap between that guess and the actual transcript is extracted.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memv — Agent Memory Atlas">
+    <meta property="og:description" content="Importance emerges from
+prediction error — the model is asked what an episode should contain,
+and only the gap between that guess and the actual transcript is
+extracted.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memv — Agent Memory Atlas">
+    <meta name="twitter:description" content="Importance emerges from
+prediction error — the model is asked what an episode should contain,
+and only the gap between that guess and the actual transcript is
+extracted.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memv — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Store only what you failed to predict</p>
+          <h1>memv</h1>
+          <p class="document-deck">Importance emerges from prediction
+error — the model is asked what an episode should contain, and only the
+gap between that guess and the actual transcript is extracted.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vstorm-co/memv">
+              <span>Source</span>
+              <strong>vstorm-co/memv</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448" title="fd314bac28247df1149edfbf0d1f7881690ef448">
+              <span>Analyzed revision</span>
+              <code>fd314bac…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memv is an Apache-licensed Python memory library — SQLite or
+Postgres, hybrid retrieval, pluggable LLM and embedding adapters — with
+a single organising idea stated in its first line:</p>
+<blockquote>
+<p>"Most memory systems extract everything and rely on retrieval to
+filter it. memv extracts only what the model <strong>failed to
+predict</strong> — importance emerges from prediction error, not upfront
+scoring."</p>
+</blockquote>
+<p><strong>That is a genuinely different answer to the hardest question
+in this atlas.</strong> Almost every system here decides what to store
+by asking a model to <em>score</em> importance, or by storing everything
+and hoping the ranker copes. Both fail the same way: an LLM asked "how
+important is this?" has no reference point, so it either flags
+everything or flags what sounds dramatic.</p>
+<p><code>PredictCalibrateExtractor</code> gives it a reference point.
+The loop, from the docstring:</p>
+<blockquote>
+<p>"1. Predict what the episode should contain (given existing
+knowledge) 2. Compare prediction vs actual episode 3. Extract only what
+we FAILED to predict"</p>
+</blockquote>
+<p>If the model, knowing what it already knows, can guess what the
+conversation said, that content adds nothing. What survives is the
+surprise — which is what "important" should have meant all along. The
+idea is credited to <a
+href="https://arxiv.org/abs/2508.03341">Nemori</a> and the citation is
+in the module docstring, not just the README.</p>
+<p><strong>And there is a discipline note inside it worth as much as the
+mechanism:</strong></p>
+<blockquote>
+<p>"Episode content is for RETRIEVAL (narrative is fine) Extraction
+source is ONLY original messages (ground truth)"</p>
+</blockquote>
+<p>The episode's narrative summary is used to <em>find</em> things and
+never to <em>extract</em> from. So a summarisation error can degrade
+recall but cannot become a stored fact. Separating the lossy
+representation from the authoritative one, and saying which is which at
+the top of the extractor, is the kind of boundary most pipelines
+blur.</p>
+<p><strong>The second mechanism is the cleanest bitemporal
+implementation in the atlas</strong> — section 5.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Exchanges become episodes. Each episode is compared against what is
+already known; only the unpredicted part becomes knowledge. Knowledge
+carries both when it was true and when the system stopped believing it,
+and queries can ask as of either.</p>
+<pre class="mermaid"><code>flowchart TD
+    EX[&quot;add_exchange(user, assistant)&quot;] --&gt; EP[&quot;episode — title + original_messages&quot;]
+    EP --&gt; P[&quot;stage 1: predict what this episode&lt;br/&gt;should contain, given existing knowledge&quot;]
+    P --&gt; C[&quot;stage 2: calibrate — compare the prediction&lt;br/&gt;against the ORIGINAL MESSAGES, not the narrative&quot;]
+    C --&gt; G[&quot;stage 3: extract only the gaps&quot;]
+    G --&gt; K[&quot;semantic_knowledge:&lt;br/&gt;statement, valid_at, invalid_at, expired_at, user_id&quot;]
+    CS[&quot;no prior knowledge&quot;] --&gt;|&quot;cold start prompt&quot;| G
+    Q[&quot;retrieve(query, user_id, as of event_time)&quot;] --&gt; F[&quot;WHERE (valid_at IS NULL OR valid_at &amp;lt;= ?)&lt;br/&gt;AND (invalid_at IS NULL OR invalid_at &amp;gt; ?)&lt;br/&gt;AND expired_at IS NULL&quot;]
+    K --&gt; F
+    F --&gt; H[&quot;vector similarity + BM25,&lt;br/&gt;reciprocal rank fusion&quot;]
+    H --&gt; R[&quot;result.to_prompt()&quot;]
+    IE[&quot;include_expired = true&quot;] -.-&gt;|&quot;drops the expired_at clause —&lt;br/&gt;what did we once believe?&quot;| F
+    V[&quot;model validator&quot;] -.-&gt;|&quot;rejects invalid_at &amp;lt;= valid_at&quot;| K</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>src/memv/</code> splits into <code>processing</code>
+(extraction, prompts), <code>memory</code> (the pipeline),
+<code>storage</code> (SQLite and Postgres), <code>retrieval</code>,
+<code>embeddings</code>, <code>llm</code>, <code>mcp</code>,
+<code>dashboard</code>, <code>cache</code>, <code>models</code>,
+<code>protocols</code>, <code>config</code>.</p>
+<p><code>protocols.py</code> defines <code>LLMClient</code> and the
+embedding interface, and the adapters are separate —
+<code>OpenAIEmbedAdapter</code>,
+<code>PydanticAIAdapter("openai:gpt-4o-mini")</code> — so the model
+choices are constructor arguments rather than configuration sprawl. The
+quick start is nine lines and includes both adapters explicitly, which
+is honest about what the library needs.</p>
+<p>12,000 lines of Python, 15 test files, an mkdocs site, and a
+<code>notes/</code> directory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Extract</strong> —
+<code>src/memv/processing/extraction.py</code> (the Nemori citation
+<code>:1-6</code>, <code>PredictCalibrateExtractor</code> and its flow
+<code>:34-47</code>, <code>extract</code> <code>:52-75</code>,
+<code>_predict</code> <code>:77</code>),
+<code>src/memv/processing/prompts.py</code>
+(<code>prediction_prompt</code>,
+<code>extraction_prompt_with_prediction</code>,
+<code>cold_start_extraction_prompt</code>).</p>
+<p><strong>Query as of a time</strong> —
+<code>src/memv/storage/sqlite/_knowledge.py</code> (the as-of predicates
+<code>:78-93</code>, the user-scoped reads <code>:108-122</code>).</p>
+<p><strong>Guard the interval</strong> — <code>src/memv/models.py</code>
+(<code>check_temporal_range</code> <code>:123-127</code>, the validity
+checks <code>:64</code>, <code>:100</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>semantic_knowledge</code> carries a <code>statement</code>, a
+<code>user_id</code>, and <strong>three time columns doing two
+jobs</strong>:</p>
+<ul>
+<li><code>valid_at</code> / <code>invalid_at</code> — when the fact was
+true in the world.</li>
+<li><code>expired_at</code> — when the system stopped believing it.</li>
+</ul>
+<p>The read is the textbook form:</p>
+<pre class="sql"><code>WHERE (valid_at IS NULL OR valid_at &lt;= ?)
+  AND (invalid_at IS NULL OR invalid_at &gt; ?)
+  AND expired_at IS NULL</code></pre>
+<p>with <code>include_expired</code> dropping the last clause. So "what
+was true on this date" and "what did we once believe" are different
+questions with different answers, both askable. That is what the
+<code>bitemporal</code> mark certifies, and this implementation is
+cleaner than most — the two dimensions are separate columns with
+separate semantics rather than one timestamp doing double duty.</p>
+<p>A <code>check_temporal_range</code> model validator rejects
+<code>invalid_at &lt;= valid_at</code>, so an interval that ends before
+it begins cannot be stored. Small, and it is the invariant a bitemporal
+store most often loses.</p>
+<p>There is no status enum and no tombstone. <code>expired_at</code> is
+the withdrawal mechanism, and it is a timestamp rather than a reason —
+so the store knows <em>when</em> it stopped believing something and not
+<em>why</em>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector similarity plus BM25 fused by reciprocal rank, over the as-of
+filtered set, scoped by <code>user_id = ?</code> — a stored key on the
+read path, earning <code>scope_enforced</code>.</p>
+<p>Filtering by validity <em>before</em> ranking is the right order: a
+system that ranks first and filters after can return five results and
+show two.</p>
+<p><code>result.to_prompt()</code> as the retrieval surface — returning
+something formatted for injection rather than a raw row list — is a
+small API decision that prevents every caller inventing its own
+serialisation.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add_exchange</code> then <code>process(user_id)</code> —
+capture is cheap and synchronous, extraction is a separate call.
+Splitting them means the expensive predict-then- calibrate pass can be
+batched or deferred without blocking the conversation.</p>
+<p>The cold-start path is handled explicitly: with no existing knowledge
+there is nothing to predict against, so a separate prompt uses the
+episode content plus the original messages. A predict-calibrate system
+that did not special-case its empty state would extract nothing from the
+first conversation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python library first — <code>uv add memvee</code> — with an MCP
+surface and a dashboard beside it. <code>async with memory:</code> as
+the lifecycle and <code>await memory.process(...)</code> as the explicit
+extraction trigger make the cost visible in the calling code rather than
+hidden in a background thread.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Two marks: bitemporal and scope enforced.</strong></p>
+<p><strong>Trust state — withheld.</strong> <code>expired_at</code>
+withholds a statement from the default read, which is close, and it is a
+timestamp rather than a discrete status with a reason; nothing
+distinguishes "expired because superseded" from "expired because
+refuted", which is the distinction <a
+href="../cortex-engine/">cortex-engine</a> makes the case for.</p>
+<p><strong>Tombstone, audit log, human review, negative eval —
+no.</strong></p>
+<p><strong>The risk is that the whole design rests on an unmeasured
+judgement.</strong> Prediction error decides what is stored, so a
+prediction that is too good silently discards real information, and a
+prediction that is too poor stores everything the system was built to
+avoid storing. Nothing in the tree measures the extraction rate, the
+false-discard rate, or how either moves with the prediction model — and
+the cheaper the prediction model, the more it will fail to predict, so
+the storage volume is coupled to a model choice the library leaves to
+the caller.</p>
+<p>That is not an argument against the idea. It is the measurement the
+idea needs, and <a
+href="../agent-working-memory/">AgentWorkingMemory</a>'s
+<code>discardRegret</code> — counting the near-discards that were later
+accessed — is the shape it would take.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>A LongMemEval harness with no committed results.</strong>
+<code>benchmarks/longmemeval/</code> holds <code>run.py</code>,
+<code>add.py</code>, <code>search.py</code>, <code>evaluate.py</code>,
+<code>dataset.py</code>, <code>config.py</code> and a
+<code>_checkpoint.py</code> — the checkpointing is the detail that says
+someone actually ran it, since nobody builds resume logic for a
+benchmark they intend to run once. <code>benchmarks/results/</code>
+exists and is empty in the tree.</p>
+<p>So the harness is real, the intent is real, and a reader cannot see a
+number. For a project whose central claim is that a <em>different
+extraction criterion</em> produces better memory, the comparison that
+matters — predict-calibrate against extract-everything, on the same
+corpus with the same retriever — is exactly what this harness could
+produce, and it would be a genuine contribution rather than another
+leaderboard row.</p>
+<p>15 test files against 12,000 lines.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Decide what to store by what you failed to predict.</strong>
+Ask the model what the episode should contain given what you already
+know, compare against the actual, keep the gap. An importance score has
+no reference point; a prediction error does.</li>
+<li><strong>Extract only from the original messages, never from your own
+summary.</strong> "Episode content is for RETRIEVAL (narrative is fine);
+extraction source is ONLY original messages (ground truth)" — so a
+summarisation error costs you recall and cannot become a stored
+fact.</li>
+<li><strong>Special-case the cold start.</strong> With no prior
+knowledge there is nothing to predict against; a separate prompt is
+required or the first conversation yields nothing.</li>
+<li><strong>Separate valid time from belief time as two columns, and
+query both.</strong> <code>valid_at</code>/<code>invalid_at</code> for
+when it was true, <code>expired_at</code> for when you stopped believing
+it, with an <code>include_expired</code> switch. "What was true then"
+and "what did we think then" are different questions.</li>
+<li><strong>Reject an interval that ends before it starts.</strong> A
+model validator on <code>invalid_at &lt;= valid_at</code> costs one
+function and catches the commonest bitemporal data defect.</li>
+<li><strong>Filter by validity before ranking, not after.</strong>
+Otherwise you ask for five results and show two.</li>
+<li><strong>Split capture from extraction.</strong>
+<code>add_exchange</code> then <code>process</code> means the expensive
+pass is deferrable and its cost is visible at the call site.</li>
+<li><strong>Return something formatted for injection.</strong>
+<code>result.to_prompt()</code> stops every caller inventing a
+serialisation.</li>
+<li><strong>Cite the paper in the module, not the README.</strong> The
+Nemori reference sits above the class that implements it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not leave the criterion unmeasured.</strong> Prediction
+error decides everything stored; too-good a prediction discards real
+information and too-poor a one stores everything. Nothing measures the
+rate, and it moves with whichever model the caller passes in.</li>
+<li><strong>Do not build a checkpointed benchmark harness and commit no
+results.</strong> The comparison this project needs — predict-calibrate
+against extract-everything on one corpus — is the one its own harness is
+built to run.</li>
+<li><strong>Do not let <code>expired_at</code> carry the
+reason.</strong> A timestamp records when belief ended and not whether
+the fact was superseded or refuted.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>The right choice if you are building on a Python stack and want an
+extraction criterion with an actual argument behind it rather than an
+importance prompt. The bitemporal store is well-built and would be worth
+the dependency on its own.</p>
+<p><code>processing/extraction.py</code> is worth reading whatever you
+build — it is 200-odd lines and it reframes the storage decision in a
+way most of this atlas has not considered.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What fraction of exchanges survive extraction?</strong> The
+rate is the design's central parameter and is unmeasured.</li>
+<li><strong>How does the extraction rate move with the prediction
+model?</strong> A weaker predictor stores more, by construction.</li>
+<li><strong>Has the LongMemEval harness been run?</strong>
+<code>_checkpoint.py</code> suggests yes; no results are committed.</li>
+<li><strong>What sets <code>expired_at</code>?</strong> The column is
+queried; the writer was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Extraction</strong> —
+<code>src/memv/processing/extraction.py</code> (the Nemori citation and
+framing <code>:1-6</code>, <code>ExtractionResponse</code>
+<code>:28-32</code>, <code>PredictCalibrateExtractor</code> with the
+three-stage flow and the retrieval-versus-ground-truth note
+<code>:34-47</code>, <code>extract</code> <code>:52-75</code>,
+<code>_predict</code> <code>:77</code>),
+<code>src/memv/processing/prompts.py</code></p>
+<p><strong>Bitemporal storage</strong> —
+<code>src/memv/storage/sqlite/_knowledge.py</code> (the as-of query with
+and without <code>include_expired</code> <code>:75-93</code>, the
+user-scoped list and count <code>:108-122</code>),
+<code>src/memv/models.py</code> (the validity checks <code>:64</code>,
+<code>:100</code>, <code>check_temporal_range</code>
+<code>:123-127</code>)</p>
+<p><strong>Retrieval</strong> — <code>src/memv/retrieval/</code>,
+<code>src/memv/embeddings/</code>, <code>src/memv/cache.py</code></p>
+<p><strong>Interfaces</strong> — <code>src/memv/protocols.py</code>,
+<code>src/memv/llm/</code>, <code>src/memv/mcp/</code>,
+<code>src/memv/dashboard/</code></p>
+<p><strong>Benchmark</strong> —
+<code>benchmarks/longmemeval/{run,add,search,evaluate,dataset,config,_checkpoint}.py</code>,
+<code>benchmarks/results/</code> (empty),
+<code>benchmarks/data/</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448"><code class="commit-id" title="fd314bac28247df1149edfbf0d1f7881690ef448">fd314bac…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and the LongMemEval harness was not run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
