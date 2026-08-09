@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="session_close(to, note) writes an
+addressed message that session_boot delivers and marks read — an indexed
+mailbox inside the memory store, with provenance enforced by a database
+CHECK.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MarsNMe — Agent Memory Atlas">
+    <meta property="og:description" content="session_close(to, note)
+writes an addressed message that session_boot delivers and marks read —
+an indexed mailbox inside the memory store, with provenance enforced by
+a database CHECK.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MarsNMe — Agent Memory Atlas">
+    <meta name="twitter:description" content="session_close(to, note)
+writes an addressed message that session_boot delivers and marks read —
+an indexed mailbox inside the memory store, with provenance enforced by
+a database CHECK.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MarsNMe — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">An agent can leave a note for another
+agent</p>
+          <h1>MarsNMe</h1>
+          <p class="document-deck">session_close(to, note) writes an
+addressed message that session_boot delivers and marks read — an indexed
+mailbox inside the memory store, with provenance enforced by a database
+CHECK.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/marsmanleo/marsnme">
+              <span>Source</span>
+              <strong>marsmanleo/marsnme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316" title="3ed1b0bc7bbccfd40efd13df366d0f538d155316">
+              <span>Analyzed revision</span>
+              <code>3ed1b0bc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MarsNMe is an "agent-agnostic, LLM-agnostic memory backend for
+MCP-compatible tools", pitched at someone using four AI tools at once —
+"I use Cursor to code, Warp to deploy, Perplexity to research, and
+Claude Code to manage my vault" — with sixteen MCP tools over Postgres
+on Supabase.</p>
+<p><strong>The mechanism worth the report is a mailbox.</strong></p>
+<p><code>session_close(to=&lt;body&gt;, note=...)</code> writes a note
+addressed to another agent;
+<code>session_boot(body=&lt;target&gt;)</code> delivers unread notes for
+that body <strong>and marks them read</strong>. The migration that adds
+it is three columns and an index:</p>
+<pre class="sql"><code>ALTER TABLE %I.memories ADD COLUMN IF NOT EXISTS recipient_body text;
+ALTER TABLE %I.memories ADD COLUMN IF NOT EXISTS note text;
+ALTER TABLE %I.memories ADD COLUMN IF NOT EXISTS read_at timestamptz;
+CREATE INDEX IF NOT EXISTS idx_%I_memories_unread_notes
+  ON %I.memories (recipient_body, read_at);</code></pre>
+<p><strong>This is a different primitive from shared memory, and the
+difference matters.</strong> A shared store lets two agents read the
+same facts. A note is <em>addressed</em>, it is <em>durable</em>, and it
+is <em>acknowledged</em> — the recipient's boot marks
+<code>read_at</code>, so the sender's message is delivered exactly once
+and the system knows whether it landed. Every other multi-agent system
+in this atlas coordinates by both parties reading a common store and
+hoping the right thing is salient; this one lets one agent say something
+<em>to</em> another and know it arrived.</p>
+<p>The index on <code>(recipient_body, read_at)</code> is the detail
+that says it was built to be queried rather than bolted on — unread
+notes for a body is the hot path and it has an index shaped for exactly
+that.</p>
+<p><strong>Two more mechanisms are worth naming</strong>: provenance as
+a database constraint (section 7) and a three-tier recall with stated
+character budgets (section 6).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Each profile is a Postgres schema. Memories carry an origin
+identifying which tool wrote them. Recall discloses progressively.
+Closing a session both rescues expiring memories and can leave a note
+for another agent.</p>
+<pre class="mermaid"><code>flowchart TD
+    T[&quot;Cursor · Warp · Perplexity · Claude Code&quot;] --&gt; W[&quot;write&quot;]
+    W --&gt; OC{&quot;origin in the CHECK allowlist?&lt;br/&gt;sync · hermes · manual ·&lt;br/&gt;hermes-coco-digest · perplexity-coco ·&lt;br/&gt;cursor-coco · warp-coco · batch-promote · …&quot;}
+    OC --&gt;|no| REJ[&quot;insert rejected by Postgres&quot;]
+    OC --&gt;|yes| M[&quot;memories / marsvault_chunks&lt;br/&gt;in the profile&#39;s schema&quot;]
+    Q[&quot;recall&quot;] --&gt; P1[&quot;~80-char previews&quot;]
+    P1 --&gt;|&quot;looks relevant&quot;| P2[&quot;get_summary — ~300 chars&quot;]
+    P2 --&gt;|&quot;still relevant&quot;| P3[&quot;get_full — complete&quot;]
+    M --&gt; P1
+    SC[&quot;session_close(to=body, note=…)&quot;] --&gt; N[&quot;recipient_body, note, read_at = NULL&quot;]
+    SC --&gt; BP[&quot;auto batch_promote:&lt;br/&gt;short-term memories expiring within 48h,&lt;br/&gt;up to 5, promoted to long-term&quot;]
+    SB[&quot;session_boot(body=target)&quot;] --&gt; UN[&quot;SELECT … WHERE recipient_body = $1&lt;br/&gt;AND read_at IS NULL&lt;br/&gt;(indexed)&quot;]
+    N --&gt; UN
+    UN --&gt; DEL[&quot;delivered, then read_at set&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two deployment targets — <code>marsnme-supabase/</code> (a gateway
+with <code>server.mjs</code> and a <code>stdio.mjs</code>, plus a
+Cloudflare routing worker) and <code>marsnme-cf/</code> (schema, tools,
+utils) — over <code>supabase/migrations/</code>.</p>
+<p>3,900 lines, and the repository carries <code>CLA.md</code>,
+<code>TRADEMARK.md</code>, <code>NOTICE</code>, <code>SECURITY.md</code>
+and <code>CONTRIBUTING.md</code> — more legal scaffolding than code,
+which tells you it is a product with a hosted service behind it.</p>
+<p><strong>The scope discipline in the changelog is worth
+noting.</strong> Version 0.3.0 removed five PRD tools from the gateway:
+"idea/PRD/task execution now lives in [Draft]… MarsNMe = CoCo soul
+memory only." A project narrowing its own tool surface and saying where
+the removed capability went is the opposite of the usual direction.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Handoff</strong> —
+<code>supabase/migrations/20260707160000_note_handoff_columns.sql</code>
+(the three columns and the unread index),
+<code>marsnme-cf/src/tools/session-tools.ts</code>
+(<code>recipient_body</code> and <code>note</code> on close
+<code>:147</code>).</p>
+<p><strong>Provenance</strong> —
+<code>supabase/migrations/20260619085518_marsvault_chunks_origin_allow_batch_promote.sql</code>
+(the incident note <code>:1-13</code>, the widened CHECK
+<code>:20-30</code>).</p>
+<p><strong>Schema</strong> — <code>marsnme-cf/db/schema.sql</code>,
+<code>marsnme-cf/src/utils/db.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Memories and vault chunks in a Postgres schema per profile
+(<code>coco</code>, <code>toto</code>), with short-term rows that expire
+and long-term rows that do not.</p>
+<p><code>origin</code> is the provenance field and it is the interesting
+one: <code>sync</code>, <code>hermes</code>, <code>manual</code>,
+<code>hermes-coco-digest</code>, <code>hermes-toto-digest</code>,
+<code>perplexity-coco</code>, <code>cursor-coco</code>,
+<code>warp-coco</code>, <code>batch-promote</code> — so a chunk records
+<em>which tool or pass produced it</em>, at a granularity that
+distinguishes Perplexity from Cursor from a nightly digest.</p>
+<p>There is no status field, no confidence, no supersession pointer and
+no tombstone. Expiry and promotion are the lifecycle.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Three tools, three budgets</strong>: <code>recall</code>
+returns "~80-char previews", then <code>get_summary</code> (~300 chars),
+then <code>get_full</code> (complete) — "avoids token-dumping full
+chunks on every recall; drill down only when a preview looks
+relevant".</p>
+<p>Stating the character budget per tier, and exposing each as its own
+tool, puts the disclosure decision in the model's hands with the cost
+visible at each step. <a href="../memsearch/">MemSearch</a> and <a
+href="../memory-ts/">memory-ts</a> reach the same shape from different
+directions — progressive disclosure is quietly becoming the consensus
+answer to injection cost, and this is the version that names the
+budgets.</p>
+<p><strong>Scope is structural</strong> — a Postgres schema per profile
+— so there is no scope key on a read path and
+<code>scope_enforced</code> is not earned. <code>body</code> is an
+<em>addressee</em> for notes rather than a retrieval filter.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Provenance is a database CHECK constraint.</strong> A chunk
+whose <code>origin</code> is not in the allowlist is rejected by
+Postgres, not by application code — so a new tool cannot write into the
+vault until someone deliberately widens the constraint. That is an
+unusual and strong position: the write surface is enumerated in the
+schema, and adding to it is a migration with a review.</p>
+<p><strong>And the migration records the bug that widening it
+fixed.</strong> <code>batch_promote</code> writes chunks with
+<code>origin = 'batch-promote'</code>, the existing constraint did not
+include that value, and the promote failed. The fix widens the allowlist
+— and notes the asymmetry: "<strong>toto.marsvault_chunks has no origin
+check constraint, so it was</strong>" unaffected.</p>
+<p>That parenthesis is the finding worth carrying: <strong>one profile
+enforces the allowlist and the other does not.</strong> The constraint
+that makes the guarantee real in <code>coco</code> is simply absent in
+<code>toto</code>, so the same code path writing to the other profile is
+unconstrained. It is documented rather than hidden, which is why this
+report can state it — and it is the kind of divergence that only appears
+when someone hits it.</p>
+<p><strong>Auto-promotion on close</strong> is the third mechanism:
+closing a session promotes short-term memories expiring within 48 hours,
+up to five, to long-term storage — "no Hermes or manual promote needed".
+Tying rescue-from-expiry to the moment a session ends is well-chosen: it
+is exactly when the value of the session's material is clearest and when
+the user is not waiting on it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Sixteen MCP tools, a <code>curl -fsSL … | bash</code> installer,
+Docker, and a Cloudflare routing worker in front of a Supabase gateway.
+The cross-tool pitch is the product, and the handoff note is what makes
+it more than four clients on one database.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks.</strong> No trust state, no tombstone, no
+bitemporality, no scope key on a read path, no audit log, no human
+review, no committed exclusion case.</p>
+<p><strong>The origin constraint is the closest thing to a safety
+mechanism</strong>, and it guards <em>provenance</em> rather than truth:
+it says which tool may write, not whether what was written is right. As
+a defence against an unexpected writer it is strong, because Postgres
+enforces it. As a defence against a wrong memory it does nothing.</p>
+<p><strong>And the constraint is inconsistently applied</strong>, per
+section 7 — which is the practical risk, because a guarantee that holds
+in one profile and not another is worse than no guarantee, since the
+reader assumes the first.</p>
+<p><strong>The installer is <code>curl … | bash</code>.</strong> Common,
+and worth a reader knowing before running it against a hosted service
+they have not read the source of.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper, no benchmark, no test directory found</strong>, and
+the evidence offered is a user story from the creator — "Leo, MarsNMe
+creator (3 months of daily use across 4 AI tools)" — which is honestly
+attributed as the author's own experience rather than presented as an
+independent result.</p>
+<p>At 3,900 lines with sixteen tools across two deployment targets, the
+untested surface that matters most is the handoff: a note that is
+delivered twice, or marked read without being delivered, loses a message
+between agents silently, and the <code>read_at</code> column is exactly
+what a test would assert on.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let one agent leave an addressed note for another.</strong>
+A shared store lets two agents read the same facts; a note is addressed,
+durable and <em>acknowledged</em> — three columns and an index give you
+delivery semantics that a common store cannot.</li>
+<li><strong>Index the unread query.</strong>
+<code>(recipient_body, read_at)</code> is the hot path and shaping the
+index for it is what makes the mailbox usable rather than a scan.</li>
+<li><strong>Mark it read on delivery.</strong> <code>read_at</code>
+turns "the note exists" into "the note arrived", which is the difference
+between a mailbox and a bulletin board.</li>
+<li><strong>Enumerate your write origins as a database CHECK.</strong> A
+new tool cannot write until someone widens the constraint in a migration
+— the write surface becomes a reviewable list rather than whatever calls
+the API.</li>
+<li><strong>Make the origin granular enough to be useful.</strong>
+<code>perplexity-coco</code>, <code>cursor-coco</code>,
+<code>warp-coco</code>, <code>batch-promote</code> tells you which tool
+produced a memory, which a boolean <code>is_automated</code> never
+would.</li>
+<li><strong>Record the bug in the migration that fixes it</strong>,
+including the asymmetry you found — "toto.marsvault_chunks has no origin
+check constraint".</li>
+<li><strong>Rescue expiring memories when a session closes.</strong> A
+48-hour window and a cap of five, at the moment the session's value is
+clearest and nobody is waiting.</li>
+<li><strong>State the character budget for each recall tier.</strong>
+~80, ~300, full — as three separate tools, so the model chooses the
+disclosure with the cost in view.</li>
+<li><strong>Narrow your tool surface and say where the rest
+went.</strong> Five PRD tools removed with a link to the project that
+now owns them.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not apply a constraint to one tenant schema and not
+another.</strong> A guarantee that holds in <code>coco</code> and not in
+<code>toto</code> is worse than none, because a reader generalises from
+the first one they check.</li>
+<li><strong>Do not leave a message-delivery path untested.</strong> A
+note delivered twice or marked read without delivering loses context
+between agents silently, and <code>read_at</code> is the exact assertion
+target.</li>
+<li><strong>Do not offer a user story as the evidence.</strong> It is
+honestly attributed here, and three months of the author's own daily use
+is a reason to keep building, not a result.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Worth looking at if you genuinely work across several AI tools and
+want them to share one memory — and specifically if you want agents to
+<em>hand off</em> rather than merely share, which is the thing this has
+and the others do not.</p>
+<p>The handoff migration is fourteen lines and lifts into any store with
+a memories table.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does <code>toto</code> get the origin constraint?</strong>
+The migration documents its absence.</li>
+<li><strong>What happens if two boots race on the same unread
+note?</strong> <code>read_at</code> is set on delivery; the concurrency
+was not traced.</li>
+<li><strong>Are the recall tiers enforced or advisory?</strong> The
+budgets are stated as approximate character counts.</li>
+<li><strong>What is Hermes?</strong> It appears as an origin value and
+as the pass that <code>batch_promote</code> replaces.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Handoff</strong> —
+<code>supabase/migrations/20260707160000_note_handoff_columns.sql</code>
+(the purpose comment <code>:1-4</code>, <code>recipient_body</code> /
+<code>note</code> / <code>read_at</code> and the unread index
+<code>:5-15</code>), <code>marsnme-cf/src/tools/session-tools.ts</code>
+(<code>recipient_body</code> and <code>note</code> on close
+<code>:147</code>)</p>
+<p><strong>Provenance</strong> —
+<code>supabase/migrations/20260619085518_marsvault_chunks_origin_allow_batch_promote.sql</code>
+(the failure it fixes <code>:1-13</code>, the <code>toto</code>
+asymmetry note <code>:13</code>, the widened allowlist
+<code>:20-30</code>)</p>
+<p><strong>Deployment</strong> —
+<code>marsnme-supabase/server.mjs</code>, <code>stdio.mjs</code>,
+<code>cloudflare-routing-worker/</code>,
+<code>marsnme-cf/db/schema.sql</code>,
+<code>marsnme-cf/src/utils/db.ts</code>, <code>docker/</code>,
+<code>install.sh</code></p>
+<p><strong>Documentation</strong> — <code>README.md</code> (the 0.3.0
+notes: three-layer recall, body-to-body handoff, auto
+<code>batch_promote</code>, the CoCo-only tool surface),
+<code>CHANGELOG.md</code>, <code>AGENTS.md</code>,
+<code>SECURITY.md</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316"><code class="commit-id" title="3ed1b0bc7bbccfd40efd13df366d0f538d155316">3ed1b0bc…</code></a>
+— first reading. Screened before reading; the tree was read, nothing was
+installed, and the hosted service was not used.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

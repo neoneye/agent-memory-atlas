@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 236 reports.**
+**This page covers all 237 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["236 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["237 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2041,6 +2041,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 11,600 lines of TypeScript with a five-state status filtered on the retrieval path *and* in the replacement and linked-memory lookups, decay counted in sessions rather than days, and a migrations directory — because the schema actually changes.
 - Study when: you suspect half your schema is fields nothing reads.
 - Do not copy when: you need supersession to hold — `superseded_by` records the replacement and nothing stops the old content being re-extracted from a later transcript.
+
+### [`marsnme`](../systems/marsnme/)
+
+- Best idea: an agent can leave an addressed note for another agent. `session_close(to=<body>, note=...)` writes it, `session_boot(body=<target>)` delivers unread notes and marks them read — three columns and an index on `(recipient_body, read_at)`. Every other multi-agent system in this atlas coordinates by both parties reading a common store and hoping the right thing is salient; this one gives delivery semantics a shared store cannot.
+- Biggest risk: the provenance CHECK constraint that makes the write surface enumerable holds in one profile schema and not the other — "toto.marsvault_chunks has no origin check constraint" — which the project documents and which is worse than no guarantee, because a reader generalises from the first schema they check.
+- Most reusable component: provenance as a database constraint. A chunk whose `origin` is not in the allowlist is rejected by Postgres, so a new tool cannot write until someone widens the constraint in a migration — and the values are granular enough to be useful (`perplexity-coco`, `cursor-coco`, `warp-coco`, `batch-promote`) rather than a boolean.
+- Maturity impression: 3,900 lines across two deployment targets with sixteen MCP tools, a three-tier recall stating its character budget per tier (~80, ~300, full) as three separate tools, auto-promotion of memories expiring within 48 hours at session close, and a version that *removed* five tools and said where they went.
+- Study when: your agents share a store and you need one of them to hand something to another and know it arrived.
+- Do not copy when: you need evidence — the offered support is the author's own three months of daily use, honestly attributed, and no test covers the delivery path.
+
 
 
 

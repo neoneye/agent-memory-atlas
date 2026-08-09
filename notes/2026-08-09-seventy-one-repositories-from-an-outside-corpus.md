@@ -1,9 +1,9 @@
 # Seventy-one repositories from an outside corpus — the join, the probe, and what came back
 
-**Status:** in progress. Sixty-six reports written and pushed across sixteen
-batches; every remaining candidate cloned, screened and probed at code level,
-with the evidence tabulated below and no verdict claimed for anything unread.
-Five of the tabulated candidates remain unread.
+**Status:** complete. Seventy reports written and pushed across seventeen
+batches. Every candidate in the tabulated list below has now been read and
+either written up or dispositioned in this note; nothing in the join remains
+unexamined.
 **Origin:** [issue #17](https://github.com/neoneye/agent-memory-atlas/issues/17),
 submitted 2026-08-09 by the author of
 [AlexisOlson/somnigraph](https://github.com/AlexisOlson/somnigraph), pointing at
@@ -91,7 +91,7 @@ rejected-value records. The one that was —
 
 ## What has been written
 
-Sixty-six reports across sixteen batches. The six that changed something in the
+Seventy reports across seventeen batches. The six that changed something in the
 corpus rather than adding to it:
 
 - **[Wenlan](../content/systems/wenlan.md)** — the atlas's tenth tombstone, and
@@ -285,8 +285,11 @@ the third distinct repository of that name in the atlas), AgentWorkingMemory,
 Second Brain, Context Mem and MoltBrain; then Fidelis, TeleMem, Mengram,
 OpenCode Memory and OpenMemory; then Ori Mnemos, YourMemory, cortex-engine,
 obsidian-mind and vir; then DiffMem, MemSearch, mnemos, Nocturne Memory and
-Claudest; then agentmemory V4, memv, MemCP, ArcRift and Memlayer. Five
-remain.*
+Claudest; then agentmemory V4, memv, MemCP, ArcRift and Memlayer; then Stash,
+knowledge-worker, memory-ts and MarsNMe. **None remains** — the four smallest
+entries below the last of those (`claude-cognitive`, `context-infrastructure`,
+`continuity-v2`, `sovereign-ai-kit`) were read and dispositioned earlier in this
+note rather than given reports.*
 
 Every one of these is cloned, screened with `screen_repo.py`, and measured.
 The six read and dispositioned above are excluded.
@@ -379,7 +382,7 @@ Four rows deserve a note now rather than after a reading:
 
 ## What came of it
 
-- **66 reports added**, taking the corpus from 167 to 233.
+- **70 reports added**, taking the corpus from 167 to 237.
 - **Marks added**: 18 `scope_enforced`, 18 `audit_log`, 9 `trust_state`,
   5 `bitemporal`, 5 `negative_eval`, 5 `human_review`, and **2 `tombstone`** —
   the first two added since the
