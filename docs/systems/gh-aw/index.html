@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="GitHub's agentic-workflows
+compiler gives a workflow three cross-run memory backends — Actions
+cache, a git branch, and an issue comment — and treats every one of them
+as a hostile artifact written by a previous run of itself.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="gh-aw — Agent Memory Atlas">
+    <meta property="og:description" content="GitHub's agentic-workflows
+compiler gives a workflow three cross-run memory backends — Actions
+cache, a git branch, and an issue comment — and treats every one of them
+as a hostile artifact written by a previous run of itself.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="gh-aw — Agent Memory Atlas">
+    <meta name="twitter:description" content="GitHub's agentic-workflows
+compiler gives a workflow three cross-run memory backends — Actions
+cache, a git branch, and an issue comment — and treats every one of them
+as a hostile artifact written by a previous run of itself.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>gh-aw — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Memory in CI, on an integrity lattice</p>
+          <h1>gh-aw</h1>
+          <p class="document-deck">GitHub's agentic-workflows compiler
+gives a workflow three cross-run memory backends — Actions cache, a git
+branch, and an issue comment — and treats every one of them as a hostile
+artifact written by a previous run of itself.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/github/gh-aw">
+              <span>Source</span>
+              <strong>github/gh-aw</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d" title="c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d">
+              <span>Analyzed revision</span>
+              <code>c9dca3e2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><code>gh-aw</code> is GitHub's compiler for <strong>agentic
+workflows</strong>: a Markdown file with YAML frontmatter in
+<code>.github/workflows/</code>, compiled by a Go binary into a
+<code>.lock.yml</code> GitHub Actions workflow that runs a coding agent.
+It is on a token-cost list because it meters per-run inference in "AI
+Credits" and can cap a run, and that is not why it is in this atlas.</p>
+<p>It is here because a workflow run is a session with unusually hard
+edges — a fresh container, no filesystem, nothing carried forward — and
+<code>gh-aw</code> gives that session three ways to remember things
+anyway. <code>cache-memory</code> puts a directory in the GitHub Actions
+cache. <code>repo-memory</code> puts it on an orphan git branch.
+<code>comment-memory</code> puts it in a managed issue or pull-request
+comment. All three materialise as ordinary files under
+<code>/tmp/gh-aw/</code>, all three are edited by the agent with the
+file tools it already has, and all three are synced back by a post-agent
+step the agent never calls.</p>
+<p>The genuinely interesting part is what happens at restore.
+<code>cache-memory</code> is not a directory of files; it is a
+<strong>git repository with one branch per trust level</strong> —
+<code>merged</code>, <code>approved</code>, <code>unapproved</code>,
+<code>none</code> — and a run checks out the branch matching its own
+integrity level and then merges <em>down</em> from strictly higher
+levels only. The comment in <a
+href="https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/actions/setup/sh/setup_cache_memory_git.sh"><code>setup_cache_memory_git.sh</code></a>
+states the rule directly: <em>"lower-integrity runs see higher-integrity
+data via merge, but higher-integrity runs never see lower-integrity
+data."</em> A run triggered by an unapproved fork PR can read what a
+merged run remembered and cannot contaminate it. That is an
+information-flow lattice applied to agent memory, and this atlas has
+very little of it.</p>
+<p>The second interesting part follows from the first. Before the agent
+is allowed near the restored tree, the same script deletes every
+non-sample file under <code>.git/hooks</code>, points
+<code>core.hooksPath</code> at <code>/dev/null</code>, deletes every
+symlink, strips the execute bit from every file, and — when
+<code>allowed-extensions</code> is configured — deletes every file whose
+extension is not on the list. The threat model is written down in <a
+href="https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md">ADR-26587</a>:
+<em>"A compromised prior run could therefore plant executable scripts …
+which the next agent would encounter without any validation."</em>
+Memory is modelled as an artifact written by an attacker who was
+you.</p>
+<p>Where it is weakest is everything a memory system usually is. There
+is no retrieval — the store is a directory and the agent greps it. There
+is no fact, no extraction, no dedupe, no supersession, no contradiction
+handling and no way to mark anything wrong. The integrity level is a
+property of the <em>run that wrote</em> the file, never of the claim
+inside it, so nothing is ever promoted or demoted on evidence. And the
+reading agent gets the whole directory, bounded only by the 10GB
+repository cache limit.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory in <code>gh-aw</code> is <strong>a file a previous run of
+this workflow left behind</strong>. Not a fact, not an embedding, not a
+summary — a byte sequence at a path, whose meaning is entirely a
+convention between the workflow's Markdown prompt and whatever the agent
+decides to write. The compiler validates size, count, extension and
+glob. It never parses content.</p>
+<p>So there is no belief lifecycle in the usual sense, and it is worth
+being precise about what replaces it. A file's status is <strong>where
+it lives</strong>, and it has three independent coordinates:</p>
+<ul>
+<li><strong>Which backend.</strong> Cache memory is ephemeral by design
+(7-day Actions cache retention, 10GB per repository, LRU eviction). Repo
+memory is permanent and versioned. Comment memory is a single rendered
+document with one current value.</li>
+<li><strong>Which integrity branch</strong>, for cache memory only:
+<code>merged</code> &gt; <code>approved</code> &gt;
+<code>unapproved</code> &gt; <code>none</code>. This is assigned by the
+trigger, not by the content, and <strong>nothing ever moves a file
+between branches</strong>. There is no promotion path and no
+adjudication. The lattice governs who may <em>read</em> what, and that
+is all it does.</li>
+<li><strong>Whether it survived the gate.</strong> A restored file with
+a disallowed extension, or a symlink, is deleted before the agent sees
+it. It was memory; now it is not, and nothing records that it was.</li>
+</ul>
+<p>Death is by expiry, eviction, prefix-group pruning in the scheduled
+maintenance workflow, or overwrite. Nothing is ever marked false. A
+wrong file stays wrong until an agent happens to overwrite it, and the
+only record that it was ever different is the git history of the store
+itself.</p>
+<p>Control is <strong>hybrid, tilted at the agent</strong>. The agent
+writes freely with ordinary file edits and never calls a memory tool;
+ADR-27479 chose that deliberately over an explicit
+<code>comment_memory</code> safe output, on the grounds that an agent
+asked to decide <em>when</em> to persist will forget. The human's
+control is exercised at compile time, in frontmatter, through limits —
+and, for repo memory, afterwards, because the store is a git branch a
+person can open a pull request against.</p>
+<pre class="mermaid"><code>flowchart TD
+    R[&quot;cache restored from a previous run&quot;] --&gt; H[&quot;delete .git/hooks/*&lt;br/&gt;core.hooksPath = /dev/null&quot;]
+    H --&gt; F{&quot;git fsck clean?&quot;}
+    F -- &quot;no&quot; --&gt; RI[&quot;rm -rf .git, reinitialise&lt;br/&gt;working tree preserved&quot;]
+    F -- &quot;yes&quot; --&gt; CO
+    RI --&gt; CO[&quot;checkout branch = this run&#39;s integrity level&quot;]
+    CO --&gt; M[&quot;merge down: strictly higher levels only&lt;br/&gt;-X theirs&quot;]
+    M --&gt; S[&quot;delete symlinks · chmod a-x ·&lt;br/&gt;drop disallowed extensions&quot;]
+    S --&gt; A[&quot;agent reads and edits files&quot;]
+    A --&gt; C[&quot;commit run-$GITHUB_RUN_ID&lt;br/&gt;on the same integrity branch&quot;]
+    C --&gt; SV[&quot;save cache&quot;]
+    L[&quot;legacy flat files, trust unknown&quot;] -.-&gt;|&quot;committed to &#39;none&#39; only,&lt;br/&gt;to prevent trust escalation&quot;| CO</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>gh-aw</code> is a <strong>compiler and a CLI</strong>, not a
+runtime. <code>gh aw compile</code> reads a Markdown workflow, resolves
+imports, and emits a <code>.lock.yml</code> GitHub Actions workflow
+containing every step inline. There is no <code>gh-aw</code> process at
+run time: what executes is GitHub Actions running generated YAML that
+shells out to scripts vendored from <code>actions/setup/sh/</code>.</p>
+<p>The memory subsystem is therefore <strong>compile-time code that
+emits run-time steps</strong>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cache-memory config, key derivation, integrity-aware keys</td>
+<td><code>pkg/workflow/cache.go</code>,
+<code>pkg/workflow/cache_integrity.go</code></td>
+</tr>
+<tr>
+<td>Repo-memory config, validation, branch naming</td>
+<td><code>pkg/workflow/repo_memory.go</code>,
+<code>pkg/workflow/repo_memory_validation.go</code></td>
+</tr>
+<tr>
+<td>Repo-memory prompt section</td>
+<td><code>pkg/workflow/repo_memory_prompt.go</code></td>
+</tr>
+<tr>
+<td>Comment-memory safe-output config</td>
+<td><code>pkg/workflow/comment_memory.go</code></td>
+</tr>
+<tr>
+<td>Pre-agent restore, lattice and sanitisation</td>
+<td><code>actions/setup/sh/setup_cache_memory_git.sh</code></td>
+</tr>
+<tr>
+<td>Post-agent commit</td>
+<td><code>actions/setup/sh/commit_cache_memory_git.sh</code></td>
+</tr>
+<tr>
+<td>Store repair</td>
+<td><code>actions/setup/sh/check_cache_memory_git_integrity.sh</code></td>
+</tr>
+<tr>
+<td>Repo-memory clone and filename hygiene</td>
+<td><code>actions/setup/sh/clone_repo_memory_branch.sh</code>,
+<code>sanitize_repo_memory_filenames.sh</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Persistence is entirely GitHub's: the Actions cache service, the git
+object store, and the issues API. There is no database, no vector index
+and no search service, because there is no search. Repo-memory commits
+go through the GraphQL <code>createCommitOnBranch</code> mutation, which
+makes them <strong>Verified</strong> under GitHub's own GPG key and lets
+them satisfy a ruleset that requires signed commits — with a documented
+hole: the mutation cannot express symlinks, executable bits or
+submodules, so an artifact containing one falls back to a plain
+<code>git push</code> that a signed-commit ruleset will then reject.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to stand up, and nothing that runs locally. Adopting this
+means adopting GitHub Actions, an agent engine with credentials
+configured as repository secrets, and the <code>gh aw</code> extension
+for compiling and for reading logs. The cost is a GitHub-shaped lock-in
+rather than an infrastructure one: every durable surface here is a
+GitHub product, and the design has no meaning off the platform.</p>
+<p>The store is as human-readable as it gets. Repo memory is a branch
+you can check out; comment memory is a comment you can read in a
+browser; cache memory is a git repository whose log is one commit per
+run, named <code>run-&lt;GITHUB_RUN_ID&gt;</code>. Repair by hand is a
+<code>git push</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Restore and read.</strong>
+<code>generateCacheMemoryGitSetupStep</code> in
+<code>pkg/workflow/cache.go</code> emits a step running
+<code>actions/setup/sh/setup_cache_memory_git.sh</code> with
+<code>GH_AW_CACHE_DIR</code>, <code>GH_AW_MIN_INTEGRITY</code> and —
+only when configured — <code>GH_AW_ALLOWED_EXTENSIONS</code> as a
+colon-separated list. The script detects a cache hit by the presence of
+<code>.git</code>, flattens a legacy nested layout, deletes hook files,
+runs <code>git fsck --connectivity-only</code> and reinitialises on
+corruption while preserving the working tree, checks out the integrity
+branch, merges down, then sanitises.</p>
+<p><strong>Context assembly.</strong>
+<code>buildRepoMemoryPromptSection</code> in
+<code>pkg/workflow/repo_memory_prompt.go</code> returns a
+<code>PromptSection</code> pointing at a template file, substituting
+<code>GH_AW_MEMORY_DIR</code>, <code>GH_AW_MEMORY_DESCRIPTION</code>,
+<code>GH_AW_MEMORY_BRANCH_NAME</code> and a
+<code>**Constraints:**</code> block listing the allowed globs and the
+size, count and patch-size caps. This is the whole of retrieval: the
+agent is told a path and the rules, and goes looking. Comment memory
+differs — ADR-27479 records that its content <em>is</em> injected into
+the prompt and into the threat-detection context, so a small memory
+arrives read rather than referenced.</p>
+<p><strong>Write and persist.</strong> The agent edits files in the
+mounted directory with whatever editing tools its engine has. Afterwards
+<code>commit_cache_memory_git.sh</code> stages everything with
+<code>git add -A</code> and commits <code>run-${GITHUB_RUN_ID}</code> on
+the current integrity branch with <code>--allow-empty</code>, so the log
+has a row per run whether or not anything changed, then
+<code>git gc --auto</code>. Repo memory instead validates against
+<code>file-glob</code>, <code>max-file-size</code>,
+<code>max-file-count</code> and <code>max-patch-size</code>, and pushes
+only if threat detection passes; a <code>push_repo_memory</code>
+safe-output tool exists so a workflow can fail on the limits early
+rather than at the end.</p>
+<p><strong>Update, delete, forget.</strong> There is no delete path.
+Removing a file from the working tree is picked up by
+<code>git add -A</code> and committed as a deletion; expiry is the
+Actions cache's own 7-day retention and LRU; the scheduled <em>Agentic
+Maintenance</em> workflow groups cache entries by key prefix (everything
+before the run ID) and keeps only the newest per group.</p>
+<p><strong>Scope enforcement.</strong> Two layers. The integrity branch,
+above. And the cache key itself: when
+<code>tools.github.min-integrity</code> is set, the key incorporates the
+integrity level and a hash of the guard policy, so editing any policy
+field forces a miss rather than silently reusing memory gathered under
+the old policy.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. The unit is a file; the system's model of it is
+<code>(path, size, extension)</code>.</p>
+<p>Scoping is real and multi-axis, which is unusual for a system with no
+data model at all:</p>
+<ul>
+<li><strong>Integrity level</strong> — a git branch, read-down
+only.</li>
+<li><strong>Repository and branch</strong> — Actions cache scoping is
+branch-local with fallback to the default branch, which the
+documentation calls out as a behaviour to plan around: on a non-default
+branch the first restore usually comes from the default branch, and
+later saves start a branch-local lineage.</li>
+<li><strong>Named store</strong> — <code>id</code> selects
+<code>/tmp/gh-aw/cache-memory-{id}/</code> or
+<code>/tmp/gh-aw/repo-memory-{id}/</code>, and repo memory maps
+<code>id</code> to branch <code>{branch-prefix}/{id}</code>.</li>
+<li><strong>Target repository</strong> — <code>target-repo</code> sends
+repo memory somewhere else entirely, which is the documented way to
+isolate memory from the repository being worked on.</li>
+</ul>
+<p>Provenance is the git log of the store: one commit per run, named for
+the run ID, on the branch of that run's integrity level. There are no
+temporal fields, no validity interval, no version chain at the level of
+a claim, no TTL a user can set, and no pinning.
+<code>cache-hit-history.json</code> is written on a hit with
+<code>run_id</code>, <code>timestamp</code> and <code>cache_files</code>
+— a restore receipt, not a record of what the memory says.</p>
+<p>Nothing separates episodic from semantic material. The workflow
+author does that by choosing filenames, or does not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>There is no retrieval mechanism, and that is a design
+position rather than an omission.</strong> The store is mounted as a
+directory and the agent uses its own <code>Read</code>,
+<code>Grep</code> and <code>Glob</code>. No embedding is computed, no
+index is built, no ranking, no fusion, no reranking, no token budget on
+the read side.</p>
+<p>The consequences are the ones you would predict, plus one you might
+not:</p>
+<ul>
+<li>Cost scales with what the agent chooses to open, not with what the
+system decides to inject — which is cheaper than eager injection for a
+large store and worse for a small one, since a small store would have
+been better simply pasted.</li>
+<li>Relevance is the model's problem. A file that stops being true stays
+exactly as discoverable as one that is.</li>
+<li><code>allowed-extensions</code> is, incidentally, the only
+content-shaped filter on the read path, and it filters by file
+extension.</li>
+</ul>
+<p>The one non-obvious consequence is that <strong>the restore gate is
+the retrieval policy</strong>. What a run can see is decided entirely by
+branch checkout and merge direction, before the agent runs. That is a
+coarse filter, but it is enforced by the filesystem rather than by a
+query the agent could phrase differently, which is a stronger guarantee
+than most retrieval-side scoping in this atlas.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are <strong>in-band file edits</strong>, invisible to the
+persistence layer until the run ends. There is no extraction model, no
+LLM in the write path, no dedupe and no consolidation. Whatever the
+agent leaves in the directory is what gets stored.</p>
+<p>Filtering is structural and happens at two moments. On restore:
+symlinks deleted, execute bits stripped, disallowed extensions removed.
+On push, for repo memory: <code>file-glob</code> (with a documented and
+genuinely surprising depth rule — a slashless pattern like
+<code>*.json</code> matches only at depth 1 inside a memory subfolder,
+not at the artifact root and not deeper), <code>max-file-size</code>
+(100KB default), <code>max-file-count</code> (100 default),
+<code>max-patch-size</code> (10KB default, 1MB ceiling), then threat
+detection. <code>format-json: true</code> pretty-prints
+<code>.json</code> before commit, which is a diff-quality decision
+rather than a memory one and reads as a sign the maintainers expect
+humans to review these branches.</p>
+<p>Conflict handling is stated plainly and is the weakest link in the
+write path: concurrent pushes are replayed onto the latest remote state
+and <strong>your file changes win</strong>. Two workflows writing the
+same memory file concurrently do not merge; the later one erases the
+earlier.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path is <strong>fully deferred and costs the agent
+nothing</strong>. No LLM call, no blocking, no round trip — an edit is a
+file write, and persistence happens in a separate job after the agent
+has exited.</p>
+<p>The lag before a memory is retrievable is <strong>one workflow
+run</strong>, and the honest number is longer than that: a cache saved
+at the end of run <em>N</em> is available to run <em>N+1</em> only if
+the key matches and the entry has not been evicted, and on a non-default
+branch the first restore commonly comes from the default branch instead.
+Nothing here is available mid-run to a concurrent run.</p>
+<p>No background pass rewrites the store. <code>git gc --auto</code>
+runs after each commit and the maintenance workflow prunes cache entries
+by key prefix on a schedule; neither reads content, so neither has a
+token bill.</p>
+<p>On the read side there is no per-turn injection to bound, which
+sidesteps <a
+href="../../patterns/cache-preserving-injection/">cache-preserving
+injection</a> entirely rather than solving it: the prompt carries a path
+and a constraints block, both fixed for the run, and the volatile
+material arrives as tool results. Comment memory is the exception — its
+content is inlined into the prompt, and for a workflow that grows its
+comment memory over time that is a growing fixed cost per run.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration surface is <strong>YAML frontmatter</strong>, and
+nothing else:</p>
+<pre class="yaml"><code>tools:
+  cache-memory: true
+  repo-memory:
+    branch-name: memory/insights
+    file-glob: [&quot;*.md&quot;, &quot;*.json&quot;]
+    max-file-size: 1048576</code></pre>
+<p>There is no MCP server for memory, no SDK and no REST endpoint. The
+compiler turns those keys into steps; the agent is told a directory.
+This is the lowest-ceremony agent integration in this atlas — an agent
+that can read and write files already supports it, and porting the
+<em>idea</em> to another CI system is a week of shell, not a library
+adoption.</p>
+<p>The agency split is worth naming. The agent has total freedom over
+content and zero awareness of persistence. It cannot choose to save,
+cannot choose not to save, cannot address a memory by id, and cannot ask
+what it remembers — it can only look. The engine's own compaction and
+session lifecycle are irrelevant here, because a run ends and the
+container is destroyed regardless.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>This is the strongest section of the design, and it is strong in an
+unusual direction: <strong>it protects the machine from the memory, not
+the memory from the world.</strong></p>
+<p>What is defended:</p>
+<ul>
+<li><strong>Execution planted in the store.</strong> Hook files under
+<code>.git/hooks</code> survive in the cache but are untracked, so a
+prior run could write a <code>post-checkout</code> hook that fires on
+the host runner before any sandbox exists. The script deletes them and
+sets <code>core.hooksPath</code> to <code>/dev/null</code> twice, before
+and after the format check.</li>
+<li><strong>Symlink escape.</strong> All working-tree symlinks are
+deleted, with the reason written in the script: a link out of the cache
+directory would bypass the regular-file checks that follow.</li>
+<li><strong>Unexpected file types and executables</strong>, per
+ADR-26587, unconditionally and at every integrity level including
+<code>none</code>.</li>
+<li><strong>Trust escalation.</strong> Legacy flat files from an older
+<code>gh-aw</code> are committed to the <code>none</code> branch only,
+because their provenance is unknown.</li>
+<li><strong>Policy drift.</strong> Changing the guard policy changes the
+cache key, so memory gathered under a looser policy is not silently
+reused under a stricter one.</li>
+<li><strong>Store corruption.</strong> <code>git fsck</code> on restore,
+with reinitialisation that keeps the working tree, plus a separate
+integrity-check script that reseeds.</li>
+</ul>
+<p>What is not defended, and this is where the shape of the thing
+shows:</p>
+<ul>
+<li><strong>False content.</strong> Nothing checks whether a remembered
+claim is true, and there is no mechanism that could express that it is
+not. A prompt-injected fact written into <code>notes.md</code> by an
+unapproved run is, from every later unapproved run's point of view,
+simply what it knows. The lattice bounds the blast radius by trust
+level; it does nothing within a level.</li>
+<li><strong>The trust label is about the writer, not the
+belief.</strong> <code>merged</code> says a merged commit produced this
+file. It does not say anyone read it.</li>
+<li><strong>Concurrency.</strong> Last writer wins, by documented
+design.</li>
+<li><strong>Secrets.</strong> The repo-memory documentation says not to
+store sensitive data and offers <code>target-repo</code> for isolation;
+nothing enforces it, and a memory branch on a public repository is
+public.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test coverage of the memory subsystem is substantial by this atlas's
+standards and entirely <strong>compiler-shaped</strong>. Fourteen files
+in <code>pkg/workflow/</code> carry <code>memory</code> in the name,
+holding 94 <code>func Test</code> entries, and they assert what the
+compiler <em>emits</em>: that restore precedes execution, that restore
+keys strip the run ID so a run can fall back to an earlier one, that
+<code>GH_AW_ALLOWED_EXTENSIONS</code> is emitted only when configured,
+that multiple named caches produce distinct directories, that import
+merge rules resolve local-wins, that repo-memory paths stay consistent
+between the prompt and the steps.
+<code>setup_cache_memory_git_test.sh</code> and
+<code>check_cache_memory_git_integrity_test.sh</code> exercise the shell
+directly.</p>
+<p>What is not tested, as far as the tree shows, is the property the
+design is built on. There is no test in which a file written on the
+<code>none</code> branch is shown to be invisible to a run at
+<code>merged</code> — the level the lattice exists to protect. The
+integrity tests assert the env-var contract that selects a branch; the
+read-down guarantee is enforced by the merge loop and asserted nowhere.
+That is the test I would want before trusting this, and it is a cheap
+one: two runs and a <code>git show</code>.</p>
+<p>There is no retrieval-quality evaluation, which is consistent — there
+is no retrieval. There is no benchmark and no paper; the README, the
+reference docs and a large <code>docs/adr/</code> tree are the design
+record, and the ADRs are unusually good, carrying rejected alternatives
+and negative consequences rather than only the decision.</p>
+<p>I ran nothing. Every claim here comes from reading the tree at
+<code class="commit-id" title="c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d">c9dca3e2…</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give memory an integrity level and enforce
+read-down.</strong> If some of your sessions are more trusted than
+others — an authenticated user versus a public demo, an internal ticket
+versus a fork PR, a reviewed document versus a scraped one — then a
+lattice where low reads high and high never reads low is a containment
+property you can implement with a scope column and one filter. It is
+much weaker than verifying content and much cheaper, and the two
+compose.</li>
+<li><strong>Treat your own store as an untrusted input at load.</strong>
+The question "what could a compromised earlier session have written
+here, and what would happen when I load it" has an answer for most
+memory systems, and the answer is rarely "nothing". Deserialising a
+pickle, restoring a directory, evaluating a template, reading a path —
+all of it. Strip the capability, do not detect the attack.</li>
+<li><strong>Make the store a git repository when the store is
+files.</strong> One commit per session, named for the session, buys a
+free history, a free diff, free corruption detection via
+<code>fsck</code>, and hand repair with tools the operator already has.
+Note the atlas's own line here: git history is not an audit log of
+memory mutations, because it records the state of a tree rather than the
+events that changed a belief. It is still worth having.</li>
+<li><strong>Separate the durability tiers explicitly.</strong>
+Ephemeral-and-fast versus permanent-and-versioned as two named backends
+with one interface, chosen per store rather than globally, is a cleaner
+answer than one store with a TTL field.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let "last writer wins" be the concurrency answer for
+memory.</strong> It is fine for a cache and wrong for a store the agent
+reasons from, because the loss is silent and the losing content is
+exactly the content another agent thought worth writing.</li>
+<li><strong>Do not confuse a provenance label with an epistemic
+one.</strong> Knowing a fact came from a trusted context is not knowing
+it is true, and a lattice can make a system feel governed while nothing
+in it can ever be marked wrong.</li>
+<li><strong>Do not ship a store with no delete semantics beyond
+overwrite.</strong> Correcting a wrong memory here requires an agent to
+notice it, which requires it to be read, which is the failure you are
+trying to fix.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if your agent's sessions are already CI jobs; almost
+nothing here transfers otherwise, and the parts that do transfer are
+ideas rather than code. The design assumes a session is short, isolated,
+untrusted by default, and followed by a step you control — which is true
+of a workflow run and false of a chat.</p>
+<p>Walk away if you need the agent to <em>reason about</em> what it
+remembers rather than read it. There is no fact, no confidence, no
+contradiction and no correction, and adding them would mean building a
+memory system next to this one rather than extending it. The right
+reading of <code>gh-aw</code> for most people is as a security model for
+memory that happens to ship with a filesystem attached.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the read-down guarantee actually hold end to end? The merge
+loop looks correct, but nothing in the tree demonstrates a
+<code>none</code>-branch file failing to reach a <code>merged</code>
+run, and the branch is also the thing a corrupted-cache reinitialisation
+resets.</li>
+<li>What happens to the lattice when the cache is cold? A reinitialised
+repository starts every branch from the same empty commit, so the first
+run at each level sees nothing — but the interaction between
+branch-scoped Actions caches, the default-branch fallback and integrity
+branches is not something reading can settle.</li>
+<li>How large do these stores get in practice, and does the agent's own
+reading of a grown directory become the dominant cost?
+<code>gh aw logs</code> reports AIC per run, so the data exists in
+users' accounts; nothing is committed here.</li>
+<li>Does threat detection inspect memory content on the way
+<em>out</em>, and what does it reject? The wiring is asserted in tests;
+the detector's own criteria were not traced in this read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Compile-time configuration</strong>
+<code>pkg/workflow/cache.go</code> ·
+<code>pkg/workflow/cache_integrity.go</code> ·
+<code>pkg/workflow/cache_validation.go</code> ·
+<code>pkg/workflow/repo_memory.go</code> ·
+<code>pkg/workflow/repo_memory_validation.go</code> ·
+<code>pkg/workflow/comment_memory.go</code> ·
+<code>pkg/workflow/compiler_custom_job_memory.go</code></p>
+<p><strong>Context assembly</strong>
+<code>pkg/workflow/repo_memory_prompt.go</code></p>
+<p><strong>Run-time steps</strong>
+<code>actions/setup/sh/setup_cache_memory_git.sh</code> ·
+<code>actions/setup/sh/commit_cache_memory_git.sh</code> ·
+<code>actions/setup/sh/check_cache_memory_git_integrity.sh</code> ·
+<code>actions/setup/sh/clone_repo_memory_branch.sh</code> ·
+<code>actions/setup/sh/create_cache_memory_dir.sh</code> ·
+<code>actions/setup/sh/sanitize_repo_memory_filenames.sh</code></p>
+<p><strong>Design record</strong>
+<code>docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md</code>
+·
+<code>docs/adr/27479-comment-memory-file-based-agent-memory-with-github-persistence.md</code>
+·
+<code>docs/adr/44037-restore-memory-read-only-access-custom-jobs.md</code>
+·
+<code>docs/adr/44015-expose-memory-stores-to-on-steps-pre-activation.md</code>
+· <code>docs/src/content/docs/reference/cache-memory.md</code> ·
+<code>docs/src/content/docs/reference/repo-memory.md</code></p>
+<p><strong>Tests</strong>
+<code>pkg/workflow/cache_memory_integration_test.go</code> ·
+<code>pkg/workflow/cache_memory_restore_keys_test.go</code> ·
+<code>pkg/workflow/cache_memory_threat_detection_test.go</code> ·
+<code>pkg/workflow/cache_integrity_test.go</code> ·
+<code>pkg/workflow/repo_memory_path_consistency_test.go</code> ·
+<code>actions/setup/sh/setup_cache_memory_git_test.sh</code></p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d"><code class="commit-id" title="c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d">c9dca3e2…</code></a>
+— first reading, from the <a
+href="https://github.com/QuesmaOrg/awesome-ai-tokenomics">awesome-ai-tokenomics
+triage</a>. Screened before reading: 3 auto-run surfaces
+(<code>.devcontainer/devcontainer.json</code>, whose
+<code>postCreateCommand</code> pipes the project's own
+<code>install-gh-aw.sh</code> from
+<code>raw.githubusercontent.com</code> into <code>bash</code>;
+<code>.gitattributes</code>, whose three filter drivers are git-lfs on
+slide assets; <code>.vscode/settings.json</code>, which sets only
+Copilot and search options), 6 dependency surfaces inside the seven-day
+cooldown and 5 unpinned manifests. Nothing was executed and nothing was
+installed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

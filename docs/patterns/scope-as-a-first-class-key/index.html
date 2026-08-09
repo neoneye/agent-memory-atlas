@@ -443,6 +443,33 @@ agent to make. A validated, RLS-backed, org-routed key whose hierarchy
 exists only in prose is a good reminder that a scope <em>format</em> and
 a scope <em>resolution order</em> are different pieces of work, and the
 second one is easy to assume you have done.</p>
+<p><strong><a href="../../systems/gh-aw/">gh-aw</a> is the only scope in
+this atlas that is directional, and the only one enforced by a
+filesystem rather than a query.</strong> Its cache-memory store is a git
+repository with one branch per integrity level — <code>merged</code>,
+<code>approved</code>, <code>unapproved</code>, <code>none</code> — and
+the pre-agent step checks out the branch matching this run's level, then
+merges <em>down</em> from strictly higher levels only. The comment says
+what the shape is for: <em>"lower-integrity runs see higher-integrity
+data via merge, but higher-integrity runs never see lower-integrity
+data."</em> Legacy files of unknown provenance are committed to
+<code>none</code> alone, explicitly to prevent trust escalation.</p>
+<p>Two things generalise from it. The first is that <strong>a scope need
+not be a partition.</strong> Every other entry on this page divides
+memory into disjoint boxes and asks which box you are in; this one
+orders the boxes and allows reads in one direction, which is the right
+shape whenever some of your sessions are less trusted than others rather
+than merely different from them — a public demo beside an authenticated
+user, a fork PR beside a merged commit.</p>
+<p>The second is that the filter runs <em>before the reader exists</em>.
+What a run can see is decided by a branch checkout in a shell script, so
+there is no query to phrase differently, no argument to widen, and no
+post-filter to forget — the failure modes CSM and Pydantic AI close with
+a bound parameter and a returned-path check are not expressible here.
+The price is that it is coarse: the whole store moves together, nothing
+within a level is separated, and the level describes the run that wrote
+a file rather than anything about the file. Read it as a containment
+boundary, not as tenancy.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>

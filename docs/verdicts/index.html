@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 238 reports.</strong></p>
+<p><strong>This page covers all 239 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;238 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;239 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6140,6 +6140,48 @@ and you have never checked whether any of it reaches a session.</li>
 memory that writes itself — every entry here exists because a person
 decided to type it, and retrieval is exact keyword matching that will
 miss a paraphrase and says so in the injected block.</li>
+</ul>
+<h3 id="gh-aw"><a href="../systems/gh-aw/"><code>gh-aw</code></a></h3>
+<ul>
+<li>Best idea: memory on an information-flow lattice. The cache-memory
+store is a git repository with one branch per trust level —
+<code>merged</code>, <code>approved</code>, <code>unapproved</code>,
+<code>none</code> — and
+<code>actions/setup/sh/setup_cache_memory_git.sh</code> checks out the
+branch for the run's own level, then merges <em>down</em> from strictly
+higher levels only: <em>"lower-integrity runs see higher-integrity data
+via merge, but higher-integrity runs never see lower-integrity
+data."</em> A fork PR can read what a merged run remembered and cannot
+write into it.</li>
+<li>Biggest risk: the trust label describes the run that wrote the file,
+never the claim inside it. Nothing here can mark a memory wrong, and no
+file ever moves between levels, so a poisoned note written by one
+unapproved run is simply what every later unapproved run knows.
+Concurrency is documented as last-writer-wins.</li>
+<li>Most reusable component: the pre-agent sanitisation gate. Before the
+agent touches a restored tree the script deletes every non-sample file
+under <code>.git/hooks</code>, sets <code>core.hooksPath</code> to
+<code>/dev/null</code>, deletes every symlink, strips the execute bit
+from every file, and drops any extension not on the allow-list —
+because, per ADR-26587, <em>"a compromised prior run could … plant
+executable scripts"</em>. The move is to strip the capability rather
+than detect the attack, and it transfers to any store a session
+reloads.</li>
+<li>Maturity impression: MIT, GitHub, Inc., 2,766 Go files. Fourteen
+memory-named test files in <code>pkg/workflow/</code> holding 94
+<code>func Test</code> entries, plus shell tests for the restore and
+integrity scripts, and a <code>docs/adr/</code> tree that records
+rejected alternatives and negative consequences rather than only
+decisions. What no test asserts is the read-down guarantee itself:
+nothing demonstrates a <code>none</code>-branch file failing to reach a
+<code>merged</code> run.</li>
+<li>Study when: your sessions are CI jobs, or you have any store a later
+session reloads and have never asked what an earlier compromised session
+could have left in it.</li>
+<li>Do not copy when: you need the agent to reason about what it
+remembers. There is no retrieval, no fact, no confidence and no
+correction — the store is a directory the agent greps, and adding those
+would mean building a second memory system beside this one.</li>
 </ul>
         </article>
       </div>

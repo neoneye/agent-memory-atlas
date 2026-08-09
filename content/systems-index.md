@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **238 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **239 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -99,6 +99,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`gbrain`](../systems/gbrain/) **GBrain** — Claims graded, holders scored · `garrytan/gbrain` · Scope enforced, Negative evals
 - [`generative-agents`](../systems/generative-agents/) **Generative Agents** — Observation-reflection ancestor · `joonspk-research/generative_agents`
 - [`genericagent`](../systems/genericagent/) **GenericAgent** — Memory as written policy · `lsdefine/GenericAgent`
+- [`gh-aw`](../systems/gh-aw/) **gh-aw** — Memory in CI, on an integrity lattice · `github/gh-aw` · Scope enforced
 - [`gini-agent`](../systems/gini-agent/) **Gini Agent** — Reimplemented memory model · `Open-Curiosity/gini-agent` · Trust state, Bi-temporal, Scope enforced
 - [`gitlord`](../systems/gitlord/) **GitLord** — Git as the agent's event log · `yashneil75/gitlord`
 - [`gitmem`](../systems/gitmem/) **GitMem** — You may not record a lesson without two arguments against it · `gitmem-dev/gitmem` · Scope enforced, Human review

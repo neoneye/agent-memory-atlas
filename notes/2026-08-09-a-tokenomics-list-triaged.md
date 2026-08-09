@@ -85,3 +85,68 @@ was expected to be empty.
 The screen found three auto-run surfaces across the five — all in `ccusage`,
 which ships `.claude/settings.json` hooks, an `.envrc` and a `.mcp.json`. Nothing
 was executed.
+
+### Batch 2 — the rest of the meters, and the one that was not a meter
+
+| Repository | Commit | Outcome |
+| --- | --- | --- |
+| `douglasmonsky/codex-usage-tracker` | `bc190476` | Out of scope: a SQLite index over Codex CLI logs. No memory vocabulary in source at all |
+| `steipete/CodexBar` | `98c7196f` | Out of scope: a macOS menu-bar meter, 2,437 files. Every vocabulary hit is a changelog line or a menu-refresh scheduler |
+| `CodeZeno/Claude-Code-Usage-Monitor` | `7b108da8` | Out of scope: a 39-file Windows taskbar widget. No hits |
+| `openlit/openlit` | `ad20b7b4` | Out of scope, and the batch's near-miss — see below |
+| **`github/gh-aw`** | `c9dca3e2` | **Report written** — [gh-aw](../content/systems/gh-aw.md), the atlas's 239th |
+
+**openlit is the near-miss worth naming**, because it does everything a memory
+system does except the last step.
+`cli/internal/coding/sessionstate/sessionstate.go` opens with *"persists tiny
+per-session facts that the CLI needs to remember across hook invocations"*, and it
+is a real durable store: JSON under `$XDG_CACHE_HOME/openlit/sessions/<sid>.json`,
+written `0600`, bounded in size, best-effort on corruption. It survives a process
+boundary because each hook invocation is a fresh process. It does not survive the
+*session*, and what it holds — a cached `user_email`, the last-seen composer mode
+— is replayed as an OpenTelemetry resource attribute, never back to a model. A
+store that outlives the process but not the session, feeding telemetry rather
+than context, is exactly the shape the scope bar exists to exclude.
+
+**gh-aw is the find.** GitHub's agentic-workflows compiler is on a token-cost list
+because it meters inference in AI Credits and can cap a run. That is not why it
+matters here. A workflow run is a session with unusually hard edges — fresh
+container, no filesystem, nothing carried forward — and `gh-aw` gives it three
+ways to remember anyway: the Actions cache, an orphan git branch, and a managed
+issue comment, all materialised as ordinary files the agent edits with the tools
+it already has.
+
+Two mechanisms justified the report.
+
+The first is an **information-flow lattice over memory**. The cache-memory store is
+a git repository with one branch per integrity level — `merged`, `approved`,
+`unapproved`, `none` — and the pre-agent script checks out the branch for this
+run's level, then merges down from strictly higher levels only: *"lower-integrity
+runs see higher-integrity data via merge, but higher-integrity runs never see
+lower-integrity data."* A fork PR reads what a merged run remembered and cannot
+write into it. Nothing else in the atlas has a directional scope.
+
+The second is that **the restore path treats the store as hostile**. Before the
+agent sees the tree: hook files under `.git/hooks` deleted, `core.hooksPath` set
+to `/dev/null`, every symlink deleted, execute bits stripped from every file, and
+files with disallowed extensions removed. ADR-26587 states the reasoning — a
+compromised prior run could have planted an executable. This project screens other
+people's repositories for exactly that shape before reading them; `gh-aw` screens
+its own memory before reading it, which is the same argument applied one level in.
+
+The mark is `scope_enforced` and only that. `trust_state` was considered and
+withheld: the four levels label the run that wrote a file, never the claim inside
+it, and no file ever moves between levels, so there is no state a belief can be
+promoted or demoted through. `audit_log` was considered and withheld under the
+atlas's own rule that git history is a different mechanism — though here the
+history is unusually pointed, one commit per run named `run-<GITHUB_RUN_ID>` on
+the branch of that run's trust level.
+
+Ten entries read, one report, and the cost-list hypothesis is holding in the
+direction that predicted few memory systems. The other half — that a list written
+by people who measure bills would contain the cache measurement
+[cache-preserving injection](../content/patterns/cache-preserving-injection.md)
+says nobody publishes — has produced nothing yet. `gh-aw` sidesteps the pattern
+rather than answering it: there is no per-turn injection to invalidate, because
+the store is a directory and the agent goes looking.
+

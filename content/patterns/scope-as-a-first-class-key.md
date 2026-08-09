@@ -334,6 +334,32 @@ only in prose is a good reminder that a scope *format* and a scope *resolution
 order* are different pieces of work, and the second one is easy to assume you
 have done.
 
+**[gh-aw](../../systems/gh-aw/) is the only scope in this atlas that is
+directional, and the only one enforced by a filesystem rather than a query.** Its
+cache-memory store is a git repository with one branch per integrity level —
+`merged`, `approved`, `unapproved`, `none` — and the pre-agent step checks out the
+branch matching this run's level, then merges *down* from strictly higher levels
+only. The comment says what the shape is for: *"lower-integrity runs see
+higher-integrity data via merge, but higher-integrity runs never see
+lower-integrity data."* Legacy files of unknown provenance are committed to
+`none` alone, explicitly to prevent trust escalation.
+
+Two things generalise from it. The first is that **a scope need not be a
+partition.** Every other entry on this page divides memory into disjoint boxes and
+asks which box you are in; this one orders the boxes and allows reads in one
+direction, which is the right shape whenever some of your sessions are less
+trusted than others rather than merely different from them — a public demo beside
+an authenticated user, a fork PR beside a merged commit.
+
+The second is that the filter runs *before the reader exists*. What a run can see
+is decided by a branch checkout in a shell script, so there is no query to phrase
+differently, no argument to widen, and no post-filter to forget — the failure
+modes CSM and Pydantic AI close with a bound parameter and a returned-path check
+are not expressible here. The price is that it is coarse: the whole store moves
+together, nothing within a level is separated, and the level describes the run
+that wrote a file rather than anything about the file. Read it as a containment
+boundary, not as tenancy.
+
 ## Tests to require
 
 - Cross-user, cross-agent, and cross-project leakage.

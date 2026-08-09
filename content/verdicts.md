@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 238 reports.**
+**This page covers all 239 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["238 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["239 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2060,39 +2060,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you already have a rules file and a pile of markdown, and you have never checked whether any of it reaches a session.
 - Do not copy when: you need semantic recall, a scope boundary, or memory that writes itself — every entry here exists because a person decided to type it, and retrieval is exact keyword matching that will miss a paraphrase and says so in the injected block.
 
+### [`gh-aw`](../systems/gh-aw/)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- Best idea: memory on an information-flow lattice. The cache-memory store is a git repository with one branch per trust level — `merged`, `approved`, `unapproved`, `none` — and `actions/setup/sh/setup_cache_memory_git.sh` checks out the branch for the run's own level, then merges *down* from strictly higher levels only: *"lower-integrity runs see higher-integrity data via merge, but higher-integrity runs never see lower-integrity data."* A fork PR can read what a merged run remembered and cannot write into it.
+- Biggest risk: the trust label describes the run that wrote the file, never the claim inside it. Nothing here can mark a memory wrong, and no file ever moves between levels, so a poisoned note written by one unapproved run is simply what every later unapproved run knows. Concurrency is documented as last-writer-wins.
+- Most reusable component: the pre-agent sanitisation gate. Before the agent touches a restored tree the script deletes every non-sample file under `.git/hooks`, sets `core.hooksPath` to `/dev/null`, deletes every symlink, strips the execute bit from every file, and drops any extension not on the allow-list — because, per ADR-26587, *"a compromised prior run could … plant executable scripts"*. The move is to strip the capability rather than detect the attack, and it transfers to any store a session reloads.
+- Maturity impression: MIT, GitHub, Inc., 2,766 Go files. Fourteen memory-named test files in `pkg/workflow/` holding 94 `func Test` entries, plus shell tests for the restore and integrity scripts, and a `docs/adr/` tree that records rejected alternatives and negative consequences rather than only decisions. What no test asserts is the read-down guarantee itself: nothing demonstrates a `none`-branch file failing to reach a `merged` run.
+- Study when: your sessions are CI jobs, or you have any store a later session reloads and have never asked what an earlier compromised session could have left in it.
+- Do not copy when: you need the agent to reason about what it remembers. There is no retrieval, no fact, no confidence and no correction — the store is a directory the agent greps, and adding those would mean building a second memory system beside this one.
 

@@ -98,7 +98,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>238 memory systems with publicly readable source, each read at a
+<p>239 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. Not all 165 are open source — see <a
 href="#what-the-licences-actually-say">what the licences actually
@@ -106,7 +106,7 @@ say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 12
-systems of 238 carry a rejected-value tombstone — a record keyed on the
+systems of 239 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -119,17 +119,17 @@ the embedding survives the delete until an unscheduled compaction — see
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 133 of 238 apply a scope key as a filter on the
+shallowest.</strong> 134 of 239 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 50 of 238
+<li><strong>Negative evidence is almost never tested.</strong> 50 of 239
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. A 2026-08-08 re-score puts 27 of the then-37 on a
 <strong>read path</strong>; the rest keep material out of a projection,
 a preamble, a summarization or a write, which is a different and weaker
 thing. Use 27 for the strict reading.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 46 of 238
+<li><strong>Trust is usually a number, not a state.</strong> 46 of 239
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -178,7 +178,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>238 reports across 237 repositories</strong>:
+<strong>239 reports across 238 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -316,8 +316,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 133 of
-238 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 134 of
+239 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -336,7 +336,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Two hundred and thirty-eight systems do not fall into one hundred and
+<p>Two hundred and thirty-nine systems do not fall into one hundred and
 sixty-six categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -1011,8 +1011,9 @@ href="../systems/autogen/"><code>autogen</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
 href="../systems/dexto/"><code>dexto</code></a>, <a
-href="../systems/cognis/"><code>cognis</code></a> Plugins mounted on
-them: <a href="../systems/holographic/"><code>holographic</code></a>, <a
+href="../systems/cognis/"><code>cognis</code></a>, <a
+href="../systems/gh-aw/"><code>gh-aw</code></a> Plugins mounted on them:
+<a href="../systems/holographic/"><code>holographic</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/byterover/"><code>byterover</code></a>, <a
@@ -1044,6 +1045,33 @@ agent, which state directories exist and how each is snapshotted,
 restored and destroyed. Credentials are sanitized field by field on
 backup; memory is a directory, copied whole — so the most careful
 deletion above is undone by an ordinary restore below.</p>
+<p><strong>gh-aw is the family's only host where the session boundary is
+a container teardown, and it is the only one that treats its own store
+as hostile.</strong> GitHub's agentic-workflows compiler expands a
+frontmatter key into GitHub Actions steps that mount a durable directory
+for the run and sync it back afterwards, over three backends — the
+Actions cache, an orphan git branch, and a managed issue comment. There
+is no memory model: the unit is a file, the retrieval is the agent's own
+<code>Grep</code>, and the compiler validates size, count, glob and
+extension without ever parsing content. What it does model is <em>who
+wrote the file</em>. The cache-memory store is a git repository with one
+branch per integrity level — <code>merged</code>, <code>approved</code>,
+<code>unapproved</code>, <code>none</code> — and
+<code>actions/setup/sh/setup_cache_memory_git.sh</code> checks out the
+branch for this run's level and then merges down from strictly higher
+levels only, so a fork PR reads what a merged run remembered and cannot
+write into it. An information-flow lattice over memory is rare enough
+here to be worth the whole report, and the same script's restore gate is
+the transferable half: hook files deleted, <code>core.hooksPath</code>
+set to <code>/dev/null</code>, symlinks deleted, execute bits stripped,
+and disallowed extensions removed <em>before the agent can read
+anything</em>, because <a
+href="https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md">ADR-26587</a>
+reasons that a compromised prior run could have planted an executable.
+Every other host in this family loads its store and trusts it. The limit
+is the mirror image: the integrity level describes the run that wrote
+the file and never the claim inside it, nothing moves between levels,
+and no mechanism here can mark a memory wrong.</p>
 <p>Tradeoff: users choose a backend that fits their privacy and scale
 needs, but trust state, scope, and above all deletion must cross the
 host/provider boundary. <strong>MateClaw</strong> is the partial
@@ -2420,7 +2448,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 238 systems by the seven mechanisms judged against strict
+filters all 239 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -4463,6 +4491,39 @@ temporal decay</td>
 <td>"No Execution, No Memory" plus an ROI test for permanent
 context</td>
 <td>Every axiom is prose with no enforcement or audit</td>
+</tr>
+<tr>
+<td><code>gh-aw</code></td>
+<td>A file the agent wrote in a previous run — JSON, JSONL, Markdown,
+CSV — with no schema the system imposes or reads</td>
+<td>Three file-backed surfaces: a GitHub Actions cache holding a git
+repo, an orphan git branch, and a managed issue comment materialised as
+Markdown</td>
+<td>None. The whole store is mounted as a directory and the agent reads
+it with its own file tools; a generated prompt section names the
+path</td>
+<td>The agent edits files in place during the run; a post-agent step
+commits and pushes or upserts, gated by size, count, glob and extension
+limits</td>
+<td>Overwrite in place. Cache memory expires at 7 days and by LRU; repo
+memory is unbounded and versioned in git; nothing is ever marked
+wrong</td>
+<td>Integrity level (merged/approved/unapproved/none) as a git branch,
+plus branch-scoped cache keys and per-id directories; the level is
+enforced on the read path</td>
+<td>A YAML frontmatter key in a Markdown workflow file that a Go
+compiler expands into GitHub Actions steps; no MCP tool and no API</td>
+<td>Nothing between runs. A scheduled maintenance workflow prunes stale
+cache entries by key prefix</td>
+<td>Memory from a previous run is treated as attacker-controlled: hooks
+deleted, symlinks deleted, execute bits stripped, disallowed extensions
+removed, all before the agent can read it</td>
+<td>An information-flow lattice over memory that a low-trust run cannot
+write upward into, and a read path that assumes its own store is
+hostile</td>
+<td>No retrieval, no correction, no notion of a fact; the whole store is
+injected as a directory, and the trust label describes the writer rather
+than the belief</td>
 </tr>
 <tr>
 <td><code>gini-agent</code></td>
@@ -8804,7 +8865,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>12 of 238:</em> <a
+<p><em>12 of 239:</em> <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -8820,7 +8881,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>46 of 238:</em> <a
+<p><em>46 of 239:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 <a
@@ -8871,7 +8932,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>28 of 238:</em> <a
+<p><em>28 of 239:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
@@ -8905,7 +8966,7 @@ href="../systems/vestige/"><code>vestige</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>133 of 238:</em> <a
+<p><em>134 of 239:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -8954,6 +9015,7 @@ href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/gbrain/"><code>gbrain</code></a>, <a
+href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
 href="../systems/gitmem/"><code>gitmem</code></a>, <a
 href="../systems/gobii/"><code>gobii</code></a>, <a
@@ -9044,7 +9106,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>68 of 238:</em> <a
+<p><em>68 of 239:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/athena/"><code>athena</code></a>, <a
@@ -9116,7 +9178,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>59 of 238:</em> <a
+<p><em>59 of 239:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -9179,7 +9241,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>50 of 238:</em> <a
+<p><em>50 of 239:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -9249,7 +9311,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Fifty
-repositories of two hundred and thirty-eight assert that particular
+repositories of two hundred and thirty-nine assert that particular
 material must <em>not</em> be retrieved — the assertion every scope,
 deletion and correction claim in this document ultimately rests on. Read
 together rather than one at a time, they split cleanly in two, and the
@@ -12784,8 +12846,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across two hundred
-and thirty-eight systems, almost none can explain why they are shaped
-the way they are.</p>
+and thirty-nine systems, almost none can explain why they are shaped the
+way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -14178,6 +14240,10 @@ href="https://github.com/The-825/breadcrumbs">The-825/breadcrumbs</a> at
 <a
 href="https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7"><code class="commit-id" title="5d49be8f96b38051e2c0ed2435453d6d246d07e7">5d49be8f…</code></a>
 — the fleet architecture its docs describe is not in the tree</li>
+<li><a href="https://github.com/github/gh-aw">github/gh-aw</a> at <a
+href="https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d"><code class="commit-id" title="c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d">c9dca3e2…</code></a>
+— the memory subsystem only; the compiler's other surfaces were not
+traced</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
