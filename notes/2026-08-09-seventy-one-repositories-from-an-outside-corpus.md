@@ -205,9 +205,79 @@ for a reading, with the signal that argues for it:
     provenance surviving compression, `alash3al/stash` for its causal-link and
     hypothesis taxonomy, `nhevers/moltbrain` for hook-driven passive capture.
 
-## The fifty-one still to read, with the evidence
+## Surveyed and too thin for a report
+
+Read at the code level, not merely probed. Each of these is in scope by kind —
+something survives a session — and carries too little mechanism to justify a
+page, which is a different verdict from out-of-scope and is recorded so the next
+pass does not redo the read.
+
+- **`memorix-ai/memorix-sdk`** at `71a2815cadd987da99b47469caa82d30cc125057`,
+  1,299 lines. A generic memory SDK with clean interfaces
+  (`VectorStoreInterface`, `EmbedderInterface`, `MetadataStoreInterface`) and a
+  `MemoryAPI` of store/retrieve/delete/update/list. See below — it is worth its
+  own subsection.
+- **`tharavael/sovereign-ai-kit`**, 2,128 lines. An identity and persona kit:
+  `templates/` with `{{DOUBLE_BRACES}}` placeholders and a generator that fills
+  them. What persists is a configuration file, not a claim.
+- **`haustorium12/continuity-v2`**, 2,589 lines, no tests. A read-only FTS5 and
+  embedding index over Claude Code JSONL transcripts. Nothing is extracted,
+  curated or corrected — the transcripts are the store and the index is
+  rebuildable, which is a coherent design with no lifecycle to report on.
+- **`grapeot/context-infrastructure`**, 3,496 lines. A prompt-driven Markdown
+  observation log with cron-fired observer and reflector agents. The interesting
+  material is in `rules/axioms/`, which is prose about attribution and trust
+  rather than a mechanism.
+- **`gman1911/claude-cognitive`**, 3,678 lines. Working memory and multi-instance
+  coordination for Claude Code. Its own release notes describe Phase 4,
+  self-maintaining docs, as "Designed, not implemented", and call the release a
+  demonstration of "development transparency" — which is the right instinct and
+  leaves little to analyse at this commit.
+- **`jesung/claude-sleep`**, no source in any counted language. A daily-notes
+  plus `MEMORY.md` convention in Markdown and shell, and the README credits the
+  two-layer structure to someone else. It is a practice, not a system.
+
+## The verdict I nearly overturned, and why I did not
+
+`memorix-sdk` is worth a subsection because it is a live instance of this
+project's own [characteristic failure](2026-07-28-methodology-hazards.md), caught
+before publication.
+
+The source corpus declines it as "a pre-alpha generic vector-store SDK whose
+embedders and backends are all stubs". The first check appeared to refute that:
+grepping for stubs returns a wall of `pass` bodies, and every one of them is an
+`@abstractmethod` on an ABC — the ordinary Python idiom, not an unimplemented
+method. Beside them sit concrete classes with real names: `OpenAIEmbedder`,
+`GeminiEmbedder`, `SentenceTransformersEmbedder`, `FAISSVectorStore`,
+`QdrantVectorStore`, `SQLiteMetadataStore`.
+
+Reading the bodies is what settles it, and it settles it the other way:
+
+- `OpenAIEmbedder.__init__` sets `self.client = None` with the comment "Would be
+  initialized with `openai.OpenAI(...)`", and `embed()` returns
+  `_dummy_embedding` — an MD5 hash of the text.
+- `QdrantVectorStore` stores into three Python dicts and its `search()` returns
+  `[]` unconditionally.
+- `FAISSVectorStore` stores into the same three dicts, commented "In-memory
+  storage for demo purposes", and never touches FAISS.
+- `SQLiteMetadataStore` is the one real implementation — it creates a table and
+  uses `sqlite3`.
+
+So the corpus's verdict is right, with one refinement: the *embedders and vector
+backends* are stubs, the *metadata store* is not. The trap is entirely in the
+class names — a reader who greps for `class .*Embedder` and finds three
+providers has found three names, and the atlas's rule is that a name is not a
+mechanism.
+
+**Recording this because the near-miss is the useful part.** A correction to
+somebody else's code-level verdict, published on the strength of a grep for
+`pass`, would have been wrong in exactly the direction this project warns about:
+plausible, checkable, and refuted by reading the next thirty lines.
+
+## The forty-five still to read, with the evidence
 
 Every one of these is cloned, screened with `screen_repo.py`, and measured.
+The six read and dispositioned above are excluded.
 **None has been read**, and nothing below is a verdict — the columns are the
 probe output described above, and that probe caught out three times as often as
 it hit. They are ordered by size because size correlates with nothing in
