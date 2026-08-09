@@ -331,15 +331,22 @@ there is no `UPDATE` against either table anywhere in the tree, and the only
 [breadcrumbs](../../systems/breadcrumbs/) answers the value question and skips
 the actor one, which is the mirror image of the warning above. Its
 `store_fact()` writes a `SUPERSEDED` row to `episodes.jsonl` before overwriting
-a semantic fact, carrying `prior_value`, `prior_status` and `new_value`, so the
-log does show what an entry used to say. It records no actor — a single-operator
-kit does not need one — and, more consequentially, it records nothing on the
-trust axis: promoting a fact to `verified` writes no event, and a restatement
-whose value happens to match the stored one drops the `verified` status and its
-oracle with no row logged. The lesson generalizes past that repository: decide
-which transitions the log covers by asking which ones you would need to
-reconstruct, not by asking which ones happen to pass through the function you
-instrumented.
+a semantic fact, carrying `prior_value`, `prior_status` and `new_value`, and
+`reject_fact()` and `lift_tombstone()` add `REJECTED` and `TOMBSTONE_LIFTED`
+rows with their required reasons, so the log shows what an entry used to say and
+what it was forbidden to say again. It records no actor — a single-operator kit
+does not need one — and, more consequentially, it records nothing on the trust
+axis: promoting a fact to `verified` mutates the row in place and writes no
+event.
+
+**What that costs is visible in the same repository, one function away.**
+`build_context(as_of=…)` replays the store as of a past moment by filtering
+facts on a `recorded_at` stamp — and renders each surviving fact's *current*
+status and oracle, because the promotion that changed them left no event to
+replay and no stamp to compare. The timeline query is only as deep as the log
+underneath it. Decide which transitions the log covers by asking which ones you
+would need to reconstruct, not by asking which ones happen to pass through the
+function you instrumented.
 
 [Memory Palace](../../systems/memory-palace/) is the counterexample and worth
 knowing about before trusting a schema. Migration 0004 creates `access_log` as

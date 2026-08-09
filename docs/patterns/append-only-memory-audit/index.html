@@ -438,16 +438,24 @@ value question and skips the actor one, which is the mirror image of the
 warning above. Its <code>store_fact()</code> writes a
 <code>SUPERSEDED</code> row to <code>episodes.jsonl</code> before
 overwriting a semantic fact, carrying <code>prior_value</code>,
-<code>prior_status</code> and <code>new_value</code>, so the log does
-show what an entry used to say. It records no actor — a single-operator
-kit does not need one — and, more consequentially, it records nothing on
-the trust axis: promoting a fact to <code>verified</code> writes no
-event, and a restatement whose value happens to match the stored one
-drops the <code>verified</code> status and its oracle with no row
-logged. The lesson generalizes past that repository: decide which
-transitions the log covers by asking which ones you would need to
-reconstruct, not by asking which ones happen to pass through the
-function you instrumented.</p>
+<code>prior_status</code> and <code>new_value</code>, and
+<code>reject_fact()</code> and <code>lift_tombstone()</code> add
+<code>REJECTED</code> and <code>TOMBSTONE_LIFTED</code> rows with their
+required reasons, so the log shows what an entry used to say and what it
+was forbidden to say again. It records no actor — a single-operator kit
+does not need one — and, more consequentially, it records nothing on the
+trust axis: promoting a fact to <code>verified</code> mutates the row in
+place and writes no event.</p>
+<p><strong>What that costs is visible in the same repository, one
+function away.</strong> <code>build_context(as_of=…)</code> replays the
+store as of a past moment by filtering facts on a
+<code>recorded_at</code> stamp — and renders each surviving fact's
+<em>current</em> status and oracle, because the promotion that changed
+them left no event to replay and no stamp to compare. The timeline query
+is only as deep as the log underneath it. Decide which transitions the
+log covers by asking which ones you would need to reconstruct, not by
+asking which ones happen to pass through the function you
+instrumented.</p>
 <p><a href="../../systems/memory-palace/">Memory Palace</a> is the
 counterexample and worth knowing about before trusting a schema.
 Migration 0004 creates <code>access_log</code> as "the L0 layer"

@@ -1,60 +1,73 @@
 ---
 title: "breadcrumbs"
 eyebrow: "Correction that never reaches the retrieval lane"
-description: "A copy-and-adapt agent-ops kit whose sharpest artifact asks not whether a ledger entry is still true but whether it can ever be seen, and fails CI when a superseded entry still wins the injection lane."
+description: "A copy-and-adapt agent-ops kit whose sharpest artifact asks not whether a ledger entry is still true but whether it can ever be seen, with committed cases asserting that a superseded entry must never win the injection lane."
 root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
-revision: e7940f325d6e102f53b782d50fc95ae75d9cdefa
-revision_url: https://github.com/The-825/breadcrumbs/commit/e7940f325d6e102f53b782d50fc95ae75d9cdefa
+revision: 5d49be8f96b38051e2c0ed2435453d6d246d07e7
+revision_url: https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7
 analyzed_at: 2026-08-09
-capabilities: "trust_state, audit_log, negative_eval"
+capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
+  tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
   trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"
-  audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION and SUPERSEDED rows, the latter with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
+  audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION, SUPERSEDED, REJECTED and TOMBSTONE_LIFTED rows, the second with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
+  human_review: "the git-resident ledgers | .github/workflows/automerge.yml | considerPR refuses to merge an agent branch without the greenlight label unless greenlight_tiers.classify returns AUTO on every changed file | greenlight_tiers.py --selftest, ten tier cases"
   negative_eval: "conclusions ledger injection lane | templates/ledger-tools/retrieval_exam.py | run_forbidden_check replays the boot matcher and names a superseded entry that still wins a slot | retrieval_exam.py --selftest, four forbidden-hit cases"
 matrix:
-  memory_unit: "A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row"
-  storage: "Plain files in git: JSONL ledgers, a JSON fact store, a markdown handoff; no database"
-  retrieval: "Path-key match against the files a session touched, most specific then most recent, hard-capped"
+  memory_unit: "A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row and a tab-separated index row"
+  storage: "Plain files in git: JSONL ledgers, a JSON fact store, a TSV fact index, a markdown handoff; no database"
+  retrieval: "Path-key match against the files a session touched, most specific then most recent, hard-capped; the fact index answers by exact key or alias first"
   write: "A session appends by hand or through a prompt hook; no model extracts anything"
-  update_delete: "Append-only supersession through obsoleted_by; the engine overwrites a fact only after logging its prior value"
+  update_delete: "Append-only supersession through obsoleted_by; the engine logs a prior value before overwriting and refuses a value it has tombstoned"
   scoping: "The path key is a relevance key, not an access boundary; no user, tenant or agent scope"
-  integration: "Claude Code hooks and slash commands, plus a stdlib library for a loop you write yourself"
-  background: "Nothing runs on its own; the auditor and the exam are report-only sweeps you invoke"
-  trust: "asserted vs verified, where verified refuses to be set without a named oracle"
+  integration: "Claude Code hooks and slash commands, plus three push hooks for the fact index and a stdlib library for a loop you write yourself"
+  background: "Nothing in this tree runs on its own; the sweeps are report-only and the weekly gardener trigger ships as a template"
+  trust: "asserted vs verified, where verified refuses to be set without a named oracle and a rejected value refuses to be re-asserted"
   strengths: "Committed cases asserting a superseded entry must not win the injection lane, gated in CI"
-  risks: "The fleet architecture the docs describe is not in the tree, and one essay of four says so"
+  risks: "The fleet architecture the docs describe is not in the tree, and one essay of five says so"
 ---
 
 ## 1. Executive Summary
 
-breadcrumbs is a **copy-and-adapt kit**, not a library you install. 188 tracked
+breadcrumbs is a **copy-and-adapt kit**, not a library you install. 202 tracked
 files at this commit, most of them markdown: templates for a rules file, a
 session handoff, a decisions ledger and a settled-facts store; a CI kit of lint
 guards and a fail-closed merge gate; pattern essays explaining each piece. MIT
 licensed, no package manifest, no dependencies — every executable here is
 stdlib Python 3 or POSIX shell. There being nothing to install is a stated
-position rather than an omission: [`kit.json`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/kit.json)
+position rather than an omission: [`kit.json`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/kit.json)
 argues that *"a package would make our release cadence your dependency and fight
 the adapt step"*, and offers a machine-readable inventory instead — eight
 problem statements routed to artifacts, and per-artifact `assumes` and
 `selftest` fields.
 
-Four of those files are a memory system, and they are the reason for this
-report:
+Two clusters of those files are a memory system, and they are the reason for
+this report. The **ledger tools**, which is where the correction machinery
+lives:
 
-- [`templates/ledger-tools/memory_engine.py`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/memory_engine.py)
-  — 344 lines of three-tier file-native memory (working state, append-only
-  episodes, semantic facts) for an agent loop you write yourself.
-- [`templates/ledger-tools/conclusions_audit.py`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/conclusions_audit.py)
+- [`templates/ledger-tools/memory_engine.py`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/ledger-tools/memory_engine.py)
+  — 484 lines of three-tier file-native memory (working state, append-only
+  episodes, semantic facts) for an agent loop you write yourself, carrying a
+  rejected-value tombstone and an as-of replay.
+- [`templates/ledger-tools/conclusions_audit.py`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/ledger-tools/conclusions_audit.py)
   — asks whether every ledger entry is still **true**.
-- [`templates/ledger-tools/retrieval_exam.py`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/retrieval_exam.py)
+- [`templates/ledger-tools/retrieval_exam.py`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/ledger-tools/retrieval_exam.py)
   — 1017 lines asking whether any entry can ever be **seen**.
-- [`templates/ledger-tools/capture_nudge.py`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/capture_nudge.py)
+- [`templates/ledger-tools/capture_nudge.py`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/ledger-tools/capture_nudge.py)
   — a prompt hook that fires when the operator's own wording looks like a
   ruling.
+
+And the **memory desk**
+([`templates/memory-desk/`](https://github.com/The-825/breadcrumbs/tree/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/memory-desk)),
+a second and separate store built for the read side: a 60-line kernel, a
+tab-separated fact index, an append-only capture journal, a 297-line `mem` CLI,
+three harness hooks that push rows into context, and a written weekly curation
+contract. Section 6 covers why it exists; the short version is in its own
+essay, which designs *"for the weakest reader on their worst day"* and moves
+every judgement call out of retrieval and into maintenance.
 
 **The finding worth the reader's time is `run_forbidden_check()`**, landed in
 [PR #22](https://github.com/The-825/breadcrumbs/pull/22) on 9 August 2026, five
@@ -81,21 +94,22 @@ own. And `memory_engine.verify_fact()` raises rather than writes when handed
 empty evidence, which is the shortest possible statement of oracle-gated trust.
 
 **Where it is weakest is the distance between the prose and the tree.**
-[`docs/floating-memory.md`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/docs/floating-memory.md)
+[`docs/floating-memory.md`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/docs/floating-memory.md)
 describes a production memory layer in detail — an orphan git branch, a capped
 head file, per-session append-only fold files, a projection computed at read
 time, a trust rank, a reaper that greps merged history to check a fold's own
 claim, an orphaned-branch matcher, a mishandled-claim SLA. None of that is in
 this repository. `grep -rl fold --include='*.py'` at this commit returns only
-the migration runner and a test-harness example. What ships is the smaller kit;
-what is described is the system the kit was extracted from.
+the migration runner and a test-harness example, and `reaper` and `projection`
+appear in no `.py` or `.sh` file at all. What ships is the smaller kit; what is
+described is the system the kit was extracted from.
 
 The essay itself opens by saying so, in a bolded header before the first
 section: the fleet machinery *"runs in the system this pattern came out of and
 does NOT ship in this kit"*, followed by a link to the ledger tools a reader can
 copy today. That closes the entry point most likely to mislead, and it is the
 only essay carrying such a header.
-[`docs/breadcrumbs-whitepaper.md`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/docs/breadcrumbs-whitepaper.md)
+[`docs/breadcrumbs-whitepaper.md`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/docs/breadcrumbs-whitepaper.md)
 presents five mechanisms as the system, and two of them have no code path
 in the tree: the recorder that refuses a completion claim while obligations
 dangle (3.2), and the versioned handoff where a session acknowledges the state
@@ -138,6 +152,19 @@ re-check rather than a rewrite. Two clocks then run over the survivors:
 `conclusions_audit.py` marks an entry `STALE` when its keyed path is gone from
 the tree and `AGING` when nothing re-verified it inside 180 days.
 
+**How a value stops being admissible at all.** Supersession retires a *record*;
+`reject_fact(category, key, value, reason)` retires a *value*. It writes a row
+into `.memory/tombstones.json` keyed by `category/key` and then by the rejected
+value itself, deletes the fact entry when that value is the one currently held,
+and logs a `REJECTED` episode. From then on `store_fact()` raises rather than
+writes when the same value arrives — the first thing it does, before it reads
+`facts.json` at all. Lifting is a deliberate act with its own required reason
+and its own `TOMBSTONE_LIFTED` episode, so the rejection and the reversal both
+survive in the episodic trail even after the tombstone row is gone. The
+docstring gives the reason a supersession alone is not enough: *"the next
+session that re-derives the old value writes it right back, and nothing
+remembers it was ever wrong."*
+
 **And the part most designs skip.** Marking a row superseded does not remove it
 from the lane. `CONCLUSIONS_TEMPLATE.md` tells adopters their matcher *should*
 treat an `obsoleted_by` entry as excluded, and the exam's own model of a matcher
@@ -157,7 +184,9 @@ The check keys on the supersession marker, never on the value, and the reason is
 pinned by a selftest: in a revert chain where a value goes A → B → A, the final
 entry restating A is a legitimately current entry, and a check that tombstoned
 by value would suppress it. That is a real distinction, correctly reasoned, and
-it is also exactly why this is not a rejected-value tombstone — see section 5.
+it is why the two tiers are keyed differently — the hand-authored ledger on the
+record, the engine's semantic store on the value. Section 5 is where that split
+is worth arguing about.
 
 ```mermaid
 flowchart TB
@@ -177,6 +206,13 @@ flowchart TB
     L --> X
     X -->|"a superseded entry won a slot"| F["FORBIDDEN HIT<br/>the model answers from the old ruling"]
     X -->|"no superseded entry is even reachable"| U["UNEXERCISED<br/>says nothing yet, never reported as clean"]
+
+    W2["store_fact(category, key, value) — engine semantic tier"] --> T{"tombstones.json holds this exact value<br/>under this category/key?"}
+    T -->|"yes"| Z["raises: 'a rejected value may not be silently re-asserted'"]
+    T -->|"no, and a different value is held"| SU["SUPERSEDED episode<br/>prior value + prior status, then overwrite at asserted"]
+    T -->|"no, and the same value is held"| NO["no-op: status and evidence untouched"]
+    RJ["reject_fact(…, reason) — reason required"] --> T
+    RJ --> EP["REJECTED episode; lift_tombstone logs TOMBSTONE_LIFTED"]
 ```
 
 ## 3. Architecture
@@ -185,12 +221,15 @@ There is no server, no database, no daemon and no external dependency. The
 runtime is `python3` and a git repository.
 
 **What has to be running: nothing.** Adoption is copying files. The stores are
-a `CONCLUSIONS.jsonl`, a `DECISIONS.md`, a `SESSION_STATE.md` at the repo root,
-and — if you use the engine — a `.memory/` directory holding
-`session_state.json`, `episodes.jsonl` and `facts.json`. Every one is
-human-readable and repairable with a text editor, which is stated as a design
-goal rather than an accident: retrieval is *"deterministic and inspectable with
-cat and grep."*
+a `CONCLUSIONS.jsonl`, a `DECISIONS.md`, a `SESSION_STATE.md` at the repo root;
+if you use the engine, a `.memory/` directory holding `session_state.json`,
+`episodes.jsonl`, `facts.json` and `tombstones.json`; and if you use the desk, a
+`memory/` directory holding `MEMORY.md`, `index.tsv` and `journal.jsonl`. Every
+one is human-readable and repairable with a text editor, which is stated as a
+design goal rather than an accident: retrieval is *"deterministic and
+inspectable with cat and grep."* The desk states the same rule as a fallback
+that its tests pin — *"grep -i '&lt;word&gt;' memory/index.tsv reads the same
+rows; the tsv is the interface, mem is convenience."*
 
 **Runtime shape.** Three things, with different lifetimes:
 
@@ -198,15 +237,23 @@ cat and grep."*
    header says so first: *"ASSUMES an agent execution loop you control (you
    build the prompt, you call the model, you log what happened)."* It does not
    wrap a provider, does not ship an MCP server, and does not hook a harness.
-2. **Harness hooks.** `capture_nudge.py` (UserPromptSubmit),
-   `templates/hooks/pre-compact-save.sh` (PreCompact) and
-   `post-compact-pointer.sh` (SessionStart, matcher `compact`). All fail open;
-   the nudge catches every exception and returns 0 on principle.
-3. **Report-only sweeps.** `conclusions_audit.py` and `retrieval_exam.py` are
-   CLIs you run on a cadence or in CI. Neither writes to the ledger. The
-   auditor exits 0 whatever it finds *"(this is a report, not a gate)"*; the
-   exam exits nonzero only under `--fail-on-regression` or
-   `--fail-on-forbidden`.
+2. **Harness hooks.** The memory-relevant ones span four events.
+   `capture_nudge.py` (UserPromptSubmit),
+   `templates/hooks/pre-compact-save.sh` (PreCompact),
+   `post-compact-pointer.sh` (SessionStart, matcher `compact`), and the desk's
+   trio: `session-start-memory.sh` (SessionStart), `prompt-index-hits.sh`
+   (UserPromptSubmit) and `path_note_guard.py` (PostToolUse, matcher
+   `Edit|Write|MultiEdit`). All fail open; the nudge catches every exception and
+   returns 0 on principle, and the desk's hooks exit 0 on a missing desk, a
+   missing `python3` and an unparsable payload alike.
+3. **Report-only sweeps and one gate.** `conclusions_audit.py` and
+   `retrieval_exam.py` are CLIs you run on a cadence or in CI. Neither writes to
+   the ledger. The auditor exits 0 whatever it finds *"(this is a report, not a
+   gate)"*; the exam exits nonzero only under `--fail-on-regression` or
+   `--fail-on-forbidden`. The desk's `mem check` is the exception in posture —
+   it exits 2 on a duplicate key, a dead source path, a malformed row, a bad
+   journal line or a kernel past its 60-line cap, and it runs in this
+   repository's own CI against this repository's own index.
 
 **Concurrency.** Deliberate and honestly bounded. Episodes are append-only JSONL
 so parallel writers do not contend, paired with a `merge=union` gitattributes
@@ -229,7 +276,14 @@ pitch, and it is accurate.
   oldest-first flush orders by last update rather than first insertion.
   `store_fact()` on a key that already holds a *different* value writes a
   `SUPERSEDED` episode carrying the prior value and prior status before it
-  overwrites, and the replacement re-enters at `asserted`.
+  overwrites, and the replacement re-enters at `asserted`; on a key that already
+  holds the *same* value it returns without touching status or evidence.
+- **Rejection (engine)** — `reject_fact(category, key, value, reason)` and
+  `lift_tombstone(category, key, value, reason)`, at
+  `templates/ledger-tools/memory_engine.py:209` and `:241`. Both refuse an empty
+  reason, on the stated parallel that *"an unexplained rejection is as
+  unauditable as an unexplained verification"*, and both log an episode.
+  `store_fact()` consults `tombstones.json` at line 177 before anything else.
 - **Capture (ledger)** — by hand, prompted by `capture_nudge.py`, which regexes
   the submitted prompt for ruling-shaped language (`\bruling\b`,
   `\bfrom now on\b`, `\bgoing forward\b`, clause-initial `always|never` with
@@ -240,11 +294,19 @@ pitch, and it is accurate.
   `COMPACTION` row *before* the working file shrinks. The comment names the
   ordering guarantee: *"if the process dies between the two writes, the worst
   case is a duplicate episode, never a lost one."*
-- **Retrieval / context assembly** — `MemoryEngine.build_context(query)`:
+- **Retrieval / context assembly** — `MemoryEngine.build_context(query, as_of=None)`:
   newest-first episodes with exact keyword overlap promoted ahead of recency,
   capped at `MAX_EPISODES_IN_CONTEXT = 5`, emitted under a header that names its
   own limit: `=== MEMORY (retrieval: recency + exact keyword; no paraphrase
-  match) ===`.
+  match) ===`. Passing `as_of` cuts episodes at that timestamp, drops facts
+  whose `recorded_at` is later, and extends the header with the exclusion and
+  the one case it cannot cover.
+- **Retrieval (desk)** — `templates/memory-desk/mem`: `lookup()` matches the
+  normalised query against keys and aliases exactly, falls back to a token
+  score weighting key and alias overlap 3× against answer overlap, and prints
+  at most `MAX_HITS = 3` rows of three lines each. `--stdin` is the hook form
+  and raises the floor to `MIN_HOOK_SCORE = 3`, so a prompt with no key overlap
+  injects nothing.
 - **Correction** — append a line with `obsoleted_by` on the old entry.
   `conclusions_audit._chain_issue()` resolves every pointer against the other
   ledger paths, the special paths, and the tree, and reports the ones that
@@ -265,12 +327,22 @@ pitch, and it is accurate.
   files, and classifies each document `booted` / `linked` / `deep` / `island` /
   `orphan`. `boot_weight()` reports the bytes and lines every session pays
   before any work happens.
-- **Tests** — three `--selftest` entry points, 47 checks total, all offline
-  against `tempfile` fixtures.
+- **Merge gating** — `ci-kit/workflows/greenlight_tiers.classify(files)` returns
+  `AUTO` only when every changed file is an addition or modification inside
+  `docs/`, `checklists/`, `README.md` or `planning/DECISIONS.md`; every deletion,
+  every rename, an empty list and everything else returns `GATED`, which means
+  the human approval label is required. `.github/workflows/automerge.yml` runs
+  it from the base branch's checkout.
+- **Integrity** — `mem check`: duplicate keys or aliases across rows, empty
+  fields, a `checked` value that is neither a date nor `-`, a `source` path that
+  resolves at neither the desk directory nor the repo root, a malformed journal
+  line, a kernel past its cap. Exit 2 on any of them.
+- **Tests** — six `--selftest` entry points and one unittest suite, 115 checks
+  total, all offline against `tempfile` fixtures or the shipped kit itself.
 
 ## 5. Memory Data Model
 
-Four stores, four schemas, all flat text.
+Seven stores, all flat text.
 
 | Store | Shape | Correction model |
 | --- | --- | --- |
@@ -278,19 +350,40 @@ Four stores, four schemas, all flat text.
 | Decisions (`DECISIONS.md`) | Numbered prose entries, newest last | A "Superseded by D-n" line added to the old entry |
 | Corrections (`CORRECTION_LEDGER`) | JSONL: `date`, `zone`, `oracle`, `tier`, `ref`, `note` | Append-only, never edited |
 | Search misses (`SEARCH_MISSES`) | JSONL: `query` verbatim, `where_searched`, `suggested_home` | Append-only, never edited |
-| Engine (`.memory/`) | `session_state.json`, `episodes.jsonl`, `facts.json` | Working tier rewritten, episodes appended, a fact overwritten in place behind a `SUPERSEDED` episode |
+| Engine (`.memory/`) | `session_state.json`, `episodes.jsonl`, `facts.json`, `tombstones.json` | Working tier rewritten, episodes appended, a fact overwritten in place behind a `SUPERSEDED` episode, a rejected value refused at the door |
+| Desk index (`memory/index.tsv`) | Five tab-separated fields: `key`, `aliases` (pipe-separated), `answer` (one line), `source`, `checked` | Rewritten in place by the weekly gardener pass, in a reviewed PR |
+| Desk journal (`memory/journal.jsonl`) | One JSON object per line: `ts`, `type` in `fact\|decision\|gotcha\|todo\|state`, `text`, optional `key` and `source` | Append-only; the gardener promotes and never rewrites |
 
-**Temporal fields.** `when` (the date the conclusion was reached) and
-`verified` (the date it was last checked). `CONCLUSIONS_TEMPLATE.md` describes a
-believed-as-of-X filter over them — *believed at X iff `when <= X` and (no
-`obsoleted_by`, or its date is absent or later than X)* — which is the shape of
-a bi-temporal query. **It is not bi-temporal validity and no code implements
-it.** `when` is a record time doing double duty; there is no interval during
-which the fact was true, so "when did we believe the wrong value" is
-answerable and "when was the value actually true" is not. The mark is withheld
-and the near-miss is the interesting part: the pointer grammar carries a date
-precisely so the as-of question becomes a one-line filter, and nobody has
-written the filter.
+**Temporal fields.** In the ledger, `when` (the date the conclusion was reached)
+and `verified` (the date it was last checked). `CONCLUSIONS_TEMPLATE.md`
+describes a believed-as-of-X filter over them — *believed at X iff `when <= X`
+and (no `obsoleted_by`, or its date is absent or later than X)* — which is the
+shape of a bi-temporal query, and no code implements it. In the engine there is
+a filter: `store_fact()` stamps every fact with `recorded_at`, and
+`build_context(as_of=…)` drops facts stamped later and truncates episodes at the
+cutoff. **That is one axis, and the docstring says which one**: *"This filters
+learned-at only; a valid-at axis (when the fact was true in the world) is a
+schema decision for your ledger, not this engine."* So the mark is withheld,
+correctly and by the project's own account: "what did we know on Tuesday" is
+answerable, "what was true on Tuesday" is not.
+
+**What the replay does not replay is the trust axis**, and that is the sharper
+limit. `verify_fact()` mutates the entry in place, writes no episode and does
+not touch `recorded_at`, so a fact stored before the cutoff and verified after
+it renders under `as_of` with the *later* oracle. Running the engine's own
+worked example at this commit — store `env/python`, verify it against `ci run
+4412`, take a cutoff, then verify it again against a run dated after the
+cutoff — a replay at that cutoff prints:
+
+```
+fact.env.python: >=3.11 [verified (ci run 9999 green, run AFTER the cutoff)]
+```
+
+The header names its unstamped-facts limit and not this one. The replay answers
+which facts existed, not what was believed about them, which is the question a
+stale-belief postmortem usually has. The fix is the same missing piece section 9
+names: an episode on promotion would make the status reconstructable, and
+nothing writes one.
 
 **Scoping.** The `path` key is a *relevance* key. `injected_for()` applies it as
 a read-path predicate against the files a session touched, which is
@@ -300,34 +393,50 @@ user, tenant, project or agent key anywhere in the schema. For a single-operator
 kit that is the right call, and it is why the scope mark is a dash rather than a
 defect.
 
-**Why there is no tombstone.** `obsoleted_by` is keyed on a *record*, and the
-project reasons about the value-keyed alternative explicitly — and rejects it.
-From the revert-case selftest comment: a value that flips A → B → A ends with a
-current entry restating A, so *"tombstoning by value would be wrong and the
-check keys on supersession markers instead."* That reasoning is correct for a
-hand-written ledger where nothing re-extracts. It stops being correct the moment
-a model mines facts back into the store, and the schema anticipates exactly that
-case — `PROVENANCE.md` describes a backfill pass mining facts out of git
-history, and `CONCLUSIONS_TEMPLATE.md` warns that one such backfill *"swamped
-the session-verified entries and wrecked lookup precision."* A re-mining pass
-that re-derives a superseded fact writes a new line with a new date and walks
-past every `obsoleted_by` in the file. This is the closest thing in the corpus
-to a project that considered the rejected-value tombstone, understood the
-failure it addresses, and declined it for a stated reason.
+**The tombstone, and the one tier that has it.** `tombstones.json` is a durable
+record keyed on the rejected value, consulted on the write path, and it earns
+the mark: `store_fact()` reads it before it reads anything else and raises
+rather than writes when the incoming value matches. Refusal is the whole
+mechanism — there is no silent drop, no shadow row, no status the caller has to
+remember to check — and the error text names the reason recorded at rejection
+and the deliberate way out. The tombstone is scoped to the `category/key` it was
+written for, which is right: I rejected `postgres 14` under `env/db` and the
+same value still stored under `infra/db` and under `env/database`, because the
+rejection was a statement about that key and not about that string.
 
-The engine's `SUPERSEDED` episode is the nearest miss of all, and it is worth
-being precise about why it is not the mark. The row carries the retired value
-verbatim — `prior_value`, `prior_status`, `new_value` — so a durable record of
-a rejected value does exist in the store. Nothing reads it. `store_fact()`
-consults `facts.json` and never the episode log, `build_context()` selects
-episodes by keyword overlap for display, and no write path asks whether the
-value arriving has been retired before. A tombstone is a record consulted on
-the write or read path; this is a record consulted by a human grepping
-`episodes.jsonl`.
+**It covers one of the two stores that matter, and the flagship is the other
+one.** The conclusions ledger — the artifact the kit is named around, the one
+`retrieval_exam.py` audits — keys corrections on the *record*, through
+`obsoleted_by`, and the project reasons about the value-keyed alternative there
+explicitly and rejects it. From the revert-case selftest comment: a value that
+flips A → B → A ends with a current entry restating A, so *"tombstoning by value
+would be wrong and the check keys on supersession markers instead."* That
+reasoning is correct for a hand-written ledger where nothing re-extracts. It
+stops being correct the moment a model mines facts back into the store, and the
+schema anticipates exactly that case — `PROVENANCE.md` describes a backfill pass
+mining facts out of git history, and `CONCLUSIONS_TEMPLATE.md` warns that one
+such backfill *"swamped the session-verified entries and wrecked lookup
+precision."* A re-mining pass that re-derives a superseded fact writes a new line
+with a new date and walks past every `obsoleted_by` in the file. The engine's
+tombstone does not reach it: they are different stores with different write
+paths, and nothing in the ledger tooling consults `tombstones.json`.
+
+So the honest reading of this repository is a split. It is the clearest case in
+the corpus of a project that reached the value-keyed question, answered *no* for
+a store where the answer is defensible, and *yes* for the store where
+re-derivation is the actual risk — and the revert-chain argument is why the two
+answers are not a contradiction. What remains is that the backfill hazard the
+project documents lives on the side that answered no.
+
+Two boundaries on the mark, both narrow. The tombstone binds `store_fact()`
+only: `note()` will still put a rejected string in the working scratchpad, which
+is a scratchpad and not a claim. And the key is `str(value)`, so `3` and `"3"`
+are one entry — conservative in the safe direction, since the collision refuses
+more than it admits.
 
 ## 6. Retrieval Mechanics
 
-Two retrievers, both keyword-exact, both deterministic, neither semantic.
+Three retrievers, all keyword-exact, all deterministic, none semantic.
 
 **The engine's.** `build_context()` splits the query on whitespace, drops tokens
 of two characters or fewer, intersects against `action + " " + outcome`
@@ -348,6 +457,38 @@ The four config keys (`special_paths`, `injection_cap`, `recency_field`,
 the cap as the number to check first because *"it is almost always smaller than
 people remember."*
 
+**The desk's, which is the design argument rather than an implementation
+detail.** `mem <words>` normalises the query, tries an exact match against every
+key and alias, and only then falls back to a token score that weights key and
+alias overlap three times as heavily as answer overlap. A hit is three lines:
+answer, source, checked date. Three hits maximum. Everything about it is an
+answer to a stated failure — [`docs/memory-desk.md`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/docs/memory-desk.md)
+argues that *"every memory system in this kit was written by strong models on
+high effort, and most of it will be read by weak ones on low"*, and that the
+weak session fails at judgement rather than at execution, so *"take every
+judgment out of retrieval and move it into maintenance."*
+
+Two consequences are worth lifting whatever you think of the premise. **A miss
+is an instruction, never a bare "not found":** a failed lookup prints a scoped
+`grep -ril '<token>'`, then a narrow read, then the exact `mem add` line that
+writes the answer back, because a dead end invites a guess. And **the push
+half** carries the retrieval the model never asks for: the kernel is injected at
+`SessionStart`, the prompt is run through the index at `UserPromptSubmit`, and a
+row aliased `file:<repo-relative-path>` is injected on the first `Edit`, `Write`
+or `MultiEdit` against that file, which is the moment a gotcha about it matters.
+`path_note_guard.py` explains its own event choice: `PostToolUse` rather than
+`PreToolUse` because on this harness a pre-hook's plain stdout never reaches the
+model and the JSON form that does would also carry a permission decision, *"which
+an informational hook must not touch."*
+
+The push half is also where the freshness discipline lands on the reader: every
+row prints its `checked` date, and a row unchecked for more than
+`STALE_DAYS = 90` prints `STALE, re-verify at the source` inline. The stated
+goal is that the reader *"learns to trust dated answers and to re-verify flagged
+ones"*. There is no verification behind the date — the essay says so, in a
+section headed what the desk is not: *"the desk does not verify its own answers
+beyond dates and dead links; a row is as good as its last gardening."*
+
 **The failure modes this is built around are stated better than most systems
 state their successes.** An `UNREACHABLE` entry is *"correct, well written, and
 silently absent from every session that needed it"* — worse than no entry,
@@ -362,10 +503,12 @@ Survey mode's `boot_weight()` prints what the boot surface costs; the recorded
 run of this repo against itself (2026-08-06, in `docs/memory-measurement.md`)
 is 117 markdown documents, two booted, *"376 lines and 20,052 bytes charged to
 every session."* Running `--survey` against this commit gives the same shape a
-little heavier: 119 markdown documents, `CLAUDE.md` and `README.md` booted at
-385 lines and 21,133 bytes, 117 linked, and zero orphans, islands or deep
+little heavier: 123 markdown documents, `CLAUDE.md` and `README.md` booted at
+402 lines and 22,421 bytes, 121 linked, and zero orphans, islands or deep
 documents. A repository that scores its own signage and keeps the orphan count
-at zero while adding files is the demonstration the tool needs.
+at zero while adding files is the demonstration the tool needs. The desk's
+kernel cap is the same concern enforced instead of measured: `mem check` fails
+the build past 60 lines, and the shipped kernel sits at 47.
 
 ## 7. Write Mechanics
 
@@ -375,14 +518,31 @@ summarization, a consolidation pass rewriting a claim — does not exist here.
 Neither does the coverage those mechanisms buy: what nobody writes down is not
 remembered.
 
+**What the desk changes is the price of writing, not who writes.** Its argument
+is that same-turn capture is the right rule and fails for a specific reason:
+*"capturing well is expensive"*, and choosing the right ledger, phrasing the
+entry and finding the source mid-task is exactly the load that gets dropped
+under pressure. So `mem add` has no quality bar beyond one typed sentence, the
+journal is append-only, and a weekly gardener pass promotes durable entries into
+index rows, dedupes, re-verifies stale rows at their sources and retires rows
+with stated reasons. The contract is written down in
+[`gardener/GARDENER.md`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/memory-desk/gardener/GARDENER.md)
+with an ordered pass, a watermark appended last so nothing is processed twice,
+and one boundary that is the reason the split works: *"Retire, never silently. A
+retired row is listed in the PR body with one line of reason."* The pass itself
+is prose — a contract for an agent or a person to follow, not a script — and the
+companion `gardener.yml` template does the zero-dependency thing on a weekly
+cron: count the journal entries past the watermark and open an issue.
+
 **Nothing blocks.** `store_fact()` and `log_episode()` are file appends and a
 JSON rewrite, no model call on the path. Lag from write to retrievable is a
 filesystem write. No background pass re-reads or rewrites the store; the two
 sweeps are read-only and invoked by hand.
 
-**Append vs update.** Append-only for episodes, corrections and search misses.
-The conclusions ledger is append-only by convention with one sanctioned in-place
-edit (`verified`). The engine's `facts.json` is the exception in shape —
+**Append vs update.** Append-only for episodes, corrections, search misses and
+the desk journal. The conclusions ledger is append-only by convention with one
+sanctioned in-place edit (`verified`); the desk index is rewritten by the
+gardener in a reviewed PR. The engine's `facts.json` is the exception in shape —
 `store_fact()` overwrites `facts[category][key]` outright — but the overwrite is
 not a silent one. When the incoming value differs from the stored one, the prior
 value and prior status go to `episodes.jsonl` as a `SUPERSEDED` row first, and
@@ -391,20 +551,17 @@ vouched for a value it no longer holds. That is the supersession discipline the
 rest of the kit is built on, reaching the tier that sits furthest from the
 ledger, and three selftests pin it.
 
-**The gap the guard leaves is the equality test.** The episode is written only
-when `prior.get("value") != value`; the dict assignment underneath is
-unconditional. So restating a fact with the value it already holds rewrites
-the entry to `{"status": "asserted", "evidence": None}` and logs
-nothing. Running the module header's own worked example against this commit —
-`store_fact("environment", "python", ">=3.11")`, `verify_fact(…, evidence="ci
-run 4412 green on 3.11")`, then the same `store_fact` again — leaves the fact
-`asserted` with
-`evidence: None` and `episodes.jsonl` empty of `SUPERSEDED` rows. The direction
-is fail-safe, since trust is lost rather than gained, but the docstring's claim
-is that *"a verified fact cannot vanish without a trace"*, and on this path it
-vanishes without one. The committed check next to it, *"restating the same value
-is not a supersession"*, asserts the missing episode and not the surviving
-status, so the case is pinned on the half that holds.
+**Restating an unchanged value is a no-op on every field.** The same-value
+branch returns before touching status, evidence or `recorded_at`, so a fact
+verified against a named oracle survives being written again with the value it
+already holds. Running the module header's own worked example against this
+commit — `store_fact("env", "python", ">=3.11")`, `verify_fact(…, evidence="ci
+run 4412 green on 3.11")`, then the same `store_fact` again — leaves the entry
+`verified` with its evidence intact and `episodes.jsonl` carrying no
+`SUPERSEDED` row. Two committed checks pin both halves: that the restatement is
+not a supersession, and that it keeps the status and the evidence. The
+docstring's claim that *"a verified fact cannot vanish without a trace"* holds on
+every path through the setter.
 
 **Conflict handling.** None automatic. Two contradicting lines both live until a
 human writes the pointer. `docs/memory-measurement.md` calls this out as the
@@ -418,10 +575,14 @@ live fact from every future injection."* That scan is described and not shipped.
 
 **Filtering hostile input.** The kit's answer is at the write boundary, not the
 read one:
-[`SEARCH_MISSES.md`](https://github.com/The-825/breadcrumbs/blob/e7940f325d6e102f53b782d50fc95ae75d9cdefa/templates/ledger-tools/SEARCH_MISSES.md)
+[`SEARCH_MISSES.md`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/templates/ledger-tools/SEARCH_MISSES.md)
 requires screening the verbatim `query` field before append, because it is the
 one field that captures whatever the user typed. `templates/hooks/outbound-pii-screen.sh`
-is the shipped screen.
+is the shipped screen. On the read side the only guard is a threshold: `mem`'s
+hook mode requires a score of 3 — one whole key or alias token — before it will
+inject a row, which its own contract explains as keeping a weak match from
+riding into the prompt. That is a noise floor rather than a defence, and the
+rows it gates are ones a person curated.
 
 ## 8. Agent Integration
 
@@ -430,8 +591,10 @@ convention-plus-hooks. `CLAUDE.md` is the boot surface; `SESSION_STATE.md` is
 read first and refreshed on a spoken trigger word (*"Refresh it on a trigger
 word you say out loud, not on 'keep it updated,' which means never"*);
 `planning/DECISIONS.md` takes rulings the same turn they land.
-`templates/commands/` holds 29 slash-command definitions, `templates/hooks/`
-the harness-side scripts.
+`templates/commands/` holds 29 slash-command definitions, `templates/hooks/` and
+`templates/memory-desk/hooks/` the harness-side scripts, and the desk ships a
+`settings-snippet.json` wiring its three so adoption is a paste rather than a
+transcription.
 
 **A second, machine-facing surface.** `llms.txt` is the same map written for an
 agent reading the repository — eight problem-shaped headings, one line per
@@ -440,18 +603,22 @@ artifact, the boot-file convention followed rather than described — and
 command per artifact. `ci-kit/kit_manifest_check.py` runs in CI and fails when
 any artifact path, problem route or selftest script in the manifest does not
 resolve, on the stated reasoning that *"manifest rot is silent because nothing
-reads the manifest in this repo's own workflow."* That check is real, and it is
-narrower than the manifest's own promise: `verify_all` says *"CI runs the same
-set,"* and nothing compares `kit.json` against `.github/workflows/ci.yml`. The
-two agree at this commit — every one of the manifest's seven selftest commands
-appears in the workflow — by hand, not by construction.
+reads the manifest in this repo's own workflow."* It also holds the manifest to
+its own promise about CI: `verify_all` says *"CI runs the same set,"* and every
+selftest script named in `kit.json` must appear in
+`.github/workflows/ci.yml` or the check fails, with two committed cases pinning
+both verdicts. The guarantee is a substring test against the workflow text
+rather than a claim that the step runs, so a script named only in a comment
+would satisfy it — which is a small hole in a check that closes a real one.
 
-**Agency over memory is total and unmediated.** The agent writes lines directly.
-Nothing gates a write, nothing reviews one, and the only refusal in the entire
-codebase is `verify_fact()` declining an empty oracle. The heavier refusals the
-whitepaper describes — a done-claim refused while obligations dangle, a park
-requiring exactly one named accountable owner — belong to the fold CLI, which is
-prose here.
+**Agency over memory is direct at the desk and reviewed at the branch.** A
+session writes a ledger line or journals a fact with no gate in the way; the
+refusals inside the code are `verify_fact()` declining an empty oracle,
+`reject_fact()` declining an empty reason and `store_fact()` declining a
+tombstoned value. What sits above all of them is the merge gate in section 9.
+The heavier refusals the whitepaper describes — a done-claim refused while
+obligations dangle, a park requiring exactly one named accountable owner —
+belong to the fold CLI, which is prose here.
 
 **Compaction is handled explicitly**, and it is the neatest piece of harness
 work in the repo. `pre-compact-save.sh` copies the full transcript JSONL to
@@ -506,27 +673,62 @@ names four failure modes — unauthorized leakage, stale propagation,
 contradiction persistence, provenance collapse — and maps each to the mechanism
 answering it. It is a documentation pattern, not a mechanism, and says so.
 
-**An audit log of memory mutations, covering two of the three transitions that
-matter.** `episodes.jsonl` is append-only, lives in the engine's own store
-rather than in git, and carries `COMPACTION` rows naming the keys a working-tier
-flush evicted and `SUPERSEDED` rows naming a semantic fact's prior value, prior
-status and replacement. That is a record of what changed, in the store, and it
-earns the mark. What it does not cover is the trust axis: `verify_fact()`
-promotes a fact to `verified` and writes no event, and the same-value overwrite
-in section 7 demotes one to `asserted` and writes no event either. In a design
-whose spine is the trust ladder, the ladder is the one thing the log does not
-watch. Git history covers the file-based ledgers and is a different mechanism.
+**An audit log of memory mutations, covering the value axis and not the trust
+axis.** `episodes.jsonl` is append-only, lives in the engine's own store rather
+than in git, and carries four kinds of mutation row: `COMPACTION` naming the keys
+a working-tier flush evicted, `SUPERSEDED` naming a semantic fact's prior value,
+prior status and replacement, and `REJECTED` and `TOMBSTONE_LIFTED` naming a
+value refused and a refusal reversed, each with its required reason. That is a
+record of what changed, in the store, and it earns the mark. What it does not
+cover is the trust axis: `verify_fact()` promotes a fact to `verified` and writes
+no event. In a design whose spine is the trust ladder, the ladder is the one
+thing the log does not watch — and section 5 is where that costs something, since
+an as-of replay can reconstruct which facts existed and not what vouched for
+them. Git history covers the file-based ledgers and is a different mechanism.
 
-**No human review surface in code, by an explicit and defensible choice.** The
-posture throughout is report-only — *"the auditor never writes"*, *"propose
-rather than apply"*, *"Humans move the dials"*. The auditor's `--file-tasks`
-flag prints the issues a tracker integration *would* file and `file_tasks()` is
-labelled a stub seam. A person reads a report and hand-edits a ledger; nothing
-records the adjudication as an act. That is viewing plus manual editing, not a
-review surface, so the mark is a dash — but the stance behind it (a wrong
-automatic supersession is invisible and permanent, so the default must be a
-human ruling on a cheap proposal) is more carefully argued than most systems
-that do carry the mark.
+**The review surface is the merge gate, and it is fail-closed.**
+[`.github/workflows/automerge.yml`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/.github/workflows/automerge.yml)
+squash-merges an agent-branch PR only after a person applies the `greenlight`
+label on top of green required checks, with the label read from a fresh
+`pulls.get` rather than from the triggering event's frozen payload, a missing
+labels array counting as unlabeled, and every path — `workflow_run`,
+`pull_request`, `workflow_dispatch` — funnelled through one `considerPR()`. The
+memory here is files in git, so that label is the act of a person approving what
+goes into the shared store, and the desk's curation contract routes explicitly
+through it: *"The gardener proposes; a human merges."* The mark is earned on
+that.
+
+It is worth being exact about what it is. It is a repository gate, not a memory
+gate: there is no reviewer field on a row, no approved status, nothing in any
+store recording that an adjudication happened. It governs what reaches `main`,
+not what the session that wrote the line reads back from its own working tree.
+And the shipped policy exempts one of the stores.
+[`ci-kit/workflows/greenlight_tiers.py`](https://github.com/The-825/breadcrumbs/blob/5d49be8f96b38051e2c0ed2435453d6d246d07e7/ci-kit/workflows/greenlight_tiers.py)
+lets a PR merge unlabeled when every changed file is an addition or modification
+inside `docs/`, `checklists/`, `README.md` or `planning/DECISIONS.md` — and
+`planning/DECISIONS.md` is the decisions ledger, a memory store in the table in
+section 5. A ruling can therefore land on `main` on green alone, while a
+conclusions line, keyed anywhere else in the tree, waits for the label. The
+argument for tiering is stated and good — *"a blanket approval-label gate scales
+the operator, not the system. Past a few PRs a day the label becomes a rubber
+stamp applied in batches, which is worse than no gate, because it still LOOKS
+like review"* — and everything else fails closed: deletions and renames always
+gate, an unreadable input gates, an empty changed-files list gates, and the gate
+runs the base branch's copy of the policy so a PR cannot loosen the rule on
+itself. The exemption is a deliberate line drawn at a store rather than at a
+risk, and it is the one place the policy and the memory model disagree.
+
+Beside it the kit ships `greenlight-all.yml`, which batch-applies the label to
+every green agent PR on one dispatch. It is a template and is not installed
+here, and its header argues the dispatch *is* the operator's approval action —
+but it is also, precisely, the batch rubber stamp the tiering rationale names.
+Shipping both is coherent only if an adopter reads the second argument before
+copying the first file.
+
+The report-only posture is unchanged everywhere else and is the reason the gate
+carries the weight: *"the auditor never writes"*, *"propose rather than apply"*,
+*"Humans move the dials"*. The auditor's `--file-tasks` flag prints the issues a
+tracker integration *would* file and `file_tasks()` is labelled a stub seam.
 
 **Race conditions** are named rather than solved, which is the correct outcome
 for a file-native design and is documented at the point of the danger rather
@@ -539,26 +741,39 @@ than in a footnote.
 unrelated. `docs/breadcrumbs-whitepaper.md` is a 403-line self-published essay,
 not an indexed preprint, and it carries no evaluation.
 
-**What is tested.** Five offline selftests, which I ran against the pinned
-commit on 2026-08-09 with `python3 <script> --selftest`, no dependencies
-installed:
+**What is tested.** Six offline selftests and one unittest suite, which I ran
+against the pinned commit on 2026-08-09, no dependencies installed:
 
 | Script | Checks | Result |
 | --- | --- | --- |
-| `memory_engine.py` | 15 | all passed |
-| `conclusions_audit.py` | 8 | all passed |
-| `retrieval_exam.py` | 27 | all passed |
-| `ci-kit/preflight/preflight.py` | 19 | all passed |
-| `ci-kit/kit_manifest_check.py` | 5 | all passed |
+| `memory_engine.py --selftest` | 23 | all passed |
+| `conclusions_audit.py --selftest` | 8 | all passed |
+| `retrieval_exam.py --selftest` | 27 | all passed |
+| `ci-kit/preflight/preflight.py --selftest` | 19 | all passed |
+| `ci-kit/kit_manifest_check.py --selftest` | 7 | all passed |
+| `ci-kit/workflows/greenlight_tiers.py --selftest` | 10 | all passed |
+| `templates/memory-desk/tests/test_mem.py` | 21 | all passed |
 
 `kit_manifest_check.py` against the real `kit.json` also passes — *"clean (every
-path and selftest resolves)"*.
+path and selftest resolves)"* — and `mem check` against the shipped desk
+reports *"memory ok: 13 rows, kernel 47/60 lines"*.
 
 I also ran the exam over the committed fixture pair
 (`sample_conclusions.jsonl` + `sample_probes.json`) against the repo tree, which
 reproduced the documented output exactly: one `UNREACHABLE` entry, four distinct
 injections across four probes, one dead-weight entry, and the one `FORBIDDEN`
 hit quoted in section 2.
+
+**The desk's suite is subprocess-driven end to end**, which is the right choice
+for a tool whose contract includes exit codes: each test runs the real
+executable against a throwaway desk and asserts the code a session would
+actually get — 0 on a hit, 1 on a miss, 2 on a usage error or an integrity
+failure. Its last class runs the *shipped* kit through its own gate, so the
+template cannot rot without failing the build that carries it. One of its cases
+is a negative assertion of a familiar shape on an unfamiliar surface:
+`test_stdin_hook_mode_is_quiet_on_miss` asserts that a prompt with no index
+overlap produces empty stdout, which is a committed case that particular
+material must not be injected into a turn's context.
 
 **The negative assertions are real and specific.** Four of the exam's 27 checks
 assert about material that must *not* surface:
@@ -576,30 +791,38 @@ and "the bad thing could not have happened" stay separate even after somebody
 edits the fixture.
 
 **The memory checks are inside the gate.** `.github/workflows/ci.yml` runs the
-guard tests, the migration-runner tests, the decision-gate tests, the manifest
-check, a `Ledger-tool self-tests` step invoking all four `--selftest` entry
-points, the PII guard over the tree and the provenance guard over the PR's
-commits. The step's comment carries the argument: *"The memory tools guard
-everything else, so they cannot live outside the gate that guards everything
-else… A report that exists only when someone remembers to run it is not a
-safeguard, and neither is a selftest."* The three ledger tools' fifty checks,
-plus preflight's nineteen, fail the build when they fail.
+guard tests, the migration-runner tests, the decision-gate tests, the
+memory-desk tests, the manifest check, a `Ledger-tool self-tests` step invoking
+five `--selftest` entry points, the PII guard over the tree and the provenance
+guard over the PR's commits. The step's comment carries the argument: *"The
+memory tools guard everything else, so they cannot live outside the gate that
+guards everything else… A report that exists only when someone remembers to run
+it is not a safeguard, and neither is a selftest."* All 115 checks fail the
+build when they fail.
 
-**The exam itself is ungated**, and the reason is structural rather than
-negligent. No step runs `retrieval_exam.py --fail-on-forbidden`
-against a ledger, because the only ledger in the tree is
-`sample_conclusions.jsonl` — a fixture built to produce exactly one forbidden
-hit, so a gate over it would fail every build by construction. The kit ships the
-ratchet and cannot run it on itself. Closing that needs a conclusions store of
-the repository's own, which the repository does not keep; the tool's sharpest
-mode is therefore proven against fixtures and unproven against a live corpus.
+**One tool runs against live data and the sharper one does not.** `mem check`
+runs in CI against `templates/memory-desk/index.tsv`, the repository's own
+thirteen-row fact index, so a source path that stops resolving or a key that
+collides breaks the build rather than waiting for someone to notice. No step
+runs `retrieval_exam.py --fail-on-forbidden` against a ledger, because the only
+conclusions ledger in the tree is `sample_conclusions.jsonl` — a fixture built
+to produce exactly one forbidden hit, so a gate over it would fail every build
+by construction. The kit ships the ratchet and cannot run it on itself. Closing
+that needs a conclusions store of the repository's own, which the repository
+does not keep; the tool's sharpest mode is proven against fixtures and unproven
+against a live corpus.
 
 Second, and unchanged: nothing here is measured. The whitepaper's evidence is *"incidents
 caught and work not redone, counted by hand"*, the limitations section says
 numbers *"will follow rather than be promised"*, and section 4.5's archive audit
 (216 conversations, ~1,300 turns) counts re-derivations in the operator's own
-history rather than evaluating the system. That is a fair and unusually plain
-accounting, and it means there is no retrieval-quality result to report.
+history rather than evaluating the system. The README describes a probe that
+would bear on the desk's central claim — planted-trap questions put to a light
+tier and a heavy one, with the light tier reported to answer *"the traps the
+system carries as well as the heavy one does"* — and no trap set, no protocol
+and no result is committed to the repository. That is a fair and unusually plain
+accounting elsewhere, and it means there is no retrieval-quality result to
+report.
 
 ## 11. For Your Own Build
 
@@ -637,7 +860,33 @@ accounting, and it means there is no retrieval-quality result to report.
   they belong beside the assignment rather than in a wrapper a caller can skip.
   Reset the replacement to your lowest trust state while you are there: a new
   value inheriting the old value's oracle is the quietest way a store starts
-  lying.
+  lying. Then check for the adjacent case, which is the one that bites: a write
+  that changes nothing must change *nothing*, not silently reset the fields the
+  differing-value branch was written to reset.
+- **Make a rejection refuse, and make it require a reason.** `reject_fact()`
+  raises on an empty reason on the stated parallel that an unexplained rejection
+  is as unauditable as an unexplained verification, and the value it wrote
+  makes the next `store_fact()` of that value raise rather than quietly drop.
+  Loud refusal on the write path is what turns a tombstone from a record into a
+  guarantee, and the deliberate `lift_tombstone()` — with its own reason and its
+  own logged event — is what keeps it from becoming a wall.
+- **A miss should print the next command, not a dead end.** The desk's failed
+  lookup emits a scoped grep, then a narrow read, then the exact write-back
+  line. A bare "not found" is an invitation to answer from recall, and the
+  cheapest sessions accept it.
+- **Split capture from curation when capture keeps not happening.** One
+  unpolished journal line in the turn, a scheduled pass that promotes,
+  deduplicates and sources it later. The quality bar that was blocking the
+  write moves to where someone has time for it, and the fact survives the turn
+  it appeared in — which is the only thing that was ever at risk.
+- **Tier your review gate by diff, and write the tiers as code.** A blanket
+  approval label becomes a batch rubber stamp that still looks like review.
+  `greenlight_tiers.py` is a hundred lines that decide which PRs still need a
+  person, fails closed on every unknown, always gates deletions and renames, and
+  runs from the base branch so a PR cannot widen its own safe set. Check the
+  safe set against your *stores*, not just against your risk: a memory ledger
+  that lands unreviewed because it looks like documentation is the failure this
+  otherwise-careful policy makes easy.
 - **A manifest that routes problems to files beats a package, for a kit meant to
   be edited.** `kit.json` gives an agent a machine-readable path from "my agent
   forgets everything between sessions" to four files and their selftests,
@@ -652,10 +901,12 @@ accounting, and it means there is no retrieval-quality result to report.
   entries from current knowledge. The exclusion exists in exactly one place at
   this commit — the check that detects its absence.
 - **Do not let a gate that runs your selftests stand in for a gate that runs
-  your tool.** The four `--selftest` entry points are wired into CI and the
+  your tool.** Five `--selftest` entry points are wired into CI and the
   forbidden check is not run against any ledger, because the only ledger in the
-  tree is a fixture engineered to fail. A tool whose fixtures are gated and
-  whose live use is not is halfway to the argument it makes about reports.
+  tree is a fixture engineered to fail. `mem check` is the counterexample in the
+  same repository — it runs in CI against the real index — and the contrast is
+  the lesson: a tool whose fixtures are gated and whose live use is not is
+  halfway to the argument it makes about reports.
 - **Do not model a component you cannot read without labelling every number it
   produces.** The exam does this correctly and it is the harder discipline: a
   configured model of someone else's matcher will be wrong for some readers, and
@@ -667,11 +918,17 @@ accounting, and it means there is no retrieval-quality result to report.
   whitepaper beside it presents five mechanisms with no such header and two of
   them have no code path, which is what the fix looks like when it is applied
   per-file rather than per-shelf.
-- **Do not guard the shape of a claim and leave the claim itself unguarded.**
-  `kit_manifest_check.py` proves every path in `kit.json` resolves. The
-  manifest's `verify_all` says CI runs the same set of selftests, and no check
-  compares the manifest with the workflow; the two agree because someone edited
-  both.
+- **Do not let a replay of "what did we know" imply "what did we believe".**
+  `build_context(as_of=…)` filters facts by when they were recorded, which is
+  exactly right, and renders each one's *current* status and oracle, which reads
+  as history and is not. Any field mutated in place outside the timeline is
+  invisible to a timeline query. Either stamp the mutation or log an event for
+  it; the header that names one limit makes the unnamed ones easier to miss.
+- **Do not draw an automation boundary at a file class when your stores are
+  spread across classes.** The tier policy's safe set is documentation-shaped —
+  `docs/`, `checklists/`, `README.md` — plus one exception, and that exception
+  is a memory ledger. The category "low-risk prose" and the category "not a
+  memory store" look identical until they diverge on one path.
 
 ### Fit
 
@@ -681,6 +938,16 @@ a documentation and CI problem rather than an infrastructure one. If that
 describes you, the cost is genuinely an afternoon and the ceiling is real: exact
 keyword matching over a hand-written ledger, no semantic recall, no scope
 boundary, and every write depending on someone deciding to write.
+
+There are two entry points and they suit different problems. Take the **ledger
+tools** if your problem is that corrections do not stick — the supersession
+grammar, the two sweeps and the forbidden check are the answer to that, and they
+are where the thinking is deepest. Take the **memory desk** if your problem is
+that a cheap session never finds what is already written down: it is a smaller
+idea, thirteen rows and one verb, and it assumes a curator will visit weekly.
+The desk depends on that visit; adopting it without scheduling the gardener
+buys you an index that rots with a `checked` date printed next to every stale
+row.
 
 **Walk away if** you need multi-tenant isolation, if your memories are extracted
 from conversation rather than authored, if the corpus will exceed what a person
@@ -700,25 +967,43 @@ teams have never asked about the memory they already have.
   of it are deliberately withheld, which is a legitimate answer, but the repo
   does not say which parts.
 - Has `--fail-on-forbidden` ever been run against a real ledger, and did it find
-  anything? The only ledger in the tree is a synthetic fixture built to produce
-  exactly one hit, and `planning/DECISIONS.md` runs to D-10 without ruling on
-  whether the repository should keep a conclusions store of its own.
-- Should a same-value `store_fact()` preserve the `verified` status and its
-  oracle, or is dropping both the intended fail-safe? Either answer is
-  defensible; the docstring asserts the first and the code does the second.
+  anything? The only conclusions ledger in the tree is a synthetic fixture built
+  to produce exactly one hit, and `planning/DECISIONS.md` runs to D-12 without
+  ruling on whether the repository should keep a conclusions store of its own —
+  even though the desk's `index.tsv` shows the repository is willing to keep a
+  live memory store and gate it.
+- Is the decisions ledger's place in the tier policy's safe set a considered
+  ruling or a convenience? D-12 lists it among *"docs/, checklists/, README.md,
+  planning/DECISIONS.md"* without separating it from the documentation around
+  it, and it is the only memory store in the set.
+- Should the engine's tombstone reach the conclusions ledger, given that the
+  documented backfill hazard lives there and not in the engine? The revert-chain
+  argument says no for hand-authored entries; the backfill pass the provenance
+  doc describes is not hand-authored.
 - Does the operator's own conclusions store carry `use_count` stamps in
   practice? The readout exists; the discipline that feeds it is admitted to be
-  leaky, and the repo keeps no ledger of its own to check against.
+  leaky, and the repo keeps no conclusions ledger of its own to check against.
 - What does the boot matcher in the production system actually do, and how far
   does the exam's four-key model diverge from it?
+- What did the planted-trap probe in the README actually measure? The claim that
+  a light tier answers carried traps as well as a heavy one is the desk's whole
+  premise, and no trap set or result is in the tree.
 
 ## Appendix: File Index
 
 **Memory tools**
-- `templates/ledger-tools/memory_engine.py` — three-tier engine, asserted/verified, compaction, `SUPERSEDED` episodes
+- `templates/ledger-tools/memory_engine.py` — three-tier engine, asserted/verified, compaction, `SUPERSEDED` episodes, value tombstones, as-of replay
 - `templates/ledger-tools/conclusions_audit.py` — STALE / AGING / SPECIAL / OK plus chain resolution
 - `templates/ledger-tools/retrieval_exam.py` — reachability, lane probe, use readout, forbidden hits, survey mode
 - `templates/ledger-tools/capture_nudge.py` — UserPromptSubmit capture nudge
+
+**The memory desk**
+- `templates/memory-desk/mem` — the one lookup verb, `add`, and the `check` integrity gate
+- `templates/memory-desk/index.tsv` — thirteen live rows, five tab-separated fields
+- `templates/memory-desk/MEMORY_TEMPLATE.md` — the 60-line kernel, floor section frozen
+- `templates/memory-desk/gardener/GARDENER.md`, `gardener.yml` — the curation contract and its weekly trigger
+- `templates/memory-desk/hooks/` — session-start kernel inject, prompt-time index hits, first-edit file notes, plus the settings snippet
+- `templates/memory-desk/tests/test_mem.py` — 21 subprocess tests, the last three against the shipped kit
 
 **Schemas**
 - `templates/CONCLUSIONS_TEMPLATE.md` — the line format, dated supersession grammar, curation rules
@@ -739,19 +1024,61 @@ teams have never asked about the memory they already have.
 **Adoption surface**
 - `kit.json` — problem-to-artifact routing, per-artifact `assumes` and `selftest`
 - `llms.txt` — the same map for an agent reading the repository
-- `ci-kit/kit_manifest_check.py` — fails CI when a manifest path or selftest script does not resolve
+- `ci-kit/kit_manifest_check.py` — fails CI when a manifest path or selftest script does not resolve, or when a named selftest is absent from `ci.yml`
 
 **Reasoning**
 - `docs/floating-memory.md` — the fleet architecture, prose only, behind a what-ships header
 - `docs/memory-measurement.md` — the four instruments and their limits
 - `docs/memory-threat-model.md` — four failure modes, mapped
+- `docs/memory-desk.md` — the read side designed for the cheapest session
 - `docs/breadcrumbs-whitepaper.md` — five mechanisms, the case study, the limitations
 
 **Repo-level**
 - `CLAUDE.md`, `SESSION_STATE.md`, `planning/DECISIONS.md` — the kit run on itself
 - `.github/workflows/ci.yml` — what is actually gated
+- `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-08-09** — [`5d49be8f96b38051e2c0ed2435453d6d246d07e7`](https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7)
+— re-pinned six commits past the previous reading. Two marks added and one
+published claim corrected.
+
+`tombstone` is earned at
+[`8ddb75865be4bd6e248de88847eb05d942f2dd66`](https://github.com/The-825/breadcrumbs/commit/8ddb75865be4bd6e248de88847eb05d942f2dd66):
+`reject_fact()` writes `.memory/tombstones.json` keyed on the rejected value and
+`store_fact()` raises on a match, pinned by five new checks. The same commit
+added an `as_of` cutoff to `build_context()`; it filters the learned-at axis
+only and says so, so `bitemporal` stays withheld.
+[`1bdd8fe5a927d8d852fa85cca7a5f35c7432009a`](https://github.com/The-825/breadcrumbs/commit/1bdd8fe5a927d8d852fa85cca7a5f35c7432009a)
+closed the same-value demotion this report named — a restatement is now a no-op
+on status and evidence — and taught `kit_manifest_check.py` to fail when a
+selftest named in `kit.json` is absent from `ci.yml`, closing the second. Both
+commits' comments cite this atlas by name.
+
+`human_review` was wrong as a dash, and wrong at both previously published
+pins rather than overtaken. `.github/workflows/automerge.yml` has required a
+human `greenlight` label on every agent-branch merge since before the first
+reading; the mechanism was in `.github/workflows/` and the reading looked in the
+memory tooling. What changed upstream is the shape rather than the existence:
+[`20dcf8fe25d47b08c6c56bdb2d5801e13bde2f84`](https://github.com/The-825/breadcrumbs/commit/20dcf8fe25d47b08c6c56bdb2d5801e13bde2f84)
+tiers the gate by diff, and its safe set includes `planning/DECISIONS.md`, one
+of the memory stores.
+[`37e3ea3e1a190eff987dbc50fbfb1eb5a20b2ab5`](https://github.com/The-825/breadcrumbs/commit/37e3ea3e1a190eff987dbc50fbfb1eb5a20b2ab5)
+added the memory desk, a second store with its own index, journal, CLI, three
+push hooks, a curation contract and an integrity gate that runs in CI against
+the repository's own thirteen rows. New findings: an as-of replay renders each
+fact's current status and oracle, so a fact verified after the cutoff replays
+with an oracle that did not exist at it; and the README claims a planted-trap
+comparison across model tiers with no trap set, protocol or result committed.
+
+Screened before reading: 0 auto-run surfaces, 0 build-time exec, 0 unpinned
+dependency surfaces, 1 `AGENT` file (`CLAUDE.md`, read as data). Nothing was
+installed. Six `--selftest` runs, one unittest suite, one fixture run and one
+`--survey` run of `retrieval_exam.py`, one real run each of
+`kit_manifest_check.py` and `mem check`, and one scripted probe of
+`store_fact`/`verify_fact`/`reject_fact`/`build_context(as_of=…)` against a
+`tempfile` directory were executed with the system `python3`.
 
 **2026-08-09** — [`e7940f325d6e102f53b782d50fc95ae75d9cdefa`](https://github.com/The-825/breadcrumbs/commit/e7940f325d6e102f53b782d50fc95ae75d9cdefa)
 — re-pinned two commits past the previous reading, both landed the same day.

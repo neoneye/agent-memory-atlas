@@ -7,15 +7,17 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of two hundred and thirty-eight
-> carry it: one invented it under adversarial pressure, one adopted it from the
-> first, one arrived at a weaker form independently, one was driven to it by a
-> regulation, two built it after this page named its absence in their report, **two
-> have it as a side effect of a lookup that forgot to exclude the rejected row**,
-> and one built it as ordinary plumbing in its write gate.
-> Sorted by mechanism rather than by mark, **five of the nine** refuse the write
-> — [the table below](#the-nine-sorted-by-what-actually-stops-the-value) says
-> which, and what the other four do instead.
+> **This is not an established best practice.** Twelve systems of two hundred and thirty-eight
+> carry it, and almost no two arrived the same way: one invented it under
+> adversarial pressure, one adopted it from the first, one arrived at a weaker
+> form independently, one was driven to it by a regulation, three built it after
+> this page named its absence in their report, **two have it as a side effect of a
+> lookup that forgot to exclude the rejected row**, one made that same collision
+> deliberate, one built it as ordinary plumbing in its write gate, and one
+> hardened it against key rotation.
+> Sorted by mechanism rather than by mark, **seven of the twelve** refuse the write
+> — [the table below](#sorted-by-what-actually-stops-the-value) says
+> which, and what the other five do instead.
 > There is no consensus
 > behind this page and no library that provides the mechanism. There is now a
 > **vocabulary**: [arXiv:2605.26252](https://arxiv.org/abs/2605.26252) states it
@@ -115,8 +117,8 @@ enough.
 
 ## Seen in the atlas
 
-**Nine systems in the atlas have this.** That is still the most striking negative
-result in the atlas, and it is the reason this page exists.
+**Twelve systems in the atlas have this.** That is still the most striking
+negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
 mechanism and protects rejected states from ordinary pruning.
@@ -134,6 +136,19 @@ refuses a value without storing it — discussed below.
 [Universal Memory Engine](../../systems/universal-memory-engine/) is the ninth
 and the plainest — a suppression table the write gate consults at four points,
 discussed below.
+[Noosphere](../../systems/noosphere/) is the most rigorous — its tombstone is
+keyed on an HMAC subject hash and checked across every retained key version, so
+rotating the key cannot resurrect a revocation, at the price of a ninety-day
+expiry discussed below.
+[Wenlan](../../systems/wenlan/) puts one on the *suggestion* layer rather than
+the fact layer: a dismissed mind-map node keeps its row so its fingerprint stays
+occupied, and every insert is `ON CONFLICT … DO NOTHING`.
+[breadcrumbs](../../systems/breadcrumbs/) is the smallest — a JSON file of
+rejected values that the fact setter raises on — and it is the only one in a
+repository that also argues, correctly, against applying the same mechanism to
+its other store. Its commit describes the mechanism as closing *"the two
+remaining code-shaped gaps from the Agent Memory Atlas round-2 evaluation"*.
+Discussed at length below.
 
 **Where it came from: an adversary, not a designer.** Verel's git history dates
 the mechanism to 28 June 2026, inside a numbered red-team sequence, and the
@@ -400,7 +415,7 @@ than waiting to be re-derived — the answer to the failure the
 [MemoryOps AI](../../systems/memoryops-ai/) entry below describes, in the same
 paragraph of the same kind of system.
 
-### The nine, sorted by what actually stops the value
+### Sorted by what actually stops the value
 
 Counting holders of the mark conflates four different mechanisms. Sorted by the
 one question that separates them — *does anything read the rejection before the
@@ -409,8 +424,8 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/) | The write is refused. No row, or no activation |
-| **Collided** — durable by accident | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/) | The write lands *on* the rejected row, which stays rejected. Held in place by a missing filter, pinned by no test |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/) | The write is refused. No row, or no activation |
+| **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/), [Wenlan](../../systems/wenlan/) | The write lands *on* the rejected row, which stays rejected. Accidental in the first two, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/) | A copy enters the store and is stopped on the way out |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
@@ -569,14 +584,15 @@ privacy revocation whose source data expires anyway, and it means the guarantee
 is *not again for ninety days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
 
-### The one that considered it and said no, with a reason
+### The one that answered the question twice, differently, in two stores
 
-[breadcrumbs](../../systems/breadcrumbs/) is not an instance and is worth reading
-next to the ones that are, because it is the only project in the corpus that
-reaches the value-keyed question, answers it, and answers *no* on grounds this
-page has to take seriously.
+[breadcrumbs](../../systems/breadcrumbs/) is the only project in the corpus that
+reaches the value-keyed question, answers *no* for one store on grounds this
+page has to take seriously, and *yes* for another. Both answers are in the same
+repository and neither is a compromise.
 
-Its correction model is ordinary supersession: a newer JSONL line names the
+Take the *no* first, because it is the argument. The conclusions ledger's
+correction model is ordinary supersession: a newer JSONL line names the
 older one through `obsoleted_by`, keyed on the record. What is not ordinary is
 that it ships a committed test asserting a superseded entry must not win
 retrieval — and a second one pinning why that test keys on the supersession
@@ -600,21 +616,32 @@ retired writes a fresh line with a new date and walks past every `obsoleted_by`
 in the file — which is exactly the laundering path Verel's red team found, minus
 the adversary.
 
-Its engine tier gets closer than the ledger does, and the gap is instructive.
-`store_fact()` writes a `SUPERSEDED` row to the episodic log before overwriting
-a fact, carrying `prior_value`, `prior_status` and `new_value` — so a durable,
-append-only record of the retired value exists in the store. It is still not a
-tombstone, because nothing consults it: `store_fact()` reads `facts.json` and
-never the episode log, and no write path asks whether the value arriving has
-been retired before. The difference between a tombstone and a history is
-entirely which one the write path is obliged to read.
+**Its engine tier gives the *yes*, and it is a clean instance.**
+`reject_fact(category, key, value, reason)` writes `.memory/tombstones.json`
+keyed by `category/key` and then by the rejected value itself, deletes the fact
+entry if that value is the one held, and logs a `REJECTED` episode.
+`store_fact()` reads the tombstone file before it reads `facts.json` and raises
+when the incoming value matches — *"a rejected value may not be silently
+re-asserted"* — and `lift_tombstone()` is the deliberate way out, requiring its
+own reason and logging its own event. An empty reason is refused on either call,
+on the stated parallel that *"an unexplained rejection is as unauditable as an
+unexplained verification"*. Five committed cases pin the behaviour, including
+that a different value under the same key still stores.
 
-So the honest reading is that the value-keyed form is unnecessary *while every
-write is a human decision*, and that the condition is a property of the write
-path rather than of the store. Any system here that adds model-driven extraction
-to a hand-curated ledger crosses that line without the schema changing, and
-nothing signals the crossing. That is a better argument for the pattern than a
-prevalence count, and it came from a project that declined it.
+Note what the two answers do *not* do: reconcile. The engine and the ledger are
+separate stores with separate write paths, and nothing in the ledger tooling
+consults `tombstones.json`. So the backfill hazard the project documents —
+`PROVENANCE.md`'s mining pass, `CONCLUSIONS_TEMPLATE.md`'s record of one that
+*"swamped the session-verified entries"* — sits on the side that answered no.
+
+The general lesson survives the split intact, and it is sharper for having both
+halves in one repository. The value-keyed form is unnecessary *while every write
+is a human decision*, and that condition is a property of the write path rather
+than of the store. Any system here that adds model-driven extraction to a
+hand-curated ledger crosses that line without the schema changing, and nothing
+signals the crossing. That is a better argument for the pattern than a
+prevalence count, and it came from the project that stated the objection to it
+best.
 
 ## Tests to require
 

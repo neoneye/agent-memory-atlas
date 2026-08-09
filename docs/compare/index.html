@@ -105,7 +105,7 @@ href="#what-the-licences-actually-say">what the licences actually
 say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 11
+<li><strong>Correction is the phase that goes unbuilt.</strong> 12
 systems of 238 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -288,7 +288,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-eleven tombstones, fifty negative-eval suites — are counts <em>over
+twelve tombstones, fifty negative-eval suites — are counts <em>over
 inspectable code</em>, and a closed system could hold any of these
 mechanisms without this method ever knowing. And a mechanism's absence
 here is weaker evidence about the field than its presence: finding a
@@ -298,7 +298,7 @@ that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Eleven systems in this entire
+everything can overwrite or supersede. Twelve systems in this entire
 atlas can record that a <em>value</em> was rejected so extraction cannot
 bring it back — see the <a href="../capabilities/">capability index</a>
 for the live count. This is the widest gap this atlas has found, and it
@@ -3289,27 +3289,29 @@ choice, so a manual edit is unrecoverable by any check</td>
 <tr>
 <td><code>breadcrumbs</code></td>
 <td>A JSONL line — a settled fact keyed to a repo path — plus an
-append-only episode row</td>
-<td>Plain files in git: JSONL ledgers, a JSON fact store, a markdown
-handoff; no database</td>
+append-only episode row and a tab-separated index row</td>
+<td>Plain files in git: JSONL ledgers, a JSON fact store, a TSV fact
+index, a markdown handoff; no database</td>
 <td>Path-key match against the files a session touched, most specific
-then most recent, hard-capped</td>
+then most recent, hard-capped; the fact index answers by exact key or
+alias first</td>
 <td>A session appends by hand or through a prompt hook; no model
 extracts anything</td>
-<td>Append-only supersession through obsoleted_by; the engine overwrites
-a fact only after logging its prior value</td>
+<td>Append-only supersession through obsoleted_by; the engine logs a
+prior value before overwriting and refuses a value it has
+tombstoned</td>
 <td>The path key is a relevance key, not an access boundary; no user,
 tenant or agent scope</td>
-<td>Claude Code hooks and slash commands, plus a stdlib library for a
-loop you write yourself</td>
-<td>Nothing runs on its own; the auditor and the exam are report-only
-sweeps you invoke</td>
+<td>Claude Code hooks and slash commands, plus three push hooks for the
+fact index and a stdlib library for a loop you write yourself</td>
+<td>Nothing in this tree runs on its own; the sweeps are report-only and
+the weekly gardener trigger ships as a template</td>
 <td>asserted vs verified, where verified refuses to be set without a
-named oracle</td>
+named oracle and a rejected value refuses to be re-asserted</td>
 <td>Committed cases asserting a superseded entry must not win the
 injection lane, gated in CI</td>
 <td>The fleet architecture the docs describe is not in the tree, and one
-essay of four says so</td>
+essay of five says so</td>
 </tr>
 <tr>
 <td><code>buzz</code></td>
@@ -8802,7 +8804,8 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>11 of 238:</em> <a
+<p><em>12 of 238:</em> <a
+href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
@@ -9113,10 +9116,11 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>58 of 238:</em> <a
+<p><em>59 of 238:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
+href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/cambium/"><code>cambium</code></a>, <a
 href="../systems/claudest/"><code>claudest</code></a>, <a
 href="../systems/clio/"><code>clio</code></a>, <a
@@ -9232,7 +9236,7 @@ href="../systems/wax/"><code>wax</code></a></p>
 <p>Three observations follow from the counts, stated no more strongly
 than the counts support.</p>
 <p><strong>Read-path scoping is common; correction is not.</strong> Over
-half the atlas applies a scope key when retrieving, while eleven systems
+half the atlas applies a scope key when retrieving, while twelve systems
 carry a value-level tombstone. That is not the same as saying scope is
 solved — this flag measures the read path only. It says nothing about
 write authorization, whether background consolidation respects the same
@@ -9317,7 +9321,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Eleven of two hundred and thirty-eight is the real figure for the second
+Twelve of two hundred and thirty-eight is the real figure for the second
 kind, and the two newest are the cheap version of it: a
 <em>superseded</em> value is easy to assert about, because the row is
 still there to filter on. The expensive assertion is that a value the
@@ -10305,7 +10309,7 @@ Retrieval "early-stage".</p>
 survey written by the authors of a system reviewed here, working from
 threat models rather than from repositories, independently derives the
 capability the atlas counts, defines it more precisely than this atlas
-does, and reports that nobody has published it. Meanwhile eleven
+does, and reports that nobody has published it. Meanwhile twelve
 repositories here implement a value-level tombstone — the mechanism
 Verified Forgetting requires — and none of the nine has a paper. The
 literature and the code have each found half of it.</p>
@@ -14172,7 +14176,7 @@ href="https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0
 <li><a
 href="https://github.com/The-825/breadcrumbs">The-825/breadcrumbs</a> at
 <a
-href="https://github.com/The-825/breadcrumbs/commit/e7940f325d6e102f53b782d50fc95ae75d9cdefa"><code class="commit-id" title="e7940f325d6e102f53b782d50fc95ae75d9cdefa">e7940f32…</code></a>
+href="https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7"><code class="commit-id" title="5d49be8f96b38051e2c0ed2435453d6d246d07e7">5d49be8f…</code></a>
 — the fleet architecture its docs describe is not in the tree</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
@@ -15488,6 +15492,25 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-08-09</strong> — A dash is a negative claim and needs
+the tree-wide grep this project already demands of a negative sentence.
+A reading of <a href="../systems/breadcrumbs/">breadcrumbs</a> withheld
+<code>human_review</code> and wrote a paragraph defending the absence as
+a design choice, having searched the memory tooling — the auditor, the
+engine, the exam, the templates. The mechanism was a fail-closed
+approval label in <code>.github/workflows/</code>, present at both pins
+the atlas published, and a merge gate is where a repository-native
+memory system would naturally put one. Two lessons, and the second is
+the general one. <em>Search by mechanism, not by directory</em>: "where
+would this system put a review surface" is a question about the system's
+own shape, and a file-native memory in git answers it differently from a
+service with a database. And a <strong>defended</strong> absence is more
+dangerous than a bare one, because the argument for why a gap is
+reasonable reads as evidence that the gap was looked for.
+<code>capability_evidence:</code> records a file and a symbol behind
+every mark it covers; a dash carries no such record, so nothing in the
+build can distinguish a searched absence from an unsearched one, and the
+prose is the only place that distinction lives.</p>
 <p><strong>2026-08-09</strong> — A re-read of <a
 href="../systems/breadcrumbs/">breadcrumbs</a> two commits past its pin
 caught three errors that had shipped, and all three share a shape the

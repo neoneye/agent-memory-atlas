@@ -103,19 +103,21 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Nine
-systems of two hundred and thirty-eight carry it: one invented it under
-adversarial pressure, one adopted it from the first, one arrived at a
-weaker form independently, one was driven to it by a regulation, two
-built it after this page named its absence in their report, <strong>two
-have it as a side effect of a lookup that forgot to exclude the rejected
-row</strong>, and one built it as ordinary plumbing in its write gate.
-Sorted by mechanism rather than by mark, <strong>five of the
-nine</strong> refuse the write — <a
-href="#the-nine-sorted-by-what-actually-stops-the-value">the table
-below</a> says which, and what the other four do instead. There is no
-consensus behind this page and no library that provides the mechanism.
-There is now a <strong>vocabulary</strong>: <a
+<p><strong>This is not an established best practice.</strong> Twelve
+systems of two hundred and thirty-eight carry it, and almost no two
+arrived the same way: one invented it under adversarial pressure, one
+adopted it from the first, one arrived at a weaker form independently,
+one was driven to it by a regulation, three built it after this page
+named its absence in their report, <strong>two have it as a side effect
+of a lookup that forgot to exclude the rejected row</strong>, one made
+that same collision deliberate, one built it as ordinary plumbing in its
+write gate, and one hardened it against key rotation. Sorted by
+mechanism rather than by mark, <strong>seven of the twelve</strong>
+refuse the write — <a
+href="#sorted-by-what-actually-stops-the-value">the table below</a> says
+which, and what the other five do instead. There is no consensus behind
+this page and no library that provides the mechanism. There is now a
+<strong>vocabulary</strong>: <a
 href="https://arxiv.org/abs/2605.26252">arXiv:2605.26252</a> states it
 as a correctness condition — <em>no superseded value becomes
 current</em> — and proves that append-only storage cannot satisfy it,
@@ -237,7 +239,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Nine systems in the atlas have this.</strong> That is still
+<p><strong>Twelve systems in the atlas have this.</strong> That is still
 the most striking negative result in the atlas, and it is the reason
 this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -257,7 +259,22 @@ sixth and the only one that refuses a value without storing it —
 discussed below. <a
 href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a> is the ninth and the plainest — a suppression table the write
-gate consults at four points, discussed below.</p>
+gate consults at four points, discussed below. <a
+href="../../systems/noosphere/">Noosphere</a> is the most rigorous — its
+tombstone is keyed on an HMAC subject hash and checked across every
+retained key version, so rotating the key cannot resurrect a revocation,
+at the price of a ninety-day expiry discussed below. <a
+href="../../systems/wenlan/">Wenlan</a> puts one on the
+<em>suggestion</em> layer rather than the fact layer: a dismissed
+mind-map node keeps its row so its fingerprint stays occupied, and every
+insert is <code>ON CONFLICT … DO NOTHING</code>. <a
+href="../../systems/breadcrumbs/">breadcrumbs</a> is the smallest — a
+JSON file of rejected values that the fact setter raises on — and it is
+the only one in a repository that also argues, correctly, against
+applying the same mechanism to its other store. Its commit describes the
+mechanism as closing <em>"the two remaining code-shaped gaps from the
+Agent Memory Atlas round-2 evaluation"</em>. Discussed at length
+below.</p>
 <p><strong>Where it came from: an adversary, not a designer.</strong>
 Verel's git history dates the mechanism to 28 June 2026, inside a
 numbered red-team sequence, and the commit that introduces it describes
@@ -570,8 +587,8 @@ appear to have read the argument.</p>
 future rather than waiting to be re-derived — the answer to the failure
 the <a href="../../systems/memoryops-ai/">MemoryOps AI</a> entry below
 describes, in the same paragraph of the same kind of system.</p>
-<h3 id="the-nine-sorted-by-what-actually-stops-the-value">The nine,
-sorted by what actually stops the value</h3>
+<h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
+stops the value</h3>
 <p>Counting holders of the mark conflates four different mechanisms.
 Sorted by the one question that separates them — <em>does anything read
 the rejection before the write completes?</em> — and re-derived report
@@ -593,15 +610,20 @@ note</a>:</p>
 href="../../systems/perseus-vault/">Perseus Vault</a>, <a
 href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a>, <a href="../../systems/rainbox/">RainBox</a>, <a
-href="../../systems/verel/">Verel</a></td>
+href="../../systems/verel/">Verel</a>, <a
+href="../../systems/noosphere/">Noosphere</a>, <a
+href="../../systems/breadcrumbs/">breadcrumbs</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
-<td><strong>Collided</strong> — durable by accident</td>
+<td><strong>Collided</strong> — the key stays occupied</td>
 <td><a href="../../systems/mnemosyne/">Mnemosyne</a>, <a
-href="../../systems/nova-ai/">Nova AI</a></td>
+href="../../systems/nova-ai/">Nova AI</a>, <a
+href="../../systems/wenlan/">Wenlan</a></td>
 <td>The write lands <em>on</em> the rejected row, which stays rejected.
-Held in place by a missing filter, pinned by no test</td>
+Accidental in the first two, held in place by a missing filter and
+pinned by no test; deliberate in Wenlan, where the unique key is the
+value and the no-op is a named outcome the caller handles</td>
 </tr>
 <tr>
 <td><strong>Suppressed</strong> — the read path hides it</td>
@@ -786,19 +808,21 @@ That is a defensible trade for a privacy revocation whose source data
 expires anyway, and it means the guarantee is <em>not again for ninety
 days</em> rather than <em>never again</em> — a distinction worth making
 explicitly wherever this shape is copied.</p>
-<h3 id="the-one-that-considered-it-and-said-no-with-a-reason">The one
-that considered it and said no, with a reason</h3>
-<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is not an
-instance and is worth reading next to the ones that are, because it is
-the only project in the corpus that reaches the value-keyed question,
-answers it, and answers <em>no</em> on grounds this page has to take
-seriously.</p>
-<p>Its correction model is ordinary supersession: a newer JSONL line
-names the older one through <code>obsoleted_by</code>, keyed on the
-record. What is not ordinary is that it ships a committed test asserting
-a superseded entry must not win retrieval — and a second one pinning why
-that test keys on the supersession marker rather than on the value. From
-the fixture comment:</p>
+<h3
+id="the-one-that-answered-the-question-twice-differently-in-two-stores">The
+one that answered the question twice, differently, in two stores</h3>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is the only
+project in the corpus that reaches the value-keyed question, answers
+<em>no</em> for one store on grounds this page has to take seriously,
+and <em>yes</em> for another. Both answers are in the same repository
+and neither is a compromise.</p>
+<p>Take the <em>no</em> first, because it is the argument. The
+conclusions ledger's correction model is ordinary supersession: a newer
+JSONL line names the older one through <code>obsoleted_by</code>, keyed
+on the record. What is not ordinary is that it ships a committed test
+asserting a superseded entry must not win retrieval — and a second one
+pinning why that test keys on the supersession marker rather than on the
+value. From the fixture comment:</p>
 <blockquote>
 <p>"The revert case: a value flips A -&gt; B -&gt; A. Both earlier
 entries carry obsoleted_by; the final entry RESTATES the original value
@@ -817,23 +841,37 @@ precision."</em> A re-mining pass that re-derives a fact somebody
 already retired writes a fresh line with a new date and walks past every
 <code>obsoleted_by</code> in the file — which is exactly the laundering
 path Verel's red team found, minus the adversary.</p>
-<p>Its engine tier gets closer than the ledger does, and the gap is
-instructive. <code>store_fact()</code> writes a <code>SUPERSEDED</code>
-row to the episodic log before overwriting a fact, carrying
-<code>prior_value</code>, <code>prior_status</code> and
-<code>new_value</code> — so a durable, append-only record of the retired
-value exists in the store. It is still not a tombstone, because nothing
-consults it: <code>store_fact()</code> reads <code>facts.json</code> and
-never the episode log, and no write path asks whether the value arriving
-has been retired before. The difference between a tombstone and a
-history is entirely which one the write path is obliged to read.</p>
-<p>So the honest reading is that the value-keyed form is unnecessary
-<em>while every write is a human decision</em>, and that the condition
-is a property of the write path rather than of the store. Any system
-here that adds model-driven extraction to a hand-curated ledger crosses
-that line without the schema changing, and nothing signals the crossing.
-That is a better argument for the pattern than a prevalence count, and
-it came from a project that declined it.</p>
+<p><strong>Its engine tier gives the <em>yes</em>, and it is a clean
+instance.</strong>
+<code>reject_fact(category, key, value, reason)</code> writes
+<code>.memory/tombstones.json</code> keyed by <code>category/key</code>
+and then by the rejected value itself, deletes the fact entry if that
+value is the one held, and logs a <code>REJECTED</code> episode.
+<code>store_fact()</code> reads the tombstone file before it reads
+<code>facts.json</code> and raises when the incoming value matches —
+<em>"a rejected value may not be silently re-asserted"</em> — and
+<code>lift_tombstone()</code> is the deliberate way out, requiring its
+own reason and logging its own event. An empty reason is refused on
+either call, on the stated parallel that <em>"an unexplained rejection
+is as unauditable as an unexplained verification"</em>. Five committed
+cases pin the behaviour, including that a different value under the same
+key still stores.</p>
+<p>Note what the two answers do <em>not</em> do: reconcile. The engine
+and the ledger are separate stores with separate write paths, and
+nothing in the ledger tooling consults <code>tombstones.json</code>. So
+the backfill hazard the project documents — <code>PROVENANCE.md</code>'s
+mining pass, <code>CONCLUSIONS_TEMPLATE.md</code>'s record of one that
+<em>"swamped the session-verified entries"</em> — sits on the side that
+answered no.</p>
+<p>The general lesson survives the split intact, and it is sharper for
+having both halves in one repository. The value-keyed form is
+unnecessary <em>while every write is a human decision</em>, and that
+condition is a property of the write path rather than of the store. Any
+system here that adds model-driven extraction to a hand-curated ledger
+crosses that line without the schema changing, and nothing signals the
+crossing. That is a better argument for the pattern than a prevalence
+count, and it came from the project that stated the objection to it
+best.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

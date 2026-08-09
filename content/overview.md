@@ -14,7 +14,7 @@ open source — see [what the licences actually say](#what-the-licences-actually
 Corpus last extended **6 August 2026**.
 Five findings, with the counts they rest on:
 
-1. **Correction is the phase that goes unbuilt.** 11 systems of 238 carry a
+1. **Correction is the phase that goes unbuilt.** 12 systems of 238 carry a
    rejected-value tombstone — a record keyed on the *value*, so a later
    extraction cannot silently re-assert something already judged wrong. Almost
    everything else corrects by hiding a row, which stops a reader seeing it and
@@ -148,7 +148,7 @@ component is what gets reviewed and the report says so: Zep is here as
 That is genuinely less than reviewing the service, and the difference should be
 read as a gap in the atlas rather than a finding about the products.
 
-Two consequences worth stating plainly. The atlas's headline counts — eleven
+Two consequences worth stating plainly. The atlas's headline counts — twelve
 tombstones, fifty negative-eval suites — are counts *over inspectable code*, and a
 closed system could hold any of these mechanisms without this method ever
 knowing. And a mechanism's absence here is weaker evidence about the field than
@@ -159,7 +159,7 @@ proves only that nobody built one *in public*.
 else:
 
 1. **Whether correction is possible at all.** Almost everything can overwrite
-   or supersede. Eleven systems in this entire atlas can record that a *value*
+   or supersede. Twelve systems in this entire atlas can record that a *value*
    was rejected so extraction cannot bring it back — see the
    [capability index](../capabilities/) for the live count. This is the widest
    gap this atlas has found, and it is invisible on every benchmark. *Widest
@@ -1746,7 +1746,7 @@ about what is still on disk. The evidence is under
 | `autogen` | `MemoryContent` — content, a MIME type and optional metadata. There is no identifier field | Interface only. Ships an in-process list plus ChromaDB, Redis, Mem0 and a text-canvas adapter | `query(query)` returning `MemoryQueryResult`; the default returns everything in chronological order | `add(MemoryContent)`, called by the application or by a task-centric memory sample; no extraction in the core | `clear()` wipes the store. There is no targeted delete in the protocol or in any shipped adapter | Absent from the protocol. Only the Mem0 adapter carries `user_id`, and it defaults to a fresh UUID | `update_context` lets memory inject itself into the model context; components are declaratively configured | None in the core; the task-centric memory samples add their own learning loops | MIME type and free-form metadata; no provenance, confidence or state | `update_context` as a first-class injection point; a small protocol that is genuinely easy to implement | No identity on a memory, so targeted deletion is not expressible; scope is an adapter's option, not the contract's |
 | `basic-memory` | Canonical Markdown note; indexed entity, observation, relation | Filesystem source + SQLite/PostgreSQL projection | FTS5/tsvector, optional semantic chunks, hybrid score fusion, graph context | MCP/API writes accepted Markdown; file watcher reconciles human edits | Distinct create/replace/edit/move/delete with stable ID and reindex | Project, workspace, tenant, local/cloud route | MCP tools, typed clients, API, CLI | Watcher, startup reconciliation, indexing workflows | Human-visible source/checksums; no candidate/verified state | Inspectable portable memory with rebuildable indexes | Bidirectional sync complexity; agent can write unsupported claims |
 | `brain-md` | A markdown page with CLI-generated frontmatter, a `compiled_truth` section holding what is currently believed, and a `timeline` of append-only entries typed `decision \| evidence \| reversal \| note` | Plain markdown in `brain/` inside the repository — six fixed root pages plus `pages/` — with an `index.md` regenerated rather than hand-kept, and a `brainRoot` redirect for a sidecar brain | Section extraction by marker, a regenerated index and wiki-links between pages; no embeddings, no search engine, nothing to rank | Every mutation goes through `brain` subcommands — create, update, append-timeline, update-truth, archive, tag, root-page rewrite, reindex — so frontmatter is never hand-shaped | `update-truth` rewrites the compiled truth and appends its timeline entry in one atomic write; `archive-page` sets `status: archived` and can append a `kind: reversal` entry; nothing is deleted | One brain per repository, resolved by `resolveBrainDir` and redirectable through `.mindmux/preferences.json`, so another project's brain is another directory | Four skills — bootstrap, ingest, page, setup — plus a zero-dependency Node CLI and an installable git pre-commit hook; agent-agnostic by design | None. `reindex` and `lint-links` run on demand or from the pre-commit hook, which blocks a commit on a broken link | None as a status. A `reversal` is a timeline entry kind rather than a state on the page, and `status: archived` is lifecycle | A compiled-truth rewrite that cannot skip its timeline entry, a linter that deliberately excludes the append-only layer from link validation, and a stated boundary on its own guarantee | The correct-by-construction guarantee holds only while nobody hand-edits a file, and the project says so — there is no validator, by choice, so a manual edit is unrecoverable by any check |
-| `breadcrumbs` | A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row | Plain files in git: JSONL ledgers, a JSON fact store, a markdown handoff; no database | Path-key match against the files a session touched, most specific then most recent, hard-capped | A session appends by hand or through a prompt hook; no model extracts anything | Append-only supersession through obsoleted_by; the engine overwrites a fact only after logging its prior value | The path key is a relevance key, not an access boundary; no user, tenant or agent scope | Claude Code hooks and slash commands, plus a stdlib library for a loop you write yourself | Nothing runs on its own; the auditor and the exam are report-only sweeps you invoke | asserted vs verified, where verified refuses to be set without a named oracle | Committed cases asserting a superseded entry must not win the injection lane, gated in CI | The fleet architecture the docs describe is not in the tree, and one essay of four says so |
+| `breadcrumbs` | A JSONL line — a settled fact keyed to a repo path — plus an append-only episode row and a tab-separated index row | Plain files in git: JSONL ledgers, a JSON fact store, a TSV fact index, a markdown handoff; no database | Path-key match against the files a session touched, most specific then most recent, hard-capped; the fact index answers by exact key or alias first | A session appends by hand or through a prompt hook; no model extracts anything | Append-only supersession through obsoleted_by; the engine logs a prior value before overwriting and refuses a value it has tombstoned | The path key is a relevance key, not an access boundary; no user, tenant or agent scope | Claude Code hooks and slash commands, plus three push hooks for the fact index and a stdlib library for a loop you write yourself | Nothing in this tree runs on its own; the sweeps are report-only and the weekly gardener trigger ships as a template | asserted vs verified, where verified refuses to be set without a named oracle and a rejected value refuses to be re-asserted | Committed cases asserting a superseded entry must not win the injection lane, gated in CI | The fleet architecture the docs describe is not in the tree, and one essay of five says so |
 | `buzz` | An engram — a `kind:30174` Nostr event whose NIP-44 ciphertext decodes to `{slug, value}`, or `{slug: core, profile}` for the identity surface | A Nostr relay the operator runs; engrams are parameterized-replaceable events keyed by (pubkey, kind, d_tag), so the relay holds only the head | No search. `core` is fetched and injected; everything else is reached by following `[[slug]]` references or asking for a slug by name | Synchronous — build body, encrypt, sign, publish. `mem set` replaces; `mem patch` applies a unified diff under a sha256 compare-and-swap | Last-writer-wins head selection with monotonic `created_at` and event-id tiebreak; `mem rm` publishes a `value:null` tombstone, barred on `core` | The d-tag is `HMAC(conversation_key, slug)`, so addressing is per agent-owner pair; the relay filters by (pubkey, kind, d_tag) and can correlate neither | `buzz mem` CLI, ACP prompt injection of the core section, a read-only desktop viewer, and an MCP dev server | None for memory — no extraction, no consolidation, no embedding, no scheduled pass | Signatures and encryption, and nothing epistemic — no confidence, no candidate state, no provenance on a value | The relay cannot read content or correlate slugs; compare-and-swap on a memory value; a careful distinction between confirmed-absent and unknown | Replaceable events discard prior versions, so there is no history and a tombstone records only that something is gone, not what was rejected |
 | `byterover` | Flat memory with source/pinned metadata; structured knowledge `ContextData` | Local Markdown under `.byterover/`, optional cloud sync | Metadata filter and pagination only in inspected modules | LLM dedup returning CREATE/MERGE/SKIP; `DECISIONS` always creates | Structural-loss guard repairs destructive curation; no tombstones | Storage directory only | `brv` CLI, MCP, Hermes provider | LLM dedup at bounded concurrency | `source` of agent/system/user recorded but not enforced | Deterministic structural-loss detection and repair on LLM rewrites | Elastic License 2.0, not open source; merge path itself is unguarded |
 | `cambium` | A Markdown page in an adopter's vault, carrying frontmatter with four independent status axes; Cambium ships no pages | None of its own — the corpus is the adopter's vault; Cambium adds a state layer of ledgers, receipts and a watermark, all as templates | No retrieval engine. Read Sets bound which sources a route may load, and Runtime Cards are compiled shortcuts that lose to normative text on conflict | An LLM proposes a Coverage Delta; `apply_delta.py` merges it deterministically, dry-run by default, aborting if the merged file no longer parses | Supersession must retain the relationship and the reason — historical judgments must not be silently deleted; no delete path and no value-keyed rejection | Batches scope work and `apply_delta` rejects a page whose batch does not match the delta; no scope key on any read path, because there is no read path | Twelve Python check scripts, nine schema templates, twelve kernel modules and twelve runtime routes; no runtime, no server, no agent framework | A maintenance run that produces candidate lists; candidates never change a status axis by themselves | Four independent status axes that must not be merged, an evidence-maturity ladder from signal to validated, and an explicit ban on automated promotion | Checks that distinguish nothing-checkable from passed, a governed write path an LLM cannot hand-edit, and a filled example profile that binds every interface slot | The repository selects no profile of its own, so vocabulary and freshness cannot be demonstrated on it; 5,687 lines of checking tooling against 73 lines of tests |
@@ -2016,7 +2016,7 @@ that never claims to model belief.
 <!-- BEGIN GENERATED CAPABILITIES -->
 **Rejected-value tombstone** — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it.
 
-*11 of 238:* [`daimon`](../systems/daimon/), [`memsem`](../systems/memsem/), [`mnemosyne`](../systems/mnemosyne/), [`noosphere`](../systems/noosphere/), [`nova-ai`](../systems/nova-ai/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/), [`wenlan`](../systems/wenlan/)
+*12 of 238:* [`breadcrumbs`](../systems/breadcrumbs/), [`daimon`](../systems/daimon/), [`memsem`](../systems/memsem/), [`mnemosyne`](../systems/mnemosyne/), [`noosphere`](../systems/noosphere/), [`nova-ai`](../systems/nova-ai/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`rainbox`](../systems/rainbox/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/), [`wenlan`](../systems/wenlan/)
 
 **Explicit trust state** — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true.
 
@@ -2036,7 +2036,7 @@ that never claims to model belief.
 
 **Human review surface** — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect.
 
-*58 of 238:* [`acontext`](../systems/acontext/), [`agentswarms`](../systems/agentswarms/), [`agno`](../systems/agno/), [`cambium`](../systems/cambium/), [`claudest`](../systems/claudest/), [`clio`](../systems/clio/), [`core-memory`](../systems/core-memory/), [`cortex`](../systems/cortex/), [`daimon`](../systems/daimon/), [`deer-flow`](../systems/deer-flow/), [`dexto`](../systems/dexto/), [`empryo`](../systems/empryo/), [`engram`](../systems/engram/), [`engram-alpha`](../systems/engram-alpha/), [`engram-provable`](../systems/engram-provable/), [`gitmem`](../systems/gitmem/), [`hermes-agent`](../systems/hermes-agent/), [`hexis`](../systems/hexis/), [`iai-pme`](../systems/iai-pme/), [`intaris`](../systems/intaris/), [`juggler`](../systems/juggler/), [`jumbo`](../systems/jumbo/), [`kage`](../systems/kage/), [`kirocrew`](../systems/kirocrew/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`lorekit`](../systems/lorekit/), [`memanto`](../systems/memanto/), [`memcp`](../systems/memcp/), [`memoir`](../systems/memoir/), [`memora`](../systems/memora/), [`memory-palace`](../systems/memory-palace/), [`memory-project`](../systems/memory-project/), [`memoryops-ai`](../systems/memoryops-ai/), [`memsearch`](../systems/memsearch/), [`memsem`](../systems/memsem/), [`mercury-agent`](../systems/mercury-agent/), [`mnemory`](../systems/mnemory/), [`noosphere`](../systems/noosphere/), [`nova-ai`](../systems/nova-ai/), [`npcpy`](../systems/npcpy/), [`omi`](../systems/omi/), [`opensre`](../systems/opensre/), [`openyak`](../systems/openyak/), [`ostk-recall`](../systems/ostk-recall/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/), [`vestige`](../systems/vestige/), [`vir`](../systems/vir/), [`waku-agent`](../systems/waku-agent/), [`wax`](../systems/wax/), [`wenlan`](../systems/wenlan/)
+*59 of 238:* [`acontext`](../systems/acontext/), [`agentswarms`](../systems/agentswarms/), [`agno`](../systems/agno/), [`breadcrumbs`](../systems/breadcrumbs/), [`cambium`](../systems/cambium/), [`claudest`](../systems/claudest/), [`clio`](../systems/clio/), [`core-memory`](../systems/core-memory/), [`cortex`](../systems/cortex/), [`daimon`](../systems/daimon/), [`deer-flow`](../systems/deer-flow/), [`dexto`](../systems/dexto/), [`empryo`](../systems/empryo/), [`engram`](../systems/engram/), [`engram-alpha`](../systems/engram-alpha/), [`engram-provable`](../systems/engram-provable/), [`gitmem`](../systems/gitmem/), [`hermes-agent`](../systems/hermes-agent/), [`hexis`](../systems/hexis/), [`iai-pme`](../systems/iai-pme/), [`intaris`](../systems/intaris/), [`juggler`](../systems/juggler/), [`jumbo`](../systems/jumbo/), [`kage`](../systems/kage/), [`kirocrew`](../systems/kirocrew/), [`llm-wiki-memory`](../systems/llm-wiki-memory/), [`lorekit`](../systems/lorekit/), [`memanto`](../systems/memanto/), [`memcp`](../systems/memcp/), [`memoir`](../systems/memoir/), [`memora`](../systems/memora/), [`memory-palace`](../systems/memory-palace/), [`memory-project`](../systems/memory-project/), [`memoryops-ai`](../systems/memoryops-ai/), [`memsearch`](../systems/memsearch/), [`memsem`](../systems/memsem/), [`mercury-agent`](../systems/mercury-agent/), [`mnemory`](../systems/mnemory/), [`noosphere`](../systems/noosphere/), [`nova-ai`](../systems/nova-ai/), [`npcpy`](../systems/npcpy/), [`omi`](../systems/omi/), [`opensre`](../systems/opensre/), [`openyak`](../systems/openyak/), [`ostk-recall`](../systems/ostk-recall/), [`perseus-vault`](../systems/perseus-vault/), [`provem`](../systems/provem/), [`qwen-code`](../systems/qwen-code/), [`rainbox`](../systems/rainbox/), [`risuai`](../systems/risuai/), [`second-me`](../systems/second-me/), [`tigrimosr`](../systems/tigrimosr/), [`universal-memory-engine`](../systems/universal-memory-engine/), [`verel`](../systems/verel/), [`vestige`](../systems/vestige/), [`vir`](../systems/vir/), [`waku-agent`](../systems/waku-agent/), [`wax`](../systems/wax/), [`wenlan`](../systems/wenlan/)
 
 **Negative retrieval assertion** — Committed evaluation cases asserting that particular material must *not* be retrieved.
 
@@ -2047,7 +2047,7 @@ Three observations follow from the counts, stated no more strongly than the
 counts support.
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies
-a scope key when retrieving, while eleven systems carry a value-level tombstone.
+a scope key when retrieving, while twelve systems carry a value-level tombstone.
 That is not the same as saying scope is solved — this flag measures the read
 path only. It says nothing about write authorization, whether background
 consolidation respects the same boundary, whether cache and embedding keys
@@ -2120,7 +2120,7 @@ and the one a coding agent actually wastes time on.
 
 **Only these ten probe the question the atlas is actually asking.** A boundary
 test proves the filter works; a content test proves a value that was rejected,
-disputed or forbidden stays gone. Eleven of two hundred and thirty-eight is the real figure for the
+disputed or forbidden stays gone. Twelve of two hundred and thirty-eight is the real figure for the
 second kind, and the two newest are the cheap version of it: a *superseded*
 value is easy to assert about, because the row is still there to filter on. The
 expensive assertion is that a value the system destroyed does not come back.
@@ -2723,7 +2723,7 @@ That is the sharpest form the atlas's central finding has taken. A survey
 written by the authors of a system reviewed here, working from threat models
 rather than from repositories, independently derives the capability the atlas
 counts, defines it more precisely than this atlas does, and reports that nobody
-has published it. Meanwhile eleven repositories here implement a value-level
+has published it. Meanwhile twelve repositories here implement a value-level
 tombstone — the mechanism Verified Forgetting requires — and none of the nine
 has a paper. The literature and the code have each found half of it.
 
@@ -4748,7 +4748,7 @@ Privacy/deletion:
 - [rahulmranga/knowledge-worker](https://github.com/rahulmranga/knowledge-worker) at [`1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858`](https://github.com/rahulmranga/knowledge-worker/commit/1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858)
 - [rlabs-inc/memory-ts](https://github.com/rlabs-inc/memory-ts) at [`8fcadf6d8783869878a64d42aec3ed88f7f91a70`](https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70)
 - [marsmanleo/marsnme](https://github.com/marsmanleo/marsnme) at [`3ed1b0bc7bbccfd40efd13df366d0f538d155316`](https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316) — the hosted service was not used
-- [The-825/breadcrumbs](https://github.com/The-825/breadcrumbs) at [`e7940f325d6e102f53b782d50fc95ae75d9cdefa`](https://github.com/The-825/breadcrumbs/commit/e7940f325d6e102f53b782d50fc95ae75d9cdefa) — the fleet architecture its docs describe is not in the tree
+- [The-825/breadcrumbs](https://github.com/The-825/breadcrumbs) at [`5d49be8f96b38051e2c0ed2435453d6d246d07e7`](https://github.com/The-825/breadcrumbs/commit/5d49be8f96b38051e2c0ed2435453d6d246d07e7) — the fleet architecture its docs describe is not in the tree
 
 ### Commands Used
 
@@ -4934,6 +4934,23 @@ Dated changes to this atlas's own method and reading. Per-system reading
 history lives in each report's own History section; what is recorded here is
 what a reading taught the *method*, which is the part that does not belong to
 any one system.
+
+**2026-08-09** — A dash is a negative claim and needs the tree-wide grep this
+project already demands of a negative sentence. A reading of
+[breadcrumbs](../systems/breadcrumbs/) withheld `human_review` and wrote a
+paragraph defending the absence as a design choice, having searched the memory
+tooling — the auditor, the engine, the exam, the templates. The mechanism was a
+fail-closed approval label in `.github/workflows/`, present at both pins the
+atlas published, and a merge gate is where a repository-native memory system
+would naturally put one. Two lessons, and the second is the general one.
+*Search by mechanism, not by directory*: "where would this system put a review
+surface" is a question about the system's own shape, and a file-native memory in
+git answers it differently from a service with a database. And a **defended**
+absence is more dangerous than a bare one, because the argument for why a gap is
+reasonable reads as evidence that the gap was looked for. `capability_evidence:`
+records a file and a symbol behind every mark it covers; a dash carries no such
+record, so nothing in the build can distinguish a searched absence from an
+unsearched one, and the prose is the only place that distinction lives.
 
 **2026-08-09** — A re-read of [breadcrumbs](../systems/breadcrumbs/) two commits
 past its pin caught three errors that had shipped, and all three share a shape
