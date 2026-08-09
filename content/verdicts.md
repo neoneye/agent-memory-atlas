@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 192 reports.**
+**This page covers all 193 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["192 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["193 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1645,3 +1645,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 257,000 lines of Python deployed as a proxy so an existing agent needs no changes, AGPL-3.0 with a commercial contact, benchmark harnesses for five suites committed in-tree, and a LongMemEval run reporting its seeds, all three model roles and a per-category breakdown.
 - Study when: you let a model invent tags and your vocabulary has started to sprawl.
 - Do not copy when: you need memory you can defend — correction is a mark on a contradicted fact, and there is no trust state or review.
+
+### [`memorybear`](../systems/memorybear/)
+
+- Best idea: forgetting that fuses rather than deletes. Low-activation Statement–Entity pairs merge into a `MemorySummary`, inbound edges are rerouted to it with `MERGE (source)-[:DERIVED_FROM]->(ms)`, and the original node ids are kept — so "what happened to this fact" stays answerable after the fact is gone.
+- Biggest risk: every published benchmark figure, error bars included, exists only inside a PNG in the README. No harness, no result file, no dataset reference, no run configuration — unlike the systems whose numbers live in a sibling repository, there is nowhere for a reader to go.
+- Most reusable component: `forgetting_cycle_history` — per run and per user, `merged_count` beside `failed_count`, the average activation value, the duration and whether the run was manual or scheduled. A background pass that counts what it could *not* do.
+- Maturity impression: 410,000 lines across an API, a console and sandbox infrastructure on Neo4j plus Postgres, a real ACT-R activation model with Anderson (2007) cited and the formula written out, `end_user_id` on every node and relationship — beside 14 test files and a `DETACH DELETE` that interpolates the user id into Cypher instead of binding it.
+- Study when: your decay model deletes, and you would rather it compressed with a pointer back.
+- Do not copy when: you need correction — a wrong memory that is frequently retrieved is reinforced by the same mechanism that keeps a right one.
