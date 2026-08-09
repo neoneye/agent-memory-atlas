@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 212 reports.**
+**This page covers all 213 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["212 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["213 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1825,6 +1825,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: six benchmark harnesses with dated result JSONs in the repository, 99 test files, `init` writing the right config for nine editors, and a plugin architecture where each of the fourteen summarizers is replaceable.
 - Study when: your context bill comes from keeping tool output verbatim forever, and deleting it is the only alternative you have implemented.
 - Do not copy when: you need the compression to be reversible — distillation is a one-way transformation of the stored content, gated by an importance classifier with no committed accuracy figure.
+
+### [`moltbrain`](../systems/moltbrain/)
+
+- Best idea: the session summary has a schema. `request`, `investigated`, `learned`, `completed`, `next_steps`, `files_read`, `files_edited`, `notes` are columns the parser fills from the model's XML, so "what did we learn across forty sessions" is a query rather than forty paragraphs — and observation `type` is constrained by a database CHECK to six values.
+- Biggest risk: nothing in the system can be wrong. No confidence, no status, no `superseded_by`, no tombstone — so a mistaken observation stays in SQLite, stays mirrored in Chroma, and stays retrievable at full weight, while a superseded decision competes with the decision that replaced it on equal terms.
+- Most reusable component: `VectorSync`'s stated design — "fail-fast with no fallbacks - if Chroma is unavailable, syncing fails". A mirror that degrades silently leaves semantic search returning a stale subset with nothing to indicate it.
+- Maturity impression: 40 test files, careful explicit-column SQLite migrations, four indexes on the observations table, and a substantial product surface — web viewer, themes, favourites, filters, export, analytics — around a memory model that is a typed append-only log.
+- Study when: you want automatic capture you will browse yourself, with a good viewer and export.
+- Do not copy when: memory is injected into an agent without a person in the loop — the only deletion path in the tree is a duplicate-cleanup script run by hand.
+
 
 
 

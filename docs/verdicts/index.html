@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 212 reports.</strong></p>
+<p><strong>This page covers all 213 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;212 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;213 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5286,6 +5286,35 @@ implemented.</li>
 <li>Do not copy when: you need the compression to be reversible —
 distillation is a one-way transformation of the stored content, gated by
 an importance classifier with no committed accuracy figure.</li>
+</ul>
+<h3 id="moltbrain"><a
+href="../systems/moltbrain/"><code>moltbrain</code></a></h3>
+<ul>
+<li>Best idea: the session summary has a schema. <code>request</code>,
+<code>investigated</code>, <code>learned</code>, <code>completed</code>,
+<code>next_steps</code>, <code>files_read</code>,
+<code>files_edited</code>, <code>notes</code> are columns the parser
+fills from the model's XML, so "what did we learn across forty sessions"
+is a query rather than forty paragraphs — and observation
+<code>type</code> is constrained by a database CHECK to six values.</li>
+<li>Biggest risk: nothing in the system can be wrong. No confidence, no
+status, no <code>superseded_by</code>, no tombstone — so a mistaken
+observation stays in SQLite, stays mirrored in Chroma, and stays
+retrievable at full weight, while a superseded decision competes with
+the decision that replaced it on equal terms.</li>
+<li>Most reusable component: <code>VectorSync</code>'s stated design —
+"fail-fast with no fallbacks - if Chroma is unavailable, syncing fails".
+A mirror that degrades silently leaves semantic search returning a stale
+subset with nothing to indicate it.</li>
+<li>Maturity impression: 40 test files, careful explicit-column SQLite
+migrations, four indexes on the observations table, and a substantial
+product surface — web viewer, themes, favourites, filters, export,
+analytics — around a memory model that is a typed append-only log.</li>
+<li>Study when: you want automatic capture you will browse yourself,
+with a good viewer and export.</li>
+<li>Do not copy when: memory is injected into an agent without a person
+in the loop — the only deletion path in the tree is a duplicate-cleanup
+script run by hand.</li>
 </ul>
         </article>
       </div>
