@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **198 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **199 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -29,6 +29,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`agno`](../systems/agno/) **Agno** — Framework-native learning stores · `agno-agi/agno` · Scope enforced, Human review, Negative evals
 - [`ai-memory`](../systems/ai-memory/) **ai-memory** — Cross-harness handoff · `akitaonrails/ai-memory` · Scope enforced
 - [`aimaos`](../systems/aimaos/) **AIMAOS** — Contradictions embeddings place far apart · `munch2u-a11y/AIMAOS` · Scope enforced
+- [`aipass`](../systems/aipass/) **AIPass** — A budget on how often memory may speak · `AIOSAI/AIPass` · Scope enforced
 - [`alma-memory`](../systems/alma-memory/) **ALMA** — A write guard on one door of six · `RBKunnela/ALMA-memory` · Trust state, Scope enforced, Mutation audit
 - [`argo`](../systems/argo/) **ARGO** — Architecture as the memory · `derekhu0002/Argo` · Scope enforced, Negative evals
 - [`athena`](../systems/athena/) **Project Athena** — Claims labelled by how well they are known · `winstonkoh87/Athena-Public` · Mutation audit

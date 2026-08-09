@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Surfacing is governed by a pure
+function with a per-session cap, a minimum message gap and a cooldown —
+so a relevant memory can still be refused because it spoke too
+recently.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AIPass — Agent Memory Atlas">
+    <meta property="og:description" content="Surfacing is governed by a
+pure function with a per-session cap, a minimum message gap and a
+cooldown — so a relevant memory can still be refused because it spoke
+too recently.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AIPass — Agent Memory Atlas">
+    <meta name="twitter:description" content="Surfacing is governed by a
+pure function with a per-session cap, a minimum message gap and a
+cooldown — so a relevant memory can still be refused because it spoke
+too recently.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AIPass — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">A budget on how often memory may speak</p>
+          <h1>AIPass</h1>
+          <p class="document-deck">Surfacing is governed by a pure
+function with a per-session cap, a minimum message gap and a cooldown —
+so a relevant memory can still be refused because it spoke too
+recently.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AIOSAI/AIPass">
+              <span>Source</span>
+              <strong>AIOSAI/AIPass</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4" title="0d27e5ef282fca141c08c1d76fa3a8647a3eeea4">
+              <span>Analyzed revision</span>
+              <code>0d27e5ef…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (51%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AIPass is a "Persistent Agent Workspace" — a large Python monorepo
+(roughly 377,000 lines, MIT) whose memory module is one of nineteen
+subsystems, alongside mail, flow, spawn, drone, daemon, hooks and
+skills. The memory module itself is about 38,500 lines.</p>
+<p><strong>The mechanism worth the report is that recall is budgeted,
+not just ranked.</strong></p>
+<p><code>memory/apps/handlers/governance/engine.py</code> is a
+"Surfacing Governance Engine — pure decision functions for controlling
+when recalled items should be surfaced", and its default configuration
+is five numbers:</p>
+<pre class="python"><code>{
+    &quot;enabled&quot;: True,
+    &quot;threshold&quot;: 0.3,
+    &quot;max_surfaces_per_session&quot;: 5,
+    &quot;min_messages_between&quot;: 10,
+    &quot;cooldown_seconds&quot;: 300,
+}</code></pre>
+<p><code>should_surface(item_id, relevance_score, state, config)</code>
+returns a tuple of <code>(bool, reason, new_state)</code> and is
+documented as a "Pure function — does not mutate the input state dict."
+The state it carries is <code>surfaces_count</code>,
+<code>messages_since_last</code>, <code>last_surface_time</code> and
+<code>surfaced_ids</code>.</p>
+<p>So a memory can clear the relevance threshold and still be refused —
+because five have already surfaced this session, because fewer than ten
+messages have passed, or because 300 seconds have not elapsed.
+<strong>Relevance is necessary and not sufficient.</strong></p>
+<p>Almost every system in this atlas treats "should this be injected" as
+a ranking question with a cutoff. This one treats it as a <em>rate</em>
+question with state, and returns the reason. <a
+href="../token-savior/">Token Savior</a> reaches the same territory by
+learning a bandit; AIPass gets most of the way there with four counters
+and no model.</p>
+<p><strong>The second mechanism is a declared entry limit with a
+linter.</strong> Memory files are JSON per branch, entries are capped
+per type by a config with per-branch overrides "deep-merged over the
+default entry_types", and <code>check_entry()</code> is "a pure
+validator that checks whether a single entry text exceeds its character
+cap". <code>drone @memory lint</code> audits violations
+<strong>read-only</strong>, and
+<code>drone @memory rollover check</code> is a dry run.</p>
+<p>A memory store that publishes a size contract, ships a read-only
+auditor for it, and makes the destructive counterpart a separate command
+with a dry-run mode is treating growth as a governed property rather
+than an emergent one.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is per-<strong>branch</strong> — AIPass's unit of workspace —
+and two-tiered. The hot tier is JSON files the agent reads directly,
+kept small by entry limits. The archive is ChromaDB, holding what rolled
+over, searchable semantically across branches.</p>
+<p>A third layer sits beside them: <strong>symbolic fragments</strong>,
+LLM-extracted pieces stored and deduplicated separately, with a
+bootstrap path that populates them from session JSONLs.</p>
+<pre class="mermaid"><code>flowchart TD
+    E[&quot;entry written to a branch memory file&quot;] --&gt; L{&quot;check_entry: over the character cap?&quot;}
+    L --&gt;|yes| V[&quot;lint reports a violation — read-only&quot;]
+    L --&gt; F[&quot;branch JSON file, hot tier&quot;]
+    F --&gt; RO{&quot;file over its entry limit?&quot;}
+    RO --&gt;|&quot;rollover check — dry run&quot;| PRE[&quot;preview only&quot;]
+    RO --&gt;|&quot;rollover run&quot;| ARC[&quot;extractor + orchestrator → ChromaDB archive&quot;]
+    S[&quot;session text&quot;] --&gt; SX[&quot;symbolic extractor, LLM&quot;]
+    SX --&gt; DD{&quot;AUDN deduplicator, LLM verdict&quot;}
+    DD --&gt;|Add| FR[&quot;new fragment&quot;]
+    DD --&gt;|Update| FU[&quot;existing fragment revised&quot;]
+    DD --&gt;|Delete| FD[&quot;existing fragment removed&quot;]
+    DD --&gt;|Noop| FN[&quot;nothing&quot;]
+    Q[&quot;query&quot;] --&gt; SR[&quot;semantic search over archives&quot;]
+    SR --&gt; G{&quot;should_surface: threshold, session cap,&lt;br/&gt;message gap, cooldown&quot;}
+    G --&gt;|&quot;refused, with a reason&quot;| NO[&quot;not surfaced&quot;]
+    G --&gt;|allowed| YES[&quot;surfaced; state updated&quot;]</code></pre>
+<p>The <code>Delete</code> branch of the AUDN verdict is the one to
+watch: an LLM comparing a new fragment against similar existing ones may
+decide the correct action is to remove the old one.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nineteen top-level subsystems under <code>src/aipass/</code>, of
+which <code>memory</code> is one. Within it: seven modules (governance,
+lint, rollover, search, symbolic, templates, verify) over fifteen
+handler groups (archive, governance, intake, json, learnings, monitor,
+rollover, schema, search, storage, symbolic, templates, tracking and
+more).</p>
+<p>Storage is <code>handlers/storage/chroma.py</code> plus
+<code>chroma_subprocess.py</code> — running ChromaDB out of process,
+which is a defensive choice worth naming: an embedded vector store that
+segfaults or leaks takes the agent down with it unless it is
+isolated.</p>
+<p>Templates are pushed across branches
+(<code>templates/pusher.py</code>, <code>differ.py</code>,
+<code>spawn_pusher.py</code>) with a <code>template-status</code>
+command reporting version and push state, so every branch's memory
+scaffolding stays in step.</p>
+<p>The operational surface is a
+<code>drone @memory &lt;command&gt;</code> CLI, a rollover watcher
+daemon and hooks.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — an entry lands in a branch JSON file;
+<code>handlers/json/entry_limits.check_entry()</code> validates against
+the effective cap.</p>
+<p><strong>Audit</strong> — <code>modules/lint.py</code> and
+<code>handlers/json/lint_handler.py</code>, read-only.</p>
+<p><strong>Rollover</strong> —
+<code>handlers/rollover/extractor.py</code> and
+<code>orchestrator.py</code>, with <code>monitor/detector.py</code> and
+<code>memory_watcher.py</code> driving the watch mode.</p>
+<p><strong>Symbolic</strong> — <code>handlers/symbolic/</code>:
+<code>extractor</code>, <code>deduplicator</code> (AUDN),
+<code>storage</code>, <code>retriever</code>,
+<code>chroma_client</code>, <code>hook</code>.</p>
+<p><strong>Surface</strong> —
+<code>handlers/governance/engine.should_surface</code>, re-exported
+through <code>modules/governance.py</code> "for cross-branch
+consumers".</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The hot tier is JSON with a schema normaliser
+(<code>handlers/schema/normalize.py</code>) and a config-driven limit
+per entry type. That is unusual and it is the point: the <em>shape</em>
+of what may be remembered is configuration, per branch, and violations
+are reportable.</p>
+<p><code>changed_entries()</code> is "a pure diff helper that compares
+before/after file dicts and returns only NEW or CHANGED entries" — so
+downstream work (vectorising, archiving) processes deltas rather than
+whole files.</p>
+<p>There is no status field, no confidence, no supersession pointer and
+no provenance beyond the branch. The epistemic layer is entirely the
+governance function and the dedup verdict.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Semantic search over the ChromaDB archive with a
+<code>--branch</code> filter, plus symbolic fragment search, plus a
+<code>verify</code> command that checks whether a specific plan is
+vectorised — a small operational nicety that answers "is this actually
+indexed" without a query.</p>
+<p><strong>Scope is the branch and it is applied consistently</strong>:
+memory files are per-branch, entry limits have per-branch overrides,
+lint takes a branch argument, search takes a <code>--branch</code>
+filter, and templates push per branch. That earns
+<code>scope_enforced</code> — the key is stored, applied on the read
+path, and the same key governs configuration.</p>
+<p>The surfacing gate then applies on top, which means the read path has
+two stages: what matches, and what is allowed to be said.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous appends to JSON with a validator. Rollover is
+a separate, explicitly invoked operation with a dry-run mode and a
+watcher for automation.</p>
+<p>Correction is the AUDN dedup pattern — Add, Update, Delete, Noop —
+"decided… via LLM". That vocabulary is well-chosen (it is the same shape
+as <a href="../memory-palace/">Memory Palace</a>'s write guard) and the
+risk is the <code>Delete</code> verdict: a model comparing a new
+fragment against existing ones can conclude the old one should go, and
+nothing found gates that decision, records why, or keeps what was
+removed.</p>
+<p>There is no rejected-value record. A fragment deleted by an AUDN
+verdict can be re-extracted from the next session that mentions it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>drone @memory &lt;command&gt;</code> with seven module
+namespaces, hooks including a symbolic capture hook with a
+<code>hook-test</code> command, a daemon, and cross-branch template
+distribution. <code>symbolic bootstrap</code> populates fragments from
+historical session JSONLs, so an existing workspace can be
+back-filled.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded</strong>, per section 6.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log, negative eval
+— no.</strong></p>
+<p><strong>Human review — withheld, and the near-miss is the lint
+command.</strong> <code>drone @memory lint</code> audits entry-limit
+violations and is explicitly read-only; <code>rollover check</code>
+previews. Both surface work for a person and neither is a surface where
+a person adjudicates <em>content</em> — they adjudicate <em>size</em>.
+That is a real distinction and the commands are well-designed for what
+they do.</p>
+<p><strong>The governance function is the safety mechanism and it is the
+right shape.</strong> Pure, stateful, reason-returning, configurable,
+and re-exported as a public API for other subsystems. Its weakness is
+that the state is per-session and in-memory: <code>new_state()</code>
+starts every counter at zero, so the cooldown and the session cap reset
+whenever the state does, and nothing found persists
+<code>surfaced_ids</code> across a restart.</p>
+<p><strong>The dedup verdict is the risk.</strong> An LLM with
+<code>Delete</code> in its action space, operating on fragments
+extracted by another LLM, with no record of what was removed.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> 446 test files — the second-highest count
+in this pass — with a root <code>conftest.py</code>, a
+<code>Dockerfile.test</code>, codecov integration, an OpenSSF Scorecard
+badge and an OpenSSF Best Practices badge.</p>
+<p>The Scorecard and Best Practices badges are supply-chain and process
+signals rather than quality claims about memory, and this report treats
+them as such; the atlas does not read badges as evidence about
+mechanisms.</p>
+<p>No retrieval benchmark, no committed evaluation of the surfacing
+thresholds, and no derivation for the five governance defaults (0.3, 5,
+10, 300). They are plausible numbers with no measurement behind them in
+the tree.</p>
+<p><strong>I ran nothing.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Budget how often memory may speak, not just what it
+says.</strong> A per-session cap, a minimum message gap and a cooldown,
+evaluated as a pure function that returns a reason, turns "is this
+relevant" into "is this worth interrupting for". Four counters, no
+model.</li>
+<li><strong>Return the reason with the decision.</strong>
+<code>(bool, reason, new_state)</code> means a suppressed memory is
+explainable, which is the query-time signal most systems in this atlas
+lack.</li>
+<li><strong>Keep the governance function pure and re-export it.</strong>
+"Does not mutate the input state dict" is what makes it testable, and
+publishing it for "cross-branch consumers" is what stops each subsystem
+inventing its own rules.</li>
+<li><strong>Declare an entry limit per type, with per-branch overrides
+deep-merged.</strong> Memory growth becomes a configured property rather
+than an emergent one.</li>
+<li><strong>Ship a read-only linter for the limit, and a dry run for the
+fix.</strong> <code>lint</code> and <code>rollover check</code> before
+<code>rollover run</code> is the right ordering of destructiveness.</li>
+<li><strong>Diff before you process.</strong>
+<code>changed_entries()</code> returning only new or changed entries
+means archiving and vectorising cost proportional to change.</li>
+<li><strong>Run the embedded vector store in a subprocess.</strong>
+<code>chroma_subprocess.py</code> means a crash in the index does not
+take the agent with it.</li>
+<li><strong>Give the archive a <code>verify</code> command.</strong> "Is
+this plan actually vectorised" is a question an operator asks and a
+query cannot answer.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not give an LLM <code>Delete</code> without a
+record.</strong> AUDN is a good vocabulary and the destructive verdict
+needs what the other three do not: a note of what was removed and why,
+or it is an unauditable deletion decided by a model comparing the output
+of another model.</li>
+<li><strong>Do not keep surfacing state only in memory.</strong> A
+cooldown that resets on restart is a cooldown an agent can defeat by
+restarting.</li>
+<li><strong>Do not ship five tuned constants with no
+derivation.</strong> 0.3, 5, 10 and 300 are the whole surfacing policy
+and nothing in the tree measures them.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone adopting AIPass as a whole workspace — the memory
+module is tightly coupled to branches, drones and templates, and is not
+a component to lift. Within that, the governance and rollover design is
+more thought-through than most.</p>
+<p><code>governance/engine.py</code> is the file to read regardless. It
+is a short pure function and it encodes a question — <em>how often
+should memory interrupt?</em> — that most of this corpus never asks.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Where does governance state live between sessions?</strong>
+<code>new_state()</code> is a fresh dict; nothing found persists
+it.</li>
+<li><strong>What gates the AUDN <code>Delete</code> verdict?</strong>
+The deduplicator "decides the correct action via LLM"; no confirmation,
+threshold or record was found.</li>
+<li><strong>Are the five governance defaults ever tuned per
+branch?</strong> The entry limits support per-branch overrides; whether
+the surfacing config does was not traced.</li>
+<li><strong>How does rollover interact with the symbolic tier?</strong>
+Entries roll over to ChromaDB; fragments live in ChromaDB already, and
+whether they age was not established.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Surfacing governance</strong> —
+<code>src/aipass/memory/apps/handlers/governance/engine.py</code>
+(<code>DEFAULT_CONFIG</code> <code>:27-33</code>, <code>new_state</code>
+<code>:40</code>, <code>should_surface</code> <code>:56</code>),
+<code>src/aipass/memory/apps/modules/governance.py</code></p>
+<p><strong>Entry limits and lint</strong> —
+<code>handlers/json/entry_limits.py</code> (<code>check_entry</code>,
+<code>changed_entries</code>),
+<code>handlers/json/lint_handler.py</code>,
+<code>config_loader.py</code>, <code>memory_files.py</code>,
+<code>modules/lint.py</code></p>
+<p><strong>Rollover</strong> —
+<code>handlers/rollover/extractor.py</code>,
+<code>orchestrator.py</code>, <code>handlers/monitor/detector.py</code>,
+<code>memory_watcher.py</code>, <code>modules/rollover.py</code></p>
+<p><strong>Symbolic</strong> —
+<code>handlers/symbolic/deduplicator.py</code> (the AUDN pattern
+<code>:9-14</code>), <code>extractor.py</code>, <code>storage.py</code>,
+<code>retriever.py</code>, <code>chroma_client.py</code>,
+<code>hook.py</code>, <code>modules/symbolic.py</code></p>
+<p><strong>Storage</strong> — <code>handlers/storage/chroma.py</code>,
+<code>chroma_subprocess.py</code>,
+<code>handlers/archive/indexer.py</code>,
+<code>handlers/schema/normalize.py</code></p>
+<p><strong>Search</strong> —
+<code>handlers/search/query_executor.py</code>,
+<code>vector_search.py</code>, <code>modules/search.py</code>,
+<code>modules/verify.py</code></p>
+<p><strong>Templates</strong> —
+<code>handlers/templates/pusher.py</code>, <code>differ.py</code>,
+<code>spawn_pusher.py</code>, <code>modules/templates.py</code></p>
+<p><strong>Documentation</strong> —
+<code>src/aipass/memory/README.md</code> (the command surface and the
+architecture tree)</p>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4"><code class="commit-id" title="0d27e5ef282fca141c08c1d76fa3a8647a3eeea4">0d27e5ef…</code></a>
+— first reading. Screened before reading; the tree was read, never
+installed, and no test was run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

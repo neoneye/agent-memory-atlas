@@ -97,7 +97,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>198 memory systems with publicly readable source, each read at a
+<p>199 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. Not all 165 are open source — see <a
 href="#what-the-licences-actually-say">what the licences actually
@@ -105,7 +105,7 @@ say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 11
-systems of 198 carry a rejected-value tombstone — a record keyed on the
+systems of 199 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -118,7 +118,7 @@ the embedding survives the delete until an unscheduled compaction — see
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 115 of 198 apply a scope key as a filter on the
+shallowest.</strong> 116 of 199 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 42 of 198
@@ -177,7 +177,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>198 reports across 197 repositories</strong>:
+<strong>199 reports across 198 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -316,8 +316,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 115 of
-198 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 116 of
+199 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -336,7 +336,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>One hundred and ninety-eight systems do not fall into one hundred and
+<p>One hundred and ninety-nine systems do not fall into one hundred and
 sixty-six categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -2405,7 +2405,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 198 systems by the seven mechanisms judged against strict
+filters all 199 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. Two external reviews
@@ -2902,6 +2902,31 @@ construction</td>
 <td>The superseded wording is kept on the row and consulted by nothing,
 so re-asserting an overwritten value supersedes back; the memory package
 has no test of its own</td>
+</tr>
+<tr>
+<td><code>aipass</code></td>
+<td>A JSON entry in a per-branch memory file, capped by type, plus
+symbolic fragments in ChromaDB</td>
+<td>JSON files per branch as the hot tier, ChromaDB as the archive, with
+a subprocess isolation layer</td>
+<td>Semantic search across branch archives, gated by a surfacing
+governance function</td>
+<td>Entries appended to branch files under a character cap; rollover
+archives what exceeds the limit</td>
+<td>An AUDN dedup pattern — add, update, delete or noop — decided per
+fragment by an LLM</td>
+<td>branch is the scope key throughout, on files, limits, templates,
+search filters and lint</td>
+<td>A drone CLI with per-module commands, hooks, a daemon and
+cross-branch template push</td>
+<td>A rollover watcher daemon, a monitor/detector pair and template
+synchronisation</td>
+<td>A relevance score plus governance state; nothing epistemic on an
+entry</td>
+<td>Memory files have declared entry limits and a read-only linter that
+audits violations</td>
+<td>The dedup verdict is an LLM call per fragment, with delete among the
+actions it may return</td>
 </tr>
 <tr>
 <td><code>alma-memory</code></td>
@@ -7827,7 +7852,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>11 of 198:</em> <a
+<p><em>11 of 199:</em> <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
@@ -7842,7 +7867,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>37 of 198:</em> <a
+<p><em>37 of 199:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agentic-context-engine/"><code>agentic-context-engine</code></a>,
 <a href="../systems/agentrecall-x/"><code>agentrecall-x</code></a>, <a
@@ -7882,7 +7907,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>24 of 198:</em> <a
+<p><em>24 of 199:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/clawmem/"><code>clawmem</code></a>, <a
@@ -7912,7 +7937,7 @@ href="../systems/vestige/"><code>vestige</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>115 of 198:</em> <a
+<p><em>116 of 199:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -7924,6 +7949,7 @@ href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/ai-memory/"><code>ai-memory</code></a>, <a
 href="../systems/aimaos/"><code>aimaos</code></a>, <a
+href="../systems/aipass/"><code>aipass</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/argo/"><code>argo</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
@@ -8032,7 +8058,7 @@ href="../systems/yesmem/"><code>yesmem</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>61 of 198:</em> <a
+<p><em>61 of 199:</em> <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
 href="../systems/athena/"><code>athena</code></a>, <a
@@ -8097,7 +8123,7 @@ href="../systems/yantrikdb/"><code>yantrikdb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>50 of 198:</em> <a
+<p><em>50 of 199:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -8151,7 +8177,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>42 of 198:</em> <a
+<p><em>42 of 199:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agno/"><code>agno</code></a>, <a
@@ -8213,7 +8239,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Forty-two
-repositories of one hundred and ninety-eight assert that particular
+repositories of one hundred and ninety-nine assert that particular
 material must <em>not</em> be retrieved — the assertion every scope,
 deletion and correction claim in this document ultimately rests on. Read
 together rather than one at a time, they split cleanly in two, and the
@@ -11688,8 +11714,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across one hundred
-and ninety-eight systems, almost none can explain why they are shaped
-the way they are.</p>
+and ninety-nine systems, almost none can explain why they are shaped the
+way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -12898,6 +12924,9 @@ href="https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1
 href="https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f"><code class="commit-id" title="ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f">ee12da17…</code></a></li>
 <li><a href="https://github.com/hamr0/aurora">hamr0/aurora</a> at <a
 href="https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b"><code class="commit-id" title="750a39da51ed947aab851e9fd5c06a2587402e2b">750a39da…</code></a></li>
+<li><a href="https://github.com/AIOSAI/AIPass">AIOSAI/AIPass</a> at <a
+href="https://github.com/AIOSAI/AIPass/commit/0d27e5ef282fca141c08c1d76fa3a8647a3eeea4"><code class="commit-id" title="0d27e5ef282fca141c08c1d76fa3a8647a3eeea4">0d27e5ef…</code></a>
+— memory is one of nineteen subsystems in a ~377,000-line monorepo</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>

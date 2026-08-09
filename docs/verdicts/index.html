@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 198 reports.</strong></p>
+<p><strong>This page covers all 199 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;198 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;199 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -4841,6 +4841,38 @@ checking the plan.</li>
 <li>Do not copy when: you expected a memory system in this atlas's usual
 sense — nothing here is believed, corrected or forgotten, because the
 codebase is the truth.</li>
+</ul>
+<h3 id="aipass"><a
+href="../systems/aipass/"><code>aipass</code></a></h3>
+<ul>
+<li>Best idea: <code>should_surface()</code> budgets how often memory
+may speak — a relevance threshold <em>plus</em>
+<code>max_surfaces_per_session</code>, <code>min_messages_between</code>
+and <code>cooldown_seconds</code>, evaluated as a pure function
+returning <code>(bool, reason, new_state)</code>. A memory can clear the
+threshold and still be refused because it spoke too recently, and the
+refusal comes with its reason.</li>
+<li>Biggest risk: the symbolic deduplicator implements "the AUDN
+(Add/Update/Delete/Noop) deduplication pattern" and "decides the correct
+action via LLM" — one model deleting fragments extracted by another,
+with nothing found that gates the verdict, records what went, or keeps
+it.</li>
+<li>Most reusable component: entry limits as configuration — a per-type
+character cap with per-branch overrides deep-merged, a pure
+<code>check_entry()</code> validator, a read-only <code>lint</code> that
+audits violations, and <code>rollover check</code> as a dry run before
+<code>rollover run</code>. Memory growth stated as a contract and
+audited separately from being enforced.</li>
+<li>Maturity impression: a ~377,000-line monorepo with nineteen
+subsystems of which memory is ~38,500 lines, 446 test files, codecov, a
+<code>Dockerfile.test</code> and OpenSSF badges — and five surfacing
+constants (0.3, 5, 10, 300) with nothing in the tree measuring
+them.</li>
+<li>Study when: your agent injects everything that passes a similarity
+cutoff and you have never asked how often it should interrupt.</li>
+<li>Do not copy when: you need the memory module alone — it is bound to
+branches, drones and templates, and the governance state resets to zero
+on every <code>new_state()</code>.</li>
 </ul>
         </article>
       </div>

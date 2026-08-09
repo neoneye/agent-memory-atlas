@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 198 reports.**
+**This page covers all 199 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["198 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["199 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1699,3 +1699,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 145,000 lines across twelve packages with strict tooling, 153 test files, SQLite in WAL mode with schema-version detection tested against a deliberately legacy table, and a committed performance baseline file.
 - Study when: your agent plans multi-step work and you dispatch before checking the plan.
 - Do not copy when: you expected a memory system in this atlas's usual sense — nothing here is believed, corrected or forgotten, because the codebase is the truth.
+
+### [`aipass`](../systems/aipass/)
+
+- Best idea: `should_surface()` budgets how often memory may speak — a relevance threshold *plus* `max_surfaces_per_session`, `min_messages_between` and `cooldown_seconds`, evaluated as a pure function returning `(bool, reason, new_state)`. A memory can clear the threshold and still be refused because it spoke too recently, and the refusal comes with its reason.
+- Biggest risk: the symbolic deduplicator implements "the AUDN (Add/Update/Delete/Noop) deduplication pattern" and "decides the correct action via LLM" — one model deleting fragments extracted by another, with nothing found that gates the verdict, records what went, or keeps it.
+- Most reusable component: entry limits as configuration — a per-type character cap with per-branch overrides deep-merged, a pure `check_entry()` validator, a read-only `lint` that audits violations, and `rollover check` as a dry run before `rollover run`. Memory growth stated as a contract and audited separately from being enforced.
+- Maturity impression: a ~377,000-line monorepo with nineteen subsystems of which memory is ~38,500 lines, 446 test files, codecov, a `Dockerfile.test` and OpenSSF badges — and five surfacing constants (0.3, 5, 10, 300) with nothing in the tree measuring them.
+- Study when: your agent injects everything that passes a similarity cutoff and you have never asked how often it should interrupt.
+- Do not copy when: you need the memory module alone — it is bound to branches, drones and templates, and the governance state resets to zero on every `new_state()`.

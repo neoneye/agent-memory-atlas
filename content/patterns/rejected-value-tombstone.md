@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of one hundred and ninety-eight
+> **This is not an established best practice.** Nine systems of one hundred and ninety-nine
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
