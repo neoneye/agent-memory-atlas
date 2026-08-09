@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 219 reports.**
+**This page covers all 220 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["219 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["220 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1888,6 +1888,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: markdown on disk with a SQLite index and wiki-links as graph edges, ACT-R base-level activation written out beside exponential vitality decay, 35 test files, two design specs at the root, and `fading` and `warmth-audit` as first-class CLI commands.
 - Study when: your hybrid retriever runs every arm on every query and you tune fusion weights by hand.
 - Do not copy when: you need the comparison the README makes — Mem0 is measured on source-document recall through an extraction pipeline that discards source text, which is not the workload it is built for.
+
+### [`yourmemory`](../systems/yourmemory/)
+
+- Best idea: decay is deliberately kept out of the ranking formula, because "multiplying cosine by strength would penalise old-but-valid memories below newer irrelevant ones". Ranking is `0.4 × bm25_norm + 0.6 × cosine`; decay drives a 24-hour prune and the graph node scores instead, with the rate set per claim type — `fact=0.16, strategy=0.10, assumption=0.20, failure=0.35`.
+- Biggest risk: the `replace` branch overwrites in place. The system detects that the incoming statement contradicts the stored one — the hard part — and then destroys the old value, leaving no supersession record and nothing to stop it returning.
+- Most reusable component: `audit.py` — a hash-chained log of reads, writes, deletes and admin actions that stores memory *ids*, counts and query *length* and never content or query text, "so the audit log itself isn't a data-leak vector", with retention floored at 90 days and a fail-open policy whose compensating control (`verify_chain()`) is named.
+- Maturity impression: three backends behind one connection layer, non-LLM fallbacks beside the LLM paths, a benchmark document leading with `recall_all@5` when `recall_any@5` is eleven points better, 95% CIs, and a `SOC2_READINESS_REPORT.md` labelled "NOT a SOC 2 attestation… Prepared by: Automated codebase assessment" on line 2.
+- Study when: your ranking multiplies relevance by a decay term and old correct answers keep losing to new irrelevant ones.
+- Do not copy when: you need to know what a correction replaced — five test files also carry three benchmark suites.
+
 
 
 

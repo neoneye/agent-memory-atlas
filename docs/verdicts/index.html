@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 219 reports.</strong></p>
+<p><strong>This page covers all 220 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;219 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;220 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -5506,6 +5506,37 @@ you tune fusion weights by hand.</li>
 <li>Do not copy when: you need the comparison the README makes — Mem0 is
 measured on source-document recall through an extraction pipeline that
 discards source text, which is not the workload it is built for.</li>
+</ul>
+<h3 id="yourmemory"><a
+href="../systems/yourmemory/"><code>yourmemory</code></a></h3>
+<ul>
+<li>Best idea: decay is deliberately kept out of the ranking formula,
+because "multiplying cosine by strength would penalise old-but-valid
+memories below newer irrelevant ones". Ranking is
+<code>0.4 × bm25_norm + 0.6 × cosine</code>; decay drives a 24-hour
+prune and the graph node scores instead, with the rate set per claim
+type —
+<code>fact=0.16, strategy=0.10, assumption=0.20, failure=0.35</code>.</li>
+<li>Biggest risk: the <code>replace</code> branch overwrites in place.
+The system detects that the incoming statement contradicts the stored
+one — the hard part — and then destroys the old value, leaving no
+supersession record and nothing to stop it returning.</li>
+<li>Most reusable component: <code>audit.py</code> — a hash-chained log
+of reads, writes, deletes and admin actions that stores memory
+<em>ids</em>, counts and query <em>length</em> and never content or
+query text, "so the audit log itself isn't a data-leak vector", with
+retention floored at 90 days and a fail-open policy whose compensating
+control (<code>verify_chain()</code>) is named.</li>
+<li>Maturity impression: three backends behind one connection layer,
+non-LLM fallbacks beside the LLM paths, a benchmark document leading
+with <code>recall_all@5</code> when <code>recall_any@5</code> is eleven
+points better, 95% CIs, and a <code>SOC2_READINESS_REPORT.md</code>
+labelled "NOT a SOC 2 attestation… Prepared by: Automated codebase
+assessment" on line 2.</li>
+<li>Study when: your ranking multiplies relevance by a decay term and
+old correct answers keep losing to new irrelevant ones.</li>
+<li>Do not copy when: you need to know what a correction replaced — five
+test files also carry three benchmark suites.</li>
 </ul>
         </article>
       </div>
