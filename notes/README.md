@@ -8,6 +8,15 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-09-a-tokenomics-list-triaged.md](2026-08-09-a-tokenomics-list-triaged.md) —
+  73 open-source projects from a token-cost list, read against the memory bar in
+  batches of five. A cost corpus is a poor place to find memory systems and a
+  plausible place to find the measurement
+  [cache-preserving injection](../content/patterns/cache-preserving-injection.md)
+  says nobody publishes; both halves are being tested rather than assumed. The
+  running ledger, and the one method shortcut — a shallow clone disables the
+  screen's lockfile-age bound, which is only safe because nothing is installed
+  for the whole pass.
 - [2026-08-09-a-phased-program-and-where-to-abandon-it.md](2026-08-09-a-phased-program-and-where-to-abandon-it.md) —
   sequences the four notes below, and three results came out of it that none of
   them could see alone. The cheapest item is a prerequisite for the other three,
