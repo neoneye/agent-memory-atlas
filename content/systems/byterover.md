@@ -290,4 +290,6 @@ Do not copy:
 
 ## History
 
+**2026-08-09** — the repository has been renamed `campfirein/byterover-cli`; `campfirein/cipher` redirects to it and the pin below resolves unchanged. Recorded because an outside corpus listed the new name as an uncovered system, and a join on `source_url` cannot see a rename.
+
 **2026-07-27** — [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c) — first reading.

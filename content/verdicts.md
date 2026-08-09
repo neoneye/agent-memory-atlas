@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 187 reports.**
+**This page covers all 188 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["187 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["188 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -1600,3 +1600,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 780,000 lines of Go with forty-plus packages, MVCC snapshot isolation, Bolt/Cypher/gRPC/GraphQL/Qdrant/MCP surfaces, and an audit module citing GDPR, HIPAA, FISMA, SOC2 and SOX by clause rather than by name.
 - Study when: you are building the memory layer and want validity enforceable and history queryable underneath it.
 - Do not copy when: you expected a memory product — nothing here decides what to remember or resolves a contradiction.
+
+### [`empirica`](../systems/empirica/)
+
+- Best idea: a closed resolution vocabulary — `stale | superseded | retracted | mistyped` — designed from a measurement of the project's own store, where 1,267 of 1,268 resolutions expressed staleness and exactly one an error. The module argues that a 1-in-4199 error rate over six months "is not plausible, so errors were not being expressed rather than not occurring", and states the principle: "What the surface does not name, the practitioner does not reach for."
+- Biggest risk: the source tagging that would catch a gamed confidence vector — high `know` while every artifact is `intuition` — is declared v0 with the routing rule deferred, so the gaming surface it names is not closed at this commit.
+- Most reusable component: `empirica/data/resolution_kind.py` — one file holding a vocabulary, the measurement that justified it, the pre-empted rebuttal, and a normaliser that refuses to coerce an unknown value because that would manufacture the exact error being measured.
+- Maturity impression: 303,000 lines of Python with 431 test files, a Sentinel gate that blocks edits until understanding is demonstrated, a `mistakes_made` table whose columns are `why_wrong`/`cost_estimate`/`root_cause_vector`/`prevention`, and `project_unknowns` as first-class rows.
+- Study when: your correction path has one word for "not current" and you have never asked what it is hiding.
+- Do not copy when: you need retrieval — recall here is decay-weighted bootstrap, and no retrieval quality is claimed or measured.

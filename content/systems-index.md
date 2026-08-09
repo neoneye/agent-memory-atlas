@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **187 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **188 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -71,6 +71,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`ecc`](../systems/ecc/) **ECC** — A vault that stays unreviewed · `affaan-m/ECC` · Scope enforced
 - [`echo-agent`](../systems/echo-agent/) **Echo Agent** — Provenance-ranked contradiction memory · `fuyuxiang/echo-agent` · Scope enforced, Mutation audit
 - [`elastic-atlas`](../systems/elastic-atlas/) **Elastic Atlas** — Evaluated demo · `noamschwartz/atlas-memory-demo` · Scope enforced
+- [`empirica`](../systems/empirica/) **Empirica** — A vocabulary argued from its own data · `nubaeon/empirica` · Trust state, Scope enforced, Mutation audit
 - [`empryo`](../systems/empryo/) **Empryo** — Retrieval that reads the repo · `proxysoul/Empryo` · Scope enforced, Human review
 - [`engram`](../systems/engram/) **Engram** — Coding-agent local memory · `Gentleman-Programming/engram` · Scope enforced, Human review
 - [`engram-alpha`](../systems/engram-alpha/) **Engram Alpha** — Time doesn't validate, exposure doesn't validate · `techtheist/engram` · Trust state, Bi-temporal, Mutation audit, Human review, Negative evals
