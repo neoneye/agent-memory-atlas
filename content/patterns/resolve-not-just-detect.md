@@ -149,6 +149,28 @@ Confirming appends a resolution that withholds the item from then on; the
 `forget` path appends a content-keyed tombstone, which is the trace Memanto's
 `remove_both` lacks.
 
+[breadcrumbs](../../systems/breadcrumbs/) contributes the requirement none of
+the three above states, and it is the one that goes wrong after everything above
+is built correctly: **the resolution has to reach the read path, and something has
+to check that it did.** Its supersession is ordinary — a newer JSONL line names
+the older one through `obsoleted_by` — and its schema doc tells adopters their
+boot matcher *should* exclude a superseded entry from current knowledge. What is
+unusual is `run_forbidden_check()` in `templates/ledger-tools/retrieval_exam.py`,
+which replays a configurable model of that matcher against simulated
+session-start conditions and names any superseded entry that still wins an
+injection slot, naming the probe that surfaced it, with `--fail-on-forbidden`
+turning a hit into a red exit. The docstring is the argument: *"Correction that
+stops at the ledger row and never reaches the retrieval lane is not correction;
+the descent has to complete."* Two systems in this atlas fail exactly that way on
+their main retrieval path, and neither has a test that would catch it.
+
+The check is also careful about its own negative result: when every superseded
+entry is unreachable it reports `unexercised` rather than clean, because a lane
+that never had the chance to make the mistake proves nothing. Other suites here
+defend against a vacuous pass by designing the fixture so it cannot pass
+vacuously; this one puts the distinction in the verdict vocabulary, where a
+later fixture edit cannot quietly remove it.
+
 Three rules make the surface safe, and all three are transferable. A machine
 suggestion is **live by construction** — the liveness fold refuses to let a
 `supersede-candidate` suppress anything, so a wrong guess costs a line of noise

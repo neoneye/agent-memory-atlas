@@ -108,7 +108,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 237 reports.</strong></p>
+<p><strong>This page covers all 238 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -129,7 +129,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;237 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;238 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6097,6 +6097,44 @@ hand something to another and know it arrived.</li>
 <li>Do not copy when: you need evidence — the offered support is the
 author's own three months of daily use, honestly attributed, and no test
 covers the delivery path.</li>
+</ul>
+<h3 id="breadcrumbs"><a
+href="../systems/breadcrumbs/"><code>breadcrumbs</code></a></h3>
+<ul>
+<li>Best idea: a committed test that a <em>corrected</em> entry stopped
+surfacing. <code>run_forbidden_check()</code> in
+<code>templates/ledger-tools/retrieval_exam.py</code> replays a
+configurable model of the boot matcher against simulated session-start
+conditions and names any entry marked <code>obsoleted_by</code> that
+still wins an injection slot — <em>"correction that stops at the ledger
+row and never reaches the retrieval lane is not correction"</em>. Two
+systems here fail exactly that way on their main retrieval path, and
+neither has a test that would have caught it.</li>
+<li>Biggest risk: the fleet architecture the docs describe — an orphan
+memory branch, per-session fold files, a read-time projection, a reaper
+that checks a fold's claim against merged history — is not in the tree.
+What ships is four stdlib scripts and a pile of templates. A reader who
+arrives through <code>docs/floating-memory.md</code> will go looking for
+machinery that is not there.</li>
+<li>Most reusable component: <code>retrieval_exam.py --survey</code>,
+which needs no ledger, no adoption and no dependencies. It walks any
+repository's markdown, computes link distance from
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>README.md</code>,
+prints what every session pays in bytes before any work happens, and
+names the orphan — the document nothing links, which a session never
+opens on its own.</li>
+<li>Maturity impression: 26 commits, 185 files, no package manifest,
+MIT. Three <code>--selftest</code> entry points totalling 47 offline
+checks, all of which pass — and none of which
+<code>.github/workflows/ci.yml</code> runs, in a repository whose own
+argument is that <em>"a report that exists only when someone remembers
+to run it is not a safeguard"</em>.</li>
+<li>Study when: you already have a rules file and a pile of markdown,
+and you have never checked whether any of it reaches a session.</li>
+<li>Do not copy when: you need semantic recall, a scope boundary, or
+memory that writes itself — every entry here exists because a person
+decided to type it, and retrieval is exact keyword matching that will
+miss a paraphrase and says so in the injected block.</li>
 </ul>
         </article>
       </div>

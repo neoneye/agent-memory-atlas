@@ -238,6 +238,32 @@ moment the stale claim is encountered rather than in a queue nobody
 opens. Confirming appends a resolution that withholds the item from then
 on; the <code>forget</code> path appends a content-keyed tombstone,
 which is the trace Memanto's <code>remove_both</code> lacks.</p>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> contributes the
+requirement none of the three above states, and it is the one that goes
+wrong after everything above is built correctly: <strong>the resolution
+has to reach the read path, and something has to check that it
+did.</strong> Its supersession is ordinary — a newer JSONL line names
+the older one through <code>obsoleted_by</code> — and its schema doc
+tells adopters their boot matcher <em>should</em> exclude a superseded
+entry from current knowledge. What is unusual is
+<code>run_forbidden_check()</code> in
+<code>templates/ledger-tools/retrieval_exam.py</code>, which replays a
+configurable model of that matcher against simulated session-start
+conditions and names any superseded entry that still wins an injection
+slot, naming the probe that surfaced it, with
+<code>--fail-on-forbidden</code> turning a hit into a red exit. The
+docstring is the argument: <em>"Correction that stops at the ledger row
+and never reaches the retrieval lane is not correction; the descent has
+to complete."</em> Two systems in this atlas fail exactly that way on
+their main retrieval path, and neither has a test that would catch
+it.</p>
+<p>The check is also careful about its own negative result: when every
+superseded entry is unreachable it reports <code>unexercised</code>
+rather than clean, because a lane that never had the chance to make the
+mistake proves nothing. Other suites here defend against a vacuous pass
+by designing the fixture so it cannot pass vacuously; this one puts the
+distinction in the verdict vocabulary, where a later fixture edit cannot
+quietly remove it.</p>
 <p>Three rules make the surface safe, and all three are transferable. A
 machine suggestion is <strong>live by construction</strong> — the
 liveness fold refuses to let a <code>supersede-candidate</code> suppress

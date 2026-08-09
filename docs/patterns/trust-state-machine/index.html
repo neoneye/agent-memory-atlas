@@ -317,6 +317,30 @@ state: it records where a memory came from, not what anyone believes
 about it. Separating <em>authority</em> from <em>credence</em> turns out
 to be the more useful axis for gating actions, and conflating the two
 because the field is an enum is the easy mistake.</p>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is the smallest
+instance that still does the job, and the interesting part is
+<em>where</em> it puts the refusal. Its semantic tier carries two states
+— <code>asserted</code> and <code>verified</code> — and
+<code>store_fact()</code> writes <code>asserted</code> unconditionally,
+on a stated rule: <em>"Nothing an agent stores starts verified."</em>
+Promotion goes through one function that raises rather than writes when
+handed an empty oracle:</p>
+<blockquote>
+<p>"verified requires naming the oracle (a CI run, a data assertion, a
+human ruling); an agent may not mark its own claim verified with nothing
+behind it"</p>
+</blockquote>
+<p>Twelve lines, and it converts "the model said so" from a default into
+something a caller has to lie about deliberately. The context block then
+renders the oracle inline beside the value, so a reader of the
+<em>prompt</em> can see which claims nobody checked. Its correction
+ledger sharpens the same idea into an admission rule — only
+<code>ci_failure</code>, <code>data_assertion</code>,
+<code>operator_ruling</code> or <code>reverted_pr</code> count — with
+one exclusion worth copying verbatim: <em>"Model-vs-model disagreement
+is never a correction."</em> A stronger model disagreeing with a cheaper
+one has no ground truth behind it, and a self-improvement loop that
+admits it optimises a proxy.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

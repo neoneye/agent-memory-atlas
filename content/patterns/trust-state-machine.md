@@ -203,6 +203,26 @@ anyone believes about it. Separating *authority* from *credence* turns out to be
 the more useful axis for gating actions, and conflating the two because the field
 is an enum is the easy mistake.
 
+[breadcrumbs](../../systems/breadcrumbs/) is the smallest instance that still
+does the job, and the interesting part is *where* it puts the refusal. Its
+semantic tier carries two states — `asserted` and `verified` — and
+`store_fact()` writes `asserted` unconditionally, on a stated rule: *"Nothing an
+agent stores starts verified."* Promotion goes through one function that raises
+rather than writes when handed an empty oracle:
+
+> "verified requires naming the oracle (a CI run, a data assertion, a human
+> ruling); an agent may not mark its own claim verified with nothing behind it"
+
+Twelve lines, and it converts "the model said so" from a default into something
+a caller has to lie about deliberately. The context block then renders the
+oracle inline beside the value, so a reader of the *prompt* can see which claims
+nobody checked. Its correction ledger sharpens the same idea into an admission
+rule — only `ci_failure`, `data_assertion`, `operator_ruling` or `reverted_pr`
+count — with one exclusion worth copying verbatim: *"Model-vs-model disagreement
+is never a correction."* A stronger model disagreeing with a cheaper one has no
+ground truth behind it, and a self-improvement loop that admits it optimises a
+proxy.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

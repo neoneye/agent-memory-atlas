@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 237 reports.**
+**This page covers all 238 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["237 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["238 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2050,6 +2050,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 3,900 lines across two deployment targets with sixteen MCP tools, a three-tier recall stating its character budget per tier (~80, ~300, full) as three separate tools, auto-promotion of memories expiring within 48 hours at session close, and a version that *removed* five tools and said where they went.
 - Study when: your agents share a store and you need one of them to hand something to another and know it arrived.
 - Do not copy when: you need evidence — the offered support is the author's own three months of daily use, honestly attributed, and no test covers the delivery path.
+
+### [`breadcrumbs`](../systems/breadcrumbs/)
+
+- Best idea: a committed test that a *corrected* entry stopped surfacing. `run_forbidden_check()` in `templates/ledger-tools/retrieval_exam.py` replays a configurable model of the boot matcher against simulated session-start conditions and names any entry marked `obsoleted_by` that still wins an injection slot — *"correction that stops at the ledger row and never reaches the retrieval lane is not correction"*. Two systems here fail exactly that way on their main retrieval path, and neither has a test that would have caught it.
+- Biggest risk: the fleet architecture the docs describe — an orphan memory branch, per-session fold files, a read-time projection, a reaper that checks a fold's claim against merged history — is not in the tree. What ships is four stdlib scripts and a pile of templates. A reader who arrives through `docs/floating-memory.md` will go looking for machinery that is not there.
+- Most reusable component: `retrieval_exam.py --survey`, which needs no ledger, no adoption and no dependencies. It walks any repository's markdown, computes link distance from `CLAUDE.md`/`AGENTS.md`/`README.md`, prints what every session pays in bytes before any work happens, and names the orphan — the document nothing links, which a session never opens on its own.
+- Maturity impression: 26 commits, 185 files, no package manifest, MIT. Three `--selftest` entry points totalling 47 offline checks, all of which pass — and none of which `.github/workflows/ci.yml` runs, in a repository whose own argument is that *"a report that exists only when someone remembers to run it is not a safeguard"*.
+- Study when: you already have a rules file and a pile of markdown, and you have never checked whether any of it reaches a session.
+- Do not copy when: you need semantic recall, a scope boundary, or memory that writes itself — every entry here exists because a person decided to type it, and retrieval is exact keyword matching that will miss a paraphrase and says so in the injected block.
 
 
 

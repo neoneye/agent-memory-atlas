@@ -103,7 +103,7 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong> Nine
-systems of two hundred and thirty-seven carry it: one invented it under
+systems of two hundred and thirty-eight carry it: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, two
 built it after this page named its absence in their report, <strong>two
@@ -343,8 +343,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-two hundred and thirty-seven would suggest a hard idea that a few teams
-reach independently. One of two hundred and thirty-seven, plus one
+two hundred and thirty-eight would suggest a hard idea that a few teams
+reach independently. One of two hundred and thirty-eight, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -785,6 +785,44 @@ That is a defensible trade for a privacy revocation whose source data
 expires anyway, and it means the guarantee is <em>not again for ninety
 days</em> rather than <em>never again</em> — a distinction worth making
 explicitly wherever this shape is copied.</p>
+<h3 id="the-one-that-considered-it-and-said-no-with-a-reason">The one
+that considered it and said no, with a reason</h3>
+<p><a href="../../systems/breadcrumbs/">breadcrumbs</a> is not an
+instance and is worth reading next to the ones that are, because it is
+the only project in the corpus that reaches the value-keyed question,
+answers it, and answers <em>no</em> on grounds this page has to take
+seriously.</p>
+<p>Its correction model is ordinary supersession: a newer JSONL line
+names the older one through <code>obsoleted_by</code>, keyed on the
+record. What is not ordinary is that it ships a committed test asserting
+a superseded entry must not win retrieval — and a second one pinning why
+that test keys on the supersession marker rather than on the value. From
+the fixture comment:</p>
+<blockquote>
+<p>"The revert case: a value flips A -&gt; B -&gt; A. Both earlier
+entries carry obsoleted_by; the final entry RESTATES the original value
+as a new current entry."</p>
+</blockquote>
+<p>A value-keyed tombstone would suppress that final entry, which is
+legitimately current. The reasoning is correct for the store it is
+defending: entries are hand-authored, so a value only reappears because
+a person decided it was true again, and that decision should win.</p>
+<p><strong>The reasoning stops holding the moment anything re-derives
+entries, and the same repository documents that case.</strong> Its
+provenance doc describes a backfill pass mining facts out of git
+history, and its schema doc records what happened when one ran: the
+backfill <em>"swamped the session-verified entries and wrecked lookup
+precision."</em> A re-mining pass that re-derives a fact somebody
+already retired writes a fresh line with a new date and walks past every
+<code>obsoleted_by</code> in the file — which is exactly the laundering
+path Verel's red team found, minus the adversary.</p>
+<p>So the honest reading is that the value-keyed form is unnecessary
+<em>while every write is a human decision</em>, and that the condition
+is a property of the write path rather than of the store. Any system
+here that adds model-driven extraction to a hand-curated ledger crosses
+that line without the schema changing, and nothing signals the crossing.
+That is a better argument for the pattern than a prevalence count, and
+it came from a project that declined it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

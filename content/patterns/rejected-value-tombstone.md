@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Nine systems of two hundred and thirty-seven
+> **This is not an established best practice.** Nine systems of two hundred and thirty-eight
 > carry it: one invented it under adversarial pressure, one adopted it from the
 > first, one arrived at a weaker form independently, one was driven to it by a
 > regulation, two built it after this page named its absence in their report, **two
@@ -192,8 +192,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of two hundred and thirty-seven
-would suggest a hard idea that a few teams reach independently. One of two hundred and thirty-seven, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of two hundred and thirty-eight
+would suggest a hard idea that a few teams reach independently. One of two hundred and thirty-eight, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -568,6 +568,44 @@ bounded by the tombstone's ninety-day TTL. That is a defensible trade for a
 privacy revocation whose source data expires anyway, and it means the guarantee
 is *not again for ninety days* rather than *never again* — a distinction worth
 making explicitly wherever this shape is copied.
+
+### The one that considered it and said no, with a reason
+
+[breadcrumbs](../../systems/breadcrumbs/) is not an instance and is worth reading
+next to the ones that are, because it is the only project in the corpus that
+reaches the value-keyed question, answers it, and answers *no* on grounds this
+page has to take seriously.
+
+Its correction model is ordinary supersession: a newer JSONL line names the
+older one through `obsoleted_by`, keyed on the record. What is not ordinary is
+that it ships a committed test asserting a superseded entry must not win
+retrieval — and a second one pinning why that test keys on the supersession
+marker rather than on the value. From the fixture comment:
+
+> "The revert case: a value flips A -> B -> A. Both earlier entries carry
+> obsoleted_by; the final entry RESTATES the original value as a new current
+> entry."
+
+A value-keyed tombstone would suppress that final entry, which is legitimately
+current. The reasoning is correct for the store it is defending: entries are
+hand-authored, so a value only reappears because a person decided it was true
+again, and that decision should win.
+
+**The reasoning stops holding the moment anything re-derives entries, and the
+same repository documents that case.** Its provenance doc describes a backfill
+pass mining facts out of git history, and its schema doc records what happened
+when one ran: the backfill *"swamped the session-verified entries and wrecked
+lookup precision."* A re-mining pass that re-derives a fact somebody already
+retired writes a fresh line with a new date and walks past every `obsoleted_by`
+in the file — which is exactly the laundering path Verel's red team found, minus
+the adversary.
+
+So the honest reading is that the value-keyed form is unnecessary *while every
+write is a human decision*, and that the condition is a property of the write
+path rather than of the store. Any system here that adds model-driven extraction
+to a hand-curated ledger crosses that line without the schema changing, and
+nothing signals the crossing. That is a better argument for the pattern than a
+prevalence count, and it came from a project that declined it.
 
 ## Tests to require
 

@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A copy-and-adapt agent-ops kit
+whose sharpest artifact asks not whether a ledger entry is still true
+but whether it can ever be seen, and fails CI when a superseded entry
+still wins the injection lane.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="breadcrumbs — Agent Memory Atlas">
+    <meta property="og:description" content="A copy-and-adapt agent-ops
+kit whose sharpest artifact asks not whether a ledger entry is still
+true but whether it can ever be seen, and fails CI when a superseded
+entry still wins the injection lane.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="breadcrumbs — Agent Memory Atlas">
+    <meta name="twitter:description" content="A copy-and-adapt agent-ops
+kit whose sharpest artifact asks not whether a ledger entry is still
+true but whether it can ever be seen, and fails CI when a superseded
+entry still wins the injection lane.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>breadcrumbs — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Correction that never reaches the retrieval
+lane</p>
+          <h1>breadcrumbs</h1>
+          <p class="document-deck">A copy-and-adapt agent-ops kit whose
+sharpest artifact asks not whether a ledger entry is still true but
+whether it can ever be seen, and fails CI when a superseded entry still
+wins the injection lane.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/The-825/breadcrumbs">
+              <span>Source</span>
+              <strong>The-825/breadcrumbs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/The-825/breadcrumbs/commit/9252553434e01cfb4058df797470c72645eef3fc" title="9252553434e01cfb4058df797470c72645eef3fc">
+              <span>Analyzed revision</span>
+              <code>92525534…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>breadcrumbs is a <strong>copy-and-adapt kit</strong>, not a library
+you install. 185 tracked files at this commit, most of them markdown:
+templates for a rules file, a session handoff, a decisions ledger and a
+settled-facts store; a CI kit of lint guards and a fail-closed merge
+gate; pattern essays explaining each piece. MIT licensed, no package
+manifest, no dependencies — every executable here is stdlib Python 3 or
+POSIX shell.</p>
+<p>Four of those files are a memory system, and they are the reason for
+this report:</p>
+<ul>
+<li><a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/memory_engine.py"><code>templates/ledger-tools/memory_engine.py</code></a>
+— 310 lines of three-tier file-native memory (working state, append-only
+episodes, semantic facts) for an agent loop you write yourself.</li>
+<li><a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/conclusions_audit.py"><code>templates/ledger-tools/conclusions_audit.py</code></a>
+— asks whether every ledger entry is still <strong>true</strong>.</li>
+<li><a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/retrieval_exam.py"><code>templates/ledger-tools/retrieval_exam.py</code></a>
+— 1017 lines asking whether any entry can ever be
+<strong>seen</strong>.</li>
+<li><a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/capture_nudge.py"><code>templates/ledger-tools/capture_nudge.py</code></a>
+— a prompt hook that fires when the operator's own wording looks like a
+ruling.</li>
+</ul>
+<p><strong>The finding worth the reader's time is
+<code>run_forbidden_check()</code></strong>, added in <a
+href="https://github.com/The-825/breadcrumbs/pull/22">PR #22</a> six
+days before this reading. It takes the entries marked
+<code>obsoleted_by</code>, replays the boot matcher against simulated
+session-start conditions, and names any superseded entry that still wins
+a slot. The docstring states the argument: <em>"Correction that stops at
+the ledger row and never reaches the retrieval lane is not correction;
+the descent has to complete."</em> Several systems here test that a
+corrected value stays out of a <em>query result</em> — <a
+href="../verel/">Verel</a>'s suite asserts a rejected fact is
+<em>"invisible to EVERY recall path"</em>. This one tests the other read
+surface: the ranked, capped packet a session is handed <strong>before it
+asks anything</strong>, where an entry can be missed by losing a
+tie-break rather than by failing a filter. And the could-not-run case is
+a named verdict in the tool's own output (<code>UNEXERCISED</code>)
+rather than a property of a fixture, so an untested lane never reads as
+a clean one.</p>
+<p>Two more things are unusually well judged. The exam's <strong>survey
+mode</strong> (<code>--survey</code>) needs no ledger and no adoption at
+all: it walks a repo's markdown, computes link distance from the boot
+surface (<code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<code>README.md</code>, <code>.cursorrules</code>,
+<code>.github/copilot-instructions.md</code>), and reports the
+<em>orphan</em> — a document nothing links, which a session never opens
+on its own. And <code>memory_engine.verify_fact()</code> raises rather
+than writes when handed empty evidence, which is the shortest possible
+statement of oracle-gated trust.</p>
+<p><strong>Where it is weakest is the distance between the prose and the
+tree.</strong> <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/docs/floating-memory.md"><code>docs/floating-memory.md</code></a>
+describes a production memory layer in detail — an orphan git branch, a
+capped head file, per-session append-only fold files, a projection
+computed at read time, a trust rank, a reaper that greps merged history
+to check a fold's own claim, an orphaned-branch matcher, a
+mishandled-claim SLA. None of that is in this repository.
+<code>grep -rl fold --include='*.py'</code> at this commit returns only
+the migration runner and a test-harness example. What ships is the
+smaller kit; what is described is the system the kit was extracted from,
+and a reader who skims the essay and clones the repo will not find the
+machinery they just read about. The repo is explicit about this in
+several places and silent about it in others.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>one line of JSON keyed to a repo
+path</strong>. The schema is in <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/CONCLUSIONS_TEMPLATE.md"><code>templates/CONCLUSIONS_TEMPLATE.md</code></a>:
+<code>path</code>, <code>when</code>, <code>what</code> (one sentence,
+the durable fact), <code>evidence</code> (a PR number, a commit SHA, a
+doc pointer), with optional <code>tags</code>, <code>relates_to</code>,
+<code>obsoleted_by</code>, <code>supersedes</code>, and three provenance
+fields from <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/PROVENANCE.md"><code>PROVENANCE.md</code></a>
+— <code>src</code> (how it got into the ledger), <code>verified</code>
+(last checked against reality), <code>by</code> (which surface wrote it,
+<em>"never a model identifier"</em>).</p>
+<p>Nothing is extracted. A session writes a line because a human or the
+session decided a fact would cost real time to re-derive. There is no
+embedding, no consolidation pass, no summarizer.</p>
+<p><strong>How a claim becomes a belief.</strong> In
+<code>memory_engine.py</code> the semantic tier carries a discrete
+<code>status</code> field. <code>store_fact()</code> writes
+<code>"asserted"</code> unconditionally — the docstring is <em>"Nothing
+an agent stores starts verified."</em>
+<code>verify_fact(category, key, evidence)</code> is the only promotion
+path and refuses an empty oracle:</p>
+<blockquote>
+<p>"verified requires naming the oracle (a CI run, a data assertion, a
+human ruling); an agent may not mark its own claim verified with nothing
+behind it"</p>
+</blockquote>
+<p><code>build_context()</code> renders the state inline —
+<code>fact.env.python: &gt;=3.11 [verified (ci run 4412 green on 3.11)]</code>
+— so a reader of the prompt sees the oracle next to the claim, and an
+<code>asserted</code> fact is visibly one nobody checked.</p>
+<p><strong>How a belief stops being one.</strong> Never by editing. A
+wrong entry gets a newer entry that names it: <code>obsoleted_by</code>
+on the old line (forward half), <code>supersedes</code> on the new one
+(back half), in a dated pointer grammar (<code>path</code>,
+<code>path@date</code>, <code>path@date#n</code>). The only sanctioned
+in-place edit in the whole design is bumping <code>verified</code> on an
+unchanged claim, which records a re-check rather than a rewrite. Two
+clocks then run over the survivors: <code>conclusions_audit.py</code>
+marks an entry <code>STALE</code> when its keyed path is gone from the
+tree and <code>AGING</code> when nothing re-verified it inside 180
+days.</p>
+<p><strong>And the part most designs skip.</strong> Marking a row
+superseded does not remove it from the lane.
+<code>CONCLUSIONS_TEMPLATE.md</code> tells adopters their matcher
+<em>should</em> treat an <code>obsoleted_by</code> entry as excluded,
+and the exam's own model of a matcher deliberately does not —
+<code>injected_for()</code> filters only <code>UNREACHABLE</code> —
+because the exam exists to catch matchers that forgot. Running it
+against the shipped sample reproduces the failure it was written
+for:</p>
+<pre><code>PART 4  FORBIDDEN HITS
+  superseded=1  forbidden_hits=1
+  FORBIDDEN: line 6 (key=templates/ledger-tools/union-merge.md) is
+  obsoleted_by docs/removed-note.md and still injected on probe &#39;session
+  editing the merge-behavior note&#39;. The model sees the old ruling.</code></pre>
+<p>The check keys on the supersession marker, never on the value, and
+the reason is pinned by a selftest: in a revert chain where a value goes
+A → B → A, the final entry restating A is a legitimately current entry,
+and a check that tombstoned by value would suppress it. That is a real
+distinction, correctly reasoned, and it is also exactly why this is not
+a rejected-value tombstone — see section 5.</p>
+<pre class="mermaid"><code>flowchart TB
+    W[&quot;a session appends a line to CONCLUSIONS.jsonl&quot;] --&gt; S{&quot;who vouched for it&quot;}
+    S --&gt;|&quot;nobody but the author&quot;| A[&quot;asserted&quot;]
+    S --&gt;|&quot;verify_fact names a CI run, data assertion or operator ruling&quot;| V[&quot;verified&quot;]
+    A --&gt; O[&quot;a newer line names this one in obsoleted_by&quot;]
+    V --&gt; O
+    O --&gt; R[&quot;superseded — the row is corrected&quot;]
+
+    A --&gt; L[&quot;boot matcher: entries keyed to files this session touched,&lt;br/&gt;most specific then most recent, capped at 6&quot;]
+    V --&gt; L
+    R -.-&gt;|&quot;the row changed, the matcher never read the field&quot;| L
+    L --&gt; P[&quot;injected into the prompt&quot;]
+
+    R --&gt; X[&quot;run_forbidden_check replays the probes&quot;]
+    L --&gt; X
+    X --&gt;|&quot;a superseded entry won a slot&quot;| F[&quot;FORBIDDEN HIT&lt;br/&gt;the model answers from the old ruling&quot;]
+    X --&gt;|&quot;no superseded entry is even reachable&quot;| U[&quot;UNEXERCISED&lt;br/&gt;says nothing yet, never reported as clean&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no server, no database, no daemon and no external
+dependency. The runtime is <code>python3</code> and a git
+repository.</p>
+<p><strong>What has to be running: nothing.</strong> Adoption is copying
+files. The stores are a <code>CONCLUSIONS.jsonl</code>, a
+<code>DECISIONS.md</code>, a <code>SESSION_STATE.md</code> at the repo
+root, and — if you use the engine — a <code>.memory/</code> directory
+holding <code>session_state.json</code>, <code>episodes.jsonl</code> and
+<code>facts.json</code>. Every one is human-readable and repairable with
+a text editor, which is stated as a design goal rather than an accident:
+retrieval is <em>"deterministic and inspectable with cat and
+grep."</em></p>
+<p><strong>Runtime shape.</strong> Three things, with different
+lifetimes:</p>
+<ol type="1">
+<li><strong>A library.</strong> <code>MemoryEngine</code> is imported
+into an agent loop you own. Its header says so first: <em>"ASSUMES an
+agent execution loop you control (you build the prompt, you call the
+model, you log what happened)."</em> It does not wrap a provider, does
+not ship an MCP server, and does not hook a harness.</li>
+<li><strong>Harness hooks.</strong> <code>capture_nudge.py</code>
+(UserPromptSubmit), <code>templates/hooks/pre-compact-save.sh</code>
+(PreCompact) and <code>post-compact-pointer.sh</code> (SessionStart,
+matcher <code>compact</code>). All fail open; the nudge catches every
+exception and returns 0 on principle.</li>
+<li><strong>Report-only sweeps.</strong>
+<code>conclusions_audit.py</code> and <code>retrieval_exam.py</code> are
+CLIs you run on a cadence or in CI. Neither writes to the ledger. The
+auditor exits 0 whatever it finds <em>"(this is a report, not a
+gate)"</em>; the exam exits nonzero only under
+<code>--fail-on-regression</code> or
+<code>--fail-on-forbidden</code>.</li>
+</ol>
+<p><strong>Concurrency.</strong> Deliberate and honestly bounded.
+Episodes are append-only JSONL so parallel writers do not contend,
+paired with a <code>merge=union</code> gitattributes setting documented
+in <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/union-merge.md"><code>union-merge.md</code></a>.
+<code>_write()</code> is atomic against a crash (temp file plus
+<code>os.replace</code>) and the module header refuses to let that be
+mistaken for a lock: <em>"They do NOT make concurrent read-modify-write
+safe: two agents updating session_state.json can still lose an
+update."</em> The prescription is per-agent memory directories with a
+shared episodic ledger.</p>
+<p><strong>Cost to an operator:</strong> an afternoon, and no
+infrastructure. That is the whole pitch, and it is accurate.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture (engine)</strong> — <code>memory_engine.py</code>:
+<code>set_goal()</code>, <code>note(key, value)</code>,
+<code>log_episode(action, outcome, tags)</code>,
+<code>store_fact(category, key, value)</code>. <code>note()</code>
+re-inserts an updated key at the end of the dict so compaction's
+oldest-first flush orders by last update rather than first
+insertion.</li>
+<li><strong>Capture (ledger)</strong> — by hand, prompted by
+<code>capture_nudge.py</code>, which regexes the submitted prompt for
+ruling-shaped language (<code>\bruling\b</code>,
+<code>\bfrom now on\b</code>, <code>\bgoing forward\b</code>,
+clause-initial <code>always|never</code> with "never mind" excluded) and
+prints a same-turn reminder into the harness's context.</li>
+<li><strong>Compaction / promotion</strong> —
+<code>MemoryEngine.compact()</code>: at
+<code>MAX_WORKING_ENTRIES = 8</code> the overflow is written to the
+episodic ledger as a <code>COMPACTION</code> row <em>before</em> the
+working file shrinks. The comment names the ordering guarantee: <em>"if
+the process dies between the two writes, the worst case is a duplicate
+episode, never a lost one."</em></li>
+<li><strong>Retrieval / context assembly</strong> —
+<code>MemoryEngine.build_context(query)</code>: newest-first episodes
+with exact keyword overlap promoted ahead of recency, capped at
+<code>MAX_EPISODES_IN_CONTEXT = 5</code>, emitted under a header that
+names its own limit:
+<code>=== MEMORY (retrieval: recency + exact keyword; no paraphrase match) ===</code>.</li>
+<li><strong>Correction</strong> — append a line with
+<code>obsoleted_by</code> on the old entry.
+<code>conclusions_audit._chain_issue()</code> resolves every pointer
+against the other ledger paths, the special paths, and the tree, and
+reports the ones that dangle.</li>
+<li><strong>Staleness</strong> —
+<code>conclusions_audit._verdict_for()</code>: <code>SPECIAL</code> for
+<code>operations</code>/<code>domain</code>/<code>process</code>,
+<code>STALE</code> when <code>os.path.exists</code> fails on the key,
+<code>AGING</code> past <code>AGING_DAYS = 180</code> from
+<code>verified or when</code>, else <code>OK</code>.</li>
+<li><strong>Reachability</strong> —
+<code>retrieval_exam.classify_reachability()</code> over
+<code>matched_files()</code>: glob keys via <code>fnmatch</code>,
+directory keys by prefix, exact paths by membership. More than
+<code>broad_fanout = 8</code> hits is <code>BROAD</code>; zero hits with
+no special key is <code>UNREACHABLE</code>.</li>
+<li><strong>Lane simulation</strong> —
+<code>injected_for(probe, results, matcher)</code> ranks eligible
+entries by <code>(len(hits), -date.toordinal(), line_no)</code> and
+truncates at <code>injection_cap = 6</code>.
+<code>run_lane_probe()</code> diffs the injections across probes and
+reports <code>stuck</code> only when the lane was actually
+exercised.</li>
+<li><strong>Forbidden hits</strong> —
+<code>run_forbidden_check()</code>, described above.</li>
+<li><strong>Survey</strong> — <code>survey_repo()</code> builds a
+markdown link graph, BFS from the boot files, and classifies each
+document <code>booted</code> / <code>linked</code> / <code>deep</code> /
+<code>island</code> / <code>orphan</code>. <code>boot_weight()</code>
+reports the bytes and lines every session pays before any work
+happens.</li>
+<li><strong>Tests</strong> — three <code>--selftest</code> entry points,
+47 checks total, all offline against <code>tempfile</code>
+fixtures.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four stores, four schemas, all flat text.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Shape</th>
+<th>Correction model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conclusions (<code>CONCLUSIONS.jsonl</code>)</td>
+<td>One JSON object per line, keyed by repo path</td>
+<td>Append + <code>obsoleted_by</code> / <code>supersedes</code>
+pointers</td>
+</tr>
+<tr>
+<td>Decisions (<code>DECISIONS.md</code>)</td>
+<td>Numbered prose entries, newest last</td>
+<td>A "Superseded by D-n" line added to the old entry</td>
+</tr>
+<tr>
+<td>Corrections (<code>CORRECTION_LEDGER</code>)</td>
+<td>JSONL: <code>date</code>, <code>zone</code>, <code>oracle</code>,
+<code>tier</code>, <code>ref</code>, <code>note</code></td>
+<td>Append-only, never edited</td>
+</tr>
+<tr>
+<td>Search misses (<code>SEARCH_MISSES</code>)</td>
+<td>JSONL: <code>query</code> verbatim, <code>where_searched</code>,
+<code>suggested_home</code></td>
+<td>Append-only, never edited</td>
+</tr>
+<tr>
+<td>Engine (<code>.memory/</code>)</td>
+<td><code>session_state.json</code>, <code>episodes.jsonl</code>,
+<code>facts.json</code></td>
+<td>Working tier rewritten, episodes appended, facts updated in
+place</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Temporal fields.</strong> <code>when</code> (the date the
+conclusion was reached) and <code>verified</code> (the date it was last
+checked). <code>CONCLUSIONS_TEMPLATE.md</code> describes a
+believed-as-of-X filter over them — <em>believed at X iff
+<code>when &lt;= X</code> and (no <code>obsoleted_by</code>, or its date
+is absent or later than X)</em> — which is the shape of a bi-temporal
+query. <strong>It is not bi-temporal validity and no code implements
+it.</strong> <code>when</code> is a record time doing double duty; there
+is no interval during which the fact was true, so "when did we believe
+the wrong value" is answerable and "when was the value actually true" is
+not. The mark is withheld and the near-miss is the interesting part: the
+pointer grammar carries a date precisely so the as-of question becomes a
+one-line filter, and nobody has written the filter.</p>
+<p><strong>Scoping.</strong> The <code>path</code> key is a
+<em>relevance</em> key. <code>injected_for()</code> applies it as a
+read-path predicate against the files a session touched, which is
+mechanically the same operation a scope filter performs, but it answers
+"is this about what I am working on", never "am I allowed to see this".
+There is no user, tenant, project or agent key anywhere in the schema.
+For a single-operator kit that is the right call, and it is why the
+scope mark is a dash rather than a defect.</p>
+<p><strong>Why there is no tombstone.</strong> <code>obsoleted_by</code>
+is keyed on a <em>record</em>, and the project reasons about the
+value-keyed alternative explicitly — and rejects it. From the
+revert-case selftest comment: a value that flips A → B → A ends with a
+current entry restating A, so <em>"tombstoning by value would be wrong
+and the check keys on supersession markers instead."</em> That reasoning
+is correct for a hand-written ledger where nothing re-extracts. It stops
+being correct the moment a model mines facts back into the store, and
+the schema anticipates exactly that case — <code>PROVENANCE.md</code>
+describes a backfill pass mining facts out of git history, and
+<code>CONCLUSIONS_TEMPLATE.md</code> warns that one such backfill
+<em>"swamped the session-verified entries and wrecked lookup
+precision."</em> A re-mining pass that re-derives a superseded fact
+writes a new line with a new date and walks past every
+<code>obsoleted_by</code> in the file. This is the closest thing in the
+corpus to a project that considered the rejected-value tombstone,
+understood the failure it addresses, and declined it for a stated
+reason.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two retrievers, both keyword-exact, both deterministic, neither
+semantic.</p>
+<p><strong>The engine's.</strong> <code>build_context()</code> splits
+the query on whitespace, drops tokens of two characters or fewer,
+intersects against <code>action + " " + outcome</code> lowercased and
+split, puts matches ahead of pure recency, and caps at five episodes.
+The header string tells the model what it is not getting. There is no
+scoring, no fusion, no reranking, no embedding — and the docstring says
+to add semantic recall as a separate layer rather than pretend this one
+has it.</p>
+<p><strong>The modelled one.</strong>
+<code>retrieval_exam.Matcher</code> is not a retriever; it is a model
+<em>of</em> the reader's retriever, and the script is unusually careful
+that the difference stays visible:</p>
+<blockquote>
+<p>"If your real matcher diverges from the model, the numbers describe
+the model and not your system, which is worse than no numbers."</p>
+</blockquote>
+<p>The four config keys (<code>special_paths</code>,
+<code>injection_cap</code>, <code>recency_field</code>,
+<code>broad_fanout</code>) are the whole surface, and
+<code>docs/memory-measurement.md</code> names the cap as the number to
+check first because <em>"it is almost always smaller than people
+remember."</em></p>
+<p><strong>The failure modes this is built around are stated better than
+most systems state their successes.</strong> An <code>UNREACHABLE</code>
+entry is <em>"correct, well written, and silently absent from every
+session that needed it"</em> — worse than no entry, because no entry
+leaves a visible hole. A <code>BROAD</code> key fires constantly and
+therefore <em>"wins the lane on traffic rather than on relevance."</em>
+A <code>stuck</code> lane means a corpus scoring healthy while every
+session receives the same handful of entries. And
+<code>run_use_readout()</code> names dead weight: an entry injected on
+every probe with no <code>use_count</code>, paying boot tokens
+forever.</p>
+<p><strong>Token budgeting</strong> is a first-class concern and
+measured rather than estimated. Survey mode's <code>boot_weight()</code>
+prints what the boot surface costs; the recorded run of this repo
+against itself (2026-08-06, in <code>docs/memory-measurement.md</code>)
+is 117 markdown documents, two booted, <em>"376 lines and 20,052 bytes
+charged to every session."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Nothing extracts.</strong> Every write is a human or a
+session choosing to write, so the entire class of extraction failures —
+hallucinated facts, over-eager summarization, a consolidation pass
+rewriting a claim — does not exist here. Neither does the coverage those
+mechanisms buy: what nobody writes down is not remembered.</p>
+<p><strong>Nothing blocks.</strong> <code>store_fact()</code> and
+<code>log_episode()</code> are file appends and a JSON rewrite, no model
+call on the path. Lag from write to retrievable is a filesystem write.
+No background pass re-reads or rewrites the store; the two sweeps are
+read-only and invoked by hand.</p>
+<p><strong>Append vs update.</strong> Append-only for episodes,
+corrections and search misses. The conclusions ledger is append-only by
+convention with one sanctioned in-place edit (<code>verified</code>).
+The engine's <code>facts.json</code> is the exception and it is a real
+inconsistency: <code>store_fact()</code> overwrites
+<code>facts[category][key]</code> outright, so re-storing a fact
+silently drops the previous value <em>and</em> its verified status, with
+no episode logged. The engine's semantic tier does not implement the
+supersession discipline the rest of the kit is built on.</p>
+<p><strong>Conflict handling.</strong> None automatic. Two contradicting
+lines both live until a human writes the pointer.
+<code>docs/memory-measurement.md</code> calls this out as the fifth
+thing, the one that corrupts every other measurement — an entry whose
+prose says it corrects an earlier one but carries no machine-readable
+pointer <em>"is still live. It still ranks. It still competes for a
+capped injection lane against the very entry that replaced it."</em> The
+prescribed fix is a scan that <strong>proposes</strong> pointers for a
+human to rule on, restricted to the same key with a strictly earlier
+date, <em>"because a wrong supersession pointer silently deletes a live
+fact from every future injection."</em> That scan is described and not
+shipped.</p>
+<p><strong>Filtering hostile input.</strong> The kit's answer is at the
+write boundary, not the read one: <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/SEARCH_MISSES.md"><code>SEARCH_MISSES.md</code></a>
+requires screening the verbatim <code>query</code> field before append,
+because it is the one field that captures whatever the user typed.
+<code>templates/hooks/outbound-pii-screen.sh</code> is the shipped
+screen.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code is the assumed harness and the integration is entirely
+convention-plus-hooks. <code>CLAUDE.md</code> is the boot surface;
+<code>SESSION_STATE.md</code> is read first and refreshed on a spoken
+trigger word (<em>"Refresh it on a trigger word you say out loud, not on
+'keep it updated,' which means never"</em>);
+<code>planning/DECISIONS.md</code> takes rulings the same turn they
+land. <code>templates/commands/</code> holds 27 slash-command
+definitions, <code>templates/hooks/</code> the harness-side scripts.</p>
+<p><strong>Agency over memory is total and unmediated.</strong> The
+agent writes lines directly. Nothing gates a write, nothing reviews one,
+and the only refusal in the entire codebase is
+<code>verify_fact()</code> declining an empty oracle. The heavier
+refusals the whitepaper describes — a done-claim refused while
+obligations dangle, a park requiring exactly one named accountable owner
+— belong to the fold CLI, which is prose here.</p>
+<p><strong>Compaction is handled explicitly</strong>, and it is the
+neatest piece of harness work in the repo.
+<code>pre-compact-save.sh</code> copies the full transcript JSONL to
+<code>$HOME/.claude/compaction-saves</code> before every compaction,
+keeps the twenty newest, and writes a <code>LATEST</code> pointer.
+<code>post-compact-pointer.sh</code> fires on <code>SessionStart</code>
+with matcher <code>compact</code> and tells the fresh context where the
+save landed, closing with the right instruction: <em>"Repo files stay
+the source of truth for anything the summary paraphrases; trust them
+over the summary wherever they disagree."</em> Saves live outside the
+repo on purpose, because a transcript can contain anything the session
+touched.</p>
+<p><strong>Portability.</strong> The <code>BOOT_FILES</code> list in
+<code>retrieval_exam.py</code> covers <code>CLAUDE.md</code>,
+<code>AGENTS.md</code>, <code>GEMINI.md</code>,
+<code>.cursorrules</code> and
+<code>.github/copilot-instructions.md</code>, so survey mode is
+genuinely harness-neutral. The hooks are Claude Code event names and
+would need porting. The whitepaper is precise about how far the
+cross-vendor claim reaches: other vendors' models read and review the
+system, but <em>"No non-Claude model has yet run the full write loop as
+a participating member of the memory, so the portability claim covers
+reading only."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The trust ladder is the design's spine</strong>, and it is
+stated identically in code and prose: human ruling, then
+oracle-verified, then asserted by a capable tier, then asserted by a
+working tier, then unattributed — with only the unattributed rank
+quarantined, on the argument that quarantining most of the fleet's
+memory <em>"would train everyone to ignore the lane, which is worse than
+no lane."</em> That is a judgement about adoption, made explicitly, and
+it is right.</p>
+<p>The <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/templates/ledger-tools/CORRECTION_LEDGER_TEMPLATE.md">correction
+ledger</a> sharpens it into an admission rule with four oracles —
+<code>ci_failure</code>, <code>data_assertion</code>,
+<code>operator_ruling</code>, <code>reverted_pr</code> — and one
+exclusion that several systems in this atlas would benefit from
+adopting:</p>
+<blockquote>
+<p>"Model-vs-model disagreement is never a correction. A stronger model
+'disagreeing' with a cheaper one has no ground truth behind it, and
+neither does a model's own audit pass."</p>
+</blockquote>
+<p><strong>Provenance.</strong> <code>by</code> records the writing
+<em>surface</em>, never the model, on the reasoning that model names
+date fast while a surface name tells you which workflow to distrust when
+a class of entries turns out bad. <code>src</code> and
+<code>evidence</code> are kept distinct — how the entry got in versus
+how a reader checks it — which matters exactly once, when a backfill
+pass mines old facts and the two diverge.</p>
+<p><strong>Prompt-injected false memory</strong> is not defended against
+and the kit does not claim otherwise: the whitepaper lists adversarial
+settings as addressed <em>"only by the trust ladder's quarantine rank
+and the append-only forensic trail"</em> and says they deserve fuller
+treatment. <a
+href="https://github.com/The-825/breadcrumbs/blob/9252553434e01cfb4058df797470c72645eef3fc/docs/memory-threat-model.md"><code>docs/memory-threat-model.md</code></a>
+names four failure modes — unauthorized leakage, stale propagation,
+contradiction persistence, provenance collapse — and maps each to the
+mechanism answering it. It is a documentation pattern, not a mechanism,
+and says so.</p>
+<p><strong>No audit log of memory mutations.</strong>
+<code>episodes.jsonl</code> is append-only and does record one mutation
+(<code>COMPACTION</code>, with the flushed keys), but
+<code>store_fact()</code> and <code>verify_fact()</code> write no event:
+promoting a fact to verified leaves no record beyond the field itself.
+Git history covers the file-based ledgers and is a different mechanism.
+The mark is withheld; the near-miss is that the one append-only event
+stream in the codebase logs the tier that matters least.</p>
+<p><strong>No human review surface in code, by an explicit and
+defensible choice.</strong> The posture throughout is report-only —
+<em>"the auditor never writes"</em>, <em>"propose rather than
+apply"</em>, <em>"Humans move the dials"</em>. The auditor's
+<code>--file-tasks</code> flag prints the issues a tracker integration
+<em>would</em> file and <code>file_tasks()</code> is labelled a stub
+seam. A person reads a report and hand-edits a ledger; nothing records
+the adjudication as an act. That is viewing plus manual editing, not a
+review surface, so the mark is a dash — but the stance behind it (a
+wrong automatic supersession is invisible and permanent, so the default
+must be a human ruling on a cheap proposal) is more carefully argued
+than most systems that do carry the mark.</p>
+<p><strong>Race conditions</strong> are named rather than solved, which
+is the correct outcome for a file-native design and is documented at the
+point of the danger rather than in a footnote.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Grepping the tree for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi</code>, <code>CITATION.cff</code> returns only the
+authority-citation guard, which is unrelated.
+<code>docs/breadcrumbs-whitepaper.md</code> is a 403-line self-published
+essay, not an indexed preprint, and it carries no evaluation.</p>
+<p><strong>What is tested.</strong> Three offline selftests, which I ran
+against the pinned commit on 2026-08-09 with
+<code>python3 &lt;script&gt; --selftest</code>, no dependencies
+installed:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Checks</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory_engine.py</code></td>
+<td>12</td>
+<td>all passed</td>
+</tr>
+<tr>
+<td><code>conclusions_audit.py</code></td>
+<td>8</td>
+<td>all passed</td>
+</tr>
+<tr>
+<td><code>retrieval_exam.py</code></td>
+<td>27</td>
+<td>all passed</td>
+</tr>
+</tbody>
+</table></div>
+<p>I also ran the exam over the committed fixture pair
+(<code>sample_conclusions.jsonl</code> +
+<code>sample_probes.json</code>) against the repo tree, which reproduced
+the documented output exactly: one <code>UNREACHABLE</code> entry, four
+distinct injections across four probes, one dead-weight entry, and the
+one <code>FORBIDDEN</code> hit quoted in section 2.</p>
+<p><strong>The negative assertions are real and specific.</strong> Four
+of the exam's 27 checks assert about material that must <em>not</em>
+surface:</p>
+<ul>
+<li>a superseded entry keyed to a touched file <strong>is</strong> a
+forbidden hit;</li>
+<li>a superseded entry keyed to an untouched file is
+<strong>clean</strong>;</li>
+<li>a superseded entry that is unreachable reports <strong>unexercised,
+never clean</strong>;</li>
+<li>a revert chain (A → B → A) injects the <em>current</em> entry and
+reports <strong>no</strong> hit.</li>
+</ul>
+<p>The third is the one worth copying. Several suites here defend
+against a vacuous pass through fixture design — <a
+href="../omi/">Omi</a> asserts the memory a user reviewed away is absent
+<em>while the other three are present</em>. This one puts the
+distinction in the verdict vocabulary instead, so "the bad thing did not
+happen" and "the bad thing could not have happened" stay separate even
+after somebody edits the fixture.</p>
+<p><strong>Two gaps, and the first is uncomfortable for a kit about
+enforcement.</strong> <code>.github/workflows/ci.yml</code> runs the
+guard tests, the migration-runner tests, the decision-gate tests, the
+PII guard over the tree and the provenance guard over the PR's commits.
+<strong>It does not run any of the three ledger-tool selftests</strong>,
+and it does not run <code>retrieval_exam.py --fail-on-forbidden</code>
+against anything. Grepping the tree for <code>selftest</code> outside
+<code>templates/ledger-tools/</code> finds it only in documentation as a
+command a reader is invited to type. The repository that argues <em>"a
+report that exists only when someone remembers to run it is not a
+safeguard"</em> has 47 memory checks outside its own gate.</p>
+<p>The second: nothing here is measured. The whitepaper's evidence is
+<em>"incidents caught and work not redone, counted by hand"</em>, the
+limitations section says numbers <em>"will follow rather than be
+promised"</em>, and section 4.5's archive audit (216 conversations,
+~1,300 turns) counts re-derivations in the operator's own history rather
+than evaluating the system. That is a fair and unusually plain
+accounting, and it means there is no retrieval-quality result to
+report.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Test that the correction reached the prompt, not just the
+row.</strong> Replay your boot matcher against a handful of realistic
+session-start conditions and assert that no entry you have marked
+superseded wins a slot. This is a few dozen lines against a store you
+already have, and it catches the failure where the correction landed,
+the row is right, and the model still answers from the old value.</li>
+<li><strong>Keep "could not run" separate from "passed."</strong>
+<code>UNEXERCISED</code> for a lane no probe touched,
+<code>unexercised</code> for a forbidden check with nothing reachable to
+catch. A negative suite that reports green when it had no opportunity to
+fail is worse than none, because it retires the question.</li>
+<li><strong>Refuse <code>verified</code> without a named oracle, in the
+setter.</strong> Twelve lines, raises rather than writes, and it
+converts "the model said so" from a default into something a caller has
+to lie about deliberately.</li>
+<li><strong>Measure reachability, not just truth.</strong> A staleness
+sweep and a reachability sweep catch disjoint failures; an entry can be
+perfectly true and structurally invisible, and only the second sweep can
+tell you.</li>
+<li><strong>Ratchet reachability in CI, and watch the subtle
+regression.</strong> More unreachable entries is obvious. <em>Fewer
+precise entries at the same total</em> is the one people miss, because
+re-keying a specific entry to something broad reads as tidying up and is
+a downgrade.</li>
+<li><strong>State the retrieval limit inside the injected
+block.</strong>
+<code>=== MEMORY (retrieval: recency + exact keyword; no paraphrase match) ===</code>
+costs one line and tells the model what it is not being shown.</li>
+<li><strong>Exclude model-vs-model disagreement from your correction
+signal.</strong> A self-improvement loop trained on opinion optimizes a
+proxy.</li>
+<li><strong>Record the writing surface, not the model.</strong> When a
+class of entries turns out unreliable you need to know which workflow
+produced them.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not let a "should" in your schema doc stand in for a
+filter in your matcher.</strong> <code>CONCLUSIONS_TEMPLATE.md</code>
+tells adopters to exclude superseded entries from current knowledge. The
+exclusion exists in exactly one place at this commit — the check that
+detects its absence.</li>
+<li><strong>Do not ship a memory tool outside the gate that guards
+everything else.</strong> If the selftests are not in CI, they are
+documentation.</li>
+<li><strong>Do not model a component you cannot read without labelling
+every number it produces.</strong> The exam does this correctly and it
+is the harder discipline: a configured model of someone else's matcher
+will be wrong for some readers, and a wrong number that looks like
+evidence is worse than no number.</li>
+<li><strong>Do not describe a production system in a public kit without
+saying, at the top of each essay, which parts ship.</strong> A reader
+who arrives via <code>floating-memory.md</code> will look for a
+projection script and a reaper and find neither.</li>
+<li><strong>Do not let one tier escape the discipline the others
+follow.</strong> The engine's <code>store_fact()</code> overwrites in
+place inside a kit whose central rule is that nothing is edited in
+place.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for <strong>one person, or a small team, running many agent
+sessions against one repository they cannot afford to break</strong>,
+who is willing to treat memory as a documentation and CI problem rather
+than an infrastructure one. If that describes you, the cost is genuinely
+an afternoon and the ceiling is real: exact keyword matching over a
+hand-written ledger, no semantic recall, no scope boundary, and every
+write depending on someone deciding to write.</p>
+<p><strong>Walk away if</strong> you need multi-tenant isolation, if
+your memories are extracted from conversation rather than authored, if
+the corpus will exceed what a person can curate by hand, or if you were
+hoping to install the fleet architecture the whitepaper describes — that
+system is not here, and the kit is what one operator found portable out
+of it.</p>
+<p><strong>Take the exam even if you take nothing else.</strong>
+<code>retrieval_exam.py --survey</code> runs against any repository,
+needs no adoption, and answers a question most teams have never asked
+about the memory they already have.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the production system the docs describe exist as code anywhere,
+and is the fold CLI, the projection script or the reaper intended to
+ship? The extraction-boundary discipline in
+<code>docs/memory-threat-model.md</code> suggests parts of it are
+deliberately withheld, which is a legitimate answer, but the repo does
+not say which parts.</li>
+<li>Was leaving the three ledger-tool selftests out of
+<code>.github/workflows/ci.yml</code> a decision or an omission?
+<code>planning/DECISIONS.md</code> runs to D-5 at this commit and does
+not cover it.</li>
+<li>Has <code>--fail-on-forbidden</code> ever been run against a real
+ledger, and did it find anything? The only ledger in the tree is a
+synthetic fixture built to produce exactly one hit.</li>
+<li>Does the operator's own conclusions store carry
+<code>use_count</code> stamps in practice? The readout exists; the
+discipline that feeds it is admitted to be leaky, and the repo keeps no
+ledger of its own to check against.</li>
+<li>What does the boot matcher in the production system actually do, and
+how far does the exam's four-key model diverge from it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory tools</strong></p>
+<ul>
+<li><code>templates/ledger-tools/memory_engine.py</code> — three-tier
+engine, asserted/verified, compaction</li>
+<li><code>templates/ledger-tools/conclusions_audit.py</code> — STALE /
+AGING / SPECIAL / OK plus chain resolution</li>
+<li><code>templates/ledger-tools/retrieval_exam.py</code> —
+reachability, lane probe, use readout, forbidden hits, survey mode</li>
+<li><code>templates/ledger-tools/capture_nudge.py</code> —
+UserPromptSubmit capture nudge</li>
+</ul>
+<p><strong>Schemas</strong></p>
+<ul>
+<li><code>templates/CONCLUSIONS_TEMPLATE.md</code> — the line format,
+dated supersession grammar, curation rules</li>
+<li><code>templates/ledger-tools/PROVENANCE.md</code> — <code>src</code>
+/ <code>verified</code> / <code>by</code></li>
+<li><code>templates/ledger-tools/CORRECTION_LEDGER_TEMPLATE.md</code> —
+the four-oracle admission rule</li>
+<li><code>templates/ledger-tools/SEARCH_MISSES.md</code> — the miss
+ledger</li>
+<li><code>templates/AUTHORITY_LEDGER_TEMPLATE.md</code>,
+<code>templates/authority_ledger.jsonl</code> — standing grants</li>
+</ul>
+<p><strong>Fixtures</strong></p>
+<ul>
+<li><code>templates/ledger-tools/sample_conclusions.jsonl</code> — six
+lines, every verdict</li>
+<li><code>templates/ledger-tools/sample_probes.json</code> — four
+session-start conditions</li>
+</ul>
+<p><strong>Harness</strong></p>
+<ul>
+<li><code>templates/hooks/pre-compact-save.sh</code>,
+<code>templates/hooks/post-compact-pointer.sh</code></li>
+<li><code>templates/hooks/outbound-pii-screen.sh</code></li>
+<li><code>templates/commands/</code> — 27 slash commands, including
+<code>recall.md</code> and <code>checkpoint.md</code></li>
+</ul>
+<p><strong>Reasoning</strong></p>
+<ul>
+<li><code>docs/floating-memory.md</code> — the fleet architecture, prose
+only</li>
+<li><code>docs/memory-measurement.md</code> — the four instruments and
+their limits</li>
+<li><code>docs/memory-threat-model.md</code> — four failure modes,
+mapped</li>
+<li><code>docs/breadcrumbs-whitepaper.md</code> — five mechanisms, the
+case study, the limitations</li>
+</ul>
+<p><strong>Repo-level</strong></p>
+<ul>
+<li><code>CLAUDE.md</code>, <code>SESSION_STATE.md</code>,
+<code>planning/DECISIONS.md</code> — the kit run on itself</li>
+<li><code>.github/workflows/ci.yml</code> — what is actually gated</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-09</strong> — <a
+href="https://github.com/The-825/breadcrumbs/commit/9252553434e01cfb4058df797470c72645eef3fc"><code class="commit-id" title="9252553434e01cfb4058df797470c72645eef3fc">92525534…</code></a>
+— first reading, at a commit dated 8 August 2026, 26 commits into the
+repository's life. Screened before reading: 0 auto-run surfaces, 0
+build-time exec, 0 unpinned dependency surfaces (there is no package
+manifest of any kind), 1 <code>AGENT</code> file
+(<code>CLAUDE.md</code>, read as data). Nothing was installed. Three
+<code>--selftest</code> runs and one fixture run of
+<code>retrieval_exam.py</code> were executed directly with the system
+<code>python3</code>, which is safe here because every script is
+stdlib-only and writes solely to <code>tempfile</code> directories.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
