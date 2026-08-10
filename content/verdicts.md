@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 251 reports.**
+**This page covers all 252 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["251 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["252 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2177,3 +2177,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, v0.2.3, 7,081 lines of TypeScript over SQLite with FTS5 and sqlite-vec and local MiniLM embeddings, in a repository created 10 August 2026 and read the same day at its seventeenth commit. Better structured than most first-week code — versioned idempotent schema, backup before migration, 21 test files. Also carries a second unwired copy of its own tool layer, and a schema declaring L1 `atoms` and L2 `scenarios` tables that nothing writes, because the only `PipelineStage` implementation is `NoopPipeline`.
 - Study when: you want a compact, honest local-first MCP memory server to read end to end — or you want the clearest instance in this atlas of an integration test that passes because its harness reimplements the caller it was meant to exercise.
 - Do not copy when: one machine serves several repositories, which is the exact case the session key exists for and the exact case its read-path default breaks; or when you need distillation, trust state or a correction that survives.
+
+### [`windie-sandbox`](../systems/windie-sandbox/)
+
+- Best idea: the conversation is one shared message tree rather than a path per branch. Each message is persisted once with a parent link, so a fork costs one insert at any depth, shared ancestors have one identity, and there are no duplicated paths for the database to keep synchronised. `docs/conversation-tree-and-paths.md` argues it against the alternative it rejected, which is more than most design docs do.
+- Biggest risk: `replace_message` is `UPDATE messages SET content = ?` with no version row, no supersession pointer and no mutation event — and because ancestors are shared, an edit rewrites the context of every branch below it. The README promises editing *and* branching "without losing the original"; only branching keeps it.
+- Most reusable component: `ensure_message_mutation_allowed`, which refuses to modify a message an active session depends on and names both the message and the session in the error. Beside it, deleting a conversation's compaction checkpoints inside the same transaction as the edit that invalidates them — a derived summary that cannot outlive its source.
+- Maturity impression: MIT, Rust, 40,832 lines across 134 files, 378 commits since 2 July 2026, and 414 test functions with 105 in the store suite alone — 3,319 test lines against 4,648 lines of store code. The schema-version tests reject newer, older *and* unversioned databases. `save_compaction` is marked dead code with a docstring saying nothing writes compactions yet, which is the honest way to ship an unbuilt primitive. Three submodules, one tracking a `dev` branch rather than a commit.
+- Study when: you are building a branching conversation store and want the shared-node design done properly, or you want to see memory mutation that refuses to race an in-flight reader.
+- Do not copy when: memory has to be defensible or recoverable. Nothing records provenance, nothing records that a message changed, and an edit is a one-way door in a store that already knows how to keep alternatives.

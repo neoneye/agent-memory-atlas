@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 251 reports.</strong></p>
+<p><strong>This page covers all 252 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;251 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;252 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6668,6 +6668,43 @@ caller it was meant to exercise.</li>
 the exact case the session key exists for and the exact case its
 read-path default breaks; or when you need distillation, trust state or
 a correction that survives.</li>
+</ul>
+<h3 id="windie-sandbox"><a
+href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></h3>
+<ul>
+<li>Best idea: the conversation is one shared message tree rather than a
+path per branch. Each message is persisted once with a parent link, so a
+fork costs one insert at any depth, shared ancestors have one identity,
+and there are no duplicated paths for the database to keep synchronised.
+<code>docs/conversation-tree-and-paths.md</code> argues it against the
+alternative it rejected, which is more than most design docs do.</li>
+<li>Biggest risk: <code>replace_message</code> is
+<code>UPDATE messages SET content = ?</code> with no version row, no
+supersession pointer and no mutation event — and because ancestors are
+shared, an edit rewrites the context of every branch below it. The
+README promises editing <em>and</em> branching "without losing the
+original"; only branching keeps it.</li>
+<li>Most reusable component:
+<code>ensure_message_mutation_allowed</code>, which refuses to modify a
+message an active session depends on and names both the message and the
+session in the error. Beside it, deleting a conversation's compaction
+checkpoints inside the same transaction as the edit that invalidates
+them — a derived summary that cannot outlive its source.</li>
+<li>Maturity impression: MIT, Rust, 40,832 lines across 134 files, 378
+commits since 2 July 2026, and 414 test functions with 105 in the store
+suite alone — 3,319 test lines against 4,648 lines of store code. The
+schema-version tests reject newer, older <em>and</em> unversioned
+databases. <code>save_compaction</code> is marked dead code with a
+docstring saying nothing writes compactions yet, which is the honest way
+to ship an unbuilt primitive. Three submodules, one tracking a
+<code>dev</code> branch rather than a commit.</li>
+<li>Study when: you are building a branching conversation store and want
+the shared-node design done properly, or you want to see memory mutation
+that refuses to race an in-flight reader.</li>
+<li>Do not copy when: memory has to be defensible or recoverable.
+Nothing records provenance, nothing records that a message changed, and
+an edit is a one-way door in a store that already knows how to keep
+alternatives.</li>
 </ul>
         </article>
       </div>

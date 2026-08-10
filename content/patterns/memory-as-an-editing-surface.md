@@ -157,6 +157,32 @@ at from the direction of having no database at all, and it is the argument that
 editability and negative memory are separate properties rather than two views of
 one.
 
+**[Windie Sandbox](../../systems/windie-sandbox/) is the pattern taken as far as
+it goes, and it shows the property this page has not been asking for: whether the
+editor keeps what it replaced.** The whole product is an editing surface — the
+conversation is a SQLite tree of messages addressed by id, and a person can
+replace a message's text, splice one out, truncate a subtree, or fork a branch at
+any node. The model has no say in any of it. Two mechanisms here are worth
+lifting on their own: a mutation is *refused* while a `Running` or
+`WaitingForApproval` session depends on that message, with the error naming both;
+and any derived summary covering the edited history is deleted in the same
+transaction as the edit, so a stale summary cannot outlive its source.
+
+Then `replace_message` is `UPDATE messages SET content = ?`. The prior text is
+gone — no version row, no supersession pointer, no mutation event, and the
+message's only timestamp still says when it was *first* written. Forking, in the
+same store, is perfectly lossless: a branch is one insert and every ancestor
+stays put. So the system has a lossless history operation and a destructive one
+side by side, and the destructive one is the one called "edit".
+
+That splits this pattern's central question in two. Every system above is judged
+on whether a person *can* change machine-written memory; none of them is judged
+on whether the previous value is recoverable afterwards. Those are different
+guarantees, and a store that already keeps a tree of alternatives has no
+structural excuse for lacking the second — writing the edit as a sibling and
+moving the head would cost one insert. Editability, negative memory, and
+**recoverable correction** are three properties, not one.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.
@@ -169,6 +195,11 @@ one.
 - Assert every editor verb is reachable from the shipped UI. A test that the
   function exists is not the same as a person being able to reach it — which is
   exactly the gap in Soul of Waifu.
+- Edit a unit, then assert the previous value is still readable from somewhere —
+  a version row, a mutation event, a sibling node. If nothing answers, the editor
+  is a one-way door, and the user who wanted to compare two phrasings has lost
+  the first one. Windie Sandbox passes every other test on this list and has no
+  answer to this one.
 
 ## Related
 
