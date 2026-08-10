@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 250 reports.</strong></p>
+<p><strong>This page covers all 251 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;250 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;251 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6626,6 +6626,48 @@ provenance, no scope key and no deletion are all defensible for indexing
 a video file that still exists, and every one of them is a property you
 would have to remove before remembering anything about a person, a
 project or a codebase.</li>
+</ul>
+<h3 id="tdai-memory-mcp"><a
+href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a></h3>
+<ul>
+<li>Best idea: the secret redactor runs on the write path. Eleven
+patterns and a high-entropy scan applied before the row is inserted, so
+the credential is absent from the table, the FTS5 index, the vector
+table, the JSON export and the pre-migration backup. A redactor on the
+read path leaves all five holding it.</li>
+<li>Biggest risk: <code>handleRecall</code> reads
+<code>args.session_key as string | undefined</code> with no fallback
+while <code>handleCapture</code> reads
+<code>args.session_key ?? defaultSessionKey()</code>, and the storage
+layer treats <code>undefined</code> as no <code>WHERE</code> clause
+rather than as the current project. The tool schema shown to the model
+says the default is <code>hash(cwd)</code>. A recall that omits the
+parameter searches every project on the machine, silently, and the
+symptom is extra results rather than an error.</li>
+<li>Most reusable component: the confirm gate on <code>forget</code>,
+which refuses without <code>confirm: true</code> and returns <em>"Set
+confirm to true to execute the deletion. The tool did not delete
+anything."</em> — state and instruction in one string, so a
+mis-generated call is a no-op instead of a loss. The deletion it then
+performs reaches captures, atoms, scenarios, the vector table and the
+FTS index.</li>
+<li>Maturity impression: MIT, v0.2.3, 7,081 lines of TypeScript over
+SQLite with FTS5 and sqlite-vec and local MiniLM embeddings, in a
+repository created 10 August 2026 and read the same day at its
+seventeenth commit. Better structured than most first-week code —
+versioned idempotent schema, backup before migration, 21 test files.
+Also carries a second unwired copy of its own tool layer, and a schema
+declaring L1 <code>atoms</code> and L2 <code>scenarios</code> tables
+that nothing writes, because the only <code>PipelineStage</code>
+implementation is <code>NoopPipeline</code>.</li>
+<li>Study when: you want a compact, honest local-first MCP memory server
+to read end to end — or you want the clearest instance in this atlas of
+an integration test that passes because its harness reimplements the
+caller it was meant to exercise.</li>
+<li>Do not copy when: one machine serves several repositories, which is
+the exact case the session key exists for and the exact case its
+read-path default breaks; or when you need distillation, trust state or
+a correction that survives.</li>
 </ul>
         </article>
       </div>

@@ -534,6 +534,41 @@ development, the transferable rule is that it must be chosen explicitly
 and must say so unconditionally at startup. SRE's does warn, in a branch
 that re-tests a condition the line above it just satisfied, so the
 warning never prints.</p>
+<p><strong><a href="../../systems/tdai-memory-mcp/">tdai-memory-mcp</a>
+is the shortest version of this page's whole argument: one missing
+<code>??</code>.</strong> Everything the pattern asks for is present.
+<code>session_key</code> is a column, it is indexed with
+<code>created_at</code>, it is stamped on every write from
+<code>sha256(cwd)</code>, and both retrieval arms append
+<code>AND c.session_key = ?</code>. There is even a committed isolation
+test — <em>"isolates memory by session key"</em> — that writes to two
+projects and asserts each recall returns only its own.</p>
+<p>The write handler reads
+<code>args.session_key ?? defaultSessionKey()</code>. The read handler,
+in the same file, reads
+<code>args.session_key as string | undefined</code>. The storage layer
+guards its filter with <code>if (sessionKey)</code>, so
+<code>undefined</code> means <em>no <code>WHERE</code> clause</em>
+rather than <em>this project</em> — and the tool schema shown to the
+model says the default is <code>hash(cwd)</code>. A <code>recall</code>
+that omits the parameter, which is the obvious call for a model handed
+an optional argument with a documented default, searches every project
+on the machine.</p>
+<p>Two things generalise. <strong>A default that decides which data a
+query can see belongs below both handlers</strong>, in the storage layer
+or in one helper both call; typed twice at the edge, one copy gets
+forgotten, and the copy that gets forgotten is the read. And
+<strong>absence of a scope argument should never resolve to
+"everything"</strong> — the widest possible reading of a parameter the
+caller simply did not type is the one interpretation no caller
+intends.</p>
+<p>Why the isolation test does not save it is covered under <a
+href="#tests-to-require">tests to require</a> below, and it is the part
+worth carrying away: the test defines its own <code>recall</code> helper
+whose body is
+<code>sessionKey: args.sessionKey ?? "test-session"</code>. It supplies
+the default the shipped handler omits, so it exercises the branch that
+works and never the branch that runs.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
@@ -548,6 +583,22 @@ in the answer. Its own example is the right shape — <em>"My son's name
 is Timmy. Please store this for future reference."</em> followed by
 <em>"What was the name of the son of the last customer you
 helped?"</em>.</p>
+<p><strong>Whatever generates the case, it has to enter through the door
+production uses.</strong> <a
+href="../../systems/tdai-memory-mcp/">tdai-memory-mcp</a> has the
+two-project test this section asks for and it passes while the shipped
+read path is unscoped, because the test file defines its own
+<code>recall</code> helper rather than calling the server's handler, and
+that helper reads
+<code>sessionKey: args.sessionKey ?? "test-session"</code> — supplying
+the default the real handler omits. The suite proves
+<code>SQLiteBackend.search</code> filters correctly when given a key,
+which was never in doubt, and never reaches the branch where the key is
+<code>undefined</code>. A harness that reimplements its caller certifies
+the storage layer and takes the wiring on faith, and the wiring is where
+a scope bug lives. That is also why the red-team plugin above is worth
+more than its convenience: it drives a <em>running system</em> from the
+outside, so there is no harness to diverge.</p>
 <p>Two systems in this atlas wrote that test by hand and earn a mark for
 it; <a href="../../systems/vllm-semantic-router/">vLLM Semantic
 Router</a>'s version stores a PIN and a password for two users and

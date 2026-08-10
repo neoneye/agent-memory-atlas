@@ -98,7 +98,7 @@ trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>250 memory systems with publicly readable source, each read at a
+<p>251 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. Not all 165 are open source — see <a
 href="#what-the-licences-actually-say">what the licences actually
@@ -106,7 +106,7 @@ say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 12
-systems of 250 carry a rejected-value tombstone — a record keyed on the
+systems of 251 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -178,7 +178,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>250 reports across 249 repositories</strong>:
+<strong>251 reports across 250 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -288,7 +288,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twelve tombstones, fifty-five negative-eval suites — are counts <em>over
+twelve tombstones, fifty-six negative-eval suites — are counts <em>over
 inspectable code</em>, and a closed system could hold any of these
 mechanisms without this method ever knowing. And a mechanism's absence
 here is weaker evidence about the field than its presence: finding a
@@ -317,7 +317,7 @@ discard the source cannot.</li>
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
 A scope <em>key applied as a filter on the read path</em> is what 139 of
-250 systems here have, and is what the mark means. A scope
+251 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -336,7 +336,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Two hundred and fifty systems do not fall into one hundred and
+<p>Two hundred and fifty-one systems do not fall into one hundred and
 sixty-six categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -1297,7 +1297,8 @@ href="../systems/serena/"><code>serena</code></a>, <a
 href="../systems/claude-code-memory-setup/"><code>claude-code-memory-setup</code></a>,
 <a href="../systems/token-optimizer/"><code>token-optimizer</code></a>,
 <a href="../systems/klypix-mcp/"><code>klypix-mcp</code></a>, <a
-href="../systems/agent-mesh/"><code>agent-mesh</code></a></p>
+href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
+href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a></p>
 <p>Durable local state for a developer workflow: hooks, MCP, project
 scopes, exact search. <strong>Engram</strong> is the small no-extraction
 baseline over SQLite and FTS. <strong>Palazzo</strong> is MemPalace's
@@ -2792,7 +2793,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 250 systems by the seven mechanisms judged against strict
+filters all 251 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -8882,6 +8883,43 @@ ranker; optional dependencies; source diversity</td>
 backends; benchmark invalid and its harness broken</td>
 </tr>
 <tr>
+<td><code>tdai-memory-mcp</code></td>
+<td>An L0 capture row — id, session key, agent id, type, content,
+content hash, tags, created_at, metadata. The L1 atom and L2 scenario
+tables exist and are never written</td>
+<td>One SQLite file with FTS5 and sqlite-vec virtual tables kept in sync
+by triggers; embeddings are 384-dim all-MiniLM-L6-v2 computed
+locally</td>
+<td>Hybrid — FTS5 BM25 and vector distance fused by reciprocal rank
+fusion at k=60, with keyword-only and vector-only modes selectable per
+call</td>
+<td>Synchronous through the <code>capture</code> tool, redacted before
+storage, deduplicated by content hash. The distillation pipeline is a
+documented no-op</td>
+<td><code>forget</code> by id or filter, refused unless
+<code>confirm</code> is true, then a hard DELETE across captures, atoms,
+scenarios and the vector table. Nothing records that a value was
+rejected</td>
+<td><code>session_key</code> defaulting to <code>sha256(cwd)</code> and
+<code>agent_id</code> from detection, both indexed and both applied as
+filters — when the caller supplies them. The shipped recall handler
+supplies neither</td>
+<td>Six MCP tools — recall, capture, search, forget, handoff, adr — plus
+SessionStart and Stop hooks it writes into Claude Code and Devin CLI
+config</td>
+<td>None. No consolidation, extraction or maintenance pass exists; the
+only pipeline stage implemented is <code>NoopPipeline</code></td>
+<td>An <code>atoms.confidence</code> column that nothing populates. No
+state, no provenance beyond the capturing agent id</td>
+<td>Secret redaction before storage with eleven patterns and an entropy
+detector; deletion gated on an explicit confirm; a committed
+cross-project isolation test; a schema migration with a backup</td>
+<td>The recall handler passes <code>session_key</code> through as
+undefined, so the documented per-project default is an unfiltered search
+across every project on the machine — and the test that would catch it
+calls a helper that applies the default itself</td>
+</tr>
+<tr>
 <td><code>telemem</code></td>
 <td>A mem0-shaped memory scoped to a character, agent or run, plus
 video-caption memories</td>
@@ -9590,7 +9628,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>12 of 250:</em> <a
+<p><em>12 of 251:</em> <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -9606,7 +9644,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>48 of 250:</em> <a
+<p><em>48 of 251:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -9659,7 +9697,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>28 of 250:</em> <a
+<p><em>28 of 251:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
@@ -9693,7 +9731,7 @@ href="../systems/vestige/"><code>vestige</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>139 of 250:</em> <a
+<p><em>139 of 251:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -9838,7 +9876,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>70 of 250:</em> <a
+<p><em>70 of 251:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
@@ -9912,7 +9950,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>61 of 250:</em> <a
+<p><em>61 of 251:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
@@ -9977,7 +10015,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>55 of 250:</em> <a
+<p><em>56 of 251:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -10028,6 +10066,7 @@ href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
 <a
 href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a>,
 <a href="../systems/smythos-sre/"><code>smythos-sre</code></a>, <a
+href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a>, <a
 href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
 href="../systems/truememory/"><code>truememory</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -10051,12 +10090,12 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Fifty-five
-repositories of two hundred and fifty assert that particular material
-must <em>not</em> be retrieved — the assertion every scope, deletion and
-correction claim in this document ultimately rests on. Read together
-rather than one at a time, they split cleanly in two, and the split says
-more than the count.</p>
+<p><strong>Negative evidence is almost never tested.</strong> Fifty-six
+repositories of two hundred and fifty-one assert that particular
+material must <em>not</em> be retrieved — the assertion every scope,
+deletion and correction claim in this document ultimately rests on. Read
+together rather than one at a time, they split cleanly in two, and the
+split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -10124,11 +10163,11 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone.
-Twelve of two hundred and fifty is the real figure for the second kind,
-and the two newest are the cheap version of it: a <em>superseded</em>
-value is easy to assert about, because the row is still there to filter
-on. The expensive assertion is that a value the system destroyed does
-not come back.</p>
+Twelve of two hundred and fifty-one is the real figure for the second
+kind, and the two newest are the cheap version of it: a
+<em>superseded</em> value is easy to assert about, because the row is
+still there to filter on. The expensive assertion is that a value the
+system destroyed does not come back.</p>
 <p>Two further things the joint reading shows. The <strong>positive
 control</strong> — asserting that the denial is targeted rather than an
 empty result — appears in Aukora and EverOS and is absent from the rest,
@@ -13659,8 +13698,8 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across two hundred
-and fifty systems, almost none can explain why they are shaped the way
-they are.</p>
+and fifty-one systems, almost none can explain why they are shaped the
+way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
 is not expressible, and scopes deletes the same way. This is stronger
@@ -14138,6 +14177,8 @@ href="../systems/engram-alpha/"><code>engram-alpha</code></a></li>
 <li><a href="../systems/smythos-sre/"><code>smythos-sre</code></a></li>
 <li><a
 href="../systems/qwen-mm-plugins/"><code>qwen-mm-plugins</code></a></li>
+<li><a
+href="../systems/tdai-memory-mcp/"><code>tdai-memory-mcp</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -15121,6 +15162,13 @@ href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72
 — the <code>video-memory</code> capability only; the other seven
 capabilities are tool bundles and were not traced. Read only: the
 dependency surface changed the same day, so nothing was installed</li>
+<li><a
+href="https://github.com/tinhien11/tdai-memory-mcp">tinhien11/tdai-memory-mcp</a>
+at <a
+href="https://github.com/tinhien11/tdai-memory-mcp/commit/281180e76bdf927ecebad33b23779328aec545ed"><code class="commit-id" title="281180e76bdf927ecebad33b23779328aec545ed">281180e7…</code></a>
+— read only, at the seventeenth commit of a repository created the same
+day; both manifests were inside the cooldown, so nothing was
+installed</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>
@@ -15451,7 +15499,7 @@ guard-is-not-a-store shape and the operates-rather-than-believes shape
 at once, and naming <code>memory.json</code> as an example artifact does
 not change it. Recorded rather than dropped for two reasons. Its premise
 is a failure this atlas asks about in every report and finds answered in
-<strong>four</strong> of two hundred and fifty — <a
+<strong>four</strong> of two hundred and fifty-one — <a
 href="../systems/mastra-observational-memory/">Mastra</a> prevents lost
 updates with per-scope locks, <a href="../systems/logseq/">Logseq</a> is
 last-write-wins, the <a href="../systems/pydantic-ai-harness/">Pydantic

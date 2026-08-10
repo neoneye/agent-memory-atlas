@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 250 reports.**
+**This page covers all 251 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["250 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["251 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2168,3 +2168,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 5,611 lines of Python for this capability inside a suite created 29 July 2026, with 21 test files across the repository. The build pipeline has 26 test functions and is properly resumable — a JSONL checkpoint per macro event, a liveness check on the producer PID, a done marker. The query surface has two tests: the server lists its tools, and it degrades gracefully with no memory. Hybrid fusion, RRF, the dimension check and all nine tools are untested, and no retrieval measurement is committed anywhere.
 - Study when: an agent must answer questions about hours of recorded media it cannot hold in context, and you want to see a hierarchy with a real entry point at every level plus a skill that names the threshold below which it is the wrong tool.
 - Do not copy when: memory accumulates over time. Build-once, no provenance, no scope key and no deletion are all defensible for indexing a video file that still exists, and every one of them is a property you would have to remove before remembering anything about a person, a project or a codebase.
+
+### [`tdai-memory-mcp`](../systems/tdai-memory-mcp/)
+
+- Best idea: the secret redactor runs on the write path. Eleven patterns and a high-entropy scan applied before the row is inserted, so the credential is absent from the table, the FTS5 index, the vector table, the JSON export and the pre-migration backup. A redactor on the read path leaves all five holding it.
+- Biggest risk: `handleRecall` reads `args.session_key as string | undefined` with no fallback while `handleCapture` reads `args.session_key ?? defaultSessionKey()`, and the storage layer treats `undefined` as no `WHERE` clause rather than as the current project. The tool schema shown to the model says the default is `hash(cwd)`. A recall that omits the parameter searches every project on the machine, silently, and the symptom is extra results rather than an error.
+- Most reusable component: the confirm gate on `forget`, which refuses without `confirm: true` and returns *"Set confirm to true to execute the deletion. The tool did not delete anything."* — state and instruction in one string, so a mis-generated call is a no-op instead of a loss. The deletion it then performs reaches captures, atoms, scenarios, the vector table and the FTS index.
+- Maturity impression: MIT, v0.2.3, 7,081 lines of TypeScript over SQLite with FTS5 and sqlite-vec and local MiniLM embeddings, in a repository created 10 August 2026 and read the same day at its seventeenth commit. Better structured than most first-week code — versioned idempotent schema, backup before migration, 21 test files. Also carries a second unwired copy of its own tool layer, and a schema declaring L1 `atoms` and L2 `scenarios` tables that nothing writes, because the only `PipelineStage` implementation is `NoopPipeline`.
+- Study when: you want a compact, honest local-first MCP memory server to read end to end — or you want the clearest instance in this atlas of an integration test that passes because its harness reimplements the caller it was meant to exercise.
+- Do not copy when: one machine serves several repositories, which is the exact case the session key exists for and the exact case its read-path default breaks; or when you need distillation, trust state or a correction that survives.
