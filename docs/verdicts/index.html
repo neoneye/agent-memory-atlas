@@ -1144,15 +1144,21 @@ version control either way.</li>
 <li>Biggest risk: three forget paths and no value-level tombstone, in a
 system whose extraction re-reads the sessions that produced the
 memory.</li>
-<li>Most reusable component: the extraction cursor with a processed
-offset, and recording <code>noop</code> as an outcome so "ran and
-changed nothing" is distinguishable from "did not run".</li>
+<li>Most reusable component: the <code>pinned/</code> directory — a path
+the consolidation and extraction agents are refused by the permission
+layer, not merely told to skip in their prompts, with literal and
+symlink-resolved containment. In a design with three forget paths and no
+tombstone, it is the one place a person's memory outranks the background
+pass. The extraction cursor with a processed offset and the
+<code>noop</code> outcome status are the close seconds.</li>
 <li>Maturity impression: ~9,000 lines with a test beside nearly every
 module, and comments that read as scar tissue — per-operation kill
 signals for git, <code>execFile</code> with no shell.</li>
 <li>Study when: a team wants shared agent memory and does not want to
 stand up a service to get it.</li>
-<li>Do not copy when: corrections must survive a background pass.</li>
+<li>Do not copy when: corrections must survive a background pass —
+unless the correction can live in <code>pinned/</code>, which is the
+narrow case this design does answer.</li>
 </ul>
 <h3 id="opencode"><a
 href="../systems/opencode/"><code>opencode</code></a></h3>

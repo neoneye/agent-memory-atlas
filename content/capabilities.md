@@ -247,6 +247,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Pinecone | 1 | |  |  |
 | DuckDB | 1 | |  |  |
 
-Counted across 249 reports, each of which may name more than one store. 12 of 249 rows were read off the code at the pinned commit; the other 237 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`.
+Counted across 249 reports, each of which may name more than one store. 13 of 249 rows were read off the code at the pinned commit; the other 236 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`.
 
 <!-- END GENERATED STACK -->

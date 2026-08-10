@@ -521,10 +521,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`qwen-code`](../systems/qwen-code/)
 - Best idea: a team tier committed to the repository, with secret-bearing writes to it refused unconditionally — the guard ignores the feature flag that governs the tier, because the directory is under version control either way.
 - Biggest risk: three forget paths and no value-level tombstone, in a system whose extraction re-reads the sessions that produced the memory.
-- Most reusable component: the extraction cursor with a processed offset, and recording `noop` as an outcome so "ran and changed nothing" is distinguishable from "did not run".
+- Most reusable component: the `pinned/` directory — a path the consolidation and extraction agents are refused by the permission layer, not merely told to skip in their prompts, with literal and symlink-resolved containment. In a design with three forget paths and no tombstone, it is the one place a person's memory outranks the background pass. The extraction cursor with a processed offset and the `noop` outcome status are the close seconds.
 - Maturity impression: ~9,000 lines with a test beside nearly every module, and comments that read as scar tissue — per-operation kill signals for git, `execFile` with no shell.
 - Study when: a team wants shared agent memory and does not want to stand up a service to get it.
-- Do not copy when: corrections must survive a background pass.
+- Do not copy when: corrections must survive a background pass — unless the correction can live in `pinned/`, which is the narrow case this design does answer.
 
 ### [`opencode`](../systems/opencode/)
 - Best idea: a compaction hook that lets a plugin append context as well as replace the prompt — the moment a memory system most needs, and one few hosts expose.
