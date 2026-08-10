@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A hash-chained event log whose
+decisions carry tiers, quorum, supersession and executable verification
+commands — with both shipped write paths hardcoding the verification
+list empty, and a grounding packet that never reads the decision store
+at all.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Mesh — Agent Memory Atlas">
+    <meta property="og:description" content="A hash-chained event log
+whose decisions carry tiers, quorum, supersession and executable
+verification commands — with both shipped write paths hardcoding the
+verification list empty, and a grounding packet that never reads the
+decision store at all.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent
+Mesh — Agent Memory Atlas">
+    <meta name="twitter:description" content="A hash-chained event log
+whose decisions carry tiers, quorum, supersession and executable
+verification commands — with both shipped write paths hardcoding the
+verification list empty, and a grounding packet that never reads the
+decision store at all.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Mesh — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The schema for a verified decision, and no
+way to write one</p>
+          <h1>Agent Mesh</h1>
+          <p class="document-deck">A hash-chained event log whose
+decisions carry tiers, quorum, supersession and executable verification
+commands — with both shipped write paths hardcoding the verification
+list empty, and a grounding packet that never reads the decision store
+at all.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/cbalgeman/agent-mesh">
+              <span>Source</span>
+              <strong>cbalgeman/agent-mesh</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886" title="258a1eed288513e24953a633c44b397e91ea9886">
+              <span>Analyzed revision</span>
+              <code>258a1eed…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-10</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent Mesh is a project-local coordination substrate for
+human-plus-agent teams: 19,170 lines of Python across
+<code>src/agent_mesh/</code>, MIT, version 0.2.0, five commits between
+14 and 16 July 2026 on a repository whose first commit is
+<code>chore: publish clean agent-mesh surface</code> — a curated publish
+of work developed elsewhere, which is why the history says nothing about
+how the design arrived. It has <strong>no third-party
+dependencies</strong>: <code>pyproject.toml</code> declares an empty
+<code>dependencies</code> list under the comment <em>"Stdlib-only by
+design for core."</em> That is rare enough in this corpus to state
+first, and it means the supply-chain surface of adopting it is the
+Python standard library and nothing else.</p>
+<p>The substrate is a hash-chained append-only <code>events.jsonl</code>
+with SQLite as a declared projection of it. Most of what flows through
+it — requests, responses, backlog items, dispatch runs and leases — is
+coordination state rather than memory: a request is an act, not a claim
+that can turn out false. <strong>The memory is the decision
+log</strong>, and it is a serious one. A decision carries a human ID
+with aliases, a tier, an externalized Markdown body addressed by SHA, an
+owner, a status, an enforcement mode, affected-code globs, exemptions,
+required checks, assumptions, evidence references, tags, and a list of
+verification commands with expected signals. Supersession detects cycles
+and refuses a target that was never accepted. Acceptance can require a
+reviewer quorum. Three tiers skip <code>accepted</code> and go straight
+to <code>in_force</code>.</p>
+<p><strong>The best thing here is the revision rule, and it is a
+mechanism rather than a convention.</strong> Editing a decision that is
+<code>accepted</code> or <code>in_force</code> through the Workbench
+requires a reason, emits a <code>decision_revisited</code> event, and
+sets <code>fields_changed["status"] = [status, "proposed"]</code> — the
+projection then clears <code>accepted_utc</code> and the record has to
+be accepted again. A revised decision cannot inherit the approval of the
+thing it replaced. Very little in this atlas closes that loop.</p>
+<p><strong>The worst thing is that the verification apparatus cannot be
+filled.</strong> Both shipped write paths —
+<code>cmd_decision_propose</code> in <code>cli/mail.py</code> and
+<code>create_decision</code> in <code>workbench.py</code> — construct
+the <code>decision_proposed</code> payload with
+<code>"verification": []</code>, <code>"assumptions": []</code>,
+<code>"required_checks": []</code> and <code>"evidence": {}</code>
+hardcoded, and the Workbench also hardcodes
+<code>"affected_code_globs": []</code>. The only later mutation event,
+<code>decision_metadata_updated</code>, handles title, owner, tier,
+body, human ID, status and seven meta fields, and touches none of those
+five. So <code>decision_verifications</code>,
+<code>decision_assumptions</code>, <code>decision_checks</code> and
+<code>decision_evidence</code> have tables, projections, a rebuild path
+and consumers — and no producer. <code>agent-q decisions verify</code>
+reads a table that the package cannot write.</p>
+<p>Two further findings follow from reading the read path rather than
+the schema. The dispatch grounding packet that an agent actually
+receives has a section called <code>prior-decisions</code>, and it is
+not the decision store: <code>prior_decisions_text</code> regex-matches
+<code>APPROVE|REJECT|GO|NO-GO</code> and friends against the bodies of
+<code>res_posted</code> messages in the same thread. <strong>No decision
+record reaches an agent's context through any automatic path</strong>;
+the contract installed into <code>AGENTS.md</code> tells the model to go
+and look. And every <code>agent-q</code> read calls
+<code>rebuild_all</code>, which does <code>reset_schema</code> and
+replays the entire log — <code>projection_is_current</code> exists and
+is called from exactly one place, the Workbench refresh.</p>
+<p>There are <strong>zero tests</strong> in the published tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>decision</strong>: a durable,
+human-identified record (<code>D001</code>, <code>D038-S1</code>,
+<code>D076-E</code>) of something the project settled, with the argument
+in an externalized Markdown body addressed by <code>body_sha</code> and
+the structure in the event payload. Everything else the log carries is a
+different kind of thing. A request is a speech act; a backlog item is
+workflow state; a dispatch lease is a concurrency primitive. None of
+them can be wrong in the way a decision can, and the design is right not
+to treat them alike.</p>
+<p>Nothing extracts a decision. There is no model anywhere in the
+package — an agent or a human names the decision, and the substrate's
+job is to make the naming durable, ordered and hash-linked. Capture is
+therefore a deliberate act with a form, which puts Agent Mesh at the far
+explicit end of <a href="../../patterns/zero-llm-capture/">zero-LLM
+capture</a>.</p>
+<p>The state machine is a <code>status</code> column and it is real.
+<code>decision_proposed</code> inserts at <code>proposed</code>.
+<code>decision_accepted</code> first checks a reviewer quorum
+(<code>_decision_quorum_reached</code>, which reads
+<code>review_policy.required_reviewers</code> and
+<code>approval_quorum</code> and returns <code>True</code> when none are
+configured), then promotes to <code>in_force</code> if the tier is
+<code>architecture_contract</code>, <code>production_invariant</code> or
+<code>compliance_security</code>, and to <code>accepted</code>
+otherwise. <code>decision_rejected</code> and
+<code>decision_retired</code> are terminal marks;
+<code>decision_superseded</code> points the old record at a successor
+and the successor back at the old one, after
+<code>_ensure_supersede_target_valid</code> refuses a target that is not
+<code>accepted</code> or <code>in_force</code> and
+<code>_ensure_no_supersede_cycle</code> walks the chain.</p>
+<p><strong>The transition worth studying is the reverse one.</strong>
+Editing an accepted or in-force decision in the Workbench is refused
+without a <code>revision_reason</code>, then emits
+<code>decision_revisited</code> and folds
+<code>status: [old, "proposed"]</code> into the metadata update.
+<code>_project_decision_metadata_updated</code> reads that and sets
+<code>accepted_utc = NULL</code>. Approval is attached to a version of
+the content, not to the record, and the code enforces the
+difference.</p>
+<p>Two states in the vocabulary have no producer.
+<code>decision_assumption_violated</code> would flip a
+<code>decision_assumptions</code> row to <code>violated</code> and stamp
+the invalidating event; <code>decision_check_failed</code> would append
+to the decision's log. Both appear in the accepted-kinds set and in the
+projection's <code>elif</code> chain, and neither is emitted by any code
+path in the package. <code>decision_drift_detected</code> is emitted, by
+one command.</p>
+<p>Nothing forgets. There is no delete, no redaction, no expiry and no
+retention policy over decisions or messages — the only
+<code>DELETE</code> statements in the tree clear derived SQLite rows
+before reprojection. <code>body_fidelity</code> admits the value
+<code>redacted</code>, and it is a label a caller may pass to
+<code>agent-mesh request --body-fidelity</code>; no code path produces
+it, and nothing removes the bytes it would describe.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Proposed: &quot;decision_proposed — verification, assumptions, checks and evidence all arrive empty&quot;
+    Proposed --&gt; Accepted: &quot;decision_accepted, quorum met, ordinary tier&quot;
+    Proposed --&gt; InForce: &quot;decision_accepted — architecture_contract, production_invariant or compliance_security&quot;
+    Proposed --&gt; Rejected: &quot;decision_rejected&quot;
+    Accepted --&gt; InForce: &quot;status set through decision_metadata_updated&quot;
+    Accepted --&gt; Proposed: &quot;Workbench edit — reason required, emits decision_revisited, clears accepted_utc&quot;
+    InForce --&gt; Proposed: &quot;same rule — approval belongs to the content, not the record&quot;
+    Accepted --&gt; Superseded: &quot;decision_superseded — target must be accepted or in_force, cycles refused&quot;
+    InForce --&gt; Superseded
+    Accepted --&gt; Retired: &quot;decision_retired&quot;
+    InForce --&gt; Retired
+
+    note right of Rejected
+        Keyed on the record, not the value.
+        Nothing stops the same content
+        being proposed again as D-next.
+    end note
+
+    note right of InForce
+        enforcement_mode is computed from
+        the tier, stored, and printed in a
+        rendered Markdown view. No read path
+        consults it.
+    end note</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing has to be running to store or read anything. A project is a
+<code>.agent-mesh/</code> directory holding <code>config.toml</code>,
+<code>events.jsonl</code>, externalized bodies, a SQLite file, generated
+Markdown views and a lock.</p>
+<p><strong>The log is the store.</strong> <code>core/events.py</code>
+defines a frozen <code>Event</code> envelope — <code>event_id</code>,
+<code>schema_version</code>, <code>occurred_utc</code>,
+<code>event_seq</code>, <code>actor</code>, <code>kind</code>,
+<code>entity_id</code>, <code>thread_id</code>,
+<code>prev_event_hash</code>, <code>payload</code> — serialized through
+<code>canonical_json</code> with sorted keys and no whitespace, hashed
+with SHA-256 over the exact newline-terminated bytes.
+<code>core/chain.py</code> verifies the chain in two modes and its
+docstring states the limit of the cheap one precisely: an anchored walk
+<em>"does NOT prove that an arbitrary earlier prefix line was not
+rewritten in place at the same byte length; that requires the full
+walk"</em>. The chain is unkeyed, so it is tamper-evident against
+accident and against an editor who does not recompute, and not against
+anyone who does.</p>
+<p><strong>SQLite is a projection and says so.</strong>
+<code>store/sqlite.py</code> creates roughly thirty tables;
+<code>store/rebuild.py</code> replays the log into them.
+<code>reset_schema</code> wipes, <code>apply_record</code> refuses a gap
+in <code>event_seq</code>, and <code>table_hashes_for</code> canonically
+dumps and hashes every table so two machines can compare projections.
+This is the cleanest instance in the corpus of the log-and-projection
+split the atlas records in <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-03-the-log-and-the-projection.md">its
+own notes</a>: the derived store is disposable by construction, and the
+code treats it that way.</p>
+<p><strong>Concurrency</strong> is an owner-aware file lock
+(<code>core/lock.py</code>) carrying a PID, a boot ID and a hostname,
+with <code>OwnerStatus</code> distinguishing <code>live</code>,
+<code>stale_pid_dead</code>, <code>stale_age_exceeded</code> and
+<code>cannot_verify</code>, and a 600-second staleness bound.
+Interrupted writes are recovered idempotently
+(<code>core/recovery.py</code>), and <code>dispatch/atomic.py</code>
+journals a set of replace and delete operations so a crash rolls forward
+rather than leaving a half-applied unit.</p>
+<p><strong>The Workbench</strong> (<code>workbench.py</code>, 4,411
+lines) is a loopback HTTP server plus a single-file HTML page, with a
+per-server access token carried in a URL fragment, restricted browser
+origins, a <code>0600</code> machine-local bookmark stored outside any
+repository, and retry-safe receipts so an uncertain feedback retry
+returns the original request instead of creating a second one.
+<code>workbench_service.py</code> installs it as a user-level service
+under launchd, <code>systemd --user</code> or Task Scheduler, serving
+every repository in a machine-local registry from one process.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install agent-mesh</code>, then
+<code>agent-mesh init</code> in a repository. No database server, no
+key, no network, no model. Python 3.11+ and the standard library.</p>
+<p>The store is repairable by hand in the ordinary sense —
+<code>events.jsonl</code> is one canonical JSON object per line and the
+bodies are Markdown files — but with a sharp caveat the design creates:
+editing a line invalidates every <code>prev_event_hash</code> after it,
+so hand-repair means rewriting the chain, and there is no tool for that.
+The delete-free, redaction-free design means the recovery story for a
+mistaken write is <em>append a corrective event</em>, and for a decision
+that is <code>decision_revisited</code> or
+<code>decision_superseded</code>. For anything the schema cannot
+express, there is no story.</p>
+<p>Privacy is the part of the operator experience that has had the most
+thought. New projects default to <code>local-only</code>, whose
+generated <code>.agent-mesh/.gitignore</code> is deny-all and ignores
+itself, so a plain <code>git add -A</code> selects nothing.
+<code>git-shared</code> is an explicit opt-in allowlisting exactly the
+config, the event log and externalized bodies — and
+<code>docs/privacy.md</code> refuses to oversell it: <em>"This is an
+allowlist of canonical state, not a promise that the allowed files are
+public."</em> It also states that configs predating the setting are read
+as <code>git-shared</code> rather than silently made private, and that
+changing <code>.gitignore</code> <em>"does not erase prior commits,
+forks, caches, or clones."</em></p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Append.</strong> <code>core/events.py:append_event</code> —
+assigns <code>event_seq</code> and <code>prev_event_hash</code> from the
+tail, validates provenance
+(<code>core/provenance.py:validate_event_provenance</code>) and dispatch
+payloads (<code>core/dispatch_schema.py</code>), writes the canonical
+line. <strong>Decision stop lines are not checked here.</strong></li>
+<li><strong>Project.</strong> <code>store/rebuild.py:rebuild_all</code>
+→ <code>reset_schema</code> → <code>apply_record</code> per event →
+<code>_project_record</code>. Decision handling is
+<code>_project_decision_event</code> around <code>:1099</code> and
+<code>_project_decision_proposed</code> at <code>:1179</code>.</li>
+<li><strong>Decision write surfaces.</strong>
+<code>cli/mail.py:cmd_decision_propose</code> (<code>:838</code>),
+<code>cmd_decision_accept</code>, <code>cmd_decision_revisit</code>,
+<code>supersede</code>, <code>retire</code>; and
+<code>workbench.py:create_decision</code> (<code>:500</code>) and the
+edit path (<code>:680</code>).</li>
+<li><strong>Decision read surfaces.</strong>
+<code>cli/q.py:cmd_decisions_list/show/log/search/at/verify</code>
+(<code>:733</code>–<code>:914</code>) and the Workbench Decisions
+tab.</li>
+<li><strong>Verification runner.</strong>
+<code>cli/q.py:cmd_decisions_verify</code> (<code>:866</code>) —
+<code>subprocess.run(row["command"], cwd=config.project_root, shell=True)</code>,
+emitting <code>decision_drift_detected</code> on non-zero exit.</li>
+<li><strong>Grounding.</strong> <code>dispatch/grounding.py</code> —
+sections for referenced rows, git state, <code>prior-decisions</code>
+(<code>prior_decisions_text</code>, <code>:57</code>) and the full
+thread, each tagged <code>stable</code> or <code>volatile</code> and
+hashed.</li>
+<li><strong>Packet.</strong> <code>cli/q.py:cmd_packet</code> →
+<code>message_packet.py:build_message_packet</code>; the word
+<em>decision</em> does not occur in that module.</li>
+<li><strong>Chain integrity.</strong> <code>core/chain.py</code>,
+exposed as <code>agent-q verify-chain</code>.</li>
+<li><strong>Locking and recovery.</strong> <code>core/lock.py</code>,
+<code>core/recovery.py</code>, <code>dispatch/atomic.py</code>.</li>
+<li><strong>Agent contract.</strong>
+<code>skill/render.py:CANONICAL_SKILL_BODY</code>, installed by
+<code>adoption.py</code> into <code>AGENTS.md</code> and, when the
+repository shows signs of it, <code>CLAUDE.md</code>.</li>
+<li><strong>Tests.</strong> None.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>decisions</code> is the table that matters:
+<code>dec_ulid</code> primary key, <code>human_id</code>,
+<code>parent_human_id</code>, <code>title</code>, <code>tier</code>,
+<code>status</code>, <code>enforcement_mode</code>, <code>owner</code>,
+<code>body_sha</code>, <code>body_path</code>, <code>body_bytes</code>,
+<code>body_media_type</code>, <code>superseded_by</code>,
+<code>supersedes</code>, <code>proposed_utc</code>,
+<code>accepted_utc</code>, <code>in_force_utc</code>,
+<code>retired_utc</code>, <code>last_verified_utc</code>,
+<code>drift_risk</code>, <code>event_seq</code>, <code>meta_json</code>.
+Around it sit <code>decision_aliases</code> (a renamed decision keeps
+its old ID resolvable, with one primary), <code>decision_globs</code>
+(kinds <code>affected</code>, <code>exempt</code>,
+<code>generated</code>), <code>decision_checks</code>,
+<code>decision_verifications</code>, <code>decision_assumptions</code>,
+<code>decision_evidence</code>, <code>decision_references_in_code</code>
+and <code>decision_tags</code>.</p>
+<p>Separating the body from the record by SHA is the right call and it
+pays off twice: <code>body_sha</code> is a field
+<code>decision_metadata_updated</code> can change, so a revision is a
+content-hash change with an event behind it, and the alias table means
+the identifier a human uses is decoupled from the identity the
+projection keys on.</p>
+<p><strong>Temporal fields are all record time.</strong>
+<code>occurred_utc</code> on the event, <code>event_seq</code> for
+order, and four transition stamps on the decision. There is nothing
+recording when a decision was true <em>of the world</em> as distinct
+from when the project wrote it down, and no as-of query —
+<code>agent-q decisions at</code> takes a file path, not a date. Single
+axis, so not <a
+href="../../patterns/bi-temporal-fact-validity/">bi-temporal</a>, though
+the log makes the history reconstructible by replay in a way most
+single-axis stores cannot manage.</p>
+<p><strong>There is no scope key.</strong> The boundary is
+<code>.agent-mesh/</code> in a directory, the same filesystem-boundary
+answer as <a href="../graphify/">Graphify</a> and <a
+href="../klypix-mcp/">Klypix MCP</a>. The near-miss is worth naming
+because it looks like more: the multi-repo Workbench server
+<em>"resolves its opaque repo ID before feedback, request-status,
+backlog, attachment, or decision operations"</em>, which is a real
+access-control indirection over a machine-local registry. But it selects
+which store to open rather than filtering rows inside one, and no record
+carries a tenant, user or workspace key.
+<code>config.participants</code> is the closest thing to an identity
+list, and it gates who may act, not what may be read.</p>
+<p>Provenance is the model's other strength, and it is on the message
+side rather than the decision side. <code>core/provenance.py</code>
+defines closed vocabularies for <code>body_authority</code>
+(<code>human_chat</code>, <code>agent_mail</code>,
+<code>tool_payload</code>, <code>agent_summary</code>,
+<code>recovery_artifact</code>, <code>unknown</code>),
+<code>body_fidelity</code> (<code>full</code>,
+<code>metadata_only</code>, <code>reconstructed</code>,
+<code>inferred</code>, <code>redacted</code>, <code>missing</code>),
+source-selection modes and eight causal-edge relations.
+<strong>Distinguishing what a human said from what an agent summarised,
+as a validated enum on the record, is a thing this atlas asks about
+constantly and finds rarely</strong> — and the grounding path uses it,
+refusing to call a packet complete when a thread event's fidelity is not
+<code>full</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is deliberate and thin.
+<code>agent-q decisions search</code> selects every row from
+<code>decisions</code>, builds a haystack from <code>human_id</code>,
+<code>title</code>, and the <code>context</code> and
+<code>decision</code> strings inside <code>meta_json</code>, and prints
+rows whose lowercased haystack contains the lowercased query. No index,
+no ranking, no scoring, no limit, and the body — the file where the
+actual argument lives — is not searched at all.
+<code>agent-q decisions at &lt;path&gt;</code> is the more interesting
+query: it joins <code>decision_globs</code> where
+<code>kind='affected'</code> and <code>fnmatch</code>es the relative
+path, which answers <em>which decisions govern this file</em>. That is
+the right question, and the Workbench cannot create the globs it
+needs.</p>
+<p>Neither query filters on status. A retired, rejected or superseded
+decision prints alongside a live one with its status in the second
+column, which is the recall-first-and-label choice and is defensible on
+a surface a human reads.</p>
+<p><strong>The automatic path does not retrieve decisions at
+all.</strong> <code>dispatch/grounding.py</code> assembles a packet with
+a stable prefix and volatile suffix — a cache-shaped design, and it
+hashes every section so a caller can see what changed — but its
+<code>prior-decisions</code> section comes from
+<code>prior_decisions_text</code>, which scans <code>res_posted</code>
+events in the current thread for the regex
+<code>\b(APPROVE_WITH_CHANGES|APPROVE|REQUEST_CHANGES|REJECT|NO-GO|GO)\b</code>
+in the summary and the first 200 characters of the body. Those are
+review verdicts inside messages, not records in the decision store.
+<code>build_message_packet</code>, which backs
+<code>agent-q packet</code>, contains no reference to decisions
+either.</p>
+<p>So the substrate's durable, tiered, supersession-aware memory is
+reachable by an agent only if the agent runs a query, and the thing that
+tells it to is prose: the contract installed in <code>AGENTS.md</code>
+says <em>"Run <code>agent-q status</code> and targeted
+<code>agent-q list/locate/body</code> before responding."</em> This is
+the shape the atlas records as <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-the-guidance-was-already-in-context.md">the
+guidance was already in context</a> — an instruction to consult standing
+in for a mechanism that consults.</p>
+<p>The other retrieval cost is structural. Twenty-one
+<code>agent-q</code> commands begin with
+<code>_rebuild_all_locked</code>, which calls <code>rebuild_all</code>
+unconditionally: wipe the schema, read the whole log, replay every
+event. <code>projection_is_current</code> compares the log's SHA-256
+against the value stamped in the projection's <code>meta</code> table
+and would let a reader skip all of that; it is called from one line in
+<code>workbench.py</code>. The optimisation exists, is correct, and was
+applied to one of the two readers — the interactive one, in the commit
+titled <code>perf: reduce Workbench refresh work</code>. Every
+command-line read still pays for the full history.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, deterministic, and cheap in model terms
+because no model is involved. The path is: acquire the project lock,
+read the tail line for <code>event_seq</code> and
+<code>prev_event_hash</code>, validate, append the canonical line,
+project. A new decision is retrievable immediately — the next reader
+replays the log and sees it.</p>
+<p>Idempotence and crash safety got real attention.
+<code>AGENT_MESH_FAULT_AFTER</code> is a fault-injection hook in the
+append protocol, <code>core/recovery.py</code> handles interrupted
+writes, <code>dispatch/atomic.py</code> journals its file operations for
+roll-forward, and the Workbench's feedback receipts make an uncertain
+retry return the original request ID.</p>
+<p><strong>The write path does not validate decision
+invariants.</strong> <code>append_event</code> calls
+<code>validate_event_provenance</code> and
+<code>validate_dispatch_payload</code>; there is no equivalent for
+decisions. The decision invariants — a superseded target must be
+accepted or in force, no supersession cycles, no human-ID collision, no
+alias fork, no missing parent — are all enforced at <em>projection</em>
+time, by raising <code>DecisionStopLine</code>, and nothing catches that
+inside <code>rebuild_all</code>. The consequence is a poison event: an
+event violating a stop line is durably appended, hash-chained into the
+log, and then aborts the replay. Because <code>rebuild_all</code> runs
+at the top of essentially every read, <strong>one bad decision event
+makes the whole store unreadable from the CLI</strong> — and the log has
+no delete, no skip and no quarantine, so the repair is to rewrite an
+append-only hash chain by hand. Validating at the write boundary as well
+as the replay boundary is the standard defence and it is one function
+call away from where it already lives.</p>
+<p>The other write-side finding is the one in this report's title. Both
+propose paths hardcode the interesting lists empty:</p>
+<pre class="python"><code>&quot;assumptions&quot;: [],
+&quot;evidence&quot;: {},
+&quot;required_checks&quot;: [],
+&quot;verification&quot;: [],</code></pre>
+<p>and <code>create_decision</code> in the Workbench adds
+<code>"affected_code_globs": []</code> to that set, so the only way to
+attach a glob is the CLI's <code>--affects</code>. The one later
+mutation event covers title, owner, tier, body, human ID, status and the
+seven <code>meta_fields</code>; it cannot reach any of the four. The
+tables, the projection code, the drift event and the runner all exist
+for data no shipped command can create. The honest framing is that the
+substrate is a library — the README says <em>"Project-specific importers
+should live in the consumer repository"</em> — so a consumer can import
+<code>append_event</code> and construct a fuller payload. But a reader
+who installs the package and follows the documented flow gets a decision
+with an empty verification list and a verify command that prints
+<code>no verification commands</code>.</p>
+<p>Nothing filters malicious input, and one path makes that sharper than
+usual. <code>agent-q decisions verify</code> runs each stored
+verification command through
+<code>subprocess.run(..., shell=True)</code> in the project root. The
+command string is memory: it arrives in an event payload, written by
+whichever participant appended it, and the participant set includes
+agents. A memory store whose records can contain a shell command that a
+maintenance command later executes is a prompt-injection path with an
+unusually short distance to code execution. That the field is currently
+unfillable through the shipped surfaces is what keeps it theoretical,
+which is an uncomfortable pair of facts to hold together: the same gap
+that makes the feature useless is the thing making it safe.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no MCP server and no SDK. The integration is two CLIs and a
+contract.</p>
+<p><code>agent-mesh</code> writes: <code>init</code>,
+<code>request</code>, <code>reply</code>, <code>respond</code>,
+<code>resolve</code>, <code>reopen</code>,
+<code>decision propose|accept|revisit|supersede|retire</code>,
+<code>backlog upsert|link</code>, <code>skill render|install</code>,
+<code>adopt</code>, <code>workbench</code>. <code>agent-q</code> reads:
+<code>list</code>, <code>locate</code>, <code>body</code>,
+<code>packet</code>, <code>thread</code>, <code>trace</code>,
+<code>render</code>, <code>rebuild</code>, <code>recover</code>,
+<code>verify-chain</code>, <code>status</code>, <code>events</code>,
+<code>backlog</code>,
+<code>decisions list|show|log|search|at|verify</code>,
+<code>dispatches</code>.</p>
+<p><code>adoption.py</code> installs a versioned managed block into
+<code>AGENTS.md</code>, and into <code>CLAUDE.md</code> when the
+repository already has one or a <code>.claude/</code> directory.
+<code>agent-mesh adopt --check</code> detects a stale contract <em>and
+conflicting legacy decision-write guidance</em>, and the contract text
+tells the agent that finding one <em>"is an adoption defect; report it
+instead of silently choosing a second source of truth."</em> Treating a
+second writable surface for the same facts as a defect the tool detects,
+rather than a documentation problem, is the right instinct.</p>
+<p>The contract itself is the best-written agent-facing prose in this
+part of the corpus, and one passage is worth copying outright. Under
+<em>Quality Discipline</em> it names event kinds that do not exist yet
+and instructs against inventing them:</p>
+<blockquote>
+<p>Until quality/investigation events exist, treat this as advisory
+procedure. Future event names (do not invent today):
+<code>quality_bar_declared</code>, <code>quality_bar_updated</code>,
+<code>quality_gate_evaluated</code>, <code>investigation_opened</code>,
+…</p>
+</blockquote>
+<p>A model asked to record something for which no verb exists will
+invent one. Naming the reserved vocabulary in advance is a cheap defence
+against a schema being polluted by plausible guesses, and nothing else
+in this atlas does it.</p>
+<p>Against that, the contract also carries the system's weakest
+guarantee: <em>"Run <code>agent-mesh decision accept</code> only after
+explicit human approval and name the approving human with
+<code>--by</code>."</em> <code>cmd_decision_accept</code> takes
+<code>--by</code> as a free string and appends the event. The Workbench
+is stricter — <code>_decision_actor</code> rejects an actor outside
+<code>config.participants</code> — but participants routinely include
+the agents. Human acceptance is a mechanism in the UI and an honour
+system at the command line, and the same event kind serves both.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Integrity.</strong> The hash chain is the strongest property
+and its own docstrings scope it correctly: full walks catch a
+same-length rewrite of an earlier line, anchored walks do not, and the
+anchored mode is offered as an incremental gate rather than as the
+audit. <code>table_hashes_for</code> extends the idea to the projection
+so two replicas can compare derived state. What none of it provides is
+authenticity: SHA-256 with no key means the chain proves the log has not
+been <em>carelessly</em> edited, and anyone who can write the file can
+produce a consistent forgery. For a project-local file that is a
+reasonable place to stop, but "tamper-evident" in the README is doing
+work that a signature would do properly.</p>
+<p><strong>Trust states</strong> are genuine and applied.
+<code>status</code> gates supersession
+(<code>_ensure_supersede_target_valid</code>), drives the tier
+promotion, and is reset by the revision path. What is absent is any gate
+on <em>reading</em>: an agent that queries <code>decisions search</code>
+gets proposed records beside in-force ones, and
+<code>enforcement_mode</code> — computed per tier, stored on every row,
+and non-null by schema — is consulted by no code path in the package. It
+is printed in a rendered Markdown view. A field named for enforcement
+that enforces nothing is worth saying plainly, and it is the same class
+of finding as the four unwritable tables.</p>
+<p><strong>Audit</strong> is the capability this system has most
+completely. The event log is not a sidecar record of mutations; it
+<em>is</em> the store, append-only, ordered, hash-linked and
+schema-versioned, with the queryable form defined as derived from it.
+<code>_append_decision_log</code> additionally keeps a per-decision
+event trail, and <code>agent-q decisions log</code> prints it. Nothing
+in this corpus makes the mutation record more load-bearing.</p>
+<p><strong>Human review</strong> exists as a place: the Workbench
+Decisions tab creates proposals, appends revisions with a required
+reason, and records acceptance, with the re-approval rule enforced in
+code. The caveats above are real — an agent in the participant list can
+accept, and the CLI does not check even that — but a person inspecting
+and adjudicating memory content has somewhere to do it.</p>
+<p><strong>The reference scanner checks the inverse of what the schema
+suggests.</strong> <code>agent-mesh decision refs</code> walks the tree
+for <code>D001</code>-shaped tokens and reports the ones that resolve to
+nothing — a <em>dangling</em> reference, a citation of a decision that
+does not exist — recording the list in a
+<code>decision_scanner_run_completed</code> payload with
+<code>--record-scan</code>. It never writes
+<code>decision_references_in_code</code>; that table is filled by
+<code>decision_reference_resolved</code> events, which no code path
+emits, so the join between a decision and the lines of code that cite it
+stays empty. The check that ships is the cheap and useful half, and no
+other system here checks that a memory's <em>identifier</em> is citable
+at all — but it runs the opposite direction to <a
+href="../../compare/#verify-memory-against-its-subject">verify memory
+against its subject</a>, which asks whether the cited code moved rather
+than whether the citation resolves. Both would be worth having; one is
+here.</p>
+<p><strong>Failure modes worth naming.</strong> The poison event of
+section 7 is the sharpest: one stop-line violation makes every CLI read
+fail, permanently, in a store with no delete. The full-replay-per-read
+is the second: correctness is excellent — the projection cannot drift,
+because it is rebuilt — and the cost is linear in total history on every
+query. And a projection whose invariants are enforced only during replay
+means the log can hold a state the code will never accept, which is
+precisely the situation the write-time validator exists to prevent.</p>
+<p><strong>Privacy and deletion.</strong> Local-only by default,
+deny-all <code>.gitignore</code> including itself, an explicit allowlist
+for the shared mode, and a publish checklist that tells the reader to
+inspect commit authors, screenshots and package artifacts. Against that:
+there is no delete and no redaction. If a request body captured a secret
+or a personal detail, the substrate's answer is the same one
+<code>docs/privacy.md</code> gives for Git — rotate it, because the
+record is not coming out. For a design that stores human chat verbatim
+under a <code>human_chat</code> authority label, an intentional
+redaction path is the obvious next mechanism, and the
+<code>redacted</code> fidelity value is already sitting in the enum
+waiting for it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are no tests. Not a <code>tests/</code> directory, not a
+<code>test_*.py</code>, not a <code>conftest.py</code>, nothing under
+<code>examples/</code> that asserts. The <code>.gitignore</code>
+excludes <code>.pytest_cache/</code>, <code>.coverage</code>,
+<code>htmlcov/</code>, <code>.tox/</code> and <code>.mypy_cache/</code>
+— artifacts of a suite that is not in this tree, which is consistent
+with the repository being a curated publish of a larger internal one
+rather than with there being no suite at all. Either way, what a reader
+can check is nothing.</p>
+<p>That matters more here than in most reports, because the design's
+claims are exactly the kind that only a test can support. Idempotent
+crash recovery, a fault-injection hook
+(<code>AGENT_MESH_FAULT_AFTER</code>) that exists specifically to be
+driven by a test, roll-forward of a journaled atomic apply, owner-aware
+lock staleness across a reboot, a projection that must exactly reproduce
+the log, and stop lines that must fire — every one of these is asserted
+by a docstring and by no executable. The fault-injection environment
+variable is the clearest signal: somebody wrote a seam for a test
+harness, and the harness is not here.</p>
+<p>What ships instead is two runnable examples,
+<code>examples/solo-project/run.sh</code> and a parameterized
+<code>N=3 examples/n-agent/run.sh</code>, which exercise the flow and
+check nothing. <code>agent-q verify-chain</code>,
+<code>agent-q audit-recovered-sources</code> and
+<code>agent-mesh adopt --check</code> are operator-facing verification
+commands and a reasonable substitute for <em>runtime</em> assurance, but
+they verify a live store, not the code's behaviour.</p>
+<p>There is no paper, no benchmark, and no performance claim — grepping
+the README, <code>docs/</code> and the source for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>Citation</code> and <code>doi</code> returns nothing, and there is
+no <code>CITATION.cff</code>. The README makes no quantitative claim at
+all, which given the absence of tests is the correct restraint: nothing
+here is asserted that a reader is invited to trust on numbers.</p>
+<p>Before relying on this I would want, in order: a test that a
+stop-line violation does not brick every subsequent read; a test that
+the projection of a fixed log hashes to a fixed value; a test driving
+<code>AGENT_MESH_FAULT_AFTER</code> through the recovery path; and one
+asserting that a revised decision loses its <code>accepted_utc</code>,
+because that is the mechanism the design is best at and nothing
+currently protects it from a refactor.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make approval belong to the content, not the
+record.</strong> Requiring a reason to edit an approved record, emitting
+a distinct revision event, and clearing the approval stamp so it must be
+granted again is a handful of lines and closes the hole where a memory
+keeps its blessing through a rewrite.</li>
+<li><strong>Name your reserved vocabulary to the model before you
+implement it.</strong> A contract that lists the event names a future
+version will use, under <em>do not invent today</em>, costs one
+paragraph and prevents a schema being polluted by plausible invented
+verbs.</li>
+<li><strong>Treat a second writable surface for the same facts as a
+detectable defect.</strong> <code>adopt --check</code> looks for
+conflicting legacy decision-write guidance and reports it. Most projects
+document the migration and hope; a check that fails is better.</li>
+<li><strong>Put provenance in a closed enum and validate it on
+append.</strong> Separating <em>who authored this</em> from <em>how
+faithful is this copy</em> — <code>human_chat</code> versus
+<code>agent_summary</code>, <code>full</code> versus
+<code>reconstructed</code> — and rejecting values outside the set makes
+the difference queryable instead of conventional.</li>
+<li><strong>Hash the projection, not just the log.</strong> A canonical
+per-table dump hashed after replay turns "did these two machines derive
+the same state" into a comparison rather than an argument.</li>
+<li><strong>State the limit of the cheap integrity check in the
+code.</strong> The anchored-walk docstring explains exactly what it does
+not prove and keeps the full walk as the audit. Every incremental
+verifier should carry that paragraph.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not enforce invariants only at replay.</strong> If a
+record can be durably accepted at write time and rejected at read time,
+you have built a store that can hold a state your reader will never
+accept — and in an append-only log with no delete, that state is
+permanent. Validate at both boundaries, or make the replay skip and
+quarantine rather than abort.</li>
+<li><strong>Do not ship a table with a consumer and no
+producer.</strong> Four decision side-tables here have projections, a
+rebuild path and a runner, and no write surface. A reader inspecting the
+schema concludes the system verifies its decisions; a reader tracing the
+write path finds it cannot.</li>
+<li><strong>Do not execute memory.</strong> A stored field that a
+maintenance command feeds to a shell is a memory store with a
+code-execution path, and the writer of that field is whoever can append
+an event. If verification commands must be stored, bound them to a
+declared allowlist and never interpolate them into a shell.</li>
+<li><strong>Do not let the derived index be rebuilt from scratch on
+every read.</strong> The correctness argument for full replay is good
+and the cost is unbounded in history. The skip check here is written and
+correct; it is simply not called from the reader that runs most
+often.</li>
+<li><strong>Do not write an enforcement field nothing reads.</strong>
+<code>enforcement_mode</code> is computed, stored, non-null and printed.
+Either a read path consults it or the column is documentation with a
+schema constraint.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a small team that wants coordination between humans and
+several coding agents to leave a record it can audit, in a repository it
+controls, with no service and no vendor. The install cost is genuinely
+near zero — standard library only, one directory, and a privacy default
+that errs toward not committing anything — and the log-and-projection
+architecture means the parts most likely to be wrong are the disposable
+ones. If what you want is an inspectable history of who asked for what
+and what the project decided, this is a more careful foundation than
+most.</p>
+<p>It is not a memory layer for an agent's working knowledge, and
+reading it as one will disappoint. Nothing is retrieved automatically,
+nothing is ranked, nothing is summarised, and the only thing standing
+between a decision and the model that should honour it is an instruction
+to go and query. Walk away entirely if you need multi-user or
+multi-tenant boundaries, if you need to delete or redact anything you
+have stored, or if you cannot accept a substrate whose durability
+guarantees are asserted by docstrings and checked by nothing. At 0.2.0,
+with a five-commit published history and no test suite, the right
+posture is to read the design for its ideas — several of which are
+better than what surrounds them — rather than to adopt it for the
+guarantees.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the upstream development repository have the test suite the
+<code>.gitignore</code> and <code>AGENT_MESH_FAULT_AFTER</code> imply?
+The published history is five commits beginning with a curated publish,
+so this cannot be settled from the tree.</li>
+<li>What was the intended producer for
+<code>decision_verifications</code> and the three sibling tables — a
+richer Workbench form, a consumer-side importer, or a command that was
+not part of the published surface?</li>
+<li>What actually happens to a live project after a stop-line-violating
+event is appended? The code path says every read fails; whether an
+operator has a recovery route in practice needs the tool run against a
+constructed log, which this reading did not do.</li>
+<li>Does the Workbench expose <code>review_policy</code>, and therefore
+the reviewer quorum, anywhere in its forms? The propose payload
+hardcodes it empty and <code>decision_metadata_updated</code> can carry
+it, so the capability may exist through a path this reading did not
+find.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Log and integrity</strong> — <code>core/events.py</code>,
+<code>core/hashing.py</code>, <code>core/chain.py</code>,
+<code>core/ids.py</code>, <code>core/lock.py</code>,
+<code>core/recovery.py</code>, <code>core/source_recovery*.py</code>,
+<code>core/external_recovery_plan.py</code>.</li>
+<li><strong>Schema and projection</strong> —
+<code>store/sqlite.py</code>, <code>store/rebuild.py</code>.</li>
+<li><strong>Decision model</strong> —
+<code>_project_decision_proposed</code> and
+<code>_project_decision_metadata_updated</code> in
+<code>store/rebuild.py</code>; <code>enforcement_for_tier</code>,
+<code>_decision_quorum_reached</code>,
+<code>_ensure_supersede_target_valid</code>,
+<code>_ensure_no_supersede_cycle</code>.</li>
+<li><strong>Provenance</strong> — <code>core/provenance.py</code>.</li>
+<li><strong>Write surface</strong> — <code>cli/mail.py</code>,
+<code>workbench.py</code>.</li>
+<li><strong>Read surface</strong> — <code>cli/q.py</code>,
+<code>message_packet.py</code>, <code>views/rendering.py</code>,
+<code>views/inbox.py</code>, <code>views/outbox.py</code>,
+<code>views/archive.py</code>, <code>views/log.py</code>.</li>
+<li><strong>Grounding and dispatch</strong> —
+<code>dispatch/grounding.py</code>, <code>dispatch/dispatch.py</code>,
+<code>dispatch/atomic.py</code>, <code>dispatch/guard.py</code>,
+<code>dispatch/runtime.py</code>,
+<code>core/dispatch_schema.py</code>.</li>
+<li><strong>Agent integration</strong> — <code>skill/render.py</code>,
+<code>adoption.py</code>, <code>project_registry.py</code>,
+<code>workbench_service.py</code>.</li>
+<li><strong>Docs</strong> — <code>README.md</code>,
+<code>docs/adoption.md</code>, <code>docs/configuration.md</code>,
+<code>docs/migration.md</code>, <code>docs/privacy.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-08-10</strong> — <a
+href="https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886"><code class="commit-id" title="258a1eed288513e24953a633c44b397e91ea9886">258a1eed…</code></a>
+— first reading, at 5 commits. Screened before reading: 0 auto-run
+surfaces, 0 dependency surfaces inside the seven-day cooldown, 1
+unpinned manifest with no lockfile — which is a declared-but-empty
+<code>dependencies</code> list, so there is no third-party surface to
+pin. Nothing was installed and nothing was executed; the two shipped
+examples were read rather than run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

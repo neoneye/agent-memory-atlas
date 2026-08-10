@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 247 reports.</strong></p>
+<p><strong>This page covers all 248 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;247 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;248 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6492,6 +6492,48 @@ is no scope key, and coordination is not merely machine-local but
 OS-user-local — or when the trust machinery has to reach past Claude
 Code, since the freshness check, the mutation ledger and the
 cross-project registry live in that one adapter.</li>
+</ul>
+<h3 id="agent-mesh"><a
+href="../systems/agent-mesh/"><code>agent-mesh</code></a></h3>
+<ul>
+<li>Best idea: approval belongs to the content, not to the record.
+Editing an <code>accepted</code> or <code>in_force</code> decision in
+the Workbench is refused without a reason, emits
+<code>decision_revisited</code>, and folds
+<code>status: [old, "proposed"]</code> into the update so the projection
+clears <code>accepted_utc</code>. A revision cannot inherit the blessing
+of what it replaced, and the rule is code rather than convention.</li>
+<li>Biggest risk: decision invariants are enforced only at replay.
+<code>append_event</code> validates provenance and dispatch payloads and
+nothing else, so an event violating a stop line — a supersession target
+that was never accepted, a human-ID collision — is durably hash-chained
+into an append-only log with no delete, and then raises out of
+<code>rebuild_all</code>, which runs at the top of every
+<code>agent-q</code> command. One bad event makes the store unreadable
+and the repair is rewriting a hash chain by hand.</li>
+<li>Most reusable component: the contract in
+<code>skill/render.py</code>, which names the event kinds a future
+version will use — <code>quality_bar_declared</code>,
+<code>investigation_opened</code> and four more — under the instruction
+<em>"do not invent today"</em>. A model asked to record something with
+no verb for it will invent one; reserving the vocabulary in advance
+costs a paragraph.</li>
+<li>Maturity impression: MIT, 0.2.0, 19,170 lines of Python with
+<strong>no third-party dependencies</strong>, five commits beginning
+with a curated <code>chore: publish clean agent-mesh surface</code>, and
+<strong>zero tests</strong> — beside a <code>.gitignore</code> excluding
+<code>.pytest_cache/</code> and <code>.coverage</code>, and an
+<code>AGENT_MESH_FAULT_AFTER</code> fault-injection hook that exists to
+be driven by a harness that is not here. Every durability claim is a
+docstring.</li>
+<li>Study when: you want a coordination history you can audit — a
+hash-chained log with a disposable derived index, closed provenance
+vocabularies distinguishing what a human said from what an agent
+summarised, and a privacy default that commits nothing.</li>
+<li>Do not copy when: you need memory an agent actually receives.
+Nothing is retrieved automatically, <code>decisions search</code> is an
+unranked substring scan that never reads the decision body, and the
+verification tables have a runner, a drift event and no producer.</li>
 </ul>
         </article>
       </div>

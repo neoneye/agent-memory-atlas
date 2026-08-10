@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 247 reports.**
+**This page covers all 248 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["247 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["248 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2140,4 +2140,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 23,372 lines across `src/` and `bin/`, 174 commits since 8 June 2026, 57 test files and 10,520 test lines with 53 chained in `npm test` and a publish workflow that gates on them. Several test files are named for the dated incident that produced them. The README's "Current limitations" section names nine real gaps and every one checked here was accurate — except the lock caveat, which is more pessimistic than the code.
 - Study when: several agents from different vendors work one repository and you want project intent versioned the way code is, in a file you can `unzip` and fix by hand.
 - Do not copy when: memory must be multi-user or multi-tenant — there is no scope key, and coordination is not merely machine-local but OS-user-local — or when the trust machinery has to reach past Claude Code, since the freshness check, the mutation ledger and the cross-project registry live in that one adapter.
+
+### [`agent-mesh`](../systems/agent-mesh/)
+
+- Best idea: approval belongs to the content, not to the record. Editing an `accepted` or `in_force` decision in the Workbench is refused without a reason, emits `decision_revisited`, and folds `status: [old, "proposed"]` into the update so the projection clears `accepted_utc`. A revision cannot inherit the blessing of what it replaced, and the rule is code rather than convention.
+- Biggest risk: decision invariants are enforced only at replay. `append_event` validates provenance and dispatch payloads and nothing else, so an event violating a stop line — a supersession target that was never accepted, a human-ID collision — is durably hash-chained into an append-only log with no delete, and then raises out of `rebuild_all`, which runs at the top of every `agent-q` command. One bad event makes the store unreadable and the repair is rewriting a hash chain by hand.
+- Most reusable component: the contract in `skill/render.py`, which names the event kinds a future version will use — `quality_bar_declared`, `investigation_opened` and four more — under the instruction *"do not invent today"*. A model asked to record something with no verb for it will invent one; reserving the vocabulary in advance costs a paragraph.
+- Maturity impression: MIT, 0.2.0, 19,170 lines of Python with **no third-party dependencies**, five commits beginning with a curated `chore: publish clean agent-mesh surface`, and **zero tests** — beside a `.gitignore` excluding `.pytest_cache/` and `.coverage`, and an `AGENT_MESH_FAULT_AFTER` fault-injection hook that exists to be driven by a harness that is not here. Every durability claim is a docstring.
+- Study when: you want a coordination history you can audit — a hash-chained log with a disposable derived index, closed provenance vocabularies distinguishing what a human said from what an agent summarised, and a privacy default that commits nothing.
+- Do not copy when: you need memory an agent actually receives. Nothing is retrieved automatically, `decisions search` is an unranked substring scan that never reads the decision body, and the verification tables have a runner, a drift event and no producer.
 
