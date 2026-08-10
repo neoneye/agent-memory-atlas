@@ -96,6 +96,26 @@ change is a policy decision about a claim. Here it is a measurement, which is wh
 two states are enough: the interesting question was never "how sure is the
 model" but "is the model's own evidence real".
 
+Its second state machine answers a different question, and the answer is the
+best one in this atlas to *how do you know a human approved it*. A refutation —
+an approach recorded as having lost under cited evidence — folds to `candidate`,
+`active` or `overturned`, and the transition to `active` requires human
+authority. What makes it worth copying is that authority is not a field the
+caller sets: every row stamps the **channel the write actually arrived through**
+(`cli-agent`, `cli-tty`, `ui`, `signed`, `mechanical`), and a table maps channel
+to authority. A `--by human` flag was deleted for being *"a flag whose only
+function was to let the caller assert its own authority… an actor acting as
+witness for its own claim"*; what survives is `--by agent`, which can only
+narrow. The human path is the absence of that flag plus an interactive terminal,
+and the two strongest channels are unreachable from the CLI entirely, *"because a
+channel an agent can reach by shelling out is the deleted `--by human`
+renamed."* A hand-edited `ratified: true` on an agent row changes nothing,
+because the fold re-derives authority from the channel — there is a test for
+exactly that. The design states its own ceiling in the same comment: nothing
+local is unforgeable, and what this earns is provenance rather than proof.
+A revision returns an active record to `candidate` unless the revising channel
+is itself human, so approval attaches to the content and not to the row.
+
 The same design also separates lifecycle from epistemics the way Magic Context
 does, but by *location* rather than by column. Trust lives on the item and is
 append-only; liveness — resolved, reopened, superseded-candidate, forgotten —

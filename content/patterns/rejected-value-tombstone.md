@@ -252,6 +252,20 @@ the two. This one was caught by
 [re-deriving the strong-form subset](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-07-the-strong-form-tombstone-subset.md),
 which is a thing nobody does on a schedule.
 
+*And the same system runs a second negative store beside it, which is the
+sharpest illustration on this page of what the tombstone property actually
+buys.* Daimon's `refutations.jsonl` records an approach that **lost** — subject,
+verdict, scope, cited evidence — keyed on `sha1(subject, scope)`, folded through
+candidate, active and overturned, and activated only through a write channel the
+process observed to be human. By every measure of care it is the more elaborate
+of the two: adversarial tests, an authority model that cannot be spoofed by a
+flag, a revision rule that demotes its own record. And it is **not** a tombstone
+by this page's definition, because nothing consults it on any path a value
+travels: `refute guard` is a command an agent chooses to run, and the skill text
+shipped to hosts says a hit is *"advisory, not a command veto"*. The `forget`
+ledger, which is far simpler, is the one wired into the fold that every read
+crosses. Elaboration is not the property. Being on the path is.
+
 Everything else stops at supersession, archival, or deletion — mechanisms that
 remove a value from view without recording that it was *judged wrong*:
 

@@ -6,25 +6,25 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: 4222243e40352691b957d6e3242b5aed25e8c851
-revision_url: https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851
-analyzed_at: 2026-08-07
+revision: 214fa7c4b90c529c59aee96cc2b53e34fb53a79d
+revision_url: https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d
+analyzed_at: 2026-08-10
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
   storage: "Per-project JSON checkpoints plus a disposable SQLite FTS5 index"
   retrieval: "Automatic session-start injection; FTS5/BM25 for `recall`, ranked by importance x decay"
   write: "Detached LLM extraction at session end, then deterministic quote and outcome gates"
-  update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache"
+  update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache and the second negative store"
   scoping: "Per-project bucket applied on the read path; cross-project reads only by explicit slug"
   integration: "Host hooks (Claude Code plugin, Windsurf, Codex), CLI, read-only stdio MCP"
   background: "Detached serialize child, retry ledger with self-heal, index rebuild"
-  trust: "verbatim vs inferred as a stored field, verified by code against the transcript — with corroboration as a separate axis that can never become a trust class"
-  strengths: "A surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; an eleven-step deletion protocol with a never-forgotten twin per step; a placebo arm that has refuted the project's own features"
-  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value"
+  trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; and a separate candidate/active/overturned ledger whose authority is read off the observed write channel"
+  strengths: "Authority derived from the observed write channel rather than a caller-set flag, with the strongest channels unreachable from the CLI; a surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; a placebo arm that has refuted the project's own features"
+  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age"
 ---
 
 ## 1. Executive Summary
@@ -39,7 +39,7 @@ that one loop.
 The design commitment worth reading the code for is this: **every memory item
 carries a trust class, and the trust class is not taken on the model's word.**
 The extraction prompt asks for `trust: "verbatim"` plus an exact `quote`, and
-then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:799`)
+then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1015`)
 greps that quote against the rendered transcript. A miss is not a warning — the
 item is *downgraded* to `inferred`, the failure is logged, and a pointer to it is
 appended to a rejection ledger. Plenty of systems in this atlas store a
@@ -49,7 +49,7 @@ model's own trust label as a claim to be falsified before it is stored.
 A second gate goes further, and is the most interesting thing here. Quote
 verification certifies *transcription*, not truth: the model can conclude "the
 tests pass", be wrong, and the transcript will faithfully record it saying so.
-`ground_outcomes` (`serializer.py:963`) narrows that gap by lexicon — if an
+`ground_outcomes` (`serializer.py:1331`) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green) and the
 item cites no tool-result message as evidence, the item is downgraded to
 `inferred` even though its quote verified. The comment in the source states the
@@ -123,17 +123,13 @@ flowchart TB
 
 `sanitize_source_ids` drops message ids the transcript cannot vouch for;
 `pin_imperatives` force-pins a "never" or "must" the model paraphrased away.
-Neither can reject an item — they clean it. The two diamonds are where the
-design lives: **the model's trust claim is the input to a test, not the verdict.**
-Nothing promotes an item, the only movement between lanes is downward, and it is
-code that moves it.
-
-Read the two diamonds as the design: **the model's own trust claim is the input
-to a test, not the verdict.** Nothing promotes an item — the only movement
-between lanes is downward, and it is code that moves it.
+Neither can reject an item — they clean it. Read the two diamonds as the design:
+**the model's own trust claim is the input to a test, not the verdict.** Nothing
+promotes an item — the only movement between lanes is downward, and it is code
+that moves it.
 
 The item's identity is content-derived: `id = <kind-initial>-sha1("<field>:<text>")`
-truncated to a hex slice, minted by `policy.stamp_item_ids` (`policy.py:129`,
+truncated to a hex slice, minted by `policy.stamp_item_ids` (`policy.py:205`,
 re-exported as `store._stamp_item_ids`). Two sessions that extract the same
 sentence into the same field produce the same id. That single decision is what
 makes the tombstone work, and also what bounds it.
@@ -157,7 +153,7 @@ id, which is why widening the id could not break it.
 Lifecycle is *not* stored on the item. The checkpoint is append-only in
 practice — `last_verified` is stamped in exactly one place and the docstring
 forbids any other writer — and liveness is a **fold over an event log at read
-time** (`store.resolutions`, `store.py:1083`; `store.is_resolved`, `store.py:1124`):
+time** (`store.resolutions`, `store.py:1972`; `store.is_resolved`, `store.py:2013`):
 
 | Latest event for an id | Effect at read |
 | --- | --- |
@@ -170,22 +166,93 @@ time** (`store.resolutions`, `store.py:1083`; `store.is_resolved`, `store.py:112
 Statuses are free-form by design and readers prefix-match, so an unknown status
 resolves rather than vanishes — the writer bothered to record a lifecycle fact.
 Same-second ties break on event *content*, never file order, so a reordered log
-folds identically (`_tie_wins`, `store.py:1071`).
+folds identically (`_tie_wins`, `store.py:1960`).
 
 Three actors can move an item, and the code is explicit about which is which.
 **Code** downgrades trust classes and emits supersede *candidates*. **The
 model** proposes items and typed `supersedes` links but never writes the
-code-owned fields — `strip_code_owned_keys` (`serializer.py:1403`) deletes any
+code-owned fields — `strip_code_owned_keys` (`serializer.py:1904`) deletes any
 the model emits. **A human** resolves, forgets, and re-opens — and re-opening a
 resolved item requires evidence: either the item's code anchor still checks out
 live, or an explicit `--evidence` string. `_cmd_reverify` refuses otherwise,
 with the reason stated in the source: *"re-stamping without evidence would mark
 an unchecked claim verified — the one thing this tool must never do to its own
-audit trail"* (`cli.py:987`).
+audit trail"* (`cli.py:1558`).
 
 The system therefore treats memory as **attested transcription plus explicitly
 labelled inference**, never as ground truth. The briefing's own top section is
 called `VERIFY BEFORE TRUSTING`.
+
+### The second store, where a rejected approach lives
+
+A checkpoint item is a thing that was said. A **refutation** is a thing that
+lost, and `refutations.py` gives it a separate append-only stream with its own
+lifecycle fold, for a reason the module header states: refutations *"describe
+approaches that lost under named evidence and scope, so their lifetime cannot
+depend on checkpoint carry, ranking, or an LLM re-emitting the wording."*
+Negative knowledge that survives only by being re-extracted is negative
+knowledge that expires the first time the model forgets to mention it.
+
+A record is `{subject, verdict, scope, anchors, evidence, revisit_when}` keyed by
+`make_id(subject, scope)`, so a second assertion of the same subject in the same
+scope is refused with a pointer to `daimon refute revise`. It lives at
+`~/.daimon/<project-slug>/refutations.jsonl`, one row per lifecycle event —
+`asserted`, `ratified`, `activated`, `revised`, `overturn-proposed`,
+`overturned` — folded into three states: **candidate**, **active**,
+**overturned**. The write path is zero-LLM.
+
+**What makes it worth studying is that authority is a property of the write
+channel, never a claim the caller makes about itself.** Every row records the
+channel it arrived through — `cli-agent`, `cli-tty`, `ui`, `signed`,
+`mechanical` — and `CHANNEL_AUTHORITY` maps that to agent, human or mechanical.
+The comment says what was deleted and why:
+
+> `--by human` was a flag whose only function was to let the caller assert its
+> own authority, which is the echo-defense hole (#512) and the
+> self-assigned-identity hole (scar 0032) one layer up: an actor acting as
+> witness for its own claim.
+
+What survives is `--by agent` with `choices=["agent"]` — a flag that can only
+*narrow* authority. The human path is the **absence** of the flag plus
+`sys.stdin.isatty()`, and a non-interactive caller is refused with a message
+telling it to pass `--by agent`. `ui` and `signed` are unreachable from the CLI
+at all, *"because a channel an agent can reach by shelling out is the deleted
+`--by human` renamed."* The honesty about the ceiling is in the same comment:
+*"Nothing local is unforgeable… forgery costs deliberate impersonation instead
+of one word, and the channel stays auditable afterwards. That is strictly more
+than the zero bits recorded before."*
+
+Three consequences follow, and each is enforced in `fold`. An agent's assertion
+folds to `candidate` and nothing an agent can do promotes it. A `revised` event
+returns an active record to `candidate` unless the revising channel is itself
+human — so, exactly as with a re-opened checkpoint item, approval attaches to the
+content rather than to the row. And `overturned` requires a human channel;
+an agent gets `overturn-proposed`, which is recorded on the record and leaves it
+active. `_EVENT_RANK` resolves same-order ambiguity toward *less* authority:
+a ratification that sorts before a revision leaves the revision candidate.
+
+The two properties the design refuses are as clearly stated as the ones it
+claims. **Evidence is cited, not verified** — `_evidence` validates the shape of
+a `kind:payload` source and *"does not resolve the reference, does not check
+that the measurement or artifact exists, and cannot establish that it entails
+the verdict"*, which is why evidence text alone never activates a guard and why
+every rendering surface says so. And nothing reaps the ledger by age: `daimon
+status` prints *"append-only negative knowledge; forget reaches it by value,
+nothing reaps it by age"*, which is the project reporting growth in place of a
+retention policy it does not have.
+
+The read side is deliberately two-tiered. `search` is a scored lexical match
+over subject, verdict, scope and anchors. `guard` is high-precision and returns
+`active` records only, matching on a stable anchor or a subject phrase of at
+least eight characters contained in the query. Neither is called by a hook, a
+briefing or an injection path: `daimon refute guard` is a command, and the
+skill text handed to hosts says the quiet part — *"A hit is advisory, not a
+command veto: verify evidence, scope, and `revisit_when`."* The instrumentation
+is built for the question that follows, splitting usage by outcome and rail
+(`refute:guard:hit:anchor`, `refute:guard:hit:subject`, `refute:guard:miss`)
+because *"one aggregate count cannot separate a hit from a miss, so the
+false-veto rate the design named as its own expansion gate is uncomputable from
+field data."*
 
 ## 3. Architecture
 
@@ -271,7 +338,7 @@ rows carrying only `tool_result` blocks are surfaced as `role: "tool"` with a
 capped payload, which is what makes outcome grounding possible on that host and
 nowhere else.
 
-**Extraction.** `serializer.serialize_strict` (`serializer.py:1472`) gates on
+**Extraction.** `serializer.serialize_strict` (`serializer.py:2049`) gates on
 `min_messages` (10 by default; tool rows do not count), renders the transcript,
 and chunks it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
 through the D-016 prompt, each cached by content hash under
@@ -284,7 +351,7 @@ byte-identical retry against a caching gateway replays the same bad body.
 message ids the transcript cannot vouch for) → `pin_imperatives` → `verify_quotes`
 → `ground_outcomes` → `_stamp_llm_provenance`.
 
-**Carry.** `carry.merge` (`carry.py:189`) folds the previous checkpoint's
+**Carry.** `carry.merge` (`carry.py:295`) folds the previous checkpoint's
 unresolved items into the new one **by exact copy, in code**. The docstring
 records the experiment behind that choice: LLM re-emission lost whole items even
 from lossless input, while exact-copy carry held 1.0 fidelity. Items expire by
@@ -293,10 +360,10 @@ field. Dedup is salient-term overlap with a per-kind generic-term filter
 computed per merge — no static stoplist, so it stays language-neutral — plus a
 `_quantity_conflict` guard that stops "ten" and "twelve" from merging.
 
-**Retrieval.** `recall.search` (`recall.py:615`) runs an FTS5 `MATCH`, AND-joined
+**Retrieval.** `recall.search` (`recall.py:754`) runs an FTS5 `MATCH`, AND-joined
 first, retrying OR-joined when AND matches nothing, ordered by
 `superseded_by IS NOT NULL`, then bm25, then a silent `frontier` recency
-tiebreak. `recall.suggest` (`recall.py:778`) is the proactive path behind
+tiebreak. `recall.suggest` (`recall.py:1053`) is the proactive path behind
 `UserPromptSubmit`, gated hard toward silence: unknown project, fewer than two
 salient terms, or fewer than two distinct shared terms with a matched session all
 return `[]`.
@@ -370,7 +437,7 @@ makes the git merges conflict-free by construction. Teammates' items are
 attributed and never merged into yours.
 
 **Staleness** has a dedicated read-time signal. `briefing.stale_carried`
-(`briefing.py:316`) flags carried items whose effective last-verified age
+(`briefing.py:505`) flags carried items whose effective last-verified age
 exceeds seven days, and the docstring states the reasoning precisely: a fresh
 checkpoint restating a carried item **is not corroboration**, because both
 sources trace back to the same original extraction.
@@ -437,7 +504,7 @@ to reword.
 form: the item is deleted from the live checkpoint, the checkpoint is rewritten
 and its receipt re-minted, and a `forgotten:<sha256[:12]>` event is appended
 carrying a content hash and never the text. On the next index rebuild,
-`_apply_event_resolutions` (`recall.py:383`) *deletes* every row with that item
+`_apply_event_resolutions` (`recall.py:437`) *deletes* every row with that item
 id across every historical checkpoint, including the FTS5 contentless-delete
 dance. Because ids are content-derived, an identical re-extraction in a future
 session lands on the same id and is suppressed on every read path.
@@ -575,7 +642,7 @@ four registers: the trust class, the `uncertainties` field, the
 `worldcheck` pass.
 
 **`worldcheck` is where a stored claim is checked against the world**, and it
-covers four claim classes (`worldcheck.py:76-82`):
+covers five claim classes (`worldcheck.py:89-99`):
 
 | Class | Answered from | Shells out |
 | --- | --- | --- |
@@ -583,10 +650,25 @@ covers four claim classes (`worldcheck.py:76-82`):
 | `file-exists` | `Path.exists()` | no |
 | `branch-state` | git's on-disk refs | no |
 | `dependency-version` | the lockfile or manifest | no |
+| `receipt-validity` | the item's origin checkpoint's Ed25519 receipt | no |
 
-Three of the four are pure disk reads, so the majority of the pass works with no
+Four of the five are pure disk reads, so the majority of the pass works with no
 `gh` on `PATH`, no GitHub remote and no network — which matters because it makes
-verification available to a project that has none of those. One aggregate
+verification available to a project that has none of those.
+
+**The fifth class is the one worth separating out**, because its subject is not
+anything the memory says. The first four are *text-derived*: `claim_for` walks a
+fixed priority list and the first match wins, so an item mentioning both a PR and
+a path keeps a stable reading as classes are added. `receipt-validity` is
+deliberately **not in that list** — it is collected in its own pass from the
+item's `origin_session` stamp, so an item may legitimately carry both a text
+claim and a receipt claim. The claim it makes is *"implicit and absolute:
+carrying an item asserts its origin's provenance still holds, and only a full
+VALID says so."* Where the other four ask whether the world still matches what
+the memory said, this one asks whether the memory is still the record that was
+signed — an edited artifact and a receipt the verifier rejected are stamped as
+two different incidents, from a fixed literal vocabulary, because *"probe output
+is trusted for truth, never for text."* One aggregate
 `BUDGET_SECONDS = 0.8` and one `MAX_PROBES = 5` cover all four, and the cap is
 *allocated in checkpoint order* rather than consumed first-come, so a burst of
 `gh` claims at the top of a checkpoint cannot starve the cheap local probes
@@ -618,7 +700,7 @@ The first three carry named tests — `test_check_branch_found_in_packed_refs`,
 `test_check_branch_probe_follows_relative_worktree_gitdir`,
 `test_check_file_exists_symlink_escape_is_skipped` — as do the budget rules,
 in `test_shared_probe_cap_is_allocated_in_item_order` and
-`test_exhausted_budget_skips_local_probes`. Eighty-eight tests cover the module.
+`test_exhausted_budget_skips_local_probes`. 119 tests cover the module.
 
 One of them is worth naming for its method.
 `test_check_file_exists_never_spawns_a_subprocess` patches `subprocess.Popen`
@@ -643,7 +725,7 @@ still a gap.
 
 ## 10. Tests, Evals, and Benchmarks
 
-2,612 tests over ~40,300 lines against ~18,200 lines of source, better than
+3,132 tests over ~50,800 lines against ~24,700 lines of source, better than
 twice the source. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
@@ -652,6 +734,23 @@ design claims closely: `test_quote_verification.py`, `test_carry.py`,
 links never guess), `test_redact_leak_gaps.py`, `test_receipts.py`,
 `test_isolation.py` (every path escapes the real `$HOME` under test). I did not
 run the suite.
+
+**The refutation ledger carries 95 of those across four files, and they are
+adversarial rather than illustrative.** `test_refutation_authority.py` asserts
+the properties the channel table exists for —
+`test_agent_cannot_self_ratify`, `test_tampered_agent_ratification_flag_cannot_activate`
+(a hand-edited `ratified: true` on an agent row folds to candidate anyway, because
+the fold re-derives authority from the channel rather than trusting the flag), and
+`test_agent_overturn_proposal_does_not_disable_active_guard`.
+`test_refutations.py` covers the fold's determinism under reorder
+(`test_malformed_order_does_not_sink_the_ledger`), identity
+(`test_a_revision_cannot_take_over_another_records_identity`), and guard
+precision (`test_guard_fires_on_exact_issue_anchor_not_broad_topic` — a negative
+retrieval case in the strict sense, asserting that a broad topical query must
+*not* surface an active guard). `test_forget_refutations.py` and
+`test_refutation_privacy.py` bind the second store to the deletion contract, and
+`test_log_text_privacy.py` covers the downgrade lines that must log a hash rather
+than the item's text.
 
 **The benchmark is the notable part.** `benchmark/` runs LongMemEval-S through
 the *real* serializer and answers only from what `daimon recall` surfaces, with
@@ -717,6 +816,27 @@ the same way, because *"'the auditor ran' and 'the auditor found residue' answer
 different questions"*. This is [Cambium](../cambium/)'s refusal to return an
 unearned pass, applied to deletion durability by a system that had already
 shipped the most complete deletion test here and then declined to trust it.
+
+*The registry also catches its own writers.* The downgrade lines in
+`verify_quotes` and `ground_outcomes` land in `logs/serialize.log`, a shape the
+registry declares `exempt-no-plaintext`, and they log
+`normalize.content_key(item["text"])` rather than the text — *"the same
+`normalize.content_key` a later `forget` of this text would tombstone, so 'which
+item downgraded' stays answerable"* while the text itself never lands. The
+adjacent case is declared rather than fixed: the LLM child's stderr sink can echo
+prompt fragments, so it is registered as plaintext purged wholesale, *"a value
+inside prose diagnostics cannot be located when the tombstone is a hash."* The
+registry's value is visible in both halves — it names which writers are bound by
+which promise, and it makes the one that cannot be bound a declaration instead of
+a leak.
+
+**A refutation is subject to the same contract.** `refutations.jsonl` is a second
+plaintext store, so `forget` was extended to reach it: `forget_content_key`
+matches **every subject the record has ever carried, not only the folded one**,
+because a revision rewrites the subject and *"matching only the current subject
+would leave exactly the text `forget` exists to reach unreachable."* `_cmd_forget`
+also stops bailing when no checkpoint exists, since a value can live in the
+ledger with no checkpoint at all.
 
 **The deletion protocol is also structurally cheap here, and the reason
 generalizes.** Step 8 asserts absence from "recall's SQLite rows", and that is
@@ -797,6 +917,17 @@ letting the two be confused.
 - **Gate re-opening on evidence.** A correction surface that lets a human mark
   something verified without checking anything is a laundering path through the
   audit trail.
+- **Derive authority from the channel you observed, never from a flag the caller
+  set.** A `--by human` argument records zero bits: the actor asserting the claim
+  is also the witness to its own identity. Stamping the observed channel on every
+  row — and making the strongest channels unreachable from the surface an agent
+  can shell out to — costs one lookup table and converts forgery from one word
+  into deliberate impersonation, auditable afterwards. Say the ceiling out loud:
+  nothing local is unforgeable, and the claim earned is provenance, not proof.
+- **Let a revision demote its own record.** If editing an approved thing leaves
+  the approval attached, the approval is on the row rather than on the content.
+  Returning a revised record to candidate — unless the revising channel is itself
+  the approving one — is the same rule applied to negative knowledge.
 - **Make carry code, not a model call.** Re-emitting prior state through an LLM
   loses items from lossless input; exact copy does not. The measurement is in
   the repo's logbook.
@@ -901,22 +1032,25 @@ they stop working.
 
 **Verification and trust**
 - `plugin/daimon_briefing/anchor.py` — AST-hash code anchors and drift detection
-- `plugin/daimon_briefing/worldcheck.py` — budgeted spot-checks over four claim
+- `plugin/daimon_briefing/worldcheck.py` — budgeted spot-checks over five claim
   classes; only the PR/issue class shells out to `gh`
+- `plugin/daimon_briefing/refutations.py` — the project-scoped negative-knowledge
+  ledger, its channel-derived authority table and its lifecycle fold
 - `plugin/daimon_briefing/receipts.py` — vitni Ed25519 provenance receipts
 - `plugin/daimon_briefing/ledger.py` — serialize log, health classification, heal plan
 
 **Integration**
 - `hook/` and `plugin/daimon_briefing/_hooks/` — per-host adapters and the shared stdlib helper
 - `plugin/daimon_briefing/mcp_server.py`, `mcp_tools.py` — read-only stdio MCP
-- `plugin/daimon_briefing/cli.py` — every command, including `resolve`, `forget`, `reverify`
+- `plugin/daimon_briefing/cli.py` — every command, including `resolve`, `forget`,
+  `reverify` and the `refute add|ratify|revise|overturn|search|guard` family
 
 **Team and extras**
 - `plugin/daimon_briefing/teamsync.py`, `teamproject.py` — git sidecar mirror
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 2,612 tests
+- `plugin/tests/` — 3,132 tests across 81 files
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
   arm and its self-verification
@@ -924,6 +1058,8 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-08-10** — [`214fa7c4b90c529c59aee96cc2b53e34fb53a79d`](https://github.com/Daily-Nerd/daimon/commit/214fa7c4b90c529c59aee96cc2b53e34fb53a79d) — 20 commits on. Screened first: 0 auto-run surfaces, 2 build-time execution paths, 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent — and `stack_source` was promoted from `seeded` to `reviewed` after checking both lists against the tree. The material change is a second store: `refutations.py` and a `refutations.jsonl` per project, holding approaches that lost under cited evidence, with a candidate/active/overturned fold whose authority is read off the observed write channel rather than a caller-set flag. Two published claims were wrong, and both were wrong at the previous pin rather than overtaken by it. `worldcheck` covers **five** claim classes, not four: `receipt-validity` is collected in its own pass from the item's `origin_session` stamp rather than from its text, and `worldcheck.py` is byte-identical to the previous pin, so the count was miscounted rather than outdated. And fourteen line-number citations pointed at unrelated lines — `store.py:1083` was `try:`, `store.py:1124` was blank, `cli.py:987` was a call to `carry._generic_terms` — apparently carried forward from a pin several readings old; every one has been re-resolved against this commit. Elsewhere the deletion contract absorbed the new store and two of its own writers: `forget` reaches every subject a refutation has ever carried rather than only the folded one, and the quote-downgrade log lines record a content key instead of the item's text, closing a plaintext residue in a shape the surface registry had already declared `exempt-no-plaintext`.
 
 **2026-08-07** — [`4222243e40352691b957d6e3242b5aed25e8c851`](https://github.com/Daily-Nerd/daimon/commit/4222243e40352691b957d6e3242b5aed25e8c851) — 42 commits on, and the deletion contract is where nearly all of them landed. Screened first: 0 auto-run surfaces, 2 build-time execution paths, 1 unpinned surface, and `plugin/pyproject.toml` and `plugin/uv.lock` both inside the seven-day cooldown; nothing was built or run. No mark moved — six of seven, `bitemporal` still absent — and the mechanisms behind two of them grew materially. `surfaces.py` now declares every file shape written under `~/.daimon` with its delete strategy, and a guard asserts every observed write shape is declared with a sensitivity twin against an empty registry, so a new store cannot ship without stating how deletion reaches it. `daimon audit privacy` adds a read-only residue audit with a three-valued exit code whose third value exists so that *"could not check" must never look like "all clean"*. `forget` now reaches quote, scene, links and topic fields and redacts the event ledger; the serializer crash log and the Windsurf adapter's own transcript store were brought inside the deletion contract; and a forget in team mode publishes a hash-only `{ts, key, author}` row so teammates suppress the value by default, never carrying the text. A CLI trust inspector was added. The project's own scars file records the methodological rule behind the auditor — residue tests must not enumerate through the scrubber's own walk — which is the same failure this atlas records as a search scoped to the place the answer ought to be.
 

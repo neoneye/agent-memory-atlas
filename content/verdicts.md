@@ -569,8 +569,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`daimon`](../systems/daimon/)
 - Best idea: the model's trust label is a claim the code falsifies — a verbatim item's quote is grepped against the transcript and demoted on a miss, and an outcome claim with no tool result cited is demoted even when its quote verifies.
 - Biggest risk: the live working set is one checkpoint per project, so anything carry drops is reachable only through a lexical index with no semantic arm, and the committed retrieval numbers are modest.
-- Most reusable component: `verify_quotes` and `ground_outcomes` in `serializer.py` — about 200 lines that make an extraction's own provenance mechanically checkable.
-- Maturity impression: 18,200 lines of source under 40,300 lines of tests, a research logbook, a scar file per landmine, a benchmark reporting policy stricter than most vendors', and a replay A/B rig with a placebo arm that has been used to refute three of the project's own hypotheses.
+- Most reusable component: `verify_quotes` and `ground_outcomes` in `serializer.py` — about 200 lines that make an extraction's own provenance mechanically checkable. Its close second is `refutations.CHANNEL_AUTHORITY`, a lookup table that reads authority off the write channel the process observed instead of a `--by` flag the caller sets, with the strongest channels unreachable from the CLI so an agent cannot shell out to one.
+- Maturity impression: 24,700 lines of source under 50,800 lines of tests, a research logbook, a scar file per landmine, a benchmark reporting policy stricter than most vendors', and a replay A/B rig with a placebo arm that has been used to refute three of the project's own hypotheses.
 - Study when: you want cross-session continuity for a coding agent, or you want to see what taking trust classes seriously actually costs in code.
 - Do not copy when: you need memory within a session, semantic retrieval, or a shared service — none of the three is here or planned.
 
