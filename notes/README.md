@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md](2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md) —
+  arXiv:2608.00017 measures the self-grading feedback loop this atlas keeps
+  asserting from code: wrong episodes get inflated scores, the inflation couples
+  to reuse, and agent error rises with retrieved-set corruption at a measured
+  slope. Its Error-Independence Assumption says a stronger judge from the same
+  family cannot fix it, which is the argument behind Engram Alpha's *"exposure
+  doesn't validate"* arrived at independently. No report: the repository the
+  paper twice says holds its code, traces and result files returns 404, while
+  the author's account is active with 48 other public repositories. Worth
+  re-checking — if it appears, this is a report.
+
 - [2026-08-09-a-tokenomics-list-triaged.md](2026-08-09-a-tokenomics-list-triaged.md) —
   73 open-source projects from a token-cost list, read against the memory bar in
   fifteen batches. The starting hypothesis was that a cost corpus would be a poor

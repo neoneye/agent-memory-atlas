@@ -67,8 +67,9 @@ separate CLI. `test/archived-visibility.mjs` asserts that the session brief and
 the per-prompt recall path *refuse* to inject an archived card while search
 deliberately still returns one, labelled — a distinction between recall surfaces
 and injection surfaces that most of this corpus does not draw at all. The
-README's own "Current limitations" section names nine real gaps, and every one
-this report checked was accurate.
+README's own "Current limitations" section names twelve gaps, and eleven of the
+twelve are accurate — the exception being a caveat about the write lock that is
+more pessimistic than the code (section 7).
 
 What is weakest is reach. The features that make the trust story work are
 concentrated on one host. The git-blob drift check on evidence anchors

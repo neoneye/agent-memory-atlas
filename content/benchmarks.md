@@ -472,6 +472,25 @@ That last line is the habit worth naming. Every publisher discussed on this page
 makes choices that shape a number; almost none of them state which way their own
 conservatism cuts, in the artifact, before anyone asks.
 
+**The clearest published instance of the placebo arm is not in this corpus at
+all, which is itself the point.**
+[arXiv:2608.00017](https://arxiv.org/abs/2608.00017) evaluates a rule that
+demotes memories it believes are wrong, and answers the objection above head on:
+its Table 7 sets budget-matched random pruning beside it on the same bank, at
+the rule's exact budget of 123 demotions. Random pruning **harms** the bank
+(ΔCorr −0.16) because it hits 13 of the 15 genuinely correct memories, while the
+rule demotes the same number with zero collateral and gains +0.59 — so the
+result is attributable to *which* rows are demoted, not how many. It reports the
+comparison at 25/50/75/100% of the budget so the choice of budget cannot be the
+explanation, and it flags its own weakness in the direction that weakens the
+finding: with only 15 correct memories in the bank, *"the '0 demoted' figure is a
+low-count estimate, and we read it accordingly."* Two further cost-matched
+baselines are reported as failures. This is the design this section asks for,
+and the caveat that travels with it is the one recorded in the
+[comparative report](../compare/#known-limitations):
+the repository the paper twice names as holding its code, traces and result
+files returns 404, so none of it can be re-run.
+
 ### The system may not be optimizing that axis at all
 
 This is the important one. The systems in this atlas with the strongest

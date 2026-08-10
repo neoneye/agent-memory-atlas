@@ -1846,7 +1846,7 @@ ledger and the cross-project registry are all reachable only from
 <code>brain_note</code> from any of the other eight hosts mutates the
 brain and records no event. And the bin that survives a merge is keyed
 on card id, not on the claim, so a buried decision can be re-asserted
-tomorrow as a fresh card that nothing recognises.</p>
+later as a fresh card that nothing recognises.</p>
 <p>Tradeoff: operationally simple and inspectable; no answer to hosted
 ranking, multi-tenancy, or rich user modelling. CSM is the exception to
 the first half and not to the second — Postgres, pgvector and a local
@@ -12781,9 +12781,10 @@ between a shared budget and a race.</p>
 <h3 id="verify-memory-against-its-subject">Verify memory against its
 subject</h3>
 <p>Repos: <code>magic-context</code>, <code>daimon</code>,
-<code>csm</code>, <code>graphify</code> and <code>breadcrumbs</code>;
-the procedural analogue is <code>voyager</code>; contrast the
-judgment-based gates in <code>verel</code> and <code>rainbox</code>.</p>
+<code>csm</code>, <code>graphify</code>, <code>breadcrumbs</code> and
+<code>klypix-mcp</code>; the procedural analogue is
+<code>voyager</code>; contrast the judgment-based gates in
+<code>verel</code> and <code>rainbox</code>.</p>
 <p>Where a memory describes something inspectable, do not adjudicate it
 — check it. Map each memory to the artifacts it is about, record a
 per-memory verification timestamp, and let a change in those artifacts
@@ -12871,6 +12872,38 @@ somewhere to land that is not a rewrite of history, and the auditor is
 report-only by construction — it classifies and prints, and
 <code>--file-tasks</code> is an explicit stub seam rather than a write
 path.</p>
+<p><strong>Klypix MCP is the sixth, and it names its own
+ceiling.</strong> An <code>ev:</code> marker on a card records a
+<code>file:line</code> plus the git blob OID of that path at capture
+time, and a later read recomputes the OID to flag drift —
+<code>computeFreshness</code>, <code>evidenceGitPath</code> and
+<code>gitBlobOid</code> in <code>src/global-brain-hook.mjs</code>, with
+a committed test that builds a real git fixture and asserts the
+<em>failure</em> directions: a deleted, renamed or unresolvable path
+must go visibly stale rather than "inherit its old OID as a green
+check", and an absolute path outside the repository is rejected. What it
+adds is the honest scoping sentence the other five leave implicit —
+<em>"It detects that the code changed — never that the claim became
+false."</em> The cost is reach rather than mechanism: the anchor is
+opt-in per card and has to be written by the card's author, and the
+freshness computation is called from one adapter, so the same card read
+through the MCP tools carries no freshness at all.</p>
+<p><strong>There is also an argument that this pattern's model-free-ness
+is load-bearing rather than merely cheap</strong>, and it comes from
+outside the corpus. <a
+href="https://arxiv.org/abs/2608.00017">arXiv:2608.00017</a> formalises
+the condition a de-inflation signal must meet — it must track truth
+<em>and</em> have its error decorrelated from the bias of the grader
+that wrote the memory — and proves that where the checker's error echoes
+the original grader's, correction makes things worse at every step size.
+Every instance above satisfies that by accident of implementation: a
+blob OID, an <code>os.path.exists</code>, an AST hash and a
+line-multiplicity comparison all fail in ways a language model does not.
+The framing above treats "the verdict is a model call" as a cost and a
+degradation risk. The stronger reading is that a model checking a
+model's memory is the specific case where the check is worthless, and
+that reframes the pattern's model-free instances from frugal to
+correct.</p>
 <h3 id="diffusion-instead-of-traversal">Diffusion instead of
 traversal</h3>
 <p>Repo: <code>hipporag</code>; contrast with BFS traversal in
@@ -16036,6 +16069,78 @@ href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-a
 note</a>, which also records what the paper gets right and why its
 lineage-without-retroactive-removal is the tombstone gap in a training
 pipeline.</li>
+<li><strong><code>arXiv:2608.00017</code> was examined and has no
+report, and the reason is that its own advertised repository does not
+exist.</strong> <a href="https://arxiv.org/abs/2608.00017">Memory Reward
+Inflation in Self-Improving LLM Agents</a> (submitted 29 June 2026) is
+the measurement behind a failure this atlas names in report after report
+and has never been able to price. An agent that stores each episode with
+a score and retrieves by similarity is running policy improvement whose
+reward is that score — and in deployment the score is the model's own
+assessment of its own output. The paper gives that failure two
+conditions rather than one: self-grades inflate wrong memories,
+<strong>and</strong> among wrong memories the inflation couples to
+reuse. The second is what separates it from <em>LLM judges are
+optimistic</em> — a uniformly generous grader changes no ordering, while
+a grader whose confidence in a wrong answer predicts how often that
+answer is retrieved builds a store whose most influential entries are
+its most confident mistakes. They call it the <strong>Echo Gap</strong>,
+and measure grader leniency at 31% for Claude Haiku 4.5, 54% for
+GPT-5.4-mini and 41% for frontier GPT-5.4, so it is not one family's
+artifact. <strong>Its central result is that a stronger judge is not the
+fix</strong>, formalised as the Error-Independence Assumption: a
+de-inflation signal must track truth <em>and</em> decorrelate its error
+from the self-grade bias, and where the verifier's error echoes the
+self-grade strongly, demotion makes the inflation worse at every step
+size. Global recalibration cannot repair the bank either, because a
+monotone map preserves the ordering retrieval and trust consume. That is
+the argument behind <a href="../systems/engram-alpha/">Engram
+Alpha</a>'s <em>"exposure doesn't validate"</em>, reached independently
+and with an inequality attached — and it is the failure recorded here
+for <a href="../systems/core-memory/">Core Memory</a>, <a
+href="../systems/nooa-memory/">NOOA</a>, <a
+href="../systems/mnemopi/">Mnemopi</a> and <a
+href="../systems/powermem/">PowerMem</a>. Its algorithm, LUCID, is
+<strong>answer-free and makes no model call at all</strong>: it flags an
+episode when the SQL errors, times out or runs non-deterministically,
+when it returns empty or all-NULL, or when it filters on a string
+literal absent from the question — <em>"a direct fingerprint of a value
+copied from a different, wrongly trusted memory"</em> — and demotes the
+stored reward 1 → 0 without rewriting content. Precision 0.90 against a
+0.46 base rate; recall low and argued harmless, since a missed wrong
+memory leaves the status quo and a demoted right one does damage. On the
+full BIRD development set with a memory-less control as the third arm,
+52.4% → 54.0% → 56.9%. <strong>And it ships the placebo arm <a
+href="../benchmarks/#the-stronger-version-compare-against-doing-it-for-no-reason">this
+atlas's benchmarks page</a> asks for and finds in exactly one
+repository</strong>: budget-matched random pruning at the same 123
+demotions <em>harms</em> the bank, taking 13 of its 15 genuinely correct
+memories, which is what makes the result about which rows are demoted
+rather than how many. <strong>And the artifact is missing.</strong> The
+paper states availability twice in the present tense — a footnote saying
+code, data and per-episode memory traces <em>"are available at"</em> a
+named GitHub URL, and Appendix F saying all of it plus exact run
+configurations and result files <em>"are released at"</em> the same one.
+Checked 10 August 2026, that URL returns 404, while the author's account
+returns 200 with 48 public repositories, none of them this one. So it is
+not a dead account, a rate limit or a rename with a redirect. The atlas
+already records <a
+href="#published-benchmark-numbers-without-committed-artifacts">published
+benchmark numbers without committed artifacts</a> for Memvid, MemoryOS
+and FiFA; this is the sharper version, because those repositories exist
+and lack the result files while this result names a repository that is
+not there — there is no partial artifact to inspect. Nothing in that
+undermines the proofs, which stand on their own, but it removes any way
+to check that the three detector channels are what the prose says, that
+the Memento re-implementation is faithful, or that 0.90 falls out of the
+traces. Most likely a repository the authors intend to publish and have
+not yet made public. Worth re-checking: if it appears, this is a report
+rather than a list entry, and the per-episode traces would be the first
+artifact in this corpus that lets a reader watch a memory bank become
+corrupted. See <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md">the
+note</a>, which also records that the paper carries no limitations
+section, and what its appendices do in place of one.</li>
 <li><strong><code>Untrivial-ai/agent-orchestrator</code> was examined
 and has no report, and it is the atlas's own thesis implemented by
 something that is not a memory system.</strong> Apache-2.0, at <a
