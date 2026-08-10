@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 246 reports.**
+**This page covers all 247 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["246 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["247 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2131,4 +2131,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: PolyForm Noncommercial 1.0.0. A 1,435-line continuity module and a 729-line checkpoint policy in TypeScript, ported from a 40,314-line Python core whose three source functions the header names with line numbers, and held to the same fixtures — two tests assert a port matches a shared fixture *exactly*. 28 test cases, most of them on the scoping filter and both sides of its AND gate.
 - Study when: you recall text a previous session wrote, and have never marked it as data on the way back in.
 - Do not copy when: the licence forbids it, or you need to see and prune what has been stored — the only administration surface is `rm`.
+
+### [`klypix-mcp`](../systems/klypix-mcp/)
+
+- Best idea: the benchmark runs a negative control before the measurement. Ten writers that bypass the lock go first, and `BENCHMARKS.md` records them losing 17 of 22 cards; if they ever lose nothing, the run reports **inconclusive** rather than a pass. A no-loss number from a harness that cannot detect loss is not evidence, and this is the only committed benchmark in the corpus that says so and then implements it.
+- Biggest risk: the entire lifecycle is prose and containment. `isArchived` is `/^archive$/i.test(c.area || '')` at roughly thirty read paths, and a death date is a regex over the card's own text — so renaming one container would silently make every retired decision read as current fact, and nothing in `test/` covers that case.
+- Most reusable component: `gardenApprovalCode`. Consolidation cannot apply without an eight-character SHA-1 of the exact candidate ids plus the day, never printed to the model and obtained by a human running `npx klypix-mcp garden-code`. An agent that skipped the review cannot get the code, and an approval issued for one candidate set cannot be replayed against another — two properties from one line, added after the gate's own comment records it was *"a model-proposes-model-approves loop with zero human in it."*
+- Maturity impression: Apache-2.0, 23,372 lines across `src/` and `bin/`, 174 commits since 8 June 2026, 57 test files and 10,520 test lines with 53 chained in `npm test` and a publish workflow that gates on them. Several test files are named for the dated incident that produced them. The README's "Current limitations" section names nine real gaps and every one checked here was accurate — except the lock caveat, which is more pessimistic than the code.
+- Study when: several agents from different vendors work one repository and you want project intent versioned the way code is, in a file you can `unzip` and fix by hand.
+- Do not copy when: memory must be multi-user or multi-tenant — there is no scope key, and coordination is not merely machine-local but OS-user-local — or when the trust machinery has to reach past Claude Code, since the freshness check, the mutation ledger and the cross-project registry live in that one adapter.
 
