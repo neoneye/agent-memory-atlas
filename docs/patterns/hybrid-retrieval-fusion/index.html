@@ -306,6 +306,34 @@ the import throws — three materially different retrieval qualities
 behind one output shape, one <code>catch {}</code>, and no signal to the
 caller. If a channel can degrade, the result should say which channel
 ran.</p>
+<p><strong><a href="../../systems/qwen-mm-plugins/">Qwen MM Plugins</a>
+closes a failure mode this page has otherwise only described in its
+degradation form: the two arms can also disagree about <em>what the
+vectors mean</em>.</strong> Its dense arm reads an
+<code>embeddings.npz</code> written at build time, its sparse arm is a
+BM25 index built over the same nodes, and both are fused by RRF in the
+usual way. What is uncommon is
+<code>check_dimension_compatibility</code>, which compares the stored
+matrix's width against the embedding backend now answering queries and
+raises with a message naming the likely cause — a memory "built with a
+different model than the current query backend". Every system on this
+page persists an index and embeds queries at read time, and in every one
+of them those are two artifacts that can drift apart with no exception,
+no crash and no empty result: the dense arm keeps returning neighbours,
+they are simply neighbours in a space the query never entered, and RRF
+dutifully fuses that garbage with a sparse arm that is working
+correctly. Fusion makes this <em>harder</em> to notice than a single-arm
+retriever would, because the lexical hits keep the result list looking
+plausible. A width comparison at load is a one-line check against the
+highest-cost silent failure in the pattern.</p>
+<p>The same system also shows why fusion earns its keep on content
+nobody wrote prose for. Its two arms are searched over a video's
+extracted events, and the lexical side reaches material the dense side
+systematically blurs — a name, a score, a caption, a slide title,
+captured verbatim into an <code>OnScreenText</code> record. The argument
+for hybrid here is not that one arm is better tuned; it is that proper
+nouns and short strings on screen have no useful embedding neighbourhood
+at all.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

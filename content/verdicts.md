@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 249 reports.**
+**This page covers all 250 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["249 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["250 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2159,3 +2159,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, `@smythos/sre` 1.8.1, about 45,700 lines across 235 TypeScript files in `packages/core/src`, first commit 7 June 2025 and 108 test files. The cache, storage, NKV and vector connectors are each tested; `LLMContext`, `LLMCache`, `RuntimeContext` and all four `Memory*` components have no test file, and the one test named *"preserves context across prompts"* mocks the conversation object away, so its assertions hold whether or not context is preserved. `LLMMemoryConnector` is exported from the package index with no implementation and no call site.
 - Study when: you are building a runtime with swappable infrastructure and want to see scope enforcement placed where it cannot be skipped, or you want a worked example of how a permissive default identity provider silently widens a boundary that every other layer is defending correctly.
 - Do not copy when: memory is the product. There is no fact, no extraction, no ranking, no provenance and no correction here — retrieval is exact-key lookup plus newest-first truncation to a token budget, and the abstract class that would have held the rest is empty.
+
+### [`qwen-mm-plugins`](../systems/qwen-mm-plugins/)
+
+- Best idea: the tool description teaches the retriever's failure mode. `search_nodes` tells the model its index "matches event descriptions, not questions" and gives a good query beside a bad one — guidance placed in the one string that is guaranteed to be in context every time the model considers the tool, rather than in a README nobody loads.
+- Biggest risk: nothing can be corrected. No delete, update, supersede or tombstone surface exists in the capability, so a hallucinated entity or a wrong causal edge is in the graph until the whole memory is rebuilt from the video — and no node carries a confidence, a build id or a model name that a later pass could act on.
+- Most reusable component: `check_dimension_compatibility`. A stored embedding matrix and a live embedding backend can drift apart with no error and no crash, producing plausible, confidently ranked garbage; one width comparison and a message naming the likely cause converts that into a startup error.
+- Maturity impression: Apache-2.0, 5,611 lines of Python for this capability inside a suite created 29 July 2026, with 21 test files across the repository. The build pipeline has 26 test functions and is properly resumable — a JSONL checkpoint per macro event, a liveness check on the producer PID, a done marker. The query surface has two tests: the server lists its tools, and it degrades gracefully with no memory. Hybrid fusion, RRF, the dimension check and all nine tools are untested, and no retrieval measurement is committed anywhere.
+- Study when: an agent must answer questions about hours of recorded media it cannot hold in context, and you want to see a hierarchy with a real entry point at every level plus a skill that names the threshold below which it is the wrong tool.
+- Do not copy when: memory accumulates over time. Build-once, no provenance, no scope key and no deletion are all defensible for indexing a video file that still exists, and every one of them is a property you would have to remove before remembering anything about a person, a project or a codebase.
