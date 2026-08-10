@@ -98,7 +98,7 @@ mechanics, trust models, and operational tradeoffs.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="in-short">In Short</h2>
-<p>248 memory systems with publicly readable source, each read at a
+<p>249 memory systems with publicly readable source, each read at a
 pinned commit and judged against seven mechanisms with strict
 definitions. Not all 165 are open source — see <a
 href="#what-the-licences-actually-say">what the licences actually
@@ -106,7 +106,7 @@ say</a>. Corpus last extended <strong>6 August 2026</strong>. Five
 findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong> 12
-systems of 248 carry a rejected-value tombstone — a record keyed on the
+systems of 249 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
 hiding a row, which stops a reader seeing it and does not stop a writer
@@ -178,7 +178,7 @@ precisely because it lacks one</em>. That is an editorial judgement and
 it is stated here rather than left to be discovered by reading four
 reports against the rule.</p>
 <p><strong>Why the two counts differ.</strong> The atlas holds
-<strong>248 reports across 247 repositories</strong>:
+<strong>249 reports across 248 repositories</strong>:
 <code>NousResearch/hermes-agent</code> carries two distinct memory
 systems and is reviewed twice, as <a
 href="../systems/hermes-agent/">Hermes Agent</a> and <a
@@ -288,7 +288,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twelve tombstones, fifty-four negative-eval suites — are counts <em>over
+twelve tombstones, fifty-five negative-eval suites — are counts <em>over
 inspectable code</em>, and a closed system could hold any of these
 mechanisms without this method ever knowing. And a mechanism's absence
 here is weaker evidence about the field than its presence: finding a
@@ -316,8 +316,8 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 138 of
-248 systems here have, and is what the mark means. A scope
+A scope <em>key applied as a filter on the read path</em> is what 139 of
+249 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
 count suggests, and in a single-user desktop deployment is not even the
@@ -336,7 +336,7 @@ readers need. The <a href="../capabilities/">capability index</a> —
 every system against all seven marks, filterable — is the fastest way
 in.</p>
 <h2 id="1-high-level-taxonomy">1. High-Level Taxonomy</h2>
-<p>Two hundred and forty-eight systems do not fall into one hundred and
+<p>Two hundred and forty-nine systems do not fall into one hundred and
 sixty-six categories. They cluster around eight architectural
 commitments, and most systems belong to more than one — a coding-agent
 memory can also be verification-first, and a host runtime's plugin can
@@ -1033,8 +1033,10 @@ href="../systems/agno/"><code>agno</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
 href="../systems/dexto/"><code>dexto</code></a>, <a
 href="../systems/cognis/"><code>cognis</code></a>, <a
-href="../systems/gh-aw/"><code>gh-aw</code></a> Plugins mounted on them:
-<a href="../systems/holographic/"><code>holographic</code></a>, <a
+href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
+href="../systems/smythos-sre/"><code>smythos-sre</code></a> Plugins
+mounted on them: <a
+href="../systems/holographic/"><code>holographic</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/metaclaw/"><code>metaclaw</code></a>, <a
 href="../systems/byterover/"><code>byterover</code></a>, <a
@@ -1215,6 +1217,30 @@ ask before calling <code>save_learning</code>, while
 exists only in the string handed to the model is not a gate, and it is
 the clearest instance in this atlas of the difference between
 instructing a behaviour and enforcing one.</p>
+<p><strong><a href="../systems/smythos-sre/">SmythOS SRE</a> takes the
+family's thesis to its endpoint: the interface is there and nothing
+implements it.</strong> <code>LLMMemoryConnector</code> is an abstract
+class exported from the package index with a <code>load(messages)</code>
+signature, no subclass, and no call site anywhere in the tree. What the
+<code>MemoryManager</code> subsystem actually contains is a cache
+service, a runtime-context serialiser and a conversation transcript — so
+the runtime that named a memory contract shipped the seam and none of
+the model. The reason to read it anyway is one layer down, and it is the
+best answer in this family to a question the others keep relocating into
+their plugins. Every read of every store passes
+<code>@SecureConnector.AccessControl</code>, a decorator that resolves
+the ACL stored with the entry and throws before the method body runs; a
+caller cannot forget it because callers do not implement it. Set against
+ADK's required keyword arguments, this is the other way to make scope
+unforgettable — a signature makes you pass the key, a decorator makes
+you pass the check. What it also shows is how far that guarantee
+travels: SRE writes the conversation mirror with a <em>team</em> owner,
+and the default <code>Account</code> connector resolves every unknown
+principal to one team called <code>default</code>, so the gate stays
+real while the boundary behind it widens to nothing. The machinery still
+runs, still logs, and still passes its tests. A permissive identity
+provider selected by default is the cheapest way to turn working access
+control into decoration, and it is invisible from the inside.</p>
 <h3 id="local-coding-agent-memory">Local coding-agent memory</h3>
 <p><a href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/mempalace/"><code>mempalace</code></a>, <a
@@ -2731,7 +2757,7 @@ survives the session with an identity you could later correct.</p>
 <h2 id="2-comparative-matrix">2. Comparative Matrix</h2>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 248 systems by the seven mechanisms judged against strict
+filters all 249 systems by the seven mechanisms judged against strict
 definitions, combining them with <strong>and</strong> — it answers
 "tombstone <em>and</em> scope enforced" in one click, which is the
 question this table cannot be sorted to answer. It is linked here as
@@ -8606,6 +8632,46 @@ implements, and that phrase is bound to capture and retrieval
 instead</td>
 </tr>
 <tr>
+<td><code>smythos-sre</code></td>
+<td>A cache entry — an opaque string under a composed key, with a TTL
+and an ACL. The two that carry conversation are <code>messages</code>
+(the whole transcript array) and <code>systemPrompt</code></td>
+<td>In-process <code>Map</code> by default (<code>RAMCache</code>), with
+Redis, S3 and a local-file cache as drop-in connectors; persisted chats
+go to files on disk through SmythFS</td>
+<td>Exact key lookup only. Nothing ranks, scores or searches — the
+transcript is loaded whole and then trimmed newest-first to a token
+budget</td>
+<td>Synchronous and total. Every message rewrites the entire transcript
+array to the store and to the cache mirror</td>
+<td>TTL expiry is the primary death: 3 hours for memory components, 1–3
+hours for runtime context, 1 hour for the LLM cache.
+<code>MemoryDeleteKeyVal</code> removes a value and its scope pointer.
+<code>LLMCache.clear()</code> deletes a key that is never written</td>
+<td>An ACL stamped on every entry naming an agent, user or team as
+owner, checked on the read path. The conversation mirror is written
+team-scoped; the default account connector resolves every candidate to
+one team</td>
+<td>Four workflow components (<code>MemoryWriteKeyVal</code>,
+<code>MemoryReadKeyVal</code>, <code>MemoryDeleteKeyVal</code>,
+<code>MemoryWriteObject</code>) an agent author wires by hand, plus
+<code>agent.chat(id, { persist: true })</code> in the SDK</td>
+<td>One expiry sweep per minute in <code>RAMCache</code>, and a
+debounced context sync whose cooldown scales with serialized size. No
+consolidation, extraction or summarisation pass exists</td>
+<td>None. No field records where a value came from or whether it may be
+acted on; a tool result and a user statement enter the transcript
+identically</td>
+<td>Access control is a decorator on the connector method rather than a
+convention, so it cannot be forgotten at a call site; scope violations
+on the key-value components fail closed as 'key not found'</td>
+<td>The transcript handle travels in a client-supplied
+<code>X-CACHE-ID</code> header; the mirror's ACL is team-wide and the
+default account connector puts everyone in one team; the scope pointer
+is written unscoped, so two sessions sharing a memory name silently lose
+each other's data</td>
+</tr>
+<tr>
 <td><code>soul-of-waifu</code></td>
 <td>Four kinds of Markdown file — a psychological state index, a user
 profile, per-subject topic files, and a dated append-only diary</td>
@@ -9455,7 +9521,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>12 of 248:</em> <a
+<p><em>12 of 249:</em> <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -9471,7 +9537,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>48 of 248:</em> <a
+<p><em>48 of 249:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -9524,7 +9590,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 <a href="../systems/verel/"><code>verel</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>28 of 248:</em> <a
+<p><em>28 of 249:</em> <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 <a href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
@@ -9558,7 +9624,7 @@ href="../systems/vestige/"><code>vestige</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>138 of 248:</em> <a
+<p><em>139 of 249:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -9683,6 +9749,7 @@ href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/redis-agent-memory-server/"><code>redis-agent-memory-server</code></a>,
 <a href="../systems/serena/"><code>serena</code></a>, <a
 href="../systems/simplemem/"><code>simplemem</code></a>, <a
+href="../systems/smythos-sre/"><code>smythos-sre</code></a>, <a
 href="../systems/stash/"><code>stash</code></a>, <a
 href="../systems/superlocalmemory/"><code>superlocalmemory</code></a>,
 <a href="../systems/supermemory/"><code>supermemory</code></a>, <a
@@ -9702,7 +9769,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>70 of 248:</em> <a
+<p><em>70 of 249:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentmemory/"><code>agentmemory</code></a>, <a
 href="../systems/alma-memory/"><code>alma-memory</code></a>, <a
@@ -9776,7 +9843,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>61 of 248:</em> <a
+<p><em>61 of 249:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentswarms/"><code>agentswarms</code></a>, <a
@@ -9841,7 +9908,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>54 of 248:</em> <a
+<p><em>55 of 249:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -9891,8 +9958,9 @@ href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
 <a
 href="../systems/second-brain-cloudflare/"><code>second-brain-cloudflare</code></a>,
-<a href="../systems/token-optimizer/"><code>token-optimizer</code></a>,
-<a href="../systems/truememory/"><code>truememory</code></a>, <a
+<a href="../systems/smythos-sre/"><code>smythos-sre</code></a>, <a
+href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
+href="../systems/truememory/"><code>truememory</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
@@ -9914,8 +9982,8 @@ here measures that.</p>
 collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
-<p><strong>Negative evidence is almost never tested.</strong> Fifty-four
-repositories of two hundred and forty-eight assert that particular
+<p><strong>Negative evidence is almost never tested.</strong> Fifty-five
+repositories of two hundred and forty-nine assert that particular
 material must <em>not</em> be retrieved — the assertion every scope,
 deletion and correction claim in this document ultimately rests on. Read
 together rather than one at a time, they split cleanly in two, and the
@@ -13522,7 +13590,7 @@ half-life to every memory kind.</p>
 recording the decision, its context, and the failure that motivated it —
 its per-agent isolation ADR states plainly that a coding agent's pinned
 memories were polluting a research agent's recall. Across two hundred
-and forty-eight systems, almost none can explain why they are shaped the
+and forty-nine systems, almost none can explain why they are shaped the
 way they are.</p>
 <p>Make scope structurally inseparable from the query. OpenClaw composes
 agent scope and user filter into a single predicate so an unscoped read
@@ -13998,6 +14066,7 @@ href="../systems/memoryops-ai/"><code>memoryops-ai</code></a></li>
 href="../systems/engram-alpha/"><code>engram-alpha</code></a></li>
 <li><a href="../systems/sesa/"><code>sesa</code></a></li>
 <li><a href="../systems/opensre/"><code>opensre</code></a></li>
+<li><a href="../systems/smythos-sre/"><code>smythos-sre</code></a></li>
 </ul>
 <h3 id="repos-inspected">Repos Inspected</h3>
 <ul>
@@ -14969,6 +15038,11 @@ at <a
 href="https://github.com/cbalgeman/agent-mesh/commit/258a1eed288513e24953a633c44b397e91ea9886"><code class="commit-id" title="258a1eed288513e24953a633c44b397e91ea9886">258a1eed…</code></a>
 — read only; no third-party dependencies to install, and the two shipped
 examples were read rather than run</li>
+<li><a href="https://github.com/SmythOS/sre">SmythOS/sre</a> at <a
+href="https://github.com/SmythOS/sre/commit/5c382a1ec07accc75947c3e4fa24841532ae7c88"><code class="commit-id" title="5c382a1ec07accc75947c3e4fa24841532ae7c88">5c382a1e…</code></a>
+— read only; the <code>MemoryManager</code> subsystem, the four
+<code>Memory*</code> components, the security decorator and the SDK chat
+store, not the LLM-provider or component libraries</li>
 </ul>
 <h3 id="commands-used">Commands Used</h3>
 <p>Representative local inspection commands:</p>

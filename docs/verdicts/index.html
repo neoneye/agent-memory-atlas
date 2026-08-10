@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 248 reports.</strong></p>
+<p><strong>This page covers all 249 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;248 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;249 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6538,6 +6538,51 @@ summarised, and a privacy default that commits nothing.</li>
 Nothing is retrieved automatically, <code>decisions search</code> is an
 unranked substring scan that never reads the decision body, and the
 verification tables have a runner, a drift event and no producer.</li>
+</ul>
+<h3 id="smythos-sre"><a
+href="../systems/smythos-sre/"><code>smythos-sre</code></a></h3>
+<ul>
+<li>Best idea: access control is a decorator on the connector method,
+not a clause in a query. <code>@SecureConnector.AccessControl</code>
+takes the request and resource id as its first two arguments, resolves
+the ACL that was stored with the entry, and throws before the wrapped
+body runs — so every cache and storage read is checked and no call site
+can forget, because call sites do not implement it. Most scoping in this
+atlas is a <code>WHERE</code> somebody has to remember to write.</li>
+<li>Biggest risk: the conversation transcript is handed across a process
+boundary by a cache id in an <code>X-CACHE-ID</code> HTTP header, read
+back unvalidated, while the mirror it addresses is written with a
+<em>team</em> owner and the default <code>DummyAccount</code> connector
+resolves every unknown principal to one team called
+<code>default</code>. The gate runs, logs and passes its tests; the
+boundary behind it is the whole process. What separates two
+conversations is that the id is a random <code>uid()</code>, which is a
+rate limiter rather than an authorisation scheme.</li>
+<li>Most reusable component: the scope-mismatch response in
+<code>MemoryReadKeyVal</code>. A key belonging to another session and a
+key that does not exist both return <code>key not found</code>, so a
+reader learns nothing about the key space outside its scope. The natural
+implementation returns a distinguishable error and leaks it.</li>
+<li>Maturity impression: MIT, <code>@smythos/sre</code> 1.8.1, about
+45,700 lines across 235 TypeScript files in
+<code>packages/core/src</code>, first commit 7 June 2025 and 108 test
+files. The cache, storage, NKV and vector connectors are each tested;
+<code>LLMContext</code>, <code>LLMCache</code>,
+<code>RuntimeContext</code> and all four <code>Memory*</code> components
+have no test file, and the one test named <em>"preserves context across
+prompts"</em> mocks the conversation object away, so its assertions hold
+whether or not context is preserved. <code>LLMMemoryConnector</code> is
+exported from the package index with no implementation and no call
+site.</li>
+<li>Study when: you are building a runtime with swappable infrastructure
+and want to see scope enforcement placed where it cannot be skipped, or
+you want a worked example of how a permissive default identity provider
+silently widens a boundary that every other layer is defending
+correctly.</li>
+<li>Do not copy when: memory is the product. There is no fact, no
+extraction, no ranking, no provenance and no correction here — retrieval
+is exact-key lookup plus newest-first truncation to a token budget, and
+the abstract class that would have held the rest is empty.</li>
 </ul>
         </article>
       </div>

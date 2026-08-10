@@ -332,6 +332,23 @@ shows the pattern at its smallest — a 196-line
 examples (<code>clawmem_memory_adapter.py</code>,
 <code>vector_memory_adapter.py</code>). The shape survives the scale
 reduction; so does the missing deletion path.</p>
+<p><strong><a href="../../systems/smythos-sre/">SmythOS SRE</a> is the
+degenerate case, and it is deliberately not counted in the tally
+above.</strong> <code>LLMMemoryConnector</code> is an abstract class
+extending the runtime's secure-connector base, declaring one method —
+<code>load(messages)</code> — and it is exported from the package index
+at <code>packages/core/src/index.ts</code>. There is no subclass
+anywhere in the tree, no registration in the connector service, and no
+call site. Nothing mounts it, so it is not a provider contract that
+anyone has had to satisfy; it is the seam without the socket. It earns a
+mention here because the failure it illustrates is cheap to reach: the
+same repository ships a working connector pattern for cache, storage,
+vector search, LLM providers and accounts, each with real
+implementations behind it, and a reader encountering
+<code>MemoryManager</code> reasonably assumes memory has one too. An
+exported abstract class is a promise the type system will not keep, and
+the distance between "we defined the interface" and "a provider exists"
+is the entire pattern.</p>
 <p>Two providers in this ecosystem — <a
 href="../../systems/redis-agent-memory-server/">Redis Agent Memory
 Server</a> and <a href="../../systems/openviking/">OpenViking</a> — have

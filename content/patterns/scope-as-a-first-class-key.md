@@ -384,6 +384,37 @@ all 6 SessionStart adapters silently leak again. These tests fail loudly
 instead."* Testing the shared function rather than the six callers is what makes
 a seventh adapter, written later, inherit the guarantee.
 
+**[SmythOS SRE](../../systems/smythos-sre/) is the failure this page has not
+otherwise seen: the filter is applied correctly and the identity it filters on
+is widened underneath it.** The enforcement placement is the best here.
+`@SecureConnector.AccessControl` is a method decorator on the connector base
+class; it reads `acRequest` and `resourceId` off the arguments, resolves the ACL
+that was stored with the entry, and throws `ACLAccessDeniedError` before the
+wrapped body runs. Every `get`, `set`, `delete` and `exists` on every cache and
+storage connector carries it. Unlike a `WHERE` clause, it cannot be omitted at a
+call site, because call sites do not write it — and unlike a required keyword
+argument, it also covers implementations written later by someone else.
+
+Then `hasAccess` tries five things in order, and the fourth is the candidate's
+*team*, resolved through the account connector. The default account connector is
+`DummyAccount`, whose `getCandidateTeam` walks its configured data, finds
+nothing, and returns the constant `DEFAULT_TEAM_ID` — the string `default` — for
+any principal, while `isTeamMember` returns `true` unconditionally for that team.
+The conversation transcript mirror is written with a team owner. So a check that
+is unforgettable by construction resolves, under the shipped defaults, to a
+tenancy of one.
+
+The lesson generalises past this codebase. Every other entry on this page can be
+audited by reading the read path; this one cannot, because the read path is
+correct. **The scope key is only as narrow as the thing that resolves principals
+to scopes**, and that resolver is usually configuration rather than code — which
+means it is invisible to code review, unchanged by tests that pass, and selected
+by whatever the framework defaults to. If a permissive resolver has to exist for
+local development, the transferable rule is that it must be chosen explicitly and
+must say so unconditionally at startup. SRE's does warn, in a branch that
+re-tests a condition the line above it just satisfied, so the warning never
+prints.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

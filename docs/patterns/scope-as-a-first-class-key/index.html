@@ -499,6 +499,41 @@ shape: <em>"If either contract regresses, all 6 SessionStart adapters
 silently leak again. These tests fail loudly instead."</em> Testing the
 shared function rather than the six callers is what makes a seventh
 adapter, written later, inherit the guarantee.</p>
+<p><strong><a href="../../systems/smythos-sre/">SmythOS SRE</a> is the
+failure this page has not otherwise seen: the filter is applied
+correctly and the identity it filters on is widened underneath
+it.</strong> The enforcement placement is the best here.
+<code>@SecureConnector.AccessControl</code> is a method decorator on the
+connector base class; it reads <code>acRequest</code> and
+<code>resourceId</code> off the arguments, resolves the ACL that was
+stored with the entry, and throws <code>ACLAccessDeniedError</code>
+before the wrapped body runs. Every <code>get</code>, <code>set</code>,
+<code>delete</code> and <code>exists</code> on every cache and storage
+connector carries it. Unlike a <code>WHERE</code> clause, it cannot be
+omitted at a call site, because call sites do not write it — and unlike
+a required keyword argument, it also covers implementations written
+later by someone else.</p>
+<p>Then <code>hasAccess</code> tries five things in order, and the
+fourth is the candidate's <em>team</em>, resolved through the account
+connector. The default account connector is <code>DummyAccount</code>,
+whose <code>getCandidateTeam</code> walks its configured data, finds
+nothing, and returns the constant <code>DEFAULT_TEAM_ID</code> — the
+string <code>default</code> — for any principal, while
+<code>isTeamMember</code> returns <code>true</code> unconditionally for
+that team. The conversation transcript mirror is written with a team
+owner. So a check that is unforgettable by construction resolves, under
+the shipped defaults, to a tenancy of one.</p>
+<p>The lesson generalises past this codebase. Every other entry on this
+page can be audited by reading the read path; this one cannot, because
+the read path is correct. <strong>The scope key is only as narrow as the
+thing that resolves principals to scopes</strong>, and that resolver is
+usually configuration rather than code — which means it is invisible to
+code review, unchanged by tests that pass, and selected by whatever the
+framework defaults to. If a permissive resolver has to exist for local
+development, the transferable rule is that it must be chosen explicitly
+and must say so unconditionally at startup. SRE's does warn, in a branch
+that re-tests a condition the line above it just satisfied, so the
+warning never prints.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 248 reports.**
+**This page covers all 249 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["248 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["249 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2150,3 +2150,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want a coordination history you can audit — a hash-chained log with a disposable derived index, closed provenance vocabularies distinguishing what a human said from what an agent summarised, and a privacy default that commits nothing.
 - Do not copy when: you need memory an agent actually receives. Nothing is retrieved automatically, `decisions search` is an unranked substring scan that never reads the decision body, and the verification tables have a runner, a drift event and no producer.
 
+
+### [`smythos-sre`](../systems/smythos-sre/)
+
+- Best idea: access control is a decorator on the connector method, not a clause in a query. `@SecureConnector.AccessControl` takes the request and resource id as its first two arguments, resolves the ACL that was stored with the entry, and throws before the wrapped body runs — so every cache and storage read is checked and no call site can forget, because call sites do not implement it. Most scoping in this atlas is a `WHERE` somebody has to remember to write.
+- Biggest risk: the conversation transcript is handed across a process boundary by a cache id in an `X-CACHE-ID` HTTP header, read back unvalidated, while the mirror it addresses is written with a *team* owner and the default `DummyAccount` connector resolves every unknown principal to one team called `default`. The gate runs, logs and passes its tests; the boundary behind it is the whole process. What separates two conversations is that the id is a random `uid()`, which is a rate limiter rather than an authorisation scheme.
+- Most reusable component: the scope-mismatch response in `MemoryReadKeyVal`. A key belonging to another session and a key that does not exist both return `key not found`, so a reader learns nothing about the key space outside its scope. The natural implementation returns a distinguishable error and leaks it.
+- Maturity impression: MIT, `@smythos/sre` 1.8.1, about 45,700 lines across 235 TypeScript files in `packages/core/src`, first commit 7 June 2025 and 108 test files. The cache, storage, NKV and vector connectors are each tested; `LLMContext`, `LLMCache`, `RuntimeContext` and all four `Memory*` components have no test file, and the one test named *"preserves context across prompts"* mocks the conversation object away, so its assertions hold whether or not context is preserved. `LLMMemoryConnector` is exported from the package index with no implementation and no call site.
+- Study when: you are building a runtime with swappable infrastructure and want to see scope enforcement placed where it cannot be skipped, or you want a worked example of how a permissive default identity provider silently widens a boundary that every other layer is defending correctly.
+- Do not copy when: memory is the product. There is no fact, no extraction, no ranking, no provenance and no correction here — retrieval is exact-key lookup plus newest-first truncation to a token budget, and the abstract class that would have held the rest is empty.
