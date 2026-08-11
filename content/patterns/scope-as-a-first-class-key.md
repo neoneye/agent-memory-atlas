@@ -445,6 +445,28 @@ away: the test defines its own `recall` helper whose body is
 shipped handler omits, so it exercises the branch that works and never the branch
 that runs.
 
+**[Memora](../../systems/memora/) is the same defect fixed, on a different key,
+and the fix is the transferable artifact.** Its retrieval `follow` mode decides
+whether corrected memories come back rather than whose memories come back, but
+the shape is identical: the filtering function was correct, two internal callers
+passed the safe value, and the three public MCP tools passed the caller's
+argument through to a storage layer that reads `None` as unfiltered. The
+correction is eleven lines — `resolve_follow(follow, *, default, for_get=False)`
+turns an omitted argument into the tool's safe default, keeps the permissive
+`None` for internal callers, and makes the string `"all"` the only way to ask for
+no filtering — plus a comment stating the rule: *"None is no longer a public
+'give me everything' signal on MCP tools."* Two properties are worth copying
+together. The default is applied **at the tool boundary**, not in the storage
+layer, so the internal callers that legitimately need everything are unaffected.
+And the unsafe reading is preserved as an explicit escape hatch, so the fix costs
+a forensic capability nothing — which is what makes it adoptable in a system that
+already has callers.
+
+The pair also says something about how to check this pattern. Both systems
+implement the filter correctly, and in both the defect is in a *default*, which
+means reading the function that enforces scope tells you nothing about whether it
+runs. Read the call site and the signature the model is shown.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

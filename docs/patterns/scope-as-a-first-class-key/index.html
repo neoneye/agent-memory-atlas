@@ -569,6 +569,30 @@ whose body is
 <code>sessionKey: args.sessionKey ?? "test-session"</code>. It supplies
 the default the shipped handler omits, so it exercises the branch that
 works and never the branch that runs.</p>
+<p><strong><a href="../../systems/memora/">Memora</a> is the same defect
+fixed, on a different key, and the fix is the transferable
+artifact.</strong> Its retrieval <code>follow</code> mode decides
+whether corrected memories come back rather than whose memories come
+back, but the shape is identical: the filtering function was correct,
+two internal callers passed the safe value, and the three public MCP
+tools passed the caller's argument through to a storage layer that reads
+<code>None</code> as unfiltered. The correction is eleven lines —
+<code>resolve_follow(follow, *, default, for_get=False)</code> turns an
+omitted argument into the tool's safe default, keeps the permissive
+<code>None</code> for internal callers, and makes the string
+<code>"all"</code> the only way to ask for no filtering — plus a comment
+stating the rule: <em>"None is no longer a public 'give me everything'
+signal on MCP tools."</em> Two properties are worth copying together.
+The default is applied <strong>at the tool boundary</strong>, not in the
+storage layer, so the internal callers that legitimately need everything
+are unaffected. And the unsafe reading is preserved as an explicit
+escape hatch, so the fix costs a forensic capability nothing — which is
+what makes it adoptable in a system that already has callers.</p>
+<p>The pair also says something about how to check this pattern. Both
+systems implement the filter correctly, and in both the defect is in a
+<em>default</em>, which means reading the function that enforces scope
+tells you nothing about whether it runs. Read the call site and the
+signature the model is shown.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -217,6 +217,22 @@ own demo scenarios, and a secret filter whose rejection names the rule
 rather than echoing the value. Only the proposal step is a language
 model; every gate after it is deterministic and testable, which is what
 makes the committed negative cases possible.</p>
+<p><a href="../../systems/plur1bus/">PLUR1BUS</a> shows what a gate can
+demand of a correction and what happens when it demands too much.
+<code>lib/safe-update.js</code> refuses a content change with no
+<code>updateSource</code> and no <code>updateEvidence</code>, refuses
+new text with no new embedding, deduplicates on a hash of the change
+rather than of the row, and appends the outcome to a reconsolidation
+event log — five checks in one function, each of which a caller cannot
+skip. The sixth is a <strong>semantic drift gate</strong>: the
+correction is rejected outright if the new embedding sits more than 0.45
+cosine from the old, on the reasoning that a replacement meaning
+something else is corruption rather than correction. It is the only
+instance of that check in this atlas, and the only caller in the tree
+passes <code>skipDriftGate: true</code>. Both halves are worth carrying:
+a gate can meaningfully refuse a correction on semantic grounds, and a
+gate whose threshold is wrong for its one real caller becomes a gate
+that never runs.</p>
 <p><a href="../../systems/verel/">Verel</a> gates promotion rather than
 writing; <a href="../../systems/engram/">engram</a> surfaces conflict
 candidates for judgment.</p>

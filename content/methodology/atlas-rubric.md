@@ -136,13 +136,16 @@ outside.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. The negative
-retrieval assertion is carried by fifty-seven repositories
-of two hundred and fifty-two, and they are not all
+retrieval assertion is carried by fifty-nine repositories
+of two hundred and fifty-three, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a
-*scope boundary*, and only [Verel](../../systems/verel/) is recorded asserting it
-about a value that was corrected, which is the harder and more useful version.
+*scope boundary*, and only two are recorded asserting it about a value that was
+*corrected* — [Verel](../../systems/verel/), and [Memora](../../systems/memora/),
+whose suite asserts that a superseded memory must not appear under default
+search or default list and that the explicit forensic mode still returns it.
+That is the harder and more useful version.
 
 **What the marks actually are, because they are not all the same thing.**
 Every one of them is a committed case asserting that
@@ -158,13 +161,13 @@ re-score, system by system, is in
 it also names the one mark that cites no case at all and should probably be
 dropped.
 
-**Three numbers appear above and they are not the same kind of number.** Fifty
-is live, generated from report frontmatter on every build. Thirty-seven and
+**Three numbers appear above and they are not the same kind of number.**
+Fifty-nine is live, generated from report frontmatter on every build. Thirty-seven and
 twenty-seven are dated: what the corpus held, and what the re-score found in it,
 on 2026-08-08. Every mark awarded since was judged against the strict definition
 at the top of this section, but **the read-path share has not been recomputed** —
 so 27 describes a smaller corpus and is not a current strict reading.
-Recomputing it means re-reading fifty test suites, which is what
+Recomputing it means re-reading every marked test suite, which is what
 `capability_evidence:`'s `subsystem` field exists to spread across future
 readings rather than do in one pass.
 

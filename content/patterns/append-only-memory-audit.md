@@ -348,6 +348,19 @@ underneath it. Decide which transitions the log covers by asking which ones you
 would need to reconstruct, not by asking which ones happen to pass through the
 function you instrumented.
 
+[PLUR1BUS](../../systems/plur1bus/) records the *decision* alongside the change.
+A reconsolidation event carries the action, the update source, the quoted
+evidence, the caller's confidence and the measured semantic drift between the old
+and new embedding, so the log answers not only what changed but how far it moved
+and on whose word. The mechanism worth stealing is beside it. The store is
+append-only JSONL with an id index, and a status transition returns the record
+with the *same id*, so an id-keyed dedupe would have silently swallowed every
+promotion — the append key is therefore computed as `status:<id>:<status>:<updatedAt>`
+for a transition and as content for a candidate, and a record carrying `updatedAt`
+is never deduplicated at all. Making a log append-only is the easy half; choosing
+a key under which a mutation cannot be mistaken for a duplicate is the half that
+decides whether the log is complete.
+
 [Memory Palace](../../systems/memory-palace/) is the counterexample and worth
 knowing about before trusting a schema. Migration 0004 creates `access_log` as
 "the L0 layer" persisting read, write, search-hit and compact events "used by the

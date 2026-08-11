@@ -456,6 +456,22 @@ is only as deep as the log underneath it. Decide which transitions the
 log covers by asking which ones you would need to reconstruct, not by
 asking which ones happen to pass through the function you
 instrumented.</p>
+<p><a href="../../systems/plur1bus/">PLUR1BUS</a> records the
+<em>decision</em> alongside the change. A reconsolidation event carries
+the action, the update source, the quoted evidence, the caller's
+confidence and the measured semantic drift between the old and new
+embedding, so the log answers not only what changed but how far it moved
+and on whose word. The mechanism worth stealing is beside it. The store
+is append-only JSONL with an id index, and a status transition returns
+the record with the <em>same id</em>, so an id-keyed dedupe would have
+silently swallowed every promotion — the append key is therefore
+computed as
+<code>status:&lt;id&gt;:&lt;status&gt;:&lt;updatedAt&gt;</code> for a
+transition and as content for a candidate, and a record carrying
+<code>updatedAt</code> is never deduplicated at all. Making a log
+append-only is the easy half; choosing a key under which a mutation
+cannot be mistaken for a duplicate is the half that decides whether the
+log is complete.</p>
 <p><a href="../../systems/memory-palace/">Memory Palace</a> is the
 counterexample and worth knowing about before trusting a schema.
 Migration 0004 creates <code>access_log</code> as "the L0 layer"

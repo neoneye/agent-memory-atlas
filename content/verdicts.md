@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 252 reports.**
+**This page covers all 253 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["252 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["253 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2186,3 +2186,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Rust, 40,832 lines across 134 files, 378 commits since 2 July 2026, and 414 test functions with 105 in the store suite alone — 3,319 test lines against 4,648 lines of store code. The schema-version tests reject newer, older *and* unversioned databases. `save_compaction` is marked dead code with a docstring saying nothing writes compactions yet, which is the honest way to ship an unbuilt primitive. Three submodules, one tracking a `dev` branch rather than a commit.
 - Study when: you are building a branching conversation store and want the shared-node design done properly, or you want to see memory mutation that refuses to race an in-flight reader.
 - Do not copy when: memory has to be defensible or recoverable. Nothing records provenance, nothing records that a message changed, and an edit is a one-way door in a store that already knows how to keep alternatives.
+
+### [`plur1bus`](../systems/plur1bus/)
+
+- Best idea: `lib/safe-update.js` — a correction that must carry a source and a quoted piece of evidence, must supply a new embedding with new text, is deduplicated by an idempotency hash over the change rather than the row, and writes the replacement to durable storage *before* superseding the original, with the crash window named in a comment and resolved in favour of a recoverable fork over a possible loss.
+- Biggest risk: doubt is arithmetic. Seven record statuses and a six-level trust ladder exist as fields, and `conflict`, `demoted` and `untrusted` enter recall as penalties of 0.3, 0.35 and 0.3 rather than as filters. Only the deletion states — `pruned` and `tombstoned` — score `-Infinity`. A memory the system has recorded as contradicting another memory ranks slightly lower and is injected anyway.
+- Most reusable component: the injected-context guard. Text PLUR1BUS itself put into a prompt is marker-matched and refused as a capture candidate, which closes the recall-becomes-memory loop the code traces to a dated performance analysis. Beside it, the append dedupe keys: a status transition is keyed on the transition, so making a log append-only does not silently swallow every promotion.
+- Maturity impression: MIT, release 7.2.3, ~64,000 lines of JavaScript with ~70,000 more across 312 test files — a test suite larger than the implementation, and the denials rather than the permissions are what it asserts. Against that, forty-seven configuration groups, fifteen background jobs, a two-major-old copy of its own source left in the tree, and a `postinstall` that patches the host OpenClaw's shipped code and is contractually unable to fail.
+- Study when: you are designing a correction path and want the most complete worked answer in this atlas to "change a memory without losing the old one" — or you want the clearest case of a safety gate that every caller disables.
+- Do not copy when: you need multi-tenant guarantees. The read-path ACL is genuinely good and fails closed, but the code itself records that dreams, episodes, graph edges and patterns carry no scope field, so their reader was left unfiltered rather than filtering everything to nothing.

@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twelve systems of two hundred and fifty-two
+> **This is not an established best practice.** Twelve systems of two hundred and fifty-three
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, three built it after
@@ -53,6 +53,15 @@ the new write creates a different row saying the same wrong thing.
 If a better name exists, this atlas has not found it, and the term is used here
 with that collision acknowledged rather than hidden. What matters is the key, not
 the word.
+
+**A third collision is inside the corpus rather than outside it.**
+[PLUR1BUS](../../systems/plur1bus/) ships `tombstoned` as one of seven record
+statuses, reachable by an authorized human command, and a record in that state
+scores `-Infinity` and never reaches recall. That is a well-built soft delete
+under this pattern's name: it is keyed on the record, so re-capturing the same
+sentence produces a new card in `candidate` that nothing checks against what was
+tombstoned. The system that uses the word is not thereby the system that has the
+mechanism, which is the reason this table exists.
 
 ## The problem
 
@@ -207,8 +216,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of two hundred and fifty-one
-would suggest a hard idea that a few teams reach independently. One of two hundred and fifty-one, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of two hundred and fifty-three
+would suggest a hard idea that a few teams reach independently. One of two hundred and fifty-three, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 

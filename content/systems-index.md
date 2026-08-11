@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **252 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **253 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -169,7 +169,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memobase`](../systems/memobase/) **Memobase** — Structured user profiles · `memodb-io/memobase` · Scope enforced
 - [`memoir`](../systems/memoir/) **Memoir** — The collision policy is chosen by memory type · `zhangfengcdt/memoir` · Scope enforced, Mutation audit, Human review
 - [`memomind`](../systems/memomind/) **MemoMind** — Four defects found by running someone else's engine · `24kchengYe/MemoMind`
-- [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review
+- [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review, Negative evals
 - [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced
 - [`memory-engine`](../systems/memory-engine/) **Memory Engine** — Agents as principals · `timescale/memory-engine` · Bi-temporal, Scope enforced
 - [`memory-lancedb-pro`](../systems/memory-lancedb-pro/) **memory-lancedb-pro** — OpenClaw memory plugin · `CortexReach/memory-lancedb-pro` · Bi-temporal, Scope enforced
@@ -240,6 +240,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`perseus-vault`](../systems/perseus-vault/) **Perseus Vault** — Claims audited against artifacts · `Perseus-Computing-LLC/perseus-vault` · Tombstone, Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
 - [`pi`](../systems/pi/) **Pi** — Branchable session substrate · `earendil-works/pi`
 - [`pltm-claude`](../systems/pltm-claude/) **PLTM** — A third verdict with nowhere to live · `Alby2007/PLTM-Claude` · Scope enforced
+- [`plur1bus`](../systems/plur1bus/) **PLUR1BUS** — OpenClaw memory plugin · `Cyb3rb1ade/openclaw-plur1bus-memory` · Trust state, Scope enforced, Mutation audit, Human review, Negative evals
 - [`powermem`](../systems/powermem/) **PowerMem** — Decay on the read path · `oceanbase/powermem` · Scope enforced
 - [`prime-agent`](../systems/prime-agent/) **Prime Agent** — A harness that edits itself, with an undo · `PrimeIntellect-ai/prime-agent` · Scope enforced, Mutation audit, Negative evals
 - [`project-golem`](../systems/project-golem/) **Project Golem** — A list of what the owner said no to · `Arvincreator/project-golem`
