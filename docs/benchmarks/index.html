@@ -110,8 +110,12 @@ corrected.</p>
 <li><strong>Almost every memory benchmark asks one question</strong>:
 after a long conversation, can the system answer a question about
 something said earlier? That is recall. Most of what makes memory hard —
-correction, deletion, scope, trust, cost — is not on the
-scoreboard.</li>
+correction, deletion, scope, trust, cost — is not on the scoreboard. The
+one published proposal that scores the rest is <a
+href="#aoep">AOEP-v0</a>, which replaces the task with a contract,
+checks five named invariants deterministically, and reports a pilot in
+which three storage designs with different retrieval quality score
+<em>identically</em> on governance. Its harness is not released.</li>
 <li><strong>A bad score on one benchmark is weak evidence.</strong>
 These are end-to-end pipelines judged by a language model, and the
 memory layer is one of six things that determine the number.</li>
@@ -1605,6 +1609,146 @@ recording as a result rather than passing over.</p>
 test</a> below — <code>prompt_prefix</code> is the B measurement,
 <code>run_background_jobs</code> is the C measurement, and only the
 assertions change.</p>
+<p><a id="aoep"></a></p>
+<h3
+id="aoep-v0--the-closest-thing-to-the-test-above-and-it-has-been-run">AOEP-v0
+— the closest thing to the test above, and it has been run</h3>
+<p>The demand two sections up — a state-machine test rather than a QA
+benchmark, with a small adapter and deterministic assertions — is not
+hypothetical any more. <strong>Always-On Agents</strong> (<a
+href="https://arxiv.org/abs/2606.30306">arXiv:2606.30306</a>, submitted
+29 June 2026) proposes the <em>Always-On Evaluation Protocol</em> and
+reports a pilot run of it over seven systems. It is a 136-page survey
+and its evaluation section is the part this page has been asking for, so
+it is treated here as a benchmark proposal rather than as a reading
+list.</p>
+<p>The protocol fixes a <strong>data contract instead of a
+task</strong>. An episode is a stream of typed events replayed one at a
+time; at the end the harness poses neutral probes — naming only target
+and actor identities, never expected values or invariant names — and
+reconstructs a state snapshot from the answers. Each event carries what
+a memory row usually omits: an idempotency key, causal links split into
+parent, supersedes and conflicts-with, a <strong>permission
+epoch</strong> on its scope that increments when authority changes,
+provenance with an explicit trust tier, retention and privacy
+constraints, and exactly one operation from a closed set of eleven
+(<code>read</code>, <code>write</code>, <code>update</code>,
+<code>delete</code>, <code>tombstone</code>, <code>share</code>,
+<code>unshare</code>, <code>validate</code>, <code>quarantine</code>,
+<code>deny</code>, <code>rollback</code>). The snapshot exposes a
+deletion ledger, a rollback ledger, pending conflicts, and the
+permission epochs in force.</p>
+<p>Three design decisions are worth taking whatever you are
+measuring.</p>
+<p><strong>The harness never trusts a system's self-report.</strong> It
+recomputes every invariant itself from the reconstructed snapshot. This
+page has spent several sections on vendor-run comparisons and
+self-assessed scores; a protocol that structurally cannot accept a
+system's word for its own behaviour is the answer to that whole class of
+problem.</p>
+<p><strong>Every check is deterministic — no LLM judge.</strong> The
+stated reason is that the position, verbosity and self-enhancement
+biases of model judging would be fatal for a contract whose purpose is
+detecting <em>quiet</em> failures. That is the same conclusion the <a
+href="#judge-variance">judge variance</a> section reaches from the
+opposite direction.</p>
+<p><strong>The scorecard is two numbers, not one, and the reason is the
+sharpest idea in it.</strong> <em>Obligation pass</em> counts positive
+things a system must actively do — record a deletion, report the current
+permission epoch after a revocation, block a stale-permission or
+untrusted-instruction task, surface an owner-versus- collaborator
+conflict, log a rollback after an external action.
+<em>Negative-invariant pass</em> counts the no-leakage checks — a
+deleted value is not visible, an out-of-scope value does not appear, an
+untrusted instruction was not promoted. They are kept apart because
+their degenerate solutions are opposite: <strong>a system that stores
+nothing passes every negative invariant</strong>, since it cannot leak
+what it never kept. Pooled into one scalar, amnesia would score
+respectably. Split, the no-memory floor is legible as what it is.</p>
+<p>The pilot bears that out, and its result table is the most useful
+thing published about governance in memory systems to date:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>System</th>
+<th>Obligation</th>
+<th>Negative-invariant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Governed reducer (oracle upper bound)</td>
+<td>15/15</td>
+<td>41/41</td>
+</tr>
+<tr>
+<td>No-memory floor</td>
+<td>0/15</td>
+<td>41/41</td>
+</tr>
+<tr>
+<td>Naive append</td>
+<td>7/15</td>
+<td>40/41</td>
+</tr>
+<tr>
+<td>Full context</td>
+<td>7/15</td>
+<td>40/41</td>
+</tr>
+<tr>
+<td>Vector-RAG</td>
+<td>7/15</td>
+<td>40/41</td>
+</tr>
+<tr>
+<td>Mem0-style reimplementation</td>
+<td>4/15</td>
+<td>38/41</td>
+</tr>
+<tr>
+<td><a href="../systems/mem0/">Mem0</a>, the actual <code>mem0ai</code>
+package</td>
+<td>3/15</td>
+<td>36/41</td>
+</tr>
+</tbody>
+</table></div>
+<p>Nine fault patterns, one frozen local reader, greedy decoding.
+<strong>The three raw-storage configurations score identically</strong>,
+which is the finding: recency, full context and dense retrieval pass
+exactly the obligations that reduce to semantic recall and fail exactly
+the ones that require maintained governance state. Retrieval quality is
+not the variable. And the two extracted-fact configurations score
+<em>lower</em> than storing everything raw, because in this pilot the
+extraction step drops the structured envelope — which is this atlas's <a
+href="../patterns/evidence-before-belief/">evidence before belief</a>
+argument arriving as a number.</p>
+<p>Read the Mem0 rows with the care the paper asks for. It is a local
+configuration against a 7B reader, not a product evaluation, and the
+paper says so; the authors included the real package specifically to
+answer the objection that their reimplementation created the failure
+mode.</p>
+<p><strong>What it does not do</strong>, and the gap is the same one
+this page keeps recording: no harness, schema or fault-pattern corpus is
+released with the paper. A protocol whose entire value is being runnable
+is described in prose, which puts AOEP-v0 in the same position as <a
+href="#fifa-the-one-proposal-that-scores-deletion-compliance">FiFA</a> —
+a good idea whose artifact is missing — with the important difference
+that its pilot was actually run and its numbers are reported per check
+rather than pooled. The pilot is also seven configurations, five of them
+built by the authors, so the table is a demonstration that the protocol
+discriminates rather than a survey of deployed systems.</p>
+<p><strong>Against the thirteen-step sequence above</strong>, AOEP is
+broader and shallower on deletion specifically. It checks that a
+tombstoned value is absent from the snapshot and that the deletion
+ledger matches, which is steps 3–4 plus a derived-tier check; it does
+not re-feed the original source material, and it does not run the
+system's background jobs and re-assert. Steps 5–8 — the ones that
+separate <em>deleted now</em> from <em>stays deleted</em> — remain
+uncovered by anything published. The two are complements: AOEP covers
+authority, scope, conflict and rollback that the sequence below does not
+touch, and the sequence covers re-derivation that AOEP does not.</p>
 <p><a id="contradiction-test"></a></p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
 <p>Forgetting has no benchmark, only <a

@@ -123,9 +123,26 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
     # broke the match. Any determiner between the two numbers hides a count.
     digits = re.compile(r"\b\d+\s+of\s+(?:the\s+)?(\d{2,3})\b")
 
+    # A paragraph citing an external work states that work's numbers. The floor
+    # above ("only the system total is ever this large") stopped being true the
+    # day this atlas started comparing itself to a survey that coded 435 works:
+    # "retrieve appears in 269 of 435" clears every floor and is nobody's stale
+    # count. Exempt only a denominator that is not one of our live totals, so a
+    # real corpus count sitting beside a citation is still checked.
+    external = re.compile(r"arxiv\.org|arXiv:|doi\.org", re.I)
+
+    def cited_spans(text: str) -> list[tuple[int, int]]:
+        spans, cursor = [], 0
+        for para in text.split("\n\n"):
+            if external.search(para):
+                spans.append((cursor, cursor + len(para)))
+            cursor += len(para) + 2
+        return spans
+
     found: list[str] = []
     for source in [root / "site" / "index.html"] + sorted((root / "content").rglob("*.md")):
         text = source.read_text(encoding="utf-8")
+        cited = cited_spans(text)
         for index, pattern in enumerate(patterns):
             for match in pattern.finditer(text):
                 value = WORDS[match.group(1).lower()]
@@ -147,6 +164,8 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
                 # floor of sixteen does not start failing the build.
                 if index == 0 and SUBSET_TAIL.match(text, match.end()):
                     continue
+                if any(start <= match.start() < end for start, end in cited):
+                    continue
                 line = text[: match.start()].count("\n") + 1
                 found.append(
                     f"{source.relative_to(root)}:{line}: '{match.group(0).strip()}' "
@@ -155,6 +174,8 @@ def stale_number_words(root: Path, live: set[int]) -> list[str]:
         for match in digits.finditer(text):
             value = int(match.group(1))
             if value < 40 or value in live:
+                continue
+            if any(start <= match.start() < end for start, end in cited):
                 continue
             line = text[: match.start()].count("\n") + 1
             found.append(

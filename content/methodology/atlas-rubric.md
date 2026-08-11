@@ -329,6 +329,23 @@ fixed yet.
   of this — it is not: its beliefs carry a status enum that moves
   `Active | Weakening | Revised | Abandoned | Contradicted`, which is correction
   with identity. Storing no *text* is not the same as having nothing to correct.
+- **Two axes the seven marks do not carry, named by a survey that coded 435
+  works.** *Always-On Agents* ([arXiv:2606.30306](https://arxiv.org/abs/2606.30306),
+  29 June 2026) reads persistent state along six axes — authority, scope,
+  mutability, provenance, recoverability, actionability — of which four map onto
+  marks here and two do not. **Authority** asks who or what licenses a record to
+  influence an action, as distinct from the agent merely holding it; the nearest
+  thing on this page is `human_review`, which asks whether a person can inspect,
+  not whether a grant exists and is still current. **Recoverability** asks
+  whether a decision taken on a bad record can be traced and repaired; nothing
+  here scores rollback at all. The survey finds both are the field's thinnest
+  regions — authority is its rarest axis at 72 of 435 works, and rollback its
+  rarest lifecycle stage at 27 — so the omission is not obviously costing this
+  corpus many marks. It is still an omission, and the honest reading is that the
+  seven were chosen against failures found by reading implementations, which
+  under-weights a failure whose implementations largely do not exist yet. Adding
+  a mark is not the obvious fix: a mark nobody satisfies discriminates nothing.
+  Recording the gap is.
 - **No second reader.** Every mark on every report comes from one LLM reviewer
   directed by one person, with no blinded re-review and no inter-rater agreement
   figure. The [methodology hazards

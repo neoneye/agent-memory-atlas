@@ -38,6 +38,24 @@ Five findings, with the counts they rest on:
    epistemic status. The rest store a confidence float, which cannot express
    *rejected* and so cannot survive being wrong.
 
+**A survey of the literature reached the same shape independently.**
+*Always-On Agents* ([arXiv:2606.30306](https://arxiv.org/abs/2606.30306),
+29 June 2026) codes 435 works against a ten-stage lifecycle and finds the field
+concentrated on the accumulating end: retrieve appears in 269 of 435 and write in
+200, while audit falls to 88, forget to 66 and rollback to 27 — and it reports
+inter-coder agreement (0.82 on lifecycle stages, 0.74 on state axes over a blind
+236-work sample), which is a number this atlas does not have for its own marks.
+Two research programmes with different methods, one reading code and one coding
+papers, put the gap in the same place. That is corroboration rather than
+originality on either side, and it is worth stating plainly here rather than
+leaving a reader to find it. Where the two differ is more useful than where they
+agree: its six state axes include **authority** (who licenses this record to
+influence an action) and **recoverability**, and this atlas has no mark for
+either — see [the rubric's open work](../methodology/atlas-rubric/#open-work-on-this-rubric).
+Its evaluation protocol, and the pilot in which the actual `mem0ai` package
+satisfies 3 of 15 governance obligations, is read against this atlas's own
+demands on the [benchmarks page](../benchmarks/#aoep).
+
 **Start here:** [find a system](#2-comparative-matrix) in the matrix ·
 [filter by mechanism](../capabilities/) on the capability index ·
 [read one verdict](../verdicts/) per system ·

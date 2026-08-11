@@ -288,6 +288,29 @@ CORPUS_FLOOR = 40
 DATED_ENTRY = re.compile(r"^[ \t\n*-]*\d{4}-\d{2}-\d{2}\b")
 
 
+#: A paragraph that cites an external work states that work's numbers, not this
+#: corpus's. "retrieve appears in 269 of 435" is a true sentence about somebody
+#: else's coded corpus, and every phrase this checker binds on — "negative
+#: retrieval assertion", "audit log", "scope" — appears in exactly the prose
+#: that compares their findings to ours. The exemption is deliberately narrow:
+#: it applies only to a denominator that is *not* one of this atlas's live
+#: totals, so a corpus count that happens to sit beside a citation is still
+#: checked. Reworded prose was tried first and is the wrong fix — it makes the
+#: page harder to read to keep a checker quiet, and the next citation breaks it
+#: again.
+EXTERNAL_SOURCE = re.compile(r"arxiv\.org|arXiv:|doi\.org", re.I)
+
+
+def external_spans(text: str) -> list[tuple[int, int]]:
+    """Character ranges of paragraphs that cite an external work."""
+    spans, cursor = [], 0
+    for para in text.split("\n\n"):
+        if EXTERNAL_SOURCE.search(para):
+            spans.append((cursor, cursor + len(para)))
+        cursor += len(para) + 2
+    return spans
+
+
 def historical_spans(text: str) -> list[tuple[int, int]]:
     """Character ranges of dated history entries, which state past counts."""
     spans, cursor = [], 0
@@ -322,6 +345,7 @@ def check(root: Path, show_list: bool) -> int:
         raw = source.read_text(encoding="utf-8")
         text = normalize(raw)
         past = historical_spans(text)
+        cited = external_spans(text)
         where = source.relative_to(root)
 
         # A number naming its mechanism directly needs no window: the subject is
@@ -367,6 +391,19 @@ def check(root: Path, show_list: bool) -> int:
                 continue
             ahead, behind = window(text, match.start(), match.end())
             if LOCAL_SCOPE.match(ahead):
+                continue
+            # Somebody else's corpus, cited in a paragraph naming the paper. A
+            # denominator matching one of our live totals is still ours.
+            if (
+                denom is not None
+                and value(denom) not in (total_reports, total_repos)
+                and any(s0 <= match.start() < e0 for s0, e0 in cited)
+            ):
+                if show_list:
+                    listed.append(
+                        f"{where}:{text[: match.start()].count(chr(10)) + 1}: "
+                        f"'{' '.join(match.group(0).split())}' — external corpus, not checked"
+                    )
                 continue
             flag = bind(ahead, behind)
             line = text[: match.start()].count("\n") + 1
