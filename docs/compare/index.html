@@ -1169,7 +1169,9 @@ record statuses and a six-level trust ladder, wired into a ranking
 score, so <code>conflict</code> and <code>untrusted</code> cost a memory
 0.3 and it reaches the prompt anyway. Only the deletion states filter. A
 plugin free to invent everything invents the states before it decides
-what they <em>do</em>.</p>
+what they <em>do</em> — and the append-only store underneath makes that
+decision twice, because a status change appends a second copy of the
+record and something has to choose which copy the ranker scores.</p>
 <p>Tradeoff: users choose a backend that fits their privacy and scale
 needs, but trust state, scope, and above all deletion must cross the
 host/provider boundary. <strong>MateClaw</strong> is the partial
@@ -8235,12 +8237,13 @@ pipeline</td>
 hook, background crons, and an Obsidian review vault</td>
 <td>Daily consolidation, garbage collection, skill mining, critical-push
 classification, and two dream passes</td>
-<td>Seven-state record status and a six-level trust ladder, plus an
-append-only reconsolidation event log</td>
+<td>Seven-state record status and a six-level trust ladder scored off
+the newest revision, plus an append-only reconsolidation event log</td>
 <td>A correction path that demands evidence, records the event, and
 orders its writes so a crash cannot lose the memory</td>
-<td>Forty-seven config groups over one careful core; the semantic-drift
-gate is disabled by the only caller that uses it</td>
+<td>Forty-seven config groups over one careful core; doubt states are
+ranking penalties rather than filters, and the drift gate is
+deliberately off</td>
 </tr>
 <tr>
 <td><code>powermem</code></td>
@@ -15418,12 +15421,11 @@ surface changed the same day so nothing was built</li>
 <li><a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">Cyb3rb1ade/openclaw-plur1bus-memory</a>
 at <a
-href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/241aac282e20c40819bdfffef0f9ce7115abd936"><code class="commit-id" title="241aac282e20c40819bdfffef0f9ce7115abd936">241aac28…</code></a>
-— read only; both manifests were inside the cooldown and the package's
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3efedcd4179f6e5594229b7a52f2ca8a6e234d9a"><code class="commit-id" title="3efedcd4179f6e5594229b7a52f2ca8a6e234d9a">3efedcd4…</code></a>
+— both manifests were inside the cooldown and the package's
 <code>postinstall</code> patches the host OpenClaw's dist directory, so
-nothing was installed and nothing was run. The unreferenced
-<code>plur1bus/</code> directory, a v5 copy of the plugin, was not
-treated as part of the system</li>
+nothing was installed; three regression files that import only node
+builtins and in-tree modules were run with <code>node --test</code></li>
 <li><a
 href="https://github.com/OmniNode-ai/omniintelligence">OmniNode-ai/omniintelligence</a>
 at <a

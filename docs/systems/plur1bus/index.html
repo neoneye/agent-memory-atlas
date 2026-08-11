@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="Per-agent LanceDB memory for
-OpenClaw where every correction is versioned, evidenced and logged — and
-where the one gate that would refuse a bad correction is switched off by
-its only caller.">
+OpenClaw where every correction is versioned, evidenced and logged, and
+where an append-only store means the copy a scorer reads is a decision
+the design has to make on purpose.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="PLUR1BUS — Agent Memory Atlas">
     <meta property="og:description" content="Per-agent LanceDB memory
-for OpenClaw where every correction is versioned, evidenced and logged —
-and where the one gate that would refuse a bad correction is switched
-off by its only caller.">
+for OpenClaw where every correction is versioned, evidenced and logged,
+and where an append-only store means the copy a scorer reads is a
+decision the design has to make on purpose.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PLUR1BUS — Agent Memory Atlas">
     <meta name="twitter:description" content="Per-agent LanceDB memory
-for OpenClaw where every correction is versioned, evidenced and logged —
-and where the one gate that would refuse a bad correction is switched
-off by its only caller.">
+for OpenClaw where every correction is versioned, evidenced and logged,
+and where an append-only store means the copy a scorer reads is a
+decision the design has to make on purpose.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>PLUR1BUS — Agent Memory Atlas</title>
     <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
@@ -81,18 +81,18 @@ off by its only caller.">
           <p class="eyebrow">OpenClaw memory plugin</p>
           <h1>PLUR1BUS</h1>
           <p class="document-deck">Per-agent LanceDB memory for OpenClaw
-where every correction is versioned, evidenced and logged — and where
-the one gate that would refuse a bad correction is switched off by its
-only caller.</p>
+where every correction is versioned, evidenced and logged, and where an
+append-only store means the copy a scorer reads is a decision the design
+has to make on purpose.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory">
               <span>Source</span>
               <strong>Cyb3rb1ade/openclaw-plur1bus-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/241aac282e20c40819bdfffef0f9ce7115abd936" title="241aac282e20c40819bdfffef0f9ce7115abd936">
+            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3efedcd4179f6e5594229b7a52f2ca8a6e234d9a" title="3efedcd4179f6e5594229b7a52f2ca8a6e234d9a">
               <span>Analyzed revision</span>
-              <code>241aac28…</code>
+              <code>3efedcd4…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -116,11 +116,12 @@ only caller.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>PLUR1BUS is an MIT-licensed memory plugin for OpenClaw — around 9,300
-lines in <code>index.js</code>, 55,000 across <code>lib/</code>, and a
-further 70,000 in <code>tests/</code> and <code>test/</code>, which is
-the first unusual thing about it: the test suite is larger than the
-implementation it covers, across 312 test files.</p>
+<p>PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release
+7.2.6 — around 9,300 lines in <code>index.js</code>, 55,000 across
+<code>lib/</code>, and a further 70,000 in <code>tests/</code> and
+<code>test/</code>, which is the first unusual thing about it: the test
+suite is larger than the implementation it covers, across 317 test
+files.</p>
 <p>The second unusual thing is the ratio of care to surface.
 <code>openclaw.plugin.json</code> declares forty-seven top-level
 configuration groups, covering dreaming, emotional state, persona voice,
@@ -140,19 +141,29 @@ rejected if the cosine distance exceeds 0.45 — a machine refusing to let
 a "correction" quietly replace a memory with something that means
 something else. It is a genuinely novel gate, and the only caller in the
 tree, the user-facing <code>/correct</code> command at
-<code>index.js:6412</code>, passes <code>skipDriftGate: true</code>.</p>
+<code>index.js:6422</code>, passes <code>skipDriftGate: true</code> —
+deliberately, with the reasoning written at the call site: the gate
+throws rather than degrades, a large correction is exactly what a user
+typing <code>/correct</code> intends, and the confirmation dialog shows
+the old and new text in full before anything is written. The measured
+drift is still recorded on the reconsolidation event. A gate that is off
+by argument is a different thing from a gate that is off by accident,
+and this is the first.</p>
 <p>Where it is strongest: scope. <code>checkAccess</code>
 (<code>lib/acl-middleware.js:103</code>) denies by default, denies on a
 missing owner, denies on a conflicting ownership tuple, and is applied
 as a filter on the read path in three places. The tests assert the
 denials rather than the permissions.</p>
-<p>Where it is weakest: the system can express doubt and cannot act on
-it. A record carries a status from a seven-value set and a trust level
-from a six-value ladder, and <code>conflict</code>, <code>demoted</code>
-and <code>untrusted</code> are all wired into the ranking arithmetic as
-penalties of 0.3, 0.35 and 0.3. A memory the system has flagged as
-contradicting another memory is ranked slightly lower and then injected
-into the prompt.</p>
+<p>Where it is weakest: the system can express doubt and mostly declines
+to act on it. A record carries a status from a seven-value set and a
+trust level from a six-value ladder, and <code>conflict</code>,
+<code>demoted</code> and <code>untrusted</code> are wired into the
+ranking arithmetic as penalties of 0.3, 0.35 and 0.3 rather than as
+filters. Only the deletion states withhold. A memory the system has
+flagged as contradicting another memory is ranked lower and can still
+reach the prompt — carrying its status in the rendered line, which is
+the difference between a model that can weigh the flag and one that
+cannot see it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>There are two stores and they hold different kinds of thing.</p>
 <p><strong>LanceDB cards</strong> are the memories proper — one table
@@ -172,7 +183,7 @@ from <code>NEO_STATUSES</code> (<code>lib/neo-arch.js:62</code>):</p>
 <code>untrusted → user_asserted → assistant_asserted → tool_observed → validated → curated</code>.</p>
 <p>What moves a record between states is a person.
 <code>/plur1bus memory promote|demote|prune|tombstone &lt;id&gt;</code>
-(<code>index.js:5951</code>) requires authorization, calls
+(<code>index.js:5961</code>) requires authorization, calls
 <code>transitionRecordStatus</code>, and appends the transitioned record
 back to the JSONL. There is no automatic promoter; a candidate becomes
 promoted because someone typed the command.</p>
@@ -190,10 +201,46 @@ const penalties = (item.origin?.role === &quot;assistant&quot; ? 0.2 : 0)
   + (item.stale === true ? 0.15 : 0);</code></pre>
 <p>So the states that withhold a memory are the deletion states, and the
 states that express doubt are ranking adjustments. The mechanism for
-filtering on status exists, is used, and is pointed at the wrong end of
-the vocabulary — a record the system has marked <code>conflict</code>
+filtering on status exists, is used, and is pointed at the deletion end
+of the vocabulary — a record the system has marked <code>conflict</code>
 outranks a <code>candidate</code> record about anything sufficiently
 on-topic.</p>
+<p><strong>Which copy of a record the scorer sees is itself a design
+decision here, and it is the one that makes the rest of the vocabulary
+mean anything.</strong> The JSONL stores are append-only event logs:
+<code>transitionRecordStatus</code> appends a fresh line under the same
+id rather than replacing the old one, so a record that has moved to
+<code>demoted</code> exists on disk twice, once in each state.
+<code>routeNeoRecall</code> (<code>lib/neo-arch.js:1419</code>)
+deduplicates by id and keeps the <strong>newest revision</strong>,
+ordered by <code>updatedAt</code> — the field a transition sets — while
+preserving first-appearance order so the <code>itemIndex</code> tiebreak
+below stays stable. The helper that dates a revision,
+<code>neoRevisionTimeMs</code> (<code>:1412</code>), carries a note on
+why the existing <code>recordTimeMs</code> will not serve: it reads
+<code>startTime</code>/<code>createdAt</code>, which are identical
+across every revision of one record, so it cannot tell two revisions
+apart. An undated record sorts to <code>-Infinity</code> so any dated
+revision beats it and the comparison never lands on
+<code>NaN</code>.</p>
+<p>Read against an append-only store, that is not a detail. Keeping the
+first line seen means scoring the record as it was <em>before</em> the
+transition, which would apply the <code>active</code> arithmetic to a
+record a person had just demoted — and a status penalty computed against
+the wrong copy is not a weakened penalty, it is no penalty.
+<code>tests/neo-status-transition-dedupe.test.js</code> fixes the
+arithmetic to a number: <code>active=0.371</code> against
+<code>demoted=-0.116</code> at a live <code>minScore</code> of
+<code>0.08</code>, so the two copies fall on opposite sides of the
+admission threshold.</p>
+<p>The rendered line carries the status the penalty was computed from.
+<code>formatNeoRecallContext</code> emits <code>lane</code>,
+<code>category</code>, <code>trust</code>, <code>id</code>,
+<code>score</code> and <code>status</code> on each
+<code>&lt;memory-record&gt;</code>, which matters because the memory
+prompt supplement tells the model to prefer <code>active</code> and
+<code>promoted</code> over conflicting cards — an instruction that can
+only be followed if the distinction is in the payload.</p>
 <p>One state transition is not epistemic at all and is worth naming here
 because it protects the whole loop. Text that PLUR1BUS itself injected
 into a prompt — recall blocks, temporal context, status reminders, cron
@@ -227,7 +274,7 @@ dependency.</p>
 <li><strong><code>index.js</code></strong> (9,292 lines) — plugin entry,
 hook registration, chat commands, and the wiring between every subsystem
 below.</li>
-<li><strong><code>lib/</code></strong> (206 files, 54,682 lines) —
+<li><strong><code>lib/</code></strong> (206 files, 54,781 lines) —
 <code>recall-pipeline.js</code> (1,903), <code>neo-arch.js</code>
 (2,356), <code>obsidian-control-room.js</code> (3,918) and
 <code>obsidian-bridge.js</code> (2,035) dominate;
@@ -284,15 +331,9 @@ Markdown for everything except the LanceDB tables, which is a real
 operational advantage when a background job has done something
 unexpected. <code>scripts/repair-installed-plugin.mjs</code> and
 <code>lib/memory-doctor.js</code> exist for when it has.</p>
-<p>One directory in the tree is not part of the system.
-<code>plur1bus/</code> holds a 4,080-line <code>index.js</code> and a
-partial <code>lib/</code>, added on 11 June 2026 in the commit
-<em>"plur1bus 5.0.0: generalized plugin for distribution"</em>,
-referenced by nothing and excluded from the published <code>files</code>
-list. Reading it produces answers about a version two majors old.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<h3 id="capture--indexjs6723">Capture — <code>index.js:6723</code></h3>
+<h3 id="capture--indexjs6754">Capture — <code>index.js:6754</code></h3>
 <p><code>api.on("agent_end", …)</code> hands the turn to
 <code>runtimeScheduler.enqueueCapture(agentId, …)</code> with an abort
 signal. Capture is per-agent queued and runs after the turn ends, so the
@@ -331,22 +372,37 @@ the old row at an id that was never written.</li>
 <strong>append the event</strong> with the action, the source, the
 evidence, the confidence and the measured drift.</li>
 </ol>
-<h3 id="the-drift-gates-only-caller--indexjs6412">The drift gate's only
-caller — <code>index.js:6412</code></h3>
+<h3 id="the-drift-gates-only-caller--indexjs6422">The drift gate's only
+caller — <code>index.js:6422</code></h3>
 <p><code>/correct &lt;old&gt; to &lt;new&gt;</code> runs a confirmation
 token exchange, then calls <code>safeUpdate</code> with
 <code>updateSource: "telegram:/correct"</code>, an evidence string, and
 <code>skipDriftGate: true</code>. Every other reference to
-<code>skipDriftGate</code> in the tree is in a test. So at this commit
-the gate does not run in production: no in-tree caller reaches it with
-the gate on.</p>
-<p>Both halves of that are defensible on their own. A user typing an
-explicit correction has more authority than a cosine distance, and a
-gate that refuses "I moved from Berlin to Tokyo" for being too different
-from the memory it corrects would be worse than useless. But then the
-gate protects nothing, because the automated bulk paths that
-<em>would</em> benefit from it — consolidation, dreaming, conflict
-resolution — do not call <code>safeUpdate</code> at all.</p>
+<code>skipDriftGate</code> in the tree is in a test, so the gate does
+not run in production.</p>
+<p>The reasoning sits at the call site rather than in a commit message:
+<code>/correct</code> is a nonce-confirmed user action, the confirmation
+dialog shows old and new text in the clear, so high semantic drift there
+is intended and consented to, and the gate would block a legitimate
+large correction with an exception rather than a warning. The drift is
+still computed and written onto the reconsolidation event as
+<code>semanticDrift</code>, so switching the gate off costs the
+measurement nothing.</p>
+<p>What remains is that the gate guards nothing else: the automated bulk
+paths that would most benefit from it — consolidation, dreaming,
+conflict resolution — do not call <code>safeUpdate</code> at all. A
+threshold whose only caller has reasoned its way out of it has no live
+consumer.</p>
+<p>The confirmation dialog is the part worth copying. Target resolution
+is fuzzy — candidates are resolved without a minimum score, and
+"unambiguous" means only that the top match beats the second by more
+than 0.15 — while <code>safeUpdate</code> replaces the entire text. A
+prompt naming an 80-character title cannot tell a user which memory they
+are about to overwrite, so it renders the stored text and the
+replacement at 300 characters each. The same value carries into
+provenance: <code>payload.oldText</code> holds the stored content being
+replaced rather than the search term that found it, and
+<code>updateEvidence</code> builds its evidence line from that.</p>
 <h3 id="scope--libacl-middlewarejs103">Scope —
 <code>lib/acl-middleware.js:103</code></h3>
 <p><code>checkAccess(ctx, memory)</code> returns
@@ -369,7 +425,7 @@ batch form, with optional violation logging to
 by <code>normalizeNeoScope</code>. Neo records are filtered by
 <code>isNeoRecordAccessible</code> (<code>lib/neo-arch.js:1364</code>)
 rather than by <code>checkAccess</code>, and the comment at
-<code>neo-arch.js:1655</code> is candid about the limit: dreams,
+<code>neo-arch.js:1704</code> is candid about the limit: dreams,
 episodes, graph edges and patterns carry no scope field at all, so
 passing a requester to those readers would filter every record to
 nothing rather than filter correctly, and the reader was deliberately
@@ -382,7 +438,7 @@ deduplicated. That creates an obvious hazard:
 <code>transitionRecordStatus</code> returns the same record with a new
 status and the <em>same id</em>, so an id-keyed dedupe would silently
 swallow every promotion. It does not, and the reason is three small
-functions at <code>lib/neo-arch.js:1958</code>:</p>
+functions at <code>lib/neo-arch.js:2007</code>:</p>
 <pre class="js"><code>function appendDedupeId(record) {
   if (!record || typeof record !== &quot;object&quot; || !record.id) return &quot;&quot;;
   if (record.updatedAt || record.embeddingUpdatedAt) return &quot;&quot;;   // a mutated record always appends
@@ -502,6 +558,23 @@ rather than the present after fifteen minutes. That is the right shape
 for the class of memory that gets an agent into trouble, and no other
 system in this atlas conditions action on the age of the specific memory
 being acted upon.</p>
+<p>The guard is only as good as the timestamp reaching it, and the
+timestamp is produced by the mapping layer rather than by the store.
+Canonical hits from <code>KNOWLEDGE.md</code> carry no
+<code>createdAt</code> of their own and take the file's mtime as their
+age, and they are marked <code>authoritative</code> and exempted from
+the operational guard on the reasoning that a canonical document is the
+reference something else is verified <em>against</em>. Semantic-lens
+hits copy <code>createdAt</code>, <code>updatedAt</code> and
+<code>lastRetrievedAt</code> off the underlying entry, and the
+reactivation block renders age and freshness rather than omitting them.
+<code>parseMemoryTimestamp</code> discards a value outside the
+representable <code>Date</code> range the way it discards a missing one,
+which keeps <code>buildTemporalProvenance</code> from throwing a
+<code>RangeError</code> and taking the whole recall rendering with it —
+the age label is therefore always <code>unknown</code> or
+<code>&lt;n&gt;[mhd] ago</code>, which is what the reactivation renderer
+assumes.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are created by the <code>agent_end</code> capture, by explicit
 tool and command use, by the Obsidian bridge importing vault edits, and
@@ -600,14 +673,22 @@ memories.</li>
 <code>memoryClass: core</code> are honoured by the GC.</li>
 <li><strong>A repairable store</strong> — JSONL and Markdown, plus a
 doctor and a repair script.</li>
+<li><strong>The scorer reads the newest revision of an append-only
+record</strong>, so a status a person set is the status the ranking
+arithmetic uses.</li>
+<li><strong>A correction dialog that shows what it will
+overwrite</strong>, at 300 characters of old and new text, against a
+target resolved by fuzzy match.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>Doubt does not withhold.</strong> <code>conflict</code> and
-<code>demoted</code> and <code>untrusted</code> are ranking penalties.
-The system can record that it does not believe something and will still
-put it in the prompt.</li>
-<li><strong>The drift gate is off</strong> wherever it could fire.</li>
+<li><strong>Doubt does not withhold.</strong> <code>conflict</code>,
+<code>demoted</code> and <code>untrusted</code> are ranking penalties
+rather than filters. The system can record that it does not believe
+something and still put it in the prompt, labelled with the status,
+which moves the decision to the model.</li>
+<li><strong>The drift gate is off</strong> wherever it could fire, by a
+reasoned choice that leaves the threshold with no live consumer.</li>
 <li><strong>No bi-temporal axis</strong>, so correcting a fact destroys
 the ability to audit the period when the wrong value was in force.</li>
 <li><strong>No value-level tombstone</strong>, so a forgotten fact
@@ -617,6 +698,9 @@ graph edges, patterns — and the code says the reader was left unfiltered
 rather than filtering everything to nothing.</li>
 <li><strong><code>postinstall</code> patches the host</strong> and is
 contractually unable to fail.</li>
+<li><strong>A prompt-facing value can be produced by four different
+mapping paths</strong>, and correctness has to be established at each
+one rather than at the store.</li>
 <li><strong>The feature surface is the risk.</strong> Forty-seven config
 groups, fifteen background jobs and two dream passes over one memory
 store means the number of paths that can write to a card is large, and
@@ -624,12 +708,23 @@ only one of them goes through <code>safeUpdate</code>.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>I ran nothing.</strong> The screen flagged both
-<code>package.json</code> and <code>package-lock.json</code> as changed
-within the seven-day cooldown, so the tree was read and not installed.
-Everything below is read from committed test code.</p>
-<p>312 test files under <code>tests/</code> and <code>test/</code>,
-69,535 lines — larger than the implementation. <code>npm test</code> is
+<p><strong>I ran three test files and installed nothing.</strong> The
+screen flagged both <code>package.json</code> and
+<code>package-lock.json</code> as changed within the seven-day cooldown,
+so nothing was installed — but <code>npm test</code> needs no framework,
+and the three regression files added since the previous pin import only
+node builtins and in-tree modules.
+<code>node --test tests/neo-status-transition-dedupe.test.js tests/correct-informed-consent.test.js tests/recall-temporal-provenance-gaps.test.js</code>
+reports <strong>27 passing across 7 suites, 0 failing</strong>. I then
+took a scratch copy, restored <code>lib/neo-arch.js</code> from the
+previous pin, and re-ran the first file: <strong>5 of its 7 tests
+fail</strong>, which is the negative control for the deduplication rule
+described in section 2 and confirms the tests discriminate rather than
+merely pass. The rest of the suite was not run, because the files that
+import <code>@lancedb/lancedb</code> need an install this screen
+refuses.</p>
+<p>317 test files under <code>tests/</code> and <code>test/</code> —
+larger than the implementation. <code>npm test</code> is
 <code>node --check</code> on three modules followed by
 <code>node --test</code> over both directories, so there is no framework
 dependency to install.</p>
@@ -657,6 +752,12 @@ anything in the repository. <strong>No paper, arXiv reference or
 citation file exists in this tree</strong>; the documentation is a 51 KB
 README, an 87 KB changelog, and a 97 KB
 <code>how-to-memory-perfect.md</code>.</p>
+<p><code>tests/neo-status-transition-dedupe.test.js</code> is worth
+reading for its shape as much as its subject: it pins the arithmetic to
+numbers — <code>active=0.371</code> against <code>demoted=-0.116</code>
+at a live <code>minScore</code> of <code>0.08</code> — so the assertion
+is about which side of the admission threshold each copy falls on, not
+about an ordering that a weight change would silently invert.</p>
 <p>The test I would want before trusting this in production is the one
 nothing here contains: assert that a memory the user has corrected does
 not come back after a consolidation pass and a dream pass have run over
@@ -698,16 +799,26 @@ saves the memories a decay curve is worst at keeping.</li>
 on a contradiction — it can only be slightly less enthusiastic. Decide
 which states filter and which rank, and make the filtering ones
 filter.</li>
-<li><strong>A safety gate whose callers all disable it.</strong> Either
-the default is wrong for the real caller and should change, or the
-caller is wrong. A gate that never fires is a comment.</li>
+<li><strong>A safety gate whose only caller disables it.</strong> The
+disabling may be right — an explicitly confirmed user correction
+outranks a cosine distance — but a threshold with no live consumer is a
+threshold nobody is maintaining. Either give it a caller or record, at
+the call site, why it has none.</li>
+<li><strong>Deduplicating an append-only log by first
+appearance.</strong> If a state change appends rather than replaces, the
+first copy is the pre-change one, and every consumer that keeps it is
+reading the record as it was before the decision. Pick the newest
+revision by a field the transition actually sets, and check that the
+field differs between revisions before relying on it.</li>
+<li><strong>Instructing a model to weigh a distinction your renderer
+omits.</strong> A prompt supplement that says <em>prefer active over
+conflicting</em> needs the status in the payload; otherwise it is an
+instruction the model has no way to follow and no way to report it
+cannot.</li>
 <li><strong>Patching your host at <code>postinstall</code>.</strong>
 However well-tested and however necessary, an install step that rewrites
 another package's shipped code — and cannot fail by contract — is a
 support burden and a supply-chain surface.</li>
-<li><strong>Leaving a superseded copy of your own source in the
-tree.</strong> A two-major-old duplicate that nothing imports is a trap
-for every reader and every agent that greps.</li>
 <li><strong>Per-feature injection caps with no global budget.</strong>
 Seven bounded features can still fill a context window.</li>
 </ul>
@@ -733,10 +844,6 @@ the rest of the system, and is the most complete answer in this atlas to
 <ul>
 <li>What is the lag between capture and vector-retrievability under a
 real embedding cron? Nothing in the tree measures it.</li>
-<li>Would the drift gate fire on real corrections if it were enabled, or
-was <code>skipDriftGate: true</code> added because it fired on ordinary
-ones? The commit history for <code>index.js:6426</code> would answer
-this and reading it was outside this review.</li>
 <li>Do the seven weights in <code>scoreNeoRecallItem</code> come from
 measurement or from judgement?</li>
 <li>Does a consolidation or dream pass ever resurrect the text of a
@@ -746,6 +853,8 @@ at what point do the per-feature caps collectively exceed a sensible
 budget?</li>
 <li>Is the host patch upstreamed or proposed to OpenClaw, or does each
 release re-apply it?</li>
+<li>How many other prompt-facing fields are produced by more than one
+mapping path, and is there a check that all of them agree?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -789,6 +898,60 @@ release re-apply it?</li>
 <code>tests/safe-update-dataloss.test.js</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-08-11</strong> — <a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/3efedcd4179f6e5594229b7a52f2ca8a6e234d9a"><code class="commit-id" title="3efedcd4179f6e5594229b7a52f2ca8a6e234d9a">3efedcd4…</code></a>
+— second reading the same day, at release 7.2.6, twelve commits past the
+first pin. Screened again before reading: 0 auto-run surfaces, the same
+<code>postinstall</code>, both manifests inside the cooldown; nothing
+was installed. Three regression files were executed with
+<code>node --test</code> and pass (27 tests); restoring
+<code>lib/neo-arch.js</code> from the previous pin on a scratch copy
+fails 5 of 7 in the dedup file.</p>
+<p><strong>A published claim was wrong, and wrong in the system's
+favour.</strong> This report stated that a record marked
+<code>conflict</code> or <code>demoted</code> was ranked down by 0.3 and
+injected anyway. The penalty was not being applied at all. The JSONL
+stores are append-only, so <code>transitionRecordStatus</code> appends a
+second line under the same id; <code>routeNeoRecall</code> deduplicated
+by first appearance and therefore scored the pre-transition copy, with
+its <code>active</code> status. <a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/20cf0fe79c03d13a9d4ce18e9e9a807a76232b9e"><code class="commit-id" title="20cf0fe79c03d13a9d4ce18e9e9a807a76232b9e">20cf0fe7…</code></a>
+changes the deduplication to keep the newest revision by
+<code>updatedAt</code>, preserving first-appearance order so the
+tiebreak stays stable. The error in this report was one of mechanism
+rather than of outcome — the observable behaviour was as described — and
+it came from reading the scorer without reading what the scorer is
+handed.</p>
+<p>The same commit renders <code>status</code> on each
+<code>&lt;memory-record&gt;</code> line, closing a gap this report did
+not find: the memory prompt supplement instructs the model to prefer
+<code>active</code> and <code>promoted</code> over conflicting cards,
+and the template emitted lane, category, trust, id and score but not
+status, so the instruction asked for a distinction the payload did not
+carry. The reading that would have caught it is one this report did not
+perform — checking every distinction a prompt instruction demands
+against the fields the renderer actually emits.</p>
+<p>It also corrects <code>/correct</code>. The confirmation dialog named
+an 80-character title while <code>safeUpdate</code> replaced the full
+text against a fuzzily-resolved target, and <code>payload.oldText</code>
+carried the user's search term rather than the stored content, so
+<code>updateEvidence</code> recorded the query instead of the value it
+replaced. Both are fixed, and <code>skipDriftGate</code> is retained
+with its rationale written at the call site. That answers the open
+question this report carried about why the gate is disabled.</p>
+<p><a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/35852e8e5db32e588456d50643c2b10d55e15509"><code class="commit-id" title="35852e8e5db32e588456d50643c2b10d55e15509">35852e8e…</code></a>
+repairs the timestamps the operational guard depends on: canonical
+<code>KNOWLEDGE.md</code> hits carried no age and, containing
+operational keywords, permanently demanded live verification; they now
+take the file mtime and are marked <code>authoritative</code> and
+exempt. A probe over the live namespaces is recorded in that commit as
+25,550 rows with none missing <code>createdAt</code>, placing the defect
+in the read path's mapping layer rather than in the store.</p>
+<p>The unreferenced <code>plur1bus/</code> directory described in the
+previous entry is deleted. Its <code>index.js</code> imported
+<code>./lib/categorize.js</code>, which never existed inside that
+directory, so the copy could not have run.</p>
 <p><strong>2026-08-11</strong> — <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/241aac282e20c40819bdfffef0f9ce7115abd936"><code class="commit-id" title="241aac282e20c40819bdfffef0f9ce7115abd936">241aac28…</code></a>
 — first reading, at release 7.2.3. Screened before reading: 0 auto-run
