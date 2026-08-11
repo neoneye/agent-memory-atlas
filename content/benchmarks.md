@@ -966,6 +966,23 @@ So the question "does a deleted memory stay deleted?" has, for most systems
 here, the answer "until the next scheduled job", and there is no benchmark that
 would reveal it.
 
+**A forensics tool built for a different purpose supplies outside evidence for
+the same point.** `perplexityai/numbat` reconstructs agent sessions from on-disk
+artifacts without prior instrumentation, so its discovery layer is a survey of
+what actually survives on a developer's laptop. Two of its entries land on this
+section. It discovers OpenClaw sessions that were reset or deleted, because they
+persist as plaintext `*.jsonl.reset.<timestamp>` and `*.jsonl.deleted.<timestamp>`
+files beside the live journal — a regular expression in `internal/discover/discover.go`
+with a test for each suffix. And its Gemini CLI extractor deliberately ignores
+`$rewindTo` records, on the reasoning that *"a rewind changes resume context, not
+what already happened"*, so a user-visible undo leaves the earlier actions intact
+and readable. Neither claim was checked at the commits this atlas pinned for
+those systems, so both belong to numbat's extractors rather than to those
+reports. What they establish anyway is the shape of the gap: the question is not
+only whether a background pass re-derives a deleted memory, but whether the
+deletion ever reached the filesystem at all. A benchmark that asks a system's own
+API whether a memory is gone would pass in both of these cases.
+
 ### What a forgetting benchmark would have to do
 
 Not a QA benchmark. A state-machine test, run per system:
