@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 255 reports.**
+**This page covers all 256 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["255 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["256 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2213,3 +2213,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, ~108,000 lines with ~195,000 lines of tests, and the cohort tests use pre-computed session ids that hash into a known arm rather than mocking the hash. At this commit the shipped `hooks.json` states that every context-injection hook is disabled for an instrumented baseline, leaving four safety guards registered — so the loop this repository exists to close is deliberately switched off, and every mechanism for running the trial is committed while no result is.
 - Study when: you want to hold out a control cohort in a memory system and need the smallest honest version of it.
 - Do not copy when: you need a memory store. This half has none — no correction, no scope, no state a memory can hold — and its injection path is specific to Claude Code hooks and one HTTP contract.
+
+### [`hillock`](../systems/hillock/)
+
+- Best idea: the refusal is a `return` statement. The local model is invoked only inside the branch that has already matched a stored fact above threshold, so a question with no evidence behind it never reaches it — a structural property where almost everything else in this atlas has a prompt asking the model to say "I don't know".
+- Biggest risk: the gate's threshold is fixed at 0.42 while its similarity falls with query length. Facts are bundled from exactly three components and queries from all their tokens, so holding overlap constant, the same fact passes for a six-token question and is blocked for an eight-token one. Admission depends on phrasing, which nothing in the repository states.
+- Most reusable component: the ten committed hard negatives, each annotated inline with why the source text does not support an answer — *"Newton is 1600s, Tesla is 1800s"*, *"Enigma is target object, testing link-routing direction"*. The reasoning beside the case is what lets a later reader check the test rather than trust it.
+- Maturity impression: AGPL-3.0 with a CLA held for possible commercial dual-licensing, 1,754 lines across eight files, no test suite, self-described as a research prototype that "isn't all that yet". It publishes four scores under 31% on its README with a diagnosis of each. The 10,000-dimensional fading-context reservoir it is named around cannot leave its zero initial state, so the pronoun resolution the README advertises never runs; the separate HDC matcher that does the gating works. `talon_engine.py`, absent from the README's file list, disables a HuggingFace `torch.load` safety check to load a remote checkpoint.
+- Study when: you want the smallest complete demonstration that "will not answer without evidence" can be control flow rather than instruction — or a live example of a benchmark whose gate metric pools blocking with answering, where the published numbers imply three of ten hard negatives were actually blocked.
+- Do not copy when: memory has to be corrected later. Three strings per fact with no time, source or status is below the floor, and `update_relation` keys its delete on subject-and-predicate, so the first multi-valued relation silently loses data.

@@ -602,7 +602,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixty of two hundred and fifty-five. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Sixty-one of two hundred and fifty-six. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -1329,6 +1329,23 @@ The pilot is also seven configurations, five of them built by the authors, so th
 table is a demonstration that the protocol discriminates rather than a survey of
 deployed systems.
 
+**The failure the split scorecard exists to prevent is already in this corpus.**
+[Hillock](../systems/hillock/) publishes a *Gate Accuracy* on its README,
+described there as the rate of blocking unanswerable queries and hard negatives,
+and in the harness as a *hallucination defense rate*. Its formula is
+`(correct_blocks + correct_answers) / len(questions)` over thirty questions of
+which twenty are answerable — so it pools a positive obligation with a negative
+invariant in exactly the proportion that hides the negative one. A system that
+answered everything and blocked nothing would score 66.7% on it; a system that
+blocked everything would score 33.3%, which is *higher* than the 30.0% reported.
+The two published numbers together recover what the label does not say: with
+retrieval accuracy of 30.0% over twenty answerable questions, six answers were
+right, so the pooled 30.0% leaves three correct blocks out of ten hard negatives.
+The arithmetic is not wrong and the project is unusually forthcoming — the
+fixtures and the scorer are both committed, and all four of its scores are under
+31% on its own front page. The label is what fails, and it fails in the direction
+that reads better.
+
 **Against the thirteen-step sequence above**, AOEP is broader and shallower on
 deletion specifically. It checks that a tombstoned value is absent from the
 snapshot and that the deletion ledger matches, which is steps 3–4 plus a
@@ -1652,7 +1669,7 @@ not publish, is still the right order to do these things in.
   descriptions, not from re-reading their datasets here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 254 repositories,
+  [comparative report](../compare/). It is a statement about 255 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are
