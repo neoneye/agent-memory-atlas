@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 253 reports.**
+**This page covers all 255 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["253 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["255 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2195,3 +2195,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release 7.2.3, ~64,000 lines of JavaScript with ~70,000 more across 312 test files — a test suite larger than the implementation, and the denials rather than the permissions are what it asserts. Against that, forty-seven configuration groups, fifteen background jobs, a two-major-old copy of its own source left in the tree, and a `postinstall` that patches the host OpenClaw's shipped code and is contractually unable to fail.
 - Study when: you are designing a correction path and want the most complete worked answer in this atlas to "change a memory without losing the old one" — or you want the clearest case of a safety gate that every caller disables.
 - Do not copy when: you need multi-tenant guarantees. The read-path ACL is genuinely good and fails closed, but the code itself records that dreams, episodes, graph edges and patterns carry no scope field, so their reader was left unfiltered rather than filtering everything to nothing.
+
+### [`omniintelligence`](../systems/omniintelligence/)
+
+- Best idea: demotion is deliberately harder than promotion, and the reasoning is in the constants rather than a design doc — ten injections against five, a five-failure streak against three, a 40% floor against a 60% ceiling, and a 24-hour cooldown, with the 20-point gap named as the thing that stops patterns flip-flopping on variance. The operator's override is bounded so the band cannot be tuned away.
+- Biggest risk: the cold-start promotion path selects exactly what the gate refuses. `SQL_FETCH_CANDIDATE_PATTERNS` deliberately admits `evidence_tier = 'unmeasured'` rows, and `apply_transition` — which the same handler calls, and which production wires directly — rejects every transition to `PROVISIONAL` below `observed`. The thresholds were loosened from 2 to 1 to unblock 5,384 candidates, which cannot have been what blocked them.
+- Most reusable component: the monotonic evidence tier, guarded in the `WHERE` clause of its own `UPDATE` by a `CASE` that maps tiers to weights, so a concurrent writer and a redelivered Kafka message fail identically. Beside it, `pattern_lifecycle_transitions`, which stores a `gate_snapshot` of the conditions that justified each transition rather than only the verdict.
+- Maturity impression: MIT, ~164,000 lines of Python over 68 ONEX node packages and 28 Postgres migrations, with ~150,000 lines of tests. The schema carries real invariants, including one asserting successes plus failures cannot exceed injections. Against that: `verified` is the top evidence tier and nothing writes it, the manual kill switch reads a materialized view that only integration tests refresh, the anti-gaming guardrails are a tested pure-function node nothing calls, and the framework beneath it is three private git dependencies.
+- Study when: you are designing a promotion/demotion lifecycle and want the most carefully argued set of thresholds in this atlas — or you want a worked example of an enforcement gate and a selection query that disagree about the same rule.
+- Do not copy when: you want memory as a library. The smallest useful deployment is Kafka plus Postgres plus a second service running inside the agent's session.
+
+### [`omniclaude`](../systems/omniclaude/)
+
+- Best idea: a standing randomized control arm. One session in five is hashed into a cohort that receives no injection at all, and the control session still writes a record — empty pattern list, `source = CONTROL_COHORT`, the assignment seed, and the effective control percentage and salt — so a later analysis can tell which configuration produced which arm. Almost nothing else in this atlas is set up to find out whether its memory helps.
+- Biggest risk: the trial's identity is the session. `assign_cohort` accepts `user_id` and `repo_path` and documents stickiness as its purpose; the single production caller passes neither, so the same person is redrawn every session over a shared pattern store that their treated sessions are continuously teaching. A session with no id skips assignment and is silently treatment.
+- Most reusable component: roughly 400 lines — the salted hash, the record that carries the experiment's own parameters, and the `hooks-off`/`hooks-on` harness whose cost records mark each token count `MEASURED`, `ESTIMATED` or `UNKNOWN` so an analysis cannot average the two.
+- Maturity impression: MIT, ~108,000 lines with ~195,000 lines of tests, and the cohort tests use pre-computed session ids that hash into a known arm rather than mocking the hash. At this commit the shipped `hooks.json` states that every context-injection hook is disabled for an instrumented baseline, leaving four safety guards registered — so the loop this repository exists to close is deliberately switched off, and every mechanism for running the trial is committed while no result is.
+- Study when: you want to hold out a control cohort in a memory system and need the smallest honest version of it.
+- Do not copy when: you need a memory store. This half has none — no correction, no scope, no state a memory can hold — and its injection path is specific to Claude Code hooks and one HTTP contract.

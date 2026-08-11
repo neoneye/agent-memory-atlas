@@ -243,6 +243,31 @@ is never a correction."* A stronger model disagreeing with a cheaper one has no
 ground truth behind it, and a self-improvement loop that admits it optimises a
 proxy.
 
+**[OmniIntelligence](../../systems/omniintelligence/) runs two state machines on
+one row and wires them in one direction**, which is the arrangement this pattern
+usually collapses. Lifecycle status — `candidate → provisional → validated →
+deprecated` — decides whether a pattern may be injected. An evidence tier —
+`unmeasured → observed → measured → verified` — decides whether it may *advance*.
+Evidence gates status and status never touches evidence, so "how sure are we" and
+"what is this allowed to do" cannot contaminate each other.
+
+Two mechanisms are worth taking whole. The tier is **monotonic in SQL**: the
+`UPDATE` that writes it carries a `CASE` mapping each tier to a weight and only
+matches when the new weight exceeds the stored one, so a redelivered message, a
+concurrent writer and a caller with a stale read all fail by touching no rows.
+And the transitions are **asymmetric with a stated band** — promotion at a 60%
+success rate over five injections, demotion at 40% over ten plus a five-failure
+streak and a 24-hour cooldown — with the 20-point gap named in the constant's own
+docstring as the thing that keeps variance from flip-flopping a pattern between
+states, and the operator's override bounded so the band cannot be closed.
+
+The failure is instructive for anyone building a ladder. `verified` is a valid
+value, is gated on, and is written by nothing: the sole writer's pure function
+returns only `OBSERVED` or `MEASURED`, above a docstring saying verification
+"requires independent validation (not computed here)". A top state nothing can
+reach makes every gate that names it unsatisfiable while reading, from the schema
+and from the enum, exactly like a state that works.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

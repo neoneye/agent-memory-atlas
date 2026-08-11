@@ -472,6 +472,19 @@ transition and as content for a candidate, and a record carrying
 append-only is the easy half; choosing a key under which a mutation
 cannot be mistaken for a duplicate is the half that decides whether the
 log is complete.</p>
+<p><a href="../../systems/omniintelligence/">OmniIntelligence</a> stores
+the <em>evidence</em> beside the decision.
+<code>pattern_lifecycle_transitions</code> carries the usual from/to,
+trigger, actor, reason and correlation id — and a
+<code>gate_snapshot JSONB</code> holding the gate conditions as they
+stood at the moment of the transition. "Why was this promoted" is then
+answerable from one row, rather than requiring a reconstruction of what
+the metrics were that afternoon. Its foreign key is
+<code>ON DELETE RESTRICT</code> with the reason written beside it:
+<em>"Audit records must never be silently deleted when parent patterns
+are removed."</em> An audit that holds only verdicts tells you what
+happened; one that holds the inputs tells you whether it should
+have.</p>
 <p><a href="../../systems/memory-palace/">Memory Palace</a> is the
 counterexample and worth knowing about before trusting a schema.
 Migration 0004 creates <code>access_log</code> as "the L0 layer"

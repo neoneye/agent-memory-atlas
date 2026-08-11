@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **253 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **255 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -220,6 +220,8 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`ollama`](../systems/ollama/) **Ollama** — Procedural memory, and nothing else · `ollama/ollama`
 - [`omega-memory`](../systems/omega-memory/) **OMEGA** — Local-first cross-model memory · `omega-memory/omega-memory` · Bi-temporal, Scope enforced, Mutation audit
 - [`omi`](../systems/omi/) **Omi** — Status decides what a memory may do · `BasedHardware/omi` · Trust state, Bi-temporal, Scope enforced, Mutation audit, Human review, Negative evals
+- [`omniclaude`](../systems/omniclaude/) **OmniClaude** — Memory under a standing trial · `OmniNode-ai/omniclaude`
+- [`omniintelligence`](../systems/omniintelligence/) **OmniIntelligence** — Evidence-tiered pattern learning · `OmniNode-ai/omniintelligence` · Trust state, Mutation audit, Human review, Negative evals
 - [`omnimemory`](../systems/omnimemory/) **OmniMemory** — A gate that tests whether the gate discriminates · `OmniNode-ai/omnimemory`
 - [`open-cowork`](../systems/open-cowork/) **open-cowork** — Evaluated memory · `OpenCoworkAI/open-cowork` · Negative evals
 - [`openclaw`](../systems/openclaw/) **OpenClaw** — Host-runtime plugin memory · `openclaw/openclaw` · Scope enforced

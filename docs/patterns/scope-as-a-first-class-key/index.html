@@ -588,11 +588,27 @@ storage layer, so the internal callers that legitimately need everything
 are unaffected. And the unsafe reading is preserved as an explicit
 escape hatch, so the fix costs a forensic capability nothing — which is
 what makes it adoptable in a system that already has callers.</p>
-<p>The pair also says something about how to check this pattern. Both
-systems implement the filter correctly, and in both the defect is in a
-<em>default</em>, which means reading the function that enforces scope
-tells you nothing about whether it runs. Read the call site and the
-signature the model is shown.</p>
+<p><strong><a
+href="../../systems/omniintelligence/">OmniIntelligence</a> is the third
+variation and the most complete: the parameter exists everywhere except
+where a caller could supply it.</strong> Migration <code>022</code> adds
+<code>project_scope</code> to <code>learned_patterns</code> with two
+indexes, and the repository's declared read SQL applies it —
+<code>AND ($6::text IS NULL OR project_scope IS NULL OR project_scope = $6::text)</code>.
+The FastAPI endpoint that serves those patterns to the injector declares
+<code>domain</code>, <code>language</code>, <code>min_confidence</code>,
+<code>limit</code> and <code>offset</code>, and no project parameter at
+all, so <code>$6</code> is never bound on the network read path and
+every project is served every project's patterns. Column, indexes,
+predicate and intent are all present; the query string is where the
+boundary stops existing.</p>
+<p>The three together say something about how to check this pattern. All
+three implement the filter correctly, and in each the defect is
+somewhere other than the filter — a default in one, a default in
+another, an absent query parameter in the third. Reading the function
+that enforces scope tells you nothing about whether it runs. Read the
+call site, the signature the model is shown, and the surface a remote
+caller actually has.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

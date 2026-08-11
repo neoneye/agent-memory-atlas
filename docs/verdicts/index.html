@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 253 reports.</strong></p>
+<p><strong>This page covers all 255 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;253 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;255 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6746,6 +6746,82 @@ ACL is genuinely good and fails closed, but the code itself records that
 dreams, episodes, graph edges and patterns carry no scope field, so
 their reader was left unfiltered rather than filtering everything to
 nothing.</li>
+</ul>
+<h3 id="omniintelligence"><a
+href="../systems/omniintelligence/"><code>omniintelligence</code></a></h3>
+<ul>
+<li>Best idea: demotion is deliberately harder than promotion, and the
+reasoning is in the constants rather than a design doc — ten injections
+against five, a five-failure streak against three, a 40% floor against a
+60% ceiling, and a 24-hour cooldown, with the 20-point gap named as the
+thing that stops patterns flip-flopping on variance. The operator's
+override is bounded so the band cannot be tuned away.</li>
+<li>Biggest risk: the cold-start promotion path selects exactly what the
+gate refuses. <code>SQL_FETCH_CANDIDATE_PATTERNS</code> deliberately
+admits <code>evidence_tier = 'unmeasured'</code> rows, and
+<code>apply_transition</code> — which the same handler calls, and which
+production wires directly — rejects every transition to
+<code>PROVISIONAL</code> below <code>observed</code>. The thresholds
+were loosened from 2 to 1 to unblock 5,384 candidates, which cannot have
+been what blocked them.</li>
+<li>Most reusable component: the monotonic evidence tier, guarded in the
+<code>WHERE</code> clause of its own <code>UPDATE</code> by a
+<code>CASE</code> that maps tiers to weights, so a concurrent writer and
+a redelivered Kafka message fail identically. Beside it,
+<code>pattern_lifecycle_transitions</code>, which stores a
+<code>gate_snapshot</code> of the conditions that justified each
+transition rather than only the verdict.</li>
+<li>Maturity impression: MIT, ~164,000 lines of Python over 68 ONEX node
+packages and 28 Postgres migrations, with ~150,000 lines of tests. The
+schema carries real invariants, including one asserting successes plus
+failures cannot exceed injections. Against that: <code>verified</code>
+is the top evidence tier and nothing writes it, the manual kill switch
+reads a materialized view that only integration tests refresh, the
+anti-gaming guardrails are a tested pure-function node nothing calls,
+and the framework beneath it is three private git dependencies.</li>
+<li>Study when: you are designing a promotion/demotion lifecycle and
+want the most carefully argued set of thresholds in this atlas — or you
+want a worked example of an enforcement gate and a selection query that
+disagree about the same rule.</li>
+<li>Do not copy when: you want memory as a library. The smallest useful
+deployment is Kafka plus Postgres plus a second service running inside
+the agent's session.</li>
+</ul>
+<h3 id="omniclaude"><a
+href="../systems/omniclaude/"><code>omniclaude</code></a></h3>
+<ul>
+<li>Best idea: a standing randomized control arm. One session in five is
+hashed into a cohort that receives no injection at all, and the control
+session still writes a record — empty pattern list,
+<code>source = CONTROL_COHORT</code>, the assignment seed, and the
+effective control percentage and salt — so a later analysis can tell
+which configuration produced which arm. Almost nothing else in this
+atlas is set up to find out whether its memory helps.</li>
+<li>Biggest risk: the trial's identity is the session.
+<code>assign_cohort</code> accepts <code>user_id</code> and
+<code>repo_path</code> and documents stickiness as its purpose; the
+single production caller passes neither, so the same person is redrawn
+every session over a shared pattern store that their treated sessions
+are continuously teaching. A session with no id skips assignment and is
+silently treatment.</li>
+<li>Most reusable component: roughly 400 lines — the salted hash, the
+record that carries the experiment's own parameters, and the
+<code>hooks-off</code>/<code>hooks-on</code> harness whose cost records
+mark each token count <code>MEASURED</code>, <code>ESTIMATED</code> or
+<code>UNKNOWN</code> so an analysis cannot average the two.</li>
+<li>Maturity impression: MIT, ~108,000 lines with ~195,000 lines of
+tests, and the cohort tests use pre-computed session ids that hash into
+a known arm rather than mocking the hash. At this commit the shipped
+<code>hooks.json</code> states that every context-injection hook is
+disabled for an instrumented baseline, leaving four safety guards
+registered — so the loop this repository exists to close is deliberately
+switched off, and every mechanism for running the trial is committed
+while no result is.</li>
+<li>Study when: you want to hold out a control cohort in a memory system
+and need the smallest honest version of it.</li>
+<li>Do not copy when: you need a memory store. This half has none — no
+correction, no scope, no state a memory can hold — and its injection
+path is specific to Claude Code hooks and one HTTP contract.</li>
 </ul>
         </article>
       </div>

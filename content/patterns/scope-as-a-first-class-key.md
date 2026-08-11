@@ -462,10 +462,23 @@ And the unsafe reading is preserved as an explicit escape hatch, so the fix cost
 a forensic capability nothing — which is what makes it adoptable in a system that
 already has callers.
 
-The pair also says something about how to check this pattern. Both systems
-implement the filter correctly, and in both the defect is in a *default*, which
-means reading the function that enforces scope tells you nothing about whether it
-runs. Read the call site and the signature the model is shown.
+**[OmniIntelligence](../../systems/omniintelligence/) is the third variation and
+the most complete: the parameter exists everywhere except where a caller could
+supply it.** Migration `022` adds `project_scope` to `learned_patterns` with two
+indexes, and the repository's declared read SQL applies it —
+`AND ($6::text IS NULL OR project_scope IS NULL OR project_scope = $6::text)`.
+The FastAPI endpoint that serves those patterns to the injector declares `domain`,
+`language`, `min_confidence`, `limit` and `offset`, and no project parameter at
+all, so `$6` is never bound on the network read path and every project is served
+every project's patterns. Column, indexes, predicate and intent are all present;
+the query string is where the boundary stops existing.
+
+The three together say something about how to check this pattern. All three
+implement the filter correctly, and in each the defect is somewhere other than the
+filter — a default in one, a default in another, an absent query parameter in the
+third. Reading the function that enforces scope tells you nothing about whether it
+runs. Read the call site, the signature the model is shown, and the surface a
+remote caller actually has.
 
 ## Tests to require
 

@@ -361,6 +361,16 @@ is never deduplicated at all. Making a log append-only is the easy half; choosin
 a key under which a mutation cannot be mistaken for a duplicate is the half that
 decides whether the log is complete.
 
+[OmniIntelligence](../../systems/omniintelligence/) stores the *evidence* beside
+the decision. `pattern_lifecycle_transitions` carries the usual from/to, trigger,
+actor, reason and correlation id — and a `gate_snapshot JSONB` holding the gate
+conditions as they stood at the moment of the transition. "Why was this promoted"
+is then answerable from one row, rather than requiring a reconstruction of what
+the metrics were that afternoon. Its foreign key is `ON DELETE RESTRICT` with the
+reason written beside it: *"Audit records must never be silently deleted when
+parent patterns are removed."* An audit that holds only verdicts tells you what
+happened; one that holds the inputs tells you whether it should have.
+
 [Memory Palace](../../systems/memory-palace/) is the counterexample and worth
 knowing about before trusting a schema. Migration 0004 creates `access_log` as
 "the L0 layer" persisting read, write, search-hit and compact events "used by the

@@ -367,6 +367,36 @@ one exclusion worth copying verbatim: <em>"Model-vs-model disagreement
 is never a correction."</em> A stronger model disagreeing with a cheaper
 one has no ground truth behind it, and a self-improvement loop that
 admits it optimises a proxy.</p>
+<p><strong><a
+href="../../systems/omniintelligence/">OmniIntelligence</a> runs two
+state machines on one row and wires them in one direction</strong>,
+which is the arrangement this pattern usually collapses. Lifecycle
+status — <code>candidate → provisional → validated → deprecated</code> —
+decides whether a pattern may be injected. An evidence tier —
+<code>unmeasured → observed → measured → verified</code> — decides
+whether it may <em>advance</em>. Evidence gates status and status never
+touches evidence, so "how sure are we" and "what is this allowed to do"
+cannot contaminate each other.</p>
+<p>Two mechanisms are worth taking whole. The tier is <strong>monotonic
+in SQL</strong>: the <code>UPDATE</code> that writes it carries a
+<code>CASE</code> mapping each tier to a weight and only matches when
+the new weight exceeds the stored one, so a redelivered message, a
+concurrent writer and a caller with a stale read all fail by touching no
+rows. And the transitions are <strong>asymmetric with a stated
+band</strong> — promotion at a 60% success rate over five injections,
+demotion at 40% over ten plus a five-failure streak and a 24-hour
+cooldown — with the 20-point gap named in the constant's own docstring
+as the thing that keeps variance from flip-flopping a pattern between
+states, and the operator's override bounded so the band cannot be
+closed.</p>
+<p>The failure is instructive for anyone building a ladder.
+<code>verified</code> is a valid value, is gated on, and is written by
+nothing: the sole writer's pure function returns only
+<code>OBSERVED</code> or <code>MEASURED</code>, above a docstring saying
+verification "requires independent validation (not computed here)". A
+top state nothing can reach makes every gate that names it unsatisfiable
+while reading, from the schema and from the enum, exactly like a state
+that works.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>
