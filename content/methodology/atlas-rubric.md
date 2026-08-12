@@ -136,8 +136,8 @@ outside.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. The negative
-retrieval assertion is carried by sixty-four repositories
-of two hundred and sixty-four, and they are not all
+retrieval assertion is carried by sixty-five repositories
+of two hundred and sixty-five, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a

@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 264 reports.</strong></p>
+<p><strong>This page covers all 265 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the mechanism described on this page</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-    R[&quot;264 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;265 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7220,6 +7220,52 @@ shared. Only decisions carry a status, deletion is a whole-user wipe,
 nothing records what a status was before the model changed it, and the
 detached-memory repair re-files by argmax with no floor on the read
 path.</li>
+</ul>
+<h3 id="openakashic"><a
+href="../systems/openakashic/"><code>openakashic</code></a></h3>
+<ul>
+<li>Best idea: retrieval that tells the caller what it does not know and
+asks for the fix. Every search returns a next step chosen from the top
+result's own epistemic state — "Top result is superseded. See newer
+version at … via read_note", "⚠ Top result has more disputes than
+confirms (3d / 1c). Check list_reviews before trusting", "Top result has
+no reviews yet. If you use it and verify, confirm_note(path)". A store
+whose read path recruits its own reviewers is how the review corpus gets
+written at all, and almost nothing else here does it.</li>
+<li>Biggest risk: on the public claim path a superseded claim is demoted
+by a fixed −0.42 and the terms that offset it are the ones a
+long-trusted claim accumulates — up to +0.18 from twelve confirmations,
++0.10 for a core role, +0.08 confidence, +0.07 source weight.
+Transcribing the SQL into a scratch implementation, a superseded claim
+with all of those and a query that quotes its wording scores 0.618
+against its own unreviewed successor's 0.532. The penalty is constant;
+the evidence cancelling it is cumulative, so supersession bites least on
+the claim believed longest.</li>
+<li>Most reusable component: <code>_is_superseded_search_note</code> and
+the test beside it. The vault search drops superseded notes <em>before
+indexing</em> rather than ranking them low, and
+<code>test_search_closed_notes_excludes_superseded_notes_before_indexing</code>
+asserts the excluded rows never reach the ranker at all — a committed
+negative retrieval assertion, and the same repository's other read path
+shows what the alternative costs.</li>
+<li>Maturity impression: MIT, 43,590 lines with the server in the tree,
+134 tests across 15 files, a public API that answers without a token, an
+installer for nine MCP clients, and a benchmark committed in full —
+harness, judge, four task files and 175 result artifacts. Sanitisation
+is behind an optional <code>nh3</code> import whose fallback serves
+markdown unsanitised with a log warning, and that dependency is pinned
+only with <code>&gt;=</code>.</li>
+<li>Study when: you are building memory that outlives the agent that
+wrote it and is read by agents that cannot ask it anything — the review
+vocabulary, the consolidation verdicts and the lineage links are the
+most developed answer in this atlas. Also study the README, which
+publishes a controlled follow-up that found no significant lift in the
+same sentence as the result it qualifies.</li>
+<li>Do not copy when: you need a tenant boundary or a delete. There is
+no owner, user or tenant column on any table — that is the design, not
+an oversight — revision rewrites a shared body in place with only a
+counter to show it, and nothing records that a capsule changed or what
+it said before.</li>
 </ul>
         </article>
       </div>

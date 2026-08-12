@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **264 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **265 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -232,6 +232,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`omnimemory`](../systems/omnimemory/) **OmniMemory** — A gate that tests whether the gate discriminates · `OmniNode-ai/omnimemory`
 - [`omninode-knowledge-base`](../systems/omninode-knowledge-base/) **OmniNode Knowledge Base** — Every claim needs evidence, and none has any · `OmniNode-ai/knowledge-base` · Trust state
 - [`open-cowork`](../systems/open-cowork/) **open-cowork** — Evaluated memory · `OpenCoworkAI/open-cowork` · Negative evals
+- [`openakashic`](../systems/openakashic/) **OpenAkashic** — One memory, every agent · `szara7678/OpenAkashic` · Trust state, Negative evals
 - [`openclaw`](../systems/openclaw/) **OpenClaw** — Host-runtime plugin memory · `openclaw/openclaw` · Scope enforced
 - [`opencode`](../systems/opencode/) **OpenCode** — Hooks, no contract · `anomalyco/opencode`
 - [`opencode-mem`](../systems/opencode-mem/) **OpenCode Memory** — A path traversal it found in itself, with the payload printed · `tickernelz/opencode-mem` · Scope enforced

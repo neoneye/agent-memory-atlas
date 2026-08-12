@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 264 reports.**
+**This page covers all 265 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["264 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["265 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2294,3 +2294,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 10,827 lines of Python, MIT, SQLite by default with an optional Postgres and pgvector path, local embeddings through fastembed, an MCP server with five tools, and 66 tests over a real in-memory SQLite run by CI. The dependency list has no lockfile and pulls a spaCy model from a GitHub release URL.
 - Study when: you have a status column and want a worked example of making it govern rather than label, or you want to see a topic tree that reorganizes itself with every delete path moving its memories first.
 - Do not copy when: memory must be auditable, correctable per item, or shared. Only decisions carry a status, deletion is a whole-user wipe, nothing records what a status was before the model changed it, and the detached-memory repair re-files by argmax with no floor on the read path.
+
+### [`openakashic`](../systems/openakashic/)
+
+- Best idea: retrieval that tells the caller what it does not know and asks for the fix. Every search returns a next step chosen from the top result's own epistemic state — "Top result is superseded. See newer version at … via read_note", "⚠ Top result has more disputes than confirms (3d / 1c). Check list_reviews before trusting", "Top result has no reviews yet. If you use it and verify, confirm_note(path)". A store whose read path recruits its own reviewers is how the review corpus gets written at all, and almost nothing else here does it.
+- Biggest risk: on the public claim path a superseded claim is demoted by a fixed −0.42 and the terms that offset it are the ones a long-trusted claim accumulates — up to +0.18 from twelve confirmations, +0.10 for a core role, +0.08 confidence, +0.07 source weight. Transcribing the SQL into a scratch implementation, a superseded claim with all of those and a query that quotes its wording scores 0.618 against its own unreviewed successor's 0.532. The penalty is constant; the evidence cancelling it is cumulative, so supersession bites least on the claim believed longest.
+- Most reusable component: `_is_superseded_search_note` and the test beside it. The vault search drops superseded notes *before indexing* rather than ranking them low, and `test_search_closed_notes_excludes_superseded_notes_before_indexing` asserts the excluded rows never reach the ranker at all — a committed negative retrieval assertion, and the same repository's other read path shows what the alternative costs.
+- Maturity impression: MIT, 43,590 lines with the server in the tree, 134 tests across 15 files, a public API that answers without a token, an installer for nine MCP clients, and a benchmark committed in full — harness, judge, four task files and 175 result artifacts. Sanitisation is behind an optional `nh3` import whose fallback serves markdown unsanitised with a log warning, and that dependency is pinned only with `>=`.
+- Study when: you are building memory that outlives the agent that wrote it and is read by agents that cannot ask it anything — the review vocabulary, the consolidation verdicts and the lineage links are the most developed answer in this atlas. Also study the README, which publishes a controlled follow-up that found no significant lift in the same sentence as the result it qualifies.
+- Do not copy when: you need a tenant boundary or a delete. There is no owner, user or tenant column on any table — that is the design, not an oversight — revision rewrites a shared body in place with only a counter to show it, and nothing records that a capsule changed or what it said before.
