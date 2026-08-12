@@ -38,10 +38,9 @@ an in-memory store, four rerankers, an MCP server, and a decorator that wraps th
 service in telemetry.
 
 That makes it useful to this atlas in a way a port usually is not: the same
-design, read twice, in two languages, by two teams. And the second reading has
-something the first did not.
+design, read twice, in two languages, by two teams.
 
-**The `audit_log` here is now the better-evidenced of the two.**
+**The `audit_log` here is the better-evidenced of the two.**
 `PostgresMemoryStore` creates a `{table}_history` table beside the memory table,
 indexed on `(memory_id, created_at)`, and `SaveHistoryAsync` writes through a
 single `INSERT INTO {historyTable} (id, memory_id, event, old_memory,
@@ -251,8 +250,8 @@ so they exercise the SQL rather than a fake. I did not run them — they need a
 container runtime and, for the OpenAI suite, a key and a `testsettings.yaml`.
 
 No benchmark, no retrieval-quality measurement and no published numbers, which
-also means none of the Mem0 figures this atlas has previously had to treat as
-claims are restated here. A port that does not inherit the original's benchmark
+also means none of the Mem0 figures this atlas treats as unverified claims are
+restated here. A port that does not inherit the original's benchmark
 claims is a port making no claims, which is the correct default.
 
 ## 11. For Your Own Build

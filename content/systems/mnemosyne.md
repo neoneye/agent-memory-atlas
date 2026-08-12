@@ -85,8 +85,8 @@ VERACITY_WEIGHTS = {
 ```
 
 A memory whose origin is unknown outranks one the system knows came from a tool,
-and one it knows was inferred. The atlas found this ordering in the Bun port and
-it is the same table here, in the module whose docstring calls it *"Our novel
+and one it knows was inferred. The same ordering is in the Bun port, and the same
+table here, in the module whose docstring calls it *"Our novel
 contribution"*. The honest move — labelling where a memory came from — costs it
 standing.
 

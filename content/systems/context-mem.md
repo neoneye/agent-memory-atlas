@@ -55,9 +55,9 @@ memory remains findable at every age and simply says less. That is a different
 answer, and for a coding agent it is arguably the right one: you rarely want the
 full stdout of a build from March, and you often want to know that it passed.
 
-**And the reason this report leads with a benchmark section is that the
-repository contains both the flattering number and the unflattering one, and the
-badge is the flattering one.**
+**The repository contains both the flattering number and the unflattering one,
+and the badge is the flattering one** — which is why the benchmark comes first
+below.
 
 ## 2. Mental Model
 

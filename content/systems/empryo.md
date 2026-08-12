@@ -39,9 +39,9 @@ The maintainer reports that the memory layer has been extracted from
 `src/core/memory/` into a standalone `packages/memory/` workspace package, that
 the content-hash resurrection described in section 7 is closed there, and that a
 retrieval-quality benchmark now exists with a CI floor gate. None of that is in
-`proxysoul/Empryo`: at the time of writing the public repository is still at
-`e6b5885d`, `packages/memory/` does not exist in it, and the commits named for
-the fix are not present. Everything below was read at the pinned commit and
+`proxysoul/Empryo`: at the 2026-07-31 reading the public repository was at
+`e6b5885d`, `packages/memory/` did not exist in it, and the commits named for
+the fix were not present. Everything below was read at the pinned commit and
 resolves against it. Treat the newer work as reported rather than reviewed until
 it can be read.
 

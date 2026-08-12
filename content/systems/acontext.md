@@ -42,7 +42,7 @@ embeddings, no API lock-in" and "progressive disclosure, not search" — the age
 calls `get_skill` and `get_skill_file` and decides what it needs, rather than
 being handed a semantic top-*k*.
 
-**The reason this report matters to the atlas is the write gate.** The
+**The write gate is the mechanism worth the report.** The
 [skills as procedural memory](../../patterns/skills-as-procedural-memory/) pattern
 argues that a procedure should not be written to memory until an execution has
 been verified, and notes that almost nothing does this. Acontext does. Its `tasks`

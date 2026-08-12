@@ -33,7 +33,7 @@ knowledge-worker builds "a personal knowledge graph that survives between AI
 conversations" — local, user-centred rather than conversation-centred, and
 **"provenance-or-bust"**.
 
-**That phrase turns out to be a code comment above a real check.**
+**That phrase is a code comment above a real check.**
 `mygraph/validator.py`:
 
 ```python

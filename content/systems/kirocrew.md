@@ -77,8 +77,8 @@ safe_snippet, _ = redact_credentials(safe_snippet)
 
 That is second-order reasoning about a defence: having built an audit log for
 blocked injections, they asked what the audit log itself becomes when the thing
-it records is hostile and a human UI renders it. **The atlas has not previously
-found a system that treats its own security log as an attack surface.**
+it records is hostile and a human UI renders it. **No other system here treats
+its own security log as an attack surface.**
 
 **The trust model is a privileged source rather than a status.** `user_explicit`
 bypasses the confidence floor and is the only source permitted to write the

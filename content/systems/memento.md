@@ -37,9 +37,7 @@ wanted.
 
 **Licensing note.** The repository is under the **PolyForm Noncommercial License
 1.0.0** — source-available, non-commercial, so you may read and use it but not
-build a product on it. The atlas previously recorded this repository as carrying
-no licence at all and said the decision should be revisited if one appeared. It
-has.
+build a product on it.
 
 **The mechanism worth the visit is the time capsule.** `entries.status` has six
 values, and one of them is `sealed`. A sealed entry has been recorded and stored

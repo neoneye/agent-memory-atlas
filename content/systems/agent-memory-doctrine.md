@@ -108,7 +108,7 @@ Nothing to deploy. The cost is reading: 22,000 lines of doctrine is a substantia
 
 > *"Deletion dominates correction: a superseded version retained for reconstructability is, once its basis is purged, exactly the recoverable residue the deletion was meant to eliminate."*
 
-That is a claim this atlas has not previously found stated anywhere: the version history you keep for auditability is a deletion hazard, and the two goods are in direct conflict. Purged identifiers are recorded so that a projection built on a purged projection is *residual* rather than merely stale — *"without that, a partial purge would look like a correctness problem instead of a governance one."*
+Nothing else in this corpus states that claim: the version history you keep for auditability is a deletion hazard, and the two goods are in direct conflict. Purged identifiers are recorded so that a projection built on a purged projection is *residual* rather than merely stale — *"without that, a partial purge would look like a correctness problem instead of a governance one."*
 
 `independent_sweep` is the verification. It iterates `store.all_versions()`, keeps anything content-bearing whose freshness is `RESIDUAL`, subtracts what the receipt declared, and returns the remainder as undeclared.
 

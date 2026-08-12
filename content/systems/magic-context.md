@@ -201,7 +201,7 @@ Writes arrive from four sources, distinguished in `sourceType`: foreground `agen
 
 ## 8. Agent Integration
 
-The Pi adapter (`packages/pi-plugin/`) hooks Pi's `ExtensionAPI` — tagging messages through a context handler, injecting `<session-history>` and primers into the system prompt, registering `/ctx-*` slash commands including `/ctx-dream`, and spawning subagents through Pi's print mode. `clone-inheritance.ts` handles Pi's session fork/clone semantics, deciding what memory a cloned session inherits, which is a question the atlas has not previously had to consider.
+The Pi adapter (`packages/pi-plugin/`) hooks Pi's `ExtensionAPI` — tagging messages through a context handler, injecting `<session-history>` and primers into the system prompt, registering `/ctx-*` slash commands including `/ctx-dream`, and spawning subagents through Pi's print mode. `clone-inheritance.ts` handles Pi's session fork/clone semantics, deciding what memory a cloned session inherits, which is a question no other system in this atlas has to answer.
 
 Because Pi exposes no memory-provider interface at all (see the [Pi report](../pi/) and the [pluggable memory provider](../../patterns/pluggable-memory-provider/) pattern), everything here is built at the tool and lifecycle level. There is correspondingly no host-level path for a user's deletion request to reach this store.
 

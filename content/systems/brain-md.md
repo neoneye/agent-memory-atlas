@@ -115,14 +115,10 @@ index lives inside the repo. A `brainRoot` redirect in `.mindmux/preferences.jso
 allows a sidecar brain outside the repository, and the hook skips folding in that
 case — a small correctness detail that many hook scripts would get wrong.
 
-**A screening note that is about this atlas's tooling rather than about this
-project.** The first screen of this tree returned `NOTHING SCANNED` while
-`skills/brain-setup/hooks/pre-commit` sat in it. The hook is an *asset to be
-installed* rather than an active hook in the checkout, so nothing executes on
-clone — but a screen that reports nothing over a tree containing a hook payload
-has told the reader something false by omission. `screen_repo.py` now reports
-hook-shaped files wherever they appear, with that distinction in the finding
-text, and this tree is the fixture the change was verified against.
+**The hook payload in the tree is an asset, not an active hook.**
+`skills/brain-setup/hooks/pre-commit` is a file the setup skill installs into a
+target repository's `.git/hooks/`. In this checkout it is inert: nothing runs on
+clone, and the tree carries no manifest, no install step and no dependency.
 
 ## 4. Essential Implementation Paths
 
@@ -300,4 +296,4 @@ already in this atlas that keep history in a sibling file and let the two drift.
 
 ## History
 
-**2026-08-07** — [`5cecfdd4154687751f80e2d40f3a70a4fdca4543`](https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543) — first reading. The screen returned **NOTHING SCANNED** — no manifest it recognises exists — so the tree was read by hand: a zero-dependency Node CLI with no package manifest, and one hook payload at `skills/brain-setup/hooks/pre-commit` that is installed by the setup skill rather than active in the checkout. Nothing executes on clone and nothing was run. The screen's miss is recorded in section 3 because it is a gap in this atlas's tooling rather than in the project.
+**2026-08-07** — [`5cecfdd4154687751f80e2d40f3a70a4fdca4543`](https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543) — first reading. The screen returned **NOTHING SCANNED** — no manifest it recognises exists — so the tree was read by hand: a zero-dependency Node CLI with no package manifest, and one hook payload at `skills/brain-setup/hooks/pre-commit` that is installed by the setup skill rather than active in the checkout. Nothing executes on clone and nothing was run. A screen that reports nothing over a tree containing a hook payload tells the reader something false by omission — a gap in this atlas's tooling rather than in the project — so `screen_repo.py` now reports hook-shaped files wherever they appear, with that distinction in the finding text, verified against this tree.

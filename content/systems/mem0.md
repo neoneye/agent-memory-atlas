@@ -155,9 +155,8 @@ instance — a wipe, not an edit.
 That is a named append-only event record of memory mutations in the system's own
 store, which is the whole test. It is also the richer of the two implementations
 of this schema in the atlas: the C# reimplementation
-[Mem0Sharp](../mem0sharp/) carried a narrower history table when it was first
-read, with no `actor_id` and no `role`, and has since converged on this exact
-column list by migration.
+[Mem0Sharp](../mem0sharp/) reached this exact column list by migration, having
+started narrower — no `actor_id`, no `role`.
 
 The mark does not soften the report's main risk. An audit of *what changed* is
 not a trust model: extracted facts are still stored as plain text with no
