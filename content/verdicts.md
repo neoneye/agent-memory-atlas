@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 256 reports.**
+**This page covers all 257 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["256 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["257 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2222,3 +2222,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0 with a CLA held for possible commercial dual-licensing, 1,754 lines across eight files, no test suite, self-described as a research prototype that "isn't all that yet". It publishes four scores under 31% on its README with a diagnosis of each. The 10,000-dimensional fading-context reservoir it is named around cannot leave its zero initial state, so the pronoun resolution the README advertises never runs; the separate HDC matcher that does the gating works. `talon_engine.py`, absent from the README's file list, disables a HuggingFace `torch.load` safety check to load a remote checkpoint.
 - Study when: you want the smallest complete demonstration that "will not answer without evidence" can be control flow rather than instruction — or a live example of a benchmark whose gate metric pools blocking with answering, where the published numbers imply three of ten hard negatives were actually blocked.
 - Do not copy when: memory has to be corrected later. Three strings per fact with no time, source or status is below the floor, and `update_relation` keys its delete on subject-and-predicate, so the first multi-valued relation silently loses data.
+
+### [`memory-compiler`](../systems/memory-compiler/)
+
+- Best idea: a rejected-value tombstone with a chokepoint behind it. `TOMBSTONES.md` carries the rejected value in a column, `tombstone_collision_check()` scans the other canonical files for it verbatim, and a hit is a blocking finding — `--close` refuses to seal and leaves the ledger entry open. Thirty lines, no dependencies, and it satisfies the correction argument this atlas has been making for its whole corpus.
+- Biggest risk: the scan ignores rejected values under twelve characters as too noisy, and both tombstones in the project's own worked example are ten — a superseded go-live date and a superseded hex colour. Neither is visible to the automatic check; two hand-written `must_not_return` tests are what cover them. Dates, prices, versions and names are most of what gets corrected and nearly all of them fall under the floor.
+- Most reusable component: `ARCHITECTURE.md` §5, which contains no code — a list of the decisions that could reasonably have gone the other way, each with its reason and the condition under which an adopter should choose differently. Beside it, two habits: tombstone replacements recorded as pointers rather than copies, because *"a copied value is the next stale fact waiting to happen"*, and a close step that prints `audit: not implemented in this reference build` rather than letting a reader assume one ran.
+- Maturity impression: MIT, 1,432 lines across eleven files, three commits all uploaded on 11 August 2026, self-described as a reference implementation rather than a maintained product. No test suite for the 848-line compiler that enforces every rule, and no agent integration ships — the README says the glue is yours to write, so every guarantee holds exactly as often as a harness remembers to call `--close`.
+- Study when: you want the smallest complete demonstration that correction can be made to fail loudly, or you are designing a reassertion check and want to see where a length-based noise floor puts the hole.
+- Do not copy when: memory has to be shared, scoped, queried, or extracted automatically. There is no retrieval here at all — everything durable is meant to fit in a prompt, and the design is honest that this is the trade.

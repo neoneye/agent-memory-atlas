@@ -136,8 +136,8 @@ outside.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. The negative
-retrieval assertion is carried by sixty-one repositories
-of two hundred and fifty-six, and they are not all
+retrieval assertion is carried by sixty-two repositories
+of two hundred and fifty-seven, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a
@@ -162,7 +162,7 @@ it also names the one mark that cites no case at all and should probably be
 dropped.
 
 **Three numbers appear above and they are not the same kind of number.**
-Sixty-one
+Sixty-two
 is live, generated from report frontmatter on every build. Thirty-seven and
 twenty-seven are dated: what the corpus held, and what the re-score found in it,
 on 2026-08-08. Every mark awarded since was judged against the strict definition

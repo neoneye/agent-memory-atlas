@@ -104,13 +104,13 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong> Twelve
-systems of two hundred and fifty-six carry it, and almost no two arrived
-the same way: one invented it under adversarial pressure, one adopted it
-from the first, one arrived at a weaker form independently, one was
-driven to it by a regulation, three built it after this page named its
-absence in their report, <strong>two have it as a side effect of a
-lookup that forgot to exclude the rejected row</strong>, one made that
-same collision deliberate, one built it as ordinary plumbing in its
+systems of two hundred and fifty-seven carry it, and almost no two
+arrived the same way: one invented it under adversarial pressure, one
+adopted it from the first, one arrived at a weaker form independently,
+one was driven to it by a regulation, three built it after this page
+named its absence in their report, <strong>two have it as a side effect
+of a lookup that forgot to exclude the rejected row</strong>, one made
+that same collision deliberate, one built it as ordinary plumbing in its
 write gate, and one hardened it against key rotation. Sorted by
 mechanism rather than by mark, <strong>seven of the twelve</strong>
 refuse the write — <a
@@ -249,9 +249,9 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Twelve systems in the atlas have this.</strong> That is still
-the most striking negative result in the atlas, and it is the reason
-this page exists.</p>
+<p><strong>Thirteen systems in the atlas have this.</strong> That is
+still the most striking negative result in the atlas, and it is the
+reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
 pruning. <a href="../../systems/rainbox/">RainBox</a> stores
@@ -371,11 +371,11 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-two hundred and fifty-six would suggest a hard idea that a few teams
-reach independently. One of two hundred and fifty-six, plus one adoption
-by a reader who went looking, suggests an idea that is <em>not</em>
-being reached at all — and that the way it spread was somebody reading
-another project's source.</p>
+two hundred and fifty-seven would suggest a hard idea that a few teams
+reach independently. One of two hundred and fifty-seven, plus one
+adoption by a reader who went looking, suggests an idea that is
+<em>not</em> being reached at all — and that the way it spread was
+somebody reading another project's source.</p>
 <p><strong>The third is an independent arrival, and it stops short in
 the two places this page predicts.</strong> <a
 href="../../systems/daimon/">Daimon</a>'s <code>daimon forget</code>
@@ -638,7 +638,8 @@ href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a>, <a href="../../systems/rainbox/">RainBox</a>, <a
 href="../../systems/verel/">Verel</a>, <a
 href="../../systems/noosphere/">Noosphere</a>, <a
-href="../../systems/breadcrumbs/">breadcrumbs</a></td>
+href="../../systems/breadcrumbs/">breadcrumbs</a>, <a
+href="../../systems/memory-compiler/">Memory Compiler</a></td>
 <td>The write is refused. No row, or no activation</td>
 </tr>
 <tr>
@@ -668,6 +669,30 @@ every read, consulted by one emitter</td>
 value-keyed, normalized, consulted before the write, refusing
 activation. The mark is broader than this page's argument, and a reader
 deciding what to build should use the table rather than the count.</p>
+<p><strong><a href="../../systems/memory-compiler/">Memory Compiler</a>
+is the cheapest complete instance, and the one that shows where the cost
+actually lands.</strong> Its store is four Markdown files; the tombstone
+is a table with a <code>Rejected value</code> column; the consultation
+is <code>tombstone_collision_check()</code>, thirty lines that scan the
+other canonical files for that value verbatim and emit a blocking
+finding. The session cannot be sealed while a hit stands. No database,
+no normalization pipeline, no embedding — the <em>Cost to adopt</em>
+section above is answered here with a substring search and a chokepoint,
+which is worth knowing before anyone concludes the pattern needs
+infrastructure.</p>
+<p>What it also demonstrates is that the hard half is the comparison,
+exactly as this page argues. The scan skips any rejected value shorter
+than twelve characters, commented <em>"ignore short/generic strings, too
+noisy"</em> — and both tombstones in the project's own worked example
+are ten characters: a superseded go-live date and a superseded hex
+colour. The automatic check cannot see either. Two hand-written
+<code>must_not_return</code> cases in its test file cover them instead,
+so the example is correct and the mechanism that makes it correct is the
+one an adopter has to remember to write. A length threshold is the
+simplest possible answer to "when is a match meaningful", and it fails
+on precisely the values — dates, prices, versions, identifiers — that
+get corrected most often. Scope the comparison to a field or a whole
+cell instead of to a length.</p>
 <p><strong><a href="../../systems/memoryops-ai/">MemoryOps AI</a> is the
 closest any system here comes without arriving</strong>, and it is the
 best argument on this page that the expensive half of the pattern is not

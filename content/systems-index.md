@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **256 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **257 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -172,6 +172,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`memomind`](../systems/memomind/) **MemoMind** — Four defects found by running someone else's engine · `24kchengYe/MemoMind`
 - [`memora`](../systems/memora/) **Memora** — Rehearsable correction · `agentic-box/memora` · Mutation audit, Human review, Negative evals
 - [`memori`](../systems/memori/) **Memori** — Portable store, hosted judgement · `MemoriLabs/Memori` · Scope enforced
+- [`memory-compiler`](../systems/memory-compiler/) **Memory Compiler** — A tombstone that blocks the close · `KTVSUN/memory-compiler` · Tombstone, Human review, Negative evals
 - [`memory-engine`](../systems/memory-engine/) **Memory Engine** — Agents as principals · `timescale/memory-engine` · Bi-temporal, Scope enforced
 - [`memory-lancedb-pro`](../systems/memory-lancedb-pro/) **memory-lancedb-pro** — OpenClaw memory plugin · `CortexReach/memory-lancedb-pro` · Bi-temporal, Scope enforced
 - [`memory-palace`](../systems/memory-palace/) **Memory Palace** — Draft-by-default procedural memory · `agi-is-going-to-arrive/memory-palace` · Trust state, Human review

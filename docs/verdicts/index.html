@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 256 reports.</strong></p>
+<p><strong>This page covers all 257 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;256 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;257 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6866,6 +6866,48 @@ were actually blocked.</li>
 per fact with no time, source or status is below the floor, and
 <code>update_relation</code> keys its delete on subject-and-predicate,
 so the first multi-valued relation silently loses data.</li>
+</ul>
+<h3 id="memory-compiler"><a
+href="../systems/memory-compiler/"><code>memory-compiler</code></a></h3>
+<ul>
+<li>Best idea: a rejected-value tombstone with a chokepoint behind it.
+<code>TOMBSTONES.md</code> carries the rejected value in a column,
+<code>tombstone_collision_check()</code> scans the other canonical files
+for it verbatim, and a hit is a blocking finding — <code>--close</code>
+refuses to seal and leaves the ledger entry open. Thirty lines, no
+dependencies, and it satisfies the correction argument this atlas has
+been making for its whole corpus.</li>
+<li>Biggest risk: the scan ignores rejected values under twelve
+characters as too noisy, and both tombstones in the project's own worked
+example are ten — a superseded go-live date and a superseded hex colour.
+Neither is visible to the automatic check; two hand-written
+<code>must_not_return</code> tests are what cover them. Dates, prices,
+versions and names are most of what gets corrected and nearly all of
+them fall under the floor.</li>
+<li>Most reusable component: <code>ARCHITECTURE.md</code> §5, which
+contains no code — a list of the decisions that could reasonably have
+gone the other way, each with its reason and the condition under which
+an adopter should choose differently. Beside it, two habits: tombstone
+replacements recorded as pointers rather than copies, because <em>"a
+copied value is the next stale fact waiting to happen"</em>, and a close
+step that prints
+<code>audit: not implemented in this reference build</code> rather than
+letting a reader assume one ran.</li>
+<li>Maturity impression: MIT, 1,432 lines across eleven files, three
+commits all uploaded on 11 August 2026, self-described as a reference
+implementation rather than a maintained product. No test suite for the
+848-line compiler that enforces every rule, and no agent integration
+ships — the README says the glue is yours to write, so every guarantee
+holds exactly as often as a harness remembers to call
+<code>--close</code>.</li>
+<li>Study when: you want the smallest complete demonstration that
+correction can be made to fail loudly, or you are designing a
+reassertion check and want to see where a length-based noise floor puts
+the hole.</li>
+<li>Do not copy when: memory has to be shared, scoped, queried, or
+extracted automatically. There is no retrieval here at all — everything
+durable is meant to fit in a prompt, and the design is honest that this
+is the trade.</li>
 </ul>
         </article>
       </div>

@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twelve systems of two hundred and fifty-six
+> **This is not an established best practice.** Twelve systems of two hundred and fifty-seven
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, three built it after
@@ -126,7 +126,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twelve systems in the atlas have this.** That is still the most striking
+**Thirteen systems in the atlas have this.** That is still the most striking
 negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -216,8 +216,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of two hundred and fifty-six
-would suggest a hard idea that a few teams reach independently. One of two hundred and fifty-six, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of two hundred and fifty-seven
+would suggest a hard idea that a few teams reach independently. One of two hundred and fifty-seven, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -447,7 +447,7 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Nova AI](../../systems/nova-ai/), [Wenlan](../../systems/wenlan/) | The write lands *on* the rejected row, which stays rejected. Accidental in the first two, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/) | A copy enters the store and is stopped on the way out |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
@@ -456,6 +456,28 @@ write completes?* — and re-derived report by report in
 consulted before the write, refusing activation. The mark is broader than this
 page's argument, and a reader deciding what to build should use the table rather
 than the count.
+
+**[Memory Compiler](../../systems/memory-compiler/) is the cheapest complete
+instance, and the one that shows where the cost actually lands.** Its store is
+four Markdown files; the tombstone is a table with a `Rejected value` column; the
+consultation is `tombstone_collision_check()`, thirty lines that scan the other
+canonical files for that value verbatim and emit a blocking finding. The session
+cannot be sealed while a hit stands. No database, no normalization pipeline, no
+embedding — the *Cost to adopt* section above is answered here with a substring
+search and a chokepoint, which is worth knowing before anyone concludes the
+pattern needs infrastructure.
+
+What it also demonstrates is that the hard half is the comparison, exactly as
+this page argues. The scan skips any rejected value shorter than twelve
+characters, commented *"ignore short/generic strings, too noisy"* — and both
+tombstones in the project's own worked example are ten characters: a superseded
+go-live date and a superseded hex colour. The automatic check cannot see either.
+Two hand-written `must_not_return` cases in its test file cover them instead, so
+the example is correct and the mechanism that makes it correct is the one an
+adopter has to remember to write. A length threshold is the simplest possible
+answer to "when is a match meaningful", and it fails on precisely the values —
+dates, prices, versions, identifiers — that get corrected most often. Scope the
+comparison to a field or a whole cell instead of to a length.
 
 **[MemoryOps AI](../../systems/memoryops-ai/) is the closest any system here comes
 without arriving**, and it is the best argument on this page that the expensive
