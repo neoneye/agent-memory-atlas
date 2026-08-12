@@ -337,18 +337,17 @@ Multi-tenancy is sound: project-scoped reads, cascading deletes, and a separate
 `core/tests/service/test_skill_learner_consumer.py` covering the queue consumer
 and `tests/e2e/` running the pipeline.
 
-**The trigger tests are the most valuable artifact in this repository**, and they
-are the reason this system changes what the atlas can say about the skills
-pattern. Three of the six assert a *negative*: that a running task, a pending
+**The trigger tests are the most valuable artifact in this repository.** Three of
+the six assert a *negative*: that a running task, a pending
 task, and a task update with no status each leave `ctx.learning_task_ids` empty.
 The gate is not a comment or a prompt instruction — it is behaviour with tests
 that fail if it regresses.
 
 Those are write-path assertions, so they do not earn `negative_eval`, which asks
-for cases asserting that particular material must not be *retrieved*. But they are
-the same discipline applied one stage earlier, and the atlas should say so: a
-mechanism nobody tests is a mechanism nobody has, and Acontext tested the one that
-matters most to its own design.
+for cases asserting that particular material must not be *retrieved*. They are
+the same discipline applied one stage earlier: a mechanism nobody tests is a
+mechanism nobody has, and Acontext tested the one that matters most to its own
+design.
 
 There is no benchmark harness and no committed scores, which is consistent — there
 is no public benchmark for "did the agent learn the right skill", and inventing a

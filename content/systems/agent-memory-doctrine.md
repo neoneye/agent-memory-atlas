@@ -39,7 +39,7 @@ Two honesty constraints hold that up. *"Unknown is not a fourth bucket"* — sta
 
 **The substrate stub is deliberately unsafe, and says so.** `InMemoryTemporalGraph` reproduces the *verified permissive* semantics of the mapped substrate: identity is not a content address, supersession marks validity fields rather than deleting, deletion is physical and leaves no tombstone, no operation checks actor identity, and partition filtering *"is an optional query argument that defaults to unfiltered"*. The comment explains why: *"A stub that were already safe would prove nothing about the governance layer under test: the negative paths need something real to escape through."*
 
-That unfiltered default deserves its own sentence, because this atlas has now documented the same defect in three live systems in a single round — a retrieval argument whose omission means *everything*. Here somebody has built it on purpose, as a hazard for the governance layer to catch.
+That unfiltered default deserves its own sentence, because it is the most repeated scope defect in this corpus — a retrieval argument whose omission means *everything*, catalogued in four live systems on the [scope as a first-class key](../../patterns/scope-as-a-first-class-key/) page. Here somebody has built it on purpose, as a hazard for the governance layer to catch.
 
 Where it is weakest is the ratio. Twenty-five ADRs and 22,000 lines of doctrine sit above a reference implementation whose substrate is a dictionary, and the repository is careful to say so itself: *"Passing fixture validation is not the same thing as proving a production memory system behaves correctly."* Nothing here is a deployable memory system, and it does not claim to be.
 
