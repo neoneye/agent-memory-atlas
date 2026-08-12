@@ -8,6 +8,57 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-12-what-would-make-rollback-a-mark.md](2026-08-12-what-would-make-rollback-a-mark.md) —
+  the rubric declined to score recoverability partly because almost nothing
+  implements it. NeuraKeep ships a working undo and MythologIQ specifies rollback
+  traceability, so the rarity argument expired and the limits section now says
+  so. What never existed is a definition that discriminates: proposes one in
+  three clauses — restored from a durable record of the prior state, reversible
+  by a caller rather than by the database under it, and the reversal itself
+  recorded — and refuses to adopt it before a corpus sweep, because a mark
+  awarded on a loose reading is the `audit_log` failure repeated. Authority left
+  alone, with the condition that would reopen it.
+
+- [2026-08-12-the-harness-this-page-does-not-ship.md](2026-08-12-the-harness-this-page-does-not-ship.md) —
+  the benchmarks page faults FiFA for releasing no code and AOEP-v0 for
+  describing an unshipped harness, then specifies a thirteen-step deletion
+  sequence and ships neither. The asymmetry is real, the acknowledgement has
+  landed in §9, and this is the build: one file, standard library, an adapter
+  Protocol, and — the part that matters — a deliberately leaky example store that
+  *fails* steps 5–8, because a harness shipped with only a passing fixture proves
+  nothing about whether its assertions discriminate. No certificate, no
+  scoreboard, no pass list.
+
+- [2026-08-12-which-marks-could-be-execution-grounded.md](2026-08-12-which-marks-could-be-execution-grounded.md) —
+  answers "run the code, don't just read it" with evidence the project generated
+  without noticing: five of the last nine systems had code executed during
+  review, none needing a container and three needing nothing but an interpreter.
+  The binding constraint is the seven-day cooldown, not tooling. Proposes three
+  tiers recorded per mark — `read`, `reproduced`, `executed` — and one rule: where
+  a mark rests on arithmetic that twenty lines can falsify, reproduce it. Also
+  corrects two framings, including that "a 71% failure rate on re-audits" is one
+  incident on one capability rather than a rate.
+
+- [2026-08-12-the-cheapest-of-the-ten-metrics.md](2026-08-12-the-cheapest-of-the-ten-metrics.md) —
+  of the ten axes in the scorecard, write-to-readable lag needs a clock and two
+  calls. About forty lines against the deletion sequence's existing adapter, with
+  the four design points that are the whole value: a unique token per trial so
+  the probe cannot measure a cache, polling `prompt_prefix` rather than the
+  store's read API because the question is when the memory reaches the *model*,
+  p50/p95/max and never a mean because the distributions are bimodal by
+  construction, and a timeout treated as a result rather than an error.
+
+- [2026-08-12-the-atlas-read-without-javascript.md](2026-08-12-the-atlas-read-without-javascript.md) —
+  an outside review reported floating `no`/`yes`/`a test fails` text and missing
+  linked documents on the build page. Both were artifacts of reading it without
+  JavaScript and with anchors stripped: the text is a Mermaid flowchart's edge
+  labels, and the three "missing" documents are hyperlinks in the sentences that
+  name them. Worth a note anyway, because `check_mermaid.py` requires a diagram
+  in every system report, so all 260 report pages degrade to raw `flowchart TD`
+  source for readers who execute no JavaScript — a growing share. Proposes
+  build-time SVG rendering, a one-line text alternative per diagram, and a guard
+  that pins the current behaviour.
+
 - [2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md](2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md) —
   arXiv:2608.00017 measures the self-grading feedback loop this atlas keeps
   asserting from code: wrong episodes get inflated scores, the inflation couples
