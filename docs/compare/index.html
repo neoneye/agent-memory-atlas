@@ -2145,18 +2145,16 @@ has already matched a stored fact above threshold, and every path that
 matches nothing returns a fixed refusal without calling it at all. That
 is the difference between asking a model to decline and making the
 un-evidenced question unaskable, and it is the cleanest instance of the
-second in this corpus. Beside it sit two failures worth the reading. Its
-10,000-dimensional fading-context reservoir — the component the project
-is named around — updates as
-<code>decay·state + roll(state)·token</code>, in which every term is
-proportional to the state, so a zero initial vector stays zero and the
-pronoun resolution it feeds never fires. And its gate bundles each fact
-from exactly three components while bundling the query from all of its
-tokens, so cosine falls as a question lengthens against a fixed 0.42
-threshold: the same fact passes for a six-token query and is blocked for
-an eight-token one. A system whose central claim is knowing when to
-refuse has calibrated that refusal against an unstated assumption about
-phrasing.</p>
+second in this corpus. Beside it sits the failure worth the reading. Its
+gate bundles each fact from exactly three components while bundling the
+query from all of its surviving tokens, so cosine falls as a question
+lengthens against a fixed 0.42 threshold: the same fact passes at six
+components and is blocked at eight. A system whose central claim is
+knowing when to refuse has calibrated that refusal against an unstated
+assumption about phrasing. Its correction path is the other half of the
+same shape — a <code>DELETE</code> narrowed to five named functional
+predicates, of which exactly one is ever produced by the extractor's own
+normaliser, so everything else accumulates.</p>
 <p>Tradeoff: structure answers questions flat stores cannot, but
 extraction and resolution mistakes have a blast radius proportional to
 how connected the graph is.</p>
@@ -5522,8 +5520,8 @@ hebbian_weights; the 10,000-dimensional codebook is in-process only</td>
 ±1 hypervectors against a fixed 0.42 threshold</td>
 <td>An LLM extracts triples from ingested text or from a conversational
 assertion; there is no admission gate</td>
-<td><code>update_relation</code> deletes every row for a
-subject-predicate pair before inserting the replacement;
+<td><code>update_relation</code> deletes prior rows only for five named
+functional predicates; every other relation is append-only, and
 <code>/reset</code> drops all three tables</td>
 <td>None — one database, one user, no scope key anywhere in the
 schema</td>
@@ -5535,7 +5533,8 @@ fact</td>
 <td>The refusal is a return statement — the model is never asked a
 question the symbolic layer could not answer</td>
 <td>The gate's threshold is fixed while its similarity falls with query
-length, so admission depends on how a question is phrased</td>
+length, and correction reaches only one of the predicates the extractor
+produces</td>
 </tr>
 <tr>
 <td><code>hindsight</code></td>
@@ -15677,7 +15676,7 @@ framework dependencies</li>
 <li><a
 href="https://github.com/roandejager/Hillock">roandejager/Hillock</a> at
 <a
-href="https://github.com/roandejager/Hillock/commit/62f75e0c2b70a92991b47c14b320742b026ad3ce"><code class="commit-id" title="62f75e0c2b70a92991b47c14b320742b026ad3ce">62f75e0c…</code></a>
+href="https://github.com/roandejager/Hillock/commit/a0499a55d0e44787dc0df03f4661dd9b0e7c9480"><code class="commit-id" title="a0499a55d0e44787dc0df03f4661dd9b0e7c9480">a0499a55…</code></a>
 — read only; its benchmark needs a local Ollama model, so the published
 numbers were read rather than reproduced, and the reservoir and
 gate-geometry findings were checked by reproducing the arithmetic in

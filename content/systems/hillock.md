@@ -1,14 +1,14 @@
 ---
 title: "Hillock"
 eyebrow: "A gate that is control flow"
-description: "A 1,754-line local prototype that refuses by never calling the model, publishes four scores under 31% against itself — and whose fading-context hypervector cannot leave zero."
+description: "A small local prototype that refuses by never calling the model, publishes four scores under 31% against itself, and gates on a threshold that moves with the length of the question."
 root: ../..
 page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
-revision: 62f75e0c2b70a92991b47c14b320742b026ad3ce
-revision_url: https://github.com/roandejager/Hillock/commit/62f75e0c2b70a92991b47c14b320742b026ad3ce
-analyzed_at: 2026-08-11
+revision: a0499a55d0e44787dc0df03f4661dd9b0e7c9480
+revision_url: https://github.com/roandejager/Hillock/commit/a0499a55d0e44787dc0df03f4661dd9b0e7c9480
+analyzed_at: 2026-08-12
 capabilities: "negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -18,13 +18,13 @@ matrix:
   storage: "One SQLite file with three tables — entities, relations, hebbian_weights; the 10,000-dimensional codebook is in-process only"
   retrieval: "String entity linking, a one-hop SQL fetch, then cosine over bundled ±1 hypervectors against a fixed 0.42 threshold"
   write: "An LLM extracts triples from ingested text or from a conversational assertion; there is no admission gate"
-  update_delete: "`update_relation` deletes every row for a subject-predicate pair before inserting the replacement; `/reset` drops all three tables"
+  update_delete: "`update_relation` deletes prior rows only for five named functional predicates; every other relation is append-only, and `/reset` drops all three tables"
   scoping: "None — one database, one user, no scope key anywhere in the schema"
   integration: "A local console loop against Ollama; no API, no MCP, no library surface"
   background: "None; Hebbian decay runs inline on every turn"
   trust: "No status, no confidence, no provenance and no timestamp on a stored fact"
   strengths: "The refusal is a return statement — the model is never asked a question the symbolic layer could not answer"
-  risks: "The gate's threshold is fixed while its similarity falls with query length, so admission depends on how a question is phrased"
+  risks: "The gate's threshold is fixed while its similarity falls with query length, and correction reaches only one of the predicates the extractor produces"
 ---
 
 ## 1. Executive Summary
@@ -37,9 +37,9 @@ Two things make it interesting to this atlas, and neither is the hyperdimensiona
 
 **It publishes four numbers against itself, all under 31%.** Extraction precision 10.6%, extraction recall 22.7%, retrieval accuracy 30.0%, gate accuracy 30.0% — on the README, above the install instructions, with an explanation of why. The harness that computes them is committed, and so is the whole benchmark: thirty sentences, thirty questions, twenty answerable with expected subject-predicate-object, and ten hard negatives each annotated with the reason it is unanswerable. What is not committed is any run output.
 
-Against that, three findings that reading the code produces and the README does not.
+**The fading-context reservoir leaves its zero state because the token is added to it directly.** `step` computes `state = decay*state + token_hv + roll(state)*token_hv`, and the middle term is what makes the recurrence go anywhere: without it every term is proportional to the state, and a zero-initialised vector maps to zero forever. Reproducing both forms in separate code, the old rule holds a norm of `0.0` across five steps and the current one climbs `8.0 → 34.4`. The added term also does more than revive the state: `get_context_fingerprint` scores the state against *unbound* codebook entity vectors, so a purely permutation-bound state would have had no component to align with them.
 
-The **hyperdimensional reservoir — the fading-context state the project is architecturally named around — cannot leave zero.** `HyperdimensionalReservoir.state` starts as a zero vector and its only update is `state = decay*state + roll(state)*token`, in which every term is proportional to the current state. Zero maps to zero forever, so `get_context_fingerprint` returns an empty list on every call and the pronoun-resolution path it feeds never fires. The HDC *matcher* that does the gating is a separate code path over the codebook and works.
+Against that, two findings that reading the code produces and the README does not.
 
 The **gate's operating point is a function of how long the question is.** Facts are bundled from exactly three components — a deliberate normalization the README explains — while the query is bundled from all its tokens, and both are compared against a fixed `0.42`. Holding the overlap constant, cosine falls as the query lengthens, so the same fact clears the gate for a short question and is blocked for a longer one.
 
@@ -49,7 +49,7 @@ And the **published gate accuracy does not measure gating.** `gate_acc = (correc
 
 A memory here is a **triple** — `Marie_Curie → born_in → Poland` — and nothing else is durable except the strength of association between two entities.
 
-A fact becomes a memory when a local model extracts it, either from an ingested document or from a sentence the user typed that parses as a declaration. There is no admission gate, no confidence, and no review: `update_relation` is called and the triple is in the store. A fact stops being a memory when a later assertion overwrites its predicate, or when `/reset` drops all three tables. There is no per-fact deletion, no status, no timestamp, and no record that anything was ever removed.
+A fact becomes a memory when a local model extracts it, either from an ingested document or from a sentence the user typed that parses as a declaration. There is no admission gate, no confidence, and no review: `update_relation` is called and the triple is in the store. A fact stops being a memory when a later assertion overwrites it — which happens only for five named functional predicates, `born_in`, `died_in`, `capital_of`, `place_of_birth` and `place_of_death` — or when `/reset` drops all three tables. Every other relation accumulates. There is no per-fact deletion, no status, no timestamp, and no record that anything was ever removed.
 
 So the epistemic vocabulary is thin by construction: **everything stored is treated as true**, and the entire trust decision has been moved from the store to the read path. That is a coherent position for a prototype and it puts unusual weight on the gate.
 
@@ -73,8 +73,8 @@ flowchart TD
   G -->|yes| H["Hebbian: strengthen every<br/>co-active pair, decay the rest"]
   H --> P["render prompt = matched facts<br/>+ primed associations"]
   P --> O["Ollama renders the answer"]
-  S["reservoir.state = 0"] -. "decay·state + roll(state)·token<br/>— zero maps to zero" .-> S
-  S -.->|"fingerprint is always empty"| PR["pronoun resolution<br/>never fires"]
+  S["reservoir state"] -. "decay·state + token + roll(state)·token" .-> S
+  S -.->|"top-1 codebook match"| PR["pronoun resolution<br/>when no entity linked"]
 ```
 
 ## 3. Architecture
@@ -113,16 +113,17 @@ The query is bundled into one hypervector by summing the codebook vector of ever
 
 The three-component rule is deliberate and the README explains it: holding every fact to the same number of components keeps a short fact from scoring higher than a long one for structural rather than semantic reasons. That reasoning is right, and it is more care than most threshold-based retrieval in this corpus receives.
 
-The unhandled half is that the *query* side has no such rule. Bundling n random ±1 vectors and comparing against a bundle of three gives a cosine of roughly `k / sqrt(3n)` for k shared components, so the score falls as the question gets longer while the threshold stays at 0.42. Simulating the geometry with two shared components and 10,000 dimensions:
+The unhandled half is that the *query* side has no such rule. Tokens are deduplicated by resolved identity and anything of two characters or fewer is dropped unless it is a known entity — which removes `a`, `of`, `in` and `me` — but what survives is still an unbounded bundle compared against a bundle of three. Bundling n random ±1 vectors against three gives a cosine of roughly `k / sqrt(3n)` for k shared components, so the score falls as the question gets longer while the threshold stays at `0.42`. Simulating the geometry with two shared components and 10,000 dimensions:
 
-| Query tokens | Cosine | Against a 0.42 threshold |
+| Surviving query components | Cosine | Against a 0.42 threshold |
 | --- | --- | --- |
-| 4 | 0.576 | pass |
-| 6 | 0.486 | pass |
-| 8 | 0.403 | **block** |
-| 12 | 0.337 | **block** |
+| 3 | 0.674 | pass |
+| 5 | 0.518 | pass |
+| 6 | 0.474 | pass |
+| 8 | 0.411 | **block** |
+| 10 | 0.363 | **block** |
 
-Same fact, same overlap, opposite outcomes. "Where was Turing born?" and "Could you tell me where Alan Turing was born?" are not the same query to this gate. For a system whose central claim is refusing to answer when it should, the threshold is the most important number in the repository, and it is calibrated against an unstated assumption about question length.
+Same fact, same overlap, opposite outcomes. The two-character filter barely moves this, because English question words are longer than two characters: of the benchmark's own phrasings, *"Where was Alan Turing born?"*, *"Who did Turing work with?"* and *"What did Marie Curie discover?"* lose nothing at all, and *"Could you tell me where Alan Turing was born?"* loses one token. "Where was Turing born?" and the longer form are still not the same query to this gate. For a system whose central claim is refusing to answer when it should, the threshold is the most important number in the repository, and it is calibrated against an unstated assumption about question length. Normalising the query side the way the fact side is normalised — a fixed component budget, or dividing by the component count — is the change the fixed threshold is waiting for.
 
 ### The refusal — `main.py`
 
@@ -133,13 +134,18 @@ That is the strongest idea here and it generalizes past the prototype. A system 
 ### Correction — `database.py`, `update_relation`
 
 ```python
-cursor.execute("DELETE FROM relations WHERE source_id = ? AND predicate = ?", (src_key, predicate))
+SINGLE_VALUED_PREDICATES = {"born_in", "died_in", "capital_of", "place_of_birth", "place_of_death"}
+...
+if predicate in SINGLE_VALUED_PREDICATES:
+    cursor.execute("DELETE FROM relations WHERE source_id = ? AND predicate = ?", (src_key, predicate))
 cursor.execute("INSERT OR REPLACE INTO relations VALUES (?, ?, ?)", (src_key, predicate, tgt_key))
 ```
 
-Correction is destructive and unrecorded: the prior object is gone, with no supersession pointer, no tombstone, no event and no timestamp. Re-ingesting the same document re-derives the same fact, and nothing consults what a user previously replaced.
+Correction is destructive and unrecorded where it happens at all: the prior object is gone, with no supersession pointer, no tombstone, no event and no timestamp. Re-ingesting the same document re-derives the same fact, and nothing consults what a user previously replaced.
 
-The sharper issue is that this makes **every predicate single-valued**. `born_in` genuinely is; `collaborated_with` is not. Because the `DELETE` is keyed on `(source, predicate)` and not on `(source, predicate, target)`, recording that Turing collaborated with a second person removes the first. The table's own primary key is the full triple, so the schema supports multi-valued predicates and the write path does not.
+**The allowlist is the whole correction policy, and it reaches one of the predicates this system produces.** `predicate_map` in `main.py` normalises everything the extractor emits into four canonical forms — `born_in`, `collaborated_with`, `discovered`, `cracked` — of which only `born_in` appears in the set. `capital_of` exists only in the seed data; `died_in`, `place_of_birth` and `place_of_death` appear nowhere but this set and the optional GLiREL label list in `talon_engine.py`. Anything the model extracts under an un-normalised predicate — the README's own example of extraction noise is `[Grace_Hopper] -[became_a_pioneer]-> […]` — is append-only by construction.
+
+So a user who corrects "Marie Curie discovered Radioactivity" leaves both triples in the store, and both are candidates at the next retrieval. The arrangement protects multi-valued relations from data loss and makes single-valued correctness depend on a hand-maintained set of five strings meeting a predicate vocabulary that a language model invents at ingest time. A `functional` column on the predicate, or a supersession row instead of a `DELETE`, would not have that coupling.
 
 ### Writes — `main.py`, conversational learning
 
@@ -196,10 +202,10 @@ Strengths:
 
 Gaps:
 
-- **The reservoir is inert.** The named architectural component cannot leave its zero state, so pronoun resolution — one of the three capabilities the README advertises — never runs.
+- **The reservoir has no test.** The recurrence that revived it is one term in one line, and nothing asserts the state changes when a token is fed to it.
 - **The gate's threshold is length-sensitive**, so admission depends on phrasing in a way nothing in the repository states.
 - **The published gate accuracy pools blocking with answering**, and the pooled number is dominated by the twenty answerable questions.
-- **Correction is destructive and makes every predicate single-valued.**
+- **Correction reaches one predicate the system actually produces**, and is destructive and unrecorded where it does.
 - **Nothing stored carries provenance, time or trust**, so a user assertion and a PDF extraction are indistinguishable afterwards.
 - **No scope of any kind**, which is consistent with one local user and worth stating anyway.
 - **`talon_engine.py` disables a checkpoint-deserialization guard** for anyone who installs the optional stack.
@@ -236,10 +242,11 @@ Two things are wrong with the scoring, and they are worth separating from the lo
 
 ### Avoid
 
-- **A recurrence with no additive term.** `state = decay*state + f(state, token)` is zero-preserving, and a zero-initialized state stays zero forever. Assert once, at startup, that the component you named the project after changes when you feed it something.
+- **A recurrence with no additive term.** `state = decay*state + f(state, token)` is zero-preserving, and a zero-initialised state stays zero forever however long you run it. The assertion that catches it is one line — feed a token, check the norm moved — and it belongs beside any state you carry across turns.
+- **A hand-maintained list of which predicates are functional.** If the vocabulary is invented by a language model at ingest time and the list is five strings in a source file, the two will not meet. Put the property on the predicate, or supersede instead of deleting.
 - **A threshold calibrated against one input shape.** If the score depends on a property of the query the threshold does not know about — length, token count, language — the gate is measuring phrasing as much as relevance.
 - **A single scalar over positive and negative obligations.** Blocking what must be blocked and answering what must be answered are different jobs with opposite degenerate solutions; a pooled score hides which one you failed.
-- **Keying a correction on `(subject, predicate)`.** It silently makes every relation functional, and the first multi-valued predicate you meet loses data with no error.
+- **Keying a correction on `(subject, predicate)` for every relation.** It silently makes them all functional, and the first multi-valued predicate you meet loses data with no error — but narrowing it to an allowlist trades that for relations nobody can correct at all. Both failures are quiet.
 - **Disabling a deserialization guard to load a model**, especially in a module the README does not list. If the optional path needs it, say so where the person installing it will read it.
 
 ### Fit
@@ -252,11 +259,12 @@ The hyperdimensional layer is the part to be most careful about, and not because
 
 ## 12. Open Questions
 
-- Was the reservoir ever observed to produce a non-empty fingerprint? The debug path in the benchmark prints "Active Echo" lines from it, which suggests the output was expected and its absence not noticed.
+- Does the revived reservoir resolve pronouns correctly in practice, or does the bundle term dominate the permutation-bound term enough that word order stops mattering?
+- Is the five-predicate allowlist meant to grow with the extractor's vocabulary, and what maintains it?
 - Where did `HDC_THRESHOLD = 0.42` come from, and against what distribution of query lengths?
 - What is the intended behaviour for a genuinely multi-valued predicate — is `collaborated_with` meant to hold one target, or is the `DELETE` an oversight?
 - Is `talon_engine.py` intended as the default ingestion path once the dependencies are declared, and does the author know the patch disables a `torch.load` guard?
-- Do the four README numbers come from one run, and would committing that run's output be acceptable given it depends on a local model?
+- Do the four README numbers come from one run, and would committing that run's output be acceptable given it depends on a local model? They describe the extraction and gating behaviour of a prior version; three of the four inputs to them have changed since.
 
 ## Appendix: File Index
 
@@ -269,5 +277,15 @@ The hyperdimensional layer is the part to be most careful about, and not because
 - Hyperparameters: `config.py`.
 
 ## History
+
+**2026-08-12** — [`a0499a55d0e44787dc0df03f4661dd9b0e7c9480`](https://github.com/roandejager/Hillock/commit/a0499a55d0e44787dc0df03f4661dd9b0e7c9480) — re-read one day past the first pin, at v0.2.3, two commits later. Screened again before reading: 0 auto-run surfaces, 0 build-time exec, nothing inside the cooldown, one unpinned manifest; nothing was installed and nothing from the repository was executed.
+
+[`348f08341e7b9dfd42a10d5a23b855e4bd46d0a1`](https://github.com/roandejager/Hillock/commit/348f08341e7b9dfd42a10d5a23b855e4bd46d0a1) changes three things in twenty-five added lines. `reservoir.step` gains `+ token_hv`, so the recurrence has an additive term and a zero-initialised state leaves zero — reproducing both forms in separate code, the previous rule holds a norm of `0.0` across five steps where the current one climbs to `34.4`. `update_relation` narrows its `DELETE` to a set of five named functional predicates, so a second `collaborated_with` no longer removes the first. And `select_answering_facts` deduplicates query tokens by resolved identity and drops tokens of two characters or fewer.
+
+**What the second fix trades.** Removing the data loss for multi-valued relations leaves correction reaching only `born_in`: `predicate_map` normalises the extractor's output into `born_in`, `collaborated_with`, `discovered` and `cracked`, and only the first is in the allowlist, while `died_in`, `place_of_birth` and `place_of_death` appear nowhere else in the tree but the optional GLiREL label list. A corrected `discovered` fact now leaves both triples in the store. The report's previous statement — that the delete keyed on `(subject, predicate)` made every relation functional — was accurate at that pin and describes a defect the project has replaced with a narrower one.
+
+**What the third fix does not change.** The report's claim that the gate's operating point moves with question length holds at this commit: the fact side is still exactly three components, the query side is still unbounded, and `HDC_THRESHOLD` is still `0.42`. The two-character filter removes nothing from three of the benchmark's own four sample phrasings and one token from the fourth, so the crossover between passing and blocking still sits between six and eight surviving components.
+
+The README, its four published metrics and `config.py` are untouched by the commit, so the numbers on the front page describe the extraction, matching and gating behaviour of the previous version.
 
 **2026-08-11** — [`62f75e0c2b70a92991b47c14b320742b026ad3ce`](https://github.com/roandejager/Hillock/commit/62f75e0c2b70a92991b47c14b320742b026ad3ce) — first reading, on the `master` default branch, at the fifty-sixth commit of a repository created 11 June 2026. Screened before reading: 0 auto-run surfaces, 0 build-time exec surfaces, 0 dependency surfaces inside the cooldown, 1 unpinned manifest (`numpy`, `psutil`, `pypdf`, none pinned); nothing was installed and nothing from the repository was executed. The reservoir and gate-geometry findings were checked by reproducing the arithmetic in separate code rather than by importing the modules.
