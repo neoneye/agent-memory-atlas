@@ -78,7 +78,7 @@ you are borrowing.
 
 ## Job 2 — You are extending the atlas itself
 
-Three skills under `.agents/skills/`, in the order they are normally used:
+Four skills under `.agents/skills/`, in the order they are normally used:
 
 - **`screen-repository`** — run `python3 scripts/screen_repo.py <path>` before
   reading or running anything from a checkout. Reports auto-executing hooks,
@@ -89,6 +89,10 @@ Three skills under `.agents/skills/`, in the order they are normally used:
   validates the site.
 - **`reanalyze-memory-system`** — re-reads a system at a newer commit and records
   what moved, including claims the atlas published that stopped being true.
+- **`remove-meta-narrative`** — run over anything edited under `content/` before
+  committing. A page states what is true; a `## History` entry states what
+  changed. This catches the second leaking into the first, including the form no
+  grep sees: a paragraph superseded by the next one, both retained.
 
 Read [`content/methodology/atlas-rubric.md`](content/methodology/atlas-rubric.md)
 first: it defines each of the seven marks strictly, and a mark awarded on a
