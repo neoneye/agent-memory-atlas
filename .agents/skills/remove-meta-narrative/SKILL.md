@@ -56,18 +56,28 @@ Removing it from these places is a worse error than leaving it in the body.
 Run both, over the **body only** — stop at `## History`, or its entry buries the
 real hits and a check whose output is mostly noise gets skipped.
 
-Both need triage, not just the second. On this repository's rubric page, grep 1
-returns five hits and all five are legitimate — "re-reading a system is the
-expensive part" is a statement about method, not a narration of a past position.
+All three need triage. On this repository's rubric page, grep 1 returns five hits
+and all five are legitimate — "re-reading a system is the expensive part" is a
+statement about method, not a narration of a past position.
 
 ```sh
 # 1 — explicit narration
-rg -n -i 're-read|re-review|re-pin|previously (said|reported)|this (report|page) (first|named|called)|the atlas (found|missed|had)' <file>
+rg -n -i 're-read|re-review|re-pin|previously (said|reported|found|named)|this (report|page) (first|named|called)|the atlas (found|missed|had)' <file>
 
 # 2 — adverbial leakage, high false-positive rate by design
 sed '/^## History$/q' <file> \
   | rg -n -i '\b(now|still|no longer|used to|already|newer|earlier|these days|has since|has started|as of this reading|at the time of writing)\b'
+
+# 3 — the project narrating its own trajectory. Highest yield of the three.
+sed '/^## History$/q' <file> \
+  | rg -n -i '(atlas|report|corpus|rubric|census)[^.]{0,50}(has now|now documents|has since|has not previously|had not|used to be|previously)|the reason this (report|page)|this atlas.{0,3}s (tooling|screener|scripts|build)|the atlas (can|could|should) (say|said|call|claim)|in a single round'
 ```
+
+Grep 3 is narrow **on purpose**. Do not widen it to `this atlas|in this corpus`:
+comparative claims — "the only system in this atlas that…", "most systems in this
+corpus collapse these" — are current state and correct, they outnumber the real
+hits by roughly fifty to one, and in a 260-file sweep two genuine hits sat
+unnoticed inside that noise until the pattern was narrowed to trajectory verbs.
 
 Then the part no command does: **read every paragraph you added or touched, and
 the one immediately before and after it.** You are looking for two paragraphs
@@ -81,6 +91,7 @@ that hold different positions on the same question.
 | "evaluated against **now** or against an `asOf`" | "**still** archived at the third re-assertion" |
 | "the pattern must **still** rank in the top five" | "the audit gap is **no longer** open" |
 | "holds what is **no longer** true" (a tombstone file's contents) | "**already** covered in the previous pin" |
+| "the only system in this atlas that routes them separately" | "the defect this atlas has **now** found five times in a fortnight" |
 | "drops the summary when a message **no longer** exists" | "MemoryAgentBench **has since** been read above" |
 
 **The test:** if the sentence would have to change when *this project* changes
@@ -140,6 +151,11 @@ a reader who wants the sequence can find it.
 - **Fixing the words and leaving the structure.** Removing "has started to fail"
   from a bullet that still holds two positions makes the contradiction quieter,
   not absent.
+- **Leaving a running tally in place.** "The atlas has now found this five
+  times", "the fourth instance in the corpus" — a count of the project's own
+  findings is stale on the next reading and sizes a defect by the reader's
+  knowledge of the project. Point at the pattern page or the census section that
+  collects the instances, and let it hold the count.
 - **Editing only the file you were pointed at.** The same passage is usually
   paraphrased in the homepage card, the verdict entry and the overview family
   prose. Sweep the same vocabulary through every file the change touched.
