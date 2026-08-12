@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A decision ledger with a typed
+schema, a per-type status enum and five CI-enforced checks — whose own
+rule that an accepted claim carries an evidence artifact has zero
+instances, and whose ledger contains two records with the same id.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OmniNode Knowledge
+Base — Agent Memory Atlas">
+    <meta property="og:description" content="A decision ledger with a
+typed schema, a per-type status enum and five CI-enforced checks — whose
+own rule that an accepted claim carries an evidence artifact has zero
+instances, and whose ledger contains two records with the same id.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OmniNode Knowledge
+Base — Agent Memory Atlas">
+    <meta name="twitter:description" content="A decision ledger with a
+typed schema, a per-type status enum and five CI-enforced checks — whose
+own rule that an accepted claim carries an evidence artifact has zero
+instances, and whose ledger contains two records with the same id.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OmniNode Knowledge Base — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">Every claim needs evidence, and none has
+any</p>
+          <h1>OmniNode Knowledge Base</h1>
+          <p class="document-deck">A decision ledger with a typed
+schema, a per-type status enum and five CI-enforced checks — whose own
+rule that an accepted claim carries an evidence artifact has zero
+instances, and whose ledger contains two records with the same id.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OmniNode-ai/knowledge-base">
+              <span>Source</span>
+              <strong>OmniNode-ai/knowledge-base</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OmniNode-ai/knowledge-base/commit/37f76b13827987823dd71ef7fe3c9358dbc06a41" title="37f76b13827987823dd71ef7fe3c9358dbc06a41">
+              <span>Analyzed revision</span>
+              <code>37f76b13…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-12</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is OmniNode's public architectural provenance record: 89 files,
+Apache-2.0, holding decision records, doctrine, pivots, deep dives and
+an architecture document, each a Markdown file with typed YAML
+frontmatter. It is in this atlas for the same reason <a
+href="../cambium/">Cambium</a> and <a
+href="../breadcrumbs/">breadcrumbs</a> are — the store is a working
+method rather than a runtime, and the method is the part worth
+reading.</p>
+<p>The mechanism is good. <code>schemas/frontmatter.schema.json</code>
+is generated from Pydantic models in <code>scripts/validate.py</code>
+and discriminates on <code>type</code>, so each of the eight artifact
+kinds gets its own status vocabulary: an ADR is <code>proposed</code>,
+<code>accepted</code>, <code>superseded</code>, <code>deprecated</code>
+or <code>rejected</code>; a pivot is <code>observed</code>,
+<code>emerging</code>, <code>accepted</code>, <code>historical</code> or
+<code>superseded</code>; a doctrine document is only <code>draft</code>,
+<code>accepted</code> or <code>deprecated</code>. That is a discrete
+epistemic state on the claim itself rather than on a workflow, and CI
+fails a file that carries a value outside its type's enum.</p>
+<p>Five checks run on every pull request, and all five are real:
+frontmatter against the schema, every <code>refs:</code> entry resolving
+to a file that exists, sanitization patterns, index freshness against
+regenerated output, and relative links. A separate gate scans commit
+messages and PR titles and bodies for the same forbidden content, and it
+<em>"does NOT honor the <code># sanitization-ok:</code> author
+allowlist"</em> — the escape hatch that exists for artifacts is refused
+where the author is writing prose nobody will review as an artifact.</p>
+<p><strong>Then there is what the checks do not cover, and it is
+precisely the project's own philosophy.</strong> The README states it
+three ways: <em>"Truth must be proven"</em>, <em>"Completion requires
+durable evidence"</em>, <em>"A decision is not accepted… until the
+evidence artifact exists and is referenced."</em>
+<code>evidence/README.md</code> puts the rule in one line: <em>"Every
+accepted ADR and confirmed pivot should have at least one evidence file.
+Claims without evidence are hypotheses."</em></p>
+<p><code>evidence/</code> contains a README and nothing else. So do
+<code>plans/</code> and <code>experiments/</code>. Three of the nine
+documented artifact types have zero instances, and the missing one is
+the type the whole philosophy rests on — against 28 ADRs and 15 doctrine
+documents. The rule names two kinds specifically: 8 ADRs carry
+<code>status: accepted</code> and 5 pivots do, so 13 artifacts fail it
+by name and 29 carry an accepted-family status overall.</p>
+<p><strong>And the ledger has a key collision.</strong>
+<code>adrs/ADR-0010-adaptive-recursive-contract-bisection.md</code> and
+<code>adrs/ADR-0010-required-context-parity-ratchet.md</code> both
+declare <code>adr_id: ADR-0010</code> with different titles and
+different decisions. Nothing in the validator checks that an id
+identifies one record, so a future <code>refs: [ADR-0010]</code> or
+<code>supersedes: [ADR-0010]</code> resolves to whichever file a reader
+opens first.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>file with a type and a status</strong>. The
+type decides which fields are legal and which statuses exist; the status
+decides whether the claim is currently held.</p>
+<pre class="text"><code>adr         proposed | accepted | superseded | deprecated | rejected   + adr_id, supersedes, superseded_by
+pivot       observed | emerging | accepted | historical | superseded   + observed_date, confidence: low|medium|high
+doctrine    draft | accepted | deprecated
+architecture draft | accepted | superseded | deprecated
+plan        draft | active | completed | superseded
+evidence    draft | accepted | superseded
+experiment  proposed | active | completed   + hypothesis, outcome: confirmed|refuted|inconclusive|None
+deep-dive   draft | public-curated          + period</code></pre>
+<p>Two of those deserve a second look. A pivot carries a
+<code>confidence</code> of <code>low</code>, <code>medium</code> or
+<code>high</code> <em>beside</em> its status, which is the separation
+this atlas argues for — how sure you are is not the same axis as whether
+the claim is current. And an experiment carries a
+<code>hypothesis</code> and an <code>outcome</code> that may be
+<code>confirmed</code>, <strong><code>refuted</code></strong> or
+<code>inconclusive</code>. A schema with a first-class refutation is
+rare in this corpus. There are no experiments.</p>
+<p>Correction is supersession, expressed in frontmatter rather than by
+editing the superseded text: the new artifact lists
+<code>supersedes: [ADR-0026]</code>, the old one lists
+<code>superseded_by: [ADR-0027]</code> and moves to
+<code>status: superseded</code>, and both files stay in the tree. The
+corpus contains exactly one such pair, and it is correct in both
+directions — which is the good news and the caveat at once, because the
+reciprocity is a convention rather than a check.</p>
+<p>The distinction the design gets right, and which most Markdown
+knowledge bases collapse, is that <strong>an artifact records what was
+rejected as well as what was chosen</strong>. Every ADR carries an
+"Alternatives Considered" section with the reason each was refused —
+ADR-0019's is <em>"self-attestation defeats the gate; agents lie; an OCC
+receipt written by the party it certifies is not evidence"</em>. That is
+a rejected-value record kept in prose, keyed by nothing and consulted by
+nothing, which is the near-miss worth naming: the store knows what it
+ruled out and has no way to be asked.</p>
+<pre class="mermaid"><code>flowchart TD
+  PR[&quot;pull request&quot;] --&gt; CI{&quot;validate.py — five checks&quot;}
+  CI --&gt;|&quot;frontmatter vs the&lt;br/&gt;per-type discriminated union&quot;| OK
+  CI --&gt;|&quot;every refs: entry resolves&quot;| OK
+  CI --&gt;|&quot;sanitization patterns&quot;| OK
+  CI --&gt;|&quot;indexes match regenerated output&quot;| OK
+  CI --&gt;|&quot;relative links resolve&quot;| OK[&quot;merged into the ledger&quot;]
+  OK --&gt; STORE[(&quot;56 artifacts:&lt;br/&gt;28 adr, 15 doctrine,&lt;br/&gt;7 deep-dive, 5 pivot, 1 architecture&quot;)]
+  STORE --&gt; IDX[&quot;generate_indexes.py →&lt;br/&gt;chronological, by-topic, by-type&quot;]
+  STORE -.-&gt;|&quot;stated in README, checked by nothing&quot;| GAPS[&quot;accepted ⇒ an evidence file exists&lt;br/&gt;adr_id is unique&lt;br/&gt;supersedes ⇔ superseded_by&quot;]
+  GAPS -.-&gt; E0[&quot;evidence/ holds 0 artifacts&lt;br/&gt;ADR-0010 is two records&lt;br/&gt;one supersession pair, by hand&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no runtime. The repository is the system, and four Python
+scripts, 735 lines in total, are the enforcement:</p>
+<ul>
+<li><strong><code>scripts/validate.py</code></strong> (372) — the
+Pydantic models, the five checks, and <code>--export-schema</code> so
+the committed JSON schema is generated rather than maintained.</li>
+<li><strong><code>scripts/generate_indexes.py</code></strong> (188) —
+rebuilds <code>indexes/chronological.md</code>, <code>by-topic.md</code>
+and <code>by-type.md</code> from frontmatter.</li>
+<li><strong><code>scripts/sanitization_patterns.py</code></strong> (57)
+— the shared pattern set: internal ticket references, internal IPs and
+hosts, private repository URLs, secrets-manager references, email
+addresses.</li>
+<li><strong><code>scripts/check_text_sanitization.py</code></strong>
+(118) — the same patterns applied to commit messages, PR titles and
+bodies, and a commit range.</li>
+</ul>
+<p><code>.github/workflows/ci.yml</code> runs lint,
+<code>validate.py</code>, a schema-freshness check and the sanitization
+job; <code>.pre-commit-config.yaml</code> wires the commit-message gate
+locally.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uv</code> and Python 3.12. Nothing is served, nothing is
+indexed, nothing runs on a schedule. For a team that already reviews by
+pull request this costs one CI job; for anything else there is nothing
+to deploy.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The schema</strong> — <code>validate.py:60</code> onward
+declares one model per artifact type, each pinning <code>status</code>
+to a <code>Literal[...]</code>, with <code>_discriminate</code>
+selecting the model from the <code>type</code> field.
+<code>additionalProperties: false</code> in the exported schema means an
+unknown key fails, so the frontmatter cannot quietly accumulate
+fields.</p>
+<p><strong>Cross-references</strong> —
+<code>check_cross_references</code> resolves every <code>refs:</code>
+entry and fails on a miss. This is the provenance link that cannot
+dangle, and it is the strongest routine here.</p>
+<p><strong>Index freshness</strong> — <code>check_index_freshness</code>
+regenerates the three indexes in memory and compares them to what is
+committed, so a stale index fails the build rather than misleading a
+reader. The retrieval surface is derived and verified, which is the
+right relationship between a store and its index.</p>
+<p><strong>Sanitization</strong> — applied to artifacts with an
+<code># sanitization-ok:</code> allowlist for deliberate exceptions, and
+applied to commit messages and PR bodies <em>without</em> it. The
+asymmetry is deliberate and documented in <code>CLAUDE.md</code>.</p>
+<p><strong>What has no path</strong> — there is no function anywhere
+that reads <code>status</code>, <code>supersedes</code>,
+<code>superseded_by</code> or <code>adr_id</code> for anything other
+than schema validation. The fields are typed, stored, and never
+interpreted.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Directory</th>
+<th>Artifacts</th>
+<th>What the type means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doctrine/</code></td>
+<td>15</td>
+<td>Stable platform principles</td>
+</tr>
+<tr>
+<td><code>adrs/</code></td>
+<td>28</td>
+<td>The decision ledger, ids
+<code>ADR-0001</code>–<code>ADR-0027</code></td>
+</tr>
+<tr>
+<td><code>deep-dives/</code></td>
+<td>7</td>
+<td>Narrative records of architectural evolution</td>
+</tr>
+<tr>
+<td><code>pivots/</code></td>
+<td>5</td>
+<td>Changes in understanding, before and after</td>
+</tr>
+<tr>
+<td><code>architecture/</code></td>
+<td>1</td>
+<td>Technical design documents</td>
+</tr>
+<tr>
+<td><code>plans/</code></td>
+<td><strong>0</strong></td>
+<td>Intended work</td>
+</tr>
+<tr>
+<td><code>experiments/</code></td>
+<td><strong>0</strong></td>
+<td>Hypothesis-driven, with structured outcomes</td>
+</tr>
+<tr>
+<td><code>evidence/</code></td>
+<td><strong>0</strong></td>
+<td>Links from claims to durable proof</td>
+</tr>
+</tbody>
+</table></div>
+<p>Twenty-eight ADR files carry twenty-seven distinct ids. Statuses
+across the corpus: 29 <code>accepted</code>, 21 <code>proposed</code>, 8
+<code>public-curated</code>, and one each of <code>superseded</code>,
+<code>emerging</code> and <code>draft</code>.</p>
+<p>Every artifact carries <code>topics: []</code> and
+<code>refs: []</code>. Topics group a generated index and are not used
+as a filter; refs are validated to resolve and are not used for anything
+else.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The repository ships no query. Retrieval is opening one of three
+generated indexes — chronological, by topic, by type — or grepping the
+tree, and <code>README.md</code> names the intended entry point in
+prose: start at <code>doctrine/</code>, then ADRs, then pivots.</p>
+<p>For a corpus of 56 documents that is adequate and honest, and the
+freshness check means the indexes can be trusted. It also means the
+store has no way to answer the question its own status field makes
+askable — <em>"which accepted decisions are still current"</em> —
+without a person reading every file.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is a pull request, and the gate is CI. Nothing is extracted,
+summarized or consolidated; there is no background pass; the only
+derived artifacts are the three indexes, and they are regenerated by
+hand and verified in CI.</p>
+<p>Deletion is not modelled at all. The correction path is supersession,
+which retains the superseded artifact and marks it — the behaviour this
+atlas argues for — and there is no mechanism for removing a claim that
+should never have been recorded, which is a different need and one the
+sanitization gate partly covers by refusing the content at the
+boundary.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>CLAUDE.md</code> is the whole integration: the commands, the
+gates, and four rules, ending with a line stating when it was last
+checked against the code — <em>"verified against <code>scripts/</code>,
+<code>.pre-commit-config.yaml</code>, and
+<code>.github/workflows/ci.yml</code> on the 2026-06-21 refresh"</em>. A
+contract file that records when it was last reconciled with the thing it
+describes is a small habit worth copying, and this atlas has read many
+that do not.</p>
+<p>The agent-facing content extends past the contract. ADR-0019 exists
+because an implementing agent wrote its own verification receipt:
+<em>"In practice the implementing agent was authoring its own OCC
+evidence companion, which defeats the gate: agents lie, and
+self-attestation is not proof."</em> The decision is that evidence comes
+only from an autogen tick or an independent verifier, and any
+self-authored companion is re-verified before the work is accepted.</p>
+<p>That is the right rule and it is recorded here as a decision, not
+implemented here as a check — this repository holds the ledger, and the
+receipt gate it describes lives in the platform's other
+repositories.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Five checks, all of which fail the build.</strong> Nothing
+here is advisory, and that distinguishes it from most documentation
+repositories, where a convention is a sentence in a contributing
+guide.</p>
+<p><strong>Three invariants, none of which are checked</strong>, and
+each is stated by the repository as central:</p>
+<ol type="1">
+<li><em>"Every accepted ADR and confirmed pivot should have at least one
+evidence file."</em> Eight accepted ADRs, five accepted pivots, zero
+evidence files. Under the repository's own next sentence — <em>"Claims
+without evidence are hypotheses"</em> — the ledger holds no accepted
+decisions at all, only hypotheses that say <code>accepted</code>.</li>
+<li><strong>An id identifies one record.</strong> <code>ADR-0010</code>
+identifies two, with different titles and unrelated decisions.</li>
+<li><strong>Supersession is reciprocal.</strong> ADR-0026 and ADR-0027
+point at each other correctly. A future pair that does not would pass
+every check, leaving a superseded claim that still reads as current, or
+a current claim that silently supersedes nothing.</li>
+</ol>
+<p>All three are cheap to add to a validator that already parses every
+file into a typed model — a set for ids, a dictionary lookup for the
+back-link, and a count of <code>refs:</code> entries pointing into
+<code>evidence/</code> for the first. The gap is not capability; the
+machinery is already there and pointed elsewhere.</p>
+<p><strong>Sanitization is the strongest safety property</strong>,
+because it is enforced at three surfaces including the two nobody
+reviews, and because refusing the allowlist on commit messages shows the
+failure mode was thought about rather than inherited.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No tests for the scripts. <code>validate.py</code> is 372 lines of
+parsing and comparison with no test file, and its five checks are
+exercised only by running it over the corpus in CI — which does mean a
+regression in a check would surface as the corpus passing when it should
+not, silently, rather than as a red test.</p>
+<p>There is nothing to benchmark, and the repository claims no numbers.
+Nothing was run for this review; the counts here come from reading the
+frontmatter of every artifact.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Generate the schema from the models and fail CI when the
+committed copy drifts.</strong> <code>--export-schema</code> plus a
+freshness check means the published contract cannot describe a validator
+that no longer exists.</li>
+<li><strong>Give each artifact type its own status vocabulary.</strong>
+A doctrine principle that is <code>observed</code> or
+<code>emerging</code> is a genuinely different epistemic claim from an
+ADR that is <code>proposed</code>, and one shared enum would have
+flattened both.</li>
+<li><strong>Verify the index rather than trusting it.</strong>
+Regenerate in memory, compare to what is committed, fail on a
+difference. It costs nothing and removes the commonest quiet defect in a
+file-backed store.</li>
+<li><strong>Deny the allowlist where nobody is reviewing.</strong> An
+escape hatch that applies to reviewed artifacts and not to commit
+messages is a considered boundary, and the reasoning is in the contract
+file.</li>
+<li><strong>Date the contract file against the code.</strong> One
+trailing comment saying when <code>CLAUDE.md</code> was last checked
+against <code>scripts/</code> and CI tells a reader how much to trust
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Stating an invariant in a README and enforcing the schema
+instead.</strong> The three rules this project describes as its
+philosophy are exactly the three a reader cannot rely on, and a
+validator that already builds a typed model of every file is fifteen
+lines from checking all three.</li>
+<li><strong>An id field that nothing constrains.</strong> A ledger whose
+keys can collide has no reliable way to express supersession or
+reference, and the collision here is already in the tree.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right for a team that wants its architectural reasoning inspectable
+and is willing to pay for it in pull requests. The five checks are a
+good floor, the type-per-status model is better than most, and the whole
+thing is 735 lines of Python over a directory of Markdown.</p>
+<p>Wrong as agent memory in the sense the rest of this atlas means it.
+Nothing retrieves, nothing scopes, nothing reads a status back, and no
+agent writes here without a human opening a pull request — this is a
+record humans and agents maintain together, not a store an agent uses
+during a task. Take the schema and the checks; the runtime is somebody
+else's problem, and in OmniNode's case it is <a
+href="../omniintelligence/">OmniIntelligence</a> and <a
+href="../omnimemory/">OmniMemory</a>, read separately.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A philosophy with no instances.</strong>
+<code>evidence/</code>, <code>plans/</code> and
+<code>experiments/</code> are documented, templated, indexed by type —
+and empty. The most load-bearing claim in the README has zero artifacts
+behind it.</li>
+<li><strong>A duplicate primary key in a decision ledger</strong>, which
+makes <code>ADR-0010</code> ambiguous in any future reference.</li>
+<li><strong>Typed fields nothing consumes.</strong> <code>status</code>,
+<code>supersedes</code>, <code>superseded_by</code>,
+<code>confidence</code>, <code>hypothesis</code>, <code>outcome</code>,
+<code>topics</code> and <code>refs</code> are validated and then never
+read by any code path except the index generator, which uses
+<code>topics</code> and <code>date</code> only. The sharpest case is
+<code>outcome: refuted</code> — a first-class record that a hypothesis
+failed, in a type with no instances.</li>
+<li><strong>No tests on the enforcement.</strong> The five checks are
+the entire guarantee and none of them has a test asserting it still
+catches what it was written for.</li>
+<li><strong>Supersession by convention.</strong> One correct pair, no
+check, and the failure is silent in the direction that matters — a
+superseded claim that still reads current.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the shape: typed frontmatter per artifact kind, a status enum
+that means something, a generated schema, a generated index that is
+verified rather than trusted, and a content gate that reaches the
+surfaces nobody reviews. That is a better foundation than most
+hand-maintained knowledge bases have, and it is small.</p>
+<p>Then write the three checks this one is missing before the corpus
+grows, because each becomes harder to add later: unique ids, reciprocal
+supersession, and an evidence reference on anything claiming
+<code>accepted</code>. The third is the one that turns the project's
+philosophy from a paragraph into a property.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Is the evidence rule enforced elsewhere?</strong> ADR-0019
+and ADR-0022 describe an OCC receipt gate in the platform's other
+repositories, so the proof artifacts may exist and simply not be linked
+from here. If they do, the missing thing is the link, and the link is
+the artifact type this repository defines.</li>
+<li><strong>Which ADR-0010 do later documents mean?</strong> Neither is
+referenced by a <code>refs:</code> entry at this commit, so the
+collision has not yet been resolved by usage.</li>
+<li><strong>Why can a deep-dive only be <code>draft</code> or
+<code>public-curated</code>?</strong> Its vocabulary is the one status
+set with no way to say a narrative was superseded, in a repository whose
+whole subject is that understanding changes. All seven deep-dives are
+<code>public-curated</code>.</li>
+<li><strong>What happens to a claim that was wrong rather than
+superseded?</strong> The ADR enum has <code>rejected</code>, no artifact
+uses it, and the difference between "we decided against this" and "we
+decided this and it was untrue" is not modelled.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/validate.py</code></td>
+<td>Pydantic models per artifact type; the five checks;
+<code>--export-schema</code></td>
+</tr>
+<tr>
+<td><code>scripts/generate_indexes.py</code></td>
+<td>Rebuilds the three indexes from frontmatter</td>
+</tr>
+<tr>
+<td><code>scripts/sanitization_patterns.py</code></td>
+<td>The shared forbidden-content pattern set</td>
+</tr>
+<tr>
+<td><code>scripts/check_text_sanitization.py</code></td>
+<td>The same patterns over commit messages and PR text, without the
+allowlist</td>
+</tr>
+<tr>
+<td><code>schemas/frontmatter.schema.json</code></td>
+<td>Generated contract; CI fails if it drifts</td>
+</tr>
+<tr>
+<td><code>adrs/ADR-0019-no-self-authored-evidence.md</code></td>
+<td><em>"agents lie, and self-attestation is not proof"</em></td>
+</tr>
+<tr>
+<td><code>adrs/ADR-0026</code>, <code>ADR-0027</code></td>
+<td>The corpus's only supersession pair, correct in both directions</td>
+</tr>
+<tr>
+<td><code>adrs/ADR-0010-*.md</code></td>
+<td>Two files, one id</td>
+</tr>
+<tr>
+<td><code>evidence/README.md</code></td>
+<td>The rule with no instances</td>
+</tr>
+<tr>
+<td><code>CLAUDE.md</code></td>
+<td>The agent contract, dated against the code it describes</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-12</strong> — <a
+href="https://github.com/OmniNode-ai/knowledge-base/commit/37f76b13827987823dd71ef7fe3c9358dbc06a41"><code class="commit-id" title="37f76b13827987823dd71ef7fe3c9358dbc06a41">37f76b13…</code></a>
+— first reading. The screen found no auto-run surface, no build-time
+execution and a <code>uv.lock</code> unchanged for 81 days;
+<code>CLAUDE.md</code> is addressed to a reading agent and was read as
+data. Nothing was installed or run — the artifact counts, the status
+distribution, the empty directories and the duplicate
+<code>adr_id</code> come from reading the frontmatter of every file in
+the tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

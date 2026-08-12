@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 262 reports.**
+**This page covers all 263 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["262 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["263 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2276,3 +2276,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 12,259 lines of Python, 112 test functions across eight files plus three `verify_*` scripts that exercise the sandbox fence and the broker separation, four Postgres tables reached over HTTPS, and six complete session workspaces committed with the agent's own programs in them. `docs/failure-modes.md` is 191 sessions analysed for the 14 that were not wins.
 - Study when: you need a defensible record of what an autonomous agent with a shell and a credential actually did, or you want the corpus's clearest measured instance of memory-to-action failure — five of six early-surrender sessions had recorded the unresolved question and never ran the experiment.
 - Do not copy when: you want a store. Nothing survives a game, by design; there is no correction path, no scope key applied on a read path, and the prompt's request for "hypotheses you have ruled out" is a paragraph in a file nothing consults.
+
+### [`omninode-knowledge-base`](../systems/omninode-knowledge-base/)
+
+- Best idea: a status vocabulary per artifact type, generated into the published schema rather than maintained beside it. An ADR is proposed, accepted, superseded, deprecated or rejected; a pivot is observed, emerging, accepted, historical or superseded and carries a separate `confidence` of low, medium or high — the axis split this atlas argues for, since how sure you are is not whether the claim is current. `validate.py --export-schema` regenerates `schemas/frontmatter.schema.json` and CI fails when the committed copy drifts, so the published contract cannot describe a validator that no longer exists.
+- Biggest risk: the three invariants the project states as its philosophy are the three nothing checks. `evidence/README.md` says "Every accepted ADR and confirmed pivot should have at least one evidence file. Claims without evidence are hypotheses" — there are eight accepted ADRs, five accepted pivots and zero evidence files. Two ADR files declare `adr_id: ADR-0010` with unrelated decisions. And the corpus's single supersession pair is reciprocal because someone did it carefully, not because anything verifies that `supersedes` and `superseded_by` agree.
+- Most reusable component: `check_index_freshness`, which regenerates the three indexes in memory and fails the build if they differ from what was committed. A derived retrieval surface that is verified rather than trusted removes the commonest quiet defect in a file-backed store, and it is a dozen lines. Beside it, `check_text_sanitization.py`, which applies the artifact patterns to commit messages and PR bodies and deliberately refuses the `# sanitization-ok:` allowlist there.
+- Maturity impression: Apache-2.0, 89 files, 56 artifacts across five populated directories, 735 lines of Python in four scripts, five CI-gated checks and no tests on any of them. Three of the nine documented artifact types — evidence, plans, experiments — have no instances at all, and the experiment schema is the one with a first-class `outcome: confirmed | refuted | inconclusive`.
+- Study when: you are designing frontmatter for a knowledge store somebody has to keep honest, and you want a worked example of typed statuses, generated schemas and a verified index.
+- Do not copy when: you need agent memory during a task. Nothing retrieves, nothing scopes, no status is ever read back by code, and every write is a pull request — this is a record a team maintains, not a store an agent uses.

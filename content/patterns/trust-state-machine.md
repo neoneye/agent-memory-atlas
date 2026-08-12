@@ -268,6 +268,25 @@ returns only `OBSERVED` or `MEASURED`, above a docstring saying verification
 reach makes every gate that names it unsatisfiable while reading, from the schema
 and from the enum, exactly like a state that works.
 
+**[OmniNode's knowledge base](../../systems/omninode-knowledge-base/) gives each
+kind of claim its own vocabulary instead of one shared enum**, which is the
+cheapest refinement on this page. A decision record moves through `proposed`,
+`accepted`, `superseded`, `deprecated` or `rejected`; an architectural pivot
+through `observed`, `emerging`, `accepted`, `historical` or `superseded`; a
+doctrine principle only `draft`, `accepted` or `deprecated`. The vocabularies are
+Pydantic `Literal`s discriminated on a `type` field, exported into the published
+JSON schema by the validator that enforces them, so the contract cannot drift
+from the check. A pivot also carries `confidence` — `low`, `medium`, `high` — as a
+*separate* field from status, which is this pattern's central discipline written
+into a schema: how sure you are and whether the claim is current are different
+questions, and one column cannot answer both.
+
+The same repository shows the limit of a schema-only state machine. Nothing reads
+a status back: `supersedes` and `superseded_by` are validated as lists of strings
+and never checked against each other, so the corpus's single supersession pair is
+reciprocal by hand. A state machine enforced at the boundary and nowhere else is
+a vocabulary, not a machine.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

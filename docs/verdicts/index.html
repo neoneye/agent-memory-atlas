@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 262 reports.</strong></p>
+<p><strong>This page covers all 263 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;262 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;263 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7132,6 +7132,51 @@ ran the experiment.</li>
 design; there is no correction path, no scope key applied on a read
 path, and the prompt's request for "hypotheses you have ruled out" is a
 paragraph in a file nothing consults.</li>
+</ul>
+<h3 id="omninode-knowledge-base"><a
+href="../systems/omninode-knowledge-base/"><code>omninode-knowledge-base</code></a></h3>
+<ul>
+<li>Best idea: a status vocabulary per artifact type, generated into the
+published schema rather than maintained beside it. An ADR is proposed,
+accepted, superseded, deprecated or rejected; a pivot is observed,
+emerging, accepted, historical or superseded and carries a separate
+<code>confidence</code> of low, medium or high — the axis split this
+atlas argues for, since how sure you are is not whether the claim is
+current. <code>validate.py --export-schema</code> regenerates
+<code>schemas/frontmatter.schema.json</code> and CI fails when the
+committed copy drifts, so the published contract cannot describe a
+validator that no longer exists.</li>
+<li>Biggest risk: the three invariants the project states as its
+philosophy are the three nothing checks. <code>evidence/README.md</code>
+says "Every accepted ADR and confirmed pivot should have at least one
+evidence file. Claims without evidence are hypotheses" — there are eight
+accepted ADRs, five accepted pivots and zero evidence files. Two ADR
+files declare <code>adr_id: ADR-0010</code> with unrelated decisions.
+And the corpus's single supersession pair is reciprocal because someone
+did it carefully, not because anything verifies that
+<code>supersedes</code> and <code>superseded_by</code> agree.</li>
+<li>Most reusable component: <code>check_index_freshness</code>, which
+regenerates the three indexes in memory and fails the build if they
+differ from what was committed. A derived retrieval surface that is
+verified rather than trusted removes the commonest quiet defect in a
+file-backed store, and it is a dozen lines. Beside it,
+<code>check_text_sanitization.py</code>, which applies the artifact
+patterns to commit messages and PR bodies and deliberately refuses the
+<code># sanitization-ok:</code> allowlist there.</li>
+<li>Maturity impression: Apache-2.0, 89 files, 56 artifacts across five
+populated directories, 735 lines of Python in four scripts, five
+CI-gated checks and no tests on any of them. Three of the nine
+documented artifact types — evidence, plans, experiments — have no
+instances at all, and the experiment schema is the one with a
+first-class
+<code>outcome: confirmed | refuted | inconclusive</code>.</li>
+<li>Study when: you are designing frontmatter for a knowledge store
+somebody has to keep honest, and you want a worked example of typed
+statuses, generated schemas and a verified index.</li>
+<li>Do not copy when: you need agent memory during a task. Nothing
+retrieves, nothing scopes, no status is ever read back by code, and
+every write is a pull request — this is a record a team maintains, not a
+store an agent uses.</li>
 </ul>
         </article>
       </div>
