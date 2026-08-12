@@ -1,6 +1,7 @@
 # The atlas read without JavaScript — two confident criticisms, one root cause
 
-**Status:** proposed. Diagnosis is settled; the fix is not adopted.
+**Status:** proposed, and now twice-evidenced. Diagnosis is settled; the fix is
+not adopted.
 **Origin:** an outside review (Qwen, 2026-08-12) of
 [`build.md`](../content/build.md), whose two structural findings were both wrong
 in the same way. The diagnosis is worth more than the findings.
@@ -50,8 +51,16 @@ Neither finding is a property of the page.
 readers, `curl | pandoc`, reader-mode extractors, and anything indexing the site
 for retrieval all land on the same surface this reviewer did. And the exposure is
 not one page: `scripts/check_mermaid.py` *requires* a diagram in every system
-report, so all 260 report pages degrade into a block of raw `flowchart TD`
+report, so all 264 report pages degrade into a block of raw `flowchart TD`
 source for those readers — in the section that carries the mechanism.
+
+**A second review reached the same wrong conclusion on a different page**, this
+time reporting the PRO-LONG report's section 2 as "a table that has completely
+lost its markdown rendering", quoting three of that diagram's edge labels. Two
+independent readers opening with confident structural criticism that resolves to
+*the diagram did not render* is a property of the delivery, not of either
+reader — the argument is in
+[the fourth review and the second broken diagram](2026-08-13-the-fourth-review-and-the-second-broken-diagram.md).
 
 That is the opposite of what the diagram is for. A reader without JS gets the
 worst of both: not a picture, and not prose either, because the prose was written

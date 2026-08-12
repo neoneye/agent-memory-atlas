@@ -8,6 +8,46 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-08-13-the-fourth-review-and-the-second-broken-diagram.md](2026-08-13-the-fourth-review-and-the-second-broken-diagram.md) —
+  a fourth outside review opened with "the Mental Model table has completely lost
+  its markdown rendering", quoting three edge labels from the PRO-LONG report's
+  Mermaid diagram. Two further items asked for a rubric page and a pattern
+  library that exist and sit in the nav of every rendered page. Two reviews now
+  resolve the same way, which makes the delivery surface the finding: check the
+  rendered artifact before answering a criticism of presentation, and the corpus
+  before answering one of coverage. Also corrects the claim that PRO-LONG's
+  missing test suite is buried in section 10 — it is in section 1, though as the
+  closing line, which is the version of the criticism worth keeping.
+- [2026-08-13-the-marks-are-invisible-on-the-page-that-earns-them.md](2026-08-13-the-marks-are-invisible-on-the-page-that-earns-them.md) —
+  `rg 'trust_state|scope_enforced' docs/systems/mindcache/index.html` returns
+  nothing: the capability marks feed the index, the grid and the matrix, and
+  never reach the report a reader lands on. Proposes rendering all seven in the
+  header — earned and withheld distinctly, each linked to its own rubric anchor —
+  so that `capabilities: ""` reads as *assessed and carries none* rather than as
+  *nobody looked*, which is the distinction the rubric exists to protect.
+- [2026-08-13-enforce-where-the-writer-cannot-reach.md](2026-08-13-enforce-where-the-writer-cannot-reach.md) —
+  a pattern page proposal with six candidate instances already in the corpus:
+  an invariant enforced by the party it constrains is a policy, and one enforced
+  where that party cannot reach is a mechanism. arc-code is the case with a
+  before and after, PRO-LONG is the counter-case where the recorder is out of
+  reach but the record is not, and the page's distinguishing test is adversarial
+  — not "does the gate work" but "what happens when the constrained party goes
+  around it".
+- [2026-08-13-a-memory-type-axis-and-why-machinery-is-the-wrong-one.md](2026-08-13-a-memory-type-axis-and-why-machinery-is-the-wrong-one.md) —
+  accepts that the atlas has no axis for *what kind of memory this is* and
+  declines the reason offered for it. The eight families sort by how you would
+  adopt a system, not by what it holds, so a seeded `memory_type` key is worth
+  adding; but sorting by machinery would file daimon — the most complete deletion
+  test in the corpus, achievable because it has no embeddings to compact — below
+  the systems it beats on the axis the atlas cares most about.
+- [2026-08-13-what-a-friction-column-could-actually-say.md](2026-08-13-what-a-friction-column-could-actually-say.md) —
+  measures the four proposed reality-check columns against what 264 reports can
+  already fill. The report format has required "does the agent block" and "what
+  is the lag" since it was written, and 124 of 264 reports state the first: the
+  gap is enforcement, not policy. Proposes fixing that before adding a column,
+  then seeding `write_mode` and `setup` through the same labelled mechanism that
+  back-filled `stack_*`, and keeping token overhead out of the matrix because no
+  reading produces it.
 - [2026-08-12-deletion-harness-level-1-and-level-2.md](2026-08-12-deletion-harness-level-1-and-level-2.md) —
   the implementation plan for the thirteen-step sequence. **Level 1** is the
   harness running against itself: an adapter Protocol, steps 1–10, and two
