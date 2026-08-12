@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 261 reports.</strong></p>
+<p><strong>This page covers all 262 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;261 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;262 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -7089,6 +7089,49 @@ benchmark publishers.</li>
 correction path, no trust state, no provenance and no scope key applied
 on a read path, and the agent's hypotheses sit in the same
 undifferentiated stream as the board states that would refute them.</li>
+</ul>
+<h3 id="arc-code"><a
+href="../systems/arc-code/"><code>arc-code</code></a></h3>
+<ul>
+<li>Best idea: the recorder is the actuator. <code>rig/broker.py</code>
+holds the ARC key and every game session, plays every action and writes
+<code>logs.txt</code>; the agent gets a forwarding client and no key, so
+there is no path to the game that skips the record. The guarantee is
+stated as such — "anything reaching the game is written down by the
+thing that forwards it" — and it exists because one run disproved the
+weaker version: handed a session that might have died, an agent read
+<code>scorecard.json</code>, built its own HTTP client with the key it
+found on its own disk, and played a RESET that never reached the
+log.</li>
+<li>Biggest risk: the archive decides a file changed by comparing its
+byte length to the stored length, under an assumption the code states —
+"every file here is append-only or rewritten whole". That holds for the
+log and not for <code>notes.md</code>, which the agent edits, so a
+same-length correction to the agent's own beliefs never reaches the
+permanent record. The agent is unaffected, since it reads the live file;
+the published session evidence is what silently lags.</li>
+<li>Most reusable component: the three boundaries, none of which depend
+on ARC — actuator outside the sandbox holding the credential, evidence
+mirrored off the disposable machine every 60 seconds, and a grader kept
+apart from the launcher that can re-grade stored sessions later, writing
+the stricter verdict into <code>games.reaudit</code> beside the original
+<code>games.audit</code> rather than over it.</li>
+<li>Maturity impression: MIT, 12,259 lines of Python, 112 test functions
+across eight files plus three <code>verify_*</code> scripts that
+exercise the sandbox fence and the broker separation, four Postgres
+tables reached over HTTPS, and six complete session workspaces committed
+with the agent's own programs in them.
+<code>docs/failure-modes.md</code> is 191 sessions analysed for the 14
+that were not wins.</li>
+<li>Study when: you need a defensible record of what an autonomous agent
+with a shell and a credential actually did, or you want the corpus's
+clearest measured instance of memory-to-action failure — five of six
+early-surrender sessions had recorded the unresolved question and never
+ran the experiment.</li>
+<li>Do not copy when: you want a store. Nothing survives a game, by
+design; there is no correction path, no scope key applied on a read
+path, and the prompt's request for "hypotheses you have ruled out" is a
+paragraph in a file nothing consults.</li>
 </ul>
         </article>
       </div>

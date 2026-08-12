@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An ARC-AGI-3 harness whose agent
+memory is a file that survives context compaction, made complete by
+moving the only path to the game out of the agent's reach — after one
+agent proved it had to be.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="arc-code — Agent Memory Atlas">
+    <meta property="og:description" content="An ARC-AGI-3 harness whose
+agent memory is a file that survives context compaction, made complete
+by moving the only path to the game out of the agent's reach — after one
+agent proved it had to be.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="arc-code — Agent Memory Atlas">
+    <meta name="twitter:description" content="An ARC-AGI-3 harness whose
+agent memory is a file that survives context compaction, made complete
+by moving the only path to the game out of the agent's reach — after one
+agent proved it had to be.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>arc-code — Agent Memory Atlas</title>
+    <!-- Google Analytics (G-2F6NE7JWTR). Also present in the other head; the
+         build has no shared header partial, so the two must be kept in step. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2F6NE7JWTR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Consent Mode v2. Everything denied until the reader chooses, for every
+      // region rather than only the EU — a site arguing for scope-before-ranking
+      // should not quietly set cookies while it decides whether it has to ask.
+      // assets/main.js raises analytics_storage on accept; the ad_* signals are
+      // never granted, because nothing here advertises.
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-2F6NE7JWTR');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <a class="back-link" href="../../"><span aria-hidden="true">←</span> Back to atlas</a>
+          <p class="eyebrow">The actuator writes the log</p>
+          <h1>arc-code</h1>
+          <p class="document-deck">An ARC-AGI-3 harness whose agent
+memory is a file that survives context compaction, made complete by
+moving the only path to the game out of the agent's reach — after one
+agent proved it had to be.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jerber/arc-code">
+              <span>Source</span>
+              <strong>jerber/arc-code</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9" title="6b33c1f7c2ad45997663c69157f5559d1be61bd9">
+              <span>Analyzed revision</span>
+              <code>6b33c1f7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-08-12</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (52%), and a dash means the mechanism was not found at this commit — not that the system needed it.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>arc-code runs a stock coding agent through ARC-AGI-3, the benchmark
+built to measure learning on first contact. The harness has no solver,
+no planner, no world model and no grid tooling; the agent writes those
+during each game and they die with it. The published result is 24 of 25
+games won at 96.2% for about $540, with a second attempt at the missed
+game bringing pass@2 to 99.3%.</p>
+<p>The memory is two files. <code>logs.txt</code> holds every action,
+the agent's own plan for it, and the state it produced.
+<code>notes.md</code> holds whatever the agent decides is durable. The
+prompt is explicit about why they exist — <em>"Your context may compact;
+files survive"</em> — and the schema counts how often that happens:
+<code>games.compactions</code> is a column, so the number of times the
+file was the only memory is recorded per game.</p>
+<p><strong>The finding worth the report is why the log can be
+trusted.</strong> <code>act.py</code> used to run inside the agent's
+sandbox, which put the game key on a disk the agent is root on. One run
+settled whether that was a boundary: <em>"handed a session that might
+have died, an agent read <code>scorecard.json</code>, built its own HTTP
+client with <code>ARC_API_KEY</code> and played a RESET that never
+reached <code>logs.txt</code>."</em> The fix was not a stronger
+instruction. <code>rig/broker.py</code> moved the actuator into a
+separate process that holds the key, plays every action and writes the
+log, and the agent gets a forwarding client with no key at all. The
+guarantee is stated precisely and it is the one that matters for an
+append-only memory: <em>"anything reaching the game is written down by
+the thing that forwards it."</em></p>
+<p><strong>The second finding is a measured failure of
+memory-to-action.</strong> <code>docs/failure-modes.md</code> reports
+191 sessions over the 25 public games: 177 wins, 14 not. Six of the 14
+stopped early, with 1,391–2,218 of 2,500 moves unused — and in five of
+those six <em>"the model had already recorded an unresolved question but
+did not run the corresponding experiment."</em> The memory held the
+right open question and nothing consumed it. This atlas keeps finding
+fields that nothing reads; here the field is a paragraph the agent wrote
+itself, and the cost of nothing reading it is measured.</p>
+<p><strong>The defect is in the archive, not the memory.</strong>
+<code>push_artifacts</code> decides a file changed by comparing its
+length to the stored length, under a stated assumption: <em>"every file
+here is append-only or rewritten whole, so a change that keeps the
+length is not a thing that happens."</em> That holds for
+<code>logs.txt</code>. It does not hold for <code>notes.md</code>, which
+the agent edits — and a correction that preserves length, a coordinate
+changed from <code>44</code> to <code>46</code> or <code>left</code> to
+<code>down</code>, leaves the agent's working memory correct and the
+permanent record showing the version it replaced.</p>
+<p>MIT, 12,259 lines of Python, 112 tests across eight files plus three
+<code>verify_*</code> scripts that exercise the sandbox fence, the
+broker and the network boundary.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two memories with different owners and different guarantees.</p>
+<p><strong>The log is written by the actuator and never by the
+agent.</strong> It is verbatim, it is append-only, and its completeness
+is a property of the topology rather than of the agent's cooperation. An
+entry is a plan, an action and a state.</p>
+<p><strong>The notes are written by the agent and nothing checks
+them.</strong> The prompt asks for <em>"confirmed mechanics, level
+solutions, hypotheses you have ruled out"</em> — which is a three-state
+epistemic vocabulary, expressed as advice, in a Markdown file. The
+committed runs show the agent using it well:
+<code>data/runs/tu93_v2sub/notes.md</code> records the per-level step
+limit as a derived formula, marks <em>"Confirmed. No ACTION5/6/7"</em>
+against the action set, and separates rendering geometry from entity
+behaviour.</p>
+<p>Nothing distinguishes the two in storage. A ruled-out hypothesis and
+a confirmed mechanic are both paragraphs, and the failure-modes study is
+what happens when the agent reads its own uncertainty and does not act
+on it.</p>
+<p>The retrieval instruction is unusually specific, and it is a memory
+design decision rather than a prompt flourish: <em>"Read it with code,
+not with your eyes… Never print the log, or a whole state, into your own
+context."</em> The argument given is transcription error — a grid read
+by eye is a grid that may have been read wrong — so the harness treats
+the agent's own context as the unreliable medium and the file as the
+reliable one.</p>
+<pre class="mermaid"><code>flowchart TD
+  AGENT[&quot;stock coding agent&lt;br/&gt;context compacts, counted in games.compactions&quot;]
+  AGENT --&gt;|&quot;./act do --plan &#39;…&#39;&quot;| BROKER[&quot;broker: holds the key,&lt;br/&gt;plays the action, writes the log&quot;]
+  BROKER --&gt; GAME[&quot;ARC-AGI-3&quot;]
+  GAME --&gt; BROKER
+  BROKER --&gt;|&quot;append: plan, action, state&quot;| LOG[(&quot;logs.txt — verbatim,&lt;br/&gt;append-only, complete by topology&quot;)]
+  AGENT --&gt;|&quot;Write/Edit&quot;| NOTES[(&quot;notes.md + helper programs&lt;br/&gt;rewritten freely, nothing checks&quot;)]
+  LOG --&gt;|&quot;grep, sed, diff — never by eye&quot;| AGENT
+  NOTES --&gt; AGENT
+  LOG --&gt; MIRROR{&quot;every 60s: size changed?&quot;}
+  NOTES --&gt; MIRROR
+  MIRROR --&gt;|&quot;yes&quot;| PG[(&quot;Postgres: runs, games,&lt;br/&gt;actions, artifacts by name&quot;)]
+  MIRROR --&gt;|&quot;same length&quot;| MISS[&quot;edit never reaches the record&quot;]
+  PG --&gt; AUDIT[&quot;audit.py re-grades stored sessions&lt;br/&gt;verdict → games.reaudit, beside games.audit&quot;]</code></pre>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><strong><code>act.py</code></strong> (580 lines) is the actuator and
+the log's format owner. <code>LOG</code>, <code>SEP</code> and
+<code>STATE</code> are imported by the database layer, with a comment
+stating the coupling: <em>"the log parser below must track its
+writer."</em></li>
+<li><strong><code>rig/broker.py</code></strong> (322 lines) is that
+actuator moved out of the sandbox, holding the ARC key and every game
+session.</li>
+<li><strong><code>rig/db.py</code></strong> (637 lines) is the durable
+record: four tables reached over HTTPS rather than 5432, <em>"because
+that is the one protocol every environment this runs in
+allows."</em></li>
+<li><strong><code>rig/audit.py</code></strong> (243 lines) is a pattern
+grader over the stored command and file stream, deliberately kept apart
+from the launcher.</li>
+<li><strong><code>rig/agents.py</code></strong>,
+<strong><code>rig/cloud.py</code></strong>,
+<strong><code>rig/export.py</code></strong>,
+<strong><code>rig/score.py</code></strong> cover the two agent backends,
+sandbox provisioning, publication and scoring.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A cloud sandbox per game, a Neon Postgres, an ARC key and a model
+key. The sandbox is explicitly disposable — <em>"a sandbox is somewhere
+to play, not somewhere to keep evidence: it can be killed at any moment
+and it takes its disk with it"</em> — which is what forces the mirror,
+and the mirror is what makes the run's memory readable <em>"long after
+the machine that produced it is gone."</em></p>
+<p>That separation is the transferable architectural idea, and it costs
+a managed Postgres.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The log write</strong> — the broker plays the action and
+appends the entry, so no path exists from the agent to the game that
+does not pass through the writer.</p>
+<p><strong>The mirror</strong> — <code>db.push_artifacts</code>
+(<code>rig/db.py:356</code>) lists every file in the workspace, reads it
+once, and uploads those whose byte length differs from what is stored,
+with
+<code>on conflict (run, game, name) do update set body = excluded.body</code>.
+Latest version per name; no history.</p>
+<p><strong>The tick</strong> — <code>MIRROR_EVERY = 60</code>, with the
+comment <em>"a killed sandbox loses at most this much"</em>. Actions are
+inserted <code>on conflict do nothing</code>, so a replayed tick cannot
+duplicate a row.</p>
+<p><strong>The re-grade</strong> — <code>audit.record</code>
+(<code>rig/audit.py:197</code>) re-runs the pattern set as it stands
+over streams stored earlier and, with <code>--save</code>, writes the
+verdict to <code>games.reaudit</code>. The original
+<code>games.audit</code> is untouched. The docstring gives the
+principle: <em>"Re-grading is the only way to strengthen a result
+already collected. Prevention cannot be applied backwards; a stricter
+reading can."</em></p>
+<p><strong>The pattern set</strong> — <code>SUSPICIOUS</code> in
+<code>audit.py</code> carries a comment explaining why its regexes are
+narrow: a bare <code>\bnc\b</code> also matches every Python variable
+named <code>nc</code>, and <em>"an audit that cries wolf gets ignored
+exactly when it matters."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key</th>
+<th>Grows or replaces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>runs</code></td>
+<td><code>id</code></td>
+<td>inserted once, <code>on conflict do nothing</code></td>
+</tr>
+<tr>
+<td><code>games</code></td>
+<td><code>(run, game)</code></td>
+<td>upserted; carries score, cost, token counts,
+<code>compactions</code>, <code>audit</code>, <code>reaudit</code></td>
+</tr>
+<tr>
+<td><code>actions</code></td>
+<td><code>(run, game, n)</code></td>
+<td>append-only; carries the agent's <code>plan</code> beside the
+action</td>
+</tr>
+<tr>
+<td><code>artifacts</code></td>
+<td><code>(run, game, name)</code></td>
+<td><strong>replaced</strong> — one row per filename, latest body</td>
+</tr>
+</tbody>
+</table></div>
+<p>The agent-facing model has no schema at all. <code>logs.txt</code>
+documents its own format and legend in its opening lines, and the prompt
+tells the agent to read those first — a memory that carries its own
+reading instructions, which is a cheap idea worth copying.</p>
+<p>Nothing anywhere carries a validity interval, a provenance link, a
+scope key or a status. <code>actions.plan</code> is the closest thing to
+provenance in the system: it stores what the agent believed it was doing
+at the moment it acted, so a wrong action and the reasoning behind it
+are recoverable together.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The agent greps. There is no index, no ranking and no injection, and
+the prompt's guidance is procedural: <code>wc -l</code> to orient,
+<code>grep -n</code> for headers, <code>sed -n 'a,bp'</code> for a
+range, pipe states into a script and print the conclusion.</p>
+<p>Two consequences, and the second is measured:</p>
+<ul>
+<li><strong>Exactness is the whole point.</strong> Diffing two recorded
+states answers "what changed" without a model in the path, which is why
+the harness can carry a benchmark about inferring mechanics with no
+mechanics code of its own.</li>
+<li><strong>Nothing makes the agent look.</strong> The failure-modes
+study is precisely a retrieval failure: the answer was in the notes, the
+agent had written it, and six sessions ended with a third of their
+budget unspent.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Log writes are synchronous with the action and outside the agent's
+control. Note writes are ordinary file edits with no gate, no review and
+no record — the agent may rewrite or delete <code>notes.md</code> at
+will, and the only trace is the next mirror, which sees the file only if
+its length changed.</p>
+<p>There is no extraction, no summarization, no consolidation and no
+background rewrite of the store. The one background pass is the mirror,
+and it is a copy rather than a transformation.</p>
+<p><code>act do</code> stops a batch as soon as an action changes the
+score, <em>"discarding the rest — a score increase means a level was
+cleared, so the state you planned against is gone."</em> That is a
+small, correct piece of memory hygiene: it prevents the log from
+recording actions planned against a state that no longer existed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Stock Claude Code or Codex, headless, six pre-approved tools (Bash,
+Read, Write, Edit, Grep, Glob), no MCP server, no subagent, no plugin,
+no hook. <code>rig/agents.py</code> adapts both and counts compaction
+events into the run report.</p>
+<p>The contract is a Markdown file — <code>PROMPT.md</code>, 68 lines —
+and it reads as a memory policy rather than a task description: one
+section on acting, one on memory, one on playing well. The memory
+section is the longest.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Completeness by topology.</strong> The broker is the
+strongest idea here and generalises past this benchmark: if a memory
+must record every effect, the recorder should be the only thing that can
+cause an effect. Instructing an agent to log its actions is a policy;
+making the log the actuator is a mechanism. That this repository learned
+it from a real bypass — an agent building its own HTTP client and
+playing an unlogged RESET — is the kind of evidence the atlas rarely
+gets for a design change.</p>
+<p><strong>The fence is tested rather than asserted.</strong>
+<code>verify_fence.py</code>, <code>verify_sandbox.py</code> and
+<code>verify_broker.py</code> exercise the network boundary and the
+actuator separation directly, and the README records that some Codex
+runs did try to find published solutions.</p>
+<p><strong>The archive's size test.</strong> Stated as an assumption in
+the code and true of the log, false of the notes. The consequence is
+bounded — the agent's own memory is unaffected, because it reads the
+live file — but the permanent record of what the agent believed can
+silently lag what it actually wrote. For a repository whose published
+artifact <em>is</em> the session record, that is the defect worth
+fixing, and a hash instead of a length closes it.</p>
+<p><strong>The verdict is kept twice, on purpose.</strong>
+<code>games.audit</code> holds what was judged when the session ran;
+<code>games.reaudit</code> holds a stricter later reading. Neither
+overwrites the other, and <code>export.py</code> prefers the re-grade
+when rendering. That is supersession with the superseded value retained
+— the shape this atlas argues for on memory generally, applied here to a
+judgement about a session.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>112 test functions across <code>test_act.py</code>,
+<code>test_audit.py</code>, <code>test_broker.py</code>,
+<code>test_db.py</code>, <code>test_export.py</code>,
+<code>test_payload.py</code>, <code>test_run.py</code> and
+<code>test_score.py</code>, plus three <code>verify_*</code> scripts.
+<code>tests/conftest.py</code> executes on collection, which the screen
+flagged; nothing in the tree was run for this review.</p>
+<p>The benchmark evidence is a study rather than a scorecard.
+<code>docs/failure-modes.md</code> reports 191 sessions of Claude Opus 5
+over the 25 public games — 177 wins — and then spends its length on the
+14 that were not, with the numbers drawn from the run database and every
+quotation taken from the model's own writing. Three of those sessions
+are published in full under <code>data/runs/</code>, including the
+agent's own programs: a world model, a simulator, a planner and a miner,
+all written during play and preserved.</p>
+<p><code>docs/REPRODUCE.md</code> and <code>rig/baselines.json</code>
+cover reproduction. The headline figure — 96.2%, pass@2 99.3%, about
+$540 — is the ARC operator's own model-only evaluation as the comparison
+point, and the README says the full post-broker record is not yet
+released, so the published per-session evidence is six workspaces rather
+than 191.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the recorder the actuator.</strong> An append-only
+memory is only as complete as the agent's willingness to write to it,
+unless the write is the same operation as the effect. Moving the key and
+the session out of the agent's reach turned a policy into a guarantee,
+and the repository can say exactly which run proved it needed to.</li>
+<li><strong>Keep the re-grade beside the original verdict.</strong> A
+judgement that improves should not erase the one it replaces; two
+columns cost nothing and make the improvement checkable.</li>
+<li><strong>Let the memory document its own format.</strong>
+<code>logs.txt</code> opens with its legend, and the prompt tells the
+agent to read that before anything else. A store whose reader has to be
+told its schema out of band drifts from it.</li>
+<li><strong>Say what the agent must not do with memory.</strong>
+<em>"Never print the log, or a whole state, into your own context"</em>
+is a retrieval instruction that protects correctness rather than cost,
+and the reason — transcription error on a grid read by eye — is written
+down beside it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Detecting change by file length.</strong> It is cheap and it
+is wrong for any file a model edits in place. A digest is one line
+more.</li>
+<li><strong>Storing one row per filename and calling it an
+archive.</strong> <code>artifacts</code> keeps the latest body per name,
+so the history of the agent's own notes — the interesting part, since it
+is where beliefs changed — is not recoverable from the record.</li>
+<li><strong>Relying on a written instruction to record
+uncertainty.</strong> The prompt asks for ruled-out hypotheses; the
+failure study shows the agent recording open questions and then not
+acting on them. Instructions produce the writing, not the reading.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right for anyone who needs a defensible record of what an autonomous
+agent did, in a setting where the agent has a shell and a key. Most of
+the value is in the three architectural boundaries — actuator outside
+the sandbox, evidence outside the machine, grader outside the launcher —
+and none of them depends on ARC.</p>
+<p>Wrong as a memory system to adopt. There is no correction path, no
+scope key, no trust state on a memory and nothing that survives a game,
+by design: the whole point of the result is that the ARC-specific
+machinery is built during play and discarded. A reader wanting a store
+should take the boundaries and leave the rest.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>The size-based change test</strong>, above. The archive can
+miss a same-length correction to the agent's notes.</li>
+<li><strong>Uncertainty recorded and not consumed</strong>, measured:
+five of six early-surrender sessions had already written down the
+question that would have unblocked them. Nothing in the system reads a
+note back to the agent, or blocks a "this is impossible" conclusion on
+the open questions the notes still hold.</li>
+<li><strong>No tombstone, and the prompt asks for one in prose.</strong>
+<em>"Hypotheses you have ruled out"</em> is exactly the rejected-value
+record this atlas looks for, kept as a paragraph nothing consults, in a
+file the agent may rewrite. A refuted hypothesis can return by being
+re-derived, and nothing would notice.</li>
+<li><strong>Belief and observation share a directory.</strong> The log
+is trustworthy and the notes are not, and nothing in storage marks the
+difference.</li>
+<li><strong>A single log per game with no scope key.</strong> Isolation
+is the sandbox, so anything that changes how workspaces are laid out
+changes the boundary.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow three boundaries and one sentence. The boundaries: the
+actuator holds the credential and writes the record, the record leaves
+the disposable machine on a timer, the grader runs separately and can be
+re-run later. The sentence is the guarantee that follows from the first
+— anything reaching the effect is written down by the thing that
+forwards it.</p>
+<p>Build, if you want this as memory: a digest instead of a length, a
+version chain for agent-written files, and something that reads an open
+question back to the agent before it is allowed to conclude a task is
+impossible. The third is the one the failure study makes a business case
+for.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Would surfacing open questions change the surrender
+rate?</strong> The study identifies the failure and the harness has the
+material to test a fix — the notes are on disk and the prompt is a file.
+Nothing in the repository has tried it.</li>
+<li><strong>How often does the size test actually miss an edit?</strong>
+Checkable against the six committed workspaces if their mirrored bodies
+are compared with the final on-disk files; the archive side is not
+published.</li>
+<li><strong>What does <code>reaudit</code> disagree with
+<code>audit</code> about?</strong> The mechanism for strengthening a
+verdict exists, and no stored pair is published to show a re-grade
+changing one.</li>
+<li><strong>Does anything survive between games?</strong> Nothing in the
+code carries a finding from one game to the next, and the README frames
+that as the result rather than a limitation. Whether a cross-game
+<code>notes.md</code> would help or poison is the obvious next
+experiment and is not run here.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PROMPT.md</code></td>
+<td>The agent contract; its longest section is "Memory"</td>
+</tr>
+<tr>
+<td><code>act.py</code></td>
+<td>The actuator and the owner of the log format (<code>LOG</code>,
+<code>SEP</code>, <code>STATE</code>)</td>
+</tr>
+<tr>
+<td><code>rig/broker.py</code></td>
+<td>The actuator moved out of the agent's reach, holding the key</td>
+</tr>
+<tr>
+<td><code>rig/db.py</code></td>
+<td>Four tables over HTTPS; <code>push_artifacts</code> and the
+60-second mirror</td>
+</tr>
+<tr>
+<td><code>rig/audit.py</code></td>
+<td>Pattern grader over stored streams; <code>record --save</code>
+writes <code>reaudit</code></td>
+</tr>
+<tr>
+<td><code>rig/agents.py</code></td>
+<td>Claude Code and Codex backends; counts compactions</td>
+</tr>
+<tr>
+<td><code>rig/export.py</code></td>
+<td>Publication; prefers <code>reaudit</code> over <code>audit</code>
+when rendering</td>
+</tr>
+<tr>
+<td><code>docs/failure-modes.md</code></td>
+<td>191 sessions, 14 non-wins, the uncertainty finding</td>
+</tr>
+<tr>
+<td><code>data/runs/</code></td>
+<td>Six complete session workspaces, including the agent's own
+programs</td>
+</tr>
+<tr>
+<td><code>tests/</code>, <code>verify_*.py</code></td>
+<td>112 test functions plus fence, sandbox and broker checks</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-08-12</strong> — <a
+href="https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9"><code class="commit-id" title="6b33c1f7c2ad45997663c69157f5559d1be61bd9">6b33c1f7…</code></a>
+— first reading. The screen reported a build-time exec path in
+<code>tests/conftest.py</code> and two dependency surfaces changed the
+day of the reading, inside the seven-day cooldown, so nothing was
+installed and no test was run. Claims here come from the source, the
+committed session workspaces and <code>docs/failure-modes.md</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        pre.replaceWith(holder);
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

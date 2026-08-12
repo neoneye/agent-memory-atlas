@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 261 reports.**
+**This page covers all 262 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["261 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["262 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2267,3 +2267,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 4,355 lines of Python, an MIT trove classifier in `pyproject.toml` with no `LICENSE` file in the tree, a paper ([arXiv:2607.20064](https://arxiv.org/abs/2607.20064)), four committed scorecards with per-game replay links on `arcprize.org`, 25 full agent workspaces — and no tests at all. The evaluation is far better evidenced than the code.
 - Study when: your observations are machine-generated and exactly checkable — grids, diffs, traces — and you want to know whether a verbatim log plus `grep` beats a summarizing memory before you build the summarizer. Also study the scorecards: the budget-matched rerun that cuts its own headline is the honesty this atlas asks of benchmark publishers.
 - Do not copy when: memories are claims about the world. There is no correction path, no trust state, no provenance and no scope key applied on a read path, and the agent's hypotheses sit in the same undifferentiated stream as the board states that would refute them.
+
+### [`arc-code`](../systems/arc-code/)
+
+- Best idea: the recorder is the actuator. `rig/broker.py` holds the ARC key and every game session, plays every action and writes `logs.txt`; the agent gets a forwarding client and no key, so there is no path to the game that skips the record. The guarantee is stated as such — "anything reaching the game is written down by the thing that forwards it" — and it exists because one run disproved the weaker version: handed a session that might have died, an agent read `scorecard.json`, built its own HTTP client with the key it found on its own disk, and played a RESET that never reached the log.
+- Biggest risk: the archive decides a file changed by comparing its byte length to the stored length, under an assumption the code states — "every file here is append-only or rewritten whole". That holds for the log and not for `notes.md`, which the agent edits, so a same-length correction to the agent's own beliefs never reaches the permanent record. The agent is unaffected, since it reads the live file; the published session evidence is what silently lags.
+- Most reusable component: the three boundaries, none of which depend on ARC — actuator outside the sandbox holding the credential, evidence mirrored off the disposable machine every 60 seconds, and a grader kept apart from the launcher that can re-grade stored sessions later, writing the stricter verdict into `games.reaudit` beside the original `games.audit` rather than over it.
+- Maturity impression: MIT, 12,259 lines of Python, 112 test functions across eight files plus three `verify_*` scripts that exercise the sandbox fence and the broker separation, four Postgres tables reached over HTTPS, and six complete session workspaces committed with the agent's own programs in them. `docs/failure-modes.md` is 191 sessions analysed for the 14 that were not wins.
+- Study when: you need a defensible record of what an autonomous agent with a shell and a credential actually did, or you want the corpus's clearest measured instance of memory-to-action failure — five of six early-surrender sessions had recorded the unresolved question and never ran the experiment.
+- Do not copy when: you want a store. Nothing survives a game, by design; there is no correction path, no scope key applied on a read path, and the prompt's request for "hypotheses you have ruled out" is a paragraph in a file nothing consults.
