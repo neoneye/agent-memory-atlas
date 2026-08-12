@@ -1659,6 +1659,21 @@ not publish, is still the right order to do these things in.
 
 ## 9. Limits of This Page
 
+- **This page holds others to a standard it does not meet.** It faults
+  [FiFA](#fifa-the-one-proposal-that-scores-deletion-compliance) for releasing no
+  code and [AOEP-v0](#aoep) for describing a harness it does not ship, and then
+  specifies a thirteen-step deletion sequence and a contradiction test in enough
+  detail to implement and ships neither. The asymmetry is real and the excuse
+  available — that a specification is a contribution and an unrun harness is a
+  liability — is one FiFA and AOEP could make with equal force. What separates
+  them, if anything separates them, is that the sequence below is written as an
+  adapter contract with six named methods rather than as a claim about results,
+  and that this page states it has produced no numbers rather than publishing
+  some. That is a difference in kind, not a defence of the gap. Until the
+  sequence exists as something a reader can run against their own store, the
+  honest description of this page is a critique with a specification attached,
+  and the criticism it makes of others applies to it.
+
 - Benchmark harnesses in these repositories were **inspected, not run**, with
   three exceptions at different strengths, and the differences between them are
   worth keeping. The strongest is [Provem](../systems/provem/), because the

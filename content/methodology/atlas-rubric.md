@@ -343,7 +343,20 @@ fixed yet.
   rarest lifecycle stage at 27 — so the omission is not obviously costing this
   corpus many marks. It is still an omission, and the honest reading is that the
   seven were chosen against failures found by reading implementations, which
-  under-weights a failure whose implementations largely do not exist yet. Adding
+  under-weights a failure whose implementations largely do not exist yet.
+
+  **The rarity argument has started to fail on the recoverability half.**
+  [NeuraKeep](../../systems/neurakeep/) ships a working rollback — an append-only
+  audit carrying `before` and `after` per mutation, an `undoable` flag derived
+  from whether a `before` exists, and an undo that restores the prior rows and
+  records its own reversal — and [MythologIQ's Agent
+  Memory](../../systems/agent-memory-doctrine/) specifies rollback traceability
+  as one of five invariants and implements the residue half of it. Two is not
+  many, but it is no longer none, and "nobody satisfies it" stops being a reason
+  the day something does. The counter-argument that survives is narrower: a mark
+  is a claim about a mechanism, and this atlas has read rollback in two systems
+  without yet establishing what would distinguish a real one from an undo button
+  over a log nobody keeps. That definition is the work, not the count. Adding
   a mark is not the obvious fix: a mark nobody satisfies discriminates nothing.
   Recording the gap is.
 - **No second reader.** Every mark on every report comes from one LLM reviewer
