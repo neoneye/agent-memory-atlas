@@ -500,6 +500,24 @@ defending against. And the test that matters is not "does my filter work" but
 "what happens when my caller forgets" — a question you can only ask if something
 underneath you is willing to say yes.
 
+**[NeuraKeep](../../systems/neurakeep/) settles the argument by shipping all
+three forms in one repository.** Its section search filters
+`AND (? IS NULL OR sections.space = ?)`, and the `memory_search` MCP tool passes
+`optionalString(args.space)` — so an agent that omits the argument reads across
+every space. Twenty lines away in the same file, the failures query takes
+`WHERE space = ?` with no null branch. And the CLI resolves an unset `--space` to
+`"personal"` before calling the same function. Safe, defaulted, and unsafe, by
+the same author, over the same column — and the unsafe one is on the surface a
+model drives.
+
+That is the strongest available evidence that this is not a knowledge problem.
+Nobody here needed to be told that scope should be applied; the correct form was
+written first and then not reused. What varies is the *call site*, which is why
+the check this page asks for is a check on call sites: enumerate every surface
+that can reach the store, and for each one ask what happens when the scope
+argument is absent. A single function can be right in one caller and wrong in
+the next, and reading the function will never show you that.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

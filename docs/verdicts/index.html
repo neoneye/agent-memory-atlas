@@ -109,7 +109,7 @@ one system is worth your time. Reading it end to end is not the point;
 find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 259 reports.</strong></p>
+<p><strong>This page covers all 260 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -130,7 +130,7 @@ marks, where the build <em>does</em> fail if a report omits the key.</p>
 once because it decides how much weight a completeness claim on any page
 can carry:</p>
 <pre class="mermaid"><code>flowchart TD
-    R[&quot;259 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
+    R[&quot;260 reports&lt;br/&gt;frontmatter and prose, each pinned to a commit&quot;]
     R --&gt; GEN[&quot;generate_index.py&lt;br/&gt;generate_matrix.py&quot;]
     R --&gt; HAND[&quot;Written by hand&lt;br/&gt;this page, the patterns, the comparative prose&quot;]
     GEN --&gt; AZ[&quot;A–Z index&quot;]
@@ -6995,6 +6995,54 @@ There is nothing to retrieve, nothing to correct and nothing to scope;
 the design's claim is that agent-written state should not accumulate, so
 take the baseline/scratch split as a layer over a real store rather than
 as one.</li>
+</ul>
+<h3 id="neurakeep"><a
+href="../systems/neurakeep/"><code>neurakeep</code></a></h3>
+<ul>
+<li>Best idea: a memory that cannot cite its source is never created.
+<code>governProposalDiff</code> blocks any event, fact or failure whose
+<code>sourceIds</code> or <code>sectionIds</code> are empty, so
+provenance is a precondition of existence rather than a field somebody
+hopes gets filled. Beside it, the review queue is the only path to
+durability — the extractor writes a <code>proposals</code> row with a
+<code>diff_json</code> and a person applies it, including for the
+agent's own daily notes, which are filed into a separate
+<code>system</code> space so the system cannot promote what it wrote
+about itself.</li>
+<li>Biggest risk: the agent-facing search reads every space when the
+model omits one. The section query filters
+<code>AND (? IS NULL OR sections.space = ?)</code> and
+<code>memory_search</code> passes
+<code>optionalString(args.space)</code>, while the <code>failures</code>
+query in the same file takes <code>WHERE space = ?</code> with no null
+branch and the CLI resolves an unset space to <code>personal</code>. The
+repository ships the safe form, the defaulted form and the unsafe form
+of its own scope check, and the unsafe one is on the surface the model
+drives.</li>
+<li>Most reusable component: the governor audit. Append-only JSONL, one
+entry per mutation carrying <code>before</code>, <code>after</code> and
+<code>targetIds</code>, with <code>undoable</code> derived from the
+presence of a <code>before</code> and <code>undoGovernorAudit</code>
+appending its own reversal entry — a working rollback, which is one of
+the two axes this atlas's rubric records as uncovered. Beside it, two
+schema habits: <code>failures.revisit_condition</code>, so a "do not
+repeat" carries its own expiry criterion, and
+<code>facts.review_after</code>, which schedules re-examination rather
+than waiting for a contradiction.</li>
+<li>Maturity impression: Apache-2.0, v0.1.0, 10,626 lines of TypeScript
+over one SQLite vault with FTS5 maintained by triggers, an MCP server, a
+CLI and a local review app — and three commits, so nothing about how it
+arrived is inspectable. Retrieval is BM25 with an eight-component rank
+breakdown returned per hit; there are no embeddings and it does not
+pretend otherwise. A commercial hosted tier exists; the local core
+reviewed here makes no call to it.</li>
+<li>Study when: you want the strictest provenance gate in this atlas, or
+a worked example of an undo that is auditable because the audit stores
+what the row was.</li>
+<li>Do not copy when: memory must accumulate unattended. Nothing becomes
+a durable fact without a person applying a proposal — that is the
+design, not an oversight, and it is either exactly what you want or
+immediately disqualifying.</li>
 </ul>
         </article>
       </div>

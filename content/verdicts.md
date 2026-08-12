@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 259 reports.**
+**This page covers all 260 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["259 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["260 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2249,3 +2249,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 3,181 commits since 9 February 2026, 1,339 files — and the memory component is 1,070 lines of it. The wider project is a well-tested deployment system for a local AI stack (27 services, a fleet-and-distro release lab); the reset logic itself has no test beyond a BSD/GNU `stat` compatibility check. Across the whole tree `agent memory` and `memory system` appear zero times in code and every `forget` is `wifi-forget`.
 - Study when: you run long-lived agents and have been bitten by role drift, and want the cheapest mechanism in this atlas for an agent editing its own instructions — a shell script and a timer, adoptable independently of ODS.
 - Do not copy when: you need memory that survives, ranks or corrects. There is nothing to retrieve, nothing to correct and nothing to scope; the design's claim is that agent-written state should not accumulate, so take the baseline/scratch split as a layer over a real store rather than as one.
+
+### [`neurakeep`](../systems/neurakeep/)
+
+- Best idea: a memory that cannot cite its source is never created. `governProposalDiff` blocks any event, fact or failure whose `sourceIds` or `sectionIds` are empty, so provenance is a precondition of existence rather than a field somebody hopes gets filled. Beside it, the review queue is the only path to durability — the extractor writes a `proposals` row with a `diff_json` and a person applies it, including for the agent's own daily notes, which are filed into a separate `system` space so the system cannot promote what it wrote about itself.
+- Biggest risk: the agent-facing search reads every space when the model omits one. The section query filters `AND (? IS NULL OR sections.space = ?)` and `memory_search` passes `optionalString(args.space)`, while the `failures` query in the same file takes `WHERE space = ?` with no null branch and the CLI resolves an unset space to `personal`. The repository ships the safe form, the defaulted form and the unsafe form of its own scope check, and the unsafe one is on the surface the model drives.
+- Most reusable component: the governor audit. Append-only JSONL, one entry per mutation carrying `before`, `after` and `targetIds`, with `undoable` derived from the presence of a `before` and `undoGovernorAudit` appending its own reversal entry — a working rollback, which is one of the two axes this atlas's rubric records as uncovered. Beside it, two schema habits: `failures.revisit_condition`, so a "do not repeat" carries its own expiry criterion, and `facts.review_after`, which schedules re-examination rather than waiting for a contradiction.
+- Maturity impression: Apache-2.0, v0.1.0, 10,626 lines of TypeScript over one SQLite vault with FTS5 maintained by triggers, an MCP server, a CLI and a local review app — and three commits, so nothing about how it arrived is inspectable. Retrieval is BM25 with an eight-component rank breakdown returned per hit; there are no embeddings and it does not pretend otherwise. A commercial hosted tier exists; the local core reviewed here makes no call to it.
+- Study when: you want the strictest provenance gate in this atlas, or a worked example of an undo that is auditable because the audit stores what the row was.
+- Do not copy when: memory must accumulate unattended. Nothing becomes a durable fact without a person applying a proposal — that is the design, not an oversight, and it is either exactly what you want or immediately disqualifying.
