@@ -18,7 +18,7 @@ across the corpus, and this argues about whether any one system is worth your
 time. Reading it end to end is not the point; find the system you are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 263 reports.**
+**This page covers all 264 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -39,7 +39,7 @@ because it decides how much weight a completeness claim on any page can carry:
 
 ```mermaid
 flowchart TD
-    R["263 reports<br/>frontmatter and prose, each pinned to a commit"]
+    R["264 reports<br/>frontmatter and prose, each pinned to a commit"]
     R --> GEN["generate_index.py<br/>generate_matrix.py"]
     R --> HAND["Written by hand<br/>this page, the patterns, the comparative prose"]
     GEN --> AZ["A–Z index"]
@@ -2285,3 +2285,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 89 files, 56 artifacts across five populated directories, 735 lines of Python in four scripts, five CI-gated checks and no tests on any of them. Three of the nine documented artifact types — evidence, plans, experiments — have no instances at all, and the experiment schema is the one with a first-class `outcome: confirmed | refuted | inconclusive`.
 - Study when: you are designing frontmatter for a knowledge store somebody has to keep honest, and you want a worked example of typed statuses, generated schemas and a verified index.
 - Do not copy when: you need agent memory during a task. Nothing retrieves, nothing scopes, no status is ever read back by code, and every write is a pull request — this is a record a team maintains, not a store an agent uses.
+
+### [`mindcache`](../systems/mindcache/)
+
+- Best idea: the decision status is applied where retrieval candidates are assembled, not where they are ranked. `DecisionMemory.status` is a database enum — active, inactive, superseded, rejected, conditional — written by an LLM handed a semantic cluster of related decisions, along with a one-sentence `context` for each verdict. `status.in_(["active", "conditional"])` then appears in the embedding job, three tree-cache queries and the client's retrieval query, including the fetch that builds the similarity candidate set, so a decision superseded after it was embedded stops being retrievable without anything deleting or re-embedding its vector.
+- Biggest risk: two README badges read "BEAM-1M Passed" and "BEAM-10M Passed", and the three committed result files contain no score of any kind. The harness's fourth stage judges answers against a rubric and writes `overall_score` back into the same file; no committed file has been through it — two hold retrieval traces with rubrics and no answer, one holds answers with no judgement — and the mem0 baseline the judge compares against is loaded from a path outside the repository.
+- Most reusable component: the extraction schema in `Memory_extract/schema.py`, where the Pydantic field descriptions carry the formatting rules and worked BAD/GOOD examples and `extra = "forbid"` closes the object. The prompt and the validator are the same artifact, so they cannot drift apart, and the reasoning step is a schema field rather than a convention.
+- Maturity impression: 10,827 lines of Python, MIT, SQLite by default with an optional Postgres and pgvector path, local embeddings through fastembed, an MCP server with five tools, and 66 tests over a real in-memory SQLite run by CI. The dependency list has no lockfile and pulls a spaCy model from a GitHub release URL.
+- Study when: you have a status column and want a worked example of making it govern rather than label, or you want to see a topic tree that reorganizes itself with every delete path moving its memories first.
+- Do not copy when: memory must be auditable, correctable per item, or shared. Only decisions carry a status, deletion is a whole-user wipe, nothing records what a status was before the model changed it, and the detached-memory repair re-files by argmax with no floor on the read path.

@@ -6,7 +6,7 @@ root: ..
 page_kind: methodology
 ---
 
-Every one of the **263 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **264 reports**, by slug. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -195,6 +195,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 - [`metaclaw`](../systems/metaclaw/) **MetaClaw** — Self-tuning memory policy · `aiming-lab/MetaClaw` · Scope enforced
 - [`midas`](../systems/midas/) **Midas** — A guard on memory-justified action · `vornicx/Midas` · Bi-temporal, Scope enforced, Mutation audit, Negative evals
 - [`mimir`](../systems/mimir/) **Mimir** — One graph, three node kinds · `MakerViking/mimir` · Scope enforced, Negative evals
+- [`mindcache`](../systems/mindcache/) **MindCache** — A superseded decision leaves the read path · `faisalhussain-devs/MindCache` · Trust state, Scope enforced
 - [`minecontext`](../systems/minecontext/) **MineContext** — Prospective memory, inferred · `volcengine/MineContext`
 - [`mirix`](../systems/mirix/) **MIRIX** — Multi-agent typed memory · `Mirix-AI/MIRIX` · Scope enforced, Negative evals
 - [`mnemopi`](../systems/mnemopi/) **Mnemopi** — A decay curve per memory type · `can1357/oh-my-pi` · Negative evals
